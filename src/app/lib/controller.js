@@ -3,7 +3,7 @@ import isEmpty from 'lodash/isEmpty';
 import io from 'socket.io-client';
 import { machineStore } from '../store/local-storage';
 import log from './log';
-import { MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
+import { PROTOCOL_SCREEN, MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
 
 class CNCController {
     socket = null;
@@ -126,7 +126,7 @@ class CNCController {
                         this.dataSources.push(dataSource);
                     }
                     this.port = port;
-                    if (dataSource === 'developerPanel') {
+                    if (dataSource === PROTOCOL_SCREEN) {
                         this.panelPort = port;
                     } else {
                         this.workspacePort = port;
@@ -144,13 +144,13 @@ class CNCController {
                     }
                     if (!isEmpty(this.ports) && !isEmpty(this.dataSources)) {
                         this.port = this.ports[0];
-                        if (this.dataSources[0] === 'developerPanel') {
+                        if (this.dataSources[0] === PROTOCOL_SCREEN) {
                             this.panelPort = this.ports[0];
                         } else {
                             this.workspacePort = this.ports[0];
                         }
                     } else {
-                        if (dataSource === 'developerPanel') {
+                        if (dataSource === PROTOCOL_SCREEN) {
                             this.panelPort = '';
                         } else {
                             this.workspacePort = '';
@@ -288,7 +288,7 @@ class CNCController {
     // command(cmd, ...args) {
     command(cmd, dataSource, ...args) {
         // const { port } = this;
-        const port = dataSource === 'developerPanel' ? this.panelPort : this.workspacePort;
+        const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }
@@ -299,7 +299,7 @@ class CNCController {
     // @param {object} [context] The associated context information.
     writeln(data, dataSource, context = {}) {
         // const { port } = this;
-        const port = dataSource === 'developerPanel' ? this.panelPort : this.workspacePort;
+        const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }

@@ -11,6 +11,7 @@ import {
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import SetBackground from './SetBackground';
+import { PROTOCOL_TEXT } from '../../constants';
 
 
 class LaserSetBackgroundWidget extends PureComponent {
@@ -21,13 +22,25 @@ class LaserSetBackgroundWidget extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:open': () => {
+        // TODO
+        'serialport:open': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.setState({ isConnected: true });
         },
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.setState({ isConnected: false });
         },
-        'Marlin:state': (state) => {
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const headType = state.headType;
             const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
             this.setState({ isLaser });

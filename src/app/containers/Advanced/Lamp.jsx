@@ -4,7 +4,7 @@ import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
-class Lamp extends PureComponent {
+class LightBar extends PureComponent {
     static propTypes = {
         executeGcode: PropTypes.func,
         setLightMode: PropTypes.func
@@ -19,56 +19,49 @@ class Lamp extends PureComponent {
         onchangeBrightness: (brightness) => {
             this.setState({ brightness });
         },
-        changeLightOnoff: () => {
-            const checkLightStatus = document.getElementById('lightStatus');
-
-            if (checkLightStatus.checked) {
-                this.props.executeGcode('set light status', { lightStatus: true });
-            } else {
-                this.props.executeGcode('set light status', { lightStatus: false });
-            }
+        switchLightBar: () => {
+            const { lightStatus } = this.state;
+            this.setState({ lightStatus: !lightStatus });
+            this.props.executeGcode('set light status', { lightStatus: !lightStatus });
         }
     }
 
     render() {
         return (
             <div>
-                <div>
-                    <p>{i18n._('lamp')}</p>
-                    <ul style={{ listStyle: 'none' }}>
-                        <li>
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get light status')}>
-                                Get Light Status
-                            </button>
-                        </li>
-                        <li>
-                            <NumberInput
-                                className={styles['input-setting']}
-                                value={this.state.brightness}
-                                onChange={this.actions.onchangeBrightness}
-                            />
-                            <input
-                                type="checkbox"
-                                id="lightStatus"
-                                checked={this.state.lightStatus}
-                                onChange={this.actions.changeLightOnoff}
-                            />
-                                Light On
-                            <br />
-                        </li>
-                        <li>
-                            <input type="radio" name="browser" onClick={() => this.props.setLightMode('status')} />
-                                Status
-                            <br />
-                            <input type="radio" name="browser" onClick={() => this.props.setLightMode('light')} />
-                                Light
-                            <br />
-                        </li>
-                    </ul>
-                </div>
+                <p>{i18n._('Light Bar')}</p>
+                <ul style={{ listStyle: 'none' }}>
+                    <li>
+                        <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get light status')}>
+                            {i18n._('Get Status')}
+                        </button>
+                    </li>
+                    <li>
+                        <NumberInput
+                            className={styles['input-setting']}
+                            value={this.state.brightness}
+                            onChange={this.actions.onchangeBrightness}
+                        />
+                        <input
+                            type="checkbox"
+                            checked={this.state.lightStatus}
+                            onChange={this.actions.switchLightBar}
+                        />
+                        {i18n._('Switch Light')}
+                        <br />
+                    </li>
+                    <li>
+                        <input type="radio" name="browser" onClick={() => this.props.setLightMode('status')} />
+                        {i18n._('Status')}
+                        <br />
+                        <input type="radio" name="browser" onClick={() => this.props.setLightMode('light')} />
+                        {i18n._('Light')}
+                        <br />
+                    </li>
+                </ul>
             </div>
         );
     }
 }
 
-export default Lamp;
+export default LightBar;

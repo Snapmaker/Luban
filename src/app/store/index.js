@@ -11,6 +11,7 @@ import ensureArray from '../lib/ensure-array';
 import settings from '../config/settings';
 import ImmutableStore from '../lib/immutable-store';
 import log from '../lib/log';
+import { PROTOCOL_TEXT } from '../constants';
 
 let userData = null;
 
@@ -102,7 +103,7 @@ export const defaultState = {
                 type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
             },
             port: '',
-            dataSource: 'workspace', // workspace | developerPanel
+            dataSource: PROTOCOL_TEXT,
             baudrate: 115200,
             autoReconnect: false
         },
@@ -179,7 +180,6 @@ export const defaultState = {
     },
     developerPanel: {
         widgets: [
-            // 'connection', 'axes', 'macro'
             'connectionPanel', 'axesPanel', 'macroPanel'
         ],
         defaultWidgets: []

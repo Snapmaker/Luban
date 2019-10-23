@@ -1,12 +1,13 @@
 import store from '../store';
 import {
+    PROTOCOL_TEXT,
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
 
 
 export const set = (req, res) => {
-    const { port, dataSource = 'workspace', name, gcode } = req.body;
+    const { port, dataSource = PROTOCOL_TEXT, name, gcode } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -49,7 +50,7 @@ export const set = (req, res) => {
 
 export const get = (req, res) => {
     // const port = req.query.port;
-    const { port, dataSource = 'workspace' } = req.query;
+    const { port, dataSource = PROTOCOL_TEXT } = req.query;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({

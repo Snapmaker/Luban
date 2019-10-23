@@ -7,6 +7,7 @@ import { mm2in } from '../../lib/units';
 import GCodeStates from './GCodeStats';
 import {
     // Units
+    PROTOCOL_TEXT,
     IMPERIAL_UNITS,
     METRIC_UNITS
 } from '../../constants';
@@ -48,37 +49,40 @@ class GCode extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port, dataSource } = options;
-            if (dataSource === 'workspace') {
-                this.setState({ port: port });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({ port: port });
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
-                const initialState = this.getInitialState();
-                this.setState({ ...initialState });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            const initialState = this.getInitialState();
+            this.setState({ ...initialState });
         },
         'sender:status': (data, dataSource) => {
-            const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
-
-            if (dataSource === 'workspace') {
-                this.setState({
-                    total,
-                    sent,
-                    received,
-                    startTime,
-                    finishTime,
-                    elapsedTime,
-                    remainingTime
-                });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
+            this.setState({
+                total,
+                sent,
+                received,
+                startTime,
+                finishTime,
+                elapsedTime,
+                remainingTime
+            });
         },
         'workflow:state': (workflowState, dataSource) => {
-            if (dataSource === 'workspace') {
-                if (this.state.workflowState !== workflowState) {
-                    this.setState({ workflowState });
-                }
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            if (this.state.workflowState !== workflowState) {
+                this.setState({ workflowState });
             }
         }
     };
@@ -87,7 +91,7 @@ class GCode extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('G-code'));
+        this.props.setTitle(i18n._('G-Code'));
     }
 
     getInitialState() {

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
+import { PROTOCOL_TEXT, ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
@@ -10,9 +10,12 @@ import api from '../../api';
 import { ModelInfo } from '../models/ModelInfoUtils';
 import Model from '../models/Model';
 import ModelGroup from '../models/ModelGroup';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
+
+const controller = new Client(PROTOCOL_TEXT);
 
 // return true if tran1 equals tran2 uploadModel
 const customCompareTransformation = (tran1, tran2) => {

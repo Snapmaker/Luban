@@ -4,7 +4,7 @@ import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
-class GcodeFile extends PureComponent {
+class Setting extends PureComponent {
     static propTypes = {
         machineSetting: PropTypes.object,
         getMachineSetting: PropTypes.func,
@@ -174,4 +174,4 @@ class GcodeFile extends PureComponent {
     }
 }
 
-export default GcodeFile;
+export default Setting;

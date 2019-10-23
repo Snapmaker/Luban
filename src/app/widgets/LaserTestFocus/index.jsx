@@ -11,6 +11,7 @@ import {
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
+import { PROTOCOL_TEXT } from '../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
@@ -23,22 +24,25 @@ class LaserTestFocusWidget extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
-                this.setState({ isConnected: true });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({ isConnected: true });
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
-                this.setState({ isConnected: false });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({ isConnected: false });
         },
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
-                const headType = state.headType;
-                const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-                this.setState({ isLaser });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            const headType = state.headType;
+            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
+            this.setState({ isLaser });
         }
     };
 

@@ -2,16 +2,20 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
+import { PROTOCOL_TEXT } from '../../constants';
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
     window.location.reload(forcedReload);
 };
+
+const controller = new Client(PROTOCOL_TEXT);
 
 class QuickAccessToolbar extends PureComponent {
     static propTypes = {
@@ -25,32 +29,25 @@ class QuickAccessToolbar extends PureComponent {
 
     command = {
         cyclestart: () => {
-            // controller.command('cyclestart');
-            controller.command('cyclestart', 'workspace');
+            controller.command('cyclestart');
         },
         feedhold: () => {
-            // controller.command('feedhold');
-            controller.command('feedhold', 'workspace');
+            controller.command('feedhold');
         },
         homing: () => {
-            // controller.command('homing');
-            controller.command('homing', 'workspace');
+            controller.command('homing');
         },
         sleep: () => {
-            // controller.command('sleep');
-            controller.command('sleep', 'workspace');
+            controller.command('sleep');
         },
         unlock: () => {
-            // controller.command('unlock');
-            controller.command('unlock', 'workspace');
+            controller.command('unlock');
         },
         reset: () => {
-            // controller.command('reset');
-            controller.command('reset', 'workspace');
+            controller.command('reset');
         },
         stop: () => {
-            // controller.command('reset');
-            controller.command('reset', 'workspace');
+            controller.command('reset');
             this.setState({ halted: true });
         }
     };

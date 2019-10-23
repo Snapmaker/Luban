@@ -5,6 +5,7 @@ import store from '../store';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
+import { PROTOCOL_TEXT } from '../constants';
 
 const log = logger('api:file');
 
@@ -29,7 +30,7 @@ export const set = (req, res) => {
 export const uploadGcodeFile = (req, res) => {
     const file = req.files.file;
     const port = req.body.port;
-    const dataSource = req.body.dataSource || 'workspace';
+    const dataSource = req.body.dataSource || PROTOCOL_TEXT;
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -64,7 +65,7 @@ export const uploadGcodeFile = (req, res) => {
 export const uploadUpdateFile = (req, res) => {
     const file = req.files.file;
     const port = req.body.port;
-    const dataSource = req.body.dataSource || 'workspace';
+    const dataSource = req.body.dataSource || PROTOCOL_TEXT;
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;

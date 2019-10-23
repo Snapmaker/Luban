@@ -4,7 +4,7 @@ import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
-class Cnccom extends PureComponent {
+class CNC extends PureComponent {
     static propTypes = {
         // machineSetting: PropTypes.object,
         // getMachineSetting: PropTypes.func,
@@ -62,4 +62,4 @@ class Cnccom extends PureComponent {
     }
 }
 
-export default Cnccom;
+export default CNC;

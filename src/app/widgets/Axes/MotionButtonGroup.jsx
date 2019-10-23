@@ -66,7 +66,6 @@ run into the fixtures before you use this feature.')}
                             type="button"
                             className="sm-btn btn-sm btn-default"
                             onClick={() => {
-                                // controller.command('gcode', 'workspace', 'G92 X0 Y0 Z0');
                                 props.executeGcode('G92 X0 Y0 Z0');
                             }}
                             disabled={!canClick}

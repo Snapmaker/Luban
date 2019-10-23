@@ -8,10 +8,14 @@ import api from '../../api';
 import Anchor from '../../components/Anchor';
 import settings from '../../config/settings';
 import combokeys from '../../lib/combokeys';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import styles from './styles.styl';
+import { PROTOCOL_TEXT } from '../../constants';
+
+const controller = new Client(PROTOCOL_TEXT);
 
 const Logo = memo(() => (
     <Anchor
@@ -103,8 +107,7 @@ class Header extends PureComponent {
     actionHandlers = {
         CONTROLLER_COMMAND: (event, { command }) => {
             // feedhold, cyclestart, homing, unlock, reset
-            // controller.command(command);
-            controller.command(command, 'workspace');
+            controller.command(command);
         }
     };
 

@@ -4,11 +4,14 @@ import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
-import controller from '../../../lib/controller';
+// import controller from '../../../lib/controller';
+import Client from '../../../lib/client';
 import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import PrintPreview from './PrintPreview';
+import { PROTOCOL_TEXT } from '../../../constants';
 
+const controller = new Client(PROTOCOL_TEXT);
 
 function generateSquareGcode(size, sideLength, power) {
     // M3: laser on
@@ -109,8 +112,7 @@ class PrintSquareTrace extends PureComponent {
             this.props.addGcode('Laser Coordinating G-code', gcodeStr);
 
             setTimeout(() => {
-                // controller.command('gcode:start');
-                controller.command('gcode:start', 'workspace');
+                controller.command('gcode:start');
             }, 1000);
         }
     };

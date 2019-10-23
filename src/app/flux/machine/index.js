@@ -1,5 +1,8 @@
 import isEmpty from 'lodash/isEmpty';
-import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE,
+import {
+    PROTOCOL_TEXT,
+    ABSENT_OBJECT,
+    WORKFLOW_STATE_IDLE,
     MACHINE_SERIES,
     MACHINE_PATTERN
 } from '../../constants';
@@ -26,8 +29,6 @@ const INITIAL_STATE = {
 
     // Serial port
     port: controller.port || '',
-    // Warning Don't initialize
-    // ports: controller.ports || [],
     ports: [],
     dataSource: '',
     dataSources: [],
@@ -236,11 +237,11 @@ export const actions = {
     // Enclosure
     getEnclosureState: () => () => {
         // controller.writeln('M1010', dataSource, { source: 'query' });
-        controller.writeln('M1010', 'workspace', { source: 'query' });
+        controller.writeln('M1010', PROTOCOL_TEXT, { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
         // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, 'workspace', { source: 'query' });
+        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, PROTOCOL_TEXT, { source: 'query' });
     },
 
     // Server

@@ -9,9 +9,11 @@ import colornames from 'colornames';
 
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import {
     MARLIN,
+    PROTOCOL_TEXT,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
@@ -31,6 +33,8 @@ import WorkflowControl from './WorkflowControl';
 import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
+
+const controller = new Client(PROTOCOL_TEXT);
 
 class Visualizer extends Component {
     static propTypes = {
@@ -105,37 +109,42 @@ class Visualizer extends Component {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port, dataSource } = options;
-            if (dataSource === 'workspace') {
-                this.stopToolheadRotationAnimation();
-                this.updateWorkPositionToZero();
-                this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-
-                this.setState({ port }, () => {
-                    this.loadGcode();
-                });
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+
+            this.setState({ port }, () => {
+                this.loadGcode();
+            });
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
-                // reset state related to port and controller
-                this.stopToolheadRotationAnimation();
-                this.updateWorkPositionToZero();
-                this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-
-                this.setState(() => ({
-                    port: controller.port,
-                    controller: {
-                        type: controller.type,
-                        state: controller.state
-                    },
-                    workflowState: controller.workflowState
-                }));
-
-                this.unloadGcode();
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            // reset state related to port and controller
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+
+            this.setState(() => ({
+                port: controller.port,
+                controller: {
+                    type: controller.type,
+                    state: controller.state
+                },
+                workflowState: controller.workflowState
+            }));
+
+            this.unloadGcode();
         },
-        'sender:status': (data) => {
+        'sender:status': (data, dataSource) => {
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const { name, size, total, sent, received } = data;
             this.setState({
                 gcode: {
@@ -150,41 +159,43 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
         'workflow:state': (workflowState, dataSource) => {
-            if (dataSource === 'workspace') {
-                if (this.state.workflowState !== workflowState) {
-                    this.setState({ workflowState });
-                    switch (workflowState) {
-                        case WORKFLOW_STATE_IDLE:
-                            this.stopToolheadRotationAnimation();
-                            this.updateWorkPositionToZero();
-                            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-                            break;
-                        case WORKFLOW_STATE_RUNNING:
-                            this.startToolheadRotationAnimation();
-                            break;
-                        case WORKFLOW_STATE_PAUSED:
-                            this.stopToolheadRotationAnimation();
-                            break;
-                        default:
-                            break;
-                    }
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            if (this.state.workflowState !== workflowState) {
+                this.setState({ workflowState });
+                switch (workflowState) {
+                    case WORKFLOW_STATE_IDLE:
+                        this.stopToolheadRotationAnimation();
+                        this.updateWorkPositionToZero();
+                        this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+                        break;
+                    case WORKFLOW_STATE_RUNNING:
+                        this.startToolheadRotationAnimation();
+                        break;
+                    case WORKFLOW_STATE_PAUSED:
+                        this.stopToolheadRotationAnimation();
+                        break;
+                    default:
+                        break;
                 }
             }
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
-                const { pos } = state;
-                this.setState({
-                    controller: {
-                        type: MARLIN,
-                        ...this.state.controller,
-                        ...state
-                    }
-                });
-                if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
-                    this.updateWorkPosition(pos);
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            const { pos } = state;
+            this.setState({
+                controller: {
+                    type: MARLIN,
+                    ...this.state.controller,
+                    ...state
                 }
+            });
+            if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
+                this.updateWorkPosition(pos);
             }
         }
     };
@@ -204,48 +215,39 @@ class Visualizer extends Component {
             const { workflowState } = this.state;
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
-                // controller.command('gcode:start');
-                controller.command('gcode:start', 'workspace');
+                controller.command('gcode:start');
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
                     const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
-                    // controller.command('gcode', cmd);
-                    // controller.command('gcode:resume');
-                    controller.command('gcode', 'workspace', cmd);
-                    controller.command('gcode:resume', 'workspace');
+                    controller.command('gcode', cmd);
+                    controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
                     if (this.pauseStatus.headStatus === 'on') {
                         // resume laser power
                         const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
                         const powerStrength = Math.floor(powerPercent * 255 / 100);
                         if (powerPercent !== 0) {
-                            // controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                            controller.command('gcode', 'workspace', `M3 P${powerPercent} S${powerStrength}`);
+                            controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
                         } else {
-                            // controller.command('gcode', 'M3');
-                            controller.command('gcode', 'workspace', 'M3 P100');
+                            controller.command('gcode', 'M3');
                         }
                     }
 
-                    // controller.command('gcode:resume');
-                    controller.command('gcode:resume', 'workspace');
+                    controller.command('gcode:resume');
                 } else {
                     if (this.pauseStatus.headStatus === 'on') {
                         // resume spindle
-                        // controller.command('gcode', 'M3');
-                        controller.command('gcode', 'workspace', 'M3 P100');
+                        controller.command('gcode', 'M3');
 
                         // for CNC machine, resume need to wait >500ms to let the tool head started
                         setTimeout(() => {
-                            // controller.command('gcode:resume');
-                            controller.command('gcode:resume', 'workspace');
+                            controller.command('gcode:resume');
                         }, 1000);
                     } else {
-                        // controller.command('gcode:resume');
-                        controller.command('gcode:resume', 'workspace');
+                        controller.command('gcode:resume');
                     }
                 }
             }
@@ -260,8 +262,7 @@ class Visualizer extends Component {
                     };
 
                     if (this.pauseStatus.headStatus === 'on') {
-                        // controller.command('gcode', 'M5');
-                        controller.command('gcode', 'workspace', 'M5');
+                        controller.command('gcode', 'M5');
                     }
 
                     // toolhead has stopped
@@ -276,19 +277,14 @@ class Visualizer extends Component {
                         };
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
-                        // const targetE = Math.max(pos.e - 5, 0);
-                        // const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        const targetE = Math.max(pos.e - 5, 0);
                         const targetZ = Math.min(pos.z + 30, this.props.size.z);
-                        /*
                         const cmd = [
                             `G1 F3000 E${targetE}\n`,
                             `G1 Z${targetZ} F3000\n`,
                             `G1 F100 E${pos.e}\n`
                         ];
                         controller.command('gcode', cmd);
-                        */
-                        // controller.command('gcode', `G1 Z${targetZ} F1000`);
-                        controller.command('gcode', 'workspace', `G1 Z${targetZ} F1000`);
                     }
                 } else {
                     this.actions.tryPause();
@@ -298,8 +294,7 @@ class Visualizer extends Component {
         handlePause: () => {
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
-                // controller.command('gcode:pause');
-                controller.command('gcode:pause', 'workspace');
+                controller.command('gcode:pause');
 
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = true;
@@ -312,8 +307,7 @@ class Visualizer extends Component {
         handleStop: () => {
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
-                // controller.command('gcode:stop');
-                controller.command('gcode:stop', 'workspace');
+                controller.command('gcode:stop');
             }
         },
         handleClose: () => {
@@ -323,8 +317,7 @@ class Visualizer extends Component {
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_IDLE].includes(workflowState)) {
                 // this.destroyPreviousGcodeObject();
-                // controller.command('gcode:unload');
-                controller.command('gcode:unload', 'workspace');
+                controller.command('gcode:unload');
                 pubsub.publish('gcode:unload'); // Unload the G-code
             }
         },
@@ -459,6 +452,7 @@ class Visualizer extends Component {
         const bbox = { min: box.min, max: box.max };
 
         // Set gcode bounding box
+        /*
         controller.context = {
             ...controller.context,
             xmin: bbox.min.x,
@@ -468,6 +462,17 @@ class Visualizer extends Component {
             zmin: bbox.min.z,
             zmax: bbox.max.z
         };
+        */
+        const context = {
+            ...controller.getContext(),
+            xmin: bbox.min.x,
+            xmax: bbox.max.x,
+            ymin: bbox.min.y,
+            ymax: bbox.max.y,
+            zmin: bbox.min.z,
+            zmax: bbox.max.z
+        };
+        controller.setContext(context);
 
         pubsub.publish('gcode:bbox', bbox);
 
@@ -514,8 +519,7 @@ class Visualizer extends Component {
                 });
             }),
             pubsub.subscribe('gcode:unload', () => {
-                // controller.command('gcode:unload');
-                controller.command('gcode:unload', 'workspace');
+                controller.command('gcode:unload');
                 this.props.clearGcode();
             })
         ];
@@ -722,7 +726,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
-    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, 'workspace', name, gcode)),
+    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode())
 });
 

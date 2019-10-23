@@ -15,13 +15,10 @@ import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as widgetActions } from '../../flux/widget';
-
 import {
     ABSENT_OBJECT,
-    // Units
     IMPERIAL_UNITS,
     METRIC_UNITS,
-    // Workflow
     WORKFLOW_STATE_IDLE
 } from '../../constants';
 import {
@@ -30,19 +27,6 @@ import {
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
-
-/*
-const toFixedUnits = (units, val) => {
-    val = Number(val) || 0;
-    if (units === IMPERIAL_UNITS) {
-        val = mm2in(val).toFixed(4);
-    }
-    if (units === METRIC_UNITS) {
-        val = val.toFixed(3);
-    }
-
-    return val;
-};*/
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -138,14 +122,19 @@ class Axes extends PureComponent {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
-                this.props.executeGcode(this.props.dataSource, gcode.join('\n'));
+                // this.props.executeGcode(this.props.dataSource, gcode.join('\n'));
+                this.props.executeGcode(gcode.join('\n'));
             }
         },
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                this.props.executeGcode(this.props.dataSource, `G0 ${s} F${this.state.jogSpeed}`);
+                // this.props.executeGcode(this.props.dataSource, `G0 ${s} F${this.state.jogSpeed}`);
+                this.actions.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
             }
+        },
+        executeGcode: (gcode) => {
+            this.props.executeGcode(this.props.dataSource, gcode);
         },
         toggleKeypadJogging: () => {
             this.setState(state => ({
@@ -195,7 +184,8 @@ class Axes extends PureComponent {
                 `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
             ];
 
-            this.props.executeGcode(gcode.join('\n'));
+            // this.props.executeGcode(gcode.join('\n'));
+            this.actions.executeGcode(gcode.join('\n'));
         }
     };
 
@@ -240,20 +230,22 @@ class Axes extends PureComponent {
     controllerEvents = {
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === this.props.dataSource) {
-                const initialState = this.getInitialState();
-                this.setState({ ...initialState });
+            if (dataSource !== this.props.dataSource) {
+                return;
             }
+            const initialState = this.getInitialState();
+            this.setState({ ...initialState });
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === this.props.dataSource) {
-                this.setState({
-                    controller: {
-                        state: state
-                    }
-                });
+            if (dataSource !== this.props.dataSource) {
+                return;
             }
+            this.setState({
+                controller: {
+                    state: state
+                }
+            });
         }
     };
 
@@ -332,10 +324,12 @@ class Axes extends PureComponent {
             });
         }
         const { dataSource, x, y, z } = nextProps.workPosition;
-        if (dataSource === this.props.dataSource
-            && x !== this.props.workPosition.x
-            && y !== this.props.workPosition.y
-            && z !== this.props.workPosition.z) {
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
+        if (x !== this.props.workPosition.x
+            || y !== this.props.workPosition.y
+            || z !== this.props.workPosition.z) {
             this.setState({
                 workPosition: {
                     ...this.state.workPosition,
@@ -484,7 +478,7 @@ class Axes extends PureComponent {
             <div>
                 <DisplayPanel
                     workPosition={workPosition}
-                    executeGcode={this.props.executeGcode}
+                    executeGcode={this.actions.executeGcode}
                     state={state}
                 />
 
@@ -510,7 +504,7 @@ class Axes extends PureComponent {
                         type="button"
                         className="btn btn-default"
                         disabled={!canClick}
-                        onClick={() => this.props.executeGcode('G28')}
+                        onClick={() => this.actions.executeGcode('G28')}
                     >
                         {i18n._('Home')}
                     </button>
@@ -527,7 +521,7 @@ class Axes extends PureComponent {
                         onChange={this.actions.onChangeJogSpeed}
                     />
                 </div>
-                <ControlPanel state={state} actions={actions} executeGcode={this.props.executeGcode} />
+                <ControlPanel state={state} actions={actions} executeGcode={this.actions.executeGcode} />
             </div>
         );
     }
@@ -560,7 +554,6 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        // executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
         executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode)),
         updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };

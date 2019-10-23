@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT } from '../../constants';
+import { PROTOCOL_TEXT, ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
@@ -28,10 +28,17 @@ class Console extends PureComponent {
     pubsubTokens = [];
 
     controllerEvents = {
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.actions.clearAll();
         },
-        'serialport:write': (data, context) => {
+        'serialport:write': (data, context, dataSource) => {
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             if (context && (context.__sender__ === this.props.widgetId)) {
                 // Do not write to the terminal console if the sender is the widget itself
                 return;
@@ -42,7 +49,10 @@ class Console extends PureComponent {
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         },
-        'serialport:read': (data) => {
+        'serialport:read': (data, dataSource) => {
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         }
@@ -269,7 +279,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
     };
 };
 

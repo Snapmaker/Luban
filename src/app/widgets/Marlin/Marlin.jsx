@@ -2,21 +2,25 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
 import { connect } from 'react-redux';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import i18n from '../../lib/i18n';
 
 import Printing from './Printing';
 import Laser from './Laser';
 import CNC from './CNC';
 import {
+    PROTOCOL_TEXT,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX,
     HEAD_3DP,
     HEAD_LASER,
     HEAD_CNC,
     HEAD_UNKNOWN
-} from './constants';
+} from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
+
+const controller = new Client(PROTOCOL_TEXT);
 
 const normalizeToRange = (n, min, max) => {
     if (n < min) {
@@ -113,7 +117,7 @@ class MarlinWidget extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port, dataSource } = options;
-            if (dataSource === 'workspace') {
+            if (dataSource === PROTOCOL_TEXT) {
                 this.setState({
                     ...this.getInitialState(),
                     isConnected: true,
@@ -123,12 +127,12 @@ class MarlinWidget extends PureComponent {
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
+            if (dataSource === PROTOCOL_TEXT) {
                 this.setState({ ...this.getInitialState() });
             }
         },
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
+            if (dataSource === PROTOCOL_TEXT) {
                 this.setState({
                     controller: {
                         ...this.state.controller,
@@ -138,7 +142,7 @@ class MarlinWidget extends PureComponent {
             }
         },
         'Marlin:settings': (settings, dataSource) => {
-            if (dataSource === 'workspace') {
+            if (dataSource === PROTOCOL_TEXT) {
                 this.setState({
                     controller: {
                         ...this.state.controller,
@@ -168,12 +172,12 @@ class MarlinWidget extends PureComponent {
             overridesSectionExpanded: this.props.overridesSectionExpanded,
 
             // data
-            port: controller.port,
+            port: controller.getPort(),
             nozzleTemperature: 30,
             bedTemperature: 30,
             controller: {
-                state: controller.state,
-                settings: controller.settings
+                state: controller.getState(),
+                settings: controller.getSettings()
             }
         };
     }

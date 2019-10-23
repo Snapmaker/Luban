@@ -63,16 +63,18 @@ class Connection extends PureComponent {
 
     onPortOpened(options) {
         const { dataSource } = options;
-        if (dataSource === this.props.dataSource) {
-            this.setState({ connected: true });
+        if (dataSource !== this.props.dataSource) {
+            return;
         }
+        this.setState({ connected: true });
     }
 
     onPortClosed(options) {
         const { dataSource } = options;
-        if (dataSource === this.props.dataSource) {
-            this.setState({ connected: false });
+        if (dataSource !== this.props.dataSource) {
+            return;
         }
+        this.setState({ connected: false });
     }
 
     addControllerEvents() {

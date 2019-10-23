@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -11,7 +12,9 @@ import { NumberInput as Input } from '../../components/Input';
 import Overrides from './Overrides';
 import MachineModal from './MachineModal';
 import styles from './index.styl';
-import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
+import { PROTOCOL_TEXT, TEMPERATURE_MIN, TEMPERATURE_MAX } from '../../constants';
+
+const controller = new Client(PROTOCOL_TEXT);
 
 class Printing extends PureComponent {
     static propTypes = {
@@ -23,23 +26,19 @@ class Printing extends PureComponent {
     actions = {
         onApplyHeadTemperature: () => {
             const { state } = this.props;
-            // controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
-            controller.command('gcode', 'workspace', `M104 S${state.nozzleTargetTemperature}`);
+            controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
         },
         onCancelHeadTemperature: () => {
             this.props.actions.changeNozzleTargetTemperature(0);
-            // controller.command('gcode', 'M104 S0');
-            controller.command('gcode', 'workspace', 'M104 S0');
+            controller.command('gcode', 'M104 S0');
         },
         onApplybedTargetTemperature: () => {
             const { state } = this.props;
-            // controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
-            controller.command('gcode', 'workspace', `M140 S${state.bedTargetTemperature}`);
+            controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
         },
         onCancelbedTargetTemperature: () => {
             this.props.actions.changeBedTargetTemperature(0);
-            // controller.command('gcode', 'M140 S0');
-            controller.command('gcode', 'workspace', 'M140 S0');
+            controller.command('gcode', 'M140 S0');
         }
     };
 

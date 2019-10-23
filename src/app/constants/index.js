@@ -59,6 +59,16 @@ export const EXPERIMENTAL_IMAGE_TRACING = false;
 export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;
 
+export const PROTOCOL_TEXT = 'text';
+export const PROTOCOL_SCREEN = 'screen';
+
+export const MAX_LINE_POINTS = 300;
+export const TEMPERATURE_MIN = 0;
+export const TEMPERATURE_MAX = 300;
+export const HEAD_3DP = '3dp';
+export const HEAD_LASER = 'laser';
+export const HEAD_CNC = 'cnc';
+export const HEAD_UNKNOWN = 'unknown';
 
 export const MACHINE_SERIES = {
     ORIGINAL: {

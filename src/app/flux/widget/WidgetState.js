@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { MACHINE_SERIES } from '../../constants';
+import { PROTOCOL_TEXT, PROTOCOL_SCREEN, MACHINE_SERIES } from '../../constants';
 
 const defaultState = {
     machine: {
@@ -62,7 +62,7 @@ const defaultState = {
                 hertz: 10,
                 overshoot: 1
             },
-            dataSource: 'workspace'
+            dataSource: PROTOCOL_TEXT
         },
         axesPanel: {
             minimized: false,
@@ -78,7 +78,7 @@ const defaultState = {
                 hertz: 10,
                 overshoot: 1
             },
-            dataSource: 'developerPanel'
+            dataSource: PROTOCOL_SCREEN
         },
         connection: {
             minimized: false,
@@ -88,7 +88,7 @@ const defaultState = {
             port: '',
             baudrate: 115200,
             autoReconnect: false,
-            dataSource: 'workspace'
+            dataSource: PROTOCOL_TEXT
         },
         connectionPanel: {
             minimized: false,
@@ -98,7 +98,7 @@ const defaultState = {
             port: '',
             baudrate: 115200,
             autoReconnect: false,
-            dataSource: 'developerPanel'
+            dataSource: PROTOCOL_SCREEN
         },
         gcode: {
             minimized: false,
@@ -106,11 +106,11 @@ const defaultState = {
         },
         macro: {
             minimized: false,
-            dataSource: 'workspace'
+            dataSource: PROTOCOL_TEXT
         },
         macroPanel: {
             minimized: false,
-            dataSource: 'developerPanel'
+            dataSource: PROTOCOL_SCREEN
         },
         marlin: {
             minimized: false,

@@ -27,6 +27,7 @@ import Marlin from './Marlin';
 import PacketManager from '../PacketManager';
 import {
     MARLIN,
+    PROTOCOL_TEXT,
     QUERY_TYPE_POSITION,
     QUERY_TYPE_TEMPERATURE,
     WRITE_SOURCE_CLIENT,
@@ -490,7 +491,7 @@ class MarlinController {
         // Marlin
         this.controller = new Marlin();
 
-        if (dataSource === 'workspace') {
+        if (dataSource === PROTOCOL_TEXT) {
             this.controller.state.isScreenProtocol = false;
         } else {
             this.controller.state.isScreenProtocol = true;
@@ -849,7 +850,6 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
-                // if (dataSource === 'developerPanel') {
                 if (this.controller.state.isScreenProtocol) {
                     switch (data) {
                         /*

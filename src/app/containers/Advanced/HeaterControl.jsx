@@ -6,7 +6,7 @@ import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './index.styl';
-import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
+import { TEMPERATURE_MIN, TEMPERATURE_MAX } from '../../constants';
 
 class HeaterControl extends PureComponent {
     static propTypes = {

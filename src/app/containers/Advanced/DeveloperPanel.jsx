@@ -9,7 +9,8 @@ import { actions as machineActions } from '../../flux/machine';
 import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Setting from './Setting';
@@ -23,14 +24,17 @@ import History from './History';
 import store from '../../store';
 import styles from './index.styl';
 import {
+    PROTOCOL_SCREEN,
     MAX_LINE_POINTS,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX
-} from './constants';
+} from '../../constants';
 
 const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
+
+const controller = new Client(PROTOCOL_SCREEN);
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
@@ -98,21 +102,23 @@ class DeveloperPanel extends PureComponent {
             this.setState({ calibrationMargin });
         },
         switchHexMode: () => {
-            controller.command('switch hex mode', 'developerPanel');
+            controller.command('switch hex mode');
         },
+        /*
         switchOn: () => {
             // outdated
             this.props.executeGcode('M1024');
         },
         switchOff: () => {
             // outdated
-            controller.command('switch off', 'developerPanel');
+            controller.command('switch off');
         },
+        */
         forceSwitch: () => {
-            controller.command('force switch', 'developerPanel');
+            controller.command('force switch');
         },
         clearFeeder: () => {
-            controller.command('clear feeder', 'developerPanel');
+            controller.command('clear feeder');
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
@@ -263,79 +269,83 @@ class DeveloperPanel extends PureComponent {
 
     controllerEvents = {
         'Marlin:state': (state, dataSource) => {
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
             const controllerState = this.state.controller.state;
             const { hexModeEnabled, headPower } = state;
-            if (dataSource === 'developerPanel') {
-                if (controllerState && controllerState.temperature) {
-                    this.actions.updateLines(Number(state.temperature.t), Number(state.temperature.b));
+            if (controllerState && controllerState.temperature) {
+                this.actions.updateLines(Number(state.temperature.t), Number(state.temperature.b));
+            }
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    state
                 }
+            });
+            if (hexModeEnabled !== this.state.hexModeEnabled) {
+                this.setState({ hexModeEnabled });
+            }
+            if (headPower !== this.state.laserState.laserPercent) {
                 this.setState({
-                    controller: {
-                        ...this.state.controller,
-                        state
+                    laserState: {
+                        ...this.state.laserState,
+                        laserPercent: headPower
                     }
                 });
-                if (hexModeEnabled !== this.state.hexModeEnabled) {
-                    this.setState({ hexModeEnabled });
-                }
-                if (headPower !== this.state.laserState.laserPercent) {
-                    this.setState({
-                        laserState: {
-                            ...this.state.laserState,
-                            laserPercent: headPower
-                        }
-                    });
-                }
             }
         },
         'machine:settings': (state, dataSource) => {
-            if (dataSource === 'developerPanel') {
-                if (!isEmpty(state)) {
-                    Object.keys(state).forEach(setting => {
-                        if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
-                            if (state[setting] === null) {
-                                state[setting] = 0;
-                            }
-                        } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
-                            if (state[setting] === null || state[setting] > 1) {
-                                state[setting] = 1;
-                            } else {
-                                state[setting] = -1;
-                            }
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
+            if (!isEmpty(state)) {
+                Object.keys(state).forEach(setting => {
+                    if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
+                        if (state[setting] === null) {
+                            state[setting] = 0;
                         }
-                    });
-                    this.actions.changeMachineSetting(state);
-                }
+                    } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
+                        if (state[setting] === null || state[setting] > 1) {
+                            state[setting] = 1;
+                        } else {
+                            state[setting] = -1;
+                        }
+                    }
+                });
+                this.actions.changeMachineSetting(state);
             }
         },
         'serialport:read': (data, dataSource) => {
-            if (dataSource === 'developerPanel') {
-                const targetString = this.state.targetString || '';
-                if (data.match(targetString)) {
-                    this.textarea.value += `${data}\n`;
-                }
-                const { length } = this.textarea.value;
-                if (length > 16384) {
-                    this.textarea.value = '';
-                }
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
+            const targetString = this.state.targetString || '';
+            if (data.match(targetString)) {
+                this.textarea.value += `${data}\n`;
+            }
+            const { length } = this.textarea.value;
+            if (length > 16384) {
+                this.textarea.value = '';
             }
         },
         'transfer:hex': (data, dataSource) => {
-            if (dataSource === 'developerPanel') {
-                const dataArray = Buffer.from(data, '');
-                const hexArray = [];
-                for (let i = 0; i < dataArray.length; i++) {
-                    const hexString = dataArray[i].toString(16);
-                    if (dataArray[i] < 16) {
-                        hexArray.push(`0${hexString}`);
-                    } else {
-                        hexArray.push(`${hexString}`);
-                    }
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
+            const dataArray = Buffer.from(data, '');
+            const hexArray = [];
+            for (let i = 0; i < dataArray.length; i++) {
+                const hexString = dataArray[i].toString(16);
+                if (dataArray[i] < 16) {
+                    hexArray.push(`0${hexString}`);
+                } else {
+                    hexArray.push(`${hexString}`);
                 }
-                const bufferString = hexArray.join(' ');
-                if (!isEmpty(bufferString)) {
-                    this.textarea.value += `${bufferString}\n`;
-                }
+            }
+            const bufferString = hexArray.join(' ');
+            if (!isEmpty(bufferString)) {
+                this.textarea.value += `${bufferString}\n`;
             }
         }
     };
@@ -663,7 +673,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode('developerPanel', gcode, context))
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(PROTOCOL_SCREEN, gcode, context))
     };
 };
 

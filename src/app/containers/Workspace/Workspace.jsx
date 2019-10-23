@@ -19,6 +19,7 @@ import SecondaryWidgets from './SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
 import {
+    PROTOCOL_TEXT,
     DATA_PREFIX,
     WORKFLOW_STATE_IDLE,
     LASER_GCODE_SUFFIX,
@@ -379,7 +380,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
-    updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
+    updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer(PROTOCOL_TEXT, container, value))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));

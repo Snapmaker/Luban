@@ -7,7 +7,6 @@ import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
 
-
 // Widget container on the left of workspace.
 class PrimaryWidgets extends PureComponent {
     static propTypes = {
@@ -20,14 +19,14 @@ class PrimaryWidgets extends PureComponent {
         primaryWidgets: store.get('developerPanel.widgets')
     };
 
-    componentDidUpdate() {
-        // const { primaryWidgets } = this.state;
-        // Calling store.set() will merge two different arrays into one.
-        // Remove the property first to avoid duplication.
-        // store.replace('developerPanel.widgets', primaryWidgets);
-    }
+    actions = {
+        changeWidgetOrder: (primaryWidgets) => {
+            this.setState({ primaryWidgets });
+        }
+    };
 
     render() {
+        const { changeWidgetOrder } = this.actions;
         const { className = '', defaultWidgets } = this.props;
         const widgets = this.state.primaryWidgets
             .map(widgetId => (
@@ -63,11 +62,7 @@ class PrimaryWidgets extends PureComponent {
                     ghostClass: 'sortable-ghost', // Class name for the drop placeholder
                     dataIdAttr: 'data-widget-id'
                 }}
-                onChange={(order) => {
-                    this.setState({
-                        primaryWidgets: order
-                    });
-                }}
+                onChange={changeWidgetOrder}
             >
                 {widgets}
             </Sortable>

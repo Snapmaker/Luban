@@ -3,11 +3,15 @@ import Select from 'react-select';
 import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import TextArea from 'react-textarea-autosize';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 import modal from '../../lib/modal';
+import { PROTOCOL_SCREEN } from '../../constants';
+
+const controller = new Client(PROTOCOL_SCREEN);
 
 class Firmware extends PureComponent {
     static propTypes = {
@@ -36,7 +40,7 @@ class Firmware extends PureComponent {
             const { port } = this.props;
             formData.append('file', file);
             formData.append('port', port);
-            formData.append('dataSource', 'developerPanel');
+            formData.append('dataSource', PROTOCOL_SCREEN);
             const res = await api.uploadUpdateFile(formData);
             const { originalName } = res.body;
             this.setState({
@@ -95,59 +99,48 @@ class Firmware extends PureComponent {
 
     controllerEvents = {
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'developerPanel') {
-                const { moduleID, moduleVersion, updateProgress, updateCount, firmwareVersion } = state;
-                if (updateProgress !== this.state.updateProgress) {
-                    this.setState({
-                        updateProgress
-                    });
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
+            const { moduleID, moduleVersion, updateProgress, updateCount, firmwareVersion } = state;
+            if (updateProgress !== this.state.updateProgress) {
+                this.setState({
+                    updateProgress
+                });
+            }
+            if (updateCount !== this.state.updateCount) {
+                this.setState({
+                    updateCount
+                });
+            }
+            if (firmwareVersion !== this.state.firmwareVersion) {
+                this.setState({
+                    firmwareVersion
+                });
+            }
+            if (moduleID && (this.state.moduleIDs.indexOf(moduleID) === -1)) {
+                const moduleIDs = [...this.state.moduleIDs];
+                moduleIDs.push(moduleID);
+                this.setState({ moduleIDs: moduleIDs });
+                this.moduleTextarea.value += `${moduleID}: ${moduleVersion}\n`;
+            }
+            if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
+                modal({
+                    title: i18n._('Update Finished'),
+                    body: (
+                        <div>
+                            {i18n._('The firmware is updated successfully. The calibration data will be reset. For the module update, it may take about one minute to restart the machine. Please wait until the machine is restarted. ')}
+                        </div>
+                    )
+                });
+                if (typeof this.props.executeGcode === 'function') {
+                    setTimeout(() => {
+                        controller.command('force switch');
+                    }, 8000);
                 }
-                if (updateCount !== this.state.updateCount) {
-                    this.setState({
-                        updateCount
-                    });
-                }
-                if (firmwareVersion !== this.state.firmwareVersion) {
-                    this.setState({
-                        firmwareVersion
-                    });
-                }
-                if (moduleID && (this.state.moduleIDs.indexOf(moduleID) === -1)) {
-                    const moduleIDs = [...this.state.moduleIDs];
-                    moduleIDs.push(moduleID);
-                    this.setState({ moduleIDs: moduleIDs });
-                    this.moduleTextarea.value += `${moduleID}: ${moduleVersion}\n`;
-                }
-                if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
-                    modal({
-                        title: i18n._('Update Finished'),
-                        body: (
-                            <div>
-                                {i18n._('The firmware is updated successfully. The calibration data will be reset. For the module update, it may take about one minute to restart the machine. Please wait until the machine is restarted. ')}
-                            </div>
-                        )
-                        /*
-                footer: (
-                    <div style={{ display: 'inline-block', marginRight: '8px' }}>
-                        <input
-                            type="checkbox"
-                            defaultChecked={false}
-                            onChange={this.actions.onChangeShouldShowWarningTag}
-                        />
-                        <span style={{ paddingLeft: '4px' }}>{i18n._('not show next time')}</span>
-                    </div>
-                )
-                */
-                    });
-                    if (typeof this.props.executeGcode === 'function') {
-                        setTimeout(() => {
-                            controller.command('force switch', 'developerPanel');
-                        }, 8000);
-                    }
-                    this.setState({
-                        shouldShowUpdateWarning: false
-                    });
-                }
+                this.setState({
+                    shouldShowUpdateWarning: false
+                });
             }
         }
     };

@@ -3,10 +3,14 @@ import React from 'react';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 // import DigitalReadout from './DigitalReadout';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
+import { PROTOCOL_TEXT } from '../../constants';
+
+const controller = new Client(PROTOCOL_TEXT);
 
 const Overrides = (props) => {
     const { speedFactor = 0, extruderFactor = 0, state, actions } = props;
@@ -43,15 +47,13 @@ const Overrides = (props) => {
                                 className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                 aria-hidden="true"
                                 onClick={() => {
-                                    // controller.command('speedFactor', state.speedFactor);
-                                    controller.command('factor:speed', 'workspace', state.speedFactor);
+                                    controller.command('factor:speed', state.speedFactor);
                                 }}
                             />
                             <Anchor
                                 className="fa fa-undo fa-fw"
                                 onClick={() => {
-                                    // controller.command('speejFactor', 100);
-                                    controller.command('factor:speed', 'workspace', 100);
+                                    controller.command('factor:speed', 100);
                                 }}
                             />
                         </td>
@@ -84,15 +86,13 @@ const Overrides = (props) => {
                                 className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                 aria-hidden="true"
                                 onClick={() => {
-                                    // controller.command('factor:extruder', state.extruderFactor);
-                                    controller.command('factor:extruder', 'workspace', state.extruderFactor);
+                                    controller.command('factor:extruder', state.extruderFactor);
                                 }}
                             />
                             <Anchor
                                 className="fa fa-undo fa-fw"
                                 onClick={() => {
-                                    // controller.command('factor:extruder', 100);
-                                    controller.command('factor:extruder', 'workspace', 100);
+                                    controller.command('factor:extruder', 100);
                                 }}
                             />
                         </td>

@@ -8,17 +8,21 @@ import pubsub from 'pubsub-js';
 import { connect } from 'react-redux';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import Client from '../../lib/client';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
 import { actions as machineActions } from '../../flux/machine';
+import { PROTOCOL_TEXT } from '../../constants';
 
 
 const STATUS_IDLE = 'idle';
 const STATUS_CONNECTING = 'connecting';
 const STATUS_CONNECTED = 'connected';
 
+
+const controller = new Client(PROTOCOL_TEXT);
 
 class SerialConnection extends PureComponent {
     static propTypes = {
@@ -122,64 +126,34 @@ class SerialConnection extends PureComponent {
 
         if (includes(map(ports, 'port'), port)) {
             this.setState({
-                ports: ports,
-                port: port
+                ports,
+                port
             });
         } else {
             this.setState({
-                ports: ports
+                ports
             });
         }
     }
 
     onPortOpened(options) {
         const { port, dataSource, err } = options;
-        if (dataSource === 'workspace') {
-            // if (err) {
-            if (err && err !== 'inuse') {
-                this.setState({
-                    err: 'Can not open this port',
-                    status: STATUS_IDLE
-                });
-                log.error(`Error opening serial port '${port}'`, err);
-
-                return;
-            }
-
+        if (dataSource !== PROTOCOL_TEXT) {
+            return;
+        }
+        if (err && err !== 'inuse') {
             this.setState({
-                port,
-                err: null,
-                status: STATUS_CONNECTED
+                err: 'Can not open this port',
+                status: STATUS_IDLE
             });
+            log.error(`Error opening serial port '${port}'`, err);
 
-            log.debug(`Connected to ${port}.`);
-
-            // re-upload G-code
-            let name = '';
-            let gcode = '';
-            api.controllers.get()
-                .then((res) => {
-                    let next;
-                    const c = find(res.body, { port: port });
-                    if (c) {
-                        next = api.fetchGCode({ port: port });
-                    }
-                    return next;
-                })
-                .then((res) => {
-                    name = get(res, 'body.name', '');
-                    gcode = get(res, 'body.data', '');
-                    if (gcode) {
-                        pubsub.publish('gcode:render', { name, gcode });
-                    }
-                })
-                .catch(() => {
-                    // Empty block
-                });
+            return;
         }
 
         this.setState({
-            port: port,
+            port,
+            err: null,
             status: STATUS_CONNECTED
         });
 
@@ -191,9 +165,9 @@ class SerialConnection extends PureComponent {
         api.controllers.get()
             .then((res) => {
                 let next;
-                const c = find(res.body, { port: port });
+                const c = find(res.body, { port });
                 if (c) {
-                    next = api.fetchGCode({ port: port });
+                    next = api.fetchGCode({ port });
                 }
                 return next;
             })
@@ -214,24 +188,25 @@ class SerialConnection extends PureComponent {
 
     onPortClosed(options) {
         const { port, dataSource, err } = options;
-        if (dataSource === 'workspace') {
-            if (err) {
-                this.setState({
-                    err: 'Can not close this port'
-                });
-                log.error(err);
-                return;
-            }
-
-            log.debug(`Disconnected from '${port}'.`);
-
-            this.setState({
-                err: null,
-                status: STATUS_IDLE
-            });
-            // Refresh ports
-            this.listPorts();
+        if (dataSource !== PROTOCOL_TEXT) {
+            return;
         }
+        if (err) {
+            this.setState({
+                err: 'Can not close this port'
+            });
+            log.error(err);
+            return;
+        }
+
+        log.debug(`Disconnected from '${port}'.`);
+
+        this.setState({
+            err: null,
+            status: STATUS_IDLE
+        });
+        // Refresh ports
+        this.listPorts();
         this.props.updateMachineConnectionState(false);
     }
 
@@ -252,11 +227,11 @@ class SerialConnection extends PureComponent {
             status: STATUS_CONNECTING
         });
 
-        controller.openPort(port, 'workspace');
+        controller.openPort(port);
     }
 
     closePort(port) {
-        controller.closePort(port, 'workspace');
+        controller.closePort(port);
     }
 
     renderPortOption = (option) => {
