@@ -23,7 +23,7 @@ if (isElectron()) {
     };
 }
 
-// Also see "containers/Workspace/WidgetManager/index.jsx"
+// Also see "widget/Workspace/WidgetManager/index.jsx"
 export const defaultState = {
     session: {
         name: '',
@@ -38,22 +38,45 @@ export const defaultState = {
             z: 125
         }
     },
-    workspace: {
-        container: {
-            default: {
-                widgets: ['visualizer']
-            },
-            primary: {
-                show: true,
-                widgets: [
-                    'connection', 'console', 'marlin', 'laser-test-focus'
-                ]
-            },
-            secondary: {
-                show: true,
-                widgets: [
-                    'webcam', 'axes', 'macro', 'gcode'
-                ]
+    tab: {
+        workspace: {
+            container: {
+                default: {
+                    widgets: ['visualizer']
+                },
+                primary: {
+                    show: true,
+                    widgets: [
+                        'connection', 'console', 'marlin', 'laser-test-focus'
+                    ]
+                },
+                secondary: {
+                    show: true,
+                    widgets: [
+                        'webcam', 'axes', 'macro', 'gcode'
+                    ]
+                }
+            }
+        },
+        '3dp': {
+            container: {
+                default: {
+                    widgets: ['3dp-material', '3dp-configurations', '3dp-output']
+                }
+            }
+        },
+        laser: {
+            container: {
+                default: {
+                    widgets: ['laser-set-background', 'laser-params', 'laser-output']
+                }
+            }
+        },
+        cnc: {
+            container: {
+                default: {
+                    widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
+                }
             }
         }
     },
@@ -166,23 +189,23 @@ export const defaultState = {
 // TODO: refactor 'cncState'
 const normalizeState = (state, cncState) => {
     // Keep default widgets unchanged
-    const defaultList = get(defaultState, 'workspace.container.default.widgets');
-    set(state, 'workspace.container.default.widgets', defaultList);
+    const defaultList = get(defaultState, 'tab.workspace.container.default.widgets');
+    set(state, 'tab.workspace.container.default.widgets', defaultList);
 
     // Update primary widgets
-    let primaryList = get(cncState, 'workspace.container.primary.widgets');
+    let primaryList = get(cncState, 'tab.workspace.container.primary.widgets');
     if (primaryList) {
-        set(state, 'workspace.container.primary.widgets', primaryList);
+        set(state, 'tab.workspace.container.primary.widgets', primaryList);
     } else {
-        primaryList = get(state, 'workspace.container.primary.widgets');
+        primaryList = get(state, 'tab.workspace.container.primary.widgets');
     }
 
     // Update secondary widgets
-    let secondaryList = get(cncState, 'workspace.container.secondary.widgets');
+    let secondaryList = get(cncState, 'tab.workspace.container.secondary.widgets');
     if (secondaryList) {
-        set(state, 'workspace.container.secondary.widgets', secondaryList);
+        set(state, 'tab.workspace.container.secondary.widgets', secondaryList);
     } else {
-        secondaryList = get(state, 'workspace.container.secondary.widgets');
+        secondaryList = get(state, 'tab.workspace.container.secondary.widgets');
     }
 
     primaryList = uniq(ensureArray(primaryList)); // keep the order of primaryList
@@ -192,8 +215,8 @@ const normalizeState = (state, cncState) => {
     secondaryList = difference(secondaryList, primaryList); // exclude primaryList
     secondaryList = difference(secondaryList, defaultList); // exclude defaultList
 
-    set(state, 'workspace.container.primary.widgets', primaryList);
-    set(state, 'workspace.container.secondary.widgets', secondaryList);
+    set(state, 'tab.workspace.container.primary.widgets', primaryList);
+    set(state, 'tab.workspace.container.secondary.widgets', secondaryList);
 
     return state;
 };
@@ -218,7 +241,7 @@ const getUserConfig = () => {
 
         if (typeof data === 'object') {
             cnc.version = data.version || cnc.version; // fallback to current version
-            cnc.state = data.state || cnc.state;
+            cnc.state = merge(data.state) || cnc.state;
         }
     } catch (e) {
         log.error(e);
@@ -274,18 +297,18 @@ const migrateStore = () => {
     // 2.4.2
     // add widget "laser-test-focus"
     if (semver.lt(cnc.version, '2.4.2')) {
-        const primaryWidgets = store.get('workspace.container.primary.widgets');
+        const primaryWidgets = store.get('tab.workspace.container.primary.widgets');
 
         if (!includes(primaryWidgets, 'laser-test-focus')) {
             primaryWidgets.push('laser-test-focus');
-            store.set('workspace.container.primary.widgets', primaryWidgets);
+            store.set('tab.workspace.container.primary.widgets', primaryWidgets);
         }
     }
 
     // 2.4.4
     // remove widget 'macro' (maybe add back later)
     if (semver.lt(cnc.version, '2.4.4')) {
-        const widgets = store.get('workspace.container.secondary.widgets');
+        const widgets = store.get('tab.workspace.container.secondary.widgets');
 
         let needUpdate = false;
 
@@ -299,7 +322,7 @@ const migrateStore = () => {
             widgets.splice(widgets.indexOf('probe'), 1);
         }
 
-        needUpdate && store.set('workspace.container.secondary.widgets', widgets);
+        needUpdate && store.set('tab.workspace.container.secondary.widgets', widgets);
     }
 
     // 2.5.3
@@ -318,7 +341,7 @@ const migrateStore = () => {
         /*
         if (includes(secondaryWidgets, 'macro')) {
             secondaryWidgets.splice(secondaryWidgets.indexOf('macro'), 1);
-            store.set('workspace.container.secondary.widgets', secondaryWidgets);
+            store.set('tab.workspace.container.secondary.widgets', secondaryWidgets);
         }
         */
         if (!includes(secondaryWidgets, 'macro')) {

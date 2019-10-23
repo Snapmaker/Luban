@@ -1,9 +1,14 @@
 import isEmpty from 'lodash/isEmpty';
-import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE } from '../../constants';
+import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE,
+    MACHINE_SERIES,
+    MACHINE_PATTERN
+} from '../../constants';
 import controller from '../../lib/controller';
-import store from '../../store';
+import { machineStore } from '../../store/local-storage';
 import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
+import { actions as widgetActions } from '../widget';
+
 
 const STATUS_UNKNOWN = 'UNKNOWN';
 // const STATUS_IDLE = 'IDLE';
@@ -11,7 +16,6 @@ const STATUS_UNKNOWN = 'UNKNOWN';
 // const STATUS_PAUSED = 'PAUSED';
 
 let statusTimer = null;
-
 
 const INITIAL_STATE = {
     // Servers
@@ -39,13 +43,25 @@ const INITIAL_STATE = {
     },
 
     // current connected device
-    series: 'original',
+    series: MACHINE_SERIES.ORIGINAL.value,
     size: {
         x: 125,
         y: 125,
         z: 125
     },
-    enclosure: false
+    enclosure: false,
+
+    // machine pattern
+    pattern: MACHINE_PATTERN['3DP'].value,
+
+    workMachineState: {
+        isUpdate: false,
+        series: 'unknown',
+        pattern: 'unknown'
+    },
+    // machine connect state
+    isConnected: false,
+    connectionMode: ''
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -62,11 +78,13 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
-        const initialMachineState = store.get('machine');
+        const initialMachineState = machineStore.get('machine') || INITIAL_STATE;
+        const machinePort = machineStore.get('port') || '';
 
         dispatch(actions.updateState({
-            series: initialMachineState.series,
-            size: initialMachineState.size
+            series: initialMachineState.series || INITIAL_STATE.series,
+            size: initialMachineState.size || INITIAL_STATE.size,
+            port: machinePort
         }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
@@ -171,17 +189,30 @@ export const actions = {
         });
     },
 
+    updateMachinePattern: (pattern) => (dispatch) => {
+        dispatch(actions.updateState({ pattern }));
+    },
+
     updateMachineSeries: (series) => (dispatch) => {
-        store.set('machine.series', series);
+        machineStore.set('machine.series', series);
 
         dispatch(actions.updateState({ series }));
+        dispatch(widgetActions.updateMachineSeries(series));
+    },
+
+    updateMachineConnectionState: (state) => (dispatch) => {
+        dispatch(actions.updateState({ isConnected: state }));
+    },
+    updatePort: (port) => (dispatch) => {
+        dispatch(actions.updateState({ port: port }));
+        machineStore.set('port', port);
     },
     updateMachineSize: (size) => (dispatch) => {
         size.x = Math.min(size.x, 1000);
         size.y = Math.min(size.y, 1000);
         size.z = Math.min(size.z, 1000);
 
-        store.set('machine.size', size);
+        machineStore.set('machine.size', size);
 
         dispatch(actions.updateState({ size }));
 
@@ -274,6 +305,7 @@ export const actions = {
             statusTimer = null;
         }
     }
+
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

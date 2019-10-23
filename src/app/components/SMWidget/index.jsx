@@ -4,13 +4,16 @@
 
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import _ from 'lodash';
 
+import { connect } from 'react-redux';
 import Widget from '../Widget';
 
 import SMSortableHandle from './SMSortableHandle';
 import SMDropdownButton from './SMDropdownButton';
 import SMMinimizeButton from './SMMinimizeButton';
-import store from '../../store';
+import { actions as widgetActions } from '../../flux/widget';
+import i18n from '../../lib/i18n';
 
 
 /**
@@ -52,100 +55,127 @@ class WidgetState {
     }
 }
 
-
-/**
- * Widget configuration store.
- */
-class WidgetConfig {
-    widgetId = '';
-
-    constructor(widgetId) {
-        if (!widgetId) {
-            throw new Error('The widget ID cannot be an empty string.');
-        }
-        this.widgetId = widgetId;
-    }
-
-    translateKey(key) {
-        const widgetId = this.widgetId;
-        return `widgets["${widgetId}"].${key}`;
-    }
-
-    get(key, defaultValue) {
-        key = this.translateKey(key);
-        return store.get(key, defaultValue);
-    }
-
-    set(key, value) {
-        key = this.translateKey(key);
-        return store.set(key, value);
-    }
-
-    unset(key) {
-        key = this.translateKey(key);
-        return store.unset(key);
-    }
-
-    replace(key, value) {
-        key = this.translateKey(key);
-        return store.replace(key, value);
-    }
-}
-
 // Create widget with default layout (minimize + fullscreen)
 function createDefaultWidget(WrappedWidget) {
-    return class extends PureComponent {
-        static propTypes = {
-            widgetId: PropTypes.string.isRequired
+    const mapStateToProps = (state, ownProps) => {
+        const { widgets } = state.widget;
+        const { widgetId } = ownProps;
+        const { minimized = false, fullscreen = false, needRemove = false } = widgets[widgetId] || {};
+        return {
+            minimized,
+            fullscreen,
+            needRemove
         };
+    };
 
-        config = new WidgetConfig(this.props.widgetId);
+    const mapDispatchToProps = (dispatch) => ({
+        updateWidgetState: (widgetId, key, value) => dispatch(widgetActions.updateWidgetState(widgetId, key, value))
+    });
+
+
+    return connect(mapStateToProps, mapDispatchToProps)(class extends PureComponent {
+        static propTypes = {
+            widgetId: PropTypes.string.isRequired,
+            onRemove: PropTypes.func,
+            onToggle: PropTypes.func,
+
+            minimized: PropTypes.bool.isRequired,
+            fullscreen: PropTypes.bool.isRequired,
+            needRemove: PropTypes.bool,
+
+            updateWidgetState: PropTypes.func.isRequired
+        };
 
         state = {
             title: '',
-            fullscreen: this.config.get('fullscreen', false),
-            minimized: this.config.get('minimized', false)
+            display: true,
+            buttons: ['SMMinimize', 'SMDropdown']
         };
 
         actions = {
             onToggleFullscreen: () => {
-                this.setState(state => {
-                    const { fullscreen, minimized } = state;
-                    return {
-                        fullscreen: !fullscreen,
-                        minimized: fullscreen ? minimized : false
-                    };
-                });
+                const fullscreen = !this.props.fullscreen;
+                const minimized = fullscreen ? this.props.minimized : false;
+                this.props.updateWidgetState(this.props.widgetId, 'fullscreen', fullscreen);
+                this.props.updateWidgetState(this.props.widgetId, 'minimized', minimized);
             },
             onToggleMinimized: () => {
-                this.setState(state => ({
-                    minimized: !state.minimized
-                }));
+                const minimized = !this.props.minimized;
+                this.props.updateWidgetState(this.props.widgetId, 'minimized', minimized);
             },
             setTitle: (title) => {
                 this.setState({ title });
+            },
+            onRemove: () => {
+                this.props.onRemove();
+            },
+            setControlButtons: (buttons) => {
+                if (buttons && _.isArray(buttons)) {
+                    this.setState({
+                        buttons
+                    });
+                }
+            },
+            setDisplay: (display) => {
+                this.setState({
+                    display: display
+                });
             }
         };
 
-        componentDidUpdate() {
-            this.config.set('minimized', this.state.minimized);
-            this.config.set('fullscreen', this.state.fullscreen);
-        }
-
         render() {
-            const state = this.state;
+            const { widgetId, minimized, fullscreen, needRemove, onToggle } = this.props;
+            const state = {
+                title: this.state.title,
+                minimized: minimized,
+                fullscreen: fullscreen,
+                needRemove: needRemove,
+                buttons: this.state.buttons
+            };
             const actions = this.actions;
 
             return (
-                <Widget fullscreen={state.fullscreen}>
+                <Widget style={{ display: this.state.display ? '' : 'none' }} fullscreen={state.fullscreen}>
                     <Widget.Header>
                         <Widget.Title>
                             <SMSortableHandle />
                             {this.state.title}
                         </Widget.Title>
                         <Widget.Controls className="sortable-filter">
-                            <SMMinimizeButton state={state} actions={actions} />
-                            <SMDropdownButton state={state} actions={actions} />
+                            { state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
+                                if (typeof v === 'object') {
+                                    const { disabled = false, title = '', onClick, className = 'fa' } = v;
+                                    return (
+                                        <Widget.Button
+                                            key={title}
+                                            disabled={disabled}
+                                            title={i18n._(title)}
+                                            onClick={onClick}
+                                        >
+                                            <i
+                                                className={className}
+                                            />
+                                        </Widget.Button>
+                                    );
+                                } else if (v === 'SMMinimize') {
+                                    return (
+                                        <SMMinimizeButton
+                                            key="SMMinimize"
+                                            state={state}
+                                            actions={actions}
+                                        />
+                                    );
+                                } else if (v === 'SMDropdown') {
+                                    return (
+                                        <SMDropdownButton
+                                            key="SMDropdown"
+                                            state={state}
+                                            actions={actions}
+                                        />
+                                    );
+                                }
+                                return null;
+                            })}
                         </Widget.Controls>
                     </Widget.Header>
                     <Widget.Content
@@ -155,19 +185,24 @@ function createDefaultWidget(WrappedWidget) {
                             display: state.minimized ? 'none' : 'block'
                         }}
                     >
-                        <WrappedWidget config={this.config} setTitle={actions.setTitle} />
+                        <WrappedWidget
+                            widgetId={widgetId}
+                            onToggle={onToggle}
+                            setTitle={actions.setTitle}
+                            setDisplay={actions.setDisplay}
+                            setControlButtons={actions.setControlButtons}
+                        />
                     </Widget.Content>
                 </Widget>
             );
         }
-    };
+    });
 }
 
 
 export {
     createDefaultWidget,
     WidgetState,
-    WidgetConfig,
     SMSortableHandle,
     SMMinimizeButton,
     SMDropdownButton

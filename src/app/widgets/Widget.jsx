@@ -1,13 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import AxesWidget from './Axes/index';
-import AxesPanelWidget from './AxesPanel/index';
 import ConnectionWidget from './Connection';
-import ConnectionPanelWidget from './ConnectionPanel';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import MacroWidget from './Macro';
-import MacroPanelWidget from './MacroPanel';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
@@ -26,15 +23,16 @@ import PrintingOutputWidget from './PrintingOutput';
 const getWidgetByName = (name) => {
     const Widget = {
         'axes': AxesWidget,
-        'axesPanel': AxesPanelWidget,
+        'axesPanel': AxesWidget,
         'connection': ConnectionWidget,
-        'connectionPanel': ConnectionPanelWidget,
+        'connectionPanel': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
         'macro': MacroWidget,
-        'macroPanel': MacroPanelWidget,
+        'macroPanel': MacroWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
+        // 'default-console': DefaultConsole,
         'webcam': WebcamWidget,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,

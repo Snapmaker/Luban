@@ -10,11 +10,10 @@ import controller from '../../lib/controller';
 import Terminal from './Terminal';
 import { ABSENT_OBJECT } from '../../constants';
 
-class Console extends PureComponent {
+class DefaultConsole extends PureComponent {
     static propTypes = {
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
-        defaultWidgets: PropTypes.array.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -50,15 +49,15 @@ class Console extends PureComponent {
 
     actions = {
         onTerminalData: (data) => {
-            if (data === 'help' || data === 'h' || data === 'H') {
+            if (data === 'help\r' || data === 'h\r' || data === 'H\r') {
                 this.actions.getHelp();
-            } else if (data === 'v' || data === 'V') {
+            } else if (data === 'v\r' || data === 'V\r') {
                 this.actions.queryVersion();
-            } else if (data === 'g' || data === 'G') {
+            } else if (data === 'g\r' || data === 'G\r') {
                 this.actions.queryGCommands();
-            } else if (data === 'm' || data === 'M') {
+            } else if (data === 'm\r' || data === 'M\r') {
                 this.actions.queryMCommands();
-            } else if (data === 'clear') {
+            } else if (data === 'clear\r') {
                 this.actions.clearAll();
             } else {
                 this.props.executeGcode(data);
@@ -72,7 +71,7 @@ class Console extends PureComponent {
                 terminal.writeln(color.yellow('Supported commands: '));
                 terminal.writeln(color.blue('------------------------------------'));
                 terminal.writeln(color.cyan('  help | h | H : Help Information'));
-                terminal.writeln(color.cyan('  clear: Clear Console'));
+                terminal.writeln(color.cyan('  clear: Clear DefaultConsole'));
                 terminal.writeln(color.cyan('  v | V : Version Information'));
                 terminal.writeln(color.green('  g | G : G-Command List'));
                 terminal.writeln(color.yellow('  m | M : M-Command List'));
@@ -246,31 +245,27 @@ class Console extends PureComponent {
             <Terminal
                 ref={this.terminal}
                 onData={this.actions.onTerminalData}
-                defaultWidgets={this.props.defaultWidgets}
             />
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const widget = state.widget;
-    const defaultWidgets = widget.tab.workspace.container.default.widgets;
-
     const machine = state.machine;
+
     const { port, server, isConnected } = machine;
 
     return {
         port,
         server,
-        isConnected,
-        defaultWidgets
+        isConnected
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Console);
+export default connect(mapStateToProps, mapDispatchToProps)(DefaultConsole);

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
+import { connect } from 'react-redux';
 import log from '../../lib/log';
 import History from './History';
 import styles from './index.styl';
@@ -424,4 +425,13 @@ class TerminalWrapper extends PureComponent {
     }
 }
 
-export default TerminalWrapper;
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const defaultWidgets = widget.tab.workspace.container.default.widgets;
+    return {
+        defaultWidgets
+    };
+};
+
+
+export default connect(mapStateToProps)(TerminalWrapper);

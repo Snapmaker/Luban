@@ -14,6 +14,7 @@ import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
 import { actions as machineActions } from '../../flux/machine';
+import { actions as widgetActions } from '../../flux/widget';
 
 import {
     ABSENT_OBJECT,
@@ -86,16 +87,25 @@ const normalizeToRange = (n, min, max) => {
 
 class Axes extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
+        widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
 
         port: PropTypes.string.isRequired,
         dataSources: PropTypes.array,
+        dataSource: PropTypes.string.isRequired,
         workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func
+        executeGcode: PropTypes.func,
+
+        axes: PropTypes.array.isRequired,
+        speed: PropTypes.number.isRequired,
+        keypad: PropTypes.bool.isRequired,
+        selectedDistance: PropTypes.string.isRequired,
+        customDistance: PropTypes.number.isRequired,
+
+        updateWidgetState: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -115,12 +125,12 @@ class Axes extends PureComponent {
         },
         getJogDistance: () => {
             const { units } = this.state;
-            const selectedDistance = this.props.config.get('jog.selectedDistance');
+            const selectedDistance = this.props.selectedDistance;
             if (selectedDistance) {
                 return Number(selectedDistance) || 0;
             }
 
-            const customDistance = this.props.config.get('jog.customDistance');
+            const customDistance = this.props.customDistance;
             return toUnits(units, customDistance);
         },
         // actions
@@ -128,13 +138,13 @@ class Axes extends PureComponent {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
-                this.props.executeGcode(gcode.join('\n'));
+                this.props.executeGcode(this.props.dataSource, gcode.join('\n'));
             }
         },
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                this.props.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
+                this.props.executeGcode(this.props.dataSource, `G0 ${s} F${this.state.jogSpeed}`);
             }
         },
         toggleKeypadJogging: () => {
@@ -230,14 +240,14 @@ class Axes extends PureComponent {
     controllerEvents = {
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
+            if (dataSource === this.props.dataSource) {
                 const initialState = this.getInitialState();
                 this.setState({ ...initialState });
             }
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
+            if (dataSource === this.props.dataSource) {
                 this.setState({
                     controller: {
                         state: state
@@ -255,7 +265,7 @@ class Axes extends PureComponent {
     }
 
     getInitialState() {
-        const jogSpeed = this.props.config.get('jog.speed') || 1500;
+        const jogSpeed = this.props.speed;
 
         // init jog speed options, add saved speed when it doesn't exists in default options
         const jogSpeedOptions = DEFAULT_SPEED_OPTIONS;
@@ -266,13 +276,13 @@ class Axes extends PureComponent {
 
         return {
             // config
-            axes: this.props.config.get('axes', DEFAULT_AXES),
-            keypadJogging: this.props.config.get('jog.keypad'),
+            axes: this.props.axes || DEFAULT_AXES,
+            keypadJogging: this.props.keypad,
             jogSpeed,
             jogSpeedOptions,
             selectedAxis: '', // Defaults to empty
-            selectedDistance: this.props.config.get('jog.selectedDistance'),
-            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
+            selectedDistance: this.props.selectedDistance,
+            customDistance: toUnits(METRIC_UNITS, this.props.customDistance),
 
             // display
             canClick: true, // Defaults to true
@@ -322,7 +332,7 @@ class Axes extends PureComponent {
             });
         }
         const { dataSource, x, y, z } = nextProps.workPosition;
-        if (dataSource === 'workspace'
+        if (dataSource === this.props.dataSource
             && x !== this.props.workPosition.x
             && y !== this.props.workPosition.y
             && z !== this.props.workPosition.z) {
@@ -338,7 +348,6 @@ class Axes extends PureComponent {
     componentDidUpdate(prevProps, prevState) {
         const {
             units,
-            minimized,
             axes,
             jogSpeed,
             keypadJogging,
@@ -346,17 +355,29 @@ class Axes extends PureComponent {
             customDistance
         } = this.state;
 
-        this.props.config.set('minimized', minimized);
-        this.props.config.set('axes', axes);
-        this.props.config.set('jog.speed', jogSpeed);
-        this.props.config.set('jog.keypad', keypadJogging);
-        this.props.config.set('jog.selectedDistance', selectedDistance);
+        this.props.updateWidgetState(this.props.widgetId, {
+            axes: axes,
+            jog: {
+                speed: jogSpeed,
+                keypad: keypadJogging,
+                selectedDistance: selectedDistance
+            }
+        });
+        // this.props.config.set('axes', axes);
+        // this.props.config.set('jog.speed', jogSpeed);
+        // this.props.config.set('jog.keypad', keypadJogging);
+        // this.props.config.set('jog.selectedDistance', selectedDistance);
 
         // The custom distance will not persist while toggling between in and mm
         if ((prevState.customDistance !== customDistance) && (prevState.units === units)) {
             const distance = (units === IMPERIAL_UNITS) ? in2mm(customDistance) : customDistance;
             // Save customDistance in mm
-            this.props.config.set('jog.customDistance', Number(distance));
+            // this.props.config.set('jog.customDistance', Number(distance));
+            this.props.updateWidgetState(this.props.widgetId, {
+                jog: {
+                    customDistance: Number(distance)
+                }
+            });
         }
     }
 
@@ -441,7 +462,7 @@ class Axes extends PureComponent {
     canClick() {
         // TODO: move to redux state
         const { port, dataSources, workState, server, serverStatus } = this.props;
-        return (port && dataSources.indexOf('workspace') !== -1 && workState === WORKFLOW_STATE_IDLE
+        return (port && dataSources.indexOf(this.props.dataSource) !== -1 && workState === WORKFLOW_STATE_IDLE
             || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
@@ -512,25 +533,36 @@ class Axes extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
+    const { widgets } = state.widget;
+    const { widgetId } = ownProps;
+    const { jog, axes, dataSource } = widgets[widgetId];
 
+    const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
     const { port, dataSources, workState, workPosition, server, serverStatus } = machine;
 
     return {
         port,
+        dataSource,
         dataSources,
         workState,
         workPosition,
         server,
-        serverStatus
+        serverStatus,
+        axes,
+        speed,
+        keypad,
+        selectedDistance,
+        customDistance
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         // executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
+        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode)),
+        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };
 };
 

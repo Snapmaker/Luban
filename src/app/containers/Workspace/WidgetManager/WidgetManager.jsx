@@ -1,15 +1,20 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Modal from '../../../components/Modal';
 import i18n from '../../../lib/i18n';
-import store from '../../../store';
 import WidgetList from './WidgetList';
 
 class WidgetManager extends PureComponent {
     static propTypes = {
         onSave: PropTypes.func,
-        onClose: PropTypes.func.isRequired
+        onClose: PropTypes.func.isRequired,
+
+        defaultWidgets: PropTypes.array.isRequired,
+        primaryWidgets: PropTypes.array.isRequired,
+        secondaryWidgets: PropTypes.array.isRequired
+
     };
 
     state = {
@@ -129,11 +134,11 @@ class WidgetManager extends PureComponent {
     }
 
     render() {
-        const defaultWidgets = store.get('workspace.container.default.widgets', [])
+        const defaultWidgets = this.props.defaultWidgets
             .map(widgetId => widgetId.split(':')[0]);
-        const primaryWidgets = store.get('workspace.container.primary.widgets', [])
+        const primaryWidgets = this.props.primaryWidgets
             .map(widgetId => widgetId.split(':')[0]);
-        const secondaryWidgets = store.get('workspace.container.secondary.widgets', [])
+        const secondaryWidgets = this.props.secondaryWidgets
             .map(widgetId => widgetId.split(':')[0]);
         const activeWidgets = _.union(defaultWidgets, primaryWidgets, secondaryWidgets);
 
@@ -175,5 +180,16 @@ class WidgetManager extends PureComponent {
         );
     }
 }
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const defaultWidgets = widget.tab.workspace.container.default.widgets;
+    const primaryWidgets = widget.tab.workspace.container.primary.widgets;
+    const secondaryWidgets = widget.tab.workspace.container.secondary.widgets;
+    return {
+        defaultWidgets,
+        primaryWidgets,
+        secondaryWidgets
+    };
+};
 
-export default WidgetManager;
+export default connect(mapStateToProps, null)(WidgetManager);

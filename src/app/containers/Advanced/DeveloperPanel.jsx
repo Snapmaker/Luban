@@ -141,7 +141,6 @@ class DeveloperPanel extends PureComponent {
             this.setState({ bedTargetTemperature });
         },
         changeMachineSetting: (setting) => {
-            console.log('c state', setting);
             this.setState({
                 machineSetting: {
                     ...this.state.machineSetting,
@@ -292,7 +291,6 @@ class DeveloperPanel extends PureComponent {
         'machine:settings': (state, dataSource) => {
             if (dataSource === 'developerPanel') {
                 if (!isEmpty(state)) {
-                    console.log('state3', state);
                     Object.keys(state).forEach(setting => {
                         if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
                             if (state[setting] === null) {

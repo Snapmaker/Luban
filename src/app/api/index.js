@@ -1,10 +1,10 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import ensureArray from '../lib/ensure-array';
-import store from '../store';
+import { machineStore } from '../store/local-storage';
 
 const bearer = (request) => {
-    const token = store.get('session.token');
+    const token = machineStore.get('session.token');
     if (token) {
         request.set('Authorization', `Bearer ${token}`);
     }

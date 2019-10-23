@@ -55,6 +55,12 @@ class ImmutableStore extends events.EventEmitter {
         this.emit('change', this.state);
         return this.state;
     }
+
+    setState(state) {
+        this.state = _.merge({}, state);
+        this.emit('change', this.state);
+        return this.state;
+    }
 }
 
 export default ImmutableStore;
