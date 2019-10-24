@@ -10,12 +10,12 @@ import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space/Space';
 import TipTrigger from '../../components/TipTrigger';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import styles from './styles.styl';
 import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
 import { actions as workspaceActions } from '../../flux/workspace';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];

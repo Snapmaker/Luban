@@ -129,6 +129,7 @@ class Connection extends PureComponent {
                 )}
                 {connectionType === 'serial' && (
                     <SerialConnection
+                        dataSource={this.props.dataSource}
                         style={{ marginTop: '10px' }}
                     />
                 )}

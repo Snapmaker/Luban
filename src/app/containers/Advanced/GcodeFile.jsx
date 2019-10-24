@@ -8,7 +8,7 @@ import modal from '../../lib/modal';
 import api from '../../api';
 import ProgressBar from '../../components/ProgressBar';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import styles from './index.styl';
 import {
     PROTOCOL_SCREEN,
@@ -17,7 +17,7 @@ import {
     WORKFLOW_STATE_RUNNING
 } from '../../constants';
 
-const controller = new Client(PROTOCOL_SCREEN);
+const controller = new SerialClient(PROTOCOL_SCREEN);
 
 class GcodeFile extends PureComponent {
     static propTypes = {

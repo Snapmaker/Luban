@@ -4,7 +4,7 @@ import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -14,7 +14,7 @@ import MachineModal from './MachineModal';
 import styles from './index.styl';
 import { PROTOCOL_TEXT, TEMPERATURE_MIN, TEMPERATURE_MAX } from '../../constants';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 class Printing extends PureComponent {
     static propTypes = {

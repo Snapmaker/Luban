@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { connect } from 'react-redux';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import i18n from '../../lib/i18n';
 
 import Printing from './Printing';
@@ -20,7 +20,7 @@ import {
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const normalizeToRange = (n, min, max) => {
     if (n < min) {
@@ -123,12 +123,15 @@ class MarlinWidget extends PureComponent {
                     isConnected: true,
                     port: port
                 });
+                this.props.setDisplay(true);
+                this.actions.setTitle();
             }
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
             if (dataSource === PROTOCOL_TEXT) {
                 this.setState({ ...this.getInitialState() });
+                this.props.setDisplay(false);
             }
         },
         'Marlin:state': (state, dataSource) => {

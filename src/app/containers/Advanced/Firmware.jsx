@@ -4,14 +4,14 @@ import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import TextArea from 'react-textarea-autosize';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 import modal from '../../lib/modal';
 import { PROTOCOL_SCREEN } from '../../constants';
 
-const controller = new Client(PROTOCOL_SCREEN);
+const controller = new SerialClient(PROTOCOL_SCREEN);
 
 class Firmware extends PureComponent {
     static propTypes = {

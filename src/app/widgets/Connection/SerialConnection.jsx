@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
@@ -22,14 +22,16 @@ const STATUS_CONNECTING = 'connecting';
 const STATUS_CONNECTED = 'connected';
 
 
-const controller = new Client(PROTOCOL_TEXT);
-
 class SerialConnection extends PureComponent {
     static propTypes = {
+        dataSource: PropTypes.string.isRequired,
         updateMachineConnectionState: PropTypes.func.isRequired,
         port: PropTypes.string.isRequired,
         updatePort: PropTypes.func.isRequired
     };
+
+    controller = new SerialClient({ dataSource: this.props.dataSource });
+
 
     state = {
         // Available serial ports
@@ -219,7 +221,7 @@ class SerialConnection extends PureComponent {
             }
         }, 5000);
 
-        controller.listPorts();
+        this.controller.listPorts();
     }
 
     openPort(port) {
@@ -227,11 +229,11 @@ class SerialConnection extends PureComponent {
             status: STATUS_CONNECTING
         });
 
-        controller.openPort(port);
+        this.controller.openPort(port);
     }
 
     closePort(port) {
-        controller.closePort(port);
+        this.controller.closePort(port);
     }
 
     renderPortOption = (option) => {
@@ -290,14 +292,14 @@ class SerialConnection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            this.controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            this.controller.off(eventName, callback);
         });
     }
 

@@ -10,7 +10,7 @@ import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Setting from './Setting';
@@ -34,7 +34,7 @@ const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
 
-const controller = new Client(PROTOCOL_SCREEN);
+const controller = new SerialClient(PROTOCOL_SCREEN);
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {

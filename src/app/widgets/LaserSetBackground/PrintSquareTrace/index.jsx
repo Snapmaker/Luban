@@ -5,13 +5,13 @@ import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 // import controller from '../../../lib/controller';
-import Client from '../../../lib/client';
+import SerialClient from '../../../lib/serialClient';
 import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import PrintPreview from './PrintPreview';
 import { PROTOCOL_TEXT } from '../../../constants';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 function generateSquareGcode(size, sideLength, power) {
     // M3: laser on

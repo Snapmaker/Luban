@@ -4,13 +4,13 @@ import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 // import DigitalReadout from './DigitalReadout';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
 import { PROTOCOL_TEXT } from '../../constants';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 const Overrides = (props) => {
     const { speedFactor = 0, extruderFactor = 0, state, actions } = props;

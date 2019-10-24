@@ -10,7 +10,7 @@ import colornames from 'colornames';
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import {
     MARLIN,
     PROTOCOL_TEXT,
@@ -34,7 +34,7 @@ import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 class Visualizer extends Component {
     static propTypes = {

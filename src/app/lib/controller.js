@@ -287,6 +287,8 @@ class CNCController {
 
     // command(cmd, ...args) {
     command(cmd, dataSource, ...args) {
+        console.log(cmd);
+        console.log('dataSource', dataSource);
         // const { port } = this;
         const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {

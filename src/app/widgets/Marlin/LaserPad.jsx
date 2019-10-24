@@ -5,14 +5,14 @@ import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
 import styles from '../styles.styl';
 import { PROTOCOL_TEXT } from '../../constants';
 
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 class LaserPad extends PureComponent {
     static propTypes = {

@@ -122,8 +122,7 @@ class Axes extends PureComponent {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
-                // this.props.executeGcode(this.props.dataSource, gcode.join('\n'));
-                this.props.executeGcode(gcode.join('\n'));
+                this.actions.executeGcode(gcode.join('\n'));
             }
         },
         move: (params = {}) => {
@@ -184,7 +183,6 @@ class Axes extends PureComponent {
                 `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
             ];
 
-            // this.props.executeGcode(gcode.join('\n'));
             this.actions.executeGcode(gcode.join('\n'));
         }
     };

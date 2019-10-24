@@ -227,6 +227,8 @@ export const actions = {
         // if (port && workState === WORKFLOW_STATE_IDLE) {
         if (port) {
             // controller.command('gcode', gcode, context);
+            console.log(dataSource);
+            console.log(gcode);
             controller.command('gcode', dataSource, gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {

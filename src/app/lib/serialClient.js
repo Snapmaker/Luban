@@ -1,6 +1,8 @@
 import controller from './controller';
 
-class Client {
+class SerialClient {
+    map = new Map();
+
     constructor(options) {
         this.dataSource = options.dataSource || '';
     }
@@ -34,11 +36,11 @@ class Client {
     }
 
     on(eventName, callback) {
-        controller.on(eventName, callback);
+        controller.on(eventName, this._getCallback(callback));
     }
 
     off(eventName, callback) {
-        controller.off(eventName, callback);
+        controller.off(eventName, this._removeCallback(callback));
     }
 
     listPorts() {
@@ -66,12 +68,37 @@ class Client {
     }
 
     command(cmd, ...args) {
+        console.log(cmd, this.dataSource);
         controller.command(cmd, this.dataSource, ...args);
     }
 
     writeln(data, dataSource, context = {}) {
         controller.writeln(data, this.dataSource, context);
     }
+
+    _getCallback(callback) {
+        const newVar = this.map.get(callback);
+        if (newVar) {
+            return newVar;
+        }
+        const newCallback = (options) => {
+            const { dataSource } = options;
+            if (dataSource && dataSource !== this.dataSource) {
+                return;
+            }
+            callback(options);
+        };
+        this.map.set(callback, newCallback);
+        return newCallback;
+    }
+
+    _removeCallback(callback) {
+        const newVar = this.map.get(callback);
+        if (newVar) {
+            this.map.delete(callback);
+        }
+        return newVar;
+    }
 }
 
-export default Client;
+export default SerialClient;

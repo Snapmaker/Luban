@@ -11,11 +11,11 @@ import { ModelInfo } from '../models/ModelInfoUtils';
 import Model from '../models/Model';
 import ModelGroup from '../models/ModelGroup';
 // import controller from '../../lib/controller';
-import Client from '../../lib/client';
+import SerialClient from '../../lib/serialClient';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 
-const controller = new Client(PROTOCOL_TEXT);
+const controller = new SerialClient(PROTOCOL_TEXT);
 
 // return true if tran1 equals tran2 uploadModel
 const customCompareTransformation = (tran1, tran2) => {
