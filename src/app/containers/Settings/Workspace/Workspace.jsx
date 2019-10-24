@@ -1,12 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import store from '../../../store';
+import storeManager from '../../../store/local-storage';
 import i18n from '../../../lib/i18n';
 import styles from './index.styl';
 
 const Workspace = (props) => {
     const { actions } = props;
-    const workspaceSettings = store.get();
+    const workspaceSettings = storeManager.get();
 
     return (
         <form>

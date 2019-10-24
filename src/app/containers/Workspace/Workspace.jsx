@@ -362,11 +362,11 @@ class Workspace extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const showPrimaryContainer = widget.tab.workspace.container.primary.show;
-    const primaryWidgets = widget.tab.workspace.container.primary.widgets;
-    const showSecondaryContainer = widget.tab.workspace.container.secondary.show;
-    const secondaryWidgets = widget.tab.workspace.container.secondary.widgets;
-    const defaultWidgets = widget.tab.workspace.container.default.widgets;
+    const showPrimaryContainer = widget.workspace.primary.show;
+    const primaryWidgets = widget.workspace.primary.widgets;
+    const showSecondaryContainer = widget.workspace.secondary.show;
+    const secondaryWidgets = widget.workspace.secondary.widgets;
+    const defaultWidgets = widget.workspace.default.widgets;
     return {
         showPrimaryContainer,
         showSecondaryContainer,

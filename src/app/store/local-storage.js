@@ -1,5 +1,6 @@
 import isElectron from 'is-electron';
 import path from 'path';
+import _ from 'lodash';
 import settings from '../config/settings';
 import log from '../lib/log';
 import ImmutableStore from '../lib/immutable-store';
@@ -72,10 +73,19 @@ const getLocalStore = (name) => {
         return store;
     }
 };
+
 export const widgetStore = getLocalStore('widget');
 export const machineStore = getLocalStore('machine');
 
-export const storeManager = {
+const storeManager = {
     widgetStore,
-    machineStore
+    machineStore,
+    clear: () => {
+        machineStore.clear();
+        widgetStore.clear();
+    },
+    get: () => {
+        return _.merge(machineStore.get(), widgetStore.get());
+    }
 };
+export default storeManager;

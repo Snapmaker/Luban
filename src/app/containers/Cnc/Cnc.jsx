@@ -113,7 +113,7 @@ class Cnc extends Component {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget.tab.cnc.container.default.widgets;
+    const widgets = widget.cnc.default.widgets;
     return {
         widgets
     };

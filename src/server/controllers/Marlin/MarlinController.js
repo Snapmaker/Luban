@@ -1020,8 +1020,6 @@ class MarlinController {
                     // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                     // setTimeout(() => this.writeln('M105'), 200);
                     setTimeout(() => this.writeln('M105'), 2000);
-                    // TODO force ready
-                    this.ready = true;
                 }
             }, 1000);
 

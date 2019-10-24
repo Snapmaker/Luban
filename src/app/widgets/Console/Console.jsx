@@ -264,7 +264,7 @@ class Console extends PureComponent {
 
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const defaultWidgets = widget.tab.workspace.container.default.widgets;
+    const defaultWidgets = widget.workspace.default.widgets;
 
     const machine = state.machine;
     const { port, server, isConnected } = machine;

@@ -79,14 +79,25 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
-        const initialMachineState = machineStore.get('machine') || INITIAL_STATE;
+        let initialMachineState = machineStore.get('machine');
+        if (!initialMachineState) {
+            initialMachineState = {
+                series: INITIAL_STATE.series,
+                size: INITIAL_STATE.size
+            };
+            machineStore.set('machine', {
+                series: INITIAL_STATE.series,
+                size: INITIAL_STATE.size
+            });
+        }
         const machinePort = machineStore.get('port') || '';
 
         dispatch(actions.updateState({
-            series: initialMachineState.series || INITIAL_STATE.series,
-            size: initialMachineState.size || INITIAL_STATE.size,
+            series: initialMachineState.series,
+            size: initialMachineState.size,
             port: machinePort
         }));
+
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
         // setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);

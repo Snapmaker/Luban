@@ -37,7 +37,7 @@ class SerialConnection extends PureComponent {
         // Available serial ports
         ports: [],
         // Selected port
-        port: '',
+        port: this.props.port,
         // connect status: 'idle', 'connecting', 'connected'
         status: STATUS_IDLE,
 
@@ -54,7 +54,11 @@ class SerialConnection extends PureComponent {
     controllerEvents = {
         'serialport:list': (ports) => this.onListPorts(ports),
         'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:close': (options) => this.onPortClosed(options)
+        'serialport:close': (options) => this.onPortClosed(options),
+        'serialport:read': (options) => {
+            console.log(options);
+            console.log(typeof options);
+        }
     };
 
     actions = {

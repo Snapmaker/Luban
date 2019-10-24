@@ -5,46 +5,46 @@ const defaultState = {
     machine: {
         series: MACHINE_SERIES.ORIGINAL.value
     },
-    tab: {
-        workspace: {
-            container: {
-                default: {
-                    widgets: ['visualizer']
-                },
-                primary: {
-                    show: true,
-                    widgets: [
-                        'connection', 'console', 'marlin', 'laser-test-focus'
-                    ]
-                },
-                secondary: {
-                    show: true,
-                    widgets: [
-                        'webcam', 'axes', 'macro', 'gcode'
-                    ]
-                }
-            }
+    workspace: {
+        default: {
+            widgets: ['visualizer']
         },
-        '3dp': {
-            container: {
-                default: {
-                    widgets: ['3dp-material', '3dp-configurations', '3dp-output']
-                }
-            }
+        primary: {
+            show: true,
+            widgets: [
+                'connection', 'console', 'marlin', 'laser-test-focus'
+            ]
         },
-        laser: {
-            container: {
-                default: {
-                    widgets: ['laser-set-background', 'laser-params', 'laser-output']
-                }
-            }
+        secondary: {
+            show: true,
+            widgets: [
+                'webcam', 'axes', 'macro', 'gcode'
+            ]
+        }
+    },
+    '3dp': {
+        default: {
+            widgets: ['3dp-material', '3dp-configurations', '3dp-output']
+        }
+    },
+    laser: {
+        default: {
+            widgets: ['laser-set-background', 'laser-params', 'laser-output']
+        }
+    },
+    cnc: {
+        default: {
+            widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
+        }
+    },
+    developerPanel: {
+        primary: {
+            widgets: [
+                'connectionPanel', 'axesPanel', 'macroPanel'
+            ]
         },
-        cnc: {
-            container: {
-                default: {
-                    widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
-                }
-            }
+        default: {
+            widgets: []
         }
     },
     widgets: {
@@ -181,46 +181,36 @@ const defaultState = {
 const seriesStates = {
     original: {},
     A150: {
-        tab: {
-            workspace: {
-                container: {
-                    default: {
-                        widgets: ['visualizer']
-                    },
-                    primary: {
-                        show: true,
-                        widgets: [
-                            'connection', 'console', 'marlin', 'laser-test-focus'
-                        ]
-                    },
-                    secondary: {
-                        show: true,
-                        widgets: [
-                            'axes', 'macro', 'gcode'
-                        ]
-                    }
-                }
+        workspace: {
+            default: {
+                widgets: ['visualizer']
             },
-            '3dp': {
-                container: {
-                    default: {
-                        widgets: ['3dp-material', '3dp-configurations', '3dp-output']
-                    }
-                }
+            primary: {
+                show: true,
+                widgets: [
+                    'connection', 'console', 'marlin', 'laser-test-focus'
+                ]
             },
-            laser: {
-                container: {
-                    default: {
-                        widgets: ['laser-set-background', 'laser-params', 'laser-output']
-                    }
-                }
-            },
-            cnc: {
-                container: {
-                    default: {
-                        widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
-                    }
-                }
+            secondary: {
+                show: true,
+                widgets: [
+                    'axes', 'macro', 'gcode'
+                ]
+            }
+        },
+        '3dp': {
+            default: {
+                widgets: ['3dp-material', '3dp-configurations', '3dp-output']
+            }
+        },
+        laser: {
+            default: {
+                widgets: ['laser-set-background', 'laser-params', 'laser-output']
+            }
+        },
+        cnc: {
+            default: {
+                widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
             }
         }
     },
@@ -256,6 +246,15 @@ class WidgetState {
             {
                 defaultState: store.defaultState,
                 seriesStates: store.seriesStates
+            },
+            {
+                defaultState: {
+                    workspace: {
+                        default: {
+                            widgets: defaultState.workspace.default.widgets
+                        }
+                    }
+                }
             }
         );
         this.series = this.widgetState.defaultState.machine.series;

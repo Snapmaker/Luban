@@ -82,7 +82,7 @@ class ConsoleWidget extends PureComponent {
 
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const defaultWidgets = widget.tab.workspace.container.default.widgets;
+    const defaultWidgets = widget.workspace.default.widgets;
     return {
         defaultWidgets
     };

@@ -116,7 +116,7 @@ class Laser extends Component {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget.tab.laser.container.default.widgets;
+    const widgets = widget.laser.default.widgets;
     return {
         widgets
     };

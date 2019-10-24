@@ -9,7 +9,7 @@ import settings from '../../config/settings';
 import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import store from '../../store';
+import storeManager from '../../store/local-storage';
 import General from './General';
 import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
@@ -111,7 +111,7 @@ class Settings extends PureComponent {
                     title: i18n._('Restore Defaults'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
-                    store.clear();
+                    storeManager.clear();
                     window.location.reload();
                 });
             }

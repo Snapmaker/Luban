@@ -3,7 +3,6 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
-import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
 
@@ -11,12 +10,13 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        defaultWidgets: PropTypes.array.isRequired
+        defaultWidgets: PropTypes.array.isRequired,
+        primaryWidgets: PropTypes.array.isRequired
     };
 
     // avoid using nested state or props in purecomponent
     state = {
-        primaryWidgets: store.get('developerPanel.widgets')
+        primaryWidgets: this.props.primaryWidgets
     };
 
     actions = {

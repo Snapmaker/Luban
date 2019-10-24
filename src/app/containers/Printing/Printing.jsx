@@ -125,7 +125,7 @@ class Printing extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget.tab['3dp'].container.default.widgets;
+    const widgets = widget['3dp'].default.widgets;
     return {
         widgets
     };

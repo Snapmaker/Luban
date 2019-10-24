@@ -21,7 +21,6 @@ import Firmware from './Firmware';
 import HeaterControl from './HeaterControl';
 import PrintablePlate from './PrintablePlate';
 import History from './History';
-import store from '../../store';
 import styles from './index.styl';
 import {
     PROTOCOL_SCREEN,
@@ -39,6 +38,8 @@ const controller = new SerialClient(PROTOCOL_SCREEN);
 class DeveloperPanel extends PureComponent {
     static propTypes = {
         port: PropTypes.string.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
+        primaryWidgets: PropTypes.array.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
 
@@ -55,7 +56,8 @@ class DeveloperPanel extends PureComponent {
     state = {
         statusError: false,
         hexModeEnabled: false,
-        defaultWidgets: store.get('developerPanel.defaultWidgets'),
+        defaultWidgets: this.props.defaultWidgets,
+        primaryWidgets: this.props.primaryWidgets,
         renderStamp: +new Date(),
         machineSetting: {
             xSize: 167,
@@ -425,7 +427,7 @@ class DeveloperPanel extends PureComponent {
     }
 
     render() {
-        const { defaultWidgets, renderStamp, machineSetting, rpm, statusError, laserState,
+        const { defaultWidgets, primaryWidgets, renderStamp, machineSetting, rpm, statusError, laserState,
             calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
             bedTargetTemperature, nozzleTargetTemperature, hexModeEnabled } = this.state;
         const controllerState = this.state.controller.state || {};
@@ -496,6 +498,7 @@ class DeveloperPanel extends PureComponent {
                     </div>
                     <PrimaryWidgets
                         defaultWidgets={defaultWidgets}
+                        primaryWidgets={primaryWidgets}
                     />
                 </div>
                 <div className={styles['developer-panel-right']}>
@@ -665,9 +668,13 @@ class DeveloperPanel extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { port } = state.machine;
-
+    const widget = state.widget;
+    const defaultWidgets = widget.developerPanel.default.widgets;
+    const primaryWidgets = widget.developerPanel.primary.widgets;
     return {
-        port
+        port,
+        defaultWidgets,
+        primaryWidgets
     };
 };
 
