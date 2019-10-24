@@ -19,7 +19,7 @@ class Output extends PureComponent {
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
-        workState: PropTypes.string.isRequired,
+        workflowState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -92,7 +92,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
+        const { workflowState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
 
         return (
             <div>
@@ -131,7 +131,7 @@ class Output extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={actions.onLoadGcode}
-                    disabled={workState === 'running' || !isGcodeGenerated}
+                    disabled={workflowState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Load G-code to Workspace')}
@@ -140,7 +140,7 @@ class Output extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={actions.onExport}
-                    disabled={workState === 'running' || !isGcodeGenerated}
+                    disabled={workflowState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Export G-code to file')}
@@ -151,11 +151,11 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { workState } = state.machine;
+    const { workflowState } = state.machine;
     const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled } = state.cnc;
     return {
         isGcodeGenerated,
-        workState,
+        workflowState,
         gcodeBeans,
         isAllModelsPreviewed,
         previewFailed,

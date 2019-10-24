@@ -33,7 +33,7 @@ const INITIAL_STATE = {
     dataSource: '',
     dataSources: [],
     // from workflowState: idle, running, paused
-    workState: WORKFLOW_STATE_IDLE,
+    workflowState: WORKFLOW_STATE_IDLE,
 
     workPosition: { // work position
         x: '0.000',
@@ -94,7 +94,8 @@ export const actions = {
         // Register event listeners
         const controllerEvents = {
             // 'Marlin:state': (state) => {
-            'Marlin:state': (state, dataSource) => {
+            'Marlin:state': (options) => {
+                const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
                 const { pos } = state;
@@ -109,7 +110,9 @@ export const actions = {
                     }
                 }));
             },
-            'Marlin:settings': (settings) => {
+            // 'Marlin:settings': (settings) => {
+            'Marlin:settings': (options) => {
+                const { settings } = options;
                 const state = getState().machine;
 
                 // enclosure is changed
@@ -180,8 +183,10 @@ export const actions = {
                     }));
                 }
             },
-            'workflow:state': (workState, dataSource) => {
-                dispatch(actions.updateState({ workState, dataSource }));
+            // 'workflow:state': (workflowState, dataSource) => {
+            'workflow:state': (options) => {
+                const { workflowState, dataSource } = options;
+                dispatch(actions.updateState({ workflowState, dataSource }));
             }
         };
 
@@ -224,11 +229,9 @@ export const actions = {
         const machine = getState().machine;
 
         const { port, server } = machine;
-        // if (port && workState === WORKFLOW_STATE_IDLE) {
+        // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (port) {
             // controller.command('gcode', gcode, context);
-            console.log(dataSource);
-            console.log(gcode);
             controller.command('gcode', dataSource, gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {

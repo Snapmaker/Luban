@@ -17,7 +17,7 @@ import {
     WORKFLOW_STATE_RUNNING
 } from '../../constants';
 
-const controller = new SerialClient(PROTOCOL_SCREEN);
+const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class GcodeFile extends PureComponent {
     static propTypes = {
@@ -177,21 +177,26 @@ class GcodeFile extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state, dataSource) => {
-            if (dataSource === PROTOCOL_SCREEN) {
-                const { headType, headPower, headStatus } = state;
-                if (headType !== this.state.headType) {
-                    this.setState({ headType });
-                }
-                if (headPower !== this.state.headPower) {
-                    this.setState({ headPower });
-                }
-                if (headStatus !== this.state.headStatus) {
-                    this.setState({ headStatus });
-                }
+        // 'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            if (dataSource !== PROTOCOL_SCREEN) {
+                return;
+            }
+            const { headType, headPower, headStatus } = state;
+            if (headType !== this.state.headType) {
+                this.setState({ headType });
+            }
+            if (headPower !== this.state.headPower) {
+                this.setState({ headPower });
+            }
+            if (headStatus !== this.state.headStatus) {
+                this.setState({ headStatus });
             }
         },
-        'sender:status': (data, dataSource) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }
@@ -205,7 +210,9 @@ class GcodeFile extends PureComponent {
                 }
             });
         },
-        'workflow:state': (workflowState, dataSource) => {
+        // 'workflow:state': (workflowState, dataSource) => {
+        'workflow:state': (options) => {
+            const { workflowState, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }

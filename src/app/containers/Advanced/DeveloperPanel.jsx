@@ -34,7 +34,7 @@ const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
 
-const controller = new SerialClient(PROTOCOL_SCREEN);
+const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
@@ -268,7 +268,9 @@ class DeveloperPanel extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state, dataSource) => {
+        // 'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }
@@ -295,28 +297,32 @@ class DeveloperPanel extends PureComponent {
                 });
             }
         },
-        'machine:settings': (state, dataSource) => {
+        // 'machine:settings': (settings, dataSource) => {
+        'machine:settings': (options) => {
+            const { settings, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }
-            if (!isEmpty(state)) {
-                Object.keys(state).forEach(setting => {
+            if (!isEmpty(settings)) {
+                Object.keys(settings).forEach(setting => {
                     if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
-                        if (state[setting] === null) {
-                            state[setting] = 0;
+                        if (settings[setting] === null) {
+                            settings[setting] = 0;
                         }
                     } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
-                        if (state[setting] === null || state[setting] > 1) {
-                            state[setting] = 1;
+                        if (settings[setting] === null || settings[setting] > 1) {
+                            settings[setting] = 1;
                         } else {
-                            state[setting] = -1;
+                            settings[setting] = -1;
                         }
                     }
                 });
-                this.actions.changeMachineSetting(state);
+                this.actions.changeMachineSetting(settings);
             }
         },
-        'serialport:read': (data, dataSource) => {
+        // 'serialport:read': (data, dataSource) => {
+        'serialport:read': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }
@@ -329,7 +335,9 @@ class DeveloperPanel extends PureComponent {
                 this.textarea.value = '';
             }
         },
-        'transfer:hex': (data, dataSource) => {
+        // 'transfer:hex': (data, dataSource) => {
+        'transfer:hex': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }

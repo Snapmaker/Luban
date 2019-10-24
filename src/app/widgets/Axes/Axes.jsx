@@ -77,7 +77,7 @@ class Axes extends PureComponent {
         port: PropTypes.string.isRequired,
         dataSources: PropTypes.array,
         dataSource: PropTypes.string.isRequired,
-        workState: PropTypes.string.isRequired,
+        workflowState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
@@ -311,14 +311,14 @@ class Axes extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.workState !== this.props.workState) {
+        if (nextProps.workflowState !== this.props.workflowState) {
             const { keypadJogging, selectedAxis } = this.state;
 
             // Disable keypad jogging and shuttle wheel when the workflow is not in the idle state.
             // This prevents accidental movement while sending G-code commands.
             this.setState({
-                keypadJogging: (nextProps.workState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-                selectedAxis: (nextProps.workState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+                keypadJogging: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+                selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
             });
         }
         const { dataSource, x, y, z } = nextProps.workPosition;
@@ -453,8 +453,8 @@ class Axes extends PureComponent {
 
     canClick() {
         // TODO: move to redux state
-        const { port, dataSources, workState, server, serverStatus } = this.props;
-        return (port && dataSources.indexOf(this.props.dataSource) !== -1 && workState === WORKFLOW_STATE_IDLE
+        const { port, dataSources, workflowState, server, serverStatus } = this.props;
+        return (port && dataSources.indexOf(this.props.dataSource) !== -1 && workflowState === WORKFLOW_STATE_IDLE
             || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
@@ -532,13 +532,13 @@ const mapStateToProps = (state, ownProps) => {
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, dataSources, workState, workPosition, server, serverStatus } = machine;
+    const { port, dataSources, workflowState, workPosition, server, serverStatus } = machine;
 
     return {
         port,
         dataSource,
         dataSources,
-        workState,
+        workflowState,
         workPosition,
         server,
         serverStatus,

@@ -15,7 +15,7 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class QuickAccessToolbar extends PureComponent {
     static propTypes = {

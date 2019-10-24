@@ -11,7 +11,7 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import PrintPreview from './PrintPreview';
 import { PROTOCOL_TEXT } from '../../../constants';
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 function generateSquareGcode(size, sideLength, power) {
     // M3: laser on

@@ -14,7 +14,7 @@ import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
 import { actions as machineActions } from '../../flux/machine';
-import { PROTOCOL_TEXT } from '../../constants';
+// import { PROTOCOL_TEXT } from '../../constants';
 
 
 const STATUS_IDLE = 'idle';
@@ -52,7 +52,7 @@ class SerialConnection extends PureComponent {
     loadingTimer = null;
 
     controllerEvents = {
-        'serialport:list': (ports) => this.onListPorts(ports),
+        'serialport:list': (options) => this.onListPorts(options),
         'serialport:open': (options) => this.onPortOpened(options),
         'serialport:close': (options) => this.onPortClosed(options)
     };
@@ -108,7 +108,8 @@ class SerialConnection extends PureComponent {
         }
     }
 
-    onListPorts(ports) {
+    onListPorts(options) {
+        const { ports } = options;
         // Update loading state
         if (this.loadingTimer) {
             clearTimeout(this.loadingTimer);
@@ -140,7 +141,7 @@ class SerialConnection extends PureComponent {
 
     onPortOpened(options) {
         const { port, dataSource, err } = options;
-        if (dataSource !== PROTOCOL_TEXT) {
+        if (dataSource !== this.props.dataSource) {
             return;
         }
         if (err && err !== 'inuse') {
@@ -190,7 +191,8 @@ class SerialConnection extends PureComponent {
 
     onPortClosed(options) {
         const { port, dataSource, err } = options;
-        if (dataSource !== PROTOCOL_TEXT) {
+        // if (dataSource !== PROTOCOL_TEXT) {
+        if (dataSource !== this.props.dataSource) {
             return;
         }
         if (err) {

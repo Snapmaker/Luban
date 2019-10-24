@@ -37,10 +37,12 @@ class SerialClient {
 
     on(eventName, callback) {
         controller.on(eventName, this._getCallback(callback));
+        // controller.on(eventName, callback);
     }
 
     off(eventName, callback) {
         controller.off(eventName, this._removeCallback(callback));
+        // controller.off(eventName, callback);
     }
 
     listPorts() {
@@ -68,7 +70,6 @@ class SerialClient {
     }
 
     command(cmd, ...args) {
-        console.log(cmd, this.dataSource);
         controller.command(cmd, this.dataSource, ...args);
     }
 
@@ -82,8 +83,8 @@ class SerialClient {
             return newVar;
         }
         const newCallback = (options) => {
-            const { dataSource } = options;
-            if (dataSource && dataSource !== this.dataSource) {
+            // some callback events have no dataSource
+            if (options && options.dataSource && options.dataSource !== this.dataSource) {
                 return;
             }
             callback(options);

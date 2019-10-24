@@ -34,7 +34,7 @@ import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class Visualizer extends Component {
     static propTypes = {
@@ -141,7 +141,9 @@ class Visualizer extends Component {
 
             this.unloadGcode();
         },
-        'sender:status': (data, dataSource) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }

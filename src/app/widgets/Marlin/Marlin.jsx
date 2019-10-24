@@ -117,42 +117,50 @@ class MarlinWidget extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port, dataSource } = options;
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    ...this.getInitialState(),
-                    isConnected: true,
-                    port: port
-                });
-                this.props.setDisplay(true);
-                this.actions.setTitle();
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({
+                ...this.getInitialState(),
+                isConnected: true,
+                port: port
+            });
+            this.props.setDisplay(true);
+            this.actions.setTitle();
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({ ...this.getInitialState() });
-                this.props.setDisplay(false);
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({ ...this.getInitialState() });
+            this.props.setDisplay(false);
         },
-        'Marlin:state': (state, dataSource) => {
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    controller: {
-                        ...this.state.controller,
-                        state
-                    }
-                });
+        // 'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    state
+                }
+            });
         },
-        'Marlin:settings': (settings, dataSource) => {
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    controller: {
-                        ...this.state.controller,
-                        settings
-                    }
-                });
+        // 'Marlin:settings': (settings, dataSource) => {
+        'Marlin:settings': (options) => {
+            const { settings, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    settings
+                }
+            });
         }
     };
 

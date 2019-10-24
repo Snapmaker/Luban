@@ -35,7 +35,10 @@ class Console extends PureComponent {
             }
             this.actions.clearAll();
         },
-        'serialport:write': (data, context, dataSource) => {
+        // 'serialport:write': (data, context, dataSource) => {
+        'serialport:write': (options) => {
+            const { context, dataSource } = options;
+            let data = options.data;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -49,7 +52,9 @@ class Console extends PureComponent {
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         },
-        'serialport:read': (data, dataSource) => {
+        // 'serialport:read': (data, dataSource) => {
+        'serialport:read': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }

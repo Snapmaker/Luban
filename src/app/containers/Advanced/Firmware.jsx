@@ -11,7 +11,7 @@ import styles from './index.styl';
 import modal from '../../lib/modal';
 import { PROTOCOL_SCREEN } from '../../constants';
 
-const controller = new SerialClient(PROTOCOL_SCREEN);
+const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class Firmware extends PureComponent {
     static propTypes = {
@@ -98,7 +98,9 @@ class Firmware extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state, dataSource) => {
+        // 'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
             }

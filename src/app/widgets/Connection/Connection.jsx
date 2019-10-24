@@ -5,7 +5,8 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import Notifications from '../../components/Notifications';
 
 import SerialConnection from './SerialConnection';
@@ -17,6 +18,8 @@ class Connection extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         dataSource: PropTypes.string.isRequired
     };
+
+    controller = new SerialClient({ dataSource: this.props.dataSource });
 
     state = {
         // connection types: serial, wifi
@@ -80,14 +83,14 @@ class Connection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            this.controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            this.controller.off(eventName, callback);
         });
     }
 

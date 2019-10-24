@@ -337,7 +337,7 @@ const migrateStore = () => {
     // 3.0.0
     // add widget 'macro'
     if (semver.lt(cnc.version, '3.0.0')) {
-        const secondaryWidgets = store.get('workspace.container.secondary.widgets');
+        const secondaryWidgets = store.get('tab.workspace.container.secondary.widgets');
         /*
         if (includes(secondaryWidgets, 'macro')) {
             secondaryWidgets.splice(secondaryWidgets.indexOf('macro'), 1);
@@ -346,7 +346,7 @@ const migrateStore = () => {
         */
         if (!includes(secondaryWidgets, 'macro')) {
             secondaryWidgets.push('macro');
-            store.set('workspace.container.secondary.widgets', secondaryWidgets);
+            store.set('tab.workspace.container.secondary.widgets', secondaryWidgets);
         }
     }
 };
