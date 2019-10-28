@@ -22,7 +22,6 @@ class LaserSetBackgroundWidget extends PureComponent {
     };
 
     controllerEvents = {
-        // TODO
         'serialport:open': (options) => {
             const { dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
@@ -37,8 +36,8 @@ class LaserSetBackgroundWidget extends PureComponent {
             }
             this.setState({ isConnected: false });
         },
-        'Marlin:state': (data) => {
-            const { state, dataSource } = data;
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }

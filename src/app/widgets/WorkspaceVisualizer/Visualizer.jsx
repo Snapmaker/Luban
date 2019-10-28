@@ -160,8 +160,8 @@ class Visualizer extends Component {
             });
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
-        'workflow:state': (data) => {
-            const { dataSource, workflowState } = data;
+        'workflow:state': (options) => {
+            const { dataSource, workflowState } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -186,8 +186,8 @@ class Visualizer extends Component {
             }
         },
         // FIXME
-        'Marlin:state': (data) => {
-            const { state, dataSource } = data;
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -196,7 +196,7 @@ class Visualizer extends Component {
                 controller: {
                     type: MARLIN,
                     ...this.state.controller,
-                    ...state
+                    state
                 }
             });
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {

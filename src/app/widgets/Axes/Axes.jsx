@@ -235,8 +235,8 @@ class Axes extends PureComponent {
             this.setState({ ...initialState });
         },
         // FIXME
-        'Marlin:state': (data) => {
-            const { state, dataSource } = data;
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
             if (dataSource !== this.props.dataSource) {
                 return;
             }

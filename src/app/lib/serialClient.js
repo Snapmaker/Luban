@@ -19,7 +19,6 @@ class SerialClient {
         return controller.context;
     }
 
-
     getType() {
         return controller.type;
     }

@@ -79,8 +79,8 @@ class GCode extends PureComponent {
                 remainingTime
             });
         },
-        'workflow:state': (data) => {
-            const { workflowState, dataSource } = data;
+        'workflow:state': (options) => {
+            const { workflowState, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
