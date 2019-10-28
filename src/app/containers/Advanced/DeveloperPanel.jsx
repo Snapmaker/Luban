@@ -324,7 +324,6 @@ class DeveloperPanel extends PureComponent {
         },
         // 'serialport:read': (data, dataSource) => {
         'serialport:read': (options) => {
-            console.log(options);
             const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_SCREEN) {
                 return;
