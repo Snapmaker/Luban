@@ -6,6 +6,7 @@ import {
     MACHINE_SERIES,
     MACHINE_PATTERN
 } from '../../constants';
+import { valueOf } from '../../lib/contants-utils';
 import controller from '../../lib/controller';
 import { machineStore } from '../../store/local-storage';
 import { Server } from '../models/Server';
@@ -33,7 +34,7 @@ const INITIAL_STATE = {
     dataSource: '',
     dataSources: [],
     // from workflowState: idle, running, paused
-    workState: WORKFLOW_STATE_IDLE,
+    workflowState: WORKFLOW_STATE_IDLE,
 
     workPosition: { // work position
         x: '0.000',
@@ -45,6 +46,7 @@ const INITIAL_STATE = {
 
     // current connected device
     series: MACHINE_SERIES.ORIGINAL.value,
+    isCustom: false,
     size: {
         x: 125,
         y: 125,
@@ -105,7 +107,8 @@ export const actions = {
         // Register event listeners
         const controllerEvents = {
             // 'Marlin:state': (state) => {
-            'Marlin:state': (state, dataSource) => {
+            'Marlin:state': (options) => {
+                const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
                 const { pos } = state;
@@ -120,7 +123,9 @@ export const actions = {
                     }
                 }));
             },
-            'Marlin:settings': (settings) => {
+            // 'Marlin:settings': (settings) => {
+            'Marlin:settings': (options) => {
+                const { settings } = options;
                 const state = getState().machine;
 
                 // enclosure is changed
@@ -191,8 +196,10 @@ export const actions = {
                     }));
                 }
             },
-            'workflow:state': (workState, dataSource) => {
-                dispatch(actions.updateState({ workState, dataSource }));
+            // 'workflow:state': (workflowState, dataSource) => {
+            'workflow:state': (options) => {
+                const { workflowState, dataSource } = options;
+                dispatch(actions.updateState({ workflowState, dataSource }));
             }
         };
 
@@ -201,14 +208,19 @@ export const actions = {
         });
     },
 
-    updateMachinePattern: (pattern) => (dispatch) => {
-        dispatch(actions.updateState({ pattern }));
+    updateMachineState: (state) => (dispatch,) => {
+        const { series, pattern } = state;
+        dispatch(actions.updateState({
+            pattern
+        }));
+        dispatch(actions.updateMachineSeries(series));
     },
 
     updateMachineSeries: (series) => (dispatch) => {
         machineStore.set('machine.series', series);
-
         dispatch(actions.updateState({ series }));
+        const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+        seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
         dispatch(widgetActions.updateMachineSeries(series));
     },
 
@@ -235,11 +247,9 @@ export const actions = {
         const machine = getState().machine;
 
         const { port, server } = machine;
-        // if (port && workState === WORKFLOW_STATE_IDLE) {
+        // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (port) {
             // controller.command('gcode', gcode, context);
-            console.log(dataSource);
-            console.log(gcode);
             controller.command('gcode', dataSource, gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {

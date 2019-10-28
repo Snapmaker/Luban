@@ -10,7 +10,7 @@ import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
 import { PROTOCOL_TEXT } from '../../constants';
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const Overrides = (props) => {
     const { speedFactor = 0, extruderFactor = 0, state, actions } = props;

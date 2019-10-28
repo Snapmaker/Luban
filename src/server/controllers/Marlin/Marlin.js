@@ -145,9 +145,10 @@ class MarlinLineParserResultPosition {
 class MarlinLineParserResultOk {
     // ok
     static parse(line) {
-        // TODO
-        const r = line.match(/^ok($| [0-9]+$)/);
-        // const r = line.match(/^ok/);
+        const r = line.match(/^ok$/);
+        // NEW: ok or ok with line numbers in G-Code File
+        // const r = line.match(/^ok($| [0-9]+$)/);
+        // const r = line.match(/^ok($| [0-9]+$)/);
         if (!r) {
             return null;
         }

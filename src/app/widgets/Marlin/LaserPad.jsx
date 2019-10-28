@@ -12,7 +12,7 @@ import styles from '../styles.styl';
 import { PROTOCOL_TEXT } from '../../constants';
 
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class LaserPad extends PureComponent {
     static propTypes = {

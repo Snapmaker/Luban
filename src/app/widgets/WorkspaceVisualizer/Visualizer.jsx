@@ -34,7 +34,7 @@ import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class Visualizer extends Component {
     static propTypes = {
@@ -81,12 +81,12 @@ class Visualizer extends Component {
         toolheadVisible: true,
         gcodeFilenameVisible: true,
         fileTransitModalVisible: false,
-        port: controller.port,
+        port: controller.getPort(),
         controller: {
-            type: controller.type,
-            state: controller.state
+            type: controller.getType(),
+            state: controller.getState()
         },
-        workflowState: controller.workflowState,
+        workflowState: controller.getWorkflowState(),
         workPosition: {
             x: '0.000',
             y: '0.000',
@@ -131,17 +131,19 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             this.setState(() => ({
-                port: controller.port,
+                port: controller.getPort(),
                 controller: {
-                    type: controller.type,
-                    state: controller.state
+                    type: controller.getType(),
+                    state: controller.getState()
                 },
-                workflowState: controller.workflowState
+                workflowState: controller.getWorkflowState()
             }));
 
             this.unloadGcode();
         },
-        'sender:status': (data, dataSource) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -158,10 +160,12 @@ class Visualizer extends Component {
             });
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
-        'workflow:state': (workflowState, dataSource) => {
+        'workflow:state': (data) => {
+            const { dataSource, workflowState } = data;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
+            console.log(this.state.workflowState, workflowState);
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState });
                 switch (workflowState) {
@@ -182,7 +186,8 @@ class Visualizer extends Component {
             }
         },
         // FIXME
-        'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (data) => {
+            const { state, dataSource } = data;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -213,6 +218,7 @@ class Visualizer extends Component {
         },
         handleRun: () => {
             const { workflowState } = this.state;
+            console.log(workflowState);
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
                 controller.command('gcode:start');
@@ -674,6 +680,7 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
+        console.log(state.workflowState);
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>

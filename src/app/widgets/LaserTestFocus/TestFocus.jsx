@@ -15,7 +15,7 @@ import styles from './styles.styl';
 import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
 import { actions as workspaceActions } from '../../flux/workspace';
 
-const controller = new SerialClient(PROTOCOL_TEXT);
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
@@ -71,7 +71,7 @@ class TestFocus extends PureComponent {
             ...this.actions
         };
         const { isConnected, showInstructions } = this.props;
-        const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
+        const isIdle = controller.getWorkflowState() === WORKFLOW_STATE_IDLE;
 
         return (
             <React.Fragment>

@@ -228,7 +228,6 @@ class PacketManager {
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
         const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataBuffer.length);
-        // console.log('buffer', buffer);
         return buffer;
     }
 

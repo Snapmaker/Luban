@@ -73,21 +73,50 @@ export const HEAD_UNKNOWN = 'unknown';
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'original',
-        label: 'Snapmaker Original'
+        label: 'Snapmaker Original',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        }
     },
     A150: {
         value: 'A150',
-        label: 'Snapmaker 2.0 A150'
+        label: 'Snapmaker 2.0 A150',
+        setting: {
+            size: {
+                x: 160,
+                y: 160,
+                z: 145
+            }
+        }
     },
     A250: {
         value: 'A250',
-        label: 'Snapmaker 2.0 A250'
+        label: 'Snapmaker 2.0 A250',
+        setting: {
+            size: {
+                x: 230,
+                y: 250,
+                z: 240
+            }
+        }
     },
     A350: {
         value: 'A350',
-        label: 'Snapmaker 2.0 A350'
+        label: 'Snapmaker 2.0 A350',
+        setting: {
+            size: {
+                x: 320,
+                y: 340,
+                z: 330
+            }
+        }
     }
 };
+
 export const MACHINE_PATTERN = {
     WORKSPACE: {
         value: 'workspace',
@@ -107,12 +136,5 @@ export const MACHINE_PATTERN = {
         value: 'cnc',
         label: 'CNC',
         alias: ['CNC']
-    },
-    valueOfAlias: (alias) => {
-        const key = Object.keys(MACHINE_PATTERN).find(k => {
-            const v = MACHINE_PATTERN[k];
-            return v.alias && v.alias.includes(alias);
-        });
-        return key && MACHINE_PATTERN[key].value;
     }
 };

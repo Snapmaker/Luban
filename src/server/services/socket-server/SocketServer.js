@@ -204,11 +204,7 @@ class SocketServer {
                 const portsInUse = Object.keys(controllers)
                     // .filter(port => {
                     .filter((portWithDataSource) => {
-                        // TODO not OK
-                        // const controller = controllers[port];
-                        // const controller = controllers[`"${portWithDataSource}"`];
                         const controller = controllers[portWithDataSource];
-                        // const controller = controllers[`${port}/${dataSource}`];
                         return controller && controller.isOpen();
                     });
 
@@ -219,7 +215,7 @@ class SocketServer {
                         inuse: portsInUse.indexOf(port.comName) >= 0
                     };
                 });
-                socket.emit('serialport:list', availablePorts);
+                socket.emit('serialport:list', { ports: availablePorts });
             });
         });
 

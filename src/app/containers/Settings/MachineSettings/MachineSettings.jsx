@@ -24,48 +24,16 @@ const customOption = {
 };
 const machineSeriesOptions = [
     {
-        value: MACHINE_SERIES.ORIGINAL.value,
-        label: MACHINE_SERIES.ORIGINAL.label,
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
-        }
+        ...MACHINE_SERIES.ORIGINAL
     },
     {
-        value: MACHINE_SERIES.A150.value,
-        label: MACHINE_SERIES.A150.label,
-        setting: {
-            size: {
-                x: 160,
-                y: 160,
-                z: 145
-            }
-        }
+        ...MACHINE_SERIES.A150
     },
     {
-        value: MACHINE_SERIES.A250.value,
-        label: MACHINE_SERIES.A250.label,
-        setting: {
-            size: {
-                x: 230,
-                y: 250,
-                z: 240
-            }
-        }
+        ...MACHINE_SERIES.A250
     },
     {
-        value: MACHINE_SERIES.A350.value,
-        label: MACHINE_SERIES.A350.label,
-        setting: {
-            size: {
-                x: 320,
-                y: 340,
-                z: 330
-            }
-        }
+        ...MACHINE_SERIES.A350
     },
     customOption
 ];

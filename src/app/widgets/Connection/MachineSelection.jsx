@@ -14,16 +14,17 @@ class MachineSelection extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
         pattern: PropTypes.string.isRequired,
+        querySeries: PropTypes.string,
+        queryPattern: PropTypes.string,
 
         closeModal: PropTypes.func.isRequired,
 
-        updateMachinePattern: PropTypes.func.isRequired,
-        updateMachineSeries: PropTypes.func.isRequired
+        updateMachineState: PropTypes.func.isRequired
     };
 
     state = {
-        series: this.props.series,
-        pattern: this.props.pattern
+        series: this.props.querySeries || this.props.series,
+        pattern: this.props.queryPattern || this.props.pattern
     }
 
     actions = {
@@ -38,11 +39,19 @@ class MachineSelection extends PureComponent {
             );
         },
         onClickOk: () => {
-            this.props.updateMachinePattern(this.state.pattern);
-            this.props.updateMachineSeries(this.state.series);
+            const { series, pattern } = this.state;
+            this.props.updateMachineState({
+                series,
+                pattern
+            });
             this.props.closeModal();
         },
         onClickCancel: () => {
+            const { series, pattern } = this.state;
+            this.props.updateMachineState({
+                series,
+                pattern
+            });
             this.props.closeModal();
         }
     }
@@ -91,52 +100,57 @@ class MachineSelection extends PureComponent {
             }
         ];
 
+
         return (
-            <Modal disableOverlay size="md" onClose={this.props.closeModal}>
+            <Modal disableOverlay size="md" onClose={this.actions.onClickCancel}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Machine Select')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles['select-tools']}>
-                        { machineSeriesOptions.map(v => {
-                            return (
-                                <div key={v.value} className={styles['select-tool']}>
-                                    <Anchor
-                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
-                                        onClick={() => actions.onChangeSeries(v)}
-                                    >
-                                        <img
-                                            src={v.img}
-                                            role="presentation"
-                                            alt="V-Bit"
-                                        />
-                                    </Anchor>
-                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className={styles['select-tools']}>
-                        { machinePatternOptions.map(v => {
-                            return (
-                                <div key={v.value} className={styles['select-tool']}>
-                                    <Anchor
-                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
-                                        onClick={() => actions.onChangePattern(v)}
-                                    >
-                                        <img
-                                            src={v.img}
-                                            role="presentation"
-                                            alt="V-Bit"
-                                        />
-                                    </Anchor>
-                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    {!this.props.querySeries && (
+                        <div className={styles['select-tools']}>
+                            { machineSeriesOptions.map(v => {
+                                return (
+                                    <div key={v.value} className={styles['select-tool']}>
+                                        <Anchor
+                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
+                                            onClick={() => actions.onChangeSeries(v)}
+                                        >
+                                            <img
+                                                src={v.img}
+                                                role="presentation"
+                                                alt="V-Bit"
+                                            />
+                                        </Anchor>
+                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {!this.props.queryPattern && (
+                        <div className={styles['select-tools']}>
+                            { machinePatternOptions.map(v => {
+                                return (
+                                    <div key={v.value} className={styles['select-tool']}>
+                                        <Anchor
+                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
+                                            onClick={() => actions.onChangePattern(v)}
+                                        >
+                                            <img
+                                                src={v.img}
+                                                role="presentation"
+                                                alt="V-Bit"
+                                            />
+                                        </Anchor>
+                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
@@ -155,17 +169,10 @@ class MachineSelection extends PureComponent {
         );
     }
 }
-const mapStateToProps = (state) => {
-    const { series, pattern } = state.machine;
-    return {
-        series: series,
-        pattern: pattern
-    };
-};
+
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateMachinePattern: (pattern) => dispatch(machineActions.updateMachinePattern(pattern)),
-        updateMachineSeries: (series) => dispatch(machineActions.updateMachineSeries(series))
+        updateMachineState: (state) => dispatch(machineActions.updateMachineState(state))
     };
 };
-export default connect(mapStateToProps, mapDispatchToProps)(MachineSelection);
+export default connect(null, mapDispatchToProps)(MachineSelection);

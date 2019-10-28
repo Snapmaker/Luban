@@ -55,7 +55,6 @@ class Printing extends PureComponent {
     // constructor(props) {
     //     super(props);
 
-    // console.log(this.props.widgetIds);
     // for (const widgetId of this.props.widgetIds) {
     //     this.widgetMap[widgetId] = (
     //         <div data-widget-id={widgetId} key={widgetId}>

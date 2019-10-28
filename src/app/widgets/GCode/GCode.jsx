@@ -62,7 +62,9 @@ class GCode extends PureComponent {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
-        'sender:status': (data, dataSource) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -77,7 +79,8 @@ class GCode extends PureComponent {
                 remainingTime
             });
         },
-        'workflow:state': (workflowState, dataSource) => {
+        'workflow:state': (data) => {
+            const { workflowState, dataSource } = data;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }

@@ -32,7 +32,6 @@ const getWidgetByName = (name) => {
         'macroPanel': MacroWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
-        // 'default-console': DefaultConsole,
         'webcam': WebcamWidget,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,

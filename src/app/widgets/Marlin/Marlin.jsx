@@ -34,7 +34,6 @@ const normalizeToRange = (n, min, max) => {
 
 class MarlinWidget extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
         setDisplay: PropTypes.func.isRequired,
 
@@ -65,13 +64,13 @@ class MarlinWidget extends PureComponent {
         toggleMachineModalSection: () => {
             this.setState({ machineModalSectionExpanded: !this.state.machineModalSectionExpanded });
         },
-        changeNozzleTemperature: (nozzleTemperature) => {
-            nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ nozzleTemperature: nozzleTemperature });
+        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+            nozzleTargetTemperature = normalizeToRange(nozzleTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ nozzleTargetTemperature: nozzleTargetTemperature });
         },
-        changeBedTemperature: (bedTemperature) => {
-            bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ bedTemperature: bedTemperature });
+        changeBedTemperature: (bedTargetTemperature) => {
+            bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ bedTargetTemperature: bedTargetTemperature });
         },
         is3DPrinting: () => {
             return (this.state.controller.state.headType === '3DP');
@@ -117,42 +116,53 @@ class MarlinWidget extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port, dataSource } = options;
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    ...this.getInitialState(),
-                    isConnected: true,
-                    port: port
-                });
-                this.props.setDisplay(true);
-                this.actions.setTitle();
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
+            this.setState({
+                ...this.getInitialState(),
+                isConnected: true,
+                port: port
+            });
+            this.props.setDisplay(true);
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({ ...this.getInitialState() });
-                this.props.setDisplay(false);
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            this.setState({ ...this.getInitialState() });
+            this.props.setDisplay(false);
+        },
+        // 'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            const { headType } = this.state.controller.state;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    state
+                }
+            });
+            if (state.headType !== headType) {
+                this.actions.setTitle();
             }
         },
-        'Marlin:state': (state, dataSource) => {
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    controller: {
-                        ...this.state.controller,
-                        state
-                    }
-                });
+        // 'Marlin:settings': (settings, dataSource) => {
+        'Marlin:settings': (options) => {
+            const { settings, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
             }
-        },
-        'Marlin:settings': (settings, dataSource) => {
-            if (dataSource === PROTOCOL_TEXT) {
-                this.setState({
-                    controller: {
-                        ...this.state.controller,
-                        settings
-                    }
-                });
-            }
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    settings
+                }
+            });
         }
     };
 
@@ -176,8 +186,8 @@ class MarlinWidget extends PureComponent {
 
             // data
             port: controller.getPort(),
-            nozzleTemperature: 30,
-            bedTemperature: 30,
+            nozzleTargetTemperature: 30,
+            bedTargetTemperature: 30,
             controller: {
                 state: controller.getState(),
                 settings: controller.getSettings()
@@ -189,26 +199,28 @@ class MarlinWidget extends PureComponent {
         this.addControllerEvents();
     }
 
-    componentDidUpdate() {
-        this.props.updateWidgetState(this.props.widgetId, {
-            minimized: this.state.minimized,
-            fullscreen: this.state.fullscreen,
-            statusSection: {
-                expanded: this.state.statusSectionExpanded
-            },
-            machineModalSection: {
-                expanded: this.state.machineModalSectionExpanded
-            },
-            heaterControlSection: {
-                expanded: this.state.heaterControlSectionExpanded
-            },
-            powerSection: {
-                expanded: this.state.powerSectionExpanded
-            },
-            overridesSection: {
-                expanded: this.state.overridesSectionExpanded
-            }
-        });
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.controller === prevState.controller) {
+            this.props.updateWidgetState({
+                minimized: this.state.minimized,
+                fullscreen: this.state.fullscreen,
+                statusSection: {
+                    expanded: this.state.statusSectionExpanded
+                },
+                machineModalSection: {
+                    expanded: this.state.machineModalSectionExpanded
+                },
+                heaterControlSection: {
+                    expanded: this.state.heaterControlSectionExpanded
+                },
+                powerSection: {
+                    expanded: this.state.powerSectionExpanded
+                },
+                overridesSection: {
+                    expanded: this.state.overridesSectionExpanded
+                }
+            });
+        }
     }
 
     componentWillUnmount() {
@@ -256,7 +268,6 @@ class MarlinWidget extends PureComponent {
                 headType = HEAD_UNKNOWN;
                 break;
         }
-
         return (
             <div>
                 {actions.is3DPrinting() && (
@@ -309,9 +320,9 @@ const mapStateToProps = (state, ownProps) => {
         overridesSectionExpanded
     };
 };
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
+        updateWidgetState: (value) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', value))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(MarlinWidget);

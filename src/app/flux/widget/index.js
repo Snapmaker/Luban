@@ -1,11 +1,8 @@
 import { widgetStore } from '../../store/local-storage';
 import WidgetState from './WidgetState';
 
-
-const localWidgetStore = widgetStore || {};
-const localWidgetState = new WidgetState(localWidgetStore.state);
-widgetStore.setState(localWidgetState.widgetState);
-
+const localWidgetState = new WidgetState(widgetStore);
+console.log(localWidgetState.getState());
 
 const INITIAL_STATE = {
     widgetState: localWidgetState,
@@ -24,24 +21,30 @@ export const actions = {
     },
 
     updateTabContainer: (tab, container, value) => (dispatch, getState) => {
+        // console.log(1);
         const { widgetState } = getState().widget;
         const state = widgetState.updateTabContainer(tab, container, value);
         state && dispatch(actions.updateState(state));
-        widgetStore.setState(widgetState.widgetState);
     },
 
     updateWidgetState: (widgetId, key, value) => (dispatch, getState) => {
         const { widgetState } = getState().widget;
         const state = widgetState.setWidgetState(widgetId, key, value);
         state && dispatch(actions.updateState(state));
-        widgetStore.setState(widgetState.widgetState);
     },
 
     updateMachineSeries: (series) => (dispatch, getState) => {
+        // console.log(3);
         const { widgetState } = getState().widget;
         const state = widgetState.updateSeries(series);
         state && dispatch(actions.updateState(state));
-        widgetStore.setState(widgetState.widgetState);
+    },
+
+    toggleWorkspaceWidgetToDefault: (widgetId) => (dispatch, getState) => {
+        // console.log(4);
+        const { widgetState } = getState().widget;
+        const state = widgetState.toggleWorkspaceWidgetToDefault(widgetId);
+        state && dispatch(actions.updateState(state));
     }
 
 };

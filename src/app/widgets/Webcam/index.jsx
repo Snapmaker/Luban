@@ -362,9 +362,9 @@ const mapStateToProps = (state, ownProps) => {
         muted
     };
 };
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        updateWidgetState: (widgetId, state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state))
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', state))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(WebcamWidget);

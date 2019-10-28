@@ -36,7 +36,8 @@ class LaserTestFocusWidget extends PureComponent {
             }
             this.setState({ isConnected: false });
         },
-        'Marlin:state': (state, dataSource) => {
+        'Marlin:state': (data) => {
+            const { state, dataSource } = data;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }

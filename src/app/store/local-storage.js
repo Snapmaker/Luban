@@ -53,6 +53,7 @@ const getLocalStore = (name) => {
         const localStore = getUserConfig(name) || { state: {} };
         const store = new ImmutableStore(localStore.state);
 
+        localStore.version && (store.version = localStore.version);
         store.on('change', (s) => {
             try {
                 const value = JSON.stringify({

@@ -116,11 +116,14 @@ class CNCController {
                 return;
             }
 
-            this.socket.on(eventName, (...args) => {
-                log.debug(`socket.on('${eventName}'):`, args);
+            // this.socket.on(eventName, (...args) => {
+            this.socket.on(eventName, (options) => {
+                // log.debug(`socket.on('${eventName}'):`, args);
+                log.debug(`socket.on('${eventName}'):`, options);
 
                 if (eventName === 'serialport:open') {
-                    const { controllerType, port, dataSource } = { ...args[0] };
+                    // const { controllerType, port, dataSource } = { ...args[0] };
+                    const { controllerType = 'Marlin', port, dataSource } = options;
                     if (this.ports.indexOf(port) === -1) {
                         this.ports.push(port);
                         this.dataSources.push(dataSource);
@@ -136,7 +139,8 @@ class CNCController {
                     this.type = controllerType;
                 }
                 if (eventName === 'serialport:close') {
-                    const { port, dataSource } = { ...args[0] };
+                    // const { port, dataSource } = { ...args[0] };
+                    const { port, dataSource } = options;
                     const portIndex = this.ports.indexOf(port);
                     if (portIndex !== -1) {
                         this.ports.splice(portIndex, 1);
@@ -163,22 +167,31 @@ class CNCController {
                     }
                 }
                 if (eventName === 'workflow:state') {
-                    this.workflowState = args[0];
+                    // this.workflowState = args[0];
+                    this.workflowState = options.workflowState;
                 }
                 if (eventName === 'Marlin:state') {
                     this.type = MARLIN;
-                    this.state = { ...args[0] };
+                    // this.state = { ...args[0] };
+                    this.state = options.state;
                 }
                 if (eventName === 'Marlin:settings') {
                     this.type = MARLIN;
-                    this.settings = { ...args[0] };
+                    // this.settings = { ...args[0] };
+                    this.settings = options.settings;
                 }
+                /*
+                // outdated? @jt
                 if (eventName === 'machine:settings') {
                     this.type = MARLIN;
-                    this.settings = { ...args[0] };
+                    // this.settings = { ...args[0] };
+                    this.settings = options.settings;
                 }
+                */
                 this.callbacks[eventName].forEach((callback) => {
-                    callback.apply(callback, args);
+                    // callback.apply(callback, args);
+                    // callback.apply(callback, options);
+                    callback.apply(callback, [options]);
                 });
             });
         });
@@ -287,8 +300,6 @@ class CNCController {
 
     // command(cmd, ...args) {
     command(cmd, dataSource, ...args) {
-        console.log(cmd);
-        console.log('dataSource', dataSource);
         // const { port } = this;
         const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {

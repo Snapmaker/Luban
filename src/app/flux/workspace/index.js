@@ -56,6 +56,7 @@ export const actions = {
     },
 
     loadGcode: (port, dataSource, name, gcode) => async (dispatch) => {
+        console.log('loadGcode');
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
             await api.loadGCode({ port, dataSource, name, gcode });

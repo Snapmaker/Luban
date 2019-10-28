@@ -22,6 +22,10 @@ class TerminalWrapper extends PureComponent {
         onData: () => {}
     };
 
+    state = {
+        inputHeight: 20
+    }
+
     prompt = '> ';
 
     pressEnter = false;
@@ -262,11 +266,6 @@ class TerminalWrapper extends PureComponent {
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
-        // fix bug at 20190915
-        // console.log(xtermElement.style, xtermElement.style.height);
-        // if (xtermElement.style.height === '') {
-        //     xtermElement.style.height = '252px';
-        // }
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
         // bind this
@@ -360,7 +359,11 @@ class TerminalWrapper extends PureComponent {
         const minRows = 12;
         const rowOffset = 2;
         const height = this.terminalContainer.current.parentElement.clientHeight || 300;
-        const rows = Math.round(height / lineHeight) - rowOffset;
+        const rows = Math.floor(height / lineHeight) - rowOffset;
+        const inputHeight = height - rows * lineHeight;
+        this.setState({
+            inputHeight
+        });
         if (rows > minRows) {
             this.term.resize(cols, rows);
         } else {
@@ -404,6 +407,7 @@ class TerminalWrapper extends PureComponent {
     render() {
         const defaultWidgets = this.props.defaultWidgets;
         const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
+        const inputHeight = `${this.state.inputHeight}px`;
         return (
             <div
                 className={isToggled ? styles.terminalContentAbsolute : styles.terminalContent}
@@ -412,7 +416,7 @@ class TerminalWrapper extends PureComponent {
                     ref={this.terminalContainer}
                 />
                 <input
-                    style={{ width: '100%', backgroundColor: '#000000', color: '#FFFFFF', border: 'none' }}
+                    style={{ width: '100%', height: inputHeight, backgroundColor: '#000000', color: '#FFFFFF', border: 'none' }}
                     type="text"
                     placeholder="Send Command"
                     onKeyDown={(event) => {
