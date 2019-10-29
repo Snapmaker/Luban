@@ -1,72 +1,41 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
+import PropTypes from
+    'prop-types';
 import i18n from '../../../lib/i18n';
 import api from '../../../api';
-// import { actions as machineActions } from '../../../flux/machine';
-
-
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import Anchor from '../../../components/Anchor';
-// import { EXPERIMENTAL_LASER_CAMERA } from '../../../constants';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
-        // sideLength: PropTypes.number,
-        // displayPrintTrace: PropTypes.func.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
 
-    extractingPreview0 = React.createRef();
-
-    extractingPreview1 = React.createRef();
-
-    extractingPreview2 = React.createRef();
-
-    extractingPreview3 = React.createRef();
-
-    extractingPreview4 = React.createRef();
-
-    extractingPreview5 = React.createRef();
-
-    extractingPreview6 = React.createRef();
-
-    extractingPreview7 = React.createRef();
-
-    extractingPreview8 = React.createRef();
-
     extractingPreview = [
-        this.extractingPreview0,
-        this.extractingPreview1,
-        this.extractingPreview2,
-        this.extractingPreview3,
-        this.extractingPreview4,
-        this.extractingPreview5,
-        this.extractingPreview6,
-        this.extractingPreview7,
-        this.extractingPreview8
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef(),
+        React.createRef()
     ];
 
     state = {
-        // servers: this.props.servers,
-        // center: {
-        //     x: 115,
-        //     y: 125
-        // },
+        // server: this.props.server,
         filename: '',
         options: {
             size: this.props.size,
-            // size: {
-            //     x: 230,
-            //     y: 250
-            // },
             getPoints: [
                 {
                     'x': 107,
@@ -131,7 +100,6 @@ class ExtractSquareTrace extends PureComponent {
                     const x = this.props.size.x / 2 + cameraOffsetX + d * i;
                     const y = this.props.size.y / 2 + cameraOffsetY + d * j;
                     density.push({ 'x': x, 'y': y });
-                    // console.log(`G0 X${x} Y${y} F1000`);
                 }
             }
             for (let i = 0; i < 9; i++) {
@@ -142,7 +110,6 @@ class ExtractSquareTrace extends PureComponent {
 
             Promise.all(getPhotoArray)
                 .then(async (resArray) => {
-                // console.log(resArray);
                     resArray.forEach((item, index) => {
                         const { width = 140, height = 140, fileName } = item.body;
                         imagesName.push(fileName);
@@ -165,7 +132,6 @@ class ExtractSquareTrace extends PureComponent {
             this.fileInput.current.click();
         },
         processStitch: (options) => {
-            // console.log('from frondend processStitch');
             api.processStitch(options).then((res) => {
                 console.log(res);
                 this.setState({
@@ -176,6 +142,7 @@ class ExtractSquareTrace extends PureComponent {
         },
         onChangeFile: (event) => {
             const files = event.target.files;
+
             const imagesName = [];
             const formDataArray = [];
             console.log('size file', this.props.size, this.props.server, this.props.serverStatus);
@@ -201,7 +168,6 @@ class ExtractSquareTrace extends PureComponent {
                         }
                     });
                     await this.actions.processStitch(this.state.options);
-                    // console.log(imagesName);
                 })
                 .catch(() => {
                 });
@@ -230,60 +196,18 @@ class ExtractSquareTrace extends PureComponent {
                     {i18n._('Extract Square Trace')}
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <ExtractPreview
-                        ref={this.extractingPreview[0]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[1]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[2]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[3]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[4]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[5]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[6]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[7]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
-                    <ExtractPreview
-                        ref={this.extractingPreview[8]}
-                        size={this.props.size}
-                        width={140}
-                        height={140}
-                    />
+                    {this.extractingPreview.map((previewId, index) => {
+                        const key = previewId + index;
+                        return (
+                            <ExtractPreview
+                                ref={previewId}
+                                key={key}
+                                size={this.props.size}
+                                width={140}
+                                height={140}
+                            />
+                        );
+                    })}
                 </div>
                 <div className={styles['extract-background']}>
                     <div className={classNames(styles['extract-actions'])}>
@@ -328,12 +252,4 @@ const mapStateToProps = (state) => {
         size: machine.size
     };
 };
-// const mapDispatchToProps = (dispatch) => {
-//     return {
-//         // executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
-//         // takePhoto: (index, positions, context) => dispatch(machineActions.takePhoto(index, positions, context)),
-//         // getPhoto: (index, callback) => dispatch(machineActions.getPhoto(index, callback))
-//     };
-// };
-
 export default connect(mapStateToProps)(ExtractSquareTrace);
