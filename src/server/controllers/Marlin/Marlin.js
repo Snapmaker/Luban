@@ -199,7 +199,7 @@ class MarlinLineParserResultError {
 
 class MarlinLineParserResultOkTemperature {
     static parse(line) {
-        const re = /ok (T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /ok (T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -208,15 +208,18 @@ class MarlinLineParserResultOkTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultOkTemperature,
@@ -227,7 +230,7 @@ class MarlinLineParserResultOkTemperature {
 
 class MarlinLineParserResultTemperature {
     static parse(line) {
-        const re = /(T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /(T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -236,15 +239,17 @@ class MarlinLineParserResultTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultTemperature,

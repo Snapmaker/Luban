@@ -23,6 +23,11 @@ class Printing extends PureComponent {
         actions: PropTypes.object
     };
 
+    state = {
+        nozzleTargetTemperature: null,
+        bedTargetTemperature: null
+    }
+
     actions = {
         onApplyHeadTemperature: () => {
             const { state } = this.props;
@@ -39,6 +44,18 @@ class Printing extends PureComponent {
         onCancelbedTargetTemperature: () => {
             this.props.actions.changeBedTargetTemperature(0);
             controller.command('gcode', 'M140 S0');
+        },
+        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+            this.setState({
+                nozzleTargetTemperature
+            });
+            this.props.actions.changeNozzleTargetTemperature(nozzleTargetTemperature);
+        },
+        changeBedTargetTemperature: (bedTargetTemperature) => {
+            this.setState({
+                bedTargetTemperature
+            });
+            this.props.actions.changeBedTargetTemperature(bedTargetTemperature);
         }
     };
 
@@ -47,6 +64,8 @@ class Printing extends PureComponent {
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
         const { speedFactor, extruderFactor } = controllerState;
+        const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || controllerState.temperature.tTarget || state.nozzleTargetTemperature);
+        const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || controllerState.temperature.bTarget || state.bedTargetTemperature);
 
         return (
             <div>
@@ -109,10 +128,10 @@ class Printing extends PureComponent {
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.nozzleTargetTemperature}
+                                                value={nozzleTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeNozzleTargetTemperature}
+                                                onChange={this.actions.changeNozzleTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
@@ -150,10 +169,10 @@ class Printing extends PureComponent {
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.bedTargetTemperature}
+                                                value={bedTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeBedTargetTemperature}
+                                                onChange={this.actions.changeBedTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
