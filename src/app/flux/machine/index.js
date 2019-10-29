@@ -279,6 +279,30 @@ export const actions = {
         }
     },
 
+    // takePhoto: (index, position) => (dispatch, getState) => {
+    //     const machine = getState().machine;
+    //
+    //     const { server, serverStatus } = machine;
+    //
+    //     if (server && serverStatus === STATUS_IDLE) {
+    //         server.takePhoto(index, position);
+    //     } else {
+    //         console.error('please connect through wifi');
+    //     }
+    // },
+    //
+    // getPhoto: (index, callback) => (dispatch, getState) => {
+    //     const machine = getState().machine;
+    //
+    //     const { server, serverStatus } = machine;
+    //
+    //     if (server && serverStatus === STATUS_IDLE) {
+    //         server.getPhoto(index, callback);
+    //     } else {
+    //         console.error('please connect through wifi');
+    //     }
+    // },
+
     // Enclosure
     getEnclosureState: () => () => {
         // controller.writeln('M1010', dataSource, { source: 'query' });

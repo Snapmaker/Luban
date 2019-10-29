@@ -1,0 +1,89 @@
+@import "../styles.styl"
+
+.laser-set-background-instruction-step
+    > ol
+        list-style-type: none
+
+        li
+            line-height: 1.5em
+
+.laser-set-background-instruction-step-detail
+    > ol
+        list-style-type: lower-alpha
+
+.btn-test-laser-focus-z-normal
+    width: 25px
+    height: 25px
+    background-color: $white-color
+    border-width: 2px
+    border-style: solid
+    border-color: $grey-color2
+    outline: 0
+    &:active
+        border-color: $dark-blue-color
+
+.btn-test-laser-focus-z-selected
+    width: 25px
+    height: 25px
+    background-color: $white-color
+    border-width: 2px
+    border-style: solid
+    border-color: $dark-blue-color
+    outline: 0
+
+.text-test-laser-focus-z-value-normal
+    margin-bottom: 0
+    margin-top: 0
+    color: $grey-color2
+    &:active
+        color: $dark-blue-color
+
+.text-test-laser-focus-z-value-selected
+    margin-bottom: 0
+    margin-top: 0
+    color: $dark-blue-color
+
+.laser-set-background-modal-title
+    display: block
+    font: bold 24px "Arial Black", Gadget, sans-serif
+    margin: 20px 0
+    text-align: center
+
+
+.extract-background
+    display: block
+    height: 74px
+    width: 400px
+    margin: 20px auto
+    border: 1px solid $grey-color2
+
+    .extract-actions
+        display: inline-block
+        width: 33.333333%
+        height: 100%
+        border: 1px solid transparent
+
+        &__btn
+            display: block
+
+            > i
+                display: block
+                margin-top: 8px
+                width: 100%
+                height: 40px
+
+        &__icon-conform
+            background: url("./images/conform.png") no-repeat center
+        &__icon-reset
+            background: url("./images/reset.png") no-repeat center
+        &__icon-upload
+            background: url("./images/upload.png") no-repeat center
+
+        &__text
+            display: block
+            width: 100%
+            text-align: center
+            color: $grey-color
+
+        &:hover
+            border: 1px solid $dark-blue-color

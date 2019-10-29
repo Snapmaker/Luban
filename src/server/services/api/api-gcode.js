@@ -1,9 +1,9 @@
 import store from '../../store';
 import {
-    PROTOCOL_TEXT,
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
+import { PROTOCOL_TEXT } from '../../controllers/constants';
 
 
 export const set = (req, res) => {

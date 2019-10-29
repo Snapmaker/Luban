@@ -174,9 +174,14 @@ class DefinitionManager {
             gcode.push(`M140 S${bedTempLayer0} ;Set Bed Temperature`);
             gcode.push(`M190 S${bedTempLayer0} ;Set Bed Temperature and wait `);
         }
-        gcode.push(`M109 S${printTempLayer0} ;Set Hotend Temperature and wait`);
-
         gcode.push('G28 ;Home');
+        gcode.push('G0 X0 Y0 Z1');
+        gcode.push('M109 ;Wait for Hotend Temperature');
+        if (machineHeatedBed) {
+            gcode.push('M190 ;Wait for Bed Temperature');
+        }
+        //TODO add Recognition of Model Boundary Distance
+        // gcode.push('G28 ;Home');
         gcode.push('G90 ;absolute positioning');
         gcode.push('G1 Z10 F1000');
         gcode.push('G1 X0 Y0 F1000');

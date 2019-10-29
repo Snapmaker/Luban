@@ -11,6 +11,7 @@ import trace from '../../lib/image-trace';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 
+
 const log = logger('api:image');
 
 export const set = (req, res) => {
@@ -140,6 +141,86 @@ export const processTrace = (req, res) => {
     };
     */
     trace(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+// stitch TODO
+export const processStitch = (req, res) => {
+    const options = req.body;
+    console.log('from stitch, filename >>>>>>>>>', options);
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    stitch(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processGetPhoto = (req, res) => {
+    const options = req.body;
+    console.log('from photo, filename >>>>>>>>>', options);
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    getPhoto(imageOptions)
+        .then((result) => {
+            console.log(result);
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processTakePhoto = (req, res) => {
+    const options = req.body;
+    console.log('from photo, filename >>>>>>>>>', options);
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    takePhoto(imageOptions)
         .then((result) => {
             res.send(result);
         })

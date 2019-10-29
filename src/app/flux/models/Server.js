@@ -52,4 +52,23 @@ export class Server {
             callback && callback(err, res);
         });
     }
+
+    // takePhoto(index, position, callback) {
+    //     const api = `${this.host}/api/takePhoto`;
+    //     // const data = new FormData();
+    //     // data.append('index', index);
+    //     // data.append('position', position);
+    //     request.get(api).end((err, res) => {
+    //         callback && callback(err, res);
+    //     });
+    // }
+    //
+    // getPhoto(index, callback) {
+    //     const api = `${this.host}/api/get_camera_image?index=${index}`;
+    //     request.get(api).end((err, res) => {
+    //         console.log('get', res);
+    //         console.log(typeof res.body);
+    //         callback && callback(err, res);
+    //     });
+    // }
 }
