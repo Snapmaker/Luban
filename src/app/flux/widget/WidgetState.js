@@ -30,7 +30,7 @@ const defaultState = {
     },
     laser: {
         default: {
-            widgets: ['laser-set-background', 'laser-params', 'laser-output']
+            widgets: ['laser-set-background', 'laser-camera-aid-background', 'laser-params', 'laser-output']
         }
     },
     cnc: {

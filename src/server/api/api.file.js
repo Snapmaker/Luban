@@ -5,7 +5,7 @@ import store from '../store';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
-import { PROTOCOL_TEXT } from '../constants';
+import { PROTOCOL_TEXT } from '../controllers/constants';
 
 const log = logger('api:file');
 

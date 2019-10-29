@@ -61,6 +61,7 @@ const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 
+
 // Stock Remap
 // options
 //  - image
@@ -74,6 +75,13 @@ const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/imag
 const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
 
 const processTrace = defaultAPIFactory((options) => request.post('/api/image/trace', options));
+
+const processStitch = defaultAPIFactory((options) => request.post('/api/image/stitch', options));
+
+const processGetPhoto = defaultAPIFactory((options) => request.post('/api/image/getPhoto', options));
+
+const processTakePhoto = defaultAPIFactory((options) => request.post('/api/image/takePhoto', options));
+
 
 //
 // svg
@@ -256,6 +264,9 @@ export default {
     stockRemapProcess,
     processImage,
     processTrace,
+    processStitch,
+    processGetPhoto,
+    processTakePhoto,
 
     // svg
     convertRasterToSvg,
