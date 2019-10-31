@@ -434,7 +434,8 @@ class MarlinController {
                 }
 
                 return this.dataFilter(line, context);
-            }
+            },
+            queueSize: 1
         });
         this.sender.on('data', (line = '') => {
             if (!this.isOpen()) {
@@ -588,7 +589,7 @@ class MarlinController {
                     }
                 }
                 this.sender.ack();
-                this.sender.next();
+                this.sender.multipleNext();
                 return;
             }
             if (this.workflow.state === WORKFLOW_STATE_PAUSED) {
@@ -1040,9 +1041,9 @@ class MarlinController {
                     setTimeout(() => this.writeln('M1005'));
                     // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                     // setTimeout(() => this.writeln('M105'), 200);
-                    setTimeout(() => this.writeln('M105'), 100);
+                    setTimeout(() => this.writeln('M105'), 200);
                 }
-            }, 100);
+            }, 1000);
 
             log.debug(`Connected to serial port "${port}/${dataSource}"`);
 

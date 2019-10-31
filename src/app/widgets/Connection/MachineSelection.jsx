@@ -109,48 +109,44 @@ class MachineSelection extends PureComponent {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {!this.props.querySeries && (
-                        <div className={styles['select-tools']}>
-                            { machineSeriesOptions.map(v => {
-                                return (
-                                    <div key={v.value} className={styles['select-tool']}>
-                                        <Anchor
-                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
-                                            onClick={() => actions.onChangeSeries(v)}
-                                        >
-                                            <img
-                                                src={v.img}
-                                                role="presentation"
-                                                alt="V-Bit"
-                                            />
-                                        </Anchor>
-                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                    {!this.props.queryPattern && (
-                        <div className={styles['select-tools']}>
-                            { machinePatternOptions.map(v => {
-                                return (
-                                    <div key={v.value} className={styles['select-tool']}>
-                                        <Anchor
-                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
-                                            onClick={() => actions.onChangePattern(v)}
-                                        >
-                                            <img
-                                                src={v.img}
-                                                role="presentation"
-                                                alt="V-Bit"
-                                            />
-                                        </Anchor>
-                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                    <div className={styles['select-tools']}>
+                        { machineSeriesOptions.map(v => {
+                            return (
+                                <div key={v.value} className={styles['select-tool']}>
+                                    <Anchor
+                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
+                                        onClick={() => actions.onChangeSeries(v)}
+                                    >
+                                        <img
+                                            src={v.img}
+                                            role="presentation"
+                                            alt="V-Bit"
+                                        />
+                                    </Anchor>
+                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className={styles['select-tools']}>
+                        { machinePatternOptions.map(v => {
+                            return (
+                                <div key={v.value} className={styles['select-tool']}>
+                                    <Anchor
+                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
+                                        onClick={() => actions.onChangePattern(v)}
+                                    >
+                                        <img
+                                            src={v.img}
+                                            role="presentation"
+                                            alt="V-Bit"
+                                        />
+                                    </Anchor>
+                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button

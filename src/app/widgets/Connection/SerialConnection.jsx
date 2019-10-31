@@ -109,7 +109,7 @@ class SerialConnection extends PureComponent {
             this.setState({
                 waitTime: new Date()
             });
-            setTimeout(this.actions.showMachineSelection, 200);
+            setTimeout(this.actions.showMachineSelection, 1000);
         },
         showMachineSelection: () => {
             const now = new Date();

@@ -40,21 +40,31 @@ function callCuraEngine(modelPath, configPath, outputPath) {
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 
-function processGcodeHeaderAfterCuraEngine(gcodeFilePath) {
+function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox) {
     const definitionLoader = new DefinitionLoader();
     definitionLoader.loadDefinition('active_final');
     const readFileSync = fs.readFileSync(gcodeFilePath, 'utf8');
 
     const date = new Date();
     const splitIndex = readFileSync.indexOf(';Generated');
+    const boundingBoxMax = (boundingBox || { max: { x: 0, y: 0, z: 0 } }).max;
+    const boundingBoxMin = (boundingBox || { min: { x: 0, y: 0, z: 0 } }).min;
     const header = ';Header Start\n'
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
         + ';header_type: 3dp\n'
+        + `;file_total_lines: ${readFileSync.split('\n').length}\n`
         + `;estimated_time(s): ${printTime}\n`
         + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature.default_value}\n`
         + `;build_plate_temperature(°C): ${definitionLoader.settings.material_bed_temperature.default_value}\n`
         + `;work_speed(mm/minute): ${definitionLoader.settings.speed_infill.default_value * 60}\n`
+        + '\n'
+        + `;max_x(mm): ${boundingBoxMax.x}\n`
+        + `;max_y(mm): ${boundingBoxMax.y}\n`
+        + `;max_z(mm): ${boundingBoxMax.z}\n`
+        + `;min_x(mm): ${boundingBoxMin.x}\n`
+        + `;min_y(mm): ${boundingBoxMin.y}\n`
+        + `;min_z(mm): ${boundingBoxMin.z}\n`
         + '\n'
         + ';Header End\n'
         + '\n'
@@ -73,7 +83,8 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, uploadName } = params;
+    const { originalName, uploadName, boundingBox } = params;
+
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
     if (!fs.existsSync(uploadPath)) {
@@ -116,7 +127,7 @@ function slice(params, onProgress, onSucceed, onError) {
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);
-            processGcodeHeaderAfterCuraEngine(gcodeFilePath, printTime);
+            processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox);
             onSucceed({
                 gcodeFileName: gcodeFileName,
                 printTime: printTime,
