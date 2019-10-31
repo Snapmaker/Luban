@@ -63,9 +63,9 @@ class Printing extends PureComponent {
         const { headType, state, actions } = this.props;
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
-        const { speedFactor, extruderFactor } = controllerState;
-        const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || controllerState.temperature.tTarget || state.nozzleTargetTemperature);
-        const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || controllerState.temperature.bTarget || state.bedTargetTemperature);
+        const { speedFactor, extruderFactor, temperature = {} } = controllerState;
+        const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || temperature.tTarget || state.nozzleTargetTemperature);
+        const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || temperature.bTarget || state.bedTargetTemperature);
 
         return (
             <div>
@@ -116,7 +116,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {controllerState.temperature.t}°C
+                                        {temperature.t}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -157,7 +157,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {controllerState.temperature.b}°C
+                                        {temperature.b}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>

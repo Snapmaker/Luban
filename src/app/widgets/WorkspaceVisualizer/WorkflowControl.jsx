@@ -78,7 +78,6 @@ class WorkflowControl extends PureComponent {
         const canPlay = isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING], workflowState);
         const canPause = _.includes([WORKFLOW_STATE_RUNNING], workflowState);
         const canStop = _.includes([WORKFLOW_STATE_PAUSED], workflowState);
-        console.log(state.workflowState);
 
         return (
             <div>

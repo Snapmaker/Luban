@@ -14,17 +14,16 @@ class MachineSelection extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
         pattern: PropTypes.string.isRequired,
-        querySeries: PropTypes.string,
-        queryPattern: PropTypes.string,
 
+        display: PropTypes.bool.isRequired,
         closeModal: PropTypes.func.isRequired,
 
         updateMachineState: PropTypes.func.isRequired
     };
 
     state = {
-        series: this.props.querySeries || this.props.series,
-        pattern: this.props.queryPattern || this.props.pattern
+        series: this.props.series,
+        pattern: this.props.pattern
     }
 
     actions = {
@@ -57,6 +56,9 @@ class MachineSelection extends PureComponent {
     }
 
     render() {
+        if (!this.props.display) {
+            return null;
+        }
         const state = this.state;
         const actions = this.actions;
         const machineSeriesOptions = [
@@ -109,48 +111,44 @@ class MachineSelection extends PureComponent {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {!this.props.querySeries && (
-                        <div className={styles['select-tools']}>
-                            { machineSeriesOptions.map(v => {
-                                return (
-                                    <div key={v.value} className={styles['select-tool']}>
-                                        <Anchor
-                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
-                                            onClick={() => actions.onChangeSeries(v)}
-                                        >
-                                            <img
-                                                src={v.img}
-                                                role="presentation"
-                                                alt="V-Bit"
-                                            />
-                                        </Anchor>
-                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                    {!this.props.queryPattern && (
-                        <div className={styles['select-tools']}>
-                            { machinePatternOptions.map(v => {
-                                return (
-                                    <div key={v.value} className={styles['select-tool']}>
-                                        <Anchor
-                                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
-                                            onClick={() => actions.onChangePattern(v)}
-                                        >
-                                            <img
-                                                src={v.img}
-                                                role="presentation"
-                                                alt="V-Bit"
-                                            />
-                                        </Anchor>
-                                        <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                    <div className={styles['select-tools']}>
+                        { machineSeriesOptions.map(v => {
+                            return (
+                                <div key={v.value} className={styles['select-tool']}>
+                                    <Anchor
+                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.series === v.value })}
+                                        onClick={() => actions.onChangeSeries(v)}
+                                    >
+                                        <img
+                                            src={v.img}
+                                            role="presentation"
+                                            alt="V-Bit"
+                                        />
+                                    </Anchor>
+                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className={styles['select-tools']}>
+                        { machinePatternOptions.map(v => {
+                            return (
+                                <div key={v.value} className={styles['select-tool']}>
+                                    <Anchor
+                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
+                                        onClick={() => actions.onChangePattern(v)}
+                                    >
+                                        <img
+                                            src={v.img}
+                                            role="presentation"
+                                            alt="V-Bit"
+                                        />
+                                    </Anchor>
+                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
@@ -170,9 +168,17 @@ class MachineSelection extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const { series, pattern } = state.machine;
+    return {
+        series,
+        pattern
+    };
+};
+
 const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state))
     };
 };
-export default connect(null, mapDispatchToProps)(MachineSelection);
+export default connect(mapStateToProps, mapDispatchToProps)(MachineSelection);

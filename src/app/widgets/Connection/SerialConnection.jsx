@@ -27,8 +27,6 @@ const STATUS_CONNECTED = 'connected';
 class SerialConnection extends PureComponent {
     static propTypes = {
         dataSource: PropTypes.string.isRequired,
-        series: PropTypes.string.isRequired,
-        pattern: PropTypes.string.isRequired,
 
         updateMachineConnectionState: PropTypes.func.isRequired,
         port: PropTypes.string.isRequired,
@@ -109,7 +107,7 @@ class SerialConnection extends PureComponent {
             this.setState({
                 waitTime: new Date()
             });
-            setTimeout(this.actions.showMachineSelection, 200);
+            setTimeout(this.actions.showMachineSelection, 1000);
         },
         showMachineSelection: () => {
             const now = new Date();
@@ -423,15 +421,10 @@ class SerialConnection extends PureComponent {
                         <span style={{ margin: '0 8px' }}>{err}</span>
                     )}
                 </div>
-                {showMachineSelected && (
-                    <MachineSelection
-                        series={this.props.series}
-                        pattern={this.props.pattern}
-                        querySeries={this.state.querySeries}
-                        queryPattern={this.state.queryPattern}
-                        closeModal={this.actions.closeModal}
-                    />
-                )}
+                <MachineSelection
+                    display={showMachineSelected}
+                    closeModal={this.actions.closeModal}
+                />
             </div>
         );
     }
@@ -439,12 +432,10 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, series, pattern } = machine;
+    const { port } = machine;
 
     return {
-        port,
-        series,
-        pattern
+        port
     };
 };
 const mapDispatchToProps = (dispatch) => {

@@ -611,7 +611,6 @@ class DeveloperPanel extends PureComponent {
                         >
                             <GcodeFile
                                 port={this.props.port}
-                                executeGcode={this.props.executeGcode}
                             />
                         </Tab>
                         <Tab

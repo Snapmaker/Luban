@@ -1,9 +1,9 @@
-import fs from 'fs';
 import path from 'path';
 import mv from 'mv';
 import store from '../store';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
+import parseGcodeHeader from '../lib/parseGcodeHeader';
 import DataStorage from '../DataStorage';
 import { PROTOCOL_TEXT } from '../controllers/constants';
 
@@ -19,8 +19,8 @@ export const set = (req, res) => {
             log.error(`Failed to upload file ${originalName}`);
         } else {
             res.send({
-                originalName: originalName,
-                uploadName: uploadName
+                originalName,
+                uploadName
             });
             res.end();
         }
@@ -39,14 +39,11 @@ export const uploadGcodeFile = (req, res) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {
-            const gcode = fs.readFileSync(uploadPath, 'utf-8');
-            const start = gcode.indexOf(';Header Start');
-            const end = gcode.indexOf(';Header End');
-            const gcodeHeader = start > -1 && end > start ? gcode.substring(start + 14, end) : '';
+            const gcodeHeader = parseGcodeHeader(uploadPath);
             res.send({
-                originalName: originalName,
-                uploadName: uploadName,
-                gcodeHeader: gcodeHeader
+                originalName,
+                uploadName,
+                gcodeHeader
             });
             res.end();
         }
@@ -74,8 +71,8 @@ export const uploadUpdateFile = (req, res) => {
             log.error(`Failed to upload file ${originalName}`);
         } else {
             res.send({
-                originalName: originalName,
-                uploadName: uploadName
+                originalName,
+                uploadName
             });
             res.end();
         }

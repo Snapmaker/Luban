@@ -150,6 +150,8 @@ class Sender extends events.EventEmitter {
 
     dataFilter = null;
 
+    queueSize = 1;
+
     // @param {number} [type] Streaming protocol type. 0 for send-response, 1 for character-counting.
     // @param {object} [options] The options object.
     // @param {number} [options.bufferSize] The buffer size used in character-counting streaming protocol. Defaults to 127.
@@ -161,6 +163,7 @@ class Sender extends events.EventEmitter {
         if (typeof options.dataFilter === 'function') {
             this.dataFilter = options.dataFilter;
         }
+        this.queueSize = options.queueSize || this.queueSize;
 
         // character-counting
         if (type === SP_TYPE_CHAR_COUNTING) {
@@ -336,6 +339,22 @@ class Sender extends events.EventEmitter {
         this.emit('change');
 
         return true;
+    }
+
+    multipleNext() {
+        if (!this.state.gcode) {
+            return;
+        }
+
+        // Hold off
+        if (this.state.hold) {
+            return;
+        }
+        const sent = this.state.sent;
+        const received = this.state.received;
+        for (let i = sent; i < received + this.queueSize; i++) {
+            this.next();
+        }
     }
 
     // Tells the sender to send more data.

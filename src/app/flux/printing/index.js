@@ -613,7 +613,7 @@ export const actions = {
     },
 
     generateGcode: () => async (dispatch, getState) => {
-        const { hasModel, activeDefinition } = getState().printing;
+        const { hasModel, activeDefinition, boundingBox } = getState().printing;
         if (!hasModel) {
             return;
         }
@@ -646,7 +646,8 @@ export const actions = {
         */
         const params = {
             originalName: originalName,
-            uploadName: uploadName
+            uploadName: uploadName,
+            boundingBox: boundingBox
         };
         controller.slice(params);
     },

@@ -15,6 +15,7 @@ class Console extends PureComponent {
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
         defaultWidgets: PropTypes.array.isRequired,
+        minimized: PropTypes.bool.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -216,8 +217,11 @@ class Console extends PureComponent {
         }
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps) {
+        // if (prevProps.minimized !== this.props.minimized) {
+        console.log(prevProps, this.props.minimized);
         this.resizeTerminal();
+        // }
     }
 
     componentWillUnmount() {
