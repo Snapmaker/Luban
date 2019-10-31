@@ -7,43 +7,33 @@ import styles from '../styles.styl';
 class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired,
-        size: PropTypes.object.isRequired
+        height: PropTypes.number.isRequired
     };
 
     state = {
+        src: '/',
+        filename: ''
     };
 
-    node = React.createRef();
-
-    constructor(props) {
-        super(props);
-        this.renderer = null;
+    onChangeImage(filename) {
+        this.setState({
+            filename: filename,
+            src: `${DATA_PREFIX}/${filename}`
+        });
     }
+    //
 
-    componentDidMount() {
-        this.setupImg();
-    }
-
-    onChangeImage(filename, width, height) {
-        const { size } = this.props;
-        console.log(size, DATA_PREFIX);
-        console.log(filename, width, height);
-        const imgPath = `${DATA_PREFIX}/${filename}`;
-        this.renderer.src = imgPath;
-    }
-
-    setupImg() {
-        const { width, height } = this.props;
-        this.renderer = new Image();
-        this.renderer.width = width;
-        this.renderer.height = height;
-        this.node.current.appendChild(this.renderer);
-    }
 
     render() {
         return (
-            <div ref={this.node} className={styles['laser-extract-previous']} />
+            <div className={styles['laser-extract-previous']}>
+                <img
+                    alt={this.state.filename}
+                    src={this.state.src}
+                    width={this.props.width}
+                    height={this.props.height}
+                />
+            </div>
         );
     }
 }

@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
@@ -11,13 +13,16 @@ import {
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
-import { PROTOCOL_TEXT } from '../../constants';
+import { PROTOCOL_TEXT, MACHINE_PATTERN } from '../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
+    static propTypes = {
+        pattern: PropTypes.string.isRequired
+    };
+
     state = {
         isConnected: false,
-        isLaser: false,
         showInstructions: false
     };
 
@@ -35,15 +40,6 @@ class LaserTestFocusWidget extends PureComponent {
                 return;
             }
             this.setState({ isConnected: false });
-        },
-        'Marlin:state': (options) => {
-            const { state, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            const headType = state.headType;
-            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-            this.setState({ isLaser });
         }
     };
 
@@ -88,7 +84,7 @@ class LaserTestFocusWidget extends PureComponent {
         const actions = this.actions;
 
         // TODO: move this condition to widget's filter
-        if (!state.isLaser || !state.isConnected) {
+        if (!(this.props.pattern === MACHINE_PATTERN.LASER.value) || !state.isConnected) {
             return null;
         }
 
@@ -125,5 +121,10 @@ class LaserTestFocusWidget extends PureComponent {
         );
     }
 }
-
-export default LaserTestFocusWidget;
+const mapStateToProps = (state) => {
+    const { pattern } = state.machine;
+    return {
+        pattern
+    };
+};
+export default connect(mapStateToProps)(LaserTestFocusWidget);

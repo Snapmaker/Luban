@@ -110,6 +110,7 @@ class ConsoleWidget extends PureComponent {
                 >
                     <Console
                         minimized={minimized}
+                        isDefault={isDefault}
                         widgetId={widgetId}
                         clearRenderStamp={clearRenderStamp}
                     />

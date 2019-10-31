@@ -16,7 +16,8 @@ import {
     HEAD_3DP,
     HEAD_LASER,
     HEAD_CNC,
-    HEAD_UNKNOWN
+    HEAD_UNKNOWN,
+    MACHINE_PATTERN
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
 
@@ -37,6 +38,7 @@ class MarlinWidget extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         setDisplay: PropTypes.func.isRequired,
 
+        pattern: PropTypes.string.isRequired,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
         heaterControlSectionExpanded: PropTypes.bool.isRequired,
@@ -73,15 +75,13 @@ class MarlinWidget extends PureComponent {
             this.setState({ bedTargetTemperature });
         },
         is3DPrinting: () => {
-            return (this.state.controller.state.headType === '3DP');
+            return this.props.pattern === MACHINE_PATTERN['3DP'].value;
         },
         isLaser: () => {
-            return (this.state.controller.state.headType === 'LASER'
-                || this.state.controller.state.headType === 'LASER350'
-                || this.state.controller.state.headType === 'LASER1600');
+            return this.props.pattern === MACHINE_PATTERN.LASER.value;
         },
         isCNC: () => {
-            return (this.state.controller.state.headType === 'CNC');
+            return this.props.pattern === MACHINE_PATTERN.CNC.value;
         },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
@@ -137,7 +137,6 @@ class MarlinWidget extends PureComponent {
         // 'Marlin:state': (state, dataSource) => {
         'Marlin:state': (options) => {
             const { state, dataSource } = options;
-            const { headType } = this.state.controller.state;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
@@ -147,9 +146,6 @@ class MarlinWidget extends PureComponent {
                     state
                 }
             });
-            if (state.headType !== headType) {
-                this.actions.setTitle();
-            }
         },
         // 'Marlin:settings': (settings, dataSource) => {
         'Marlin:settings': (options) => {
@@ -169,6 +165,7 @@ class MarlinWidget extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setDisplay(false);
+        this.actions.setTitle();
     }
 
     getInitialState() {
@@ -200,6 +197,9 @@ class MarlinWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (prevProps.pattern !== this.props.pattern) {
+            this.actions.setTitle();
+        }
         if (this.state.controller === prevState.controller) {
             this.props.updateWidgetState({
                 minimized: this.state.minimized,
@@ -297,6 +297,7 @@ class MarlinWidget extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
+    const { pattern } = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const {
@@ -313,6 +314,7 @@ const mapStateToProps = (state, ownProps) => {
     const overridesSectionExpanded = overridesSection.expanded;
 
     return {
+        pattern,
         statusSectionExpanded,
         machineModalSectionExpanded,
         heaterControlSectionExpanded,

@@ -13,7 +13,6 @@ class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
-        serverStatus: PropTypes.string.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };
 
@@ -32,8 +31,10 @@ class ExtractSquareTrace extends PureComponent {
     ];
 
     state = {
-        // server: this.props.server,
+        isStitched: false,
+        shouldStopAction: false,
         filename: '',
+        currentIndex: -1,
         options: {
             size: this.props.size,
             getPoints: [
@@ -78,7 +79,8 @@ class ExtractSquareTrace extends PureComponent {
 
     actions = {
         start: async () => {
-            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration' });
+            const { address } = this.props.server;
+            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
             this.setState({
                 options: {
@@ -87,14 +89,11 @@ class ExtractSquareTrace extends PureComponent {
                     getPoints: resData.points
                 }
             });
-            console.log('corners>>>>>start', this.state.options);
             const imagesName = [];
             const density = [];
-            const getPhotoArray = [];
             const d = 100;
             const cameraOffsetX = 15;
             const cameraOffsetY = -5;
-            console.log('props size', this.props.size);
             for (let j = 1; j >= -1; j--) {
                 for (let i = -1; i <= 1; i++) {
                     const x = this.props.size.x / 2 + cameraOffsetX + d * i;
@@ -102,30 +101,39 @@ class ExtractSquareTrace extends PureComponent {
                     density.push({ 'x': x, 'y': y });
                 }
             }
+            this.setState({
+                currentIndex: 0,
+                shouldStopAction: false
+            });
             for (let i = 0; i < 9; i++) {
-                const res = await api.processTakePhoto({ 'path': 'request_capture_photo', 'index': i, 'x': density[i].x, 'y': density[i].y });
-                const ask = await getPhotoArray.push(api.processGetPhoto({ 'index': i }));
-                console.log(res, ask);
-            }
-
-            Promise.all(getPhotoArray)
-                .then(async (resArray) => {
-                    resArray.forEach((item, index) => {
-                        const { width = 140, height = 140, fileName } = item.body;
-                        imagesName.push(fileName);
-                        this.extractingPreview[index].current.onChangeImage(fileName, width, height);
-                    });
+                if (this.state.shouldStopAction === true) {
                     this.setState({
                         options: {
-                            ...this.state.options,
-                            fileNames: imagesName
+                            fileNames: []
                         }
                     });
-                    console.log(this.state.options.fileNames);
-                    await this.actions.processStitch(this.state.options);
-                })
-                .catch(() => {
+                    return;
+                }
+                await api.processTakePhoto({ 'path': 'request_capture_photo', 'index': i, 'x': density[i].x, 'y': density[i].y, 'address': address });
+                const ask = await api.processGetPhoto({ 'index': i, 'address': address });
+                if (this.state.currentIndex !== i) {
+                    return;
+                }
+                this.setState({
+                    currentIndex: this.state.currentIndex + 1
                 });
+                const { width, height, fileName } = ask.body;
+                imagesName.push(fileName);
+                this.extractingPreview[i].current.onChangeImage(fileName, width, height);
+            }
+
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    fileNames: imagesName
+                }
+            });
+            await this.actions.processStitch(this.state.options);
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -133,19 +141,28 @@ class ExtractSquareTrace extends PureComponent {
         },
         processStitch: (options) => {
             api.processStitch(options).then((res) => {
-                console.log(res);
                 this.setState({
-                    filename: res.body.filename
+                    filename: res.body.filename,
+                    isStitched: true
                 });
             });
-            console.log(this.state.filename);
         },
-        onChangeFile: (event) => {
+        onChangeFile: async (event) => {
             const files = event.target.files;
+
+            const { address } = this.props.server;
+            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
+            const resData = JSON.parse(resPro.body.res.text);
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    corners: resData.corners,
+                    getPoints: resData.points
+                }
+            });
 
             const imagesName = [];
             const formDataArray = [];
-            console.log('size file', this.props.size, this.props.server, this.props.serverStatus);
             if (files.length) {
                 for (let i = 0, len = files.length; i < len; i++) {
                     const formData = new FormData();
@@ -155,7 +172,6 @@ class ExtractSquareTrace extends PureComponent {
             }
             Promise.all(formDataArray)
                 .then(async (resArray) => {
-                    // console.log(resArray);
                     resArray.forEach((item, index) => {
                         const { width, height, uploadName } = item.body;
                         imagesName.push(uploadName);
@@ -234,6 +250,7 @@ class ExtractSquareTrace extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={this.actions.setBackgroundImage}
+                        disabled={!this.state.isStitched}
                         style={{ width: '50%', margin: '0 auto', display: 'block' }}
                     >
                         {i18n._('Complete')}
@@ -248,7 +265,6 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
         server: machine.server,
-        serverStatus: machine.serverStatus,
         size: machine.size
     };
 };

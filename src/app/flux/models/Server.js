@@ -66,8 +66,6 @@ export class Server {
     // getPhoto(index, callback) {
     //     const api = `${this.host}/api/get_camera_image?index=${index}`;
     //     request.get(api).end((err, res) => {
-    //         console.log('get', res);
-    //         console.log(typeof res.body);
     //         callback && callback(err, res);
     //     });
     // }

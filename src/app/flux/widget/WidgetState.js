@@ -30,7 +30,7 @@ const defaultState = {
     },
     laser: {
         default: {
-            widgets: ['laser-set-background', 'laser-camera-aid-background', 'laser-params', 'laser-output']
+            widgets: ['laser-set-background', 'laser-params', 'laser-output']
         }
     },
     cnc: {
@@ -186,26 +186,26 @@ const defaultState = {
 const seriesStates = {
     original: {},
     A150: {
-        workspace: {
+        laser: {
             default: {
-                widgets: ['visualizer']
-            },
-            primary: {
-                show: true,
-                widgets: [
-                    'connection', 'console', 'marlin', 'laser-test-focus'
-                ]
-            },
-            secondary: {
-                show: true,
-                widgets: [
-                    'axes', 'macro', 'gcode'
-                ]
+                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
             }
         }
     },
-    A250: {},
-    A350: {}
+    A250: {
+        laser: {
+            default: {
+                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
+            }
+        }
+    },
+    A350: {
+        laser: {
+            default: {
+                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
+            }
+        }
+    }
 };
 
 function customizer(objValue, srcValue) {

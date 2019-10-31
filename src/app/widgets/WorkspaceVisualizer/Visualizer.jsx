@@ -166,7 +166,6 @@ class Visualizer extends Component {
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
-            console.log(this.state.workflowState, workflowState);
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState });
                 switch (workflowState) {
@@ -219,7 +218,6 @@ class Visualizer extends Component {
         },
         handleRun: () => {
             const { workflowState } = this.state;
-            console.log(workflowState);
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
                 controller.command('gcode:start');
@@ -681,7 +679,6 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
-        console.log(state.workflowState);
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>

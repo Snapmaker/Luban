@@ -9,6 +9,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
 import { ABSENT_OBJECT } from '../../constants';
+import MachineSelection from './MachineSelection';
 
 
 class WifiConnection extends PureComponent {
@@ -22,6 +23,10 @@ class WifiConnection extends PureComponent {
         unsetServer: PropTypes.func.isRequired
     };
 
+    state = {
+        showMachineSelected: false
+    }
+
     actions = {
         onRefreshServers: () => {
             this.props.discoverServers();
@@ -29,10 +34,21 @@ class WifiConnection extends PureComponent {
         onChangeServerOption: (option) => {
             for (const server of this.props.servers) {
                 if (server.name === option.name && server.address === option.address) {
-                    this.props.setServer(server);
+                    this.actions.setServer(server);
                     break;
                 }
             }
+        },
+        closeModal: () => {
+            this.setState({
+                showMachineSelected: false
+            });
+        },
+        setServer: (server) => {
+            this.setState({
+                showMachineSelected: true
+            });
+            this.props.setServer(server);
         }
     };
 
@@ -69,14 +85,14 @@ class WifiConnection extends PureComponent {
         for (const server1 of servers) {
             if (server1.name === name && server1.address === address) {
                 found = true;
-                this.props.setServer(server1);
+                this.actions.setServer(server1);
                 break;
             }
         }
 
         // Default select first server
         if (!found && servers.length) {
-            this.props.setServer(servers[0]);
+            this.actions.setServer(servers[0]);
         }
     }
 
@@ -147,6 +163,10 @@ class WifiConnection extends PureComponent {
                     {serverStatus === 'PAUSED' && <i className="sm-icon-14 sm-icon-paused" />}
                     {serverStatus === 'RUNNING' && <i className="sm-icon-14 sm-icon-running" />}
                 </div>
+                <MachineSelection
+                    display={this.state.showMachineSelected}
+                    closeModal={this.actions.closeModal}
+                />
             </div>
         );
     }
