@@ -78,7 +78,8 @@ class ExtractSquareTrace extends PureComponent {
 
     actions = {
         start: async () => {
-            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration' });
+            const { address } = this.props.server;
+            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
             this.setState({
                 options: {
@@ -103,8 +104,8 @@ class ExtractSquareTrace extends PureComponent {
                 }
             }
             for (let i = 0; i < 9; i++) {
-                const res = await api.processTakePhoto({ 'path': 'request_capture_photo', 'index': i, 'x': density[i].x, 'y': density[i].y });
-                const ask = await getPhotoArray.push(api.processGetPhoto({ 'index': i }));
+                const res = await api.processTakePhoto({ 'path': 'request_capture_photo', 'index': i, 'x': density[i].x, 'y': density[i].y, 'address': address });
+                const ask = await getPhotoArray.push(api.processGetPhoto({ 'index': i, address: address }));
                 console.log(res, ask);
             }
 

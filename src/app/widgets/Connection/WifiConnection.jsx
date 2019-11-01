@@ -60,6 +60,7 @@ class WifiConnection extends PureComponent {
 
     autoSetServer(servers) {
         const { server } = this.props;
+        console.log('server', server);
 
         const name = server.name;
         const address = server.address;

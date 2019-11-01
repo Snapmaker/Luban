@@ -7,8 +7,8 @@ const fs = require('fs');
  * Server represents HTTP Server on Snapmaker 2.
  */
 export const takePhoto = (options) => {
-    const { path, index, x, y } = options;
-    let api = `http://192.168.1.100:8080/api/${path}`;
+    const { path, index, x, y, address } = options;
+    let api = `http://${address}/api/${path}`;
     if (path === 'request_capture_photo') {
         api += '?';
     }
@@ -25,8 +25,8 @@ export const takePhoto = (options) => {
 };
 
 export const getPhoto = (options) => {
-    const { index } = options;
-    const api = `http://192.168.1.100:8080/api/get_camera_image?index=${index}`;
+    const { index, address } = options;
+    const api = `http://${address}/api/get_camera_image?index=${index}`;
     // console.log(`${this.host}/api/get_camera_image?index=${index}`);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {

@@ -64,7 +64,7 @@ const INITIAL_STATE = {
     },
     // machine connect state
     isConnected: false,
-    connectionMode: ''
+    connectionType: ''
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
