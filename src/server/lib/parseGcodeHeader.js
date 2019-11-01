@@ -59,7 +59,6 @@ function getDistance(start, end) {
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-
 function filter(meta) {
     for (const key of Object.keys(meta)) {
         if (meta[key] === Infinity

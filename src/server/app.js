@@ -292,6 +292,9 @@ const createApplication = () => {
     app.post(urljoin(settings.route, 'api/image/cameraCalibrationPhoto'), api.image.cameraCalibrationPhoto);
     app.post(urljoin(settings.route, 'api/image/setCameraCalibrationMatrix'), api.image.setCameraCalibrationMatrix);
 
+    app.post(urljoin(settings.route, 'api/image/processFocusOffset'), api.image.processFocusOffset);
+    app.post(urljoin(settings.route, 'api/image/snapShot'), api.image.processSnapShot);
+    // app.post(urljoin(settings.route, 'api/image/stitch'), api.image.processStitch);
 
     // Svg
     app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);

@@ -14,6 +14,7 @@ import LaserParamsWidget from './LaserParams';
 import LaserOutputWidget from './LaserOutput';
 import LaserSetBackground from './LaserSetBackground';
 import LaserTestFocusWidget from './LaserTestFocus';
+import LaserWorkOriginWidget from './LaserWorkOrigin';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CNCOutputWidget from './CNCOutput';
@@ -29,6 +30,7 @@ const getWidgetByName = (name) => {
         'axesPanel': DevelopAxesWidget,
         'connection': ConnectionWidget,
         'connectionPanel': ScreenConnectionWidget,
+        'laserWorkOrigin': LaserWorkOriginWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
         'macro': MacroWidget,

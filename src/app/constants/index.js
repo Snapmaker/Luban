@@ -169,3 +169,10 @@ export const MACHINE_HEAD_TYPE = {
         alias: ['CNC', '2']
     }
 };
+
+
+export const THICKNESS_MIN = 0;
+export const THICKNESS_MAX = 330;
+export const THICKNESS_STEP = 1;
+export const RULER_Z_OFFSET = 2;
+export const LASER_HOOD_HEIGHT = 10;

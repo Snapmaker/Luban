@@ -10,6 +10,7 @@ import styles from './index.styl';
 
 Terminal.applyAddon(fit);
 
+// let lastRows = 0;
 // .widget-header-absolute widget-content-absolute
 class TerminalWrapper extends PureComponent {
     static propTypes = {
@@ -100,7 +101,6 @@ class TerminalWrapper extends PureComponent {
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
         // bind this
         window.addEventListener('resize', this.resize.bind(this), false);
-        // bugfix: resize when oepn/close serial port
         this.resize();
     }
 

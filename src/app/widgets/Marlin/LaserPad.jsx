@@ -130,11 +130,11 @@ class LaserPad extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-primary"
+                    className="sm-btn-large sm-btn-default"
                     style={{ width: '100%' }}
                     onClick={this.actions.laserSave}
                 >
-                    {i18n._('Save')}
+                    {i18n._('Apply')}
                 </button>
             </div>
         );

@@ -91,3 +91,21 @@ export const setMatrix = (options) => {
         });
     });
 };
+
+
+export const snapShot = (options) => {
+    const { path, address } = options;
+    const api = `http://${address}:8080/api/${path}`;
+    return new Promise((resolve) => {
+        // request.get(api).end((err, res) => {
+        request.post(api).end((err, res) => {
+            let fileName = 'snapshot.jpg';
+            fileName = pathWithRandomSuffix(fileName);
+            fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+                resolve({
+                    fileName
+                });
+            });
+        });
+    });
+};

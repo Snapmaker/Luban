@@ -406,6 +406,22 @@ class MarlinParserHomeState {
     }
 }
 
+class MarlinParserFocusHeight {
+    static parse(line) {
+        const r = line.match(/^Focus Height: (.*)/);
+        if (!r) {
+            return null;
+        }
+        const zFocus = parseFloat(r[1]);
+        return {
+            type: MarlinParserFocusHeight,
+            payload: {
+                zFocus
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
@@ -454,8 +470,10 @@ class MarlinLineParser {
 
             MarlinParserSelectedCurrent,
 
-            MarlinParserSelectedOrigin
+            MarlinParserSelectedOrigin,
 
+            // Focus Height: 15.00
+            MarlinParserFocusHeight
         ];
 
         for (const parser of parsers) {
@@ -484,10 +502,10 @@ class Marlin extends events.EventEmitter {
         // tool head type
         headType: '',
         pos: {
-            x: '0.000',
-            y: '0.000',
-            z: '0.000',
-            e: '0.000'
+            x: '0.00',
+            y: '0.00',
+            z: '0.00',
+            e: '0.00'
         },
         modal: {
             motion: 'G0', // G0, G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80
@@ -522,6 +540,7 @@ class Marlin extends events.EventEmitter {
         zFocus: 15,
         gcodeHeader: 0,
         isHomed: null,
+        workOriginDefined: false,
         originOffset: {
             x: 0,
             y: 0,
@@ -653,6 +672,9 @@ class Marlin extends events.EventEmitter {
             this.emit('selected', payload);
         } else if (type === MarlinParserSelectedCurrent) {
             this.emit('selected', payload);
+        } else if (type === MarlinParserFocusHeight) {
+            this.setState({ zFocus: payload.zFocus });
+            this.emit('focus', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
@@ -676,6 +698,8 @@ export {
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
     MarlinLineParserResultOkTemperature,
-    MarlinParserHomeState
+    MarlinParserHomeState,
+    MarlinParserOriginOffset,
+    MarlinParserFocusHeight
 };
 export default Marlin;

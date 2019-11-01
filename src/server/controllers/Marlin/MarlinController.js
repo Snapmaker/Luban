@@ -422,12 +422,6 @@ class MarlinController {
             if (!this.ready) {
                 this.ready = true;
                 this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
-
-                // const version = this.controller.state.version;
-                // if (semver.gte(version, '2.4.0')) {
-                //     // send M1006 to detect type of tool head
-                //     this.writeln('M1006');
-                // }
                 // outdated version format
                 /*
                 const version = this.controller.state.version;
@@ -461,6 +455,14 @@ class MarlinController {
         this.controller.on('originOffset', (res) => {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
             //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('focus', (res) => {
+            log.silly(`controller.on('focus'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
@@ -821,6 +823,16 @@ class MarlinController {
                     if (cmd === 'M5') {
                         headStatus = 'off';
                         headPower = 0;
+                    }
+                    if (cmd === 'G28' || cmd === 'G92') {
+                        // TODO run M1007 after G28 | G92 without setTimeout
+                        setTimeout(() => this.writeln('M1007'), 500);
+                        if (cmd === 'G28') {
+                            this.controller.state.workOriginDefined = false;
+                        } else {
+                            // G92
+                            this.controller.state.workOriginDefined = true;
+                        }
                     }
                 });
                 const nextState = {

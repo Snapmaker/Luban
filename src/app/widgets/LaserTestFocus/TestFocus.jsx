@@ -270,7 +270,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                 </table>
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-primary"
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.setLaserFocusZ}
                     disabled={!isIdle || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}

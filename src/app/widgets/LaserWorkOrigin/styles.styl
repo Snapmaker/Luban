@@ -1,0 +1,76 @@
+@import "../styles.styl"
+
+.test-laser-instruction-content
+    padding: 15px
+
+.test-laser-instruction-step
+    width: 30%
+    float: left
+    margin-right: 3%
+
+    > img
+        width: 100%
+
+    > p
+        padding: 10px 0
+
+
+.btn-test-laser-focus-z-normal
+    width: 25px
+    height: 25px
+    background-color: $white-color
+    border-width: 2px
+    border-style: solid
+    border-color: $grey-color2
+    outline: 0
+    &:active
+        border-color: $dark-blue-color
+
+.btn-test-laser-focus-z-selected
+    width: 25px
+    height: 25px
+    background-color: $white-color
+    border-width: 2px
+    border-style: solid
+    border-color: $dark-blue-color
+    outline: 0
+
+.text-test-laser-focus-z-value-normal
+    margin-bottom: 0
+    margin-top: 0
+    color: $grey-color2
+    &:active
+        color: $dark-blue-color
+
+.text-test-laser-focus-z-value-selected
+    margin-bottom: 0
+    margin-top: 0
+    color: $dark-blue-color
+
+.jog-distance-control {
+    :global {
+        .input-group {
+            .input-group-btn:not(:first-child):not(:last-child) {
+                .btn {
+                    border-radius: 0;
+                }
+                .btn:last-child {
+                    border-right: none;
+                    margin-right: -1px;
+                }
+            }
+        }
+    }
+}
+
+.slider-manual
+    margin: 0 0 30px 0
+
+.modal
+    width: 200px
+    // height: 320px
+
+.modal-body
+    margin: 0
+    padding: 0
+    height: 100%

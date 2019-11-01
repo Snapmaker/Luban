@@ -13,7 +13,7 @@ const defaultState = {
         primary: {
             show: true,
             widgets: [
-                'connection', 'console', 'marlin', 'laser-test-focus'
+                'connection', 'console', 'marlin', 'laserWorkOrigin', 'laser-test-focus'
             ]
         },
         secondary: {
@@ -80,6 +80,12 @@ const defaultState = {
                 overshoot: 1
             },
             dataSource: PROTOCOL_SCREEN
+        },
+        laserWorkOrigin: {
+            hasFocusShift: false,
+            focusShift: 0,
+            selectedThickness: 1.5,
+            customThickness: 1.5
         },
         connection: {
             minimized: false,

@@ -10,7 +10,10 @@ import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
 import { stitch, stitchEach } from '../lib/image-stitch';
-import { getPhoto, takePhoto, getCameraCalibration, calibrationPhoto, setMatrix } from '../lib/image-getPhoto';
+import { getPhoto, takePhoto, getCameraCalibration, calibrationPhoto, setMatrix, snapShot } from '../lib/image-getPhoto';
+import laserFocusOffset from '../lib/laserFocusOffset';
+
+
 import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import DataStorage from '../DataStorage';
 
@@ -186,12 +189,6 @@ export const processTrace = (req, res) => {
         imageOptions = options;
     }
 
-    /*
-    async (imageOptions) => {
-        const result = await trace(imageOptions);
-        res.send(result);
-    };
-    */
     trace(imageOptions)
         .then((result) => {
             res.send(result);
@@ -317,6 +314,54 @@ export const processTakePhoto = (req, res) => {
 export const setCameraCalibrationMatrix = (req, res) => {
     const options = req.body;
     setMatrix(options)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processFocusOffset = (req, res) => {
+    const options = req.body;
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+    laserFocusOffset(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processSnapShot = (req, res) => {
+    const options = req.body;
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    snapShot(imageOptions)
         .then((result) => {
             res.send(result);
         })

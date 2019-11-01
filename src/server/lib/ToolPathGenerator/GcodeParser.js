@@ -59,6 +59,23 @@ class GcodeParser {
         };
     }
 
+    getLineLength(start, end) {
+        let dx = 0;
+        let dy = 0;
+        let dz = 0;
+        if (start.X && end.X) {
+            dx = end.X - start.X;
+        }
+        if (start.Y && end.Y) {
+            dy = end.Y - start.Y;
+        }
+        if (start.Z && end.Z) {
+            dz = end.Z - start.Z;
+        }
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /*
     getLineLength(startPoint, endPoint) {
         if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6))
             || startPoint.X === undefined || startPoint.Y === undefined
@@ -67,6 +84,7 @@ class GcodeParser {
         }
         return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y));
     }
+    */
 
     parseLine(line) {
         // do not ignore empty string

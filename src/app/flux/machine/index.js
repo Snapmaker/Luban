@@ -58,6 +58,9 @@ const INITIAL_STATE = {
     enclosure: false,
     enclosureDoor: false,
     laserFocalLength: null,
+    workOriginDefined: false,
+    zFocus: 15,
+
 
     workPosition: { // work position
         x: '0.000',
@@ -65,6 +68,7 @@ const INITIAL_STATE = {
         z: '0.000',
         a: '0.000'
     },
+
 
     originOffset: {
         x: 0,
@@ -75,6 +79,7 @@ const INITIAL_STATE = {
     // laser print mode
     laserPrintMode: LASER_PRINT_MODE_AUTO,
     materialThickness: 2.5
+
 
 };
 
@@ -129,7 +134,7 @@ export const actions = {
                 const { state } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
-                const { pos, isHomed, originOffset } = state;
+                const { pos, isHomed, workOriginDefined, originOffset, zFocus } = state;
 
                 const machineState = getState().machine;
 
@@ -153,9 +158,21 @@ export const actions = {
                         }
                     }));
                 }
-                dispatch(actions.updateState({
-                    isHomed
-                }));
+                if (isHomed !== machineState.isHomed) {
+                    dispatch(actions.updateState({
+                        isHomed
+                    }));
+                }
+                if (workOriginDefined !== machineState.workOriginDefined) {
+                    dispatch(actions.updateState({
+                        workOriginDefined
+                    }));
+                }
+                if (zFocus !== machineState.zFocus) {
+                    dispatch(actions.updateState({
+                        zFocus
+                    }));
+                }
             },
             // 'Marlin:settings': (settings) => {
             'Marlin:settings': (options) => {

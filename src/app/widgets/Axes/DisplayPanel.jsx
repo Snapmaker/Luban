@@ -8,6 +8,10 @@ import {
 } from '../../constants';
 import styles from './index.styl';
 
+function formatValue(str, offset) {
+    return (Math.round((parseFloat(str) - offset) * 100) / 100).toFixed(2);
+}
+
 class DisplayPanel extends PureComponent {
     static propTypes = {
         executeGcode: PropTypes.func.isRequired,
@@ -30,9 +34,11 @@ class DisplayPanel extends PureComponent {
         const { x, y, z } = originOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
-        const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
-        const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
-        const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
+
+        // console.log('originOffset', originOffset);
+        const machinePositionX = formatValue(workPosition.x, x);
+        const machinePositionY = formatValue(workPosition.y, y);
+        const machinePositionZ = formatValue(workPosition.z, z);
 
         return (
             <div className={styles['display-panel']}>

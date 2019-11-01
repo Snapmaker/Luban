@@ -92,6 +92,10 @@ const cameraCalibrationPhoto = defaultAPIFactory((options) => request.post('/api
 
 const setCameraCalibrationMatrix = defaultAPIFactory((options) => request.post('/api/image/setCameraCalibrationMatrix', options));
 
+const processFocusOffset = defaultAPIFactory((options) => request.post('/api/image/processFocusOffset', options));
+
+const processSnapShot = defaultAPIFactory((options) => request.post('/api/image/snapShot', options));
+
 //
 // svg
 //
@@ -282,6 +286,9 @@ export default {
     getCameraCalibration,
     cameraCalibrationPhoto,
     setCameraCalibrationMatrix,
+    processFocusOffset,
+    processSnapShot,
+
     // svg
     convertRasterToSvg,
     convertTextToSvg,

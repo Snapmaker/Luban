@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
+import isEqual from 'lodash/isEqual';
 
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
@@ -298,12 +299,12 @@ class Axes extends PureComponent {
                 state: controller.state
             },
 
+            // copy to state: because of multiple data sources
             workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000'
+                x: '0.00',
+                y: '0.00',
+                z: '0.00'
             },
-
             originOffset: {
                 x: 0,
                 y: 0,
@@ -333,6 +334,10 @@ class Axes extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
+        const { dataSource } = nextProps.workPosition;
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
         if (nextProps.workflowState !== this.props.workflowState) {
             const { keypadJogging, selectedAxis } = this.state;
 
@@ -343,7 +348,10 @@ class Axes extends PureComponent {
                 selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
             });
         }
-        if (nextProps.workPosition !== this.props.workPosition) {
+        // TODO different dataSource
+        if (nextProps.workPosition.x !== this.props.workPosition.x
+            || nextProps.workPosition.y !== this.props.workPosition.y
+            || nextProps.workPosition.z !== this.props.workPosition.z) {
             this.setState({
                 workPosition: {
                     ...this.state.workPosition,
@@ -351,7 +359,7 @@ class Axes extends PureComponent {
                 }
             });
         }
-        if (nextProps.originOffset !== this.props.originOffset) {
+        if (!isEqual(nextProps.originOffset !== this.props.originOffset)) {
             this.setState({
                 originOffset: {
                     ...this.state.originOffset,
@@ -482,6 +490,8 @@ class Axes extends PureComponent {
             && includes([SERVER_STATUS_IDLE, SERVER_STATUS_UNKNOWN], serverStatus));
     }
 
+    // TODO
+    // always render
     render() {
         // const { units } = this.state;
         const canClick = this.canClick();

@@ -27,8 +27,13 @@ class MachineModal extends PureComponent {
         const isCNC = (headType === HEAD_CNC);
         const none = '–';
         const modal = mapValues(controllerState.modal || {}, mapGCodeToText);
+        // const spindle = controllerState.modal.spindle || '';
+        let spindle = '';
+        if (controllerState && controllerState.modal) {
+            spindle = controllerState.modal.spindle || '';
+        }
         if (isLaser) {
-            switch (controllerState.modal.spindle) {
+            switch (spindle) {
                 case 'M3':
                     modal.spindle = i18n._('Power On (M3)');
                     break;
