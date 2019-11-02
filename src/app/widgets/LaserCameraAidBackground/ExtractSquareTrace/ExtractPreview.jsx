@@ -7,8 +7,8 @@ import styles from '../styles.styl';
 class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired,
-        size: PropTypes.object.isRequired
+        height: PropTypes.number.isRequired
+        // size: PropTypes.object.isRequired
     };
 
     state = {
@@ -26,8 +26,6 @@ class ExtractPreview extends Component {
     }
 
     onChangeImage(filename, width, height) {
-        const { size } = this.props;
-        console.log(size, DATA_PREFIX);
         console.log(filename, width, height);
         const imgPath = `${DATA_PREFIX}/${filename}`;
         this.renderer.src = imgPath;
@@ -36,6 +34,7 @@ class ExtractPreview extends Component {
     setupImg() {
         const { width, height } = this.props;
         this.renderer = new Image();
+        this.render.style += 'transform: rotate(90deg)';
         this.renderer.width = width;
         this.renderer.height = height;
         this.node.current.appendChild(this.renderer);

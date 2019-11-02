@@ -8,13 +8,14 @@ const fs = require('fs');
  */
 export const takePhoto = (options) => {
     const { path, index, x, y, address } = options;
-    let api = `http://${address}/api/${path}`;
+    let api = `http://${address}:8080/api/${path}`;
     if (path === 'request_capture_photo') {
         api += '?';
     }
     if (index | x | y) {
         api += `&index=${index}&x=${x}&y=${y}`;
     }
+    console.log('this is api ---------->', api, x, y);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
             resolve({
@@ -26,7 +27,7 @@ export const takePhoto = (options) => {
 
 export const getPhoto = (options) => {
     const { index, address } = options;
-    const api = `http://${address}/api/get_camera_image?index=${index}`;
+    const api = `http://${address}:8080/api/get_camera_image?index=${index}`;
     // console.log(`${this.host}/api/get_camera_image?index=${index}`);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
