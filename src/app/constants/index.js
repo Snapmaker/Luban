@@ -70,6 +70,9 @@ export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
 export const HEAD_UNKNOWN = 'unknown';
 
+export const CONNECTION_TYPE_SERIAL = 'serial';
+export const CONNECTION_TYPE_WIFI = 'wifi';
+
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'original',

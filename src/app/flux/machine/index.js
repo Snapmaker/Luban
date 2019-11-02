@@ -4,7 +4,9 @@ import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
     MACHINE_SERIES,
-    MACHINE_PATTERN
+    MACHINE_PATTERN,
+    CONNECTION_TYPE_SERIAL,
+    CONNECTION_TYPE_WIFI
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import controller from '../../lib/controller';
@@ -165,7 +167,9 @@ export const actions = {
                     port,
                     ports,
                     dataSource,
-                    dataSources
+                    dataSources,
+                    isConnected: true,
+                    connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
             'serialport:close': (options) => {
@@ -184,7 +188,9 @@ export const actions = {
                         port: ports[0],
                         ports,
                         dataSource: dataSources[0],
-                        dataSources
+                        dataSources,
+                        isConnected: false,
+                        connectionType: ''
                     }));
                 } else {
                     // this.port = '';
@@ -192,7 +198,9 @@ export const actions = {
                         port: '',
                         ports,
                         dataSource: '',
-                        dataSources
+                        dataSources,
+                        isConnected: false,
+                        connectionType: ''
                     }));
                 }
             },
@@ -308,7 +316,9 @@ export const actions = {
         // Update server
         dispatch(actions.updateState({
             server,
-            serverStatus: STATUS_UNKNOWN
+            serverStatus: STATUS_UNKNOWN,
+            isConnected: true,
+            connectionType: CONNECTION_TYPE_WIFI
         }));
 
         // TODO: Fix the issue that sometimes will get multiple machines' status simultaneously
@@ -345,7 +355,9 @@ export const actions = {
     unsetServer: () => (dispatch) => {
         dispatch(actions.updateState({
             server: ABSENT_OBJECT,
-            serverStatus: STATUS_UNKNOWN
+            serverStatus: STATUS_UNKNOWN,
+            isConnected: false,
+            connectionType: ''
         }));
 
         if (statusTimer) {

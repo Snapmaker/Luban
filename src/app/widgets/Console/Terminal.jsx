@@ -358,17 +358,18 @@ class TerminalWrapper extends PureComponent {
         const lineHeight = 18;
         const minRows = 12;
         const rowOffset = 2;
-        const height = this.terminalContainer.current.parentElement.clientHeight || 300;
+        const height = this.terminalContainer.current.parentElement.clientHeight < 300
+            ? 300 : this.terminalContainer.current.parentElement.clientHeight;
         const rows = Math.floor(height / lineHeight) - rowOffset;
-        const inputHeight = height - rows * lineHeight;
-        this.setState({
-            inputHeight
-        });
         if (rows > minRows) {
             this.term.resize(cols, rows);
         } else {
             this.term.resize(cols, minRows);
         }
+        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight);
+        this.setState({
+            inputHeight
+        });
     }
 
     clear() {

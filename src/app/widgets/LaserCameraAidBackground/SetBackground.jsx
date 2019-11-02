@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
-import { EXPERIMENTAL_LASER_CAMERA } from '../../constants';
+import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
@@ -19,6 +19,7 @@ const PANEL_EXTRACT_TRACE = 1;
 class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         isLaser: PropTypes.bool.isRequired,
         showInstructions: PropTypes.bool.isRequired,
         actions: PropTypes.object.isRequired,
@@ -54,15 +55,7 @@ class SetBackground extends PureComponent {
         setBackgroundImage: (filename) => {
             console.log(this.props, this.state);
             const { size } = this.props;
-            const { sideLength } = this.state;
-
-            console.log('from outerside', filename);
-            if (EXPERIMENTAL_LASER_CAMERA) {
-                console.log('from outerside', filename);
-                this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
-            } else {
-                this.props.setBackgroundImage(filename, sideLength, sideLength, (size.x - sideLength) / 2, (size.y - sideLength) / 2);
-            }
+            this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
 
             this.actions.hideModal();
             this.actions.displayPrintTrace();
@@ -113,7 +106,7 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { showInstructions } = this.props;
+        const { showInstructions, connectionType, isConnected } = this.props;
 
         return (
             <React.Fragment>
@@ -141,6 +134,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.showModal}
+                    disabled={connectionType !== CONNECTION_TYPE_WIFI || !isConnected}
                     style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Add Background')}
@@ -149,6 +143,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.removeBackgroundImage}
+                    disabled={connectionType !== CONNECTION_TYPE_WIFI || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
@@ -161,6 +156,8 @@ class SetBackground extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
+        isConnected: machine.isConnected,
+        connectionType: machine.connectionType,
         size: machine.size
     };
 };
