@@ -19,6 +19,7 @@ const PANEL_EXTRACT_TRACE = 1;
 class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         isLaser: PropTypes.bool.isRequired,
         showInstructions: PropTypes.bool.isRequired,
         actions: PropTypes.object.isRequired,
@@ -113,7 +114,7 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { showInstructions } = this.props;
+        const { showInstructions, connectionType, isConnected } = this.props;
 
         return (
             <React.Fragment>
@@ -141,6 +142,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.showModal}
+                    // disabled={connectionType === 'wifi' || !isConnected}
                     style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Add Background')}
@@ -149,6 +151,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.removeBackgroundImage}
+                    // disabled={connectionType === 'wifi' || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
@@ -161,6 +164,8 @@ class SetBackground extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
+        isConnected: machine.isConnected,
+        connectionType: machine.connectionType,
         size: machine.size
     };
 };

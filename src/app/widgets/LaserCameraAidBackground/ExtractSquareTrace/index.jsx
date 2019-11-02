@@ -13,7 +13,6 @@ class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
-        serverStatus: PropTypes.string.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };
 
@@ -32,7 +31,8 @@ class ExtractSquareTrace extends PureComponent {
     ];
 
     state = {
-        // server: this.props.server,
+        isStitched: false,
+        // shouldStopAction: false,
         filename: '',
         options: {
             size: this.props.size,
@@ -80,6 +80,7 @@ class ExtractSquareTrace extends PureComponent {
         start: async () => {
             const { address } = this.props.server;
             const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
+            console.log(resPro, resPro.boby);
             const resData = JSON.parse(resPro.body.res.text);
             this.setState({
                 options: {
@@ -91,11 +92,10 @@ class ExtractSquareTrace extends PureComponent {
             console.log('corners>>>>>start', this.state.options);
             const imagesName = [];
             const density = [];
-            const getPhotoArray = [];
+            // const getPhotoArray = [];
             const d = 100;
             const cameraOffsetX = 15;
             const cameraOffsetY = -5;
-            console.log('props size', this.props.size);
             for (let j = 1; j >= -1; j--) {
                 for (let i = -1; i <= 1; i++) {
                     const x = this.props.size.x / 2 + cameraOffsetX + d * i;
@@ -104,29 +104,44 @@ class ExtractSquareTrace extends PureComponent {
                 }
             }
             for (let i = 0; i < 9; i++) {
+                // if (this.state.shouldStopAction === true) {
+                //     return;
+                // }
                 const res = await api.processTakePhoto({ 'path': 'request_capture_photo', 'index': i, 'x': density[i].x, 'y': density[i].y, 'address': address });
-                const ask = await getPhotoArray.push(api.processGetPhoto({ 'index': i, address: address }));
+                const ask = await api.processGetPhoto({ 'index': i, 'address': address });
                 console.log(res, ask);
+                const { width = 140, height = 140, fileName } = ask.body;
+                imagesName.push(fileName);
+                this.extractingPreview[i].current.onChangeImage(fileName, width, height);
             }
 
-            Promise.all(getPhotoArray)
-                .then(async (resArray) => {
-                    resArray.forEach((item, index) => {
-                        const { width = 140, height = 140, fileName } = item.body;
-                        imagesName.push(fileName);
-                        this.extractingPreview[index].current.onChangeImage(fileName, width, height);
-                    });
-                    this.setState({
-                        options: {
-                            ...this.state.options,
-                            fileNames: imagesName
-                        }
-                    });
-                    console.log(this.state.options.fileNames);
-                    await this.actions.processStitch(this.state.options);
-                })
-                .catch(() => {
-                });
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    fileNames: imagesName
+                }
+            });
+            console.log(this.state.options.fileNames);
+            await this.actions.processStitch(this.state.options);
+
+            // Promise.all(getPhotoArray)
+            //     .then(async (resArray) => {
+            //         resArray.forEach((item, index) => {
+            //             const { width = 140, height = 140, fileName } = item.body;
+            //             imagesName.push(fileName);
+            //             this.extractingPreview[index].current.onChangeImage(fileName, width, height);
+            //         });
+            //         this.setState({
+            //             options: {
+            //                 ...this.state.options,
+            //                 fileNames: imagesName
+            //             }
+            //         });
+            //         console.log(this.state.options.fileNames);
+            //         await this.actions.processStitch(this.state.options);
+            //     })
+            //     .catch(() => {
+            //     });
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -136,7 +151,8 @@ class ExtractSquareTrace extends PureComponent {
             api.processStitch(options).then((res) => {
                 console.log(res);
                 this.setState({
-                    filename: res.body.filename
+                    filename: res.body.filename,
+                    isStitched: true
                 });
             });
             console.log(this.state.filename);
@@ -146,7 +162,6 @@ class ExtractSquareTrace extends PureComponent {
 
             const imagesName = [];
             const formDataArray = [];
-            console.log('size file', this.props.size, this.props.server, this.props.serverStatus);
             if (files.length) {
                 for (let i = 0, len = files.length; i < len; i++) {
                     const formData = new FormData();
@@ -235,6 +250,7 @@ class ExtractSquareTrace extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={this.actions.setBackgroundImage}
+                        disabled={!this.state.isStitched}
                         style={{ width: '50%', margin: '0 auto', display: 'block' }}
                     >
                         {i18n._('Complete')}
@@ -249,7 +265,6 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
         server: machine.server,
-        serverStatus: machine.serverStatus,
         size: machine.size
     };
 };
