@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
-import { EXPERIMENTAL_LASER_CAMERA } from '../../constants';
+import { EXPERIMENTAL_LASER_CAMERA, CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
@@ -142,7 +142,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.showModal}
-                    // disabled={connectionType === 'wifi' || !isConnected}
+                    disabled={connectionType === CONNECTION_TYPE_WIFI || !isConnected}
                     style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Add Background')}
@@ -151,7 +151,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.removeBackgroundImage}
-                    // disabled={connectionType === 'wifi' || !isConnected}
+                    disabled={connectionType === CONNECTION_TYPE_WIFI || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
