@@ -7,12 +7,11 @@ import styles from '../styles.styl';
 class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired,
-        src: PropTypes.string.isRequired
+        height: PropTypes.number.isRequired
     };
 
     state = {
-        src: this.props.src,
+        src: '/',
         filename: ''
     };
 
@@ -22,6 +21,7 @@ class ExtractPreview extends Component {
             src: `${DATA_PREFIX}/${filename}`
         });
     }
+    //
 
 
     render() {

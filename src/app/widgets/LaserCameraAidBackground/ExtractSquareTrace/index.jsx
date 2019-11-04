@@ -148,6 +148,8 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         onChangeFile: async (event) => {
+            const files = event.target.files;
+
             const { address } = this.props.server;
             const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
@@ -158,7 +160,6 @@ class ExtractSquareTrace extends PureComponent {
                     getPoints: resData.points
                 }
             });
-            const files = event.target.files;
 
             const imagesName = [];
             const formDataArray = [];
