@@ -3,12 +3,15 @@ import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import includes from 'lodash/includes';
 import TextArea from 'react-textarea-autosize';
+import jQuery from 'jquery';
+import FileSaver from 'file-saver';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import api from '../../api';
 import ProgressBar from '../../components/ProgressBar';
 // import controller from '../../lib/controller';
 import SerialClient from '../../lib/serialClient';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import styles from './index.styl';
 import {
     PROTOCOL_SCREEN,
@@ -21,8 +24,7 @@ const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class GcodeFile extends PureComponent {
     static propTypes = {
-        port: PropTypes.string,
-        executeGcode: PropTypes.func
+        port: PropTypes.string
     };
 
     gcodeFileRef = React.createRef();
@@ -31,7 +33,8 @@ class GcodeFile extends PureComponent {
 
     state = {
         gcodeFile: '',
-        // gcodeHeader: '',
+        uploadName: '',
+        gcodeHeader: '',
         workflowState: '',
         sender: {
             total: 0,
@@ -68,16 +71,35 @@ class GcodeFile extends PureComponent {
             formData.append('port', port);
             formData.append('dataSource', PROTOCOL_SCREEN);
             const res = await api.uploadGcodeFile(formData);
-            const { originalName, gcodeHeader } = res.body;
+            const { originalName, uploadName, gcodeHeader } = res.body;
+            let header = ';Header Start\n\n';
             this.headerTextarea.value = `G-Code Name: ${originalName}\n`;
-            this.headerTextarea.value += `${gcodeHeader}`;
+            for (const key of Object.keys(gcodeHeader)) {
+                const value = gcodeHeader[key];
+                header += `${key}: ${value}\n`;
+                this.headerTextarea.value += `${key.substring(1)}: ${value}\n`;
+            }
+            header += ';Header End\n\n';
             this.setState({
-                gcodeFile: originalName
+                gcodeFile: originalName,
+                uploadName,
+                gcodeHeader: header
             });
         },
         clickUploadGcodeFile: () => {
             this.gcodeFileRef.current.value = null;
             this.gcodeFileRef.current.click();
+        },
+        exportGcodeWithHeader: () => {
+            const { gcodeFile, gcodeHeader, uploadName } = this.state;
+            const exportName = pathWithRandomSuffix(gcodeFile);
+            jQuery.get(`/data/Tmp/${uploadName}`, (data) => {
+                data = data.replace(/(;Header Start)(.|\n)*(;Header End)/, '');
+                data = gcodeHeader + data;
+
+                const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+                FileSaver.saveAs(blob, exportName, true);
+            });
         },
         isCNC: () => {
             return (this.state.headType === 'CNC');
@@ -93,8 +115,8 @@ class GcodeFile extends PureComponent {
             const { workflowState } = this.state;
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
-                // controller.command('gcode:start');
-                this.props.executeGcode('start print file');
+                // this.props.executeGcode('start print file');
+                controller.command('gcode', 'gcode:resume');
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.actions.is3DP()) {
@@ -252,7 +274,7 @@ class GcodeFile extends PureComponent {
         if (total > 0) {
             progress = Math.floor(100.0 * sent / total);
         }
-        const canUpload = includes([WORKFLOW_STATE_IDLE], workflowState);
+        // const canUpload = includes([WORKFLOW_STATE_IDLE], workflowState);
         const canRun = hasGcodeFile && !includes([WORKFLOW_STATE_RUNNING], workflowState);
         const canPause = includes([WORKFLOW_STATE_RUNNING], workflowState);
         const canStop = includes([WORKFLOW_STATE_PAUSED], workflowState);
@@ -272,7 +294,6 @@ class GcodeFile extends PureComponent {
                 <button
                     className="sm-btn-small sm-btn-primary"
                     type="button"
-                    disabled={!canUpload}
                     onClick={() => {
                         this.actions.clickUploadGcodeFile();
                     }}
@@ -334,6 +355,14 @@ class GcodeFile extends PureComponent {
                         <ProgressBar progress={progress} />
                     </div>
                 )}
+                <button
+                    className="sm-btn-small sm-btn-primary"
+                    type="button"
+                    disabled={!hasGcodeFile}
+                    onClick={this.actions.exportGcodeWithHeader}
+                >
+                    {i18n._('Export')}
+                </button>
             </div>
         );
     }

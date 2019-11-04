@@ -228,7 +228,6 @@ class Workspace extends PureComponent {
 
     render() {
         const { style, className, showPrimaryContainer, showSecondaryContainer, defaultWidgets, primaryWidgets, secondaryWidgets } = this.props;
-        // console.log(111);
         const actions = { ...this.actions };
         const {
             connected,

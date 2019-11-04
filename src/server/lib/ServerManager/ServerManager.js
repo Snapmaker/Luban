@@ -31,7 +31,6 @@ class ServerManager extends EventEmitter {
 
         this.client.on('message', (msg) => {
             const message = msg.toString('utf8');
-            console.log('discover -------> ', message);
 
             const parts = message.split('|');
             if (parts.length === 0 || parts[0].indexOf('@') === -1) {

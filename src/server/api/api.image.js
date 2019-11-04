@@ -156,7 +156,6 @@ export const processTrace = (req, res) => {
 //stitch TODO
 export const processStitch = (req, res) => {
     const options = req.body;
-    console.log('from stitch, filename >>>>>>>>>', options);
 
     let imageOptions;
     if (options.image) {
@@ -182,7 +181,6 @@ export const processStitch = (req, res) => {
 
 export const processGetPhoto = (req, res) => {
     const options = req.body;
-    console.log('from photo, filename >>>>>>>>>', options);
 
     let imageOptions;
     if (options.image) {
@@ -196,7 +194,6 @@ export const processGetPhoto = (req, res) => {
 
     getPhoto(imageOptions)
         .then((result) => {
-            console.log(result);
             res.send(result);
         })
         .catch((err) => {
@@ -209,7 +206,6 @@ export const processGetPhoto = (req, res) => {
 
 export const processTakePhoto = (req, res) => {
     const options = req.body;
-    console.log('from photo, filename >>>>>>>>>', options);
 
     let imageOptions;
     if (options.image) {
