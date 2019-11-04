@@ -2,7 +2,6 @@ import { widgetStore } from '../../store/local-storage';
 import WidgetState from './WidgetState';
 
 const localWidgetState = new WidgetState(widgetStore);
-console.log(localWidgetState.getState());
 
 const INITIAL_STATE = {
     widgetState: localWidgetState,
@@ -21,7 +20,6 @@ export const actions = {
     },
 
     updateTabContainer: (tab, container, value) => (dispatch, getState) => {
-        // console.log(1);
         const { widgetState } = getState().widget;
         const state = widgetState.updateTabContainer(tab, container, value);
         state && dispatch(actions.updateState(state));
@@ -34,14 +32,12 @@ export const actions = {
     },
 
     updateMachineSeries: (series) => (dispatch, getState) => {
-        // console.log(3);
         const { widgetState } = getState().widget;
         const state = widgetState.updateSeries(series);
         state && dispatch(actions.updateState(state));
     },
 
     toggleWorkspaceWidgetToDefault: (widgetId) => (dispatch, getState) => {
-        // console.log(4);
         const { widgetState } = getState().widget;
         const state = widgetState.toggleWorkspaceWidgetToDefault(widgetId);
         state && dispatch(actions.updateState(state));

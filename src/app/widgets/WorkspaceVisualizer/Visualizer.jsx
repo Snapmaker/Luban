@@ -161,7 +161,6 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
         'workflow:state': (options) => {
-            console.log(options);
             const { dataSource, workflowState } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;

@@ -352,7 +352,6 @@ class Sender extends events.EventEmitter {
         }
         const sent = this.state.sent;
         const received = this.state.received;
-        console.log(received + this.queueSize - sent);
         for (let i = sent; i < received + this.queueSize; i++) {
             this.next();
         }

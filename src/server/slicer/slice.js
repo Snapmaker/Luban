@@ -53,12 +53,11 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox) {
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
         + ';header_type: 3dp\n'
-        + `;file_total_lines: ${readFileSync.split('\n').length}\n`
+        + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
         + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature.default_value}\n`
         + `;build_plate_temperature(°C): ${definitionLoader.settings.material_bed_temperature.default_value}\n`
         + `;work_speed(mm/minute): ${definitionLoader.settings.speed_infill.default_value * 60}\n`
-        + '\n'
         + `;max_x(mm): ${boundingBoxMax.x}\n`
         + `;max_y(mm): ${boundingBoxMax.y}\n`
         + `;max_z(mm): ${boundingBoxMax.z}\n`

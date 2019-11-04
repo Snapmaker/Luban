@@ -53,7 +53,6 @@ class SetBackground extends PureComponent {
             });
         },
         setBackgroundImage: (filename) => {
-            console.log(this.props, this.state);
             const { size } = this.props;
             this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
 
