@@ -72,14 +72,14 @@ class GcodeFile extends PureComponent {
             formData.append('dataSource', PROTOCOL_SCREEN);
             const res = await api.uploadGcodeFile(formData);
             const { originalName, uploadName, gcodeHeader } = res.body;
-            let header = ';Header Start\n\n';
+            let header = ';Header Start\n';
             this.headerTextarea.value = `G-Code Name: ${originalName}\n`;
             for (const key of Object.keys(gcodeHeader)) {
                 const value = gcodeHeader[key];
                 header += `${key}: ${value}\n`;
                 this.headerTextarea.value += `${key.substring(1)}: ${value}\n`;
             }
-            header += ';Header End\n\n';
+            header += ';Header End\n';
             this.setState({
                 gcodeFile: originalName,
                 uploadName,
@@ -94,8 +94,15 @@ class GcodeFile extends PureComponent {
             const { gcodeFile, gcodeHeader, uploadName } = this.state;
             const exportName = pathWithRandomSuffix(gcodeFile);
             jQuery.get(`/data/Tmp/${uploadName}`, (data) => {
-                data = data.replace(/(;Header Start)(.|\n)*(;Header End)/, '');
-                data = gcodeHeader + data;
+                const startIndex = data.indexOf(';Header Start');
+                const endIndex = data.indexOf(';Header End');
+                if (startIndex !== -1 && endIndex !== -1) {
+                    data = data.substring(0, startIndex) + gcodeHeader + data.substring(data.indexOf('\n', endIndex));
+                } else {
+                    data = gcodeHeader + data;
+                }
+                // data = data.replace(/(;Header Start)(.|\n)*(;Header End)/, '');
+                // data = gcodeHeader + data;
 
                 const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
                 FileSaver.saveAs(blob, exportName, true);

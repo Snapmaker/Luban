@@ -2,10 +2,9 @@ import ensureArray from 'ensure-array';
 import fs from 'fs';
 import { parseLine } from 'gcode-parser';
 
-const HEADTYPE_3DP = '3DP';
-const HEADTYPE_LASER = 'Laser';
-const HEADTYPE_CNC = 'CNC';
-const HEADTYPE_UNKNOWN = 'unknown';
+const HEADTYPE_3DP = '3dp';
+const HEADTYPE_LASER = 'laser';
+const HEADTYPE_CNC = 'cnc';
 const DEFAULT_WORK_SPEED = 1000;
 
 const metaMap = {
@@ -26,7 +25,7 @@ const metaMap = {
 };
 
 function getHeadType(filename) {
-    let headType = HEADTYPE_UNKNOWN;
+    let headType = HEADTYPE_3DP;
     const suffix = filename.substring(filename.lastIndexOf('.') + 1, filename.length);
     switch (suffix) {
         case 'gcode':
@@ -108,6 +107,31 @@ const partitionWordsByGroup = (words = []) => {
     return groups;
 };
 
+// const interpret = (() => {
+//     let cmd = '';
+//
+//     return (line, callback) => {
+//         const data = parseLine(line);
+//         const groups = partitionWordsByGroup(ensureArray(data.words));
+//
+//         for (let i = 0; i < groups.length; ++i) {
+//             const words = groups[i];
+//             const word = words[0] || [];
+//             const letter = word[0];
+//             const arg = word[1];
+//
+//             if (letter === 'G' || letter === 'M') {
+//                 cmd = letter + arg;
+//                 const params = fromPairs(words.slice(1));
+//                 callback(cmd, params);
+//             } else {
+//                 const params = fromPairs(words);
+//                 callback(cmd, params);
+//             }
+//         }
+//     };
+// })();
+
 const interpret = (() => {
     let cmd = '';
 
@@ -133,7 +157,7 @@ const interpret = (() => {
     };
 })();
 
-function parse(line, initMeta, meta, options) {
+function parse(line, initMeta, meta, options, startGcodeStart) {
     interpret(line, (cmd, params) => {
         if (cmd === 'G0' || cmd === 'G1') {
             if (!options.lastParams) {
@@ -155,7 +179,7 @@ function parse(line, initMeta, meta, options) {
                     ...params
                 };
             }
-            if (!initMeta[';min_x(mm)'] && cmd === 'G1') {
+            if (!startGcodeStart && !initMeta[';min_x(mm)'] && cmd === 'G1') {
                 if (params.X && params.X < meta.minX) {
                     meta.minX = params.X;
                 }
@@ -175,13 +199,21 @@ function parse(line, initMeta, meta, options) {
                     meta.minZ = params.Z;
                 }
             }
-            if (cmd === 'G0' && params.F) {
+            if (!startGcodeStart && !initMeta[';min_z(mm)'] && (cmd === 'G1' || cmd === 'G0')) {
+                if (params.Z && params.Z > meta.maxZ) {
+                    meta.maxZ = params.Z;
+                }
+                if (params.Z && params.Z < meta.minZ) {
+                    meta.minZ = params.Z;
+                }
+            }
+            if (!startGcodeStart && cmd === 'G0' && params.F) {
                 if (!initMeta[';jog_speed(mm/minute)']) {
                     options.jogSpeedSum += params.F;
                     options.jogSpeedCount++;
                 }
             }
-            if (cmd === 'G1' && params.F) {
+            if (!startGcodeStart && cmd === 'G1' && params.F) {
                 if (!initMeta[';work_speed(mm/minute)']) {
                     options.workSpeedSum += params.F;
                     options.workSpeedCount++;
@@ -259,20 +291,33 @@ function parseGcodeHeader(filename) {
     const header = [];
     let headerStart = false;
     let headerEnd = false;
+    let startGcodeStart = false;
 
     meta.headType = getHeadType(filename);
 
     const gcodeLines = fs.readFileSync(filename, 'utf8').split('\n');
+
     meta.fileTotalLines = gcodeLines.length;
+    let headerLength = 0;
 
     for (const line of gcodeLines) {
         if (line.indexOf(';Header Start') !== -1) {
             headerStart = true;
+            headerLength = 2;
             continue;
         }
         if (line.indexOf(';Header End') !== -1) {
             headerEnd = true;
             continue;
+        }
+        if (headerStart && !headerEnd) {
+            headerLength++;
+        }
+        if (line.indexOf(';Start GCode begin') !== -1) {
+            startGcodeStart = true;
+        }
+        if (line.indexOf(';Start GCode end') !== -1) {
+            startGcodeStart = false;
         }
         if (headerStart && !headerEnd) {
             header.push(line);
@@ -284,19 +329,22 @@ function parseGcodeHeader(filename) {
                 if (h.trim() === '') {
                     continue;
                 }
-                const key = h.split(':')[0];
-                const value = h.split(':')[1];
-                if (key === 'header_type') {
-                    initMeta[key] = value;
-                } else {
+                const key = h.split(':')[0].trim();
+                const value = h.split(':')[1].trim();
+                if (value.match(/^(-?\d+)(\.\d+)?$/)) {
                     initMeta[key] = parseFloat(value);
+                } else {
+                    initMeta[key] = value;
                 }
             }
         }
         if (line.indexOf(';End GCode begin') !== -1) {
             break;
         }
-        parse(line, initMeta, meta, options);
+        if (line.indexOf(';End GCode') !== -1) {
+            break;
+        }
+        parse(line, initMeta, meta, options, startGcodeStart);
     }
     const { jogSpeedSum, workSpeedSum, jogSpeedCount, workSpeedCount } = options;
     meta.jogSpeed = Math.round(jogSpeedSum / jogSpeedCount / 100) * 100;
@@ -305,6 +353,7 @@ function parseGcodeHeader(filename) {
 
     mergeMeta(initMeta, meta);
     filter(initMeta);
+    initMeta[';file_total_lines'] = meta.fileTotalLines - headerLength + Object.keys(initMeta).length + 2;
 
     return initMeta;
 }
