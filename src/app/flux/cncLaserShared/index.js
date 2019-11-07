@@ -312,12 +312,15 @@ export const actions = {
     },
 
     // gcode
-    generateGcode: (from) => (dispatch, getState) => {
+    generateGcode: (from, thumbnail) => (dispatch, getState) => {
         const gcodeBeans = [];
         const { modelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const sorted = modelGroup.getModels();
         const length = sorted.length;
+        if (length === 0) {
+            return;
+        }
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < (length - i - 1); j++) {
                 if (sorted[j].printOrder > sorted[j + 1].printOrder) {
@@ -327,8 +330,11 @@ export const actions = {
                 }
             }
         }
+        let estimatedTime = 0;
+        let fileTotalLines = 0;
         for (let i = 0; i < length; i++) {
             const model = sorted[i];
+            estimatedTime += model.estimatedTime;
             const gcode = model.generateGcode();
             const modelInfo = {
                 mode: model.mode,
@@ -339,8 +345,36 @@ export const actions = {
                 gcode,
                 modelInfo
             };
+            fileTotalLines += gcode.split('\n').length;
             gcodeBeans.push(gcodeBean);
         }
+        fileTotalLines -= 1;
+
+        const { headerType, gcodeConfig } = sorted[0];
+        const boundingBox = modelGroup.getAllBoundingBox();
+
+        const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
+
+        let headerStart = ';Header Start\n'
+        + `;header_type: ${headerType}\n`
+        + `;thumbnail: ${thumbnail}\n`
+        + ';file_total_lines: fileTotalLines\n'
+        + `;estimated_time(s): ${estimatedTime}\n`
+        + `;max_x(mm): ${boundingBox.max.x}\n`
+        + `;max_y(mm): ${boundingBox.max.y}\n`
+        + `;max_z(mm): ${boundingBox.max.z}\n`
+        + `;min_x(mm): ${boundingBox.min.x}\n`
+        + `;min_y(mm): ${boundingBox.min.y}\n`
+        + `;min_z(mm): ${boundingBox.min.z}\n`
+        + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
+        + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
+        + `;power(%): ${power}\n`
+        + ';Header End\n';
+        fileTotalLines += headerStart.split('\n').length;
+        headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
+
+        gcodeBeans[0].gcode = `${headerStart}\n${gcodeBeans[0].gcode}`;
+
         dispatch(actions.updateState(
             from,
             {

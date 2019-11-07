@@ -63,7 +63,6 @@ class GcodeGenerator {
         // process "jogSpeed, workSpeed..."
         const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
-        this.processGcodeHeader(gcodeLines, toolPathObj, gcodeConfig);
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
             let line = '';
@@ -106,19 +105,6 @@ class GcodeGenerator {
         gcodeStr = this.processGcodeForFixedPower(gcodeStr, gcodeConfig);
 
         return gcodeStr;
-    }
-
-    processGcodeHeader(gcodeLines, toolPathObj, gcodeConfig) {
-        gcodeLines.push(';Header Start');
-        gcodeLines.push(`;header_type: ${toolPathObj.headerType}`);
-        gcodeConfig.thumbnail && (gcodeLines.push(`;thumbnail: ${gcodeConfig.thumbnail}`));
-        gcodeLines.push(`;estimated_time(s): ${toolPathObj.estimatedTime}`);
-        gcodeLines.push(`;work_speed(mm/minute): ${gcodeConfig.workSpeed}`);
-        gcodeLines.push(`;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}`);
-        const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
-        gcodeLines.push(`;power(%): ${power}`);
-        gcodeLines.push(';Header End');
-        gcodeLines.push('');
     }
 
     processGcodeMultiPass(gcodeStr, gcodeConfig) {

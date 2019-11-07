@@ -42,8 +42,8 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            this.thumbnail.current.getThumbnail();
-            this.props.generateGcode();
+            const thumbnail = this.thumbnail.current.getThumbnail();
+            this.props.generateGcode(thumbnail);
         },
         onLoadGcode: () => {
             const { gcodeBeans } = this.props;
@@ -179,7 +179,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
+        generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('cnc', thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         manualPreview: () => dispatch(sharedActions.manualPreview('cnc')),
