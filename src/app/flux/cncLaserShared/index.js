@@ -315,7 +315,6 @@ export const actions = {
     generateGcode: (from) => (dispatch, getState) => {
         const gcodeBeans = [];
         const { modelGroup } = getState()[from];
-        console.log('this is getState>>>>>>>>', getState, modelGroup);
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const sorted = modelGroup.getModels();
         const length = sorted.length;
@@ -330,7 +329,6 @@ export const actions = {
         }
         for (let i = 0; i < length; i++) {
             const model = sorted[i];
-            console.log('this is model >>>>>>>>', model);
             const gcode = model.generateGcode();
             const modelInfo = {
                 mode: model.mode,

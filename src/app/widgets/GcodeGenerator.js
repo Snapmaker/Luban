@@ -111,6 +111,7 @@ class GcodeGenerator {
     processGcodeHeader(gcodeLines, toolPathObj, gcodeConfig) {
         gcodeLines.push(';Header Start');
         gcodeLines.push(`;header_type: ${toolPathObj.headerType}`);
+        gcodeConfig.thumbnail && (gcodeLines.push(`;thumbnail: ${gcodeConfig.thumbnail}`));
         gcodeLines.push(`;estimated_time(s): ${toolPathObj.estimatedTime}`);
         gcodeLines.push(`;work_speed(mm/minute): ${gcodeConfig.workSpeed}`);
         gcodeLines.push(`;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}`);
