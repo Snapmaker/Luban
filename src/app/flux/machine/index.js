@@ -49,7 +49,6 @@ const INITIAL_STATE = {
         dataSource: ''
     },
 
-    // isHomed: false,
     isHomed: null,
 
     originOffset: {

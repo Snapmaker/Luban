@@ -398,7 +398,6 @@ class Marlin extends events.EventEmitter {
         machineSetting: {},
         zFocus: 15,
         gcodeHeader: 0,
-        // isHomed: false,
         isHomed: null,
         originOffset: {
             x: 0,

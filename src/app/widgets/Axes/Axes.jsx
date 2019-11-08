@@ -329,13 +329,11 @@ class Axes extends PureComponent {
                 selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
             });
         }
-        const { dataSource, x, y, z } = nextProps.workPosition;
+        const { dataSource } = nextProps.workPosition;
         if (dataSource !== this.props.dataSource) {
             return;
         }
-        if (x !== this.props.workPosition.x
-            || y !== this.props.workPosition.y
-            || z !== this.props.workPosition.z) {
+        if (nextProps.workPosition !== this.props.workPosition) {
             this.setState({
                 workPosition: {
                     ...this.state.workPosition,
@@ -485,7 +483,6 @@ class Axes extends PureComponent {
             ...this.actions
         };
 
-        // const { workPosition } = this.props;
         const { workPosition, originOffset } = this.state;
 
         return (
