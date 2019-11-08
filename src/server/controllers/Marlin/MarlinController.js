@@ -127,6 +127,17 @@ class MarlinController {
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState;
                             }
+                        } else if (data[0] === 0x08 && data[1] === 0x0e) {
+                            const nextState = {
+                                ...this.controller.state,
+                                machinePosition: {
+                                    ...this.controller.state.machinePosition,
+                                    ...packetData
+                                }
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                            }
                         } else if (data[0] === 0x0a && data[1] === 0x14) {
                             // get machine size setting
                             if (!isEqual(packetData, this.controller.state.machineSetting)) {
@@ -251,6 +262,7 @@ class MarlinController {
             if (this.query.type === QUERY_TYPE_POSITION) {
                 if (this.controller.state.isScreenProtocol) {
                     this.writeln('query state');
+                    this.writeln('query coordinate');
                 } else {
                     this.writeln('M114');
                 }
@@ -898,6 +910,9 @@ class MarlinController {
                         */
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
+                            break;
+                        case 'query coordinate\n':
+                            outputData = this.packetManager.statusRequestCoordinateSystem();
                             break;
                         case 'start print file\n':
                             if (this.controller.gcodeFile) {

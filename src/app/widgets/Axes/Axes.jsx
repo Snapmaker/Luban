@@ -79,6 +79,7 @@ class Axes extends PureComponent {
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
+        machinePosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func,
@@ -289,6 +290,15 @@ class Axes extends PureComponent {
                 z: '0.000'
             },
 
+            machinePosition: {
+                isHomed: false,
+                isAligned: false,
+                coordinateID: 0,
+                coordinateOffsetX: 0,
+                coordinateOffsetY: 0,
+                coordinateOffsetZ: 0
+            },
+
             // Bounding box
             bbox: {
                 min: {
@@ -333,6 +343,21 @@ class Axes extends PureComponent {
                 workPosition: {
                     ...this.state.workPosition,
                     ...nextProps.workPosition
+                }
+            });
+        }
+
+        const { isHomed, isAligned, coordinateID, coordinateOffsetX, coordinateOffsetY, coordinateOffsetZ } = nextProps.machinePosition;
+        if (coordinateOffsetX !== this.props.machinePosition.coordinateOffsetX
+            || coordinateOffsetY !== this.props.machinePosition.coordinateOffsetY
+            || coordinateOffsetZ !== this.props.machinePosition.coordinateOffsetZ
+            || isHomed !== this.props.machinePosition.isHomed
+            || isAligned !== this.props.machinePosition.isAligned
+            || coordinateID !== this.props.machinePosition.coordinateID) {
+            this.setState({
+                machinePosition: {
+                    ...this.state.machinePosition,
+                    ...nextProps.machinePosition
                 }
             });
         }
@@ -471,12 +496,13 @@ class Axes extends PureComponent {
         };
 
         // const { workPosition } = this.props;
-        const { workPosition } = this.state;
+        const { workPosition, machinePosition } = this.state;
 
         return (
             <div>
                 <DisplayPanel
                     workPosition={workPosition}
+                    machinePosition={machinePosition}
                     executeGcode={this.actions.executeGcode}
                     state={state}
                 />
@@ -533,7 +559,7 @@ const mapStateToProps = (state, ownProps) => {
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, dataSources, workflowState, workPosition, server, serverStatus } = machine;
+    const { port, dataSources, workflowState, workPosition, machinePosition = {}, server, serverStatus } = machine;
 
     return {
         port,
@@ -541,6 +567,7 @@ const mapStateToProps = (state, ownProps) => {
         dataSources,
         workflowState,
         workPosition,
+        machinePosition,
         server,
         serverStatus,
         axes,
