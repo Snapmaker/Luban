@@ -1,11 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Select from 'react-select';
+import { Button } from '@trendmicro/react-buttons';
 import { includes, map, find, get } from 'lodash';
 import pubsub from 'pubsub-js';
 
-import { connect } from 'react-redux';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
@@ -15,6 +16,7 @@ import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
+import Modal from '../../components/Modal';
 import { actions as machineActions } from '../../flux/machine';
 // import { PROTOCOL_TEXT } from '../../constants';
 
@@ -27,6 +29,7 @@ class SerialConnection extends PureComponent {
         isConnected: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
+        machinePosition: PropTypes.object.isRequired,
         updatePort: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
@@ -44,8 +47,8 @@ class SerialConnection extends PureComponent {
         // UI state
         loadingPorts: false,
 
-        showMachineSelected: false
-
+        showMachineSelected: false,
+        showHomeReminder: true
     };
 
     loadingTimer = null;
@@ -73,6 +76,7 @@ class SerialConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
+            this.actions.closeHomeModal();
         },
         openModal: () => {
             this.setState({
@@ -83,6 +87,16 @@ class SerialConnection extends PureComponent {
             this.setState({
                 showMachineSelected: false
             });
+        },
+        openHomeModal: () => {
+            this.setState({
+                showHomeReminder: true
+            });
+        },
+        closeHomeModal: () => {
+            this.setState({
+                showHomeReminder: false
+            });
         }
     };
 
@@ -91,6 +105,13 @@ class SerialConnection extends PureComponent {
 
         // refresh ports on mount
         setTimeout(() => this.listPorts());
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const { isHomed } = nextProps.machinePosition;
+        if (this.props.machinePosition.isHomed !== isHomed && !isHomed) {
+            this.actions.openHomeModal();
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -320,7 +341,9 @@ class SerialConnection extends PureComponent {
 
     render() {
         const { isOpen, isConnected } = this.props;
-        const { err, ports, port, loadingPorts, showMachineSelected } = this.state;
+        const { err, ports, port, status, loadingPorts,
+            showMachineSelected, showHomeReminder } = this.state;
+        const { isHomed, updated } = this.props.machinePosition;
 
         const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
@@ -392,6 +415,28 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
+                    {status === 'connected' && showHomeReminder && !isHomed && updated && (
+                        <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
+                            <Modal.Header>
+                                <Modal.Title>
+                                    {i18n._('Home Reminder')}
+                                </Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <div>
+                                    {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
+                                </div>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button
+                                    btnStyle="primary"
+                                    onClick={this.actions.closeHomeModal}
+                                >
+                                    {i18n._('OK')}
+                                </Button>
+                            </Modal.Footer>
+                        </Modal>
+                    )}
                     {err && (
                         <span style={{ margin: '0 8px' }}>{err}</span>
                     )}
@@ -407,12 +452,13 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isOpen, isConnected } = machine;
+    const { port, isOpen, isConnected, machinePosition } = machine;
 
     return {
         port,
         isOpen,
-        isConnected
+        isConnected,
+        machinePosition
     };
 };
 const mapDispatchToProps = (dispatch) => {

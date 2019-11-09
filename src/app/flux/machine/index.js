@@ -52,6 +52,7 @@ const INITIAL_STATE = {
     machinePosition: {
         isHomed: false,
         isAligned: false,
+        updated: false,
         coordinateID: 0,
         coordinateOffsetX: 0,
         coordinateOffsetY: 0,
@@ -138,7 +139,8 @@ export const actions = {
                     },
                     machinePosition: {
                         ...machineState.machinePosition,
-                        ...machinePosition
+                        ...machinePosition,
+                        updated: true
                     }
                 }));
             },
