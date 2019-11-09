@@ -8,7 +8,7 @@ import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
-import stitch from '../lib/image-stitch';
+import { stitch, stitchEach } from '../lib/image-stitch';
 import { getPhoto, takePhoto } from '../lib/image-getPhoto';
 import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import DataStorage from '../DataStorage';
@@ -153,7 +153,7 @@ export const processTrace = (req, res) => {
         });
 };
 
-//stitch TODO
+// stitch TODO
 export const processStitch = (req, res) => {
     const options = req.body;
     console.log('from stitch, filename >>>>>>>>>', options);
@@ -180,9 +180,35 @@ export const processStitch = (req, res) => {
         });
 };
 
+export const processStitchEach = (req, res) => {
+    const options = req.body;
+    console.log('from processStitchEach, filename >>>>>>>>>', options);
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    stitchEach(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
 export const processGetPhoto = (req, res) => {
     const options = req.body;
-    console.log('from photo, filename >>>>>>>>>', options);
+    console.log('from get photo, filename >>>>>>>>>', options);
 
     let imageOptions;
     if (options.image) {
@@ -196,7 +222,12 @@ export const processGetPhoto = (req, res) => {
 
     getPhoto(imageOptions)
         .then((result) => {
-            console.log(result);
+            // console.log(result);
+            // if (result.status === 404) {
+            //   res.status(404)
+            // }else {
+            //   res.send(result);
+            // }
             res.send(result);
         })
         .catch((err) => {
@@ -209,7 +240,7 @@ export const processGetPhoto = (req, res) => {
 
 export const processTakePhoto = (req, res) => {
     const options = req.body;
-    console.log('from photo, filename >>>>>>>>>', options);
+    console.log('from take photo, filename >>>>>>>>>', options);
 
     let imageOptions;
     if (options.image) {

@@ -28,16 +28,23 @@ export const takePhoto = (options) => {
 export const getPhoto = (options) => {
     const { index, address } = options;
     const api = `http://${address}:8080/api/get_camera_image?index=${index}`;
-    // console.log(`${this.host}/api/get_camera_image?index=${index}`);
+    console.log(api);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
-            let fileName = `img${index}.jpg`;
-            fileName = pathWithRandomSuffix(fileName);
-            fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+            console.log('this is from getPhoto', res.status);
+            if (res.status === 404) {
                 resolve({
-                    fileName
+                    status: res.status
                 });
-            });
+            } else if (res.status === 200) {
+                let fileName = `img${index}.jpg`;
+                fileName = pathWithRandomSuffix(fileName);
+                fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+                    resolve({
+                        fileName
+                    });
+                });
+            }
         });
     });
 };

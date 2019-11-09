@@ -1,27 +1,25 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { DATA_PREFIX } from '../../../constants';
 import styles from '../styles.styl';
 
 
 class ExtractPreview extends Component {
-    static propTypes = {
-        width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired
-    };
-
     state = {
         src: '/',
-        filename: ''
+        filename: '',
+        width: '',
+        height: ''
     };
 
-    onChangeImage(filename) {
+    onChangeImage(filename, width = 140, height = 140) {
         this.setState({
             filename: filename,
-            src: `${DATA_PREFIX}/${filename}`
+            src: `${DATA_PREFIX}/${filename}`,
+            width: width,
+            height: height
         });
     }
-    //
 
 
     render() {
@@ -30,8 +28,8 @@ class ExtractPreview extends Component {
                 <img
                     alt={this.state.filename}
                     src={this.state.src}
-                    width={this.props.width}
-                    height={this.props.height}
+                    width={this.state.width}
+                    height={this.state.height}
                 />
             </div>
         );

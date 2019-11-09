@@ -90,9 +90,9 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A150',
         setting: {
             size: {
-                x: 160,
-                y: 160,
-                z: 145
+                x: 167,
+                y: 169,
+                z: 150
             }
         }
     },
@@ -101,9 +101,9 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A250',
         setting: {
             size: {
-                x: 230,
-                y: 250,
-                z: 240
+                x: 244,
+                y: 260,
+                z: 235
             }
         }
     },
@@ -112,9 +112,9 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A350',
         setting: {
             size: {
-                x: 320,
-                y: 340,
-                z: 330
+                x: 336,
+                y: 360,
+                z: 334
             }
         }
     }

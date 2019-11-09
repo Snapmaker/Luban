@@ -284,6 +284,7 @@ const createApplication = () => {
     app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
     app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
     app.post(urljoin(settings.route, 'api/image/stitch'), api.image.processStitch);
+    app.post(urljoin(settings.route, 'api/image/stitchEach'), api.image.processStitchEach);
     app.post(urljoin(settings.route, 'api/image/getPhoto'), api.image.processGetPhoto);
     app.post(urljoin(settings.route, 'api/image/takePhoto'), api.image.processTakePhoto);
     // app.post(urljoin(settings.route, 'api/image/stitch'), api.image.processStitch);
