@@ -26,10 +26,10 @@ class SerialConnection extends PureComponent {
         dataSource: PropTypes.string.isRequired,
 
         isOpen: PropTypes.bool.isRequired,
-        isConnected: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
-        machinePosition: PropTypes.object.isRequired,
+        isHomed: PropTypes.bool,
+        isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
@@ -108,8 +108,8 @@ class SerialConnection extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { isHomed } = nextProps.machinePosition;
-        if (this.props.machinePosition.isHomed !== isHomed && !isHomed) {
+        const { isHomed } = nextProps;
+        if (this.props.isHomed !== isHomed && !isHomed) {
             this.actions.openHomeModal();
         }
     }
@@ -340,10 +340,9 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { isOpen, isConnected } = this.props;
+        const { isOpen, isConnected, isHomed } = this.props;
         const { err, ports, port, status, loadingPorts,
             showMachineSelected, showHomeReminder } = this.state;
-        const { isHomed, updated } = this.props.machinePosition;
 
         const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
@@ -415,7 +414,7 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
-                    {status === 'connected' && showHomeReminder && !isHomed && updated && (
+                    {status === 'connected' && showHomeReminder && isConnected && !isHomed && (
                         <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
                             <Modal.Header>
                                 <Modal.Title>
@@ -452,13 +451,12 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isOpen, isConnected, machinePosition } = machine;
+    const { port, isHomed, isConnected } = machine;
 
     return {
         port,
-        isOpen,
-        isConnected,
-        machinePosition
+        isHomed,
+        isConnected
     };
 };
 const mapDispatchToProps = (dispatch) => {

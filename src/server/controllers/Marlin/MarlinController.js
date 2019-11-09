@@ -130,9 +130,10 @@ class MarlinController {
                         } else if (data[0] === 0x08 && data[1] === 0x0e) {
                             const nextState = {
                                 ...this.controller.state,
-                                machinePosition: {
-                                    ...this.controller.state.machinePosition,
-                                    ...packetData
+                                ...packetData,
+                                originOffset: {
+                                    ...this.controller.state.originOffset,
+                                    ...packetData.originOffset
                                 }
                             };
                             if (!isEqual(this.controller.state, nextState)) {

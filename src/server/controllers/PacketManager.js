@@ -318,13 +318,13 @@ class PacketManager {
                         }
                         break;
                     case 0x0e:
-                        this.content = {};
+                        this.content = { isHomed: false, originOffset: {} };
                         this.content.isHomed = !buffer[2];
-                        this.content.isAligned = !buffer[3];
-                        this.content.coordinateID = buffer[4];
-                        this.content.coordinateOffsetX = toValue(buffer, 5, 4) / 1000;
-                        this.content.coordinateOffsetY = toValue(buffer, 9, 4) / 1000;
-                        this.content.coordinateOffsetZ = toValue(buffer, 13, 4) / 1000;
+                        // this.content.isAligned = !buffer[3];
+                        // this.content.coordinateID = buffer[4];
+                        this.content.originOffset.x = toValue(buffer, 5, 4) / 1000;
+                        this.content.originOffset.y = toValue(buffer, 9, 4) / 1000;
+                        this.content.originOffset.z = toValue(buffer, 13, 4) / 1000;
                         break;
                     default:
                         this.content = 'ok';

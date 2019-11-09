@@ -79,7 +79,7 @@ class Axes extends PureComponent {
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
-        machinePosition: PropTypes.object.isRequired,
+        originOffset: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func,
@@ -290,13 +290,10 @@ class Axes extends PureComponent {
                 z: '0.000'
             },
 
-            machinePosition: {
-                isHomed: false,
-                isAligned: false,
-                coordinateID: 0,
-                coordinateOffsetX: 0,
-                coordinateOffsetY: 0,
-                coordinateOffsetZ: 0
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
             },
 
             // Bounding box
@@ -346,18 +343,11 @@ class Axes extends PureComponent {
                 }
             });
         }
-
-        const { isHomed, isAligned, coordinateID, coordinateOffsetX, coordinateOffsetY, coordinateOffsetZ } = nextProps.machinePosition;
-        if (coordinateOffsetX !== this.props.machinePosition.coordinateOffsetX
-            || coordinateOffsetY !== this.props.machinePosition.coordinateOffsetY
-            || coordinateOffsetZ !== this.props.machinePosition.coordinateOffsetZ
-            || isHomed !== this.props.machinePosition.isHomed
-            || isAligned !== this.props.machinePosition.isAligned
-            || coordinateID !== this.props.machinePosition.coordinateID) {
+        if (nextProps.originOffset !== this.props.originOffset) {
             this.setState({
-                machinePosition: {
-                    ...this.state.machinePosition,
-                    ...nextProps.machinePosition
+                originOffset: {
+                    ...this.state.originOffset,
+                    ...nextProps.originOffset
                 }
             });
         }
@@ -496,13 +486,13 @@ class Axes extends PureComponent {
         };
 
         // const { workPosition } = this.props;
-        const { workPosition, machinePosition } = this.state;
+        const { workPosition, originOffset } = this.state;
 
         return (
             <div>
                 <DisplayPanel
                     workPosition={workPosition}
-                    machinePosition={machinePosition}
+                    originOffset={originOffset}
                     executeGcode={this.actions.executeGcode}
                     state={state}
                 />
@@ -559,7 +549,7 @@ const mapStateToProps = (state, ownProps) => {
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, dataSources, workflowState, workPosition, machinePosition = {}, server, serverStatus } = machine;
+    const { port, dataSources, workflowState, workPosition, originOffset = {}, server, serverStatus } = machine;
 
     return {
         port,
@@ -567,7 +557,7 @@ const mapStateToProps = (state, ownProps) => {
         dataSources,
         workflowState,
         workPosition,
-        machinePosition,
+        originOffset,
         server,
         serverStatus,
         axes,

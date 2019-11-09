@@ -49,14 +49,12 @@ const INITIAL_STATE = {
         dataSource: ''
     },
 
-    machinePosition: {
-        isHomed: false,
-        isAligned: false,
-        updated: false,
-        coordinateID: 0,
-        coordinateOffsetX: 0,
-        coordinateOffsetY: 0,
-        coordinateOffsetZ: 0
+    isHomed: false,
+
+    originOffset: {
+        x: 0,
+        y: 0,
+        z: 0
     },
 
     // current connected device
@@ -127,7 +125,7 @@ export const actions = {
                 const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
-                const { pos, machinePosition } = state;
+                const { pos, isHomed, originOffset } = state;
 
                 const machineState = getState().machine;
 
@@ -137,10 +135,10 @@ export const actions = {
                         ...pos,
                         dataSource
                     },
-                    machinePosition: {
-                        ...machineState.machinePosition,
-                        ...machinePosition,
-                        updated: true
+                    isHomed,
+                    originOffset: {
+                        ...machineState.originOffset,
+                        ...originOffset
                     }
                 }));
             },

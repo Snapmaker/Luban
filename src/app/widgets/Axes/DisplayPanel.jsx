@@ -12,7 +12,7 @@ class DisplayPanel extends PureComponent {
     static propTypes = {
         executeGcode: PropTypes.func.isRequired,
         workPosition: PropTypes.object.isRequired,
-        machinePosition: PropTypes.object.isRequired,
+        originOffset: PropTypes.object.isRequired,
         state: PropTypes.object
     };
 
@@ -26,13 +26,13 @@ class DisplayPanel extends PureComponent {
     };
 
     render() {
-        const { state, workPosition, machinePosition } = this.props;
-        const { coordinateOffsetX, coordinateOffsetY, coordinateOffsetZ } = machinePosition;
+        const { state, workPosition, originOffset } = this.props;
+        const { x, y, z } = originOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
-        const machinePositionX = Math.round((parseFloat(workPosition.x) - coordinateOffsetX) * 1000) / 1000;
-        const machinePositionY = Math.round((parseFloat(workPosition.y) - coordinateOffsetY) * 1000) / 1000;
-        const machinePositionZ = Math.round((parseFloat(workPosition.z) - coordinateOffsetZ) * 1000) / 1000;
+        const machinePositionX = Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000;
+        const machinePositionY = Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000;
+        const machinePositionZ = Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000;
 
         return (
             <div className={styles['display-panel']}>
