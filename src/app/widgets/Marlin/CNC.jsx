@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -20,9 +19,8 @@ class CNC extends PureComponent {
         const { headType, state, actions } = this.props;
         const { statusSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state;
-        const headStatus = controllerState.headStatus;
-        const ovF = get(controllerState, 'ovF', 0);
-        const ovS = get(controllerState, 'ovS', 0);
+        const { headStatus } = controllerState;
+        const { speedFactor } = state;
 
         return (
             <div>
@@ -97,8 +95,7 @@ class CNC extends PureComponent {
                 </Anchor>
                 {overridesSectionExpanded && (
                     <Overrides
-                        ovF={ovF}
-                        ovS={ovS}
+                        speedFactor={speedFactor}
                         actions={actions}
                     />
                 )}

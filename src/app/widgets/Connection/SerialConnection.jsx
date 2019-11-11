@@ -10,7 +10,7 @@ import pubsub from 'pubsub-js';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import { MACHINE_PATTERN, MACHINE_SERIES } from '../../constants';
+import { MACHINE_SERIES, MACHINE_PATTERN } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import SerialClient from '../../lib/serialClient';
 import api from '../../api';
@@ -28,6 +28,7 @@ class SerialConnection extends PureComponent {
         isOpen: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
+        series: PropTypes.string.isRequired,
         isHomed: PropTypes.bool,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
@@ -340,9 +341,10 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { isOpen, isConnected, isHomed } = this.props;
+        const { isOpen, series, isConnected, isHomed } = this.props;
         const { err, ports, port, status, loadingPorts,
             showMachineSelected, showHomeReminder } = this.state;
+        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
 
         const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
@@ -414,7 +416,7 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
-                    {status === 'connected' && showHomeReminder && isConnected && !isHomed && (
+                    {status === 'connected' && showHomeReminder && isConnected && !isOriginal && isHomed !== null && !isHomed && (
                         <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
                             <Modal.Header>
                                 <Modal.Title>
@@ -451,10 +453,11 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isHomed, isConnected } = machine;
+    const { port, series, isHomed, isConnected } = machine;
 
     return {
         port,
+        series,
         isHomed,
         isConnected
     };

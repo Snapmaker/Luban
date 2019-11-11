@@ -187,6 +187,17 @@ class MarlinController {
                     this.controller.parse(String(data));
                 }
                 */
+
+                // TODO home info from M1006
+                if (String(data) === 'Homed: YES\r') {
+                    this.controller.state.isHomed = true;
+                } else if (String(data) === 'Homed: NO\r') {
+                    this.controller.state.isHomed = false;
+                } else {
+                    log.silly(`< ${data}`);
+                    this.controller.parse(String(data));
+                }
+
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
@@ -1075,7 +1086,6 @@ class MarlinController {
                     setTimeout(() => this.writeln('M1005'));
                     setTimeout(() => this.writeln('M1006'), 100);
                     // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                    // setTimeout(() => this.writeln('M105'), 200);
                     setTimeout(() => this.writeln('M105'), 200);
                 }
 

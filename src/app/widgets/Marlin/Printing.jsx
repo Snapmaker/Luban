@@ -63,7 +63,9 @@ class Printing extends PureComponent {
         const { headType, state, actions } = this.props;
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
-        const { speedFactor, extruderFactor, temperature = {} } = controllerState;
+        // const { speedFactor, extruderFactor, temperature = {} } = controllerState;
+        const { temperature = {} } = controllerState;
+        const { speedFactor, extruderFactor } = state;
         const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || temperature.tTarget || state.nozzleTargetTemperature);
         const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || temperature.bTarget || state.bedTargetTemperature);
 
@@ -211,7 +213,6 @@ class Printing extends PureComponent {
                     <Overrides
                         speedFactor={speedFactor}
                         extruderFactor={extruderFactor}
-                        state={state}
                         actions={actions}
                     />
                 )}
