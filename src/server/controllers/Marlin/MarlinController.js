@@ -1085,7 +1085,6 @@ class MarlinController {
                     // send M1005 to get firmware version (only support versions >= '2.2')
                     setTimeout(() => this.writeln('M1005'));
                     setTimeout(() => this.writeln('M1006'), 100);
-                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                     setTimeout(() => this.writeln('M105'), 200);
                 }
 
