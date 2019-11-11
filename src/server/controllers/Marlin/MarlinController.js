@@ -538,6 +538,14 @@ class MarlinController {
                 //     // send M1006 to detect type of tool head
                 //     this.writeln('M1006');
                 // }
+                // outdated version format
+                /*
+                const version = this.controller.state.version;
+                if (semver.gte(version, '2.4.0')) {
+                    // send M1006 to detect type of tool head
+                    this.writeln('M1006');
+                }
+                */
             }
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
