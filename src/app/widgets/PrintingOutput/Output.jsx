@@ -11,14 +11,17 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing';
 import { actions as workspaceActions } from '../../flux/workspace';
+import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 
 class Output extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
+        minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
+        boundingBox: PropTypes.object.isRequired,
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
@@ -35,9 +38,12 @@ class Output extends PureComponent {
         exportModelFormatInfo: 'stl_binary'
     };
 
+    thumbnail = React.createRef();
+
     actions = {
         onClickGenerateGcode: () => {
-            this.props.generateGcode();
+            const thumbnail = this.thumbnail.current.getThumbnail();
+            this.props.generateGcode(thumbnail);
         },
         onClickLoadGcode: () => {
             if (this.props.isGcodeOverstepped) {
@@ -117,68 +123,76 @@ class Output extends PureComponent {
 
         return (
             <div>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onClickGenerateGcode}
-                    disabled={!hasModel || isSlicing || isAnyModelOverstepped}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
-                <table style={{ width: '100%', marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td style={{ paddingLeft: '0px', width: '60%' }}>
-                                <Select
-                                    clearable={false}
-                                    options={[{
-                                        value: 'stl_binary',
-                                        label: i18n._('STL File (Binary) (*.stl)')
-                                    }, {
-                                        value: 'stl_ascii',
-                                        label: i18n._('STL File (ASCII) (*.stl)')
-                                    }, {
-                                        value: 'obj',
-                                        label: i18n._('OBJ File (*.obj)')
-                                    }]}
-                                    value={state.exportModelFormatInfo}
-                                    searchable={false}
-                                    onChange={actions.onChangeExportModelFormat}
-                                />
-                            </td>
-                            <td style={{ paddingRight: '0px', width: '40%' }}>
-                                <button
-                                    type="button"
-                                    className="sm-btn-large sm-btn-default"
-                                    style={{ width: '100%' }}
-                                    disabled={!hasModel}
-                                    onClick={actions.onClickExportModel}
-                                >
-                                    {i18n._('Export Models')}
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onClickLoadGcode}
-                    disabled={workflowState === 'running' || !gcodeLine}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Load G-code to Workspace')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onClickExportGcode}
-                    disabled={!gcodeLine}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Export G-code to file')}
-                </button>
+                <div>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onClickGenerateGcode}
+                        disabled={!hasModel || isSlicing || isAnyModelOverstepped}
+                        style={{ display: 'block', width: '100%' }}
+                    >
+                        {i18n._('Generate G-code')}
+                    </button>
+                    <table style={{ width: '100%', marginTop: '10px' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ paddingLeft: '0px', width: '60%' }}>
+                                    <Select
+                                        clearable={false}
+                                        options={[{
+                                            value: 'stl_binary',
+                                            label: i18n._('STL File (Binary) (*.stl)')
+                                        }, {
+                                            value: 'stl_ascii',
+                                            label: i18n._('STL File (ASCII) (*.stl)')
+                                        }, {
+                                            value: 'obj',
+                                            label: i18n._('OBJ File (*.obj)')
+                                        }]}
+                                        value={state.exportModelFormatInfo}
+                                        searchable={false}
+                                        onChange={actions.onChangeExportModelFormat}
+                                    />
+                                </td>
+                                <td style={{ paddingRight: '0px', width: '40%' }}>
+                                    <button
+                                        type="button"
+                                        className="sm-btn-large sm-btn-default"
+                                        style={{ width: '100%' }}
+                                        disabled={!hasModel}
+                                        onClick={actions.onClickExportModel}
+                                    >
+                                        {i18n._('Export Models')}
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onClickLoadGcode}
+                        disabled={workflowState === 'running' || !gcodeLine}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Load G-code to Workspace')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onClickExportGcode}
+                        disabled={!gcodeLine}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Export G-code to file')}
+                    </button>
+                </div>
+                <Thumbnail
+                    ref={this.thumbnail}
+                    modelGroup={this.props.modelGroup}
+                    boundingBox={this.props.boundingBox}
+                    minimized={this.props.minimized}
+                />
             </div>
         );
     }
@@ -189,7 +203,7 @@ const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
     const {
         stage,
-        modelGroup, hasModel, isAnyModelOverstepped,
+        modelGroup, hasModel, boundingBox, isAnyModelOverstepped,
         isGcodeOverstepped, gcodeLine, gcodePath
     } = printing;
 
@@ -197,6 +211,7 @@ const mapStateToProps = (state) => {
         workflowState,
         stage,
         modelGroup,
+        boundingBox,
         hasModel,
         isAnyModelOverstepped,
         isGcodeOverstepped,
@@ -207,7 +222,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateGcode: () => dispatch(printingActions.generateGcode()),
+        generateGcode: (thumbnail) => dispatch(printingActions.generateGcode(thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode())
     };

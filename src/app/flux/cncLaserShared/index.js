@@ -282,19 +282,56 @@ export const actions = {
     },
 
     // gcode
-    generateGcode: (from) => (dispatch, getState) => {
+    generateGcode: (from, thumbnail) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const gcodeBeans = toolPathModelGroup.generateGcode();
+        let estimatedTime = 0;
+        let fileTotalLines = 0;
         for (const gcodeBean of gcodeBeans) {
             const modelState = modelGroup.getModelState(gcodeBean.modelInfo.modelID);
+            estimatedTime += modelState.estimatedTime;
             gcodeBean.modelInfo.mode = modelState.mode;
             gcodeBean.modelInfo.originalName = modelState.originalName;
+            fileTotalLines += gcodeBean.gcode.split('\n').length;
         }
         dispatch(actions.updateState(from, {
             isGcodeGenerated: true,
             gcodeBeans
         }));
+
+        const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo.config;
+        const boundingBox = modelGroup.getAllBoundingBox();
+
+        const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
+
+        let headerStart = ';Header Start\n'
+        + `;header_type: ${headerType}\n`
+        + `;thumbnail: ${thumbnail}\n`
+        + ';file_total_lines: fileTotalLines\n'
+        + `;estimated_time(s): ${estimatedTime}\n`
+        + `;max_x(mm): ${boundingBox.max.x}\n`
+        + `;max_y(mm): ${boundingBox.max.y}\n`
+        + `;max_z(mm): ${boundingBox.max.z}\n`
+        + `;min_x(mm): ${boundingBox.min.x}\n`
+        + `;min_y(mm): ${boundingBox.min.y}\n`
+        + `;min_z(mm): ${boundingBox.min.z}\n`
+        + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
+        + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
+        + `;power(%): ${power}\n`
+        + ';Header End\n';
+        fileTotalLines += headerStart.split('\n').length;
+        headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
+
+        gcodeBeans[0].gcode = `${headerStart}\n${gcodeBeans[0].gcode}`;
+
+        dispatch(actions.updateState(
+            from,
+            {
+                isGcodeGenerated: true,
+                gcodeBeans
+            }
+        ));
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {

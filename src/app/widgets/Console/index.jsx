@@ -12,7 +12,7 @@ class ConsoleWidget extends PureComponent {
     static propTypes = {
         minimized: PropTypes.bool.isRequired,
         widgetId: PropTypes.string.isRequired,
-        defaultWidgets: PropTypes.array.isRequired,
+        isDefault: PropTypes.bool.isRequired,
 
         updateWidgetState: PropTypes.func.isRequired,
         toggleWorkspaceWidgetToDefault: PropTypes.func.isRequired
@@ -40,16 +40,12 @@ class ConsoleWidget extends PureComponent {
         },
         toggleWorkspaceWidgetToDefault: () => {
             this.props.toggleWorkspaceWidgetToDefault();
-        },
-        isDefault: () => {
-            return this.props.defaultWidgets.indexOf(this.props.widgetId) !== -1;
         }
     };
 
     render() {
         const { clearRenderStamp, minimized } = this.state;
-        const { widgetId } = this.props;
-        const isDefault = this.actions.isDefault();
+        const { widgetId, isDefault } = this.props;
 
         return (
             <Widget>
@@ -159,10 +155,11 @@ const mapStateToProps = (state, ownProps) => {
     const widget = state.widget;
     const { minimized = false } = widget.widgets[ownProps.widgetId];
     const defaultWidgets = widget.workspace.default.widgets;
+    const isDefault = defaultWidgets.indexOf(ownProps.widgetId) !== -1;
 
     return {
         minimized,
-        defaultWidgets
+        isDefault
     };
 };
 

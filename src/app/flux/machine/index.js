@@ -19,6 +19,8 @@ import { machineStore } from '../../store/local-storage';
 import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
+import History from './History';
+import FixedArray from './FixedArray';
 
 
 const STATUS_UNKNOWN = 'UNKNOWN';
@@ -34,7 +36,8 @@ const INITIAL_STATE = {
     server: ABSENT_OBJECT,
     serverStatus: STATUS_UNKNOWN,
     discovering: false,
-
+    terminalHistory: new FixedArray(1000),
+    history: new History(1000),
     // Serial port
     port: controller.port || '',
 

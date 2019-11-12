@@ -187,6 +187,7 @@ function createDefaultWidget(WrappedWidget) {
                     >
                         <WrappedWidget
                             widgetId={widgetId}
+                            minimized={minimized}
                             onToggle={onToggle}
                             setTitle={actions.setTitle}
                             setDisplay={actions.setDisplay}

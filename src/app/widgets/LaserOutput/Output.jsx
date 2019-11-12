@@ -8,13 +8,16 @@ import { LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
 
 
 class Output extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
+        minimized: PropTypes.bool.isRequired,
 
+        modelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
@@ -28,6 +31,8 @@ class Output extends PureComponent {
         setAutoPreview: PropTypes.func.isRequired
     };
 
+    thumbnail = React.createRef();
+
     actions = {
         onGenerateGcode: () => {
             if (!this.props.isAllModelsPreviewed) {
@@ -37,7 +42,8 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            this.props.generateGcode();
+            const thumbnail = this.thumbnail.current.getThumbnail();
+            this.props.generateGcode(thumbnail);
         },
         onLoadGcode: () => {
             const { gcodeBeans } = this.props;
@@ -96,55 +102,62 @@ class Output extends PureComponent {
 
         return (
             <div>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    disabled={autoPreviewEnabled}
-                    onClick={manualPreview}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Preview')}
-                </button>
-                <TipTrigger
-                    title={i18n._('Auto Preview')}
-                    content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
-                >
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
-                        <input
-                            type="checkbox"
-                            className="sm-parameter-row__checkbox"
-                            checked={autoPreviewEnabled}
-                            onChange={actions.onToggleAutoPreview}
-                        />
-                    </div>
-                </TipTrigger>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onGenerateGcode}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onLoadGcode}
-                    disabled={workflowState === 'running' || !isGcodeGenerated}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Load G-code to Workspace')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onExport}
-                    disabled={workflowState === 'running' || !isGcodeGenerated}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Export G-code to file')}
-                </button>
+                <div>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        disabled={autoPreviewEnabled}
+                        onClick={manualPreview}
+                        style={{ display: 'block', width: '100%' }}
+                    >
+                        {i18n._('Preview')}
+                    </button>
+                    <TipTrigger
+                        title={i18n._('Auto Preview')}
+                        content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
+                            <input
+                                type="checkbox"
+                                className="sm-parameter-row__checkbox"
+                                checked={autoPreviewEnabled}
+                                onChange={actions.onToggleAutoPreview}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onGenerateGcode}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Generate G-code')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onLoadGcode}
+                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Load G-code to Workspace')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onExport}
+                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Export G-code to file')}
+                    </button>
+                </div>
+                <Thumbnail
+                    ref={this.thumbnail}
+                    modelGroup={this.props.modelGroup}
+                    minimized={this.props.minimized}
+                />
             </div>
         );
     }
@@ -152,8 +165,9 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled } = state.laser;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup } = state.laser;
     return {
+        modelGroup,
         isGcodeGenerated,
         workflowState,
         gcodeBeans,
@@ -165,7 +179,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateGcode: () => dispatch(sharedActions.generateGcode('laser')),
+        generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('laser', thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         manualPreview: () => dispatch(sharedActions.manualPreview('laser', true)),
