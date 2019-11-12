@@ -46,6 +46,44 @@ class MarlinReplyParserFirmwareVersion {
     }
 }
 
+/**
+ * Marlin SM2-1.2.1.0
+ */
+class MarlinReplyParserSeries {
+    static parse(line) {
+        const r = line.match(/^Marlin (.*)-([0-9.]+)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeries,
+            payload: {
+                series: r[1],
+                version: semver.coerce(r[2]).version
+            }
+        };
+    }
+}
+
+/**
+ * Machine Size: L
+ */
+class MarlinReplyParserSeriesSize {
+    static parse(line) {
+        const r = line.match(/^Machine Size: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeriesSize,
+            payload: {
+                seriesSize: r[1].trim()
+            }
+        };
+    }
+}
+
+
 class MarlinReplyParserReleaseDate {
     static parse(line) {
         const r = line.match(/^Release Date: (.*)$/);
@@ -267,6 +305,13 @@ class MarlinLineParser {
             // New Parsers (follow pattern `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
+
+            // Marlin SM2-1.2.1.0
+            MarlinReplyParserSeries,
+
+            // Machine Size: L
+            MarlinReplyParserSeriesSize,
+
             MarlinReplyParserReleaseDate,
             // M1006
             MarlinReplyParserToolHead,
@@ -309,6 +354,8 @@ class MarlinLineParser {
 
 class Marlin extends events.EventEmitter {
     state = {
+        series: '',
+        seriesSize: '',
         // firmware version
         version: '1.0.0',
         // tool head type
@@ -395,6 +442,12 @@ class Marlin extends events.EventEmitter {
         if (type === MarlinReplyParserFirmwareVersion) {
             this.setState({ version: payload.version });
             this.emit('firmware', payload);
+        } else if (type === MarlinReplyParserSeries) {
+            this.setState({ series: payload.series, version: payload.version });
+            this.emit('series', payload);
+        } else if (type === MarlinReplyParserSeriesSize) {
+            this.setState({ seriesSize: payload.seriesSize });
+            this.emit('series', payload);
         } else if (type === MarlinReplyParserReleaseDate) {
             this.emit('firmware', payload);
         } else if (type === MarlinReplyParserToolHead) {

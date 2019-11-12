@@ -238,6 +238,7 @@ class SocketServer {
                 socket.join(port);
 
                 socket.emit('serialport:open', { port, dataSource });
+                socket.emit('serialport:ready', { state: controller.controller.state, dataSource });
             } else {
                 controller.open((err = null) => {
                     if (err) {

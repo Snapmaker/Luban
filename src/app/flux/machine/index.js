@@ -68,6 +68,7 @@ const INITIAL_STATE = {
         pattern: 'unknown'
     },
     // machine connect state
+    isOpen: false,
     isConnected: false,
     connectionType: ''
 };
@@ -171,8 +172,14 @@ export const actions = {
                     ports,
                     dataSource,
                     dataSources,
-                    isConnected: true,
+                    isOpen: true,
                     connectionType: CONNECTION_TYPE_SERIAL
+                }));
+            },
+            'serialport:ready': () => {
+                console.log('this is ready');
+                dispatch(actions.updateState({
+                    isConnected: true
                 }));
             },
             'serialport:close': (options) => {
@@ -192,6 +199,7 @@ export const actions = {
                         ports,
                         dataSource: dataSources[0],
                         dataSources,
+                        isOpen: false,
                         isConnected: false,
                         connectionType: ''
                     }));
@@ -202,6 +210,7 @@ export const actions = {
                         ports,
                         dataSource: '',
                         dataSources,
+                        isOpen: false,
                         isConnected: false,
                         connectionType: ''
                     }));
@@ -221,10 +230,10 @@ export const actions = {
 
     updateMachineState: (state) => (dispatch,) => {
         const { series, pattern } = state;
-        dispatch(actions.updateState({
+        pattern && dispatch(actions.updateState({
             pattern
         }));
-        dispatch(actions.updateMachineSeries(series));
+        series && dispatch(actions.updateMachineSeries(series));
     },
 
     updateMachineSeries: (series) => (dispatch) => {
@@ -235,9 +244,6 @@ export const actions = {
         dispatch(widgetActions.updateMachineSeries(series));
     },
 
-    updateMachineConnectionState: (state) => (dispatch) => {
-        dispatch(actions.updateState({ isConnected: state }));
-    },
     updatePort: (port) => (dispatch) => {
         dispatch(actions.updateState({ port: port }));
         machineStore.set('port', port);
