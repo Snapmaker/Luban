@@ -14,8 +14,10 @@ class Console extends PureComponent {
     static propTypes = {
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
-        defaultWidgets: PropTypes.array.isRequired,
         minimized: PropTypes.bool.isRequired,
+        isDefault: PropTypes.bool.isRequired,
+        terminalHistory: PropTypes.object.isRequired,
+        history: PropTypes.object.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -185,8 +187,18 @@ class Console extends PureComponent {
     };
 
     componentDidMount() {
-        this.actions.getHelp();
-        this.actions.greetings();
+        if (this.props.terminalHistory.getLength() === 0) {
+            this.props.terminalHistory.push('');
+            this.actions.getHelp();
+            this.actions.greetings();
+        } else {
+            const terminal = this.terminal.current;
+            const data = [];
+            for (let i = 1; i < this.props.terminalHistory.getLength(); i++) {
+                data.push(`\r${this.props.terminalHistory.get(i)}\r\n`);
+            }
+            terminal.write(data.join(''));
+        }
         this.addControllerEvents();
         this.subscribe();
     }
@@ -218,10 +230,20 @@ class Console extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        // if (prevProps.minimized !== this.props.minimized) {
-        console.log(prevProps, this.props.minimized);
-        this.resizeTerminal();
-        // }
+        if (prevProps.minimized !== this.props.minimized) {
+            this.resizeTerminal();
+        }
+        if (prevProps.isDefault !== this.props.isDefault) {
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.clear(false);
+                const data = [];
+                for (let i = 1; i < this.props.terminalHistory.getLength(); i++) {
+                    data.push(`\r${this.props.terminalHistory.get(i)}\r\n`);
+                }
+                terminal.write(data.join(''));
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -265,28 +287,31 @@ class Console extends PureComponent {
     }
 
     render() {
+        const { isDefault, terminalHistory, history } = this.props;
+        const inputValue = terminalHistory.get(0) || '';
         return (
             <Terminal
                 ref={this.terminal}
                 onData={this.actions.onTerminalData}
-                defaultWidgets={this.props.defaultWidgets}
+                isDefault={isDefault}
+                terminalHistory={terminalHistory}
+                history={history}
+                inputValue={inputValue}
             />
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const widget = state.widget;
-    const defaultWidgets = widget.workspace.default.widgets;
-
     const machine = state.machine;
-    const { port, server, isConnected } = machine;
+    const { port, server, isConnected, terminalHistory, history } = machine;
 
     return {
         port,
         server,
         isConnected,
-        defaultWidgets
+        terminalHistory,
+        history
     };
 };
 

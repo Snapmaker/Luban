@@ -40,7 +40,7 @@ function callCuraEngine(modelPath, configPath, outputPath) {
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 
-function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox) {
+function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail) {
     const definitionLoader = new DefinitionLoader();
     definitionLoader.loadDefinition('active_final');
     const readFileSync = fs.readFileSync(gcodeFilePath, 'utf8');
@@ -53,6 +53,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox) {
         + '\n'
         + `${readFileSync.substring(0, splitIndex)}\n`
         + ';header_type: 3dp\n'
+        + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
         + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature.default_value}\n`
@@ -82,7 +83,7 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, uploadName, boundingBox } = params;
+    const { originalName, uploadName, boundingBox, thumbnail } = params;
 
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
@@ -126,7 +127,7 @@ function slice(params, onProgress, onSucceed, onError) {
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);
-            processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox);
+            processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail);
             onSucceed({
                 gcodeFileName: gcodeFileName,
                 printTime: printTime,
