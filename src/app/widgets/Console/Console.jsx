@@ -218,10 +218,9 @@ class Console extends PureComponent {
     }
 
     componentDidUpdate(prevProps) {
-        // if (prevProps.minimized !== this.props.minimized) {
-        console.log(prevProps, this.props.minimized);
-        this.resizeTerminal();
-        // }
+        if (prevProps.minimized !== this.props.minimized) {
+            this.resizeTerminal();
+        }
     }
 
     componentWillUnmount() {
