@@ -10,37 +10,19 @@ import {
     SMMinimizeButton,
     SMDropdownButton
 } from '../../components/SMWidget';
-import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
-import { PROTOCOL_TEXT, MACHINE_PATTERN } from '../../constants';
+import { MACHINE_HEAD_TYPE } from '../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
-        pattern: PropTypes.string.isRequired
+        headType: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired
     };
 
     state = {
-        isConnected: false,
         showInstructions: false
-    };
-
-    controllerEvents = {
-        'serialport:open': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            this.setState({ isConnected: true });
-        },
-        'serialport:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            this.setState({ isConnected: false });
-        }
     };
 
     actions = {
@@ -57,34 +39,11 @@ class LaserTestFocusWidget extends PureComponent {
         WidgetState.bind(this);
     }
 
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
     render() {
         const state = this.state;
         const actions = this.actions;
 
-        // TODO: move this condition to widget's filter
-        if (!(this.props.pattern === MACHINE_PATTERN.LASER.value) || !state.isConnected) {
+        if (!this.props.isConnected || !(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
             return null;
         }
 
@@ -122,9 +81,10 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { pattern } = state.machine;
+    const { headType, isConnected } = state.machine;
     return {
-        pattern
+        headType: headType,
+        isConnected
     };
 };
 export default connect(mapStateToProps)(LaserTestFocusWidget);

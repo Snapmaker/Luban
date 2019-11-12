@@ -1,7 +1,6 @@
 import fs from 'fs';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
-import throttle from 'lodash/throttle';
 import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import semver from 'semver';
@@ -35,7 +34,7 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     WRITE_SOURCE_UNKNOWN,
-    HEAD_TYPE_3DP
+    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE
 } from '../constants';
 
 // % commands
@@ -118,10 +117,23 @@ class MarlinController {
                         if (data[0] === 0x08 && data[1] === 0x01) {
                             if (packetData.headStatus !== 0) {
                                 this.ready = true;
+                                this.emitAll('serialport:ready', { state: this.controller.state });
                             }
                             const nextState = {
                                 ...this.controller.state,
                                 ...packetData
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                            }
+                        } else if (data[0] === 0x08 && data[1] === 0x0e) {
+                            const nextState = {
+                                ...this.controller.state,
+                                ...packetData,
+                                originOffset: {
+                                    ...this.controller.state.originOffset,
+                                    ...packetData.originOffset
+                                }
                             };
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState;
@@ -160,20 +172,6 @@ class MarlinController {
                         break;
                 }
             } else {
-                /*
-                // M1024 outdated
-                if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
-                    this.refresh({ isScreenProtocol: true });
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else {
-                    log.silly(`< ${data}`);
-                    this.controller.parse(String(data));
-                }
-                */
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
@@ -250,6 +248,7 @@ class MarlinController {
             if (this.query.type === QUERY_TYPE_POSITION) {
                 if (this.controller.state.isScreenProtocol) {
                     this.writeln('query state');
+                    this.writeln('query coordinate');
                 } else {
                     this.writeln('M114');
                 }
@@ -261,6 +260,10 @@ class MarlinController {
                     this.writeln('M105');
                 }
                 this.lastQueryTime = now;
+            } else if (this.query.type === QUERY_TYPE_ENCLOSURE) {
+                if (!this.controller.state.isScreenProtocol) {
+                    this.writeln('M1010');
+                }
             } else {
                 log.error('Unsupported query type: ', this.query.type);
             }
@@ -268,57 +271,101 @@ class MarlinController {
         }
     };
 
-    // TODO
-    queryPosition = (() => {
-        let lastQueryTime = 0;
 
-        return throttle(() => {
+    queryState = (() => {
+        let index = 0;
+        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE];
+        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ENCLOSURE];
+
+        return () => {
             if (!this.ready) {
                 return;
             }
-
-            const now = new Date().getTime();
-
             if (!this.query.type) {
-                this.query.type = QUERY_TYPE_POSITION;
-                lastQueryTime = now;
-            } else {
-                const timespan = Math.abs(now - lastQueryTime);
-                const toleranceTime = 10000; // 10 seconds
-
-                if (timespan >= toleranceTime) {
-                    log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
-                    this.query.type = QUERY_TYPE_POSITION;
-                    lastQueryTime = now;
+                if (this.state.headType === HEAD_TYPE_3DP) {
+                    this.query.type = typeOf3dp[index++ % typeOf3dp.length];
+                } else {
+                    this.query.type = type[index++ % type.length];
                 }
             }
-        }, 1000);
+        };
     })();
 
-    queryTemperature = (() => {
-        let lastQueryTime = 0;
-
-        return throttle(() => {
-            // Check the ready flag
-            if (!this.ready) {
-                return;
-            }
-            const now = new Date().getTime();
-            if (!this.query.type) {
-                this.query.type = QUERY_TYPE_TEMPERATURE;
-                lastQueryTime = now;
-            } else {
-                const timespan = Math.abs(now - lastQueryTime);
-                const toleranceTime = 10000; // 10 seconds
-
-                if (timespan >= toleranceTime) {
-                    log.silly(`Reschedule temperture report query: now=${now}ms, timespan=${timespan}ms`);
-                    this.query.type = QUERY_TYPE_TEMPERATURE;
-                    lastQueryTime = now;
-                }
-            }
-        }, 1000);
-    })();
+    // queryPosition = (() => {
+    //     let lastQueryTime = 0;
+    //
+    //     return throttle(() => {
+    //         if (!this.ready) {
+    //             return;
+    //         }
+    //
+    //         const now = new Date().getTime();
+    //
+    //         if (!this.query.type) {
+    //             this.query.type = QUERY_TYPE_POSITION;
+    //             lastQueryTime = now;
+    //         } else {
+    //             const timespan = Math.abs(now - lastQueryTime);
+    //             const toleranceTime = 10000; // 10 seconds
+    //
+    //             if (timespan >= toleranceTime) {
+    //                 log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
+    //                 this.query.type = QUERY_TYPE_POSITION;
+    //                 lastQueryTime = now;
+    //             }
+    //         }
+    //     }, 1000);
+    // })();
+    //
+    // queryTemperature = (() => {
+    //     let lastQueryTime = 0;
+    //
+    //     return throttle(() => {
+    //         // Check the ready flag
+    //         if (!this.ready) {
+    //             return;
+    //         }
+    //         const now = new Date().getTime();
+    //         if (!this.query.type) {
+    //             this.query.type = QUERY_TYPE_TEMPERATURE;
+    //             lastQueryTime = now;
+    //         } else {
+    //             const timespan = Math.abs(now - lastQueryTime);
+    //             const toleranceTime = 2000; // 10 seconds
+    //
+    //             if (timespan >= toleranceTime) {
+    //                 log.silly(`Reschedule temperture report query: now=${now}ms, timespan=${timespan}ms`);
+    //                 this.query.type = QUERY_TYPE_TEMPERATURE;
+    //                 lastQueryTime = now;
+    //             }
+    //         }
+    //     }, 1000);
+    // })();
+    //
+    // queryEnclosure = (() => {
+    //     let lastQueryTime = 0;
+    //
+    //     return throttle(() => {
+    //         // Check the ready flag
+    //         if (!this.ready) {
+    //             return;
+    //         }
+    //         const now = new Date().getTime();
+    //         if (!this.query.type) {
+    //             this.query.type = QUERY_TYPE_ENCLOSURE;
+    //             lastQueryTime = now;
+    //         } else {
+    //             const timespan = Math.abs(now - lastQueryTime);
+    //             const toleranceTime = 10000; // 10 seconds
+    //
+    //             if (timespan >= toleranceTime) {
+    //                 log.silly(`Reschedule enclosure report query: now=${now}ms, timespan=${timespan}ms`);
+    //                 this.query.type = QUERY_TYPE_ENCLOSURE;
+    //                 lastQueryTime = now;
+    //             }
+    //         }
+    //     }, 1000);
+    // })();
 
     dataFilter = (line, context) => {
         // Current position
@@ -506,13 +553,38 @@ class MarlinController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
+                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
 
+                // const version = this.controller.state.version;
+                // if (semver.gte(version, '2.4.0')) {
+                //     // send M1006 to detect type of tool head
+                //     this.writeln('M1006');
+                // }
+                // outdated version format
+                /*
                 const version = this.controller.state.version;
                 if (semver.gte(version, '2.4.0')) {
                     // send M1006 to detect type of tool head
                     this.writeln('M1006');
                 }
+                */
             }
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('series', (res) => {
+            log.silly(`controller.on('series'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('home', (res) => {
+            log.silly(`controller.on('home'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
@@ -534,6 +606,10 @@ class MarlinController {
             }
         });
         this.controller.on('temperature', (res) => {
+            if (!this.ready) {
+                this.ready = true;
+                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+            }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
@@ -546,6 +622,16 @@ class MarlinController {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
             }
+        });
+        this.controller.on('cnc:stop', (res) => {
+            log.warn(`controller.on('cnc:stop'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
+
+            // The enclosure door opened when CNC printing;
+            this.command(null, 'gcode:stop');
+
+            setTimeout(() => {
+                this.writeln('M1010 S2');
+            }, 1000);
         });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -599,7 +685,6 @@ class MarlinController {
                     return;
                 }
             }
-
             this.query.issue();
         });
 
@@ -682,13 +767,12 @@ class MarlinController {
                 return;
             }
 
-            // TODO heartbeat
-            // M114 - Get Current Position
-            this.queryPosition();
-            if (this.state.headType === HEAD_TYPE_3DP) {
-                // M105 - Get Temperature Report
-                this.queryTemperature();
-            }
+            // this.queryPosition();
+            // // M114 - Get Current Position
+            // if (this.state.headType === HEAD_TYPE_3DP) {
+            //     this.queryTemperature();
+            // }
+            this.queryState();
 
             {
                 // The following criteria must be met to issue a query(kickoff)
@@ -885,6 +969,9 @@ class MarlinController {
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
                             break;
+                        case 'query coordinate\n':
+                            outputData = this.packetManager.statusRequestCoordinateSystem();
+                            break;
                         case 'start print file\n':
                             if (this.controller.gcodeFile) {
                                 gcode = fs.readFileSync(this.controller.gcodeFile, 'utf-8');
@@ -1028,6 +1115,10 @@ class MarlinController {
             callback(); // register controller
 
             // Make sure machine is ready.
+            setTimeout(() => this.writeln('M1005'));
+            setTimeout(() => this.writeln('M1006'), 100);
+            setTimeout(() => this.writeln('M105'), 200);
+
             this.handler = setInterval(() => {
                 // Set ready flag to true when receiving a start message
                 if (this.handler && this.ready) {
@@ -1039,10 +1130,18 @@ class MarlinController {
                 } else {
                     // send M1005 to get firmware version (only support versions >= '2.2')
                     setTimeout(() => this.writeln('M1005'));
-                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                    // setTimeout(() => this.writeln('M105'), 200);
+                    setTimeout(() => this.writeln('M1006'), 100);
                     setTimeout(() => this.writeln('M105'), 200);
                 }
+
+                setTimeout(() => {
+                    if (this.handler && !this.ready) {
+                        log.error('this machine is not ready');
+                        clearInterval(this.handler);
+                        this.emitAll('serialport:ready', { dataSource, err: 'this machine is not ready' });
+                        this.close();
+                    }
+                }, 2000);
             }, 1000);
 
             log.debug(`Connected to serial port "${port}/${dataSource}"`);
@@ -1097,9 +1196,13 @@ class MarlinController {
         return this.serialport && this.serialport.isOpen;
     }
 
-    addConnection(socket) {
+    addConnection(port, socket) {
         if (!socket) {
             log.error('The socket parameter is not specified');
+            return;
+        }
+        if (port !== this.options.port) {
+            log.error('The socket port is different this port');
             return;
         }
 

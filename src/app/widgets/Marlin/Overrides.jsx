@@ -13,7 +13,7 @@ import { PROTOCOL_TEXT } from '../../constants';
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const Overrides = (props) => {
-    const { speedFactor = 0, extruderFactor = 0, state, actions } = props;
+    const { speedFactor = 100, extruderFactor = 100, actions } = props;
 
     return (
         <div className={styles.overrides}>
@@ -47,7 +47,7 @@ const Overrides = (props) => {
                                 className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                 aria-hidden="true"
                                 onClick={() => {
-                                    controller.command('factor:speed', state.speedFactor);
+                                    controller.command('factor:speed', speedFactor);
                                 }}
                             />
                             <Anchor
@@ -86,7 +86,7 @@ const Overrides = (props) => {
                                 className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                 aria-hidden="true"
                                 onClick={() => {
-                                    controller.command('factor:extruder', state.extruderFactor);
+                                    controller.command('factor:extruder', extruderFactor);
                                 }}
                             />
                             <Anchor
@@ -106,7 +106,6 @@ const Overrides = (props) => {
 Overrides.propTypes = {
     speedFactor: PropTypes.number,
     extruderFactor: PropTypes.number,
-    state: PropTypes.object,
     actions: PropTypes.object
 };
 

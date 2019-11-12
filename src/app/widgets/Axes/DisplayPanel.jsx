@@ -12,6 +12,7 @@ class DisplayPanel extends PureComponent {
     static propTypes = {
         executeGcode: PropTypes.func.isRequired,
         workPosition: PropTypes.object.isRequired,
+        originOffset: PropTypes.object.isRequired,
         state: PropTypes.object
     };
 
@@ -25,9 +26,13 @@ class DisplayPanel extends PureComponent {
     };
 
     render() {
-        const { state, workPosition } = this.props;
+        const { state, workPosition, originOffset } = this.props;
+        const { x, y, z } = originOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
+        const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
+        const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
+        const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
 
         return (
             <div className={styles['display-panel']}>
@@ -35,7 +40,8 @@ class DisplayPanel extends PureComponent {
                     <thead>
                         <tr>
                             <th className="nowrap" title={i18n._('Axis')}>{i18n._('Axis')}</th>
-                            <th title={i18n._('Work Position')}>{i18n._('Work Position')}</th>
+                            <th title={i18n._('Machine Position')} style={{ textAlign: 'right' }}>{i18n._('Machine Position')}</th>
+                            <th title={i18n._('Work Position')} style={{ textAlign: 'right' }}>{i18n._('Work Position')}</th>
                             <th className="nowrap" title={i18n._('Action')}>{i18n._('Action')}</th>
                         </tr>
                     </thead>
@@ -45,7 +51,12 @@ class DisplayPanel extends PureComponent {
                                 <td className={styles.coordinate}>X</td>
                                 <td className={styles.workPosition}>
                                     <span className={styles.dimensionUnits}>{lengthUnits}</span>
-
+                                    <div>
+                                        <span className={styles.integerPart}>{machinePositionX}</span>
+                                    </div>
+                                </td>
+                                <td className={styles.workPosition}>
+                                    <span className={styles.dimensionUnits}>{lengthUnits}</span>
                                     <div>
                                         <span className={styles.integerPart}>{workPosition.x.split('.')[0]}</span>
                                         <span className={styles.decimalPoint}>.</span>
@@ -85,6 +96,12 @@ class DisplayPanel extends PureComponent {
                                 <td className={styles.workPosition}>
                                     <span className={styles.dimensionUnits}>{lengthUnits}</span>
                                     <div>
+                                        <span className={styles.integerPart}>{machinePositionY}</span>
+                                    </div>
+                                </td>
+                                <td className={styles.workPosition}>
+                                    <span className={styles.dimensionUnits}>{lengthUnits}</span>
+                                    <div>
                                         <span className={styles.integerPart}>{workPosition.y.split('.')[0]}</span>
                                         <span className={styles.decimalPoint}>.</span>
                                         <span className={styles.fractionalPart}>{workPosition.y.split('.')[1]}</span>
@@ -120,6 +137,12 @@ class DisplayPanel extends PureComponent {
                         {includes(axes, 'z') && (
                             <tr>
                                 <td className={styles.coordinate}>Z</td>
+                                <td className={styles.workPosition}>
+                                    <span className={styles.dimensionUnits}>{lengthUnits}</span>
+                                    <div>
+                                        <span className={styles.integerPart}>{machinePositionZ}</span>
+                                    </div>
+                                </td>
                                 <td className={styles.workPosition}>
                                     <span className={styles.dimensionUnits}>{lengthUnits}</span>
 

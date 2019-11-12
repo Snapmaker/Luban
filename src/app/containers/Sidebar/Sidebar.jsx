@@ -3,16 +3,16 @@ import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { PROTOCOL_TEXT, MACHINE_PATTERN } from '../../constants';
+import { PROTOCOL_TEXT, MACHINE_HEAD_TYPE } from '../../constants';
 
 const Sidebar = (props) => {
     const { pathname = '' } = props.location;
     const { platform } = props;
-    const { pattern, isConnected } = props.machineInfo;
+    const { headType, isConnected } = props.machineInfo;
 
-    const show3dp = !isConnected || pattern === MACHINE_PATTERN['3DP'].value;
-    const showLaser = !isConnected || pattern === MACHINE_PATTERN.LASER.value;
-    const showCNC = !isConnected || pattern === MACHINE_PATTERN.CNC.value;
+    const show3dp = !isConnected || headType === MACHINE_HEAD_TYPE['3DP'].value;
+    const showLaser = !isConnected || headType === MACHINE_HEAD_TYPE.LASER.value;
+    const showCNC = !isConnected || headType === MACHINE_HEAD_TYPE.CNC.value;
 
     return (
         <div className={styles.sidebar} id="sidebar">

@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -23,8 +22,8 @@ class Laser extends PureComponent {
         const { headType, state, actions } = this.props;
         const { statusSectionExpanded, powerSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state;
-        const ovF = get(controllerState, 'ovF', 0);
-        const ovS = get(controllerState, 'ovS', 0);
+        // const { speedFactor } = controllerState;
+        const { speedFactor } = state;
 
         return (
             <div>
@@ -82,8 +81,7 @@ class Laser extends PureComponent {
                 </Anchor>
                 {overridesSectionExpanded && (
                     <Overrides
-                        ovF={ovF}
-                        ovS={ovS}
+                        speedFactor={speedFactor}
                         actions={actions}
                     />
                 )}
