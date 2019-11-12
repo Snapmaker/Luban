@@ -118,6 +118,7 @@ class MarlinController {
                         if (data[0] === 0x08 && data[1] === 0x01) {
                             if (packetData.headStatus !== 0) {
                                 this.ready = true;
+                                this.emitAll('serialport:ready', { state: this.controller.state });
                             }
                             const nextState = {
                                 ...this.controller.state,
@@ -506,13 +507,22 @@ class MarlinController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
+                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
 
-                const version = this.controller.state.version;
-                if (semver.gte(version, '2.4.0')) {
-                    // send M1006 to detect type of tool head
-                    this.writeln('M1006');
-                }
+                // const version = this.controller.state.version;
+                // if (semver.gte(version, '2.4.0')) {
+                //     // send M1006 to detect type of tool head
+                //     this.writeln('M1006');
+                // }
             }
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('series', (res) => {
+            log.silly(`controller.on('series'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });
@@ -534,6 +544,10 @@ class MarlinController {
             }
         });
         this.controller.on('temperature', (res) => {
+            if (!this.ready) {
+                this.ready = true;
+                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+            }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
@@ -1028,6 +1042,10 @@ class MarlinController {
             callback(); // register controller
 
             // Make sure machine is ready.
+            setTimeout(() => this.writeln('M1005'));
+            setTimeout(() => this.writeln('M1006'), 100);
+            setTimeout(() => this.writeln('M105'), 200);
+
             this.handler = setInterval(() => {
                 // Set ready flag to true when receiving a start message
                 if (this.handler && this.ready) {
@@ -1039,6 +1057,7 @@ class MarlinController {
                 } else {
                     // send M1005 to get firmware version (only support versions >= '2.2')
                     setTimeout(() => this.writeln('M1005'));
+                    setTimeout(() => this.writeln('M1006'), 100);
                     // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                     // setTimeout(() => this.writeln('M105'), 200);
                     setTimeout(() => this.writeln('M105'), 200);

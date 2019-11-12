@@ -94,7 +94,8 @@ export const MACHINE_SERIES = {
                 y: 160,
                 z: 145
             }
-        }
+        },
+        alias: ['SM2-S']
     },
     A250: {
         value: 'A250',
@@ -105,7 +106,9 @@ export const MACHINE_SERIES = {
                 y: 250,
                 z: 240
             }
-        }
+        },
+        alias: ['SM2-M']
+
     },
     A350: {
         value: 'A350',
@@ -116,7 +119,8 @@ export const MACHINE_SERIES = {
                 y: 340,
                 z: 330
             }
-        }
+        },
+        alias: ['SM2-L']
     }
 };
 
