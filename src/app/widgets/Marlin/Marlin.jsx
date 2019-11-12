@@ -13,24 +13,20 @@ import {
     PROTOCOL_TEXT,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX,
+    SPEED_FACTOR_MIN,
+    SPEED_FACTOR_MAX,
     HEAD_3DP,
     HEAD_LASER,
     HEAD_CNC,
     HEAD_UNKNOWN,
-    MACHINE_PATTERN
+    MACHINE_HEAD_TYPE
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
 
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const normalizeToRange = (n, min, max) => {
-    if (n < min) {
-        return min;
-    }
-    if (n > max) {
-        return max;
-    }
-    return n;
+    return Math.max(Math.min(n, max), min);
 };
 
 class MarlinWidget extends PureComponent {
@@ -38,7 +34,9 @@ class MarlinWidget extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         setDisplay: PropTypes.func.isRequired,
 
-        pattern: PropTypes.string.isRequired,
+        port: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
+        headType: PropTypes.string.isRequired,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
         heaterControlSectionExpanded: PropTypes.bool.isRequired,
@@ -74,14 +72,22 @@ class MarlinWidget extends PureComponent {
             bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
             this.setState({ bedTargetTemperature });
         },
+        changeSpeedFactor: (speedFactor) => {
+            speedFactor = normalizeToRange(speedFactor, SPEED_FACTOR_MIN, SPEED_FACTOR_MAX);
+            this.setState({ speedFactor });
+        },
+        changeExtruderFactor: (extruderFactor) => {
+            extruderFactor = normalizeToRange(extruderFactor, SPEED_FACTOR_MIN, SPEED_FACTOR_MAX);
+            this.setState({ extruderFactor });
+        },
         is3DPrinting: () => {
-            return this.props.pattern === MACHINE_PATTERN['3DP'].value;
+            return this.props.headType === MACHINE_HEAD_TYPE['3DP'].value;
         },
         isLaser: () => {
-            return this.props.pattern === MACHINE_PATTERN.LASER.value;
+            return this.props.headType === MACHINE_HEAD_TYPE.LASER.value;
         },
         isCNC: () => {
-            return this.props.pattern === MACHINE_PATTERN.CNC.value;
+            return this.props.headType === MACHINE_HEAD_TYPE.CNC.value;
         },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
@@ -114,15 +120,16 @@ class MarlinWidget extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port, dataSource } = options;
+        'serialport:ready': (options) => {
+            const { dataSource, err } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
+            if (err) {
+                return;
+            }
             this.setState({
-                ...this.getInitialState(),
-                isConnected: true,
-                port: port
+                ...this.getInitialState()
             });
             this.props.setDisplay(true);
         },
@@ -146,6 +153,13 @@ class MarlinWidget extends PureComponent {
                     state
                 }
             });
+            const { speedFactor, extruderFactor } = state;
+            if (speedFactor && speedFactor !== this.state.speedFactor) {
+                this.setState({ speedFactor });
+            }
+            if (extruderFactor && extruderFactor !== this.state.extruderFactor) {
+                this.setState({ extruderFactor });
+            }
         },
         // 'Marlin:settings': (settings, dataSource) => {
         'Marlin:settings': (options) => {
@@ -170,7 +184,6 @@ class MarlinWidget extends PureComponent {
 
     getInitialState() {
         return {
-            isConnected: false,
             canClick: true, // Defaults to true
             headType: null,
 
@@ -182,9 +195,10 @@ class MarlinWidget extends PureComponent {
             overridesSectionExpanded: this.props.overridesSectionExpanded,
 
             // data
-            port: controller.getPort(),
             nozzleTargetTemperature: 200,
             bedTargetTemperature: 50,
+            speedFactor: 100,
+            extruderFactor: 100,
             controller: {
                 state: controller.getState(),
                 settings: controller.getSettings()
@@ -197,7 +211,7 @@ class MarlinWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.pattern !== this.props.pattern) {
+        if (prevProps.headType !== this.props.headType) {
             this.actions.setTitle();
         }
         if (this.state.controller === prevState.controller) {
@@ -242,13 +256,13 @@ class MarlinWidget extends PureComponent {
     }
 
     render() {
-        const { isConnected } = this.state;
+        const { isConnected } = this.props;
         if (!isConnected) {
             return null;
         }
         const state = {
             ...this.state,
-            canClick: !!this.state.port
+            canClick: !!this.props.port
         };
         const actions = this.actions;
         let headType = null;
@@ -297,7 +311,7 @@ class MarlinWidget extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { pattern } = state.machine;
+    const { headType, port, isConnected } = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const {
@@ -314,7 +328,9 @@ const mapStateToProps = (state, ownProps) => {
     const overridesSectionExpanded = overridesSection.expanded;
 
     return {
-        pattern,
+        port,
+        isConnected,
+        headType: headType,
         statusSectionExpanded,
         machineModalSectionExpanded,
         heaterControlSectionExpanded,

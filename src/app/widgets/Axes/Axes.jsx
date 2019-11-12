@@ -82,6 +82,7 @@ class Axes extends PureComponent {
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
+        originOffset: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func,
@@ -299,6 +300,12 @@ class Axes extends PureComponent {
                 z: '0.000'
             },
 
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+
             // Bounding box
             bbox: {
                 min: {
@@ -332,17 +339,23 @@ class Axes extends PureComponent {
                 selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
             });
         }
-        const { dataSource, x, y, z } = nextProps.workPosition;
+        const { dataSource } = nextProps.workPosition;
         if (dataSource !== this.props.dataSource) {
             return;
         }
-        if (x !== this.props.workPosition.x
-            || y !== this.props.workPosition.y
-            || z !== this.props.workPosition.z) {
+        if (nextProps.workPosition !== this.props.workPosition) {
             this.setState({
                 workPosition: {
                     ...this.state.workPosition,
                     ...nextProps.workPosition
+                }
+            });
+        }
+        if (nextProps.originOffset !== this.props.originOffset) {
+            this.setState({
+                originOffset: {
+                    ...this.state.originOffset,
+                    ...nextProps.originOffset
                 }
             });
         }
@@ -480,13 +493,13 @@ class Axes extends PureComponent {
             ...this.actions
         };
 
-        // const { workPosition } = this.props;
-        const { workPosition } = this.state;
+        const { workPosition, originOffset } = this.state;
 
         return (
             <div>
                 <DisplayPanel
                     workPosition={workPosition}
+                    originOffset={originOffset}
                     executeGcode={this.actions.executeGcode}
                     state={state}
                 />
@@ -544,7 +557,7 @@ const mapStateToProps = (state, ownProps) => {
 
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, headType, dataSources, workflowState, workPosition, server, serverStatus } = machine;
+    const { port, headType, dataSources, workflowState, workPosition, originOffset = {}, server, serverStatus } = machine;
 
     return {
         port,
@@ -553,6 +566,7 @@ const mapStateToProps = (state, ownProps) => {
         dataSources,
         workflowState,
         workPosition,
+        originOffset,
         server,
         serverStatus,
         axes,

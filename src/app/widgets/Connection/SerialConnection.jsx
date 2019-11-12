@@ -1,41 +1,43 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Select from 'react-select';
+import { Button } from '@trendmicro/react-buttons';
 import { includes, map, find, get } from 'lodash';
 import pubsub from 'pubsub-js';
 
-import { connect } from 'react-redux';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import { MACHINE_PATTERN } from '../../constants';
+import { MACHINE_SERIES, MACHINE_HEAD_TYPE, PROTOCOL_TEXT } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
+import Modal from '../../components/Modal';
 import { actions as machineActions } from '../../flux/machine';
 // import { PROTOCOL_TEXT } from '../../constants';
-
-
-const STATUS_IDLE = 'idle';
-const STATUS_CONNECTING = 'connecting';
-const STATUS_CONNECTED = 'connected';
 
 
 class SerialConnection extends PureComponent {
     static propTypes = {
         dataSource: PropTypes.string.isRequired,
 
-        updateMachineConnectionState: PropTypes.func.isRequired,
+        isOpen: PropTypes.bool.isRequired,
+
         port: PropTypes.string.isRequired,
+        series: PropTypes.string.isRequired,
+        isHomed: PropTypes.bool,
+        isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired
+        updateMachineState: PropTypes.func.isRequired,
+        resetHomeState: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired
     };
 
     controller = new SerialClient({ dataSource: this.props.dataSource });
-
 
     state = {
         // Available serial ports
@@ -43,18 +45,13 @@ class SerialConnection extends PureComponent {
         // Selected port
         port: this.props.port,
         // connect status: 'idle', 'connecting', 'connected'
-        status: STATUS_IDLE,
-
         err: null,
 
         // UI state
         loadingPorts: false,
 
         showMachineSelected: false,
-
-        waitTime: 0,
-        queryPattern: null,
-        querySeries: null
+        showHomeReminder: false
     };
 
     loadingTimer = null;
@@ -62,18 +59,8 @@ class SerialConnection extends PureComponent {
     controllerEvents = {
         'serialport:list': (options) => this.onListPorts(options),
         'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:close': (options) => this.onPortClosed(options),
-        'Marlin:state': (state) => {
-            if (this.state.queryPattern) {
-                return;
-            }
-            if (state.state.headType) {
-                const value = valueOf(MACHINE_PATTERN, 'alias', state.state.headType);
-                value && (this.setState({
-                    queryPattern: value.value
-                }));
-            }
-        }
+        'serialport:ready': (options) => this.onPortReady(options),
+        'serialport:close': (options) => this.onPortClosed(options)
     };
 
     actions = {
@@ -92,6 +79,8 @@ class SerialConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
+            this.actions.closeHomeModal();
+            this.props.resetHomeState();
         },
         openModal: () => {
             this.setState({
@@ -103,25 +92,21 @@ class SerialConnection extends PureComponent {
                 showMachineSelected: false
             });
         },
-        queryMachineInfo: () => {
+        openHomeModal: () => {
             this.setState({
-                waitTime: new Date()
+                showHomeReminder: true
             });
-            setTimeout(this.actions.showMachineSelection, 1000);
         },
-        showMachineSelection: () => {
-            const now = new Date();
-            const { querySeries, queryPattern } = this.state;
-            if (querySeries && queryPattern) {
-                this.props.updateMachineState({
-                    series: querySeries,
-                    pattern: queryPattern
-                });
-            } else if (now - this.state.waitTime < 1000) {
-                setTimeout(this.actions.showMachineSelection, 200);
-            } else {
-                this.actions.openModal();
-            }
+        closeHomeModal: () => {
+            this.setState({
+                showHomeReminder: false
+            });
+        },
+        clickHomeModalOk: () => {
+            this.props.executeGcode('G28');
+            this.setState({
+                showHomeReminder: false
+            });
         }
     };
 
@@ -130,6 +115,15 @@ class SerialConnection extends PureComponent {
 
         // refresh ports on mount
         setTimeout(() => this.listPorts());
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const { isHomed } = nextProps;
+        if (this.props.isHomed !== isHomed && !isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.openHomeModal();
+            }
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -185,8 +179,7 @@ class SerialConnection extends PureComponent {
         }
         if (err && err !== 'inuse') {
             this.setState({
-                err: 'Can not open this port',
-                status: STATUS_IDLE
+                err: 'Can not open this port'
             });
             log.error(`Error opening serial port '${port}'`, err);
 
@@ -195,10 +188,19 @@ class SerialConnection extends PureComponent {
 
         this.setState({
             port,
-            err: null,
-            status: STATUS_CONNECTED
+            err: null
         });
+    }
 
+    onPortReady(data) {
+        const { state, err } = data;
+        if (err) {
+            this.setState({
+                err: 'The machine is not ready'
+            });
+            return;
+        }
+        const port = this.state.port;
         log.debug(`Connected to ${port}.`);
 
         // re-upload G-code
@@ -223,10 +225,22 @@ class SerialConnection extends PureComponent {
             .catch(() => {
                 // Empty block
             });
-        this.actions.queryMachineInfo();
-        this.props.updateMachineConnectionState(true);
-    }
+        const { series, seriesSize, headType } = state;
+        const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
+        const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
 
+
+        if (machineHeadType && machineSeries) {
+            this.props.updateMachineState({
+                series: machineSeries.value,
+                headType: machineHeadType.value
+            });
+        } else {
+            machineHeadType && this.props.updateMachineState({ headType: machineHeadType.value });
+            machineSeries && this.props.updateMachineState({ series: machineSeries.value });
+            this.actions.openModal();
+        }
+    }
 
     onPortClosed(options) {
         const { port, dataSource, err } = options;
@@ -244,13 +258,8 @@ class SerialConnection extends PureComponent {
 
         log.debug(`Disconnected from '${port}'.`);
 
-        this.setState({
-            err: null,
-            status: STATUS_IDLE
-        });
         // Refresh ports
         this.listPorts();
-        this.props.updateMachineConnectionState(false);
     }
 
     listPorts() {
@@ -266,10 +275,6 @@ class SerialConnection extends PureComponent {
     }
 
     openPort(port) {
-        this.setState({
-            status: STATUS_CONNECTING
-        });
-
         this.controller.openPort(port);
     }
 
@@ -279,14 +284,15 @@ class SerialConnection extends PureComponent {
 
     renderPortOption = (option) => {
         const { value, label, manufacturer } = option;
-        const { port, status } = this.state;
+        const { port } = this.state;
+        const { isConnected } = this.props;
         const style = {
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
 
-        const inuse = value === port && status === STATUS_CONNECTED;
+        const inuse = value === port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -308,14 +314,15 @@ class SerialConnection extends PureComponent {
 
     renderPortValue = (option) => {
         const { value, label } = option;
-        const { port, status } = this.state;
+        const { port } = this.state;
+        const { isConnected } = this.props;
         const canChangePort = !(this.state.loading);
         const style = {
             color: canChangePort ? '#333' : '#ccc',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
-        const inuse = value === port && status === STATUS_CONNECTED;
+        const inuse = value === port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -345,11 +352,14 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { err, ports, port, status, loadingPorts, showMachineSelected } = this.state;
+        const { isOpen, series, isConnected, isHomed } = this.props;
+        const { err, ports, port, loadingPorts,
+            showMachineSelected, showHomeReminder } = this.state;
+        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
 
-        const canRefresh = !loadingPorts && status !== STATUS_CONNECTED;
+        const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
-        const canOpenPort = port && status === STATUS_IDLE;
+        const canOpenPort = port && !isOpen;
 
         return (
             <div>
@@ -394,7 +404,7 @@ class SerialConnection extends PureComponent {
                     </div>
                 </div>
                 <div className="btn-group btn-group-sm">
-                    {status !== 'connected' && (
+                    {!isConnected && (
                         <button
                             type="button"
                             className="sm-btn-small sm-btn-primary"
@@ -406,7 +416,7 @@ class SerialConnection extends PureComponent {
                             {i18n._('Open')}
                         </button>
                     )}
-                    {status === 'connected' && (
+                    {isConnected && (
                         <button
                             type="button"
                             className="sm-btn-small sm-btn-danger"
@@ -416,6 +426,28 @@ class SerialConnection extends PureComponent {
                             <Space width={4} />
                             {i18n._('Close')}
                         </button>
+                    )}
+                    {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
+                        <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
+                            <Modal.Header>
+                                <Modal.Title>
+                                    {i18n._('Home Reminder')}
+                                </Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <div>
+                                    {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
+                                </div>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button
+                                    btnStyle="primary"
+                                    onClick={this.actions.clickHomeModalOk}
+                                >
+                                    {i18n._('OK')}
+                                </Button>
+                            </Modal.Footer>
+                        </Modal>
                     )}
                     {err && (
                         <span style={{ margin: '0 8px' }}>{err}</span>
@@ -432,17 +464,22 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port } = machine;
+    const { port, series, isHomed, isOpen, isConnected } = machine;
 
     return {
-        port
+        port,
+        series,
+        isHomed,
+        isOpen,
+        isConnected
     };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateMachineConnectionState: (state) => dispatch(machineActions.updateMachineConnectionState(state)),
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
-        updatePort: (port) => dispatch(machineActions.updatePort(port))
+        updatePort: (port) => dispatch(machineActions.updatePort(port)),
+        resetHomeState: () => dispatch(machineActions.resetHomeState()),
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);

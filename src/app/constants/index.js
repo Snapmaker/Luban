@@ -71,6 +71,9 @@ export const PROTOCOL_SCREEN = 'screen';
 export const MAX_LINE_POINTS = 300;
 export const TEMPERATURE_MIN = 0;
 export const TEMPERATURE_MAX = 300;
+export const SPEED_FACTOR_MIN = 0;
+export const SPEED_FACTOR_MAX = 500;
+
 export const HEAD_3DP = '3dp';
 export const HEAD_LASER = 'laser';
 export const HEAD_CNC = 'cnc';
@@ -100,7 +103,8 @@ export const MACHINE_SERIES = {
                 y: 160,
                 z: 145
             }
-        }
+        },
+        alias: ['SM2-S']
     },
     A250: {
         value: 'A250',
@@ -111,7 +115,9 @@ export const MACHINE_SERIES = {
                 y: 250,
                 z: 240
             }
-        }
+        },
+        alias: ['SM2-M']
+
     },
     A350: {
         value: 'A350',
@@ -122,11 +128,12 @@ export const MACHINE_SERIES = {
                 y: 340,
                 z: 330
             }
-        }
+        },
+        alias: ['SM2-L']
     }
 };
 
-export const MACHINE_PATTERN = {
+export const MACHINE_HEAD_TYPE = {
     WORKSPACE: {
         value: 'workspace',
         label: 'Workspace'

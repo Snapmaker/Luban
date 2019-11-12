@@ -161,7 +161,7 @@ class Console extends PureComponent {
 
         greetings: () => {
             const terminal = this.terminal.current;
-            if (this.props.port) {
+            if (this.props.isConnected && this.props.port) {
                 const { name, version } = settings;
 
                 if (terminal) {
@@ -170,7 +170,7 @@ class Console extends PureComponent {
                 }
             }
 
-            if (this.props.server !== ABSENT_OBJECT) {
+            if (this.props.isConnected && this.props.server !== ABSENT_OBJECT) {
                 const { name, version } = settings;
 
                 if (terminal) {

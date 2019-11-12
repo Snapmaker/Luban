@@ -38,7 +38,7 @@ class LaserPad extends PureComponent {
         },
         toggleToolHead: () => {
             if (!this.actions.isLaserOn()) {
-                this.props.executeGcode(`M3 P${this.state.headPower}`);
+                this.props.executeGcode(`M3 P${this.state.headPower} S${this.state.headPower * 255 / 100}`);
             } else {
                 this.props.executeGcode('M5');
             }

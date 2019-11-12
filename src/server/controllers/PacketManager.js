@@ -317,6 +317,15 @@ class PacketManager {
                             this.content = 'finish fail';
                         }
                         break;
+                    case 0x0e:
+                        this.content = { isHomed: false, originOffset: {} };
+                        this.content.isHomed = !buffer[2];
+                        // this.content.isAligned = !buffer[3];
+                        // this.content.coordinateID = buffer[4];
+                        this.content.originOffset.x = toValue(buffer, 5, 4) / 1000;
+                        this.content.originOffset.y = toValue(buffer, 9, 4) / 1000;
+                        this.content.originOffset.z = toValue(buffer, 13, 4) / 1000;
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -562,6 +571,10 @@ class PacketManager {
 
     statusRequestResumePrintUSB() {
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x0c]));
+    }
+
+    statusRequestCoordinateSystem() {
+        return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x0e]));
     }
 
     statusSyncMachineStatus(x, y, z, e) {

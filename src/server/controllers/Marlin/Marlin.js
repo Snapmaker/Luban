@@ -46,6 +46,60 @@ class MarlinReplyParserFirmwareVersion {
     }
 }
 
+/**
+ * Marlin SM2-1.2.1.0
+ */
+class MarlinReplyParserSeries {
+    static parse(line) {
+        const r = line.match(/^Marlin (.*)-([0-9.]+)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeries,
+            payload: {
+                series: r[1],
+                version: semver.coerce(r[2]).version
+            }
+        };
+    }
+}
+
+/**
+ * Machine Size: L
+ */
+class MarlinReplyParserSeriesSize {
+    static parse(line) {
+        const r = line.match(/^Machine Size: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeriesSize,
+            payload: {
+                seriesSize: r[1].trim()
+            }
+        };
+    }
+}
+
+
+class MarlinReplyParserEmergencyStop {
+    static parse(line) {
+        const r = line.match(/;Locked UART/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserEmergencyStop,
+            payload: {
+                releaseDate: r[2]
+            }
+        };
+    }
+}
+
+
 class MarlinReplyParserReleaseDate {
     static parse(line) {
         const r = line.match(/^Release Date: (.*)$/);
@@ -88,6 +142,22 @@ class MarlinReplyParserEnclosure {
             type: MarlinReplyParserEnclosure,
             payload: {
                 enclosure: r[1] === 'On'
+            }
+        };
+    }
+}
+
+class MarlinReplyParserEnclosureDoor {
+    static parse(line) {
+        const r = line.match(/^Door: (Open|Closed)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosure,
+            payload: {
+                enclosure: r[1] === 'Open'
             }
         };
     }
@@ -258,20 +328,53 @@ class MarlinLineParserResultTemperature {
     }
 }
 
+class MarlinParserHomeState {
+    static parse(line) {
+        const r = line.match(/^Homed: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        let isHomed = null;
+        if (r[1] === 'YES') {
+            isHomed = true;
+        } else if (r[1] === 'NO') {
+            isHomed = false;
+        }
+
+        return {
+            type: MarlinParserHomeState,
+            payload: {
+                isHomed
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
             // ok
             MarlinLineParserResultOk,
 
-            // New Parsers (follow pattern `MarlinReplyParserXXX`)
+            // cnc emergency stop when enclosure open
+            MarlinReplyParserEmergencyStop,
+
+            // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
+
+            // Marlin SM2-1.2.1.0
+            MarlinReplyParserSeries,
+
+            // Machine Size: L
+            MarlinReplyParserSeriesSize,
+
             MarlinReplyParserReleaseDate,
             // M1006
             MarlinReplyParserToolHead,
             // M1010
             MarlinReplyParserEnclosure,
+            MarlinReplyParserEnclosureDoor,
 
             // start
             MarlinLineParserResultStart,
@@ -287,7 +390,10 @@ class MarlinLineParser {
 
             MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature
+            MarlinLineParserResultTemperature,
+            // Homed: YES
+            MarlinParserHomeState
+
         ];
 
         for (const parser of parsers) {
@@ -309,6 +415,8 @@ class MarlinLineParser {
 
 class Marlin extends events.EventEmitter {
     state = {
+        series: '',
+        seriesSize: '',
         // firmware version
         version: '1.0.0',
         // tool head type
@@ -351,6 +459,12 @@ class Marlin extends events.EventEmitter {
         machineSetting: {},
         zFocus: 15,
         gcodeHeader: 0,
+        isHomed: null,
+        originOffset: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
         hexModeEnabled: false,
         isScreenProtocol: false
         // isScreenProtocol: true
@@ -358,7 +472,8 @@ class Marlin extends events.EventEmitter {
 
     settings = {
         // whether enclosure is turned on
-        enclosure: false
+        enclosure: false,
+        enclosureDoor: false
     };
 
     parser = new MarlinLineParser();
@@ -395,6 +510,12 @@ class Marlin extends events.EventEmitter {
         if (type === MarlinReplyParserFirmwareVersion) {
             this.setState({ version: payload.version });
             this.emit('firmware', payload);
+        } else if (type === MarlinReplyParserSeries) {
+            this.setState({ series: payload.series, version: payload.version });
+            this.emit('series', payload);
+        } else if (type === MarlinReplyParserSeriesSize) {
+            this.setState({ seriesSize: payload.seriesSize });
+            this.emit('series', payload);
         } else if (type === MarlinReplyParserReleaseDate) {
             this.emit('firmware', payload);
         } else if (type === MarlinReplyParserToolHead) {
@@ -407,8 +528,15 @@ class Marlin extends events.EventEmitter {
                 this.set({ enclosure: payload.enclosure });
             }
             this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserEnclosureDoor) {
+            if (this.settings.enclosureDoor !== payload.enclosureDoor) {
+                this.set({ enclosureDoor: payload.enclosureDoor });
+            }
+            this.emit('enclosure', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
+        } else if (type === MarlinReplyParserEmergencyStop) {
+            this.emit('cnc:stop', payload);
         } else if (type === MarlinLineParserResultPosition) {
             const nextState = {
                 ...this.state,
@@ -441,6 +569,7 @@ class Marlin extends events.EventEmitter {
                 }
                 // just regard this M105 command as a M1005 request
                 this.emit('firmware', { version: this.state.version, ...payload });
+                this.emit('ok', payload);
             } else {
                 this.setState({ temperature: payload.temperature });
                 this.emit('temperature', payload);
@@ -448,6 +577,9 @@ class Marlin extends events.EventEmitter {
                     this.emit('ok', payload);
                 }
             }
+        } else if (type === MarlinParserHomeState) {
+            this.setState({ isHomed: payload.isHomed });
+            this.emit('home', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
@@ -470,6 +602,7 @@ export {
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
-    MarlinLineParserResultOkTemperature
+    MarlinLineParserResultOkTemperature,
+    MarlinParserHomeState
 };
 export default Marlin;

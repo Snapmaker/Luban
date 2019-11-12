@@ -8,7 +8,7 @@ import {
     HEAD_TYPE_CNC,
     PROTOCOL_TEXT,
     MACHINE_SERIES,
-    MACHINE_PATTERN,
+    MACHINE_HEAD_TYPE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI
 } from '../../constants';
@@ -41,9 +41,6 @@ const INITIAL_STATE = {
     // Serial port
     port: controller.port || '',
 
-    // head type
-    headType: HEAD_TYPE_UNKNOWN,
-
     ports: [],
     dataSource: '',
     dataSources: [],
@@ -58,6 +55,14 @@ const INITIAL_STATE = {
         dataSource: ''
     },
 
+    isHomed: null,
+
+    originOffset: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+
     // current connected device
     series: MACHINE_SERIES.ORIGINAL.value,
     isCustom: false,
@@ -67,16 +72,13 @@ const INITIAL_STATE = {
         z: 125
     },
     enclosure: false,
+    enclosureDoor: false,
 
-    // machine pattern
-    pattern: MACHINE_PATTERN['3DP'].value,
+    // machine headType
+    headType: MACHINE_HEAD_TYPE['3DP'].value,
 
-    workMachineState: {
-        isUpdate: false,
-        series: 'unknown',
-        pattern: 'unknown'
-    },
     // machine connect state
+    isOpen: false,
     isConnected: false,
     connectionType: ''
 };
@@ -107,6 +109,7 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
+
         let initialMachineState = machineStore.get('machine');
         if (!initialMachineState) {
             initialMachineState = {
@@ -137,10 +140,27 @@ export const actions = {
                 const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
-                const { headType, pos } = state;
+                const { headType, pos, originOffset } = state;
 
                 const machineState = getState().machine;
 
+                if (machineState.workPosition.x !== pos.x || machineState.workPosition.y !== pos.y || machineState.workPosition.z !== pos.z) {
+                    dispatch(actions.updateState({
+                        workPosition: {
+                            ...machineState.workPosition,
+                            ...pos,
+                            dataSource
+                        }
+                    }));
+                }
+                if (machineState.originOffset.x !== originOffset.x || machineState.originOffset.y !== originOffset.y || machineState.originOffset.z !== originOffset.z) {
+                    dispatch(actions.updateState({
+                        originOffset: {
+                            ...machineState.originOffset,
+                            ...originOffset
+                        }
+                    }));
+                }
                 dispatch(actions.updateState({
                     headType: convertHeadType(headType),
                     workPosition: {
@@ -148,17 +168,18 @@ export const actions = {
                         ...pos,
                         dataSource
                     }
+
                 }));
             },
             // 'Marlin:settings': (settings) => {
             'Marlin:settings': (options) => {
-                const { settings } = options;
-                const state = getState().machine;
+                const { enclosure = false, enclosureDoor = false } = options.settings;
 
                 // enclosure is changed
-                if (state.enclosure !== settings.enclosure) {
-                    dispatch(actions.updateState({ enclosure: settings.enclosure }));
-                }
+                dispatch(actions.updateState({
+                    enclosure: enclosure,
+                    enclosureDoor: enclosureDoor
+                }));
             },
             'http:discover': (objects) => {
                 const servers = [];
@@ -179,7 +200,10 @@ export const actions = {
                 }, 600);
             },
             'serialport:open': (options) => {
-                const { port, dataSource } = options;
+                const { port, dataSource, err } = options;
+                if (err && err !== 'inuse') {
+                    return;
+                }
                 const state = getState().machine;
                 // For Warning Don't initialize
                 const ports = [...state.ports];
@@ -193,8 +217,17 @@ export const actions = {
                     ports,
                     dataSource,
                     dataSources,
-                    isConnected: true,
+                    isOpen: true,
                     connectionType: CONNECTION_TYPE_SERIAL
+                }));
+            },
+            'serialport:ready': (data) => {
+                const { err } = data;
+                if (err) {
+                    return;
+                }
+                dispatch(actions.updateState({
+                    isConnected: true
                 }));
             },
             'serialport:close': (options) => {
@@ -214,6 +247,7 @@ export const actions = {
                         ports,
                         dataSource: dataSources[0],
                         dataSources,
+                        isOpen: false,
                         isConnected: false,
                         connectionType: ''
                     }));
@@ -224,6 +258,7 @@ export const actions = {
                         ports,
                         dataSource: '',
                         dataSources,
+                        isOpen: false,
                         isConnected: false,
                         connectionType: ''
                     }));
@@ -232,21 +267,25 @@ export const actions = {
             // 'workflow:state': (workflowState, dataSource) => {
             'workflow:state': (options) => {
                 const { workflowState, dataSource } = options;
-                dispatch(actions.updateState({ workflowState, dataSource }));
+                dispatch(actions.updateState({
+                    workflowState,
+                    dataSource
+                }));
             }
         };
 
-        Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
-        });
+        Object.keys(controllerEvents)
+            .forEach(event => {
+                controller.on(event, controllerEvents[event]);
+            });
     },
 
-    updateMachineState: (state) => (dispatch,) => {
-        const { series, pattern } = state;
-        dispatch(actions.updateState({
-            pattern
+    updateMachineState: (state) => (dispatch) => {
+        const { series, headType } = state;
+        headType && dispatch(actions.updateState({
+            headType: headType
         }));
-        dispatch(actions.updateMachineSeries(series));
+        series && dispatch(actions.updateMachineSeries(series));
     },
 
     updateMachineSeries: (series) => (dispatch) => {
@@ -257,9 +296,6 @@ export const actions = {
         dispatch(widgetActions.updateMachineSeries(series));
     },
 
-    updateMachineConnectionState: (state) => (dispatch) => {
-        dispatch(actions.updateState({ isConnected: state }));
-    },
     updatePort: (port) => (dispatch) => {
         dispatch(actions.updateState({ port: port }));
         machineStore.set('port', port);
@@ -274,6 +310,9 @@ export const actions = {
         dispatch(actions.updateState({ size }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
+    },
+    resetHomeState: () => (dispatch) => {
+        dispatch(actions.updateState({ isHomed: null }));
     },
     // executeGcode: (gcode, context) => (dispatch, getState) => {
     executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {
