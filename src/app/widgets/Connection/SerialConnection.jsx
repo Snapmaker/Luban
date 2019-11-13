@@ -32,7 +32,8 @@ class SerialConnection extends PureComponent {
         isHomed: PropTypes.bool,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired
+        updateMachineState: PropTypes.func.isRequired,
+        resetHomeState: PropTypes.func.isRequired
     };
 
     controller = new SerialClient({ dataSource: this.props.dataSource });
@@ -78,6 +79,7 @@ class SerialConnection extends PureComponent {
             const { port } = this.state;
             this.closePort(port);
             this.actions.closeHomeModal();
+            this.props.resetHomeState();
         },
         openModal: () => {
             this.setState({
@@ -465,7 +467,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
-        updatePort: (port) => dispatch(machineActions.updatePort(port))
+        updatePort: (port) => dispatch(machineActions.updatePort(port)),
+        resetHomeState: () => dispatch(machineActions.resetHomeState())
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);

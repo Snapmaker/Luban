@@ -278,6 +278,9 @@ export const actions = {
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
+    resetHomeState: () => (dispatch) => {
+        dispatch(actions.updateState({ isHomed: null }));
+    },
     // executeGcode: (gcode, context) => (dispatch, getState) => {
     executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
