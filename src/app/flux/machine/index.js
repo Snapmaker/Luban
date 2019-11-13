@@ -49,6 +49,14 @@ const INITIAL_STATE = {
         dataSource: ''
     },
 
+    isHomed: null,
+
+    originOffset: {
+        x: 0,
+        y: 0,
+        z: 0
+    },
+
     // current connected device
     series: MACHINE_SERIES.ORIGINAL.value,
     isCustom: false,
@@ -117,7 +125,7 @@ export const actions = {
                 const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
-                const { pos } = state;
+                const { pos, isHomed, originOffset } = state;
 
                 const machineState = getState().machine;
 
@@ -126,6 +134,11 @@ export const actions = {
                         ...machineState.position,
                         ...pos,
                         dataSource
+                    },
+                    isHomed,
+                    originOffset: {
+                        ...machineState.originOffset,
+                        ...originOffset
                     }
                 }));
             },
@@ -264,6 +277,9 @@ export const actions = {
         dispatch(actions.updateState({ size }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
+    },
+    resetHomeState: () => (dispatch) => {
+        dispatch(actions.updateState({ isHomed: null }));
     },
     // executeGcode: (gcode, context) => (dispatch, getState) => {
     executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {

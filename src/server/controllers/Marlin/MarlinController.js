@@ -127,6 +127,18 @@ class MarlinController {
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState;
                             }
+                        } else if (data[0] === 0x08 && data[1] === 0x0e) {
+                            const nextState = {
+                                ...this.controller.state,
+                                ...packetData,
+                                originOffset: {
+                                    ...this.controller.state.originOffset,
+                                    ...packetData.originOffset
+                                }
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                            }
                         } else if (data[0] === 0x0a && data[1] === 0x14) {
                             // get machine size setting
                             if (!isEqual(packetData, this.controller.state.machineSetting)) {
@@ -175,6 +187,17 @@ class MarlinController {
                     this.controller.parse(String(data));
                 }
                 */
+
+                // TODO home info from M1006
+                if (String(data) === 'Homed: YES\r') {
+                    this.controller.state.isHomed = true;
+                } else if (String(data) === 'Homed: NO\r') {
+                    this.controller.state.isHomed = false;
+                } else {
+                    log.silly(`< ${data}`);
+                    this.controller.parse(String(data));
+                }
+
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
@@ -251,6 +274,7 @@ class MarlinController {
             if (this.query.type === QUERY_TYPE_POSITION) {
                 if (this.controller.state.isScreenProtocol) {
                     this.writeln('query state');
+                    this.writeln('query coordinate');
                 } else {
                     this.writeln('M114');
                 }
@@ -514,6 +538,14 @@ class MarlinController {
                 //     // send M1006 to detect type of tool head
                 //     this.writeln('M1006');
                 // }
+                // outdated version format
+                /*
+                const version = this.controller.state.version;
+                if (semver.gte(version, '2.4.0')) {
+                    // send M1006 to detect type of tool head
+                    this.writeln('M1006');
+                }
+                */
             }
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
@@ -899,6 +931,9 @@ class MarlinController {
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
                             break;
+                        case 'query coordinate\n':
+                            outputData = this.packetManager.statusRequestCoordinateSystem();
+                            break;
                         case 'start print file\n':
                             if (this.controller.gcodeFile) {
                                 gcode = fs.readFileSync(this.controller.gcodeFile, 'utf-8');
@@ -1058,8 +1093,6 @@ class MarlinController {
                     // send M1005 to get firmware version (only support versions >= '2.2')
                     setTimeout(() => this.writeln('M1005'));
                     setTimeout(() => this.writeln('M1006'), 100);
-                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                    // setTimeout(() => this.writeln('M105'), 200);
                     setTimeout(() => this.writeln('M105'), 200);
                 }
 

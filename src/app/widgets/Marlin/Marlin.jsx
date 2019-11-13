@@ -13,6 +13,8 @@ import {
     PROTOCOL_TEXT,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX,
+    SPEED_FACTOR_MIN,
+    SPEED_FACTOR_MAX,
     HEAD_3DP,
     HEAD_LASER,
     HEAD_CNC,
@@ -24,13 +26,7 @@ import { actions as widgetActions } from '../../flux/widget';
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const normalizeToRange = (n, min, max) => {
-    if (n < min) {
-        return min;
-    }
-    if (n > max) {
-        return max;
-    }
-    return n;
+    return Math.max(Math.min(n, max), min);
 };
 
 class MarlinWidget extends PureComponent {
@@ -75,6 +71,14 @@ class MarlinWidget extends PureComponent {
         changeBedTargetTemperature: (bedTargetTemperature) => {
             bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
             this.setState({ bedTargetTemperature });
+        },
+        changeSpeedFactor: (speedFactor) => {
+            speedFactor = normalizeToRange(speedFactor, SPEED_FACTOR_MIN, SPEED_FACTOR_MAX);
+            this.setState({ speedFactor });
+        },
+        changeExtruderFactor: (extruderFactor) => {
+            extruderFactor = normalizeToRange(extruderFactor, SPEED_FACTOR_MIN, SPEED_FACTOR_MAX);
+            this.setState({ extruderFactor });
         },
         is3DPrinting: () => {
             return this.props.pattern === MACHINE_PATTERN['3DP'].value;
@@ -149,6 +153,13 @@ class MarlinWidget extends PureComponent {
                     state
                 }
             });
+            const { speedFactor, extruderFactor } = state;
+            if (speedFactor && speedFactor !== this.state.speedFactor) {
+                this.setState({ speedFactor });
+            }
+            if (extruderFactor && extruderFactor !== this.state.extruderFactor) {
+                this.setState({ extruderFactor });
+            }
         },
         // 'Marlin:settings': (settings, dataSource) => {
         'Marlin:settings': (options) => {
@@ -186,6 +197,8 @@ class MarlinWidget extends PureComponent {
             // data
             nozzleTargetTemperature: 200,
             bedTargetTemperature: 50,
+            speedFactor: 100,
+            extruderFactor: 100,
             controller: {
                 state: controller.getState(),
                 settings: controller.getSettings()
