@@ -38,6 +38,8 @@ class MarlinWidget extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         setDisplay: PropTypes.func.isRequired,
 
+        port: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         pattern: PropTypes.string.isRequired,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
@@ -114,15 +116,16 @@ class MarlinWidget extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port, dataSource } = options;
+        'serialport:ready': (options) => {
+            const { dataSource, err } = options;
             if (dataSource !== PROTOCOL_TEXT) {
                 return;
             }
+            if (err) {
+                return;
+            }
             this.setState({
-                ...this.getInitialState(),
-                isConnected: true,
-                port: port
+                ...this.getInitialState()
             });
             this.props.setDisplay(true);
         },
@@ -170,7 +173,6 @@ class MarlinWidget extends PureComponent {
 
     getInitialState() {
         return {
-            isConnected: false,
             canClick: true, // Defaults to true
             headType: null,
 
@@ -182,7 +184,6 @@ class MarlinWidget extends PureComponent {
             overridesSectionExpanded: this.props.overridesSectionExpanded,
 
             // data
-            port: controller.getPort(),
             nozzleTargetTemperature: 200,
             bedTargetTemperature: 50,
             controller: {
@@ -242,13 +243,13 @@ class MarlinWidget extends PureComponent {
     }
 
     render() {
-        const { isConnected } = this.state;
+        const { isConnected } = this.props;
         if (!isConnected) {
             return null;
         }
         const state = {
             ...this.state,
-            canClick: !!this.state.port
+            canClick: !!this.props.port
         };
         const actions = this.actions;
         let headType = null;
@@ -297,7 +298,7 @@ class MarlinWidget extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { pattern } = state.machine;
+    const { pattern, port, isConnected } = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const {
@@ -314,6 +315,8 @@ const mapStateToProps = (state, ownProps) => {
     const overridesSectionExpanded = overridesSection.expanded;
 
     return {
+        port,
+        isConnected,
         pattern,
         statusSectionExpanded,
         machineModalSectionExpanded,

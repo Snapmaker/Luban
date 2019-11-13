@@ -229,12 +229,13 @@ class SocketServer {
                 controller = new MarlinController(port, dataSource, { baudrate: 115200 });
             }
 
-            controller.addConnection(socket);
+            controller.addConnection(port, socket);
             // const controllers = store.get('controllers');
 
             if (controller.isOpen()) {
                 log.debug('controller.isOpen() already');
                 // Join the room
+
                 socket.join(port);
 
                 socket.emit('serialport:open', { port, dataSource });

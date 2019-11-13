@@ -1062,6 +1062,15 @@ class MarlinController {
                     // setTimeout(() => this.writeln('M105'), 200);
                     setTimeout(() => this.writeln('M105'), 200);
                 }
+
+                setTimeout(() => {
+                    if (this.handler && !this.ready) {
+                        log.error('this machine is not ready');
+                        clearInterval(this.handler);
+                        this.emitAll('serialport:ready', { dataSource, err: 'this machine is not ready' });
+                        this.close();
+                    }
+                }, 2000);
             }, 1000);
 
             log.debug(`Connected to serial port "${port}/${dataSource}"`);
@@ -1116,9 +1125,13 @@ class MarlinController {
         return this.serialport && this.serialport.isOpen;
     }
 
-    addConnection(socket) {
+    addConnection(port, socket) {
         if (!socket) {
             log.error('The socket parameter is not specified');
+            return;
+        }
+        if (port !== this.options.port) {
+            log.error('The socket port is different this port');
             return;
         }
 

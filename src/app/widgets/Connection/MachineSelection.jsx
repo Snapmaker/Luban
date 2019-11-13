@@ -21,36 +21,21 @@ class MachineSelection extends PureComponent {
         updateMachineState: PropTypes.func.isRequired
     };
 
-    state = {
-        series: this.props.series,
-        pattern: this.props.pattern
-    }
-
     actions = {
         onChangeSeries: (v) => {
-            this.setState(
-                { series: v.value }
-            );
+            this.props.updateMachineState({
+                series: v.value
+            });
         },
         onChangePattern: (v) => {
-            this.setState(
-                { pattern: v.value }
-            );
+            this.props.updateMachineState({
+                pattern: v.value
+            });
         },
         onClickOk: () => {
-            const { series, pattern } = this.state;
-            this.props.updateMachineState({
-                series,
-                pattern
-            });
             this.props.closeModal();
         },
         onClickCancel: () => {
-            const { series, pattern } = this.state;
-            this.props.updateMachineState({
-                series,
-                pattern
-            });
             this.props.closeModal();
         }
     }
@@ -59,7 +44,7 @@ class MachineSelection extends PureComponent {
         if (!this.props.display) {
             return null;
         }
-        const state = this.state;
+        const state = this.props;
         const actions = this.actions;
         const machineSeriesOptions = [
             {

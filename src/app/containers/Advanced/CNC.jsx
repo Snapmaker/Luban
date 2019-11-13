@@ -35,7 +35,7 @@ class CNC extends PureComponent {
                             <p className={styles['title-row']}>{spindleSpeed | null}</p>
                         </li>
                         <li>
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${rpm}`)}>
+                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${rpm} S${rpm * 255 / 100}`)}>
                                 {i18n._('On')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('M5')}>

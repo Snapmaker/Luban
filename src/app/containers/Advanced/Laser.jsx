@@ -35,7 +35,7 @@ class CNC extends PureComponent {
                             <p className={styles['title-row']}>{laserPercent}%</p>
                         </li>
                         <li>
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${laserPercent}`)}>
+                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${laserPercent} S${laserPercent * 255 / 100}`)}>
                                 {i18n._('On')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('M5')}>
@@ -48,7 +48,7 @@ class CNC extends PureComponent {
                                 value={laserPercent}
                                 onChange={onchangeLaserPrecent}
                             />
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${laserPercent}`)}>
+                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${laserPercent} S${laserPercent * 255 / 100}`)}>
                                 {i18n._('Set Power')}
                             </button>
                         </li>

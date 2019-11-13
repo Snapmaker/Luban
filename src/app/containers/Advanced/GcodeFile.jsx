@@ -137,14 +137,14 @@ class GcodeFile extends PureComponent {
                         if (powerPercent !== 0) {
                             controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
                         } else {
-                            controller.command('gcode', 'M3 P100');
+                            controller.command('gcode', 'M3 P100 S255');
                         }
                     }
                     controller.command('gcode:resume');
                 } else {
                     if (this.pauseStatus.headStatus === 'on') {
                         // resume spindle
-                        controller.command('gcode', 'M3 P100');
+                        controller.command('gcode', 'M3 P100 S255');
                         // for CNC machine, resume need to wait >500ms to let the tool head started
                         setTimeout(() => {
                             controller.command('gcode:resume');

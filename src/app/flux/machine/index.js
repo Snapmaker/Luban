@@ -158,7 +158,10 @@ export const actions = {
                 }, 600);
             },
             'serialport:open': (options) => {
-                const { port, dataSource } = options;
+                const { port, dataSource, err } = options;
+                if (err && err !== 'inuse') {
+                    return;
+                }
                 const state = getState().machine;
                 // For Warning Don't initialize
                 const ports = [...state.ports];
@@ -176,8 +179,11 @@ export const actions = {
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
-            'serialport:ready': () => {
-                console.log('this is ready');
+            'serialport:ready': (data) => {
+                const { err } = data;
+                if (err) {
+                    return;
+                }
                 dispatch(actions.updateState({
                     isConnected: true
                 }));

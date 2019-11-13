@@ -19,14 +19,12 @@ import { actions as machineActions } from '../../flux/machine';
 // import { PROTOCOL_TEXT } from '../../constants';
 
 
-const STATUS_IDLE = 'idle';
-const STATUS_CONNECTING = 'connecting';
-const STATUS_CONNECTED = 'connected';
-
-
 class SerialConnection extends PureComponent {
     static propTypes = {
         dataSource: PropTypes.string.isRequired,
+
+        isOpen: PropTypes.bool.isRequired,
+        isConnected: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
         updatePort: PropTypes.func.isRequired,
@@ -35,15 +33,12 @@ class SerialConnection extends PureComponent {
 
     controller = new SerialClient({ dataSource: this.props.dataSource });
 
-
     state = {
         // Available serial ports
         ports: [],
         // Selected port
         port: this.props.port,
         // connect status: 'idle', 'connecting', 'connected'
-        status: STATUS_IDLE,
-
         err: null,
 
         // UI state
@@ -151,8 +146,7 @@ class SerialConnection extends PureComponent {
         }
         if (err && err !== 'inuse') {
             this.setState({
-                err: 'Can not open this port',
-                status: STATUS_IDLE
+                err: 'Can not open this port'
             });
             log.error(`Error opening serial port '${port}'`, err);
 
@@ -166,12 +160,14 @@ class SerialConnection extends PureComponent {
     }
 
     onPortReady(data) {
-        console.log('this is ready', data);
-        const { state } = data;
+        const { state, err } = data;
+        if (err) {
+            this.setState({
+                err: 'The machine is not ready'
+            });
+            return;
+        }
         const port = this.state.port;
-        this.setState({
-            status: STATUS_CONNECTED
-        });
         log.debug(`Connected to ${port}.`);
 
         // re-upload G-code
@@ -199,7 +195,6 @@ class SerialConnection extends PureComponent {
         const { series, seriesSize, headType } = state;
         const machinePattern = valueOf(MACHINE_PATTERN, 'alias', headType);
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
-        console.log('machineSeries', machineSeries);
 
 
         if (machinePattern && machineSeries) {
@@ -230,10 +225,6 @@ class SerialConnection extends PureComponent {
 
         log.debug(`Disconnected from '${port}'.`);
 
-        this.setState({
-            err: null,
-            status: STATUS_IDLE
-        });
         // Refresh ports
         this.listPorts();
     }
@@ -251,10 +242,6 @@ class SerialConnection extends PureComponent {
     }
 
     openPort(port) {
-        this.setState({
-            status: STATUS_CONNECTING
-        });
-
         this.controller.openPort(port);
     }
 
@@ -264,14 +251,15 @@ class SerialConnection extends PureComponent {
 
     renderPortOption = (option) => {
         const { value, label, manufacturer } = option;
-        const { port, status } = this.state;
+        const { port } = this.state;
+        const { isConnected } = this.props;
         const style = {
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
 
-        const inuse = value === port && status === STATUS_CONNECTED;
+        const inuse = value === port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -293,14 +281,15 @@ class SerialConnection extends PureComponent {
 
     renderPortValue = (option) => {
         const { value, label } = option;
-        const { port, status } = this.state;
+        const { port } = this.state;
+        const { isConnected } = this.props;
         const canChangePort = !(this.state.loading);
         const style = {
             color: canChangePort ? '#333' : '#ccc',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
-        const inuse = value === port && status === STATUS_CONNECTED;
+        const inuse = value === port && isConnected;
 
         return (
             <div style={style} title={label}>
@@ -330,11 +319,12 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { err, ports, port, status, loadingPorts, showMachineSelected } = this.state;
+        const { isOpen, isConnected } = this.props;
+        const { err, ports, port, loadingPorts, showMachineSelected } = this.state;
 
-        const canRefresh = !loadingPorts && status !== STATUS_CONNECTED;
+        const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
-        const canOpenPort = port && status === STATUS_IDLE;
+        const canOpenPort = port && !isOpen;
 
         return (
             <div>
@@ -379,7 +369,7 @@ class SerialConnection extends PureComponent {
                     </div>
                 </div>
                 <div className="btn-group btn-group-sm">
-                    {status !== 'connected' && (
+                    {!isConnected && (
                         <button
                             type="button"
                             className="sm-btn-small sm-btn-primary"
@@ -391,7 +381,7 @@ class SerialConnection extends PureComponent {
                             {i18n._('Open')}
                         </button>
                     )}
-                    {status === 'connected' && (
+                    {isConnected && (
                         <button
                             type="button"
                             className="sm-btn-small sm-btn-danger"
@@ -417,10 +407,12 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port } = machine;
+    const { port, isOpen, isConnected } = machine;
 
     return {
-        port
+        port,
+        isOpen,
+        isConnected
     };
 };
 const mapDispatchToProps = (dispatch) => {
