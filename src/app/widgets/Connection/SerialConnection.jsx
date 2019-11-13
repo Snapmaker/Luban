@@ -10,7 +10,7 @@ import pubsub from 'pubsub-js';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import { MACHINE_SERIES, MACHINE_PATTERN } from '../../constants';
+import { MACHINE_SERIES, MACHINE_PATTERN, PROTOCOL_TEXT } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import SerialClient from '../../lib/serialClient';
 import api from '../../api';
@@ -33,7 +33,8 @@ class SerialConnection extends PureComponent {
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired,
-        resetHomeState: PropTypes.func.isRequired
+        resetHomeState: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired
     };
 
     controller = new SerialClient({ dataSource: this.props.dataSource });
@@ -50,7 +51,7 @@ class SerialConnection extends PureComponent {
         loadingPorts: false,
 
         showMachineSelected: false,
-        showHomeReminder: true
+        showHomeReminder: false
     };
 
     loadingTimer = null;
@@ -100,6 +101,12 @@ class SerialConnection extends PureComponent {
             this.setState({
                 showHomeReminder: false
             });
+        },
+        clickHomeModalOk: () => {
+            this.props.executeGcode('G28');
+            this.setState({
+                showHomeReminder: false
+            });
         }
     };
 
@@ -113,7 +120,9 @@ class SerialConnection extends PureComponent {
     componentWillReceiveProps(nextProps) {
         const { isHomed } = nextProps;
         if (this.props.isHomed !== isHomed && !isHomed) {
-            this.actions.openHomeModal();
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.openHomeModal();
+            }
         }
     }
 
@@ -344,7 +353,7 @@ class SerialConnection extends PureComponent {
 
     render() {
         const { isOpen, series, isConnected, isHomed } = this.props;
-        const { err, ports, port, status, loadingPorts,
+        const { err, ports, port, loadingPorts,
             showMachineSelected, showHomeReminder } = this.state;
         const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
 
@@ -418,7 +427,7 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
-                    {status === 'connected' && showHomeReminder && isConnected && !isOriginal && isHomed !== null && !isHomed && (
+                    {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                         <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
                             <Modal.Header>
                                 <Modal.Title>
@@ -433,7 +442,7 @@ class SerialConnection extends PureComponent {
                             <Modal.Footer>
                                 <Button
                                     btnStyle="primary"
-                                    onClick={this.actions.closeHomeModal}
+                                    onClick={this.actions.clickHomeModalOk}
                                 >
                                     {i18n._('OK')}
                                 </Button>
@@ -469,7 +478,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
         updatePort: (port) => dispatch(machineActions.updatePort(port)),
-        resetHomeState: () => dispatch(machineActions.resetHomeState())
+        resetHomeState: () => dispatch(machineActions.resetHomeState()),
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);
