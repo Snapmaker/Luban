@@ -455,12 +455,13 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, series, isHomed, isConnected } = machine;
+    const { port, series, isHomed, isOpen, isConnected } = machine;
 
     return {
         port,
         series,
         isHomed,
+        isOpen,
         isConnected
     };
 };
