@@ -184,6 +184,7 @@ class FileTransitModal extends PureComponent {
     render() {
         const { onClose } = this.props;
         const fileName = getGcodeName(this.props.gcodeList);
+
         const isSelected = this.state.servers.some(server => server.selected);
 
         return (

@@ -9,7 +9,7 @@ import {
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
-import { Server } from '../models/Server';
+import { Server } from './Server';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
 import History from './History';
@@ -25,18 +25,44 @@ const STATUS_UNKNOWN = 'UNKNOWN';
 let statusTimer = null;
 
 const INITIAL_STATE = {
-    // Servers
-    servers: [],
-    server: ABSENT_OBJECT,
-    serverStatus: STATUS_UNKNOWN,
-    discovering: false,
-    terminalHistory: new FixedArray(1000),
-    history: new History(1000),
+
+    // Machine Info
+    series: MACHINE_SERIES.ORIGINAL.value,
+    headType: MACHINE_HEAD_TYPE['3DP'].value,
+
+    isCustom: false,
+    size: {
+        x: 125,
+        y: 125,
+        z: 125
+    },
+
     // Serial port
     port: controller.port || '',
     ports: [],
+
+    // Connection state
+    isOpen: false,
+    isConnected: false,
+    connectionType: '',
+
+    // Servers
+    server: ABSENT_OBJECT,
+    servers: [],
+    serverStatus: STATUS_UNKNOWN,
+    discovering: false,
+
+    // Console
+    terminalHistory: new FixedArray(1000),
+    history: new History(1000),
+    // Serial port
+
     // from workflowState: idle, running, paused
     workflowState: WORKFLOW_STATE_IDLE,
+
+    isHomed: null,
+    enclosure: false,
+    enclosureDoor: false,
 
     workPosition: { // work position
         x: '0.000',
@@ -45,32 +71,12 @@ const INITIAL_STATE = {
         a: '0.000'
     },
 
-    isHomed: null,
-
     originOffset: {
         x: 0,
         y: 0,
         z: 0
-    },
+    }
 
-    // current connected device
-    series: MACHINE_SERIES.ORIGINAL.value,
-    isCustom: false,
-    size: {
-        x: 125,
-        y: 125,
-        z: 125
-    },
-    enclosure: false,
-    enclosureDoor: false,
-
-    // machine headType
-    headType: MACHINE_HEAD_TYPE['3DP'].value,
-
-    // machine connect state
-    isOpen: false,
-    isConnected: false,
-    connectionType: ''
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -162,9 +168,7 @@ export const actions = {
                 for (const object of objects) {
                     servers.push(new Server(object.name, object.address, object.model));
                 }
-                // FIXME: For KS Shooting
-                servers.push(new Server('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
-                servers.push(new Server('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
+
                 dispatch(actions.updateState({ servers }));
 
                 // TODO: refactor this behavior to Component not flux

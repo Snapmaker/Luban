@@ -18,6 +18,7 @@ class WifiConnection extends PureComponent {
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         discoverServers: PropTypes.func.isRequired,
         setServer: PropTypes.func.isRequired,
         unsetServer: PropTypes.func.isRequired
@@ -47,6 +48,16 @@ class WifiConnection extends PureComponent {
         setServer: (server) => {
             this.setState({
                 showMachineSelected: true
+            });
+            this.props.setServer(server);
+        },
+        openServer: (server) => {
+            server.open((err, data) => {
+                if (err) {
+                    return;
+                }
+                const { series, pattern } = data;
+                console.log(series, pattern);
             });
             this.props.setServer(server);
         }
@@ -113,7 +124,7 @@ class WifiConnection extends PureComponent {
     };
 
     render() {
-        const { servers, server, serverStatus, discovering } = this.props;
+        const { servers, server, serverStatus, discovering, isConnected } = this.props;
 
         return (
             <div>
@@ -155,13 +166,44 @@ class WifiConnection extends PureComponent {
                     </div>
                 </div>
                 <div>
-                    {i18n._('Status')}:
-                    <Space width={4} />
-                    {serverStatus}
-                    <Space width={4} />
-                    {serverStatus === 'IDLE' && <i className="sm-icon-14 sm-icon-idle" />}
-                    {serverStatus === 'PAUSED' && <i className="sm-icon-14 sm-icon-paused" />}
-                    {serverStatus === 'RUNNING' && <i className="sm-icon-14 sm-icon-running" />}
+                    <div
+                        className="btn-group btn-group-sm"
+                        style={{
+                            width: '50%'
+                        }}
+                    >
+                        {!isConnected && (
+                            <button
+                                type="button"
+                                className="sm-btn-small sm-btn-primary"
+                                onClick={this.actions.openServer}
+                            >
+                                <i className="fa fa-toggle-off" />
+                                <span className="space" />
+                                {i18n._('Open')}
+                            </button>
+                        )}
+                        {isConnected && (
+                            <button
+                                type="button"
+                                className="sm-btn-small sm-btn-danger"
+                                onClick={this.actions.onClosePort}
+                            >
+                                <i className="fa fa-toggle-on" />
+                                <Space width={4} />
+                                {i18n._('Close')}
+                            </button>
+                        )}
+                    </div>
+                    <div className="btn-group btn-group-sm">
+                        {i18n._('Status')}:
+                        <Space width={4} />
+                        {serverStatus}
+                        <Space width={4} />
+                        {serverStatus === 'IDLE' && <i className="sm-icon-14 sm-icon-idle" />}
+                        {serverStatus === 'PAUSED' && <i className="sm-icon-14 sm-icon-paused" />}
+                        {serverStatus === 'RUNNING' && <i className="sm-icon-14 sm-icon-running" />}
+                    </div>
                 </div>
                 <MachineSelection
                     display={this.state.showMachineSelected}
@@ -175,13 +217,14 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { servers, discovering, server, serverStatus } = machine;
+    const { servers, discovering, server, serverStatus, isConnected } = machine;
 
     return {
         servers,
         discovering,
         server,
-        serverStatus
+        serverStatus,
+        isConnected
     };
 };
 
