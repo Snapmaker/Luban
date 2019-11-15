@@ -4,7 +4,7 @@ import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
     MACHINE_SERIES,
-    MACHINE_PATTERN,
+    MACHINE_HEAD_TYPE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI
 } from '../../constants';
@@ -67,13 +67,13 @@ const INITIAL_STATE = {
     },
     enclosure: false,
 
-    // machine pattern
-    pattern: MACHINE_PATTERN['3DP'].value,
+    // machine headType
+    headType: MACHINE_HEAD_TYPE['3DP'].value,
 
     workMachineState: {
         isUpdate: false,
         series: 'unknown',
-        pattern: 'unknown'
+        headType: 'unknown'
     },
     // machine connect state
     isOpen: false,
@@ -248,9 +248,9 @@ export const actions = {
     },
 
     updateMachineState: (state) => (dispatch,) => {
-        const { series, pattern } = state;
-        pattern && dispatch(actions.updateState({
-            pattern
+        const { series, headType } = state;
+        headType && dispatch(actions.updateState({
+            headType: headType
         }));
         series && dispatch(actions.updateMachineSeries(series));
     },

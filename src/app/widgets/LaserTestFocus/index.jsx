@@ -12,12 +12,12 @@ import {
 } from '../../components/SMWidget';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
-import { MACHINE_PATTERN } from '../../constants';
+import { MACHINE_HEAD_TYPE } from '../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
-        pattern: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired
     };
 
@@ -43,7 +43,7 @@ class LaserTestFocusWidget extends PureComponent {
         const state = this.state;
         const actions = this.actions;
 
-        if (!this.props.isConnected || !(this.props.pattern === MACHINE_PATTERN.LASER.value)) {
+        if (!this.props.isConnected || !(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
             return null;
         }
 
@@ -81,9 +81,9 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { pattern, isConnected } = state.machine;
+    const { headType, isConnected } = state.machine;
     return {
-        pattern,
+        headType: headType,
         isConnected
     };
 };

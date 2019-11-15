@@ -19,7 +19,7 @@ import {
     HEAD_LASER,
     HEAD_CNC,
     HEAD_UNKNOWN,
-    MACHINE_PATTERN
+    MACHINE_HEAD_TYPE
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
 
@@ -36,7 +36,7 @@ class MarlinWidget extends PureComponent {
 
         port: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
-        pattern: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
         heaterControlSectionExpanded: PropTypes.bool.isRequired,
@@ -81,13 +81,13 @@ class MarlinWidget extends PureComponent {
             this.setState({ extruderFactor });
         },
         is3DPrinting: () => {
-            return this.props.pattern === MACHINE_PATTERN['3DP'].value;
+            return this.props.headType === MACHINE_HEAD_TYPE['3DP'].value;
         },
         isLaser: () => {
-            return this.props.pattern === MACHINE_PATTERN.LASER.value;
+            return this.props.headType === MACHINE_HEAD_TYPE.LASER.value;
         },
         isCNC: () => {
-            return this.props.pattern === MACHINE_PATTERN.CNC.value;
+            return this.props.headType === MACHINE_HEAD_TYPE.CNC.value;
         },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
@@ -211,7 +211,7 @@ class MarlinWidget extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.pattern !== this.props.pattern) {
+        if (prevProps.headType !== this.props.headType) {
             this.actions.setTitle();
         }
         if (this.state.controller === prevState.controller) {
@@ -311,7 +311,7 @@ class MarlinWidget extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { pattern, port, isConnected } = state.machine;
+    const { headType, port, isConnected } = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const {
@@ -330,7 +330,7 @@ const mapStateToProps = (state, ownProps) => {
     return {
         port,
         isConnected,
-        pattern,
+        headType: headType,
         statusSectionExpanded,
         machineModalSectionExpanded,
         heaterControlSectionExpanded,

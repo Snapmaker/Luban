@@ -10,7 +10,7 @@ import pubsub from 'pubsub-js';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import { MACHINE_SERIES, MACHINE_PATTERN, PROTOCOL_TEXT } from '../../constants';
+import { MACHINE_SERIES, MACHINE_HEAD_TYPE, PROTOCOL_TEXT } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import SerialClient from '../../lib/serialClient';
 import api from '../../api';
@@ -226,17 +226,17 @@ class SerialConnection extends PureComponent {
                 // Empty block
             });
         const { series, seriesSize, headType } = state;
-        const machinePattern = valueOf(MACHINE_PATTERN, 'alias', headType);
+        const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
 
 
-        if (machinePattern && machineSeries) {
+        if (machineHeadType && machineSeries) {
             this.props.updateMachineState({
                 series: machineSeries.value,
-                pattern: machinePattern.value
+                headType: machineHeadType.value
             });
         } else {
-            machinePattern && this.props.updateMachineState({ pattern: machinePattern.value });
+            machineHeadType && this.props.updateMachineState({ headType: machineHeadType.value });
             machineSeries && this.props.updateMachineState({ series: machineSeries.value });
             this.actions.openModal();
         }

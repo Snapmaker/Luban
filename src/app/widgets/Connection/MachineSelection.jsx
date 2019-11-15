@@ -4,7 +4,7 @@ import { Button } from '@trendmicro/react-buttons';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
-import { MACHINE_SERIES, MACHINE_PATTERN } from '../../constants';
+import { MACHINE_SERIES, MACHINE_HEAD_TYPE } from '../../constants';
 import Modal from '../../components/Modal';
 import { actions as machineActions } from '../../flux/machine';
 import styles from '../CNCTool/styles.styl';
@@ -13,7 +13,7 @@ import Anchor from '../../components/Anchor';
 class MachineSelection extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
-        pattern: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
 
         display: PropTypes.bool.isRequired,
         closeModal: PropTypes.func.isRequired,
@@ -27,9 +27,9 @@ class MachineSelection extends PureComponent {
                 series: v.value
             });
         },
-        onChangePattern: (v) => {
+        onChangeHeadType: (v) => {
             this.props.updateMachineState({
-                pattern: v.value
+                headType: v.value
             });
         },
         onClickOk: () => {
@@ -68,21 +68,21 @@ class MachineSelection extends PureComponent {
                 img: 'images/snap-logo-square-256x256.png'
             }
         ];
-        const machinePatternOptions = [
+        const machineHeadTypeOptions = [
             {
-                value: MACHINE_PATTERN['3DP'].value,
-                label: MACHINE_PATTERN['3DP'].label,
+                value: MACHINE_HEAD_TYPE['3DP'].value,
+                label: MACHINE_HEAD_TYPE['3DP'].label,
                 img: 'images/snap-logo-square-256x256.png'
             },
             {
-                value: MACHINE_PATTERN.LASER.value,
-                label: MACHINE_PATTERN.LASER.label,
+                value: MACHINE_HEAD_TYPE.LASER.value,
+                label: MACHINE_HEAD_TYPE.LASER.label,
                 img: 'images/snap-logo-square-256x256.png'
 
             },
             {
-                value: MACHINE_PATTERN.CNC.value,
-                label: MACHINE_PATTERN.CNC.label,
+                value: MACHINE_HEAD_TYPE.CNC.value,
+                label: MACHINE_HEAD_TYPE.CNC.label,
                 img: 'images/snap-logo-square-256x256.png'
             }
         ];
@@ -116,12 +116,12 @@ class MachineSelection extends PureComponent {
                         })}
                     </div>
                     <div className={styles['select-tools']}>
-                        { machinePatternOptions.map(v => {
+                        { machineHeadTypeOptions.map(v => {
                             return (
                                 <div key={v.value} className={styles['select-tool']}>
                                     <Anchor
-                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.pattern === v.value })}
-                                        onClick={() => actions.onChangePattern(v)}
+                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.headType === v.value })}
+                                        onClick={() => actions.onChangeHeadType(v)}
                                     >
                                         <img
                                             src={v.img}
@@ -154,10 +154,10 @@ class MachineSelection extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { series, pattern } = state.machine;
+    const { series, headType } = state.machine;
     return {
         series,
-        pattern
+        headType: headType
     };
 };
 

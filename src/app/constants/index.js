@@ -127,7 +127,7 @@ export const MACHINE_SERIES = {
     }
 };
 
-export const MACHINE_PATTERN = {
+export const MACHINE_HEAD_TYPE = {
     WORKSPACE: {
         value: 'workspace',
         label: 'Workspace'

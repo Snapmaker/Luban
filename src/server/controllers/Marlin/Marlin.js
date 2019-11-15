@@ -302,7 +302,7 @@ class MarlinLineParser {
             // ok
             MarlinLineParserResultOk,
 
-            // New Parsers (follow pattern `MarlinReplyParserXXX`)
+            // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
 
