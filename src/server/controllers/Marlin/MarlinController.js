@@ -535,6 +535,14 @@ class MarlinController {
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
+        this.controller.on('home', (res) => {
+            log.silly(`controller.on('home'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
         this.controller.on('headType', (res) => {
             log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);

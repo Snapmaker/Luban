@@ -534,6 +534,7 @@ class Marlin extends events.EventEmitter {
             }
         } else if (type === MarlinParserHomeState) {
             this.setState({ isHomed: payload.isHomed });
+            this.emit('home', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
