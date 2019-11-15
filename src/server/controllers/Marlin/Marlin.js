@@ -296,6 +296,28 @@ class MarlinLineParserResultTemperature {
     }
 }
 
+class MarlinParserHomeState {
+    static parse(line) {
+        const r = line.match(/^Homed: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        let isHomed = null;
+        if (r[1] === 'YES') {
+            isHomed = true;
+        } else if (r[1] === 'NO') {
+            isHomed = false;
+        }
+
+        return {
+            type: MarlinParserHomeState,
+            payload: {
+                isHomed
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
@@ -332,7 +354,10 @@ class MarlinLineParser {
 
             MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature
+            MarlinLineParserResultTemperature,
+            // Homed: YES
+            MarlinParserHomeState
+
         ];
 
         for (const parser of parsers) {
@@ -507,6 +532,9 @@ class Marlin extends events.EventEmitter {
                     this.emit('ok', payload);
                 }
             }
+        } else if (type === MarlinParserHomeState) {
+            this.setState({ isHomed: payload.isHomed });
+            this.emit('home', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
@@ -529,6 +557,7 @@ export {
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
-    MarlinLineParserResultOkTemperature
+    MarlinLineParserResultOkTemperature,
+    MarlinParserHomeState
 };
 export default Marlin;

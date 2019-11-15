@@ -173,31 +173,6 @@ class MarlinController {
                         break;
                 }
             } else {
-                /*
-                // M1024 outdated
-                if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
-                    this.refresh({ isScreenProtocol: true });
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else {
-                    log.silly(`< ${data}`);
-                    this.controller.parse(String(data));
-                }
-                */
-
-                // TODO home info from M1006
-                if (String(data) === 'Homed: YES\r') {
-                    this.controller.state.isHomed = true;
-                } else if (String(data) === 'Homed: NO\r') {
-                    this.controller.state.isHomed = false;
-                } else {
-                    log.silly(`< ${data}`);
-                    this.controller.parse(String(data));
-                }
-
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
@@ -554,6 +529,14 @@ class MarlinController {
         });
         this.controller.on('series', (res) => {
             log.silly(`controller.on('series'): source=${this.history.writeSource},
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('home', (res) => {
+            log.silly(`controller.on('home'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
