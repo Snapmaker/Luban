@@ -173,31 +173,6 @@ class MarlinController {
                         break;
                 }
             } else {
-                /*
-                // M1024 outdated
-                if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
-                    this.refresh({ isScreenProtocol: true });
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
-                    log.silly('< ok');
-                    this.controller.parse('ok');
-                } else {
-                    log.silly(`< ${data}`);
-                    this.controller.parse(String(data));
-                }
-                */
-
-                // TODO home info from M1006
-                if (String(data) === 'Homed: YES\r') {
-                    this.controller.state.isHomed = true;
-                } else if (String(data) === 'Homed: NO\r') {
-                    this.controller.state.isHomed = false;
-                } else {
-                    log.silly(`< ${data}`);
-                    this.controller.parse(String(data));
-                }
-
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
