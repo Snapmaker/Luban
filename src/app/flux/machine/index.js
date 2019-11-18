@@ -129,17 +129,25 @@ export const actions = {
 
                 const machineState = getState().machine;
 
+                if (machineState.workPosition.x !== pos.x || machineState.workPosition.y !== pos.y || machineState.workPosition.z !== pos.z) {
+                    dispatch(actions.updateState({
+                        workPosition: {
+                            ...machineState.workPosition,
+                            ...pos,
+                            dataSource
+                        }
+                    }));
+                }
+                if (machineState.originOffset.x !== originOffset.x || machineState.originOffset.y !== originOffset.y || machineState.originOffset.z !== originOffset.z) {
+                    dispatch(actions.updateState({
+                        originOffset: {
+                            ...machineState.originOffset,
+                            ...originOffset
+                        }
+                    }));
+                }
                 dispatch(actions.updateState({
-                    workPosition: {
-                        ...machineState.position,
-                        ...pos,
-                        dataSource
-                    },
-                    isHomed,
-                    originOffset: {
-                        ...machineState.originOffset,
-                        ...originOffset
-                    }
+                    isHomed
                 }));
             },
             // 'Marlin:settings': (settings) => {
