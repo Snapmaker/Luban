@@ -4,8 +4,8 @@ import {
     WORKFLOW_STATE_IDLE,
     MACHINE_SERIES,
     MACHINE_HEAD_TYPE,
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI
+    CONNECTION_TYPE_SERIAL, SERVER_STATUS_UNKNOWN,
+    LASER_PRINT_MODE_AUTO
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
@@ -17,12 +17,9 @@ import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 
 
-const STATUS_UNKNOWN = 'UNKNOWN';
 // const STATUS_IDLE = 'IDLE';
 // const STATUS_RUNNING = 'RUNNING';
 // const STATUS_PAUSED = 'PAUSED';
-
-let statusTimer = null;
 
 const INITIAL_STATE = {
 
@@ -48,8 +45,9 @@ const INITIAL_STATE = {
 
     // Servers
     server: ABSENT_OBJECT,
+    serverToken: '',
     servers: [],
-    serverStatus: STATUS_UNKNOWN,
+    serverStatus: SERVER_STATUS_UNKNOWN,
     discovering: false,
 
     // Console
@@ -75,7 +73,11 @@ const INITIAL_STATE = {
         x: 0,
         y: 0,
         z: 0
-    }
+    },
+
+    // laser print mode
+    laserPrintMode: LASER_PRINT_MODE_AUTO,
+    materialThickness: 2.5
 
 };
 
@@ -106,13 +108,19 @@ export const actions = {
             });
         }
         const machinePort = machineStore.get('port') || '';
+        const serverToken = machineStore.get('server.token') || '';
 
         dispatch(actions.updateState({
             series: initialMachineState.series,
             size: initialMachineState.size,
+            serverToken: serverToken,
             port: machinePort
         }));
 
+        const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
+        dispatch(actions.updateState({
+            connectionType: connectionType
+        }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
         // setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);
@@ -131,7 +139,6 @@ export const actions = {
                 if (machineState.workPosition.x !== pos.x
                     || machineState.workPosition.y !== pos.y
                     || machineState.workPosition.z !== pos.z) {
-                    console.log(pos);
                     dispatch(actions.updateState({
                         workPosition: {
                             ...machineState.workPosition,
@@ -164,12 +171,34 @@ export const actions = {
                 }));
             },
             'http:discover': (objects) => {
-                const servers = [];
+                objects.push({
+                    name: 'test1',
+                    address: '172.18.1.26'
+                });
+                const { servers } = getState().machine;
+                const newServers = [];
                 for (const object of objects) {
-                    servers.push(new Server(object.name, object.address, object.model));
+                    const find = servers.find(v => v.equal(object));
+                    if (find) {
+                        newServers.push(find);
+                    } else {
+                        const server = new Server(object.name, object.address, object.model);
+                        newServers.push(server);
+                        server.on('http:status', (result) => {
+                            const { err, data } = result;
+                            if (err) {
+                                dispatch(actions.updateState({
+                                    isConnected: false,
+                                    isOpen: false
+                                }));
+                                return;
+                            }
+                            dispatch(actions.updateState({ serverStatus: data.status }));
+                        });
+                    }
                 }
 
-                dispatch(actions.updateState({ servers }));
+                dispatch(actions.updateState({ servers: newServers }));
 
                 // TODO: refactor this behavior to Component not flux
                 setTimeout(() => {
@@ -220,8 +249,7 @@ export const actions = {
                         port: ports[0],
                         ports,
                         isOpen: false,
-                        isConnected: false,
-                        connectionType: ''
+                        isConnected: false
                     }));
                 } else {
                     // this.port = '';
@@ -229,8 +257,7 @@ export const actions = {
                         port: '',
                         ports,
                         isOpen: false,
-                        isConnected: false,
-                        connectionType: ''
+                        isConnected: false
                     }));
                 }
             },
@@ -268,6 +295,10 @@ export const actions = {
         dispatch(actions.updateState({ port: port }));
         machineStore.set('port', port);
     },
+    updateServerToken: (token) => (dispatch) => {
+        dispatch(actions.updateState({ serverToken: token }));
+        machineStore.set('server.token', token);
+    },
     updateMachineSize: (size) => (dispatch) => {
         size.x = Math.min(size.x, 1000);
         size.y = Math.min(size.y, 1000);
@@ -286,13 +317,16 @@ export const actions = {
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
-        const { port, server } = machine;
+        const { isConnected, connectionType, server } = machine;
+        if (!isConnected) {
+            return;
+        }
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
-        if (port) {
+        if (connectionType === CONNECTION_TYPE_SERIAL) {
             // controller.command('gcode', gcode, context);
             controller.command('gcode', gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
-        } else if (server) {
+        } else {
             server.executeGcode(gcode);
         }
     },
@@ -318,58 +352,16 @@ export const actions = {
 
         controller.listHTTPServers();
     },
+
     setServer: (server) => (dispatch) => {
-        // Update server
         dispatch(actions.updateState({
-            server,
-            serverStatus: STATUS_UNKNOWN,
-            isConnected: true,
-            connectionType: CONNECTION_TYPE_WIFI
+            server
         }));
-
-        // TODO: Fix the issue that sometimes will get multiple machines' status simultaneously
-        // Cancel previous status polling
-        if (statusTimer) {
-            clearTimeout(statusTimer);
-            statusTimer = null;
-        }
-
-        // Get status of server frequently
-        const getStatus = () => {
-            server.requestStatus((err, res) => {
-                if (!err) {
-                    dispatch(actions.updateState({
-                        serverStatus: res.body.status,
-                        workPosition: {
-                            x: server.x.toFixed(3),
-                            y: server.y.toFixed(3),
-                            z: server.z.toFixed(3)
-                        }
-                    }));
-                } else {
-                    dispatch(actions.updateState({ serverStatus: STATUS_UNKNOWN }));
-                }
-
-                // If status timer is not cancelled, then re-schedule a new timeout
-                if (statusTimer !== null) {
-                    statusTimer = setTimeout(getStatus, 1500);
-                }
-            });
-        };
-        statusTimer = setTimeout(getStatus);
     },
-    unsetServer: () => (dispatch) => {
-        dispatch(actions.updateState({
-            server: ABSENT_OBJECT,
-            serverStatus: STATUS_UNKNOWN,
-            isConnected: false,
-            connectionType: ''
-        }));
 
-        if (statusTimer) {
-            clearTimeout(statusTimer);
-            statusTimer = null;
-        }
+    updateConnectionState: (state) => (dispatch) => {
+        dispatch(actions.updateState(state));
+        state.connectionType && machineStore.set('connection.type', state.connectionType);
     }
 
 };

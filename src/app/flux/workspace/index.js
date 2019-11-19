@@ -32,6 +32,24 @@ export function getGcodeName(gcodeList) {
     return `${filename}.gcode`;
 }
 
+export function getGcodeType(gcodeList) {
+    if (gcodeList.length === 0) {
+        return null;
+    }
+
+    const gcodeBean = gcodeList[0];
+    const filename = path.basename(gcodeBean.name);
+
+    if (filename.endsWith('.nc')) {
+        return 'Laser';
+    }
+    if (filename.endsWith('.cnc')) {
+        return 'CNC';
+    }
+
+    return '3DP';
+}
+
 export const actions = {
     updateState: (state) => {
         return {
