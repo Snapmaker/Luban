@@ -8,7 +8,7 @@ import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
-import stitch from '../lib/image-stitch';
+import { stitch, stitchEach } from '../lib/image-stitch';
 import { getPhoto, takePhoto } from '../lib/image-getPhoto';
 import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import DataStorage from '../DataStorage';
@@ -153,7 +153,7 @@ export const processTrace = (req, res) => {
         });
 };
 
-//stitch TODO
+// stitch TODO
 export const processStitch = (req, res) => {
     const options = req.body;
 
@@ -168,6 +168,31 @@ export const processStitch = (req, res) => {
     }
 
     stitch(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processStitchEach = (req, res) => {
+    const options = req.body;
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    stitchEach(imageOptions)
         .then((result) => {
             res.send(result);
         })

@@ -7,15 +7,15 @@ const fs = require('fs');
  * Server represents HTTP Server on Snapmaker 2.
  */
 export const takePhoto = (options) => {
-    const { path, index, x, y, address } = options;
+    const { path, index, x, y, z, feedRate, address } = options;
     let api = `http://${address}:8080/api/${path}`;
     if (path === 'request_capture_photo') {
         api += '?';
     }
-    if (index | x | y) {
-        api += `&index=${index}&x=${x}&y=${y}`;
+    if (index | x | y | z | feedRate) {
+        api += `&index=${index}&x=${x}&y=${y}&z=${z}&feedRate=${feedRate}`;
     }
-    console.log('this is api ---------->', api, x, y);
+    console.log('this is api ---------->', api);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
             resolve({
@@ -31,13 +31,19 @@ export const getPhoto = (options) => {
     // console.log(`${this.host}/api/get_camera_image?index=${index}`);
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {
-            let fileName = `img${index}.jpg`;
-            fileName = pathWithRandomSuffix(fileName);
-            fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+            if (res.status === 404) {
                 resolve({
-                    fileName
+                    status: res.status
                 });
-            });
+            } else {
+                let fileName = `img${index}.jpg`;
+                fileName = pathWithRandomSuffix(fileName);
+                fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+                    resolve({
+                        fileName
+                    });
+                });
+            }
         });
     });
 };
