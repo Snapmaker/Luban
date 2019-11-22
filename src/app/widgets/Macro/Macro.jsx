@@ -22,7 +22,6 @@ class Macro extends PureComponent {
         macros: PropTypes.array,
         updateModal: PropTypes.func.isRequired,
         openModal: PropTypes.func.isRequired,
-        dataSource: PropTypes.string.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -47,7 +46,7 @@ class Macro extends PureComponent {
             for (let i = 0; i < macro.repeat; i++) {
                 gcode = gcode.concat(macro.content, '\n');
             }
-            this.props.executeGcode(this.props.dataSource, gcode);
+            this.props.executeGcode(gcode);
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
@@ -130,24 +129,20 @@ class Macro extends PureComponent {
     }
 }
 
-const mapStateToProps = (state, ownProps) => {
+const mapStateToProps = (state) => {
     const { port, server, workflowState, serverStatus } = state.machine;
-    const { widgets } = state.widget;
-    const { widgetId } = ownProps;
-    const dataSource = widgets[widgetId].dataSource;
 
     return {
         port,
         server,
         workflowState,
-        serverStatus,
-        dataSource
+        serverStatus
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 

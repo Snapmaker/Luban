@@ -3,36 +3,27 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Select from 'react-select';
-import { Button } from '@trendmicro/react-buttons';
 import { includes, map, find, get } from 'lodash';
 import pubsub from 'pubsub-js';
 
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import SerialPortClient from '../../lib/controller';
-import { MACHINE_SERIES, MACHINE_HEAD_TYPE, PROTOCOL_TEXT } from '../../constants';
-import { valueOf } from '../../lib/contants-utils';
+// import controller from '../../lib/controller';
 import api from '../../api';
 import Space from '../../components/Space';
-import MachineSelection from './MachineSelection';
-import Modal from '../../components/Modal';
-import { actions as machineActions } from '../../flux/machine';
+import { actions } from '../../flux/develop-tools';
+import SerialPortClient from '../../lib/controller';
 
 
-class SerialConnection extends PureComponent {
+class ScreenConnection extends PureComponent {
     static propTypes = {
         dataSource: PropTypes.string.isRequired,
 
         isOpen: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
-        series: PropTypes.string.isRequired,
-        isHomed: PropTypes.bool,
         isConnected: PropTypes.bool,
-        updatePort: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired,
-        resetHomeState: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired
+        updatePort: PropTypes.func.isRequired
     };
 
     controller = SerialPortClient.getController(this.props.dataSource);
@@ -46,10 +37,7 @@ class SerialConnection extends PureComponent {
         err: null,
 
         // UI state
-        loadingPorts: false,
-
-        showMachineSelected: false,
-        showHomeReminder: false
+        loadingPorts: false
     };
 
     loadingTimer = null;
@@ -78,33 +66,6 @@ class SerialConnection extends PureComponent {
             const { port } = this.state;
             this.closePort(port);
             this.actions.closeHomeModal();
-            this.props.resetHomeState();
-        },
-        openModal: () => {
-            this.setState({
-                showMachineSelected: true
-            });
-        },
-        closeModal: () => {
-            this.setState({
-                showMachineSelected: false
-            });
-        },
-        openHomeModal: () => {
-            this.setState({
-                showHomeReminder: true
-            });
-        },
-        closeHomeModal: () => {
-            this.setState({
-                showHomeReminder: false
-            });
-        },
-        clickHomeModalOk: () => {
-            this.props.executeGcode('G28');
-            this.setState({
-                showHomeReminder: false
-            });
         }
     };
 
@@ -113,15 +74,6 @@ class SerialConnection extends PureComponent {
 
         // refresh ports on mount
         setTimeout(() => this.listPorts());
-    }
-
-    componentWillReceiveProps(nextProps) {
-        const { isHomed } = nextProps;
-        if (this.props.isHomed !== isHomed && !isHomed) {
-            if (this.props.dataSource === PROTOCOL_TEXT) {
-                this.actions.openHomeModal();
-            }
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -141,6 +93,7 @@ class SerialConnection extends PureComponent {
 
     onListPorts(options) {
         console.log(options);
+
         const { ports } = options;
         // Update loading state
         if (this.loadingTimer) {
@@ -192,7 +145,7 @@ class SerialConnection extends PureComponent {
     }
 
     onPortReady(data) {
-        const { state, err } = data;
+        const { err } = data;
         if (err) {
             this.setState({
                 err: 'The machine is not ready'
@@ -224,21 +177,6 @@ class SerialConnection extends PureComponent {
             .catch(() => {
                 // Empty block
             });
-        const { series, seriesSize, headType } = state;
-        const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
-        const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
-
-
-        if (machineHeadType && machineSeries) {
-            this.props.updateMachineState({
-                series: machineSeries.value,
-                headType: machineHeadType.value
-            });
-        } else {
-            machineHeadType && this.props.updateMachineState({ headType: machineHeadType.value });
-            machineSeries && this.props.updateMachineState({ series: machineSeries.value });
-            this.actions.openModal();
-        }
     }
 
     onPortClosed(options) {
@@ -337,7 +275,6 @@ class SerialConnection extends PureComponent {
     };
 
     addControllerEvents() {
-        console.log('addControllerEvents');
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             this.controller.on(eventName, callback);
@@ -352,10 +289,8 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { isOpen, series, isConnected, isHomed } = this.props;
-        const { err, ports, port, loadingPorts,
-            showMachineSelected, showHomeReminder } = this.state;
-        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
+        const { isOpen, isConnected } = this.props;
+        const { err, ports, port, loadingPorts } = this.state;
 
         const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
@@ -427,59 +362,28 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
-                    {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                        <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
-                            <Modal.Header>
-                                <Modal.Title>
-                                    {i18n._('Home Reminder')}
-                                </Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <div>
-                                    {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
-                                </div>
-                            </Modal.Body>
-                            <Modal.Footer>
-                                <Button
-                                    btnStyle="primary"
-                                    onClick={this.actions.clickHomeModalOk}
-                                >
-                                    {i18n._('OK')}
-                                </Button>
-                            </Modal.Footer>
-                        </Modal>
-                    )}
                     {err && (
                         <span style={{ margin: '0 8px' }}>{err}</span>
                     )}
                 </div>
-                <MachineSelection
-                    display={showMachineSelected}
-                    closeModal={this.actions.closeModal}
-                />
             </div>
         );
     }
 }
 const mapStateToProps = (state) => {
-    const machine = state.machine;
+    const developTools = state.developTools;
 
-    const { port, series, isHomed, isOpen, isConnected } = machine;
+    const { port, isOpen, isConnected } = developTools;
 
     return {
         port,
-        series,
-        isHomed,
         isOpen,
         isConnected
     };
 };
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
-        updatePort: (port) => dispatch(machineActions.updatePort(port)),
-        resetHomeState: () => dispatch(machineActions.resetHomeState()),
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        updatePort: (port) => dispatch(actions.updatePort(port))
     };
 };
-export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);
+export default connect(mapStateToProps, mapDispatchToProps)(ScreenConnection);

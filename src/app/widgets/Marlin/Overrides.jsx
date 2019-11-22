@@ -3,14 +3,10 @@ import React from 'react';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 // import DigitalReadout from './DigitalReadout';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
-import { PROTOCOL_TEXT } from '../../constants';
-
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const Overrides = (props) => {
     const { speedFactor = 100, extruderFactor = 100, actions } = props;

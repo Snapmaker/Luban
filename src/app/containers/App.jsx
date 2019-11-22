@@ -20,7 +20,7 @@ import Workspace from './Workspace';
 import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
-import Advanced from './Advanced';
+import Advanced from './DevelopTools';
 import Settings from './Settings';
 import styles from './App.styl';
 

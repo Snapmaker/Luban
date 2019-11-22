@@ -14,7 +14,7 @@ import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
 
 import settings from './config/settings';
-import controller from './lib/controller';
+import { controller, screenController } from './lib/controller';
 import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
@@ -69,6 +69,9 @@ series([
                 if (authenticated) {
                     log.debug('Create and establish a WebSocket connection');
                     controller.connect(() => {
+                        next();
+                    });
+                    screenController.connect(() => {
                         next();
                     });
                     return;

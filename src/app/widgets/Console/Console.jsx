@@ -6,7 +6,7 @@ import pubsub from 'pubsub-js';
 import settings from '../../config/settings';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import Terminal from './Terminal';
 import { PROTOCOL_TEXT, ABSENT_OBJECT } from '../../constants';
 
@@ -149,7 +149,7 @@ class Console extends PureComponent {
                 terminal.writeln(color.yellow('  M220: Set Speed Factor override Percentage'));
                 terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
                 terminal.writeln(color.yellow('  M204: Set Default Acceleration'));
-                terminal.writeln(color.yellow('  M205: Advanced Settings'));
+                terminal.writeln(color.yellow('  M205: DevelopTools Settings'));
                 terminal.writeln(color.yellow('  M206: Set Axes Offset'));
                 terminal.writeln(color.yellow('  M301: Set PID Parameters'));
                 terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
@@ -317,7 +317,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 

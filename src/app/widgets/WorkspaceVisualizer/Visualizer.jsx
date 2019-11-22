@@ -10,8 +10,7 @@ import colornames from 'colornames';
 import { Button } from '@trendmicro/react-buttons';
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 import {
     MARLIN,
     PROTOCOL_TEXT,
@@ -36,8 +35,6 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
 
-
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class Visualizer extends Component {
     static propTypes = {
@@ -86,13 +83,13 @@ class Visualizer extends Component {
         toolheadVisible: true,
         gcodeFilenameVisible: true,
         fileTransitModalVisible: false,
-        port: controller.getPort(),
+        port: controller.port,
         controller: {
-            type: controller.getType(),
-            state: controller.getState(),
-            settings: controller.getSettings()
+            type: controller.type,
+            state: controller.state,
+            settings: controller.settings
         },
-        workflowState: controller.getWorkflowState(),
+        workflowState: controller.workflowState,
         workPosition: {
             x: '0.000',
             y: '0.000',
@@ -138,12 +135,12 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             this.setState(() => ({
-                port: controller.getPort(),
+                port: controller.port,
                 controller: {
-                    type: controller.getType(),
-                    state: controller.getState()
+                    type: controller.type,
+                    state: controller.state
                 },
-                workflowState: controller.getWorkflowState()
+                workflowState: controller.workflowState
             }));
 
             this.unloadGcode();
@@ -503,7 +500,7 @@ class Visualizer extends Component {
         };
         */
         const context = {
-            ...controller.getContext(),
+            ...controller.context,
             xmin: bbox.min.x,
             xmax: bbox.max.x,
             ymin: bbox.min.y,
@@ -511,7 +508,7 @@ class Visualizer extends Component {
             zmin: bbox.min.z,
             zmax: bbox.max.z
         };
-        controller.setContext(context);
+        controller.context = context;
 
         pubsub.publish('gcode:bbox', bbox);
 

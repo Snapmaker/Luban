@@ -7,7 +7,7 @@ import pubsub from 'pubsub-js';
 
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { preventDefault } from '../../lib/dom-events';
 import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
@@ -16,7 +16,6 @@ import KeypadOverlay from './KeypadOverlay';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as widgetActions } from '../../flux/widget';
 import {
-    ABSENT_OBJECT,
     IMPERIAL_UNITS,
     METRIC_UNITS,
     WORKFLOW_STATE_IDLE
@@ -74,15 +73,13 @@ class Axes extends PureComponent {
         widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
 
-        port: PropTypes.string.isRequired,
-        dataSources: PropTypes.array,
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
-        server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func,
+        isConnected: PropTypes.bool.isRequired,
 
         axes: PropTypes.array.isRequired,
         speed: PropTypes.number.isRequired,
@@ -129,12 +126,11 @@ class Axes extends PureComponent {
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                // this.props.executeGcode(this.props.dataSource, `G0 ${s} F${this.state.jogSpeed}`);
                 this.actions.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
             }
         },
         executeGcode: (gcode) => {
-            this.props.executeGcode(this.props.dataSource, gcode);
+            this.props.executeGcode(gcode);
         },
         toggleKeypadJogging: () => {
             this.setState(state => ({
@@ -466,10 +462,10 @@ class Axes extends PureComponent {
     }
 
     canClick() {
-        // TODO: move to redux state
-        const { port, dataSources, workflowState, server, serverStatus } = this.props;
-        return (port && dataSources.indexOf(this.props.dataSource) !== -1 && workflowState === WORKFLOW_STATE_IDLE
-            || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
+        const { isConnected, workflowState, serverStatus } = this.props;
+        // todo wifi need fix
+        console.log(serverStatus);
+        return (isConnected && workflowState === WORKFLOW_STATE_IDLE);
     }
 
     render() {
@@ -546,16 +542,14 @@ const mapStateToProps = (state, ownProps) => {
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, dataSources, workflowState, workPosition, originOffset = {}, server, serverStatus } = machine;
+    const { isConnected, workflowState, workPosition, originOffset = {}, serverStatus } = machine;
 
     return {
-        port,
+        isConnected,
         dataSource,
-        dataSources,
         workflowState,
         workPosition,
         originOffset,
-        server,
         serverStatus,
         axes,
         speed,
@@ -567,7 +561,7 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode)),
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
         updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };
 };

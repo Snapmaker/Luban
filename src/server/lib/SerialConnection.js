@@ -100,8 +100,8 @@ class SerialConnection extends EventEmitter {
         this.parser = null; // Readline parser
         this.writeFilter = (data) => data;
         this.isScreenProtocol = options.isScreenProtocol;
-        this.screenProtocolParser = new ScreenProtocolParser();
-        this.textProtocolParser = new Readline({ delimiter: '\n' });
+        // this.screenProtocolParser = new ScreenProtocolParser();
+        // this.textProtocolParser = new Readline({ delimiter: '\n' });
         if (writeFilter) {
             if (typeof writeFilter !== 'function') {
                 throw new TypeError(`"WriteFilter" must be a function: ${writeFilter}`);

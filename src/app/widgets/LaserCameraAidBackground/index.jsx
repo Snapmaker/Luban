@@ -8,7 +8,7 @@ import {
     SMMinimizeButton,
     SMDropdownButton
 } from '../../components/SMWidget';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import styles from '../styles.styl';
 import SetBackground from './SetBackground';
 

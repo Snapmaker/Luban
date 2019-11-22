@@ -9,8 +9,7 @@ import { actions as machineActions } from '../../flux/machine';
 import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
 import i18n from '../../lib/i18n';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { screenController } from '../../lib/controller';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Setting from './Setting';
@@ -32,8 +31,6 @@ import {
 const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
-
-const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
@@ -104,7 +101,7 @@ class DeveloperPanel extends PureComponent {
             this.setState({ calibrationMargin });
         },
         switchHexMode: () => {
-            controller.command('switch hex mode');
+            screenController.command('switch hex mode');
         },
         /*
         switchOn: () => {
@@ -117,10 +114,10 @@ class DeveloperPanel extends PureComponent {
         },
         */
         forceSwitch: () => {
-            controller.command('force switch');
+            screenController.command('force switch');
         },
         clearFeeder: () => {
-            controller.command('clear feeder');
+            screenController.command('clear feeder');
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
@@ -419,14 +416,14 @@ class DeveloperPanel extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            screenController.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            screenController.off(eventName, callback);
         });
     }
 
