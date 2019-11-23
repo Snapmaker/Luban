@@ -2,6 +2,7 @@ import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
 import DataStorage from '../DataStorage';
 import { pathWithRandomSuffix } from './random-utils';
+import { MACHINE_TYPE_SMALL, MACHINE_TYPE_MIDDLE, MACHINE_TYPE_LARGE } from '../constants';
 
 // TODO: first step in here,we get the points
 async function readImage(filePath) {
@@ -11,12 +12,9 @@ async function readImage(filePath) {
 }
 
 export const stitchEach = async (options) => {
-    const { stitchFileName, getPoints, corners, size, currentIndex } = options;
+    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, series } = options;
     const density = 3;
-    const d = 100;
-    // const width = 1024;
-    // const height = 1280;
-
+    const d = centerDis;
     // phrase 1 - perspective transform matrix
     const points = [];
     for (let i = 0; i < getPoints.length; i++) {
@@ -46,6 +44,7 @@ export const stitchEach = async (options) => {
     let endxSize = size.x;
     let endySize = size.y;
 
+
     if (parseInt(currentIndex / 3, 10) === 1) {
         ySize = d;
     } else {
@@ -56,60 +55,107 @@ export const stitchEach = async (options) => {
     } else {
         xSize = (size.x - d) / 2;
     }
+    // console.log('This IS series', series);
 
-    if (parseInt((currentIndex) / 3, 10) === 0) {
-        startySize = size.y - ySize;
-    } else if (parseInt((currentIndex) / 3, 10) === 1) {
-        startySize = (size.y - ySize) / 2;
-        endySize = (size.y + ySize) / 2;
-    } else if (parseInt((currentIndex) / 3, 10) === 2) {
-        endySize = ySize;
+    if (series === MACHINE_TYPE_SMALL) {
+        xSize = size.x / 2;
+        ySize = size.y / 2;
+        if (parseInt((currentIndex) / 2, 10) === 0) {
+            startySize = size.y - ySize;
+        } else if (parseInt((currentIndex) / 2, 10) === 1) {
+            endySize = size.y - ySize;
+        }
+        if (currentIndex % 2 === 0) {
+            endxSize = size.x - xSize;
+        } else if (currentIndex % 2 === 1) {
+            startxSize = size.x - xSize;
+        }
+    } else if (series === MACHINE_TYPE_MIDDLE || series === MACHINE_TYPE_LARGE) {
+        if (parseInt((currentIndex) / 3, 10) === 0) {
+            startySize = size.y - ySize;
+        } else if (parseInt((currentIndex) / 3, 10) === 1) {
+            startySize = (size.y - ySize) / 2;
+            endySize = (size.y + ySize) / 2;
+        } else if (parseInt((currentIndex) / 3, 10) === 2) {
+            // endySize = ySize;
+            endySize = size.y - ySize;
+        }
+        if (currentIndex % 3 === 0) {
+            endxSize = size.x - xSize;
+        } else if (currentIndex % 3 === 1) {
+            startxSize = (size.x - xSize) / 2;
+            endxSize = (size.x + xSize) / 2;
+        } else if (currentIndex % 3 === 2) {
+            startxSize = size.x - xSize;
+        }
     }
-    if (currentIndex % 3 === 0) {
-        endxSize = size.x - xSize;
-    } else if (currentIndex % 3 === 1) {
-        startxSize = (size.x - xSize) / 2;
-        endxSize = (size.x + xSize) / 2;
-    } else if (currentIndex % 3 === 2) {
-        startxSize = size.x - xSize;
-    }
-    // console.log('this is size', startxSize, endxSize, startySize, endySize);
 
-    console.log('this is:', currentIndex, startxSize, endxSize, startySize, endySize);
+    // console.log('this is size', currentIndex, startxSize, endxSize, startySize, endySize);
+    // console.log('This IS series', series, width, height, d);
     const stitched = new Jimp(xSize * density, ySize * density);
 
-    for (let y = startySize * density; y < endySize * density; y++) {
-        for (let x = startxSize * density; x < endxSize * density; x++) {
-            let dy = -1;
-            if (y >= (size.y / 2 - d / 2) * density) {
-                dy = 0;
-            }
-            if (y >= (size.y / 2 + d / 2) * density) {
-                dy = 1;
-            }
+    if (series === MACHINE_TYPE_MIDDLE || series === MACHINE_TYPE_LARGE) {
+        for (let y = startySize * density; y < endySize * density; y++) {
+            for (let x = startxSize * density; x < endxSize * density; x++) {
+                let dy = -1;
+                if (y >= (size.y / 2 - d / 2) * density) {
+                    dy = 0;
+                }
+                if (y >= (size.y / 2 + d / 2) * density) {
+                    dy = 1;
+                }
 
-            let dx = -1;
-            if (x >= (size.x / 2 - d / 2) * density) {
-                dx = 0;
-            }
-            if (x >= (size.x / 2 + d / 2) * density) {
-                dx = 1;
-            }
-            const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
-            // const index = ((y)* xSize * density + x ) << 2;
+                let dx = -1;
+                if (x >= (size.x / 2 - d / 2) * density) {
+                    dx = 0;
+                }
+                if (x >= (size.x / 2 + d / 2) * density) {
+                    dx = 1;
+                }
+                const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+                // const index = ((y)* xSize * density + x ) << 2;
 
-            const source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
-            // const source = perspT.transformInverse((x), (y));
-            const x0 = Math.round(source[0]);
-            const y0 = Math.round(source[1]);
-            if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
-                continue;
+                const source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                const x0 = Math.round(source[0]);
+                const y0 = Math.round(source[1]);
+                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
+                    continue;
+                }
+                const index0 = ((y0) * width + x0) << 2;
+                stitched.bitmap.data[index] = image.bitmap.data[index0];
+                stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
+                stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
+                stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
             }
-            const index0 = ((y0) * width + x0) << 2;
-            stitched.bitmap.data[index] = image.bitmap.data[index0];
-            stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
-            stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
-            stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
+        }
+    } else if (series === MACHINE_TYPE_SMALL) {
+        for (let y = startySize * density; y < endySize * density; y++) {
+            for (let x = startxSize * density; x < endxSize * density; x++) {
+                let dy = -1;
+                if (y >= (size.y / 2) * density) {
+                    dy = 1;
+                }
+                let dx = -1;
+                if (x >= (size.x / 2) * density) {
+                    dx = 1;
+                }
+                const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+                // const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
+                // const index = ((y)* xSize * density + x ) << 2;
+
+                const source = perspT.transformInverse((x - dx * d / 2 * density), (y - dy * d / 2 * density));
+                // const source = perspT.transformInverse((x), (y));
+                const x0 = Math.round(source[0]);
+                const y0 = Math.round(source[1]);
+                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
+                    continue;
+                }
+                const index0 = ((y0) * width + x0) << 2;
+                stitched.bitmap.data[index] = image.bitmap.data[index0];
+                stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
+                stitched.bitmap.data[index + 2] = image.bitmap.data[index0 + 2];
+                stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
+            }
         }
     }
     stitched.flip(false, true);
@@ -118,7 +164,7 @@ export const stitchEach = async (options) => {
     filename = pathWithRandomSuffix(filename);
     return new Promise(async (resolve) => {
         await stitched.write(`${DataStorage.tmpDir}/${filename}`, () => {
-            console.log('resolve success>>>>>>', filename, xSize, ySize);
+            // console.log('resolve success>>>>>>', filename, xSize, ySize);
             resolve({
                 filename,
                 xSize,
@@ -128,11 +174,10 @@ export const stitchEach = async (options) => {
     });
 };
 
-
 export const stitch = async (options) => {
-    const { fileNames, getPoints, corners, size } = options;
+    const { fileNames, getPoints, corners, size, centerDis } = options;
     const density = 3;
-    const d = 100;
+    const d = centerDis;
     const width = 1024;
     const height = 1280;
 
@@ -156,44 +201,76 @@ export const stitch = async (options) => {
     const perspT = PerspT(srcPoints, dstPoints);
     // phrase 2 - stitch
     const images = [];
-    for (let j = 0; j < 9; j++) {
+    for (let j = 0; j < fileNames.length; j++) {
         const fileName = fileNames[j];
         const image = await readImage(`${DataStorage.tmpDir}/${fileName}`);
         images.push(image);
     }
 
     const stitched = new Jimp(size.x * density, size.y * density);
-    for (let y = 0; y < size.y * density; y++) {
-        for (let x = 0; x < size.x * density; x++) {
-            let dy = -1;
-            if (y >= (size.y / 2 - d / 2) * density) {
-                dy = 0;
-            }
-            if (y >= (size.y / 2 + d / 2) * density) {
-                dy = 1;
-            }
+    if (fileNames.length === 4) {
+        for (let y = 0; y < size.y * density; y++) {
+            for (let x = 0; x < size.x * density; x++) {
+                let dy = -1;
+                if (y >= (size.y / 2) * density) {
+                    dy = 1;
+                }
+                let dx = -1;
+                if (x >= (size.x / 2) * density) {
+                    dx = 1;
+                }
+                const index = (y * size.x * density + x) << 2;
+                const source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                const x0 = Math.round(source[0]);
+                const y0 = Math.round(source[1]);
+                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
+                    continue;
+                }
 
-            let dx = -1;
-            if (x >= (size.x / 2 - d / 2) * density) {
-                dx = 0;
+                let from = dy > 0 ? 0 : 2;
+                if (dx > 0) {
+                    from += 1;
+                }
+                const index0 = (y0 * width + x0) << 2;
+                stitched.bitmap.data[index] = images[from].bitmap.data[index0];
+                stitched.bitmap.data[index + 1] = images[from].bitmap.data[index0 + 1];
+                stitched.bitmap.data[index + 2] = images[from].bitmap.data[index0 + 2];
+                stitched.bitmap.data[index + 3] = images[from].bitmap.data[index0 + 3];
             }
-            if (x >= (size.x / 2 + d / 2) * density) {
-                dx = 1;
-            }
-            const index = (y * size.x * density + x) << 2;
-            const source = perspT.transformInverse(x - dx * d * density, y - dy * d * density);
-            const x0 = Math.round(source[0]);
-            const y0 = Math.round(source[1]);
-            if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
-                continue;
-            }
+        }
+    } else if (fileNames.length === 9) {
+        for (let y = 0; y < size.y * density; y++) {
+            for (let x = 0; x < size.x * density; x++) {
+                let dy = -1;
+                if (y >= (size.y / 2 - d / 2) * density) {
+                    dy = 0;
+                }
+                if (y >= (size.y / 2 + d / 2) * density) {
+                    dy = 1;
+                }
 
-            const from = 4 + (-dy) * 3 + dx;
-            const index0 = (y0 * width + x0) << 2;
-            stitched.bitmap.data[index] = images[from].bitmap.data[index0];
-            stitched.bitmap.data[index + 1] = images[from].bitmap.data[index0 + 1];
-            stitched.bitmap.data[index + 2] = images[from].bitmap.data[index0 + 2];
-            stitched.bitmap.data[index + 3] = images[from].bitmap.data[index0 + 3];
+                let dx = -1;
+                if (x >= (size.x / 2 - d / 2) * density) {
+                    dx = 0;
+                }
+                if (x >= (size.x / 2 + d / 2) * density) {
+                    dx = 1;
+                }
+                const index = (y * size.x * density + x) << 2;
+                const source = perspT.transformInverse(x - dx * d * density, y - dy * d * density);
+                const x0 = Math.round(source[0]);
+                const y0 = Math.round(source[1]);
+                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
+                    continue;
+                }
+
+                const from = 4 + (-dy) * 3 + dx;
+                const index0 = (y0 * width + x0) << 2;
+                stitched.bitmap.data[index] = images[from].bitmap.data[index0];
+                stitched.bitmap.data[index + 1] = images[from].bitmap.data[index0 + 1];
+                stitched.bitmap.data[index + 2] = images[from].bitmap.data[index0 + 2];
+                stitched.bitmap.data[index + 3] = images[from].bitmap.data[index0 + 3];
+            }
         }
     }
     stitched.flip(false, true);

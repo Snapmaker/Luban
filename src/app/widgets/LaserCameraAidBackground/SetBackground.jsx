@@ -99,7 +99,12 @@ class SetBackground extends PureComponent {
     render() {
         const state = { ...this.state };
         const { showInstructions, connectionType, isConnected } = this.props;
-
+        // let extractingPreview;
+        // if (series === 'A150') {
+        //     extractingPreview = 4;
+        // } else {
+        //     extractingPreview = 9;
+        // }
         return (
             <React.Fragment>
                 {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
@@ -108,7 +113,6 @@ class SetBackground extends PureComponent {
                         <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                             {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
-                                    showModal={this.state.showModal}
                                     setBackgroundImage={this.actions.setBackgroundImage}
                                 />
                             )}

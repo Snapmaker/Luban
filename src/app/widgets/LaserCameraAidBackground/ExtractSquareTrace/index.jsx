@@ -8,16 +8,16 @@ import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import Anchor from '../../../components/Anchor';
+import { MACHINE_TYPE_SMALL } from '../../../constants';
+
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
-        showModal: PropTypes.bool.isRequired,
+        series: PropTypes.string.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };
-
-    fileInput = React.createRef();
 
     extractingPreview = [
         React.createRef(),
@@ -33,10 +33,13 @@ class ExtractSquareTrace extends PureComponent {
 
     state = {
         isStitched: false,
+        canTakePhoto: true,
         outputFilename: '',
         options: {
             currentIndex: 0,
             size: this.props.size,
+            centerDis: 100,
+            series: this.props.series,
             currentArrIndex: 0,
             getPoints: [],
             corners: [],
@@ -48,10 +51,17 @@ class ExtractSquareTrace extends PureComponent {
     actions = {
         startCameraAid: async () => {
             // parse 1: request_camera_calibration
+
+            if (!this.state.canTakePhoto) {
+                return;
+            }
+            this.setState({
+                canTakePhoto: false
+            });
             const { address } = this.props.server;
             const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
-            // console.log(resData.corners, resData.points);
+            console.log(this.props.size, resData.corners, resData.points);
             this.setState({
                 options: {
                     ...this.state.options,
@@ -61,34 +71,48 @@ class ExtractSquareTrace extends PureComponent {
             });
             let imagesName = new Set();
             const position = [];
-            const d = 100;
+            let centerDis;
             const cameraOffsetX = 20;
             const cameraOffsetY = -8.5;
-            for (let j = 1; j >= -1; j--) {
-                if (j === 1 || j === -1) {
-                    for (let i = -1; i <= 1; i++) {
-                        const x = this.props.size.x / 2 + cameraOffsetX + d * i;
-                        const y = this.props.size.y / 2 + cameraOffsetY + d * j;
-                        position.push({ 'x': x, 'y': y, 'index': position.length });
-                    }
-                } else if (j === 0) {
-                    for (let i = 1; i >= -1; i--) {
-                        const x = this.props.size.x / 2 + cameraOffsetX + d * i;
-                        const y = this.props.size.y / 2 + cameraOffsetY + d * j;
-                        if (position.length === 3) {
-                            position.push({ 'x': x, 'y': y, 'index': 5 });
-                        } else if (position.length === 5) {
-                            position.push({ 'x': x, 'y': y, 'index': 3 });
-                        } else {
+            if (this.props.series === MACHINE_TYPE_SMALL) {
+                centerDis = 80;
+                [1, 2, 4, 3].forEach((item) => {
+                    position.push({
+                        'x': this.props.size.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
+                        'y': this.props.size.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
+                        'index': item - 1
+                    });
+                });
+            } else {
+                centerDis = 100;
+                for (let j = 1; j >= -1; j--) {
+                    if (j === 1 || j === -1) {
+                        for (let i = -1; i <= 1; i++) {
+                            const x = this.props.size.x / 2 + cameraOffsetX + centerDis * i;
+                            const y = this.props.size.y / 2 + cameraOffsetY + centerDis * j;
                             position.push({ 'x': x, 'y': y, 'index': position.length });
+                        }
+                    } else if (j === 0) {
+                        for (let i = 1; i >= -1; i--) {
+                            const x = this.props.size.x / 2 + cameraOffsetX + centerDis * i;
+                            const y = this.props.size.y / 2 + cameraOffsetY + centerDis * j;
+                            if (position.length === 3) {
+                                position.push({ 'x': x, 'y': y, 'index': 5 });
+                            } else if (position.length === 5) {
+                                position.push({ 'x': x, 'y': y, 'index': 3 });
+                            } else {
+                                position.push({ 'x': x, 'y': y, 'index': position.length });
+                            }
                         }
                     }
                 }
             }
-            // console.log(position);
+
+            this.timmers = new Array(position.length);
             this.setState({
                 options: {
                     ...this.state.options,
+                    centerDis,
                     currentIndex: 0,
                     currentArrIndex: 0
                 }
@@ -97,19 +121,10 @@ class ExtractSquareTrace extends PureComponent {
             // parse 2
 
             let idx = 0;
-            for (let i = 0; i < 9; i++) {
-                if (!this.props.showModal) {
-                    this.setState({
-                        options: {
-                            ...this.state.options,
-                            currentArrIndex: 0,
-                            fileNames: []
-                        }
-                    });
-                    return;
-                }
-                if (this.state.options.currentArrIndex !== 0 && this.state.options.currentArrIndex !== i - 1) {
-                    return;
+            for (let i = 0; i < position.length; i++) {
+                console.log(this.state.options.currentArrIndex, i);
+                if (this.state.options.currentArrIndex !== i) {
+                    break;
                 }
                 await api.processTakePhoto({
                     'path': 'request_capture_photo',
@@ -120,17 +135,29 @@ class ExtractSquareTrace extends PureComponent {
                     'feedRate': 3000,
                     'address': address
                 });
+
                 let requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
                 let requestPicStatus = false;
                 let timmer = null;
+                this.timmers[position[i].index] = Date.now();
+                this.setState({
+                    options: {
+                        ...this.state.options,
+                        currentArrIndex: this.state.options.currentArrIndex + 1
+                    }
+                });
+
 
                 timmer = setInterval(() => {
-                    if (requestPicStatus) {
-                        if (idx === 9) {
+                    const diff = Date.now() - this.timmers[position[i].index];
+                    if (requestPicStatus || diff > 60000) {
+                        if (idx === position.length) {
                             imagesName = Array.from(imagesName);
-                            const swiper = imagesName[3];
-                            imagesName[3] = imagesName[5];
-                            imagesName[5] = swiper;
+                            if (this.props.series !== MACHINE_TYPE_SMALL) {
+                                this.swiperItem(imagesName, 3, 5);
+                            } else {
+                                this.swiperItem(imagesName, 2, 3);
+                            }
                             this.setState({
                                 options: {
                                     ...this.state.options,
@@ -138,6 +165,9 @@ class ExtractSquareTrace extends PureComponent {
                                 }
                             });
                             this.actions.processStitch(this.state.options);
+                            this.setState({
+                                canTakePhoto: true
+                            });
                         }
                         clearInterval(timmer);
                         return;
@@ -151,7 +181,6 @@ class ExtractSquareTrace extends PureComponent {
                             this.setState({
                                 options: {
                                     ...this.state.options,
-                                    currentArrIndex: this.state.options.currentArrIndex + 1,
                                     currentIndex: position[i].index,
                                     stitchFileName: fileName
                                 }
@@ -159,12 +188,15 @@ class ExtractSquareTrace extends PureComponent {
                             imagesName.add(fileName);
                             api.processStitchEach(this.state.options).then((stitchImg) => {
                                 const { filename, xSize, ySize } = JSON.parse(stitchImg.text);
-                                this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize, ySize);
+                                if (this.extractingPreview[position[i].index].current) {
+                                    this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize, ySize, position[i].index);
+                                }
                             });
                             idx++;
                         }
                     });
                 }, 700);
+                // this.timmers.push(timmer);
             }
         },
         processStitch: (options) => {
@@ -180,6 +212,17 @@ class ExtractSquareTrace extends PureComponent {
         }
     };
 
+
+    timmers = [];
+
+
+    swiperItem(imagesName, item1, item2) {
+        const swiper = imagesName[item1];
+        imagesName[item1] = imagesName[item2];
+        imagesName[item2] = swiper;
+    }
+
+
     render() {
         return (
             <div>
@@ -192,6 +235,8 @@ class ExtractSquareTrace extends PureComponent {
                         const key = previewId + index;
                         return (
                             <ExtractPreview
+                                size={this.props.size}
+                                series={this.props.series}
                                 ref={previewId}
                                 key={key}
                             />
@@ -201,12 +246,17 @@ class ExtractSquareTrace extends PureComponent {
                 <div className={styles['extract-background']}>
                     <div className={classNames(styles['extract-actions'])}>
                         <Anchor
-                            className={styles['extract-actions__btn']}
+                            className={this.state.canTakePhoto ? styles['extract-actions__btn'] : styles['extract-actions__disable']}
+
                             onClick={this.actions.startCameraAid}
                         >
                             <i className={styles['extract-actions__icon-reset']} />
                         </Anchor>
-                        <span className={styles['extract-actions__text']}>{i18n._('Take Photo')}</span>
+                        <span
+                            className={styles['extract-actions__text']}
+                        >
+                            {i18n._('Take Photo')}
+                        </span>
                     </div>
                 </div>
                 <div style={{ margin: '0 60px' }}>
@@ -228,6 +278,7 @@ class ExtractSquareTrace extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
+        series: machine.series,
         server: machine.server,
         size: machine.size
     };

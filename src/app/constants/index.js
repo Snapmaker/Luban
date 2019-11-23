@@ -93,8 +93,8 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A150',
         setting: {
             size: {
-                x: 167,
-                y: 169,
+                x: 160,
+                y: 160,
                 z: 150
             }
         },
@@ -148,3 +148,7 @@ export const MACHINE_HEAD_TYPE = {
         alias: ['CNC']
     }
 };
+
+export const MACHINE_TYPE_SMALL = 'A150';
+export const MACHINE_TYPE_MIDDLE = 'A250';
+export const MACHINE_TYPE_LARGE = 'A350';
