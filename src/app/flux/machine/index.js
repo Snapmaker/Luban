@@ -66,15 +66,11 @@ const INITIAL_STATE = {
         z: 125
     },
     enclosure: false,
+    enclosureDoor: false,
 
     // machine headType
     headType: MACHINE_HEAD_TYPE['3DP'].value,
 
-    workMachineState: {
-        isUpdate: false,
-        series: 'unknown',
-        headType: 'unknown'
-    },
     // machine connect state
     isOpen: false,
     isConnected: false,
@@ -95,6 +91,7 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
+
         let initialMachineState = machineStore.get('machine');
         if (!initialMachineState) {
             initialMachineState = {
@@ -152,13 +149,13 @@ export const actions = {
             },
             // 'Marlin:settings': (settings) => {
             'Marlin:settings': (options) => {
-                const { settings } = options;
-                const state = getState().machine;
+                const { enclosure = false, enclosureDoor = false } = options.settings;
 
                 // enclosure is changed
-                if (state.enclosure !== settings.enclosure) {
-                    dispatch(actions.updateState({ enclosure: settings.enclosure }));
-                }
+                dispatch(actions.updateState({
+                    enclosure: enclosure,
+                    enclosureDoor: enclosureDoor
+                }));
             },
             'http:discover': (objects) => {
                 const servers = [];
@@ -246,16 +243,20 @@ export const actions = {
             // 'workflow:state': (workflowState, dataSource) => {
             'workflow:state': (options) => {
                 const { workflowState, dataSource } = options;
-                dispatch(actions.updateState({ workflowState, dataSource }));
+                dispatch(actions.updateState({
+                    workflowState,
+                    dataSource
+                }));
             }
         };
 
-        Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
-        });
+        Object.keys(controllerEvents)
+            .forEach(event => {
+                controller.on(event, controllerEvents[event]);
+            });
     },
 
-    updateMachineState: (state) => (dispatch,) => {
+    updateMachineState: (state) => (dispatch) => {
         const { series, headType } = state;
         headType && dispatch(actions.updateState({
             headType: headType

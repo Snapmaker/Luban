@@ -84,6 +84,22 @@ class MarlinReplyParserSeriesSize {
 }
 
 
+class MarlinReplyParserEmergencyStop {
+    static parse(line) {
+        const r = line.match(/;Locked UART/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserEmergencyStop,
+            payload: {
+                releaseDate: r[2]
+            }
+        };
+    }
+}
+
+
 class MarlinReplyParserReleaseDate {
     static parse(line) {
         const r = line.match(/^Release Date: (.*)$/);
@@ -126,6 +142,22 @@ class MarlinReplyParserEnclosure {
             type: MarlinReplyParserEnclosure,
             payload: {
                 enclosure: r[1] === 'On'
+            }
+        };
+    }
+}
+
+class MarlinReplyParserEnclosureDoor {
+    static parse(line) {
+        const r = line.match(/^Door: (Open|Closed)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosure,
+            payload: {
+                enclosure: r[1] === 'Open'
             }
         };
     }
@@ -324,6 +356,9 @@ class MarlinLineParser {
             // ok
             MarlinLineParserResultOk,
 
+            // cnc emergency stop when enclosure open
+            MarlinReplyParserEmergencyStop,
+
             // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
@@ -339,6 +374,7 @@ class MarlinLineParser {
             MarlinReplyParserToolHead,
             // M1010
             MarlinReplyParserEnclosure,
+            MarlinReplyParserEnclosureDoor,
 
             // start
             MarlinLineParserResultStart,
@@ -436,7 +472,8 @@ class Marlin extends events.EventEmitter {
 
     settings = {
         // whether enclosure is turned on
-        enclosure: false
+        enclosure: false,
+        enclosureDoor: false
     };
 
     parser = new MarlinLineParser();
@@ -491,8 +528,15 @@ class Marlin extends events.EventEmitter {
                 this.set({ enclosure: payload.enclosure });
             }
             this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserEnclosureDoor) {
+            if (this.settings.enclosureDoor !== payload.enclosureDoor) {
+                this.set({ enclosureDoor: payload.enclosureDoor });
+            }
+            this.emit('enclosure', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
+        } else if (type === MarlinReplyParserEmergencyStop) {
+            this.emit('cnc:stop', payload);
         } else if (type === MarlinLineParserResultPosition) {
             const nextState = {
                 ...this.state,
@@ -525,6 +569,7 @@ class Marlin extends events.EventEmitter {
                 }
                 // just regard this M105 command as a M1005 request
                 this.emit('firmware', { version: this.state.version, ...payload });
+                this.emit('ok', payload);
             } else {
                 this.setState({ temperature: payload.temperature });
                 this.emit('temperature', payload);
