@@ -7,6 +7,7 @@ import TWEEN from '@tweenjs/tween.js';
 import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
+import { Button } from '@trendmicro/react-buttons';
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 // import controller from '../../lib/controller';
@@ -32,6 +33,8 @@ import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
 import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import Modal from '../../components/Modal';
+import i18n from '../../lib/i18n';
 
 
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
@@ -40,6 +43,8 @@ class Visualizer extends Component {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
+        enclosure: PropTypes.bool.isRequired,
+        enclosureDoor: PropTypes.bool.isRequired,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -84,7 +89,8 @@ class Visualizer extends Component {
         port: controller.getPort(),
         controller: {
             type: controller.getType(),
-            state: controller.getState()
+            state: controller.getState(),
+            settings: controller.getSettings()
         },
         workflowState: controller.getWorkflowState(),
         workPosition: {
@@ -103,7 +109,8 @@ class Visualizer extends Component {
             total: 0,
             sent: 0,
             received: 0
-        }
+        },
+        showEnclosureDoorWarn: false
     };
 
     controllerEvents = {
@@ -201,6 +208,19 @@ class Visualizer extends Component {
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
                 this.updateWorkPosition(pos);
             }
+        },
+        'Marlin:settings': (options) => {
+            const { settings, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            this.setState({
+                controller: {
+                    type: MARLIN,
+                    ...this.state.controller,
+                    settings
+                }
+            });
         }
     };
 
@@ -216,6 +236,11 @@ class Visualizer extends Component {
             return (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
         },
         handleRun: () => {
+            const { enclosure, enclosureDoor } = this.props;
+            if (!this.actions.is3DP() && enclosure && !enclosureDoor) {
+                this.actions.openModal();
+                return;
+            }
             const { workflowState } = this.state;
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
@@ -372,6 +397,16 @@ class Visualizer extends Component {
             this.toolhead.visible = visible;
             this.setState({ toolheadVisible: visible });
             this.renderScene();
+        },
+        openModal: () => {
+            this.setState({
+                showEnclosureDoorWarn: true
+            });
+        },
+        closeModal: () => {
+            this.setState({
+                showEnclosureDoorWarn: false
+            });
         }
     };
 
@@ -712,6 +747,30 @@ class Visualizer extends Component {
                         autoFocus={this.actions.autoFocus}
                     />
                 </div>
+                {state.showEnclosureDoorWarn && (
+                    <Modal
+                        disableOverlay
+                        showCloseButton={false}
+                    >
+                        <Modal.Body>
+                            <div style={{ display: 'flex' }}>
+                                <i className="fa fa-exclamation-circle fa-4x text-danger" />
+                                <div style={{ marginLeft: 25 }}>
+                                    <h5>{i18n._('Enclosure door was opened')}</h5>
+                                    <p>{i18n._('The enclosure door needs to be closed before laser or CNC printing')}</p>
+                                </div>
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={this.actions.closeModal}
+                            >
+                                {i18n._('Ok')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
         );
     }
@@ -722,6 +781,8 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: machine.size,
+        enclosure: machine.enclosure,
+        enclosureDoor: machine.enclosureDoor,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };
