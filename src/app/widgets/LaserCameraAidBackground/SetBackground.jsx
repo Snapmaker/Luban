@@ -56,7 +56,6 @@ class SetBackground extends PureComponent {
             this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
 
             this.actions.hideModal();
-            // this.actions.displayPrintTrace();
         },
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();

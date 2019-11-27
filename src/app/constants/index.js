@@ -148,7 +148,3 @@ export const MACHINE_HEAD_TYPE = {
         alias: ['CNC']
     }
 };
-
-export const MACHINE_TYPE_SMALL = 'A150';
-export const MACHINE_TYPE_MIDDLE = 'A250';
-export const MACHINE_TYPE_LARGE = 'A350';

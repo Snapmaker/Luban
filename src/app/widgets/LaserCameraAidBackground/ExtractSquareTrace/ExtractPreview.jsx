@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 // import PropTypes from 'prop-types';
 import PropTypes from 'prop-types';
-import { DATA_PREFIX } from '../../../constants';
+import { DATA_PREFIX, MACHINE_SERIES } from '../../../constants';
 import styles from '../styles.styl';
 
 class ExtractPreview extends Component {
@@ -25,7 +25,7 @@ class ExtractPreview extends Component {
 
 
     onChangeImage(filename, width, height, index) {
-        if (this.props.series === 'A150') {
+        if (this.props.series === MACHINE_SERIES.A150.value) {
             this.calcuStyle(index, width, height, 2);
         } else {
             this.calcuStyle(index, width, height, 3);

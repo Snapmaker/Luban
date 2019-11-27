@@ -8,7 +8,7 @@ import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import Anchor from '../../../components/Anchor';
-import { MACHINE_TYPE_SMALL } from '../../../constants';
+import { MACHINE_SERIES } from '../../../constants';
 
 
 class ExtractSquareTrace extends PureComponent {
@@ -59,9 +59,9 @@ class ExtractSquareTrace extends PureComponent {
                 canTakePhoto: false
             });
             const { address } = this.props.server;
-            const resPro = await api.processTakePhoto({ 'path': 'request_camera_calibration', 'address': address });
+            const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
-            console.log(this.props.size, resData.corners, resData.points);
+
             this.setState({
                 options: {
                     ...this.state.options,
@@ -74,7 +74,7 @@ class ExtractSquareTrace extends PureComponent {
             let centerDis;
             const cameraOffsetX = 20;
             const cameraOffsetY = -8.5;
-            if (this.props.series === MACHINE_TYPE_SMALL) {
+            if (this.props.series === MACHINE_SERIES.A150.value) {
                 centerDis = 80;
                 [1, 2, 4, 3].forEach((item) => {
                     position.push({
@@ -108,7 +108,6 @@ class ExtractSquareTrace extends PureComponent {
                 }
             }
 
-            this.timmers = new Array(position.length);
             this.setState({
                 options: {
                     ...this.state.options,
@@ -122,12 +121,10 @@ class ExtractSquareTrace extends PureComponent {
 
             let idx = 0;
             for (let i = 0; i < position.length; i++) {
-                console.log(this.state.options.currentArrIndex, i);
                 if (this.state.options.currentArrIndex !== i) {
                     break;
                 }
                 await api.processTakePhoto({
-                    'path': 'request_capture_photo',
                     'index': position[i].index,
                     'x': position[i].x,
                     'y': position[i].y,
@@ -138,25 +135,25 @@ class ExtractSquareTrace extends PureComponent {
 
                 let requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
                 let requestPicStatus = false;
-                let timmer = null;
-                this.timmers[position[i].index] = Date.now();
                 this.setState({
                     options: {
                         ...this.state.options,
                         currentArrIndex: this.state.options.currentArrIndex + 1
                     }
                 });
-
-
-                timmer = setInterval(() => {
-                    const diff = Date.now() - this.timmers[position[i].index];
-                    if (requestPicStatus || diff > 60000) {
+                if (this.state.options.currentArrIndex !== i + 1) {
+                    break;
+                }
+                const time = Date.now();
+                const timer = setInterval(() => {
+                    const diff = Date.now() - time;
+                    if (requestPicStatus || diff > 30000) {
                         if (idx === position.length) {
                             imagesName = Array.from(imagesName);
-                            if (this.props.series !== MACHINE_TYPE_SMALL) {
-                                this.swiperItem(imagesName, 3, 5);
+                            if (this.props.series !== MACHINE_SERIES.A150.value) {
+                                this.swapItem(imagesName, 3, 5);
                             } else {
-                                this.swiperItem(imagesName, 2, 3);
+                                this.swapItem(imagesName, 2, 3);
                             }
                             this.setState({
                                 options: {
@@ -169,7 +166,7 @@ class ExtractSquareTrace extends PureComponent {
                                 canTakePhoto: true
                             });
                         }
-                        clearInterval(timmer);
+                        clearInterval(timer);
                         return;
                     }
                     requestPic.then((res) => {
@@ -196,7 +193,7 @@ class ExtractSquareTrace extends PureComponent {
                         }
                     });
                 }, 700);
-                // this.timmers.push(timmer);
+                this.timers.push(timer);
             }
         },
         processStitch: (options) => {
@@ -213,13 +210,19 @@ class ExtractSquareTrace extends PureComponent {
     };
 
 
-    timmers = [];
+    timers = [];
+
+    componentWillUnmount() {
+        this.timers.forEach(v => {
+            clearInterval(v);
+        });
+    }
 
 
-    swiperItem(imagesName, item1, item2) {
-        const swiper = imagesName[item1];
+    swapItem(imagesName, item1, item2) {
+        const swap = imagesName[item1];
         imagesName[item1] = imagesName[item2];
-        imagesName[item2] = swiper;
+        imagesName[item2] = swap;
     }
 
 
