@@ -13,7 +13,7 @@ import styles from '../styles.styl';
 import SetBackground from './SetBackground';
 
 
-class LaserSetBackgroundWidget extends PureComponent {
+class LaserCameraAidBackground extends PureComponent {
     state = {
         isConnected: false,
         isLaser: false,
@@ -107,4 +107,4 @@ class LaserSetBackgroundWidget extends PureComponent {
     }
 }
 
-export default LaserSetBackgroundWidget;
+export default LaserCameraAidBackground;

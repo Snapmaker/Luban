@@ -95,7 +95,7 @@ export const MACHINE_SERIES = {
             size: {
                 x: 160,
                 y: 160,
-                z: 145
+                z: 150
             }
         },
         alias: ['SM2-S']
@@ -105,9 +105,9 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A250',
         setting: {
             size: {
-                x: 230,
-                y: 250,
-                z: 240
+                x: 240,
+                y: 260,
+                z: 235
             }
         },
         alias: ['SM2-M']
@@ -118,9 +118,9 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A350',
         setting: {
             size: {
-                x: 320,
-                y: 340,
-                z: 330
+                x: 336,
+                y: 360,
+                z: 334
             }
         },
         alias: ['SM2-L']

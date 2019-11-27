@@ -78,9 +78,13 @@ const processTrace = defaultAPIFactory((options) => request.post('/api/image/tra
 
 const processStitch = defaultAPIFactory((options) => request.post('/api/image/stitch', options));
 
+const processStitchEach = defaultAPIFactory((options) => request.post('/api/image/stitchEach', options));
+
 const processGetPhoto = defaultAPIFactory((options) => request.post('/api/image/getPhoto', options));
 
 const processTakePhoto = defaultAPIFactory((options) => request.post('/api/image/takePhoto', options));
+
+const getCameraCalibration = defaultAPIFactory((options) => request.post('/api/image/getCameraCalibration', options));
 
 
 //
@@ -265,8 +269,10 @@ export default {
     processImage,
     processTrace,
     processStitch,
+    processStitchEach,
     processGetPhoto,
     processTakePhoto,
+    getCameraCalibration,
 
     // svg
     convertRasterToSvg,

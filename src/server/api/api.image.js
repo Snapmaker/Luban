@@ -8,8 +8,8 @@ import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
-import stitch from '../lib/image-stitch';
-import { getPhoto, takePhoto } from '../lib/image-getPhoto';
+import { stitch, stitchEach } from '../lib/image-stitch';
+import { getPhoto, takePhoto, getCameraCalibration } from '../lib/image-getPhoto';
 import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import DataStorage from '../DataStorage';
 
@@ -153,7 +153,7 @@ export const processTrace = (req, res) => {
         });
 };
 
-//stitch TODO
+// stitch TODO
 export const processStitch = (req, res) => {
     const options = req.body;
 
@@ -179,7 +179,7 @@ export const processStitch = (req, res) => {
         });
 };
 
-export const processGetPhoto = (req, res) => {
+export const processStitchEach = (req, res) => {
     const options = req.body;
 
     let imageOptions;
@@ -192,7 +192,37 @@ export const processGetPhoto = (req, res) => {
         imageOptions = options;
     }
 
-    getPhoto(imageOptions)
+    stitchEach(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processGetPhoto = (req, res) => {
+    const options = req.body;
+
+    getPhoto(options)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const getCameraCalibrationApi = (req, res) => {
+    const options = req.body;
+
+    getCameraCalibration(options)
         .then((result) => {
             res.send(result);
         })
@@ -207,17 +237,7 @@ export const processGetPhoto = (req, res) => {
 export const processTakePhoto = (req, res) => {
     const options = req.body;
 
-    let imageOptions;
-    if (options.image) {
-        imageOptions = {
-            ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
-        };
-    } else {
-        imageOptions = options;
-    }
-
-    takePhoto(imageOptions)
+    takePhoto(options)
         .then((result) => {
             res.send(result);
         })

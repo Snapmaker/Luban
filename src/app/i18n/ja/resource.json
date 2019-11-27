@@ -666,5 +666,9 @@
     "Clear All": "",
     "Take Photo": "",
     "Set Camera Aid Background": "",
-    "Speed Factor": ""
+    "Speed Factor": "",
+    "Export": "",
+    "Machine Position": "",
+    "Home Reminder": "",
+    "The motors are homed yet. Please execute Home(G28) command before any movement.": ""
 }
