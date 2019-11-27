@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';

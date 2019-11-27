@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 
 import { EPSILON } from '../../constants';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';

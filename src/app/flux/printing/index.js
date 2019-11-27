@@ -2,16 +2,15 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { PROTOCOL_TEXT, ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PROTOCOL_TEXT } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
 import ModelGroup from '../models/ModelGroup';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
+import SerialClient from '../../lib/serialClient';
 
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
@@ -30,6 +29,22 @@ const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 //         && Math.abs(sz1 - sz2) < EPSILON
 //     );
 // };
+// return true if tran1 equals tran2 uploadModel
+// eslint-disable-next-line no-unused-vars
+const customCompareTransformation = (tran1, tran2) => {
+    const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
+    const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
+    return (
+        Math.abs(px1 - px2) < EPSILON
+        && Math.abs(pz1 - pz2) < EPSILON
+        && Math.abs(rx1 - rx2) < EPSILON
+        && Math.abs(ry1 - ry2) < EPSILON
+        && Math.abs(rz1 - rz2) < EPSILON
+        && Math.abs(sx1 - sx2) < EPSILON
+        && Math.abs(sy1 - sy2) < EPSILON
+        && Math.abs(sz1 - sz2) < EPSILON
+    );
+};
 
 export const PRINTING_STAGE = {
     EMPTY: 0,

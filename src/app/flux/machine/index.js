@@ -14,13 +14,13 @@ import {
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
-import controller from '../../lib/controller';
 import { machineStore } from '../../store/local-storage';
 import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
 import History from './History';
 import FixedArray from './FixedArray';
+import { controller } from '../../lib/controller';
 
 
 const STATUS_UNKNOWN = 'UNKNOWN';
@@ -42,8 +42,6 @@ const INITIAL_STATE = {
     port: controller.port || '',
 
     ports: [],
-    dataSource: '',
-    dataSources: [],
     // from workflowState: idle, running, paused
     workflowState: WORKFLOW_STATE_IDLE,
 
@@ -51,8 +49,7 @@ const INITIAL_STATE = {
         x: '0.000',
         y: '0.000',
         z: '0.000',
-        a: '0.000',
-        dataSource: ''
+        a: '0.000'
     },
 
     isHomed: null,
@@ -137,23 +134,27 @@ export const actions = {
         const controllerEvents = {
             // 'Marlin:state': (state) => {
             'Marlin:state': (options) => {
-                const { state, dataSource } = options;
+                const { state } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
                 const { headType, pos, originOffset } = state;
 
                 const machineState = getState().machine;
 
-                if (machineState.workPosition.x !== pos.x || machineState.workPosition.y !== pos.y || machineState.workPosition.z !== pos.z) {
+                if (machineState.workPosition.x !== pos.x
+                    || machineState.workPosition.y !== pos.y
+                    || machineState.workPosition.z !== pos.z) {
+                    console.log(pos);
                     dispatch(actions.updateState({
                         workPosition: {
                             ...machineState.workPosition,
-                            ...pos,
-                            dataSource
+                            ...pos
                         }
                     }));
                 }
-                if (machineState.originOffset.x !== originOffset.x || machineState.originOffset.y !== originOffset.y || machineState.originOffset.z !== originOffset.z) {
+                if (machineState.originOffset.x !== originOffset.x
+                    || machineState.originOffset.y !== originOffset.y
+                    || machineState.originOffset.z !== originOffset.z) {
                     dispatch(actions.updateState({
                         originOffset: {
                             ...machineState.originOffset,
@@ -200,23 +201,19 @@ export const actions = {
                 }, 600);
             },
             'serialport:open': (options) => {
-                const { port, dataSource, err } = options;
+                const { port, err } = options;
                 if (err && err !== 'inuse') {
                     return;
                 }
                 const state = getState().machine;
                 // For Warning Don't initialize
                 const ports = [...state.ports];
-                const dataSources = [...state.dataSources];
                 if (ports.indexOf(port) === -1) {
                     ports.push(port);
-                    dataSources.push(dataSource);
                 }
                 dispatch(actions.updateState({
                     port,
                     ports,
-                    dataSource,
-                    dataSources,
                     isOpen: true,
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
@@ -234,19 +231,15 @@ export const actions = {
                 const { port } = options;
                 const state = getState().machine;
                 const ports = [...state.ports];
-                const dataSources = [...state.dataSources];
                 const portIndex = ports.indexOf(port);
                 if (portIndex !== -1) {
                     ports.splice(portIndex, 1);
-                    dataSources.splice(portIndex, 1);
                 }
                 if (!isEmpty(ports)) {
                     // this.port = ports[0];
                     dispatch(actions.updateState({
                         port: ports[0],
                         ports,
-                        dataSource: dataSources[0],
-                        dataSources,
                         isOpen: false,
                         isConnected: false,
                         connectionType: ''
@@ -256,20 +249,16 @@ export const actions = {
                     dispatch(actions.updateState({
                         port: '',
                         ports,
-                        dataSource: '',
-                        dataSources,
                         isOpen: false,
                         isConnected: false,
                         connectionType: ''
                     }));
                 }
             },
-            // 'workflow:state': (workflowState, dataSource) => {
             'workflow:state': (options) => {
-                const { workflowState, dataSource } = options;
+                const { workflowState } = options;
                 dispatch(actions.updateState({
-                    workflowState,
-                    dataSource
+                    workflowState
                 }));
             }
         };
@@ -315,52 +304,26 @@ export const actions = {
         dispatch(actions.updateState({ isHomed: null }));
     },
     // executeGcode: (gcode, context) => (dispatch, getState) => {
-    executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {
+    executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
         const { port, server } = machine;
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (port) {
             // controller.command('gcode', gcode, context);
-            controller.command('gcode', dataSource, gcode, context);
+            controller.command('gcode', gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {
             server.executeGcode(gcode);
         }
     },
 
-    // takePhoto: (index, position) => (dispatch, getState) => {
-    //     const machine = getState().machine;
-    //
-    //     const { server, serverStatus } = machine;
-    //
-    //     if (server && serverStatus === STATUS_IDLE) {
-    //         server.takePhoto(index, position);
-    //     } else {
-    //         console.error('please connect through wifi');
-    //     }
-    // },
-    //
-    // getPhoto: (index, callback) => (dispatch, getState) => {
-    //     const machine = getState().machine;
-    //
-    //     const { server, serverStatus } = machine;
-    //
-    //     if (server && serverStatus === STATUS_IDLE) {
-    //         server.getPhoto(index, callback);
-    //     } else {
-    //         console.error('please connect through wifi');
-    //     }
-    // },
-
     // Enclosure
     getEnclosureState: () => () => {
-        // controller.writeln('M1010', dataSource, { source: 'query' });
-        controller.writeln('M1010', PROTOCOL_TEXT, { source: 'query' });
+        controller.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, PROTOCOL_TEXT, { source: 'query' });
+        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
     },
 
     // Server

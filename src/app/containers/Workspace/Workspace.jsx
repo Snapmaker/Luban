@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import api from '../../api';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 // import * as widgetManager from './WidgetManager';
 import DefaultWidgets from './DefaultWidgets';

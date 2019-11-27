@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -12,9 +11,8 @@ import { NumberInput as Input } from '../../components/Input';
 import Overrides from './Overrides';
 import MachineModal from './MachineModal';
 import styles from './index.styl';
-import { PROTOCOL_TEXT, TEMPERATURE_MIN, TEMPERATURE_MAX } from '../../constants';
+import { TEMPERATURE_MAX, TEMPERATURE_MIN } from '../../constants';
 
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class Printing extends PureComponent {
     static propTypes = {

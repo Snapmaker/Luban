@@ -2,7 +2,7 @@ import _ from 'lodash';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { mm2in } from '../../lib/units';
 import GCodeStates from './GCodeStats';
 import {
