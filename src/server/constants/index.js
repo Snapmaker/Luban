@@ -38,8 +38,3 @@ export const RESOURCES_DIR = '../resources';
 export const CURA_ENGINE_MACOS = `${RESOURCES_DIR}/CuraEngine/3.6/macOS/CuraEngine`;
 export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngine`;
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
-
-// Machine TYPE
-export const MACHINE_TYPE_SMALL = 'A150';
-export const MACHINE_TYPE_MIDDLE = 'A250';
-export const MACHINE_TYPE_LARGE = 'A350';

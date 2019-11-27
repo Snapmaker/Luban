@@ -21,8 +21,8 @@ export const takePhoto = (options) => {
 };
 
 export const getCameraCalibration = (options) => {
-    const { address, index } = options;
-    const api = `http://${address}:8080/api/request_camera_calibration?index=${index}`;
+    const { address } = options;
+    const api = `http://${address}:8080/api/request_camera_calibration`;
 
     return new Promise((resolve) => {
         request.get(api).end((err, res) => {

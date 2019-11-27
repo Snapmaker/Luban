@@ -20,15 +20,6 @@ class ExtractSquareTrace extends PureComponent {
     };
 
     extractingPreview = [
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef(),
-        React.createRef()
     ];
 
     state = {
@@ -36,10 +27,11 @@ class ExtractSquareTrace extends PureComponent {
         canTakePhoto: true,
         outputFilename: '',
         options: {
+            picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
             currentIndex: 0,
             size: this.props.size,
-            centerDis: 100,
             series: this.props.series,
+            centerDis: 100,
             currentArrIndex: 0,
             getPoints: [],
             corners: [],
@@ -185,6 +177,7 @@ class ExtractSquareTrace extends PureComponent {
                             imagesName.add(fileName);
                             api.processStitchEach(this.state.options).then((stitchImg) => {
                                 const { filename, xSize, ySize } = JSON.parse(stitchImg.text);
+
                                 if (this.extractingPreview[position[i].index].current) {
                                     this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize, ySize, position[i].index);
                                 }
@@ -211,6 +204,12 @@ class ExtractSquareTrace extends PureComponent {
 
 
     timers = [];
+
+    componentDidMount() {
+        for (let i = 0; i < this.state.options.picAmount; i++) {
+            this.extractingPreview[i] = React.createRef();
+        }
+    }
 
     componentWillUnmount() {
         this.timers.forEach(v => {

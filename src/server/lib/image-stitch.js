@@ -2,7 +2,6 @@ import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
 import DataStorage from '../DataStorage';
 import { pathWithRandomSuffix } from './random-utils';
-import { MACHINE_TYPE_SMALL, MACHINE_TYPE_MIDDLE, MACHINE_TYPE_LARGE } from '../constants';
 
 // TODO: first step in here,we get the points
 async function readImage(filePath) {
@@ -12,7 +11,7 @@ async function readImage(filePath) {
 }
 
 export const stitchEach = async (options) => {
-    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, series } = options;
+    const { stitchFileName, getPoints, corners, size, currentIndex, centerDis, picAmount } = options;
     const density = 3;
     const d = centerDis;
     // phrase 1 - perspective transform matrix
@@ -55,9 +54,8 @@ export const stitchEach = async (options) => {
     } else {
         xSize = (size.x - d) / 2;
     }
-    // console.log('This IS series', series);
 
-    if (series === MACHINE_TYPE_SMALL) {
+    if (picAmount === 4) {
         xSize = size.x / 2;
         ySize = size.y / 2;
         if (parseInt((currentIndex) / 2, 10) === 0) {
@@ -70,7 +68,7 @@ export const stitchEach = async (options) => {
         } else if (currentIndex % 2 === 1) {
             startxSize = size.x - xSize;
         }
-    } else if (series === MACHINE_TYPE_MIDDLE || series === MACHINE_TYPE_LARGE) {
+    } else if (picAmount === 9) {
         if (parseInt((currentIndex) / 3, 10) === 0) {
             startySize = size.y - ySize;
         } else if (parseInt((currentIndex) / 3, 10) === 1) {
@@ -91,10 +89,9 @@ export const stitchEach = async (options) => {
     }
 
     // console.log('this is size', currentIndex, startxSize, endxSize, startySize, endySize);
-    // console.log('This IS series', series, width, height, d);
     const stitched = new Jimp(xSize * density, ySize * density);
 
-    if (series === MACHINE_TYPE_MIDDLE || series === MACHINE_TYPE_LARGE) {
+    if (picAmount === 9) {
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
                 let dy = -1;
@@ -128,7 +125,7 @@ export const stitchEach = async (options) => {
                 stitched.bitmap.data[index + 3] = image.bitmap.data[index0 + 3];
             }
         }
-    } else if (series === MACHINE_TYPE_SMALL) {
+    } else if (picAmount === 4) {
         for (let y = startySize * density; y < endySize * density; y++) {
             for (let x = startxSize * density; x < endxSize * density; x++) {
                 let dy = -1;
@@ -164,7 +161,6 @@ export const stitchEach = async (options) => {
     filename = pathWithRandomSuffix(filename);
     return new Promise(async (resolve) => {
         await stitched.write(`${DataStorage.tmpDir}/${filename}`, () => {
-            // console.log('resolve success>>>>>>', filename, xSize, ySize);
             resolve({
                 filename,
                 xSize,
