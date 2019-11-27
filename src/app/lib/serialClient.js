@@ -1,4 +1,4 @@
-import controller from './controller';
+import { controller } from './controller';
 
 class SerialClient {
     map = new Map();

@@ -467,7 +467,6 @@ class Marlin extends events.EventEmitter {
         },
         hexModeEnabled: false,
         isScreenProtocol: false
-        // isScreenProtocol: true
     };
 
     settings = {

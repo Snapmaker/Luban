@@ -9,11 +9,9 @@ import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
 
 import { actions } from '../../flux/laser';
-import PrintTrace from './PrintSquareTrace';
 import ExtractSquareTrace from './ExtractSquareTrace';
 import Instructions from './Instructions';
 
-const PANEL_PRINT_TRACE = 0;
 const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
@@ -32,7 +30,8 @@ class SetBackground extends PureComponent {
 
     state = {
         showModal: false,
-        panel: PANEL_PRINT_TRACE,
+        // shouldStopAction: false,
+        panel: PANEL_EXTRACT_TRACE,
 
         // print trace settings
         maxSideLength: Math.min(this.props.size.x, this.props.size.y),
@@ -57,7 +56,6 @@ class SetBackground extends PureComponent {
             this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
 
             this.actions.hideModal();
-            this.actions.displayPrintTrace();
         },
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
@@ -74,12 +72,6 @@ class SetBackground extends PureComponent {
                 body: i18n._('Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
             });
             return false;
-        },
-        displayPrintTrace: () => {
-            this.setState({ panel: PANEL_PRINT_TRACE });
-        },
-        displayExtractTrace: () => {
-            this.setState({ panel: PANEL_EXTRACT_TRACE });
         },
         changeSideLength: (sideLength) => {
             this.setState({ sideLength });
@@ -106,23 +98,20 @@ class SetBackground extends PureComponent {
     render() {
         const state = { ...this.state };
         const { showInstructions, connectionType, isConnected } = this.props;
-
+        // let extractingPreview;
+        // if (series === 'A150') {
+        //     extractingPreview = 4;
+        // } else {
+        //     extractingPreview = 9;
+        // }
         return (
             <React.Fragment>
                 {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
-                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                            {state.panel === PANEL_PRINT_TRACE && (
-                                <PrintTrace
-                                    state={state}
-                                    actions={this.actions}
-                                />
-                            )}
+                    <Modal style={{ width: '500px' }} size="lg" onClose={this.actions.hideModal}>
+                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                             {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
-                                    sideLength={this.state.sideLength}
-                                    displayPrintTrace={this.actions.displayPrintTrace}
                                     setBackgroundImage={this.actions.setBackgroundImage}
                                 />
                             )}
@@ -142,7 +131,7 @@ class SetBackground extends PureComponent {
                     type="button"
                     className="sm-btn-large sm-btn-default"
                     onClick={this.actions.removeBackgroundImage}
-                    disabled={connectionType !== CONNECTION_TYPE_WIFI || !isConnected}
+                    disabled={!isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}

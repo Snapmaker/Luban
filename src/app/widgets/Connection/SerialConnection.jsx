@@ -9,16 +9,14 @@ import pubsub from 'pubsub-js';
 
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-// import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { MACHINE_SERIES, MACHINE_HEAD_TYPE, PROTOCOL_TEXT } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
-import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
 import Modal from '../../components/Modal';
 import { actions as machineActions } from '../../flux/machine';
-// import { PROTOCOL_TEXT } from '../../constants';
 
 
 class SerialConnection extends PureComponent {
@@ -36,8 +34,6 @@ class SerialConnection extends PureComponent {
         resetHomeState: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
-
-    controller = new SerialClient({ dataSource: this.props.dataSource });
 
     state = {
         // Available serial ports
@@ -122,6 +118,11 @@ class SerialConnection extends PureComponent {
         if (this.props.isHomed !== isHomed && !isHomed) {
             if (this.props.dataSource === PROTOCOL_TEXT) {
                 this.actions.openHomeModal();
+            }
+        }
+        if (this.props.isHomed !== isHomed && isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.closeHomeModal();
             }
         }
     }
@@ -271,15 +272,16 @@ class SerialConnection extends PureComponent {
             }
         }, 5000);
 
-        this.controller.listPorts();
+        console.log('listPorts');
+        controller.listPorts();
     }
 
     openPort(port) {
-        this.controller.openPort(port);
+        controller.openPort(port);
     }
 
     closePort(port) {
-        this.controller.closePort(port);
+        controller.closePort(port);
     }
 
     renderPortOption = (option) => {
@@ -340,14 +342,14 @@ class SerialConnection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.on(eventName, callback);
+            controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.off(eventName, callback);
+            controller.off(eventName, callback);
         });
     }
 
@@ -479,7 +481,7 @@ const mapDispatchToProps = (dispatch) => {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
         updatePort: (port) => dispatch(machineActions.updatePort(port)),
         resetHomeState: () => dispatch(machineActions.resetHomeState()),
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);

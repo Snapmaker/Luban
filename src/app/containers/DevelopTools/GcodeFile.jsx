@@ -9,8 +9,7 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import api from '../../api';
 import ProgressBar from '../../components/ProgressBar';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import styles from './index.styl';
 import {
@@ -19,8 +18,6 @@ import {
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
 } from '../../constants';
-
-const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class GcodeFile extends PureComponent {
     static propTypes = {

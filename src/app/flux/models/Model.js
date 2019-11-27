@@ -4,7 +4,7 @@ import { DATA_PREFIX } from '../../constants';
 import api from '../../api';
 import { generateToolPathObject3D } from '../generator';
 import GcodeGenerator from '../../widgets/GcodeGenerator';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 const EVENTS = {
