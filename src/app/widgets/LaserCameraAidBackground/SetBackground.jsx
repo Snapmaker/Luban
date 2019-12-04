@@ -1,8 +1,7 @@
-import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-
+import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -10,15 +9,19 @@ import Modal from '../../components/Modal';
 
 import { actions } from '../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
+import ManualCalibration from './ManualCalibration';
 import Instructions from './Instructions';
 
 const PANEL_EXTRACT_TRACE = 1;
+const PANEL_MANUAL_CALIBRATION = 2;
+const PANEL_NOT_CALIBRATION = 3;
 
 class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         isLaser: PropTypes.bool.isRequired,
+        server: PropTypes.object.isRequired,
         showInstructions: PropTypes.bool.isRequired,
         actions: PropTypes.object.isRequired,
 
@@ -30,21 +33,32 @@ class SetBackground extends PureComponent {
 
     state = {
         showModal: false,
-        // shouldStopAction: false,
+        showCalibrationModal: true,
         panel: PANEL_EXTRACT_TRACE,
-
-        // print trace settings
-        maxSideLength: Math.min(this.props.size.x, this.props.size.y),
-        minSideLength: 40,
-        sideLength: 100
+        shouldCalibrate: false,
+        getPoints: []
     };
 
     actions = {
-        showModal: () => {
-            this.setState({
-                showModal: true,
-                panel: PANEL_EXTRACT_TRACE
-            });
+        showModal: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            console.log('inside checkCalibration', (resPro.body));
+            if (!('res' in resPro.body)) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else if (!('points' in JSON.parse(resPro.body.res.text))) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_EXTRACT_TRACE
+                });
+            }
         },
         hideModal: () => {
             this.setState({
@@ -56,6 +70,16 @@ class SetBackground extends PureComponent {
             this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
 
             this.actions.hideModal();
+        },
+        calibrationOnOff: (shouldCalibrate) => {
+            this.setState({
+                shouldCalibrate
+            });
+        },
+        updateAffinePoints: (getPoints) => {
+            this.setState({
+                getPoints
+            });
         },
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
@@ -73,48 +97,60 @@ class SetBackground extends PureComponent {
             });
             return false;
         },
-        changeSideLength: (sideLength) => {
-            this.setState({ sideLength });
-        },
-        changeFilename: (filename) => {
-            this.setState({ filename });
-        }
-    };
 
-    componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.props.size)) {
-            const size = nextProps.size;
-            const maxSideLength = Math.min(size.x, size.y);
-            const minSideLength = Math.min(40, maxSideLength);
-            const sideLength = Math.min(maxSideLength, Math.max(minSideLength, this.state.sideLength));
+        displayExtractTrace: () => {
+            this.setState({ panel: PANEL_EXTRACT_TRACE });
+        },
+        displayManualCalibration: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            const res = JSON.parse(resPro.body.res.text);
             this.setState({
-                sideLength,
-                minSideLength,
-                maxSideLength
+                getPoints: res.points,
+                panel: PANEL_MANUAL_CALIBRATION
             });
         }
+
+
+    };
+
+    componentDidMount() {
     }
+
 
     render() {
         const state = { ...this.state };
         const { showInstructions, connectionType, isConnected } = this.props;
-        // let extractingPreview;
-        // if (series === 'A150') {
-        //     extractingPreview = 4;
-        // } else {
-        //     extractingPreview = 9;
-        // }
         return (
             <React.Fragment>
                 {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
-                    <Modal style={{ width: '500px' }} size="lg" onClose={this.actions.hideModal}>
+                    <Modal style={{ width: '800px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                             {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
+                                    shouldCalibrate={this.state.shouldCalibrate}
+                                    getPoints={this.state.getPoints}
                                     setBackgroundImage={this.actions.setBackgroundImage}
+                                    displayManualCalibration={this.actions.displayManualCalibration}
                                 />
                             )}
+                            {state.panel === PANEL_MANUAL_CALIBRATION && (
+                                <ManualCalibration
+                                    getPoints={this.state.getPoints}
+                                    shouldCalibrate={this.state.shouldCalibrate}
+                                    displayExtractTrace={this.actions.displayExtractTrace}
+                                    calibrationOnOff={this.actions.calibrationOnOff}
+                                    updateAffinePoints={this.actions.updateAffinePoints}
+                                />
+                            )}
+                            {state.panel === PANEL_NOT_CALIBRATION && (
+                                <div>
+                                    {i18n._('imformation')}
+                                    <br />
+                                    {i18n._('The screen haven\'t  calibrated yet. Please go to the screen to execute camera calibration before any movement.')}
+                                </div>
+                            )}
+
                         </Modal.Body>
                     </Modal>
                 )}
@@ -146,6 +182,7 @@ const mapStateToProps = (state) => {
     return {
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
+        server: machine.server,
         size: machine.size
     };
 };

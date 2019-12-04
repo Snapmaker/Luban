@@ -288,6 +288,9 @@ const createApplication = () => {
     app.post(urljoin(settings.route, 'api/image/getPhoto'), api.image.processGetPhoto);
     app.post(urljoin(settings.route, 'api/image/takePhoto'), api.image.processTakePhoto);
     app.post(urljoin(settings.route, 'api/image/getCameraCalibration'), api.image.getCameraCalibrationApi);
+    app.post(urljoin(settings.route, 'api/image/cameraCalibrationPhoto'), api.image.cameraCalibrationPhoto);
+    app.post(urljoin(settings.route, 'api/image/calculateSourcePoint'), api.image.calculateSourcePoint);
+
 
     // Svg
     app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
