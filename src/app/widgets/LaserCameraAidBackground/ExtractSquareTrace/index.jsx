@@ -11,12 +11,18 @@ import Anchor from '../../../components/Anchor';
 import { MACHINE_SERIES } from '../../../constants';
 
 
+const PANEL_MANUAL_CALIBRATION = 2;
+
+
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired
+        shouldCalibrate: PropTypes.bool.isRequired,
+        getPoints: PropTypes.array.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired,
+        displayManualCalibration: PropTypes.func.isRequired
     };
 
     extractingPreview = [
@@ -54,13 +60,15 @@ class ExtractSquareTrace extends PureComponent {
             const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
 
+            const getPoints = (this.props.shouldCalibrate && this.props.getPoints.length === 4) ? this.props.getPoints : resData.points;
             this.setState({
                 options: {
                     ...this.state.options,
                     corners: resData.corners,
-                    getPoints: resData.points
+                    getPoints: getPoints
                 }
             });
+            console.log('getPoints --------------', this.props.size, getPoints, resData.corners,);
             let imagesName = new Set();
             const position = [];
             let centerDis;
@@ -199,6 +207,9 @@ class ExtractSquareTrace extends PureComponent {
         },
         setBackgroundImage: () => {
             this.props.setBackgroundImage(this.state.outputFilename);
+        },
+        displayManualCalibration: () => {
+            this.props.displayManualCalibration({ panel: PANEL_MANUAL_CALIBRATION });
         }
     };
 
@@ -262,12 +273,23 @@ class ExtractSquareTrace extends PureComponent {
                     </div>
                 </div>
                 <div style={{ margin: '0 60px' }}>
+
+                    <div className="clearfix" />
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-primary"
+                        onClick={this.actions.displayManualCalibration}
+                        disabled={!this.state.canTakePhoto}
+                        style={{ width: '40%', float: 'left', margin: '10px 0 0 0' }}
+                    >
+                        {i18n._('Calibration')}
+                    </button>
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={this.actions.setBackgroundImage}
                         disabled={!this.state.isStitched}
-                        style={{ width: '50%', margin: '0 auto', display: 'block' }}
+                        style={{ width: '40%', float: 'right', margin: '10px 0 0 0' }}
                     >
                         {i18n._('Complete')}
                     </button>

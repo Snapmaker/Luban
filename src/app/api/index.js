@@ -86,6 +86,8 @@ const processTakePhoto = defaultAPIFactory((options) => request.post('/api/image
 
 const getCameraCalibration = defaultAPIFactory((options) => request.post('/api/image/getCameraCalibration', options));
 
+const cameraCalibrationPhoto = defaultAPIFactory((options) => request.post('/api/image/cameraCalibrationPhoto', options));
+
 
 //
 // svg
@@ -273,6 +275,7 @@ export default {
     processGetPhoto,
     processTakePhoto,
     getCameraCalibration,
+    cameraCalibrationPhoto,
 
     // svg
     convertRasterToSvg,
