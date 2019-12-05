@@ -85,6 +85,35 @@ export const actions = {
             });
     },
 
+    uploadCaseImage: (headerType, file, mode, onError) => (dispatch) => {
+        // check params
+        if (!['cnc', 'laser'].includes(headerType)) {
+            onError(`Params error: func = ${headerType}`);
+            return;
+        }
+        if (!file) {
+            onError(`Params error: file = ${file}`);
+            return;
+        }
+        if (!['greyscale', 'bw', 'vector', 'trace'].includes(mode)) {
+            onError(`Params error: mode = ${mode}`);
+            return;
+        }
+
+        // const formData = new FormData();
+        // formData.append('image', file);
+        console.log('inside uploadCaseImage', file);
+        api.uploadLaserCaseImage(file)
+            .then((res) => {
+                const { width, height, originalName, uploadName } = res.body;
+                console.log('inside api', res);
+                dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
+            })
+            .catch((err) => {
+                console.error(err);
+                onError && onError(err);
+            });
+    },
     // generateModel: (from, name, filename, width, height, mode) => (dispatch, getState) => {
     generateModel: (headerType, originalName, uploadName, width, height, mode) => (dispatch, getState) => {
         const { size } = getState().machine;

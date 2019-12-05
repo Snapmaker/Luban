@@ -35,6 +35,7 @@ class VisualizerTopLeft extends PureComponent {
         },
         onChangeFile: async (event) => {
             const file = event.target.files[0];
+            console.log('onChangeFile', file);
             try {
                 await this.props.uploadModel(file);
             } catch (e) {

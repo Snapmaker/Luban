@@ -109,6 +109,22 @@ const Sidebar = (props) => {
                     <li
                         className={classNames(
                             'text-center',
+                            { [styles.active]: pathname.indexOf('/caselibrary') === 0 }
+                        )}
+                    >
+                        <Link to="/caselibrary" title={i18n._('CaseLibrary')}>
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles.iconGear
+                                )}
+                            />
+                        </Link>
+                    </li>
+                    <li
+                        className={classNames(
+                            'text-center',
                             { [styles.active]: pathname.indexOf('/settings') === 0 }
                         )}
                     >
