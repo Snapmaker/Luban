@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import { DATA_PREFIX } from '../../../constants';
-import AutoCalibrationControls from '../../../components/three-extensions/AutoCalibrationControls';
+import ManualCalibrationControls from '../../../components/three-extensions/ManualCalibrationControls';
 import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
 
 
@@ -12,7 +12,6 @@ class ManualCalibration extends Component {
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired,
         getPoints: PropTypes.array.isRequired,
-        size: PropTypes.object.isRequired,
         updateAffinePoints: PropTypes.func.isRequired
     };
 
@@ -39,6 +38,7 @@ class ManualCalibration extends Component {
         // scale
         this.translatePosition = { x: 0, y: 0 }; // todo
         this.offset = { x: 0, y: 0 }; // todo
+        this.lastPosition = { x: 0, y: 0 }; // todo
         this.scale = 1;
     }
 
@@ -103,15 +103,20 @@ class ManualCalibration extends Component {
     }
 
     onDocumentMouseMove = (event) => {
-        const [offsetX, offsetY] = [this.translatePosition.x - event.clientX, this.translatePosition.y - event.clientY];
-        this.camera.position.set(this.offset.x + offsetX, this.offset.y + offsetY, Math.min(this.props.width, this.props.height) * 0.5 * this.scale);
+        // Coordinate axis adaptation
+        const [offsetX, offsetY] = [this.translatePosition.x - event.clientX, event.clientY - this.translatePosition.y];
+        this.camera.position.set(this.offset.x + offsetX, this.offset.y + offsetY, Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
+        this.lastPosition = {
+            x: this.offset.x + offsetX,
+            y: this.offset.y + offsetY
+        };
     }
 
     onDocumentMouseUp = (event) => {
-        if (this.translatePosition.x - event.clientX !== 0 && this.translatePosition.y - event.clientY !== 0) {
+        if (this.translatePosition.x - event.clientX !== 0 || this.translatePosition.y - event.clientY !== 0) {
             this.offset = {
-                x: this.translatePosition.x - event.clientX,
-                y: this.translatePosition.y - event.clientY
+                x: this.lastPosition.x,
+                y: this.lastPosition.y
             };
         }
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
@@ -127,7 +132,7 @@ class ManualCalibration extends Component {
 
         this.camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 10000);
         // change position
-        this.camera.position.set(0, 0, Math.min(this.props.width, this.props.height) * 0.5);
+        this.camera.position.set(0, 0, Math.max(this.props.width, this.props.height) * 0.5);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -146,13 +151,12 @@ class ManualCalibration extends Component {
     }
 
     setupExtractControls() {
-        const { width, height, getPoints, size } = this.props;
-        this.extractControls = new AutoCalibrationControls(this.camera, this.renderer.domElement, this.scale);
+        const { width, height, getPoints } = this.props;
+        this.extractControls = new ManualCalibrationControls(this.camera, this.renderer.domElement, this.scale);
         // the order is [leftBottom, rightBottom, rightTop. leftTop]
+        console.log('setupExtractControls', width, height);
         if (getPoints.length > 0) {
             this.extractControls.updateRectangleSize(getPoints, width, height);
-        } else {
-            this.extractControls.updateSize(size);
         }
 
         this.extractControls.visible = false;
@@ -188,16 +192,20 @@ class ManualCalibration extends Component {
         const { width, height } = this.props;
         if (event.deltaY < 0) {
             this.scale /= 1.05;
-            this.camera.position.set(event.offsetX * 2 - width / 2, height / 2 - event.offsetY * 2, Math.min(this.props.width, this.props.height) * 0.5 * this.scale);
+            this.camera.position.set(event.offsetX * 2 - width / 2, height / 2 - event.offsetY * 2, Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
         } else if (this.scale < 1 && event.deltaY > 0) {
             this.scale *= 1.05;
             this.camera.position.set(
                 event.offsetX * 2 - width / 2,
                 height / 2 - event.offsetY * 2,
-                Math.min(this.props.width, this.props.height) * 0.5 * this.scale
+                Math.max(this.props.width, this.props.height) * 0.5 * this.scale
             );
             if (this.scale >= 1) {
-                this.camera.position.set(0, 0, Math.min(this.props.width, this.props.height) * 0.5);
+                this.camera.position.set(0, 0, Math.max(this.props.width, this.props.height) * 0.5);
+                this.offset = {
+                    x: 0,
+                    y: 0
+                };
             }
         }
     }
@@ -214,38 +222,36 @@ class ManualCalibration extends Component {
     }
 
     // extract background image from photo
-    extract() {
+    updateMatrix() {
         if (!this.state.photoFilename) {
             return;
         }
-        const { width, height } = this.props;
         const positions = this.extractControls.getCornerPositions();
         const { leftTop, leftBottom, rightBottom, rightTop } = positions;
-
-        [leftTop, leftBottom, rightBottom, rightTop].map((item) => {
-            const orginX = item.x;
-            item.x = -item.y + height / 2;
-            item.y = -orginX + width / 2;
+        const { width, height } = this.props;
+        [leftTop, rightTop, rightBottom, leftBottom].map((item,) => {
+            item.x += width / 2;
+            item.y = -item.y + height / 2;
             return item;
         });
 
 
         // TODO change point order
         const affinePoints = [
+            leftTop,
             rightTop,
             rightBottom,
-            leftBottom,
-            leftTop
+            leftBottom
         ];
         this.props.updateAffinePoints(affinePoints);
     }
 
-    reset() {
-        this.backgroundMesh && this.group.remove(this.backgroundMesh);
-        this.photoMesh.visible = true;
-        this.extractControls.visible = true;
-        this.plateGroup.visible = false;
-    }
+    // reset() {
+    //     this.backgroundMesh && this.group.remove(this.backgroundMesh);
+    //     this.photoMesh.visible = true;
+    //     this.extractControls.visible = true;
+    //     this.plateGroup.visible = false;
+    // }
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);

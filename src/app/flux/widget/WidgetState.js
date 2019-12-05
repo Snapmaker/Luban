@@ -188,21 +188,21 @@ const seriesStates = {
     A150: {
         laser: {
             default: {
-                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
+                widgets: ['laser-params', 'laser-output']
             }
         }
     },
     A250: {
         laser: {
             default: {
-                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
+                widgets: ['laser-params', 'laser-output']
             }
         }
     },
     A350: {
         laser: {
             default: {
-                widgets: ['laser-camera-aid-background', 'laser-params', 'laser-output']
+                widgets: ['laser-params', 'laser-output']
             }
         }
     }

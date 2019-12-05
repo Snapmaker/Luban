@@ -15,9 +15,8 @@ class ManualCalibration extends PureComponent {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         getPoints: PropTypes.array.isRequired,
-        shouldCalibrate: PropTypes.bool.isRequired,
+        matrix: PropTypes.string.isRequired,
         displayExtractTrace: PropTypes.func.isRequired,
-        // setBackgroundImage: PropTypes.func.isRequired,
         calibrationOnOff: PropTypes.func.isRequired,
         updateAffinePoints: PropTypes.func.isRequired
     };
@@ -27,9 +26,8 @@ class ManualCalibration extends PureComponent {
     calibrationPreview = React.createRef();
 
     state = {
-        filename: '',
-        width: 1280,
-        height: 1024
+        width: 1024,
+        height: 1280
         // getPoints: []
     };
 
@@ -37,6 +35,7 @@ class ManualCalibration extends PureComponent {
         onClickToUpload: () => {
             api.cameraCalibrationPhoto({ 'address': this.props.server.address }).then((res) => {
                 const { fileName, width, height } = JSON.parse(res.text);
+                console.log('onClickToUpload', width, height);
                 this.setState({
                     width,
                     height
@@ -44,27 +43,29 @@ class ManualCalibration extends PureComponent {
                 this.calibrationPreview.current.onChangeImage(fileName, width, height);
             });
         },
-        reset: () => {
-            this.props.calibrationOnOff(false);
-            this.calibrationPreview.current.reset();
-            console.log('filename', this.state.filename);
-        },
         calibrate: () => {
             const { size } = this.props;
-            this.calibrationPreview.current.extract(
+            this.calibrationPreview.current.updateMatrix(
                 size.x,
                 size.y,
             );
-            this.props.calibrationOnOff(true);
         },
         previousPanel: () => {
             this.props.displayExtractTrace();
+        },
+        setCameraCalibrationMatrix: async () => {
+            this.props.calibrationOnOff(true);
+            console.log('THIS IS matrix', this.props.matrix, this.props.getPoints);
+            const matrix = this.props.matrix;
+            if (matrix.points !== this.props.getPoints) {
+                matrix.points = this.props.getPoints;
+                const res = await api.setCameraCalibrationMatrix({ 'matrix': matrix });
+                console.log('setCameraCalibrationMatrix', matrix, res);
+            }
         }
     };
 
     render() {
-        const calibrationState = this.props.shouldCalibrate ? i18n._('Calibration Enabled') : i18n._('Calibration Disabled');
-        console.log(calibrationState);
         return (
             <div>
                 <div className="clearfix" />
@@ -75,7 +76,6 @@ class ManualCalibration extends PureComponent {
                     <CalibrationPreview
                         ref={this.calibrationPreview}
                         getPoints={this.props.getPoints}
-                        size={this.props.size}
                         width={this.state.width}
                         height={this.state.height}
                         updateAffinePoints={this.props.updateAffinePoints}
@@ -91,15 +91,7 @@ class ManualCalibration extends PureComponent {
                         </Anchor>
                         <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
                     </div>
-                    <div className={classNames(styles['extract-actions'])}>
-                        <Anchor
-                            className={styles['extract-actions__btn']}
-                            onClick={this.actions.reset}
-                        >
-                            <i className={styles['extract-actions__icon-reset']} />
-                        </Anchor>
-                        <span className={styles['extract-actions__text']}>{i18n._('Reset')}</span>
-                    </div>
+
                     <div className={classNames(styles['extract-actions'])}>
                         <Anchor
                             className={styles['extract-actions__btn']}
@@ -125,10 +117,10 @@ class ManualCalibration extends PureComponent {
                         <button
                             type="button"
                             className="sm-btn-large sm-btn-primary"
-                            onClick={this.actions.previousPanel}
+                            onClick={this.actions.setCameraCalibrationMatrix}
                             style={{ width: '40%', float: 'right', margin: '10px 0 0 0' }}
                         >
-                            {i18n._('Complete')}
+                            {i18n._('Apply')}
                         </button>
                     )}
                 </div>

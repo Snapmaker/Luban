@@ -1,16 +1,16 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { connect } from 'react-redux';
+import styles from './styles.styl';
 import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
 
 import { actions } from '../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
 import ManualCalibration from './ManualCalibration';
-import Instructions from './Instructions';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
@@ -20,10 +20,9 @@ class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        isLaser: PropTypes.bool.isRequired,
+        hasBackground: PropTypes.bool.isRequired,
+        // isLaser: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
-        showInstructions: PropTypes.bool.isRequired,
-        actions: PropTypes.object.isRequired,
 
         // redux
         size: PropTypes.object.isRequired,
@@ -36,13 +35,13 @@ class SetBackground extends PureComponent {
         showCalibrationModal: true,
         panel: PANEL_EXTRACT_TRACE,
         shouldCalibrate: false,
+        matrix: '',
         getPoints: []
     };
 
     actions = {
         showModal: async () => {
             const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
-            console.log('inside checkCalibration', (resPro.body));
             if (!('res' in resPro.body)) {
                 this.setState({
                     showModal: true,
@@ -60,6 +59,12 @@ class SetBackground extends PureComponent {
                 });
             }
         },
+        // showModal: () => {
+        //     this.setState({
+        //         showModal: true,
+        //         panel: PANEL_EXTRACT_TRACE
+        //     });
+        // },
         hideModal: () => {
             this.setState({
                 showModal: false
@@ -84,19 +89,6 @@ class SetBackground extends PureComponent {
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
         },
-        checkConnectionStatus: () => {
-            const { isConnected, isLaser } = this.props;
-
-            if (isConnected && isLaser) {
-                return true;
-            }
-
-            modal({
-                title: i18n._('Information'),
-                body: i18n._('Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
-            });
-            return false;
-        },
 
         displayExtractTrace: () => {
             this.setState({ panel: PANEL_EXTRACT_TRACE });
@@ -106,6 +98,7 @@ class SetBackground extends PureComponent {
             const res = JSON.parse(resPro.body.res.text);
             this.setState({
                 getPoints: res.points,
+                matrix: res,
                 panel: PANEL_MANUAL_CALIBRATION
             });
         }
@@ -119,10 +112,9 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { showInstructions, connectionType, isConnected } = this.props;
+        const { connectionType, isConnected, hasBackground } = this.props;
         return (
             <React.Fragment>
-                {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
                     <Modal style={{ width: '800px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
@@ -137,6 +129,7 @@ class SetBackground extends PureComponent {
                             {state.panel === PANEL_MANUAL_CALIBRATION && (
                                 <ManualCalibration
                                     getPoints={this.state.getPoints}
+                                    matrix={this.state.matrix}
                                     shouldCalibrate={this.state.shouldCalibrate}
                                     displayExtractTrace={this.actions.displayExtractTrace}
                                     calibrationOnOff={this.actions.calibrationOnOff}
@@ -156,19 +149,24 @@ class SetBackground extends PureComponent {
                 )}
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-default"
+                    className={classNames(
+                        'sm-btn-large',
+                        'sm-btn-default',
+                        styles['btn-addbackground'],
+                    )}
                     onClick={this.actions.showModal}
-                    disabled={connectionType !== CONNECTION_TYPE_WIFI || !isConnected}
-                    style={{ display: 'block', width: '100%' }}
+                    style={{ display: (connectionType !== CONNECTION_TYPE_WIFI || !isConnected || hasBackground) ? 'none' : 'block' }}
                 >
                     {i18n._('Add Background')}
                 </button>
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-default"
+                    className={classNames(
+                        'sm-btn-large',
+                        styles['btn-removebackground'],
+                    )}
+                    style={{ display: hasBackground ? 'block' : 'none' }}
                     onClick={this.actions.removeBackgroundImage}
-                    disabled={!isConnected}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
                 </button>
@@ -179,10 +177,12 @@ class SetBackground extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const laser = state.laser;
     return {
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
         server: machine.server,
+        hasBackground: laser.background.enabled,
         size: machine.size
     };
 };
