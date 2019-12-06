@@ -3,14 +3,12 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import { connect } from 'react-redux';
-import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
 import Notifications from '../../components/Notifications';
 
-import SerialConnection from './SerialConnection';
-import WifiConnection from './WifiConnection';
-import { controller } from '../../lib/controller';
+import SerialConnection from './ScreenConnection';
+import { screenController } from '../../lib/controller';
 
 
 class Connection extends PureComponent {
@@ -20,7 +18,7 @@ class Connection extends PureComponent {
     };
 
     state = {
-        // connection types: serial, wifi
+        // connection types: serial
         connectionType: 'serial',
         connected: false,
         alertMessage: ''
@@ -35,11 +33,6 @@ class Connection extends PureComponent {
         onSelectTabSerial: () => {
             this.setState({
                 connectionType: 'serial'
-            });
-        },
-        onSelectTabWifi: () => {
-            this.setState({
-                connectionType: 'wifi'
             });
         }
     };
@@ -81,14 +74,14 @@ class Connection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            screenController.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            screenController.off(eventName, callback);
         });
     }
 
@@ -103,39 +96,20 @@ class Connection extends PureComponent {
                     </Notifications>
                 )}
 
-                {EXPERIMENTAL_WIFI_CONTROL && (
-                    <div className="sm-tabs">
-                        <button
-                            type="button"
-                            style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
-                            onClick={this.actions.onSelectTabSerial}
-                            disabled={connected}
-                        >
-                            {i18n._('Serial Port')}
-                        </button>
-                        <button
-                            type="button"
-                            style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'wifi') })}
-                            onClick={this.actions.onSelectTabWifi}
-                            disabled={connected}
-                        >
-                            {i18n._('Wi-Fi')}
-                        </button>
-                    </div>
-                )}
-                {!EXPERIMENTAL_WIFI_CONTROL && (
-                    <p>{i18n._('Serial Port')}</p>
-                )}
+                <div className="sm-tabs">
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
+                        onClick={this.actions.onSelectTabSerial}
+                        disabled={connected}
+                    >
+                        {i18n._('Serial Port')}
+                    </button>
+                </div>
                 {connectionType === 'serial' && (
                     <SerialConnection
                         dataSource={this.props.dataSource}
-                        style={{ marginTop: '10px' }}
-                    />
-                )}
-                {connectionType === 'wifi' && (
-                    <WifiConnection
                         style={{ marginTop: '10px' }}
                     />
                 )}

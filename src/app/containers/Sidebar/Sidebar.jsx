@@ -91,10 +91,10 @@ const Sidebar = (props) => {
                     <li
                         className={classNames(
                             'text-center',
-                            { [styles.active]: pathname.indexOf('/advanced') === 0 }
+                            { [styles.active]: pathname.indexOf('/developTools') === 0 }
                         )}
                     >
-                        <Link to="/advanced" title={i18n._('Advanced')}>
+                        <Link to="/developTools" title={i18n._('DevelopTools')}>
                             <i
                                 className={classNames(
                                     styles.icon,

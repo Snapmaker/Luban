@@ -13,7 +13,7 @@ import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../flux/machine';
+import { actions as developToolsActions } from '../../flux/develop-tools';
 import { actions as widgetActions } from '../../flux/widget';
 import {
     IMPERIAL_UNITS,
@@ -324,6 +324,10 @@ class Axes extends PureComponent {
                 selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
             });
         }
+        const { dataSource } = nextProps.workPosition;
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
         if (nextProps.workPosition !== this.props.workPosition) {
             this.setState({
                 workPosition: {
@@ -530,13 +534,13 @@ class Axes extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const machine = state.machine;
+    const machine = state.developTools;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { isConnected, workflowState, workPosition, originOffset = {}, serverStatus } = machine;
+    const { isConnected, workflowState, workPosition, originOffset } = machine;
 
     return {
         isConnected,
@@ -544,7 +548,6 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         workPosition,
         originOffset,
-        serverStatus,
         axes,
         speed,
         keypad,
@@ -555,7 +558,7 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+        executeGcode: (gcode) => dispatch(developToolsActions.executeGcode(gcode)),
         updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };
 };

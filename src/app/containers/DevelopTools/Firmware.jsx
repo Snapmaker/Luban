@@ -3,15 +3,12 @@ import Select from 'react-select';
 import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import TextArea from 'react-textarea-autosize';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { screenController } from '../../lib/controller';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 import modal from '../../lib/modal';
 import { PROTOCOL_SCREEN } from '../../constants';
-
-const controller = new SerialClient({ dataSource: PROTOCOL_SCREEN });
 
 class Firmware extends PureComponent {
     static propTypes = {
@@ -137,7 +134,7 @@ class Firmware extends PureComponent {
                 });
                 if (typeof this.props.executeGcode === 'function') {
                     setTimeout(() => {
-                        controller.command('force switch');
+                        screenController.command('force switch');
                     }, 8000);
                 }
                 this.setState({
@@ -158,14 +155,14 @@ class Firmware extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            screenController.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            screenController.off(eventName, callback);
         });
     }
 

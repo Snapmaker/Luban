@@ -2,20 +2,16 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { PROTOCOL_TEXT } from '../../constants';
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
     window.location.reload(forcedReload);
 };
-
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class QuickAccessToolbar extends PureComponent {
     static propTypes = {

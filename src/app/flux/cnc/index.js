@@ -1,5 +1,5 @@
 import ModelGroup from '../models/ModelGroup';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,

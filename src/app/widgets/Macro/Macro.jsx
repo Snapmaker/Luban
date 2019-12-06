@@ -8,10 +8,11 @@ import { Button } from '../../components/Buttons';
 import Space from '../../components/Space';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
+import { actions as developToolsActions } from '../../flux/develop-tools';
 import {
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
-    WORKFLOW_STATE_IDLE
+    WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
 } from '../../constants';
 import styles from './index.styl';
 
@@ -29,10 +30,18 @@ class Macro extends PureComponent {
         server: PropTypes.object.isRequired,
         workflowState: PropTypes.string.isRequired,
         serverStatus: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired,
+        developToolsExecuteGcode: PropTypes.func.isRequired
     };
 
     actions = {
+        executeGcode: (gcode) => {
+            if (this.props.dataSource === PROTOCOL_SCREEN) {
+                this.props.developToolsExecuteGcode(gcode);
+            } else {
+                this.props.executeGcode(gcode);
+            }
+        },
         runMacro: (macro) => {
             api.macros.read(macro.id)
                 .then((res) => {
@@ -47,7 +56,7 @@ class Macro extends PureComponent {
             for (let i = 0; i < macro.repeat; i++) {
                 gcode = gcode.concat(macro.content, '\n');
             }
-            this.props.executeGcode(this.props.dataSource, gcode);
+            this.actions.executeGcode(gcode);
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
@@ -132,9 +141,7 @@ class Macro extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { port, server, workflowState, serverStatus } = state.machine;
-    const { widgets } = state.widget;
-    const { widgetId } = ownProps;
-    const dataSource = widgets[widgetId].dataSource;
+    const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
         port,
@@ -147,7 +154,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+        developToolsExecuteGcode: (gcode) => dispatch(developToolsActions.executeGcode(gcode))
     };
 };
 

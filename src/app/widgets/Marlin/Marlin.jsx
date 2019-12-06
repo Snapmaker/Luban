@@ -2,8 +2,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
 import { connect } from 'react-redux';
-// import controller from '../../lib/controller';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 
 import Printing from './Printing';
@@ -22,8 +21,6 @@ import {
     MACHINE_HEAD_TYPE
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
-
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
@@ -200,8 +197,8 @@ class MarlinWidget extends PureComponent {
             speedFactor: 100,
             extruderFactor: 100,
             controller: {
-                state: controller.getState(),
-                settings: controller.getSettings()
+                state: controller.state,
+                settings: controller.settings
             }
         };
     }
