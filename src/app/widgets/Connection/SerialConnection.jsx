@@ -9,7 +9,7 @@ import pubsub from 'pubsub-js';
 
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import SerialPortClient from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { MACHINE_SERIES, MACHINE_HEAD_TYPE, PROTOCOL_TEXT } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import api from '../../api';
@@ -34,8 +34,6 @@ class SerialConnection extends PureComponent {
         resetHomeState: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
-
-    controller = SerialPortClient.getController(this.props.dataSource);
 
     state = {
         // Available serial ports
@@ -122,6 +120,11 @@ class SerialConnection extends PureComponent {
                 this.actions.openHomeModal();
             }
         }
+        if (this.props.isHomed !== isHomed && isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.closeHomeModal();
+            }
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -140,7 +143,6 @@ class SerialConnection extends PureComponent {
     }
 
     onListPorts(options) {
-        console.log(options);
         const { ports } = options;
         // Update loading state
         if (this.loadingTimer) {
@@ -270,15 +272,16 @@ class SerialConnection extends PureComponent {
             }
         }, 5000);
 
-        this.controller.listPorts();
+        console.log('listPorts');
+        controller.listPorts();
     }
 
     openPort(port) {
-        this.controller.openPort(port);
+        controller.openPort(port);
     }
 
     closePort(port) {
-        this.controller.closePort(port);
+        controller.closePort(port);
     }
 
     renderPortOption = (option) => {
@@ -337,17 +340,16 @@ class SerialConnection extends PureComponent {
     };
 
     addControllerEvents() {
-        console.log('addControllerEvents');
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.on(eventName, callback);
+            controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.off(eventName, callback);
+            controller.off(eventName, callback);
         });
     }
 

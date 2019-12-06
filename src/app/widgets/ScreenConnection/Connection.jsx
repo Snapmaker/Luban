@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import Notifications from '../../components/Notifications';
 
 import SerialConnection from './ScreenConnection';
-import SerialPortClient from '../../lib/controller';
+import { screenController } from '../../lib/controller';
 
 
 class Connection extends PureComponent {
@@ -16,9 +16,6 @@ class Connection extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         dataSource: PropTypes.string.isRequired
     };
-
-    controller = SerialPortClient.getController(this.props.dataSource);
-
 
     state = {
         // connection types: serial
@@ -77,14 +74,14 @@ class Connection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.on(eventName, callback);
+            screenController.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.off(eventName, callback);
+            screenController.off(eventName, callback);
         });
     }
 

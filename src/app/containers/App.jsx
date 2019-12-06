@@ -4,6 +4,7 @@ import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 import { actions as machineActions } from '../flux/machine';
+import { actions as developToolsActions } from '../flux/develop-tools';
 import { actions as keyboardShortcutActions } from '../flux/keyboardShortcut';
 import { actions as cncLaserSharedActions } from '../flux/cncLaserShared';
 import { actions as laserActions } from '../flux/laser';
@@ -20,7 +21,7 @@ import Workspace from './Workspace';
 import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
-import Advanced from './DevelopTools';
+import DevelopTools from './DevelopTools';
 import Settings from './Settings';
 import styles from './App.styl';
 
@@ -32,6 +33,7 @@ class App extends PureComponent {
         machineInfo: PropTypes.object.isRequired,
 
         machineInit: PropTypes.func.isRequired,
+        developToolsInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         initModelsPreviewChecker: PropTypes.func.isRequired,
@@ -107,6 +109,7 @@ class App extends PureComponent {
 
         // init machine module
         this.props.machineInit();
+        this.props.developToolsInit();
         // init keyboard shortcut
         this.props.keyboardShortcutInit();
 
@@ -132,7 +135,7 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
-            '/advanced',
+            '/developTools',
             '/settings/general',
             '/settings/machine',
             '/settings/config'
@@ -185,8 +188,8 @@ class App extends PureComponent {
                             }}
                         />
 
-                        <div style={{ display: (location.pathname === '/advanced') ? 'block' : 'none' }}>
-                            <Advanced />
+                        <div style={{ display: (location.pathname === '/developTools') ? 'block' : 'none' }}>
+                            <DevelopTools />
                         </div>
 
                         {location.pathname.indexOf('/settings') === 0 && (
@@ -209,6 +212,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
+        developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),

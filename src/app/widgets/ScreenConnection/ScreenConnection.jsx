@@ -12,7 +12,7 @@ import i18n from '../../lib/i18n';
 import api from '../../api';
 import Space from '../../components/Space';
 import { actions } from '../../flux/develop-tools';
-import SerialPortClient from '../../lib/controller';
+import { screenController } from '../../lib/controller';
 
 
 class ScreenConnection extends PureComponent {
@@ -25,8 +25,6 @@ class ScreenConnection extends PureComponent {
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired
     };
-
-    controller = SerialPortClient.getController(this.props.dataSource);
 
     state = {
         // Available serial ports
@@ -65,7 +63,6 @@ class ScreenConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
-            this.actions.closeHomeModal();
         }
     };
 
@@ -92,8 +89,6 @@ class ScreenConnection extends PureComponent {
     }
 
     onListPorts(options) {
-        console.log(options);
-
         const { ports } = options;
         // Update loading state
         if (this.loadingTimer) {
@@ -208,15 +203,15 @@ class ScreenConnection extends PureComponent {
             }
         }, 5000);
 
-        this.controller.listPorts();
+        screenController.listPorts();
     }
 
     openPort(port) {
-        this.controller.openPort(port);
+        screenController.openPort(port);
     }
 
     closePort(port) {
-        this.controller.closePort(port);
+        screenController.closePort(port);
     }
 
     renderPortOption = (option) => {
@@ -277,14 +272,14 @@ class ScreenConnection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.on(eventName, callback);
+            screenController.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.off(eventName, callback);
+            screenController.off(eventName, callback);
         });
     }
 

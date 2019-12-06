@@ -5,7 +5,7 @@ import {
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI, PROTOCOL_SCREEN
 } from '../../constants';
-import { controller } from '../../lib/controller';
+import { screenController } from '../../lib/controller';
 
 const STATUS_UNKNOWN = 'UNKNOWN';
 // const STATUS_IDLE = 'IDLE';
@@ -16,7 +16,7 @@ let statusTimer = null;
 
 const INITIAL_STATE = {
     // Serial port
-    port: controller.port || '',
+    port: screenController.port || '',
     ports: [],
     dataSource: PROTOCOL_SCREEN,
     // from workflowState: idle, running, paused
@@ -56,33 +56,20 @@ export const actions = {
         const controllerEvents = {
             'Marlin:state': (options) => {
                 const { state } = options;
-                const { pos, isHomed, originOffset } = state;
+                const { pos } = state;
 
-                const machineState = getState().machine;
+                const developToolsState = getState().developTools;
 
-                if (machineState.workPosition.x !== pos.x
-                    || machineState.workPosition.y !== pos.y
-                    || machineState.workPosition.z !== pos.z) {
+                if (developToolsState.workPosition.x !== pos.x
+                    || developToolsState.workPosition.y !== pos.y
+                    || developToolsState.workPosition.z !== pos.z) {
                     dispatch(actions.updateState({
                         workPosition: {
-                            ...machineState.workPosition,
+                            ...developToolsState.workPosition,
                             ...pos
                         }
                     }));
                 }
-                if (machineState.originOffset.x !== originOffset.x
-                    || machineState.originOffset.y !== originOffset.y
-                    || machineState.originOffset.z !== originOffset.z) {
-                    dispatch(actions.updateState({
-                        originOffset: {
-                            ...machineState.originOffset,
-                            ...originOffset
-                        }
-                    }));
-                }
-                dispatch(actions.updateState({
-                    isHomed
-                }));
             },
             'Marlin:settings': (options) => {
                 const { settings } = options;
@@ -166,7 +153,7 @@ export const actions = {
         };
 
         Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
+            screenController.on(event, controllerEvents[event]);
         });
     },
 
@@ -181,7 +168,7 @@ export const actions = {
         // if (port && workflowState === WORKFLOW_STATE_IDLE) {
         if (port) {
             // controller.command('gcode', gcode, context);
-            controller.command('gcode', gcode, context);
+            screenController.command('gcode', gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {
             server.executeGcode(gcode);
@@ -215,11 +202,11 @@ export const actions = {
     // Enclosure
     getEnclosureState: () => () => {
         // controller.writeln('M1010', dataSource, { source: 'query' });
-        controller.writeln('M1010', { source: 'query' });
+        screenController.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
         // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+        screenController.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
     },
 
     // Server
@@ -233,7 +220,7 @@ export const actions = {
             }
         }, 3000);
 
-        controller.listHTTPServers();
+        screenController.listHTTPServers();
     },
     setServer: (server) => (dispatch) => {
         // Update server

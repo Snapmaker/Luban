@@ -10,7 +10,7 @@ import Notifications from '../../components/Notifications';
 
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
-import SerialPortClient from '../../lib/controller';
+import { controller } from '../../lib/controller';
 
 
 class Connection extends PureComponent {
@@ -18,8 +18,6 @@ class Connection extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         dataSource: PropTypes.string.isRequired
     };
-
-    controller = SerialPortClient.getController(this.props.dataSource);
 
     state = {
         // connection types: serial, wifi
@@ -83,14 +81,14 @@ class Connection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.on(eventName, callback);
+            controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            this.controller.off(eventName, callback);
+            controller.off(eventName, callback);
         });
     }
 

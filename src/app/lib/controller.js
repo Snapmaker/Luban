@@ -164,7 +164,6 @@ class SerialPortClient {
                     this.workflowState = options.workflowState;
                 }
                 if (eventName === 'Marlin:state') {
-                    console.log('Marlin:state');
                     this.type = MARLIN;
                     // this.state = { ...args[0] };
                     this.state = options.state;
@@ -214,7 +213,6 @@ class SerialPortClient {
     }
 
     openPort(port) {
-        console.log(port, this.dataSource);
         socketController.emit('serialport:open', port, this.dataSource);
     }
 
@@ -237,7 +235,6 @@ class SerialPortClient {
 
     // command(cmd, ...args) {
     command(cmd, ...args) {
-        console.trace('command', cmd, this.dataSource, ...args);
         // const { port } = this;
         if (!this.workspacePort) {
             return;

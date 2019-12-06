@@ -122,7 +122,10 @@ export const actions = {
 
                 const machineState = getState().machine;
 
-                if (machineState.workPosition.x !== pos.x || machineState.workPosition.y !== pos.y || machineState.workPosition.z !== pos.z) {
+                if (machineState.workPosition.x !== pos.x
+                    || machineState.workPosition.y !== pos.y
+                    || machineState.workPosition.z !== pos.z) {
+                    console.log(pos);
                     dispatch(actions.updateState({
                         workPosition: {
                             ...machineState.workPosition,
@@ -130,7 +133,9 @@ export const actions = {
                         }
                     }));
                 }
-                if (machineState.originOffset.x !== originOffset.x || machineState.originOffset.y !== originOffset.y || machineState.originOffset.z !== originOffset.z) {
+                if (machineState.originOffset.x !== originOffset.x
+                    || machineState.originOffset.y !== originOffset.y
+                    || machineState.originOffset.z !== originOffset.z) {
                     dispatch(actions.updateState({
                         originOffset: {
                             ...machineState.originOffset,

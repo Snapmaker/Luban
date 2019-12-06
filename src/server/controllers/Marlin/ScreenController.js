@@ -116,8 +116,10 @@ class ScreenController {
                         this.controller.parse('ok');
                         if (data[0] === 0x08 && data[1] === 0x01) {
                             if (packetData.headStatus !== 0) {
-                                this.ready = true;
-                                this.emitAll('serialport:ready', { state: this.controller.state });
+                                if (!this.ready) {
+                                    this.ready = true;
+                                    this.emitAll('serialport:ready', { state: this.controller.state });
+                                }
                             }
                             const nextState = {
                                 ...this.controller.state,
@@ -335,7 +337,6 @@ class ScreenController {
     };
 
     constructor(port, dataSource, options) {
-        console.log(dataSource);
         const { baudRate } = { ...options };
 
         this.packetManager = new PacketManager();
@@ -373,13 +374,17 @@ class ScreenController {
                 return;
             }
 
-            line = String(line).trim();
+            line = String(line)
+                .trim();
             if (line.length === 0) {
                 return;
             }
 
             // this.emitAll('serialport:write', line, context);
-            this.emitAll('serialport:write', { data: line, context });
+            this.emitAll('serialport:write', {
+                data: line,
+                context
+            });
             this.writeln(line, {
                 ...context,
                 source: WRITE_SOURCE_FEEDER
@@ -416,7 +421,8 @@ class ScreenController {
                 return;
             }
 
-            line = String(line).trim();
+            line = String(line)
+                .trim();
             if (line.length === 0) {
                 log.warn(`Expected non-empty line: N=${this.sender.state.sent}`);
                 return;
@@ -474,7 +480,10 @@ class ScreenController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+                this.emitAll('serialport:ready', {
+                    state: this.controller.state,
+                    dataSource
+                });
 
                 // const version = this.controller.state.version;
                 // if (semver.gte(version, '2.4.0')) {
@@ -529,7 +538,10 @@ class ScreenController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+                this.emitAll('serialport:ready', {
+                    state: this.controller.state,
+                    dataSource
+                });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -1026,12 +1038,19 @@ class ScreenController {
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}/${dataSource}":`, err);
-                this.emitAll('serialport:open', { port, dataSource, err });
+                this.emitAll('serialport:open', {
+                    port,
+                    dataSource,
+                    err
+                });
                 callback(err); // notify error
                 return;
             }
 
-            this.emitAll('serialport:open', { port, dataSource });
+            this.emitAll('serialport:open', {
+                port,
+                dataSource
+            });
 
             callback(); // register controller
 
@@ -1048,7 +1067,6 @@ class ScreenController {
                     return;
                 }
                 if (this.controller.state.isScreenProtocol) {
-                    console.log('query state');
                     this.writeln('query state');
                 } else {
                     // send M1005 to get firmware version (only support versions >= '2.2')
@@ -1061,7 +1079,10 @@ class ScreenController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        this.emitAll('serialport:ready', { dataSource, err: 'this machine is not ready' });
+                        this.emitAll('serialport:ready', {
+                            dataSource,
+                            err: 'this machine is not ready'
+                        });
                         this.close();
                     }
                 }, 2000);
@@ -1099,7 +1120,10 @@ class ScreenController {
 
         // this.emitAll('serialport:close', { port });
         // store.unset(`controllers["${port}"]`);
-        this.emitAll('serialport:close', { port, dataSource });
+        this.emitAll('serialport:close', {
+            port,
+            dataSource
+        });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
@@ -1139,22 +1163,34 @@ class ScreenController {
         if (!isEmpty(this.state)) {
             // controller state
             // socket.emit('Marlin:state', this.state);
-            socket.emit('Marlin:state', { state: this.state, dataSource });
+            socket.emit('Marlin:state', {
+                state: this.state,
+                dataSource
+            });
         }
         if (!isEmpty(this.settings)) {
             // controller setting
             // socket.emit('Marlin:settings', this.settings);
-            socket.emit('Marlin:settings', { settings: this.settings, dataSource });
+            socket.emit('Marlin:settings', {
+                settings: this.settings,
+                dataSource
+            });
         }
         if (this.workflow) {
             // workflow state
             // socket.emit('workflow:state', this.workflow.state);
-            socket.emit('workflow:state', { workflowState: this.workflow.state, dataSource });
+            socket.emit('workflow:state', {
+                workflowState: this.workflow.state,
+                dataSource
+            });
         }
         if (this.sender) {
             // sender status
             // socket.emit('sender:status', this.sender.toJSON(), dataSource);
-            socket.emit('sender:status', { data: this.sender.toJSON(), dataSource });
+            socket.emit('sender:status', {
+                data: this.sender.toJSON(),
+                dataSource
+            });
         }
     }
 
@@ -1191,12 +1227,16 @@ class ScreenController {
 
     // emitAll(eventName, ...args) {
     emitAll(eventName, options) {
-        Object.keys(this.connections).forEach(id => {
-            const socket = this.connections[id];
-            const { dataSource } = this.options;
-            // socket.emit(eventName, ...args);
-            socket.emit(eventName, { ...options, dataSource });
-        });
+        Object.keys(this.connections)
+            .forEach(id => {
+                const socket = this.connections[id];
+                const { dataSource } = this.options;
+                // socket.emit(eventName, ...args);
+                socket.emit(eventName, {
+                    ...options,
+                    dataSource
+                });
+            });
     }
 
     command(socket, cmd, ...args) {
@@ -1223,7 +1263,10 @@ class ScreenController {
 
                 this.workflow.stop();
 
-                callback(null, { name, gcode });
+                callback(null, {
+                    name,
+                    gcode
+                });
             },
             'gcode:unload': () => {
                 this.workflow.stop();
@@ -1354,14 +1397,16 @@ class ScreenController {
             },
             'laser:on': () => {
                 const [power = 0] = args;
-                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
+                const powerPercent = Number(ensureRange(power, 0, 100)
+                    .toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
 
                 this.command(socket, 'gcode', `M3 P${powerPercent} S${powerStrength}`);
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0] = args;
-                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
+                const powerPercent = Number(ensureRange(power, 0, 100)
+                    .toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
 
                 const commands = [`M3 P${powerPercent} S${powerStrength}`];
@@ -1464,7 +1509,10 @@ class ScreenController {
         // `WRITE_SOURCE_QUERY` is considered triggered by code and should be quiet
         context.source = context.source || WRITE_SOURCE_QUERY;
         // context.emit && this.emitAll('serialport:write', data, context);
-        context.emit && this.emitAll('serialport:write', { data, context });
+        context.emit && this.emitAll('serialport:write', {
+            data,
+            context
+        });
 
         this.serialport.write(data, context);
     }
