@@ -10,6 +10,7 @@ class Thumbnail extends PureComponent {
     };
 
     state = {
+        dataURL: ''
     };
 
     node = React.createRef();
@@ -46,23 +47,6 @@ class Thumbnail extends PureComponent {
         this.renderScene();
     }
 
-    // componentDidUpdate(prevProps) {
-    //     if (this.props.minimized !== prevProps.minimized) {
-    //         const width = this.getVisibleWidth();
-    //         const height = this.getVisibleHeight();
-    //         this.renderer.setSize(width, height);
-    //         this.renderScene();
-    //     }
-    // }
-    //
-    // getVisibleWidth() {
-    //     return this.node.current.parentElement.clientWidth;
-    // }
-    //
-    // getVisibleHeight() {
-    //     return this.node.current.parentElement.clientHeight;
-    // }
-
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
         this.object = this.props.modelGroup.object.clone();
@@ -90,7 +74,16 @@ class Thumbnail extends PureComponent {
 
         this.renderScene();
 
-        return this.renderer.domElement.toDataURL();
+        const toDataURL = this.renderer.domElement.toDataURL();
+        this.setState({
+            dataURL: toDataURL
+        });
+
+        return toDataURL;
+    }
+
+    getDataURL() {
+        return this.state.dataURL;
     }
 
     renderScene() {

@@ -19,7 +19,7 @@ const defaultState = {
         secondary: {
             show: true,
             widgets: [
-                'webcam', 'axes', 'macro', 'gcode'
+                'wifi-transport', 'axes', 'macro', 'gcode'
             ]
         }
     },
