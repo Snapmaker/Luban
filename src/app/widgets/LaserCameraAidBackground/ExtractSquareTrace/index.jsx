@@ -7,7 +7,6 @@ import i18n from '../../../lib/i18n';
 import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
-// import Anchor from '../../../components/Anchor';
 import { MACHINE_SERIES } from '../../../constants';
 
 
@@ -31,6 +30,7 @@ class ExtractSquareTrace extends PureComponent {
     state = {
         isStitched: false,
         canTakePhoto: true,
+        canStart: true,
         outputFilename: '',
         options: {
             picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
@@ -54,6 +54,7 @@ class ExtractSquareTrace extends PureComponent {
                 return;
             }
             this.setState({
+                canStart: false,
                 canTakePhoto: false
             });
             const { address } = this.props.server;
@@ -116,7 +117,6 @@ class ExtractSquareTrace extends PureComponent {
                     currentArrIndex: 0
                 }
             });
-
             // parse 2
 
             let idx = 0;
@@ -134,7 +134,6 @@ class ExtractSquareTrace extends PureComponent {
                 });
 
                 let requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
-
                 let xSize, ySize;
                 if (this.state.options.picAmount === 4) {
                     xSize = this.props.size.x / 2;
@@ -277,7 +276,7 @@ class ExtractSquareTrace extends PureComponent {
                     })}
                     <div
                         className={styles['start-background']}
-                        style={{ display: this.state.canTakePhoto ? 'block' : 'none', width: '100%' }}
+                        style={{ display: this.state.canStart ? 'block' : 'none', width: '100%' }}
 
                     >
                         <button
