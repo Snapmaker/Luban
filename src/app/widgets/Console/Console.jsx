@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import { controller } from '../../lib/controller';
 import Terminal from './Terminal';
-import { PROTOCOL_TEXT, ABSENT_OBJECT } from '../../constants';
+import { PROTOCOL_TEXT, ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
@@ -23,6 +23,7 @@ class Console extends PureComponent {
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
         isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
 
@@ -204,23 +205,20 @@ class Console extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.isConnected && (this.props.isConnected !== nextProps.isConnected || nextProps.port !== this.props.port)) {
+        if (nextProps.isConnected && (this.props.isConnected !== nextProps.isConnected
+            || nextProps.port !== this.props.port
+            || nextProps.server !== this.props.server)) {
             const { name, version } = settings;
 
             const terminal = this.terminal.current;
             if (terminal) {
-                terminal.writeln(`${name} ${version}`);
-                terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
-            }
-        }
-
-        if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
-            const { name, version } = settings;
-
-            const terminal = this.terminal.current;
-            if (terminal) {
-                terminal.writeln(`${name} ${version}`);
-                terminal.writeln(i18n._('Connected via Wi-Fi'));
+                if (nextProps.connectionType === CONNECTION_TYPE_SERIAL) {
+                    terminal.writeln(`${name} ${version}`);
+                    terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
+                } else {
+                    terminal.writeln(`${name} ${version}`);
+                    terminal.writeln(i18n._('Connected via Wi-Fi'));
+                }
             }
         }
 
@@ -304,12 +302,13 @@ class Console extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { port, server, isConnected, terminalHistory, history } = machine;
+    const { port, server, isConnected, connectionType, terminalHistory, history } = machine;
 
     return {
         port,
         server,
         isConnected,
+        connectionType,
         terminalHistory,
         history
     };
