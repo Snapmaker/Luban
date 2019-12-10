@@ -117,50 +117,33 @@ THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, dom
         updateDashedLine();
     }
 
-    // function updateSize(size) {
-    //     remapBox2 = new THREE.Box2(
-    //         new THREE.Vector2(-size.x / 2, -size.y / 2),
-    //         new THREE.Vector2(size.x / 2, size.y / 2)
-    //     );
-    //
-    //     const padding = 5;
-    //     cornerPositions = {
-    //         leftTop: new THREE.Vector3(-size.x / 2 + padding, size.y / 2 - padding, 0),
-    //         leftBottom: new THREE.Vector3(-size.x / 2 + padding, -size.y / 2 + padding, 0),
-    //         rightBottom: new THREE.Vector3(size.x / 2 - padding, -size.y / 2 + padding, 0),
-    //         rightTop: new THREE.Vector3(size.x / 2 - padding, size.y / 2 - padding, 0)
-    //     };
-    // }
-    // function ensureRange(point, min, max) {
-    //     point = point > max ? max : point;
-    //     point = point < min ? min : point;
-    //     return point;
-    // }
+    function ensureRange(point, min, max) {
+        point = point > max ? max : point;
+        point = point < min ? min : point;
+        return point;
+    }
 
     function updateRectangleSize(pointArray, width, height) {
         remapBox2 = new THREE.Box2(
             new THREE.Vector2(-width / 2, -height / 2),
             new THREE.Vector2(width / 2, height / 2)
         );
-        // const [leftBottomX, leftBottomY] = [ensureRange(pointArray[3].x - width / 2, -width / 2, 0), ensureRange(pointArray[3].y - height / 2, -height / 2, 0)];
-        // const [rightBottomX, rightBottomY] = [ensureRange(pointArray[2].x - width / 2, 0, width / 2), ensureRange(pointArray[2].y - height / 2, -height / 2, 0)];
-        // const [rightTopX, rightTopY] = [ensureRange(pointArray[1].x - width / 2, 0, width / 2), ensureRange(pointArray[1].y - height / 2, 0, height / 2)];
-        // const [leftTopX, leftTopY] = [ensureRange(pointArray[0].x - width / 2, -width / 2, 0), ensureRange(pointArray[0].y - height / 2, 0, height / 2)];
-        //
-        // cornerPositions = {
-        //     leftBottom: new THREE.Vector3(leftBottomX, leftBottomY, 0),
-        //     rightBottom: new THREE.Vector3(rightBottomX, rightBottomY, 0),
-        //     rightTop: new THREE.Vector3(rightTopX, rightTopY, 0),
-        //     leftTop: new THREE.Vector3(leftTopX, leftTopY, 0)
-        // };
+        const [leftBottomX, leftBottomY] = [ensureRange(pointArray[3].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[3].y - height / 2), -height / 2, 0)];
+        const [rightBottomX, rightBottomY] = [ensureRange(pointArray[2].x - width / 2, 0, width / 2), ensureRange(-(pointArray[2].y - height / 2), -height / 2, 0)];
+        const [rightTopX, rightTopY] = [ensureRange(pointArray[1].x - width / 2, 0, width / 2), ensureRange(-(pointArray[1].y - height / 2), 0, height / 2)];
+        const [leftTopX, leftTopY] = [ensureRange(pointArray[0].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[0].y - height / 2), 0, height / 2)];
         cornerPositions = {
-            leftTop: new THREE.Vector3((pointArray[0].x - width / 2), -(pointArray[0].y - height / 2), 0),
-            rightTop: new THREE.Vector3((pointArray[1].x - width / 2), -(pointArray[1].y - height / 2), 0),
-            rightBottom: new THREE.Vector3((pointArray[2].x - width / 2), -(pointArray[2].y - height / 2), 0),
-            leftBottom: new THREE.Vector3((pointArray[3].x - width / 2), -(pointArray[3].y - height / 2), 0)
+            leftTop: new THREE.Vector3(leftTopX, leftTopY, 0),
+            rightTop: new THREE.Vector3(rightTopX, rightTopY, 0),
+            rightBottom: new THREE.Vector3(rightBottomX, rightBottomY, 0),
+            leftBottom: new THREE.Vector3(leftBottomX, leftBottomY, 0)
         };
-        console.log('this is cornerPositions', cornerPositions);
-        // the order is [leftBottom, rightBottom, rightTop. leftTop]
+        // cornerPositions = {
+        //     leftTop: new THREE.Vector3((pointArray[0].x - width / 2), -(pointArray[0].y - height / 2), 0),
+        //     rightTop: new THREE.Vector3((pointArray[1].x - width / 2), -(pointArray[1].y - height / 2), 0),
+        //     rightBottom: new THREE.Vector3((pointArray[2].x - width / 2), -(pointArray[2].y - height / 2), 0),
+        //     leftBottom: new THREE.Vector3((pointArray[3].x - width / 2), -(pointArray[3].y - height / 2), 0)
+        // };
     }
 
 

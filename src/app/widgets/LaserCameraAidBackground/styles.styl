@@ -46,15 +46,22 @@
 
 .btn-addbackground
   position: absolute
-  top: 10px
+  top: 0
   width: 100%
+  right: 0
+  min-width: 149.5px
 .btn-removebackground
   position: absolute
-  top: 10px
+  top: 0
   width: 100%
+  right: 0
+  min-width: 149.5px
   background-color: #fff;
   color: #D0021B;
   border-color: #D0021B
+  &:hover
+    background-color: #28a7e1
+
 .laser-set-background-modal-title
     display: block
     font: bold 24px "Arial Black", Gadget, sans-serif
@@ -100,8 +107,8 @@
    width: 20%
    right: 5%
    border-color: #088fcd
-   background-color: #fff
-   color: #088fcd
+   background-color: #28a7e1
+   color: #fff
    margin: 10px 0 0 0
    &:hover
      background-color:$dark-blue-color

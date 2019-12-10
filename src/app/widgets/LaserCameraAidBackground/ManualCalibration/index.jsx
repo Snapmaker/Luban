@@ -15,7 +15,7 @@ class ManualCalibration extends PureComponent {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         getPoints: PropTypes.array.isRequired,
-        matrix: PropTypes.string.isRequired,
+        matrix: PropTypes.object.isRequired,
         displayExtractTrace: PropTypes.func.isRequired,
         calibrationOnOff: PropTypes.func.isRequired,
         updateAffinePoints: PropTypes.func.isRequired
@@ -35,7 +35,6 @@ class ManualCalibration extends PureComponent {
         onClickToUpload: () => {
             api.cameraCalibrationPhoto({ 'address': this.props.server.address }).then((res) => {
                 const { fileName, width, height } = JSON.parse(res.text);
-                console.log('onClickToUpload', width, height);
                 this.setState({
                     width,
                     height
@@ -55,12 +54,15 @@ class ManualCalibration extends PureComponent {
         },
         setCameraCalibrationMatrix: async () => {
             this.props.calibrationOnOff(true);
-            console.log('THIS IS matrix', this.props.matrix, this.props.getPoints);
             const matrix = this.props.matrix;
+            const { address } = this.props.server;
             if (matrix.points !== this.props.getPoints) {
-                matrix.points = this.props.getPoints;
-                const res = await api.setCameraCalibrationMatrix({ 'matrix': matrix });
-                console.log('setCameraCalibrationMatrix', matrix, res);
+                for (let i = 0; i < matrix.points.length; i++) {
+                    matrix.points[i].x = Math.floor(this.props.getPoints[i].x);
+                    matrix.points[i].y = Math.floor(this.props.getPoints[i].y);
+                }
+                const res = await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
+                console.log('res', JSON.parse(res.text).status);
             }
         }
     };

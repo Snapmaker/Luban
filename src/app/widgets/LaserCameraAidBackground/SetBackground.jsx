@@ -7,6 +7,7 @@ import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
+import Space from '../../components/Space';
 
 import { actions } from '../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
@@ -40,31 +41,31 @@ class SetBackground extends PureComponent {
     };
 
     actions = {
-        showModal: async () => {
-            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
-            if (!('res' in resPro.body)) {
-                this.setState({
-                    showModal: true,
-                    panel: PANEL_NOT_CALIBRATION
-                });
-            } else if (!('points' in JSON.parse(resPro.body.res.text))) {
-                this.setState({
-                    showModal: true,
-                    panel: PANEL_NOT_CALIBRATION
-                });
-            } else {
-                this.setState({
-                    showModal: true,
-                    panel: PANEL_EXTRACT_TRACE
-                });
-            }
-        },
-        // showModal: () => {
-        //     this.setState({
-        //         showModal: true,
-        //         panel: PANEL_EXTRACT_TRACE
-        //     });
+        // showModal: async () => {
+        //     const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+        //     if (!('res' in resPro.body)) {
+        //         this.setState({
+        //             showModal: true,
+        //             panel: PANEL_NOT_CALIBRATION
+        //         });
+        //     } else if (!('points' in JSON.parse(resPro.body.res.text))) {
+        //         this.setState({
+        //             showModal: true,
+        //             panel: PANEL_NOT_CALIBRATION
+        //         });
+        //     } else {
+        //         this.setState({
+        //             showModal: true,
+        //             panel: PANEL_EXTRACT_TRACE
+        //         });
+        //     }
         // },
+        showModal: () => {
+            this.setState({
+                showModal: true,
+                panel: PANEL_EXTRACT_TRACE
+            });
+        },
         hideModal: () => {
             this.setState({
                 showModal: false
@@ -117,16 +118,19 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {state.showModal && (
                     <Modal style={{ width: '800px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
-                            {state.panel === PANEL_EXTRACT_TRACE && (
+                        {state.panel === PANEL_EXTRACT_TRACE && (
+                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                                 <ExtractSquareTrace
                                     shouldCalibrate={this.state.shouldCalibrate}
                                     getPoints={this.state.getPoints}
                                     setBackgroundImage={this.actions.setBackgroundImage}
                                     displayManualCalibration={this.actions.displayManualCalibration}
                                 />
-                            )}
-                            {state.panel === PANEL_MANUAL_CALIBRATION && (
+                            </Modal.Body>
+
+                        )}
+                        {state.panel === PANEL_MANUAL_CALIBRATION && (
+                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                                 <ManualCalibration
                                     getPoints={this.state.getPoints}
                                     matrix={this.state.matrix}
@@ -135,16 +139,34 @@ class SetBackground extends PureComponent {
                                     calibrationOnOff={this.actions.calibrationOnOff}
                                     updateAffinePoints={this.actions.updateAffinePoints}
                                 />
-                            )}
-                            {state.panel === PANEL_NOT_CALIBRATION && (
-                                <div>
-                                    {i18n._('imformation')}
-                                    <br />
-                                    {i18n._('The screen haven\'t  calibrated yet. Please go to the screen to execute camera calibration before any movement.')}
-                                </div>
-                            )}
-
-                        </Modal.Body>
+                            </Modal.Body>
+                        )}
+                        {state.panel === PANEL_NOT_CALIBRATION && (
+                            <div>
+                                <Modal.Header>
+                                    <Modal.Title>
+                                        {i18n._('Warning')}
+                                    </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                                    <div>
+                                        {i18n._('Imformation')}
+                                        <br />
+                                        <Space width={4} />
+                                        {i18n._('The screen haven\'t  calibrated yet. Please go to the screen to execute camera calibration before any movement.')}
+                                    </div>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                    <div style={{ display: 'inline-block', marginRight: '8px' }}>
+                                        <input
+                                            type="checkbox"
+                                            defaultChecked={false}
+                                        />
+                                        <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
+                                    </div>
+                                </Modal.Footer>
+                            </div>
+                        )}
                     </Modal>
                 )}
                 <button

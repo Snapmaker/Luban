@@ -154,7 +154,6 @@ class ManualCalibration extends Component {
         const { width, height, getPoints } = this.props;
         this.extractControls = new ManualCalibrationControls(this.camera, this.renderer.domElement, this.scale);
         // the order is [leftBottom, rightBottom, rightTop. leftTop]
-        console.log('setupExtractControls', width, height);
         if (getPoints.length > 0) {
             this.extractControls.updateRectangleSize(getPoints, width, height);
         }
@@ -246,12 +245,6 @@ class ManualCalibration extends Component {
         this.props.updateAffinePoints(affinePoints);
     }
 
-    // reset() {
-    //     this.backgroundMesh && this.group.remove(this.backgroundMesh);
-    //     this.photoMesh.visible = true;
-    //     this.extractControls.visible = true;
-    //     this.plateGroup.visible = false;
-    // }
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
