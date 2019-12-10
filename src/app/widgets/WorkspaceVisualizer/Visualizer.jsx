@@ -12,8 +12,10 @@ import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 import { controller } from '../../lib/controller';
 import {
+    CONNECTION_TYPE_SERIAL,
+    MACHINE_HEAD_TYPE,
     MARLIN,
-    PROTOCOL_TEXT,
+    PROTOCOL_TEXT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
@@ -21,7 +23,7 @@ import {
 import { ensureRange } from '../../lib/numeric-utils';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
-import { actions } from '../../flux/workspace';
+import { actions, getGcodeName, getGcodeType } from '../../flux/workspace';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
 import GCodeRenderer from './GCodeRenderer';
@@ -43,6 +45,11 @@ class Visualizer extends Component {
         enclosure: PropTypes.bool.isRequired,
         enclosureDoor: PropTypes.bool.isRequired,
         uploadState: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
+        server: PropTypes.object.isRequired,
+        serverStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
@@ -223,14 +230,13 @@ class Visualizer extends Component {
 
     actions = {
         isCNC: () => {
-            return (this.state.controller.state.headType === 'CNC');
+            return (this.props.headType === MACHINE_HEAD_TYPE.CNC.value);
         },
         is3DP: () => {
-            return (this.state.controller.state.headType === '3DP');
+            return (this.props.headType === MACHINE_HEAD_TYPE['3DP'].value);
         },
         isLaser: () => {
-            const headType = this.state.controller.state.headType;
-            return (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
+            return (this.props.headType === MACHINE_HEAD_TYPE.LASER.value);
         },
         handleRun: () => {
             const { enclosure, enclosureDoor } = this.props;
@@ -238,43 +244,66 @@ class Visualizer extends Component {
                 this.actions.openModal();
                 return;
             }
-            const { workflowState } = this.state;
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
 
-            if (workflowState === WORKFLOW_STATE_IDLE) {
-                controller.command('gcode:start');
-            }
-            if (workflowState === WORKFLOW_STATE_PAUSED) {
-                if (this.actions.is3DP()) {
-                    this.pause3dpStatus.pausing = false;
-                    const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
-                    controller.command('gcode', cmd);
-                    controller.command('gcode:resume');
-                } else if (this.actions.isLaser()) {
-                    if (this.pauseStatus.headStatus === 'on') {
-                        // resume laser power
-                        const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
-                        const powerStrength = Math.floor(powerPercent * 255 / 100);
-                        if (powerPercent !== 0) {
-                            controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                        } else {
+                if (workflowState === WORKFLOW_STATE_IDLE) {
+                    controller.command('gcode:start');
+                }
+                if (workflowState === WORKFLOW_STATE_PAUSED) {
+                    if (this.actions.is3DP()) {
+                        this.pause3dpStatus.pausing = false;
+                        const pos = this.pause3dpStatus.pos;
+                        const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
+                        controller.command('gcode', cmd);
+                        controller.command('gcode:resume');
+                    } else if (this.actions.isLaser()) {
+                        if (this.pauseStatus.headStatus === 'on') {
+                            // resume laser power
+                            const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
+                            const powerStrength = Math.floor(powerPercent * 255 / 100);
+                            if (powerPercent !== 0) {
+                                controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
+                            } else {
+                                controller.command('gcode', 'M3');
+                            }
+                        }
+
+                        controller.command('gcode:resume');
+                    } else {
+                        if (this.pauseStatus.headStatus === 'on') {
+                            // resume spindle
                             controller.command('gcode', 'M3');
+
+                            // for CNC machine, resume need to wait >500ms to let the tool head started
+                            setTimeout(() => {
+                                controller.command('gcode:resume');
+                            }, 1000);
+                        } else {
+                            controller.command('gcode:resume');
                         }
                     }
+                }
+            } else {
+                const { server, serverStatus } = this.props;
+                if (serverStatus === SERVER_STATUS_IDLE) {
+                    const gcode = this.props.gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
+                    const filename = getGcodeName(this.props.gcodeList);
+                    const type = getGcodeType(this.props.gcodeList);
 
-                    controller.command('gcode:resume');
-                } else {
-                    if (this.pauseStatus.headStatus === 'on') {
-                        // resume spindle
-                        controller.command('gcode', 'M3');
-
-                        // for CNC machine, resume need to wait >500ms to let the tool head started
-                        setTimeout(() => {
-                            controller.command('gcode:resume');
-                        }, 1000);
-                    } else {
-                        controller.command('gcode:resume');
-                    }
+                    const blob = new Blob([gcode], { type: 'text/plain' });
+                    const file = new File([blob], filename);
+                    server.uploadGcodeFile(filename, file, type, (msg) => {
+                        if (msg) {
+                            return;
+                        }
+                        console.log(111);
+                        server.startGcode();
+                    });
+                }
+                if (serverStatus === SERVER_STATUS_PAUSED) {
+                    server.resumeGcode();
                 }
             }
         },
@@ -318,22 +347,38 @@ class Visualizer extends Component {
             }, 50);
         },
         handlePause: () => {
-            const { workflowState } = this.state;
-            if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
-                controller.command('gcode:pause');
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
+                if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
+                    controller.command('gcode:pause');
 
-                if (this.actions.is3DP()) {
-                    this.pause3dpStatus.pausing = true;
-                    this.pause3dpStatus.pos = null;
+                    if (this.actions.is3DP()) {
+                        this.pause3dpStatus.pausing = true;
+                        this.pause3dpStatus.pos = null;
+                    }
+
+                    this.actions.tryPause();
                 }
-
-                this.actions.tryPause();
+            } else {
+                const { server, serverStatus } = this.props;
+                if (serverStatus === SERVER_STATUS_RUNNING) {
+                    server.pauseGcode();
+                }
             }
         },
         handleStop: () => {
-            const { workflowState } = this.state;
-            if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
-                controller.command('gcode:stop');
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
+                if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
+                    controller.command('gcode:stop');
+                }
+            } else {
+                const { server, serverStatus } = this.props;
+                if (serverStatus !== SERVER_STATUS_IDLE) {
+                    server.stopGcode();
+                }
             }
         },
         handleClose: () => {
@@ -404,6 +449,16 @@ class Visualizer extends Component {
             this.setState({
                 showEnclosureDoorWarn: false
             });
+        },
+        onOpen: () => {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+        },
+        onClose: () => {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
         }
     };
 
@@ -718,6 +773,9 @@ class Visualizer extends Component {
                     {state.gcode.renderState === 'rendering' && <Rendering />}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
                         <WorkflowControl
+                            serverStatus={this.props.serverStatus}
+                            isConnected={this.props.isConnected}
+                            connectionType={this.props.connectionType}
                             state={state}
                             actions={this.actions}
                             uploadState={this.props.uploadState}
@@ -780,6 +838,11 @@ const mapStateToProps = (state) => {
         size: machine.size,
         enclosure: machine.enclosure,
         enclosureDoor: machine.enclosureDoor,
+        headType: machine.headType,
+        server: machine.server,
+        serverStatus: machine.serverStatus,
+        isConnected: machine.isConnected,
+        connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };

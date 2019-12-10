@@ -25,8 +25,8 @@ class Thumbnail extends PureComponent {
 
 
     componentDidMount() {
-        const width = 300;
-        const height = 200;
+        const width = 720;
+        const height = 480;
 
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(new Vector3(0, 120, 500));

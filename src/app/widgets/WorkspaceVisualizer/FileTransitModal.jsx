@@ -11,6 +11,7 @@ import modal from '../../lib/modal';
 import { actions as machineActions } from '../../flux/machine';
 import { getGcodeName } from '../../flux/workspace';
 import styles from './index.styl';
+import { SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
 
 
 class FileTransitModal extends PureComponent {
@@ -98,7 +99,7 @@ class FileTransitModal extends PureComponent {
             if (server.name.startsWith('My')) {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
-                    server.status = 'RUNNING';
+                    server.status = SERVER_STATUS_RUNNING;
                     if (this.isComponentMounted) {
                         this.setState(state => ({
                             servers: state.servers.slice()
@@ -107,9 +108,9 @@ class FileTransitModal extends PureComponent {
                 }, 300);
                 continue;
             }
-            server.requestStatus((err, res) => {
+            server.requestStatus((err, data) => {
                 if (!err) {
-                    server.status = res.body.status;
+                    server.status = data.state.status;
 
                     if (this.isComponentMounted) {
                         this.setState(state => ({
@@ -156,6 +157,7 @@ class FileTransitModal extends PureComponent {
 
         const callback = (err) => {
             if (err) {
+                console.log('send');
                 console.error(err);
                 if (!hasError) {
                     hasError = true;
@@ -184,6 +186,7 @@ class FileTransitModal extends PureComponent {
     render() {
         const { onClose } = this.props;
         const fileName = getGcodeName(this.props.gcodeList);
+
         const isSelected = this.state.servers.some(server => server.selected);
 
         return (
@@ -211,17 +214,17 @@ class FileTransitModal extends PureComponent {
                                 {
                                     this.state.servers.map(server => {
                                         let statusIconStyle = '';
-                                        if (server.status === 'IDLE') {
+                                        if (server.status === SERVER_STATUS_IDLE) {
                                             statusIconStyle = styles['icon-idle'];
-                                        } else if (server.status === 'RUNNING') {
+                                        } else if (server.status === SERVER_STATUS_RUNNING) {
                                             statusIconStyle = styles['icon-running'];
-                                        } else if (server.status === 'PAUSED') {
+                                        } else if (server.status === SERVER_STATUS_PAUSED) {
                                             statusIconStyle = styles['icon-paused'];
                                         } else {
                                             statusIconStyle = styles['icon-loading'];
                                         }
                                         return (
-                                            <li key={server.address}>
+                                            <li key={server.host}>
                                                 <button
                                                     type="button"
                                                     style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
