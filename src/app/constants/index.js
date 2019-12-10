@@ -17,6 +17,11 @@ export const HEAD_TYPE_UNKNOWN = 'UNKNOWN';
 export const HEAD_TYPE_3DP = '3DP';
 export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
+// Workflow State
+export const SERVER_STATUS_RUNNING = 'running';
+export const SERVER_STATUS_PAUSED = 'paused';
+export const SERVER_STATUS_IDLE = 'idle';
+export const SERVER_STATUS_UNKNOWN = 'unknown';
 
 // G-code Macro
 export const MODAL_NONE = 'none';
@@ -82,6 +87,9 @@ export const HEAD_UNKNOWN = 'unknown';
 export const CONNECTION_TYPE_SERIAL = 'serial';
 export const CONNECTION_TYPE_WIFI = 'wifi';
 
+export const LASER_PRINT_MODE_AUTO = 'auto';
+export const LASER_PRINT_MODE_MANUAL = 'manual';
+
 export const MACHINE_SERIES = {
     ORIGINAL: {
         value: 'original',
@@ -104,7 +112,7 @@ export const MACHINE_SERIES = {
                 z: 150
             }
         },
-        alias: ['SM2-S']
+        alias: ['SM2-S', 'Snapmaker 2.0 A150']
     },
     A250: {
         value: 'A250',
@@ -116,7 +124,7 @@ export const MACHINE_SERIES = {
                 z: 235
             }
         },
-        alias: ['SM2-M']
+        alias: ['SM2-M', 'Snapmaker 2.0 A250']
 
     },
     A350: {
@@ -129,7 +137,7 @@ export const MACHINE_SERIES = {
                 z: 334
             }
         },
-        alias: ['SM2-L']
+        alias: ['SM2-L', 'Snapmaker 2.0 A350']
     }
 };
 
@@ -141,16 +149,16 @@ export const MACHINE_HEAD_TYPE = {
     '3DP': {
         value: '3dp',
         label: '3D Printing',
-        alias: ['3DP']
+        alias: ['3DP', '1']
     },
     LASER: {
         value: 'laser',
         label: 'Laser',
-        alias: ['LASER', 'LASER350', 'LASER1600']
+        alias: ['LASER', 'LASER350', 'LASER1600', '3']
     },
     CNC: {
         value: 'cnc',
         label: 'CNC',
-        alias: ['CNC']
+        alias: ['CNC', '2']
     }
 };

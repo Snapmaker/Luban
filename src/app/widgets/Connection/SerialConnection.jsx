@@ -107,6 +107,7 @@ class SerialConnection extends PureComponent {
     };
 
     componentDidMount() {
+        console.log('this.add');
         this.addControllerEvents();
 
         // refresh ports on mount
@@ -134,6 +135,7 @@ class SerialConnection extends PureComponent {
     }
 
     componentWillUnmount() {
+        console.log('this.remove');
         this.removeControllerEvents();
 
         if (this.loadingTimer) {

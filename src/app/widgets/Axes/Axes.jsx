@@ -1,10 +1,12 @@
 import map from 'lodash/map';
+import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
 
+import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
 import { controller } from '../../lib/controller';
@@ -19,8 +21,9 @@ import {
     HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
-    METRIC_UNITS,
-    WORKFLOW_STATE_IDLE
+    METRIC_UNITS, SERVER_STATUS_IDLE,
+    LASER_PRINT_MODE_AUTO, LASER_PRINT_MODE_MANUAL,
+    WORKFLOW_STATE_IDLE, SERVER_STATUS_UNKNOWN
 } from '../../constants';
 import {
     DISTANCE_MIN,
@@ -28,6 +31,7 @@ import {
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
+import { NumberInput as Input } from '../../components/Input';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -78,10 +82,13 @@ class Axes extends PureComponent {
         headType: PropTypes.string.isRequired,
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
+        serverStatus: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
         executeGcode: PropTypes.func,
         isConnected: PropTypes.bool.isRequired,
+        laserPrintMode: PropTypes.string.isRequired,
+        materialThickness: PropTypes.number.isRequired,
 
         axes: PropTypes.array.isRequired,
         speed: PropTypes.number.isRequired,
@@ -89,7 +96,8 @@ class Axes extends PureComponent {
         selectedDistance: PropTypes.string.isRequired,
         customDistance: PropTypes.number.isRequired,
 
-        updateWidgetState: PropTypes.func.isRequired
+        updateWidgetState: PropTypes.func.isRequired,
+        updateState: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -190,6 +198,16 @@ class Axes extends PureComponent {
             }
 
             this.actions.executeGcode(gcode.join('\n'));
+        },
+        onSelectMode: (mode) => {
+            this.props.updateState({
+                laserPrintMode: mode
+            });
+        },
+        onChangeMaterialThickness: (value) => {
+            this.props.updateState({
+                materialThickness: value
+            });
         }
     };
 
@@ -467,9 +485,10 @@ class Axes extends PureComponent {
     }
 
     canClick() {
-        const { isConnected, workflowState } = this.props;
-        // todo wifi need fix
-        return (isConnected && workflowState === WORKFLOW_STATE_IDLE);
+        const { isConnected, workflowState, serverStatus } = this.props;
+        return (isConnected
+            && includes([WORKFLOW_STATE_IDLE], workflowState)
+            && includes([SERVER_STATUS_IDLE, SERVER_STATUS_UNKNOWN], serverStatus));
     }
 
     render() {
@@ -484,9 +503,48 @@ class Axes extends PureComponent {
         };
 
         const { workPosition, originOffset } = this.state;
+        const { laserPrintMode, materialThickness } = this.props;
 
         return (
             <div>
+                <div
+                    className="sm-tabs"
+                    style={{
+                        'marginBottom': '10px'
+                    }}
+                >
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_AUTO) })}
+                        onClick={() => {
+                            this.actions.onSelectMode(LASER_PRINT_MODE_AUTO);
+                        }}
+                    >
+                        {i18n._('Auto Mode')}
+                    </button>
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_MANUAL) })}
+                        onClick={() => {
+                            this.actions.onSelectMode(LASER_PRINT_MODE_MANUAL);
+                        }}
+                    >
+                        {i18n._('Manual Mode')}
+                    </button>
+                </div>
+                {laserPrintMode === 'auto' && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
+                        <Input
+                            className="sm-parameter-row__input"
+                            value={materialThickness}
+                            onChange={this.actions.onChangeMaterialThickness}
+                        />
+                        <span className="sm-parameter-row__input-unit">mm</span>
+                    </div>
+                )}
                 <DisplayPanel
                     workPosition={workPosition}
                     originOffset={originOffset}
@@ -547,7 +605,7 @@ const mapStateToProps = (state, ownProps) => {
 
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, serverStatus } = machine;
+    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, serverStatus, laserPrintMode, materialThickness } = machine;
 
     return {
         port,
@@ -562,14 +620,18 @@ const mapStateToProps = (state, ownProps) => {
         speed,
         keypad,
         selectedDistance,
-        customDistance
+        customDistance,
+
+        laserPrintMode,
+        materialThickness
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
-        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
+        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value)),
+        updateState: (state) => dispatch(machineActions.updateState(state))
     };
 };
 
