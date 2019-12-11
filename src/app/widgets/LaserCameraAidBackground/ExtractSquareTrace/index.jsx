@@ -24,8 +24,7 @@ class ExtractSquareTrace extends PureComponent {
         displayManualCalibration: PropTypes.func.isRequired
     };
 
-    extractingPreview = [
-    ];
+    extractingPreview = [];
 
     state = {
         isStitched: false,
@@ -69,7 +68,6 @@ class ExtractSquareTrace extends PureComponent {
                     getPoints: getPoints
                 }
             });
-            console.log('getPoints --------------', this.props.size, getPoints, resData.corners,);
             let imagesName = new Set();
             const position = [];
             let centerDis;

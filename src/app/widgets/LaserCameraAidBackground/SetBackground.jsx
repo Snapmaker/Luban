@@ -41,31 +41,31 @@ class SetBackground extends PureComponent {
     };
 
     actions = {
-        // showModal: async () => {
-        //     const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
-        //     if (!('res' in resPro.body)) {
-        //         this.setState({
-        //             showModal: true,
-        //             panel: PANEL_NOT_CALIBRATION
-        //         });
-        //     } else if (!('points' in JSON.parse(resPro.body.res.text))) {
-        //         this.setState({
-        //             showModal: true,
-        //             panel: PANEL_NOT_CALIBRATION
-        //         });
-        //     } else {
-        //         this.setState({
-        //             showModal: true,
-        //             panel: PANEL_EXTRACT_TRACE
-        //         });
-        //     }
-        // },
-        showModal: () => {
-            this.setState({
-                showModal: true,
-                panel: PANEL_EXTRACT_TRACE
-            });
+        showModal: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            if (!('res' in resPro.body)) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else if (!('points' in JSON.parse(resPro.body.res.text))) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_EXTRACT_TRACE
+                });
+            }
         },
+        // showModal: () => {
+        //     this.setState({
+        //         showModal: true,
+        //         panel: PANEL_EXTRACT_TRACE
+        //     });
+        // },
         hideModal: () => {
             this.setState({
                 showModal: false

@@ -21,14 +21,11 @@ class ManualCalibration extends PureComponent {
         updateAffinePoints: PropTypes.func.isRequired
     };
 
-    fileInput = React.createRef();
-
     calibrationPreview = React.createRef();
 
     state = {
         width: 1024,
         height: 1280
-        // getPoints: []
     };
 
     actions = {
@@ -61,8 +58,7 @@ class ManualCalibration extends PureComponent {
                     matrix.points[i].x = Math.floor(this.props.getPoints[i].x);
                     matrix.points[i].y = Math.floor(this.props.getPoints[i].y);
                 }
-                const res = await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
-                console.log('res', JSON.parse(res.text).status);
+                await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
             }
         }
     };
