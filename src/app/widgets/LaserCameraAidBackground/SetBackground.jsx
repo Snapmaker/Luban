@@ -1,26 +1,29 @@
-import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { connect } from 'react-redux';
-
+import styles from './styles.styl';
+import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
+import Space from '../../components/Space';
 
 import { actions } from '../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
-import Instructions from './Instructions';
+import ManualCalibration from './ManualCalibration';
 
 const PANEL_EXTRACT_TRACE = 1;
+const PANEL_MANUAL_CALIBRATION = 2;
+const PANEL_NOT_CALIBRATION = 3;
 
 class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        isLaser: PropTypes.bool.isRequired,
-        showInstructions: PropTypes.bool.isRequired,
-        actions: PropTypes.object.isRequired,
+        hasBackground: PropTypes.bool.isRequired,
+        // isLaser: PropTypes.bool.isRequired,
+        server: PropTypes.object.isRequired,
 
         // redux
         size: PropTypes.object.isRequired,
@@ -30,22 +33,39 @@ class SetBackground extends PureComponent {
 
     state = {
         showModal: false,
-        // shouldStopAction: false,
+        showCalibrationModal: true,
         panel: PANEL_EXTRACT_TRACE,
-
-        // print trace settings
-        maxSideLength: Math.min(this.props.size.x, this.props.size.y),
-        minSideLength: 40,
-        sideLength: 100
+        shouldCalibrate: false,
+        matrix: '',
+        getPoints: []
     };
 
     actions = {
-        showModal: () => {
-            this.setState({
-                showModal: true,
-                panel: PANEL_EXTRACT_TRACE
-            });
+        showModal: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            if (!('res' in resPro.body)) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else if (!('points' in JSON.parse(resPro.body.res.text))) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_NOT_CALIBRATION
+                });
+            } else {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_EXTRACT_TRACE
+                });
+            }
         },
+        // showModal: () => {
+        //     this.setState({
+        //         showModal: true,
+        //         panel: PANEL_EXTRACT_TRACE
+        //     });
+        // },
         hideModal: () => {
             this.setState({
                 showModal: false
@@ -57,82 +77,118 @@ class SetBackground extends PureComponent {
 
             this.actions.hideModal();
         },
+        calibrationOnOff: (shouldCalibrate) => {
+            this.setState({
+                shouldCalibrate
+            });
+        },
+        updateAffinePoints: (getPoints) => {
+            this.setState({
+                getPoints
+            });
+        },
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
         },
-        checkConnectionStatus: () => {
-            const { isConnected, isLaser } = this.props;
 
-            if (isConnected && isLaser) {
-                return true;
-            }
-
-            modal({
-                title: i18n._('Information'),
-                body: i18n._('Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
+        displayExtractTrace: () => {
+            this.setState({ panel: PANEL_EXTRACT_TRACE });
+        },
+        displayManualCalibration: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            const res = JSON.parse(resPro.body.res.text);
+            this.setState({
+                getPoints: res.points,
+                matrix: res,
+                panel: PANEL_MANUAL_CALIBRATION
             });
-            return false;
-        },
-        changeSideLength: (sideLength) => {
-            this.setState({ sideLength });
-        },
-        changeFilename: (filename) => {
-            this.setState({ filename });
         }
+
+
     };
 
-    componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.props.size)) {
-            const size = nextProps.size;
-            const maxSideLength = Math.min(size.x, size.y);
-            const minSideLength = Math.min(40, maxSideLength);
-            const sideLength = Math.min(maxSideLength, Math.max(minSideLength, this.state.sideLength));
-            this.setState({
-                sideLength,
-                minSideLength,
-                maxSideLength
-            });
-        }
+    componentDidMount() {
     }
+
 
     render() {
         const state = { ...this.state };
-        const { showInstructions, connectionType, isConnected } = this.props;
-        // let extractingPreview;
-        // if (series === 'A150') {
-        //     extractingPreview = 4;
-        // } else {
-        //     extractingPreview = 9;
-        // }
+        const { connectionType, isConnected, hasBackground } = this.props;
         return (
             <React.Fragment>
-                {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
-                    <Modal style={{ width: '500px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
-                            {state.panel === PANEL_EXTRACT_TRACE && (
+                    <Modal style={{ width: '800px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
+                        {state.panel === PANEL_EXTRACT_TRACE && (
+                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                                 <ExtractSquareTrace
+                                    shouldCalibrate={this.state.shouldCalibrate}
+                                    getPoints={this.state.getPoints}
                                     setBackgroundImage={this.actions.setBackgroundImage}
+                                    displayManualCalibration={this.actions.displayManualCalibration}
                                 />
-                            )}
-                        </Modal.Body>
+                            </Modal.Body>
+
+                        )}
+                        {state.panel === PANEL_MANUAL_CALIBRATION && (
+                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                                <ManualCalibration
+                                    getPoints={this.state.getPoints}
+                                    matrix={this.state.matrix}
+                                    shouldCalibrate={this.state.shouldCalibrate}
+                                    displayExtractTrace={this.actions.displayExtractTrace}
+                                    calibrationOnOff={this.actions.calibrationOnOff}
+                                    updateAffinePoints={this.actions.updateAffinePoints}
+                                />
+                            </Modal.Body>
+                        )}
+                        {state.panel === PANEL_NOT_CALIBRATION && (
+                            <div>
+                                <Modal.Header>
+                                    <Modal.Title>
+                                        {i18n._('Warning')}
+                                    </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                                    <div>
+                                        {i18n._('Imformation')}
+                                        <br />
+                                        <Space width={4} />
+                                        {i18n._('The screen haven\'t  calibrated yet. Please go to the screen to execute camera calibration before any movement.')}
+                                    </div>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                    <div style={{ display: 'inline-block', marginRight: '8px' }}>
+                                        <input
+                                            type="checkbox"
+                                            defaultChecked={false}
+                                        />
+                                        <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
+                                    </div>
+                                </Modal.Footer>
+                            </div>
+                        )}
                     </Modal>
                 )}
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-default"
+                    className={classNames(
+                        'sm-btn-large',
+                        'sm-btn-default',
+                        styles['btn-addbackground'],
+                    )}
                     onClick={this.actions.showModal}
-                    disabled={connectionType !== CONNECTION_TYPE_WIFI || !isConnected}
-                    style={{ display: 'block', width: '100%' }}
+                    style={{ display: (connectionType !== CONNECTION_TYPE_WIFI || !isConnected || hasBackground) ? 'none' : 'block' }}
                 >
                     {i18n._('Add Background')}
                 </button>
                 <button
                     type="button"
-                    className="sm-btn-large sm-btn-default"
+                    className={classNames(
+                        'sm-btn-large',
+                        styles['btn-removebackground'],
+                    )}
+                    style={{ display: hasBackground ? 'block' : 'none' }}
                     onClick={this.actions.removeBackgroundImage}
-                    disabled={!isConnected}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
                 </button>
@@ -143,9 +199,12 @@ class SetBackground extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const laser = state.laser;
     return {
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
+        server: machine.server,
+        hasBackground: laser.background.enabled,
         size: machine.size
     };
 };

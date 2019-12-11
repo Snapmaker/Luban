@@ -254,6 +254,7 @@ const createApplication = () => {
     // register http service api
     registerApis(app);
     // Also see "src/app/app.js"
+
     // page
     app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
         const webroot = settings.assets.app.routes[0] || ''; // with trailing slash

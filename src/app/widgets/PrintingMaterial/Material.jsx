@@ -78,7 +78,7 @@ class Material extends PureComponent {
             this.props.updateDefinitionSettings(definition, {
                 [key]: { default_value: value }
             });
-
+            console.log('inside onchangedefinition', definition);
             this.props.updateActiveDefinition(definition);
         },
         onDuplicateMaterialDefinition: async () => {

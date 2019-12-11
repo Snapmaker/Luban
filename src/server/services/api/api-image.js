@@ -11,7 +11,7 @@ import trace from '../../lib/image-trace';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
-import { getCameraCalibration, getPhoto, takePhoto } from '../../lib/image-getPhoto';
+import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
 
 
 const log = logger('api:image');
@@ -220,6 +220,21 @@ export const processGetPhoto = (req, res) => {
         });
 };
 
+export const cameraCalibrationPhoto = (req, res) => {
+    const options = req.body;
+
+    calibrationPhoto(options)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
 export const getCameraCalibrationApi = (req, res) => {
     const options = req.body;
 
@@ -239,6 +254,19 @@ export const processTakePhoto = (req, res) => {
     const options = req.body;
 
     takePhoto(options)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+export const setCameraCalibrationMatrix = (req, res) => {
+    const options = req.body;
+    setMatrix(options)
         .then((result) => {
             res.send(result);
         })

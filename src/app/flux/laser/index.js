@@ -108,7 +108,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);
-        // dispatch(actions.setBackgroundEnabled(true));
+        dispatch(actions.setBackgroundEnabled(true));
     },
 
     removeBackgroundImage: () => (dispatch, getState) => {
