@@ -31,6 +31,7 @@ class Output extends PureComponent {
         isAnyModelOverstepped: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
+        addGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
 
@@ -61,6 +62,14 @@ class Output extends PureComponent {
             jQuery.get(gcodePath, (result) => {
                 this.props.clearGcode();
                 this.props.addGcode(filename, result);
+
+                this.props.addGcodeFile({
+                    name: filename,
+                    uploadName: filename,
+                    size: result.length,
+                    lastModifiedDate: new Date(),
+                    img: this.thumbnail.current.getDataURL()
+                });
             });
         },
         onClickExportGcode: () => {
@@ -224,6 +233,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         generateGcode: (thumbnail) => dispatch(printingActions.generateGcode(thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+        addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
         clearGcode: () => dispatch(workspaceActions.clearGcode())
     };
 };

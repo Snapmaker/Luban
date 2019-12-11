@@ -20,6 +20,7 @@ import CNCOutputWidget from './CNCOutput';
 import PrintingMaterialWidget from './PrintingMaterial';
 import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
+import WifiTransport from './WifiTransport';
 
 
 const getWidgetByName = (name) => {
@@ -35,6 +36,7 @@ const getWidgetByName = (name) => {
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
+        'wifi-transport': WifiTransport,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,

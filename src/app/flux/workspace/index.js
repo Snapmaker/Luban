@@ -1,5 +1,6 @@
 // Reducer for Workspace
 import path from 'path';
+import * as THREE from 'three';
 import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
@@ -11,7 +12,14 @@ const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
     gcodeList: [],
-    uploadState: 'idle' // uploading, uploaded
+    uploadState: 'idle', // uploading, uploaded
+    gcodeFiles: [],
+
+
+    background: {
+        enabled: false,
+        group: new THREE.Group()
+    }
 };
 
 
@@ -68,6 +76,19 @@ export const actions = {
         };
     },
 
+    addGcodeFile: (fileInfo) => (dispatch, getState) => {
+        const { gcodeFiles } = getState().workspace;
+        const files = [];
+        files.push(fileInfo);
+        const len = Math.min(gcodeFiles.length, 4);
+        for (let i = 0; i < len; i++) {
+            files.push(gcodeFiles[i]);
+        }
+        dispatch(actions.updateState({
+            gcodeFiles: files
+        }));
+    },
+
     // Clear G-code list
     clearGcode: () => {
         return actions.updateState({ gcodeList: [] });
@@ -89,6 +110,22 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         // TODO: unload G-code in controller
         dispatch(actions.updateState({ uploadState: 'idle' }));
+    },
+
+    removeBackgroundImage: () => (dispatch, getState) => {
+        const state = getState().workspace;
+        const { group } = state.background;
+        group.remove(...group.children);
+    },
+
+    loadBackgroundToWorkspace: (background) => (dispatch, getState) => {
+        const workspaceBackgroundGroup = getState().workspace.background.group;
+        const backgroundGroup = background.group;
+
+        workspaceBackgroundGroup.remove(...workspaceBackgroundGroup.children);
+        for (const child of backgroundGroup.children) {
+            workspaceBackgroundGroup.add(child.clone());
+        }
     }
 };
 
