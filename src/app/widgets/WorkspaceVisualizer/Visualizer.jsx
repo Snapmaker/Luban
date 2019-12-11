@@ -54,7 +54,8 @@ class Visualizer extends Component {
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
-        unloadGcode: PropTypes.func.isRequired
+        unloadGcode: PropTypes.func.isRequired,
+        backgroundGroup: PropTypes.object.isRequired
     };
 
     printableArea = null;
@@ -790,6 +791,7 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
+                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
@@ -844,7 +846,8 @@ const mapStateToProps = (state) => {
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
-        gcodeList: workspace.gcodeList
+        gcodeList: workspace.gcodeList,
+        backgroundGroup: workspace.background.group
     };
 };
 
