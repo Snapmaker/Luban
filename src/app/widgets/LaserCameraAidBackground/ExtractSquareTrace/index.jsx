@@ -7,16 +7,21 @@ import i18n from '../../../lib/i18n';
 import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
-import Anchor from '../../../components/Anchor';
 import { MACHINE_SERIES } from '../../../constants';
 
+
+const PANEL_MANUAL_CALIBRATION = 2;
+const DefaultBgiName = '../../../images/snap-logo-badge-256x256.png';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired
+        shouldCalibrate: PropTypes.bool.isRequired,
+        getPoints: PropTypes.array.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired,
+        displayManualCalibration: PropTypes.func.isRequired
     };
 
     extractingPreview = [
@@ -25,6 +30,7 @@ class ExtractSquareTrace extends PureComponent {
     state = {
         isStitched: false,
         canTakePhoto: true,
+        canStart: true,
         outputFilename: '',
         options: {
             picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
@@ -48,19 +54,22 @@ class ExtractSquareTrace extends PureComponent {
                 return;
             }
             this.setState({
+                canStart: false,
                 canTakePhoto: false
             });
             const { address } = this.props.server;
             const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
 
+            const getPoints = (this.props.shouldCalibrate && this.props.getPoints.length === 4) ? this.props.getPoints : resData.points;
             this.setState({
                 options: {
                     ...this.state.options,
                     corners: resData.corners,
-                    getPoints: resData.points
+                    getPoints: getPoints
                 }
             });
+            console.log('getPoints --------------', this.props.size, getPoints, resData.corners,);
             let imagesName = new Set();
             const position = [];
             let centerDis;
@@ -108,7 +117,6 @@ class ExtractSquareTrace extends PureComponent {
                     currentArrIndex: 0
                 }
             });
-
             // parse 2
 
             let idx = 0;
@@ -126,6 +134,24 @@ class ExtractSquareTrace extends PureComponent {
                 });
 
                 let requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
+                let xSize, ySize;
+                if (this.state.options.picAmount === 4) {
+                    xSize = this.props.size.x / 2;
+                    ySize = this.props.size.y / 2;
+                } else {
+                    if (parseInt(position[i].index / 3, 10) === 1) {
+                        ySize = centerDis;
+                    } else {
+                        ySize = Math.floor((this.props.size.y - centerDis) / 2);
+                    }
+                    if (position[i].index % 3 === 1) {
+                        xSize = centerDis;
+                    } else {
+                        xSize = Math.floor((this.props.size.x - centerDis) / 2);
+                    }
+                }
+                this.extractingPreview[position[i].index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, position[i].index);
+
                 let requestPicStatus = false;
                 this.setState({
                     options: {
@@ -175,11 +201,12 @@ class ExtractSquareTrace extends PureComponent {
                                 }
                             });
                             imagesName.add(fileName);
-                            api.processStitchEach(this.state.options).then((stitchImg) => {
-                                const { filename, xSize, ySize } = JSON.parse(stitchImg.text);
 
+
+                            api.processStitchEach(this.state.options).then((stitchImg) => {
+                                const { filename } = JSON.parse(stitchImg.text);
                                 if (this.extractingPreview[position[i].index].current) {
-                                    this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize, ySize, position[i].index);
+                                    this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize * 2, ySize * 2, position[i].index);
                                 }
                             });
                             idx++;
@@ -199,6 +226,9 @@ class ExtractSquareTrace extends PureComponent {
         },
         setBackgroundImage: () => {
             this.props.setBackgroundImage(this.state.outputFilename);
+        },
+        displayManualCalibration: () => {
+            this.props.displayManualCalibration({ panel: PANEL_MANUAL_CALIBRATION });
         }
     };
 
@@ -230,9 +260,9 @@ class ExtractSquareTrace extends PureComponent {
             <div>
                 <div className="clearfix" />
                 <div className={styles['laser-set-background-modal-title']}>
-                    {i18n._('Extract Square Trace')}
+                    {i18n._('Camera Aid Background')}
                 </div>
-                <div className={styles['photo-display']} style={{ height: this.props.size.y, width: this.props.size.x }}>
+                <div className={styles['photo-display']} style={{ height: this.props.size.y * 2 + 2, width: this.props.size.x * 2 + 2 }}>
                     {this.extractingPreview.map((previewId, index) => {
                         const key = previewId + index;
                         return (
@@ -244,32 +274,52 @@ class ExtractSquareTrace extends PureComponent {
                             />
                         );
                     })}
-                </div>
-                <div className={styles['extract-background']}>
-                    <div className={classNames(styles['extract-actions'])}>
-                        <Anchor
-                            className={this.state.canTakePhoto ? styles['extract-actions__btn'] : styles['extract-actions__disable']}
+                    <div
+                        className={styles['start-background']}
+                        style={{ display: this.state.canStart ? 'block' : 'none', width: '100%' }}
 
+                    >
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary start-actions"
                             onClick={this.actions.startCameraAid}
+                            style={{ display: 'block', width: '50%', margin: 'auto' }}
+
                         >
-                            <i className={styles['extract-actions__icon-reset']} />
-                        </Anchor>
-                        <span
-                            className={styles['extract-actions__text']}
+                            {i18n._('Start')}
+                        </button>
+                        <div
+                            style={{ textAlign: 'center' }}
                         >
-                            {i18n._('Take Photo')}
-                        </span>
+                            {i18n._('Type Something')}
+                        </div>
                     </div>
                 </div>
-                <div style={{ margin: '0 60px' }}>
+                <div style={{ margin: '0 60px', minHeight: '30px' }}>
+
+                    <div className="clearfix" />
                     <button
                         type="button"
-                        className="sm-btn-large sm-btn-primary"
+                        className={classNames(
+                            'sm-btn-large',
+                            styles[this.state.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
+                        )}
+                        onClick={this.actions.displayManualCalibration}
+                        disabled={!this.state.canTakePhoto}
+
+                    >
+                        {i18n._('Calibration')}
+                    </button>
+                    <button
+                        type="button"
+                        className={classNames(
+                            'sm-btn-large',
+                            styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                        )}
                         onClick={this.actions.setBackgroundImage}
                         disabled={!this.state.isStitched}
-                        style={{ width: '50%', margin: '0 auto', display: 'block' }}
                     >
-                        {i18n._('Complete')}
+                        {i18n._('Comfirm')}
                     </button>
                 </div>
             </div>

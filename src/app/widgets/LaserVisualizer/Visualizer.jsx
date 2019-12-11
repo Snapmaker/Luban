@@ -17,6 +17,7 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 
 
@@ -280,6 +281,9 @@ class Visualizer extends Component {
             >
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft />
+                </div>
+                <div className={styles['visualizer-top-right']}>
+                    <VisualizerTopRight />
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
