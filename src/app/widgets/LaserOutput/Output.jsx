@@ -10,6 +10,7 @@ import i18n from '../../lib/i18n';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
+import api from '../../api';
 
 
 class Output extends PureComponent {
@@ -18,6 +19,7 @@ class Output extends PureComponent {
         minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
+        background: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
@@ -26,9 +28,11 @@ class Output extends PureComponent {
         gcodeBeans: PropTypes.array.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
+        addGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired
+        setAutoPreview: PropTypes.func.isRequired,
+        loadBackgroundToWorkspace: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -55,11 +59,48 @@ class Output extends PureComponent {
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                this.props.addGcode('laser engrave object(s).nc', gcode, renderMethod);
+                const fileName = `${gcodeBeans[i].modelInfo.originalName}${LASER_GCODE_SUFFIX}`;
+                this.props.addGcode(fileName, gcode, renderMethod);
             }
 
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
+
+            this.actions.onSaveGcode();
+
+            this.props.loadBackgroundToWorkspace(this.props.background);
+        },
+        onSaveGcode: () => {
+            const { gcodeBeans } = this.props;
+            if (gcodeBeans.length === 0) {
+                return;
+            }
+
+            const gcodeArr = [];
+            for (let i = 0; i < gcodeBeans.length; i++) {
+                const { gcode } = gcodeBeans[i];
+                gcodeArr.push(gcode);
+            }
+            const gcodeStr = gcodeArr.join('\n');
+            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
+            const fileName = `${gcodeBeans[0].modelInfo.originalName}${LASER_GCODE_SUFFIX}`;
+            const file = new File([blob], fileName);
+            const formData = new FormData();
+            formData.append('file', file);
+            api.uploadFile(formData).then((res) => {
+                const response = res.body;
+                this.props.addGcodeFile({
+                    name: fileName,
+                    uploadName: response.uploadName,
+                    size: file.size,
+                    lastModifiedDate: file.lastModifiedDate,
+                    img: gcodeBeans[0].img
+                });
+            }).catch(() => {
+                // Ignore error
+            });
+
+            // api.saveFile(formData);
         },
         onExport: () => {
             const { gcodeBeans } = this.props;
@@ -165,7 +206,7 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup } = state.laser;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, background } = state.laser;
     return {
         modelGroup,
         isGcodeGenerated,
@@ -173,7 +214,8 @@ const mapStateToProps = (state) => {
         gcodeBeans,
         isAllModelsPreviewed,
         previewFailed,
-        autoPreviewEnabled
+        autoPreviewEnabled,
+        background
     };
 };
 
@@ -181,9 +223,11 @@ const mapDispatchToProps = (dispatch) => {
     return {
         generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('laser', thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+        addGcodeFile: (fileName) => dispatch(workspaceActions.addGcodeFile(fileName)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         manualPreview: () => dispatch(sharedActions.manualPreview('laser')),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value)),
+        loadBackgroundToWorkspace: (background) => dispatch(workspaceActions.loadBackgroundToWorkspace(background))
     };
 };
 

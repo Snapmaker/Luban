@@ -374,6 +374,7 @@ export const actions = {
         headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
 
         gcodeBeans[0].gcode = `${headerStart}\n${gcodeBeans[0].gcode}`;
+        gcodeBeans[0].img = thumbnail;
 
         dispatch(actions.updateState(
             from,
