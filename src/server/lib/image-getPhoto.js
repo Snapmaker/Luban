@@ -1,4 +1,5 @@
 import request from 'superagent';
+import Jimp from 'jimp';
 import { pathWithRandomSuffix } from './random-utils';
 import DataStorage from '../DataStorage';
 
@@ -52,6 +53,41 @@ export const getPhoto = (options) => {
                     });
                 });
             }
+        });
+    });
+};
+
+export const calibrationPhoto = (options) => {
+    const { address } = options;
+    const api = `http://${address}:8080/api/v1/camera_calibration_photo`;
+    return new Promise((resolve) => {
+        request.get(api).end((err, res) => {
+            let fileName = 'calibration.jpg';
+            fileName = pathWithRandomSuffix(fileName);
+            fs.writeFile(`${DataStorage.tmpDir}/${fileName}`, res.body, () => {
+                Jimp.read(`${DataStorage.tmpDir}/${fileName}`).then((image) => {
+                    const { width, height } = image.bitmap;
+                    resolve({
+                        fileName,
+                        width,
+                        height
+                    });
+                });
+            });
+        });
+    });
+};
+
+export const setMatrix = (options) => {
+    const { matrix, address } = options;
+    console.log('setMatrix>>>>', matrix, address);
+    let api = `http://${address}:8080/api/set_camera_calibration_matrix`;
+    api += `?matrix=${matrix}`;
+    return new Promise((resolve) => {
+        request.post(api).end((err, res) => {
+            resolve({
+                res
+            });
         });
     });
 };

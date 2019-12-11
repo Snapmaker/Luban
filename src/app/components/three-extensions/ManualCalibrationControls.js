@@ -15,7 +15,7 @@ import ThreeUtils from './ThreeUtils';
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
  */
-THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, cornerPositions) {
+THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions) {
     THREE.Object3D.call(this);
 
     this.position.z = 0.1;
@@ -26,8 +26,8 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
     if (!remapBox2) {
         // TODO: hardcoded bound size
         remapBox2 = new THREE.Box2(
-            new THREE.Vector2(-initialSize / 2, -initialSize / 2),
-            new THREE.Vector2(initialSize / 2, initialSize / 2)
+            new THREE.Vector2(0, 0),
+            new THREE.Vector2(initialSize, initialSize)
         );
     }
 
@@ -53,19 +53,19 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
 
     function generateGizmo() {
         const gizmo = new THREE.Mesh(
-            new THREE.PlaneGeometry(10, 10),
+            new THREE.PlaneGeometry(30, 30),
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
 
         // TODO: make the circle transparent so we can see beneath engrave trace
         {
-            const geometry = new THREE.CircleGeometry(2.5, 64);
+            const geometry = new THREE.CircleGeometry(scale * 10, 64);
             const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
             const circle = new THREE.Mesh(geometry, material);
             gizmo.add(circle);
         }
         {
-            const geometry = new THREE.CircleGeometry(1.8, 64);
+            const geometry = new THREE.CircleGeometry(scale * 7.2, 64);
             const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
             const circle = new THREE.Mesh(geometry, material);
             gizmo.add(circle);
@@ -117,19 +117,33 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
         updateDashedLine();
     }
 
-    function updateSize(size) {
-        remapBox2 = new THREE.Box2(
-            new THREE.Vector2(-size.x / 2, -size.y / 2),
-            new THREE.Vector2(size.x / 2, size.y / 2)
-        );
+    function ensureRange(point, min, max) {
+        point = point > max ? max : point;
+        point = point < min ? min : point;
+        return point;
+    }
 
-        const padding = 5;
+    function updateRectangleSize(pointArray, width, height) {
+        remapBox2 = new THREE.Box2(
+            new THREE.Vector2(-width / 2, -height / 2),
+            new THREE.Vector2(width / 2, height / 2)
+        );
+        const [leftBottomX, leftBottomY] = [ensureRange(pointArray[3].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[3].y - height / 2), -height / 2, 0)];
+        const [rightBottomX, rightBottomY] = [ensureRange(pointArray[2].x - width / 2, 0, width / 2), ensureRange(-(pointArray[2].y - height / 2), -height / 2, 0)];
+        const [rightTopX, rightTopY] = [ensureRange(pointArray[1].x - width / 2, 0, width / 2), ensureRange(-(pointArray[1].y - height / 2), 0, height / 2)];
+        const [leftTopX, leftTopY] = [ensureRange(pointArray[0].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[0].y - height / 2), 0, height / 2)];
         cornerPositions = {
-            leftTop: new THREE.Vector3(-size.x / 2 + padding, size.y / 2 - padding, 0),
-            leftBottom: new THREE.Vector3(-size.x / 2 + padding, -size.y / 2 + padding, 0),
-            rightBottom: new THREE.Vector3(size.x / 2 - padding, -size.y / 2 + padding, 0),
-            rightTop: new THREE.Vector3(size.x / 2 - padding, size.y / 2 - padding, 0)
+            leftTop: new THREE.Vector3(leftTopX, leftTopY, 0),
+            rightTop: new THREE.Vector3(rightTopX, rightTopY, 0),
+            rightBottom: new THREE.Vector3(rightBottomX, rightBottomY, 0),
+            leftBottom: new THREE.Vector3(leftBottomX, leftBottomY, 0)
         };
+        // cornerPositions = {
+        //     leftTop: new THREE.Vector3((pointArray[0].x - width / 2), -(pointArray[0].y - height / 2), 0),
+        //     rightTop: new THREE.Vector3((pointArray[1].x - width / 2), -(pointArray[1].y - height / 2), 0),
+        //     rightBottom: new THREE.Vector3((pointArray[2].x - width / 2), -(pointArray[2].y - height / 2), 0),
+        //     leftBottom: new THREE.Vector3((pointArray[3].x - width / 2), -(pointArray[3].y - height / 2), 0)
+        // };
     }
 
 
@@ -259,13 +273,13 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
 
     // API
     this.dispose = dispose;
-    this.updateSize = updateSize;
+    this.updateRectangleSize = updateRectangleSize;
     this.getCornerPositions = getCornerPositions;
     this.resetCornerPositions = resetCornerPositions;
 };
 
-THREE.ExtractControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
-    constructor: THREE.ExtractControls
+THREE.ManualCalibrationControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
+    constructor: THREE.ManualCalibrationControls
 });
 
-export default THREE.ExtractControls;
+export default THREE.ManualCalibrationControls;

@@ -1,0 +1,170 @@
+.caselibrary {
+    padding: 50px 0 0 50px;
+}
+
+.container {
+    display: table;
+    width: 100%;
+
+    // https://www.w3.org/TR/CSS21/visudet.html#min-max-heights
+    // In CSS 2.1, the effect of 'min-height' and 'max-height' on tables, inline tables, table cells, table rows, and row groups is undefined.
+    margin-bottom: 50px
+
+    .mainTitle{
+      font-size: 30px;
+    }
+
+    &.usecase {
+      border: 1px solid #ccc;
+      width: 70%
+      .columns{
+        display: flex;
+        justify-content: space-between
+        .column{
+          width: 30%;
+          border-width: 1px;
+          border-style: solid;
+          border-color: #e6e6e6;
+          border-radius: 4px;
+          overflow: hidden;
+          padding: 8px;
+          -webkit-box-shadow: 0px 0px 5px #999999;
+          box-shadow: 0px 0px 5px #999999;
+          .imgIcon{
+            display: block
+            width: 384px
+          }
+          .cardtext{
+            padding: 1.25rem 1.5rem;
+            h4{
+              font-size: 20px;
+              margin-bottom: 2rem;
+            }
+            p{
+              margin-top: -1.5rem;
+              font-size: 14px;
+              color: #808080;
+            }
+          }
+        }
+      }
+    }
+
+    &.videoTutorials {
+      border: 1px solid #ccc;
+      width: 70%
+      .columns{
+        display: flex;
+        justify-content: space-between
+        .column{
+          width: 25%;
+          border-width: 1px;
+          border-style: solid;
+          border-color: #e6e6e6;
+          border-radius: 4px;
+          overflow: hidden;
+          padding: 8px;
+          -webkit-box-shadow: 0px 0px 5px #999999;
+          box-shadow: 0px 0px 5px #999999;
+          .imgIcon{
+            display: block
+            width: 200px
+          }
+          h4{
+            text-align: center;
+            font-size: 1rem;
+            color: #808080;
+          }
+          .cardtext{
+            width: 200px;
+            font-size: 14px;
+            color: #808080;
+            margin: 0 auto
+          }
+        }
+      }
+    }
+}
+
+.row {
+    display: table-row;
+}
+
+.col {
+    display: table-cell;
+}
+
+.navbar {
+    position: relative;
+}
+
+.nav {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+
+    > li {
+        position: relative;
+        display: block;
+
+        > a {
+            position: relative;
+            display: block;
+            padding: 5px 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            color: #000;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        > a:focus,
+        > a:hover {
+            color: #cc0000;
+        }
+    }
+    > li.active {
+        > a,
+        > a:focus,
+        > a:hover {
+            color: #fff;
+            background-color: #999;
+        }
+    }
+}
+
+//
+// Left Pane
+//
+.sidenav {
+    width: 200px;
+    background-color: #f5f5f5;
+}
+
+//
+// Splitter
+//
+.splitter {
+    width: (5 + 2)px;
+    min-width: (5 + 2)px;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}
+
+//
+// Right Pane
+//
+.section {
+    vertical-align: top;
+    position: relative;
+
+    .heading {
+        color: #fff;
+        background-color: #999;
+        padding: 5px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .content {
+        padding: 15px;
+    }
+}

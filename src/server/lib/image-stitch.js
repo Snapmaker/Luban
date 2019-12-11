@@ -47,12 +47,12 @@ export const stitchEach = async (options) => {
     if (parseInt(currentIndex / 3, 10) === 1) {
         ySize = d;
     } else {
-        ySize = (size.y - d) / 2;
+        ySize = Math.floor((size.y - d) / 2);
     }
     if (currentIndex % 3 === 1) {
         xSize = d;
     } else {
-        xSize = (size.x - d) / 2;
+        xSize = Math.floor((size.x - d) / 2);
     }
 
     if (picAmount === 4) {
@@ -81,8 +81,8 @@ export const stitchEach = async (options) => {
         if (currentIndex % 3 === 0) {
             endxSize = size.x - xSize;
         } else if (currentIndex % 3 === 1) {
-            startxSize = (size.x - xSize) / 2;
-            endxSize = (size.x + xSize) / 2;
+            startxSize = Math.floor((size.x - xSize) / 2);
+            endxSize = Math.floor((size.x + xSize) / 2);
         } else if (currentIndex % 3 === 2) {
             startxSize = size.x - xSize;
         }

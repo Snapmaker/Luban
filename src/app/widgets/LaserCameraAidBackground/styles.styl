@@ -44,47 +44,104 @@
     margin-top: 0
     color: $dark-blue-color
 
+.btn-addbackground
+  position: absolute
+  top: 0
+  width: 100%
+  right: 0
+  min-width: 149.5px
+.btn-removebackground
+  position: absolute
+  top: 0
+  width: 100%
+  right: 0
+  min-width: 149.5px
+  background-color: #fff;
+  color: #D0021B;
+  border-color: #D0021B
+  &:hover
+    background-color: #28a7e1
+
 .laser-set-background-modal-title
     display: block
     font: bold 24px "Arial Black", Gadget, sans-serif
-    margin: 15px 0
-    text-align: center
+    margin: -25px 0 25px 0
+    text-align: left
 .photo-display
     margin: auto
     position: relative
-  
-    div:nth-child(){
-
-    }
+    border: 1px solid #ccc
+    box-sizing:border-box
 
 .laser-extract-previous
     display: inline-block
 
     img
       vertical-align: top
-.extract-background
+.start-background
+    position: absolute
+    top: 50%
+    left: 50%
+    width: 200px
+    transform: translate(-50%,-50%)
+
+    .start-actions
+        display: block
+
+        &:hover
+            border: 1px solid $dark-blue-color
+
+.btn-camera
+   position: absolute
+   width: 20%
+   left: 5%
+   background-color: #fff
+   color: #088fcd
+   border-color: #088fcd
+   margin: 10px 0 0 0
+   &:hover
+     background-color:$dark-blue-color
+     color: #fff
+.btn-right-camera
+   position: absolute
+   width: 20%
+   right: 5%
+   border-color: #088fcd
+   background-color: #28a7e1
+   color: #fff
+   margin: 10px 0 0 0
+   &:hover
+     background-color:$dark-blue-color
+     color: #fff
+.btn-camera-disabled
+   position: absolute
+   width: 20%
+   left: 5%
+   color: #fff
+   background-color: #DBDBDB
+   margin: 10px 0 0 0
+.btn-right-camera-disabled
+   position: absolute
+   width: 20%
+   right: 5%
+   color: #fff
+   background-color: #DBDBDB
+   margin: 10px 0 0 0
+.calibrate-background
     display: block
     height: 74px
     width: 400px
-    margin: 10px auto
+    margin: 20px auto
     border: 1px solid $grey-color2
-    vertical-align: top
-
 
     .extract-actions
         display: inline-block
-        width: 100%
+        width: 50%
         height: 100%
         border: 1px solid transparent
+
         &__btn
             display: block
-            > i
-                display: block
-                margin-top: 8px
-                width: 100%
-                height: 40px
-        &__disable
-            cursor: not-allowed
 
             > i
                 display: block
