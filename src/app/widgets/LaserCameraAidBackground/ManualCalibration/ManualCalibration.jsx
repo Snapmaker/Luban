@@ -90,7 +90,7 @@ class ManualCalibration extends Component {
         event.stopPropagation();
 
         this.handleMouseWheel(event);
-    }
+    };
 
     onMouseDown = (event) => {
         event.preventDefault();
@@ -100,7 +100,7 @@ class ManualCalibration extends Component {
             document.addEventListener('mousemove', this.onDocumentMouseMove, false);
             document.addEventListener('mouseup', this.onDocumentMouseUp, false);
         }
-    }
+    };
 
     onDocumentMouseMove = (event) => {
         // Coordinate axis adaptation
@@ -110,7 +110,7 @@ class ManualCalibration extends Component {
             x: this.offset.x + offsetX,
             y: this.offset.y + offsetY
         };
-    }
+    };
 
     onDocumentMouseUp = (event) => {
         if (this.translatePosition.x - event.clientX !== 0 || this.translatePosition.y - event.clientY !== 0) {
@@ -121,7 +121,7 @@ class ManualCalibration extends Component {
         }
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
-    }
+    };
 
 
     setupThreejs() {
@@ -191,7 +191,9 @@ class ManualCalibration extends Component {
         const { width, height } = this.props;
         if (event.deltaY < 0) {
             this.scale /= 1.05;
-            this.camera.position.set(event.offsetX * 2 - width / 2, height / 2 - event.offsetY * 2, Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
+            this.camera.position.set(event.offsetX * 2 - width / 2,
+                height / 2 - event.offsetY * 2,
+                Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
         } else if (this.scale < 1 && event.deltaY > 0) {
             this.scale *= 1.05;
             this.camera.position.set(
@@ -207,7 +209,7 @@ class ManualCalibration extends Component {
                 };
             }
         }
-    }
+    };
 
     animate = () => {
         this.renderScene();

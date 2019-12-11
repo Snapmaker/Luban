@@ -5,17 +5,16 @@ import { DATA_PREFIX, MACHINE_SERIES } from '../../../constants';
 import styles from '../styles.styl';
 
 class ExtractPreview extends Component {
+    static propTypes = {
+        size: PropTypes.object.isRequired,
+        series: PropTypes.string.isRequired
+    };
+
     state = {
         src: '/',
         filename: '',
         width: '',
-        bgImage: '',
         height: ''
-    };
-
-    static propTypes = {
-        size: PropTypes.object.isRequired,
-        series: PropTypes.string.isRequired
     };
 
     top;
@@ -23,15 +22,6 @@ class ExtractPreview extends Component {
     left;
 
     isAbsolute;
-
-    onChangeBgImage(bgImage, width, height) {
-        console.log('inside bg', bgImage);
-        this.setState({
-            src: bgImage,
-            width: width,
-            height: height
-        });
-    }
 
     onChangeImage(filename, width, height, index) {
         if (this.props.series === MACHINE_SERIES.A150.value) {
