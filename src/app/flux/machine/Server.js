@@ -152,11 +152,12 @@ export class Server extends events.EventEmitter {
                         callback(msg);
                     } else {
                         this.errorCount++;
-                        if (this.waitConfirm) {
-                            this.waitConfirm = false;
-                            this.emit('http:confirm', { err: msg });
-                        }
                         if (this.errorCount >= 3) {
+                            if (this.waitConfirm) {
+                                this.waitConfirm = false;
+                                this.emit('http:confirm', { err: msg });
+                            }
+
                             this.emit('http:status', { err: msg });
                             this.endRequestStatus();
                         }

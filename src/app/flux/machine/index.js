@@ -5,7 +5,7 @@ import {
     MACHINE_SERIES,
     MACHINE_HEAD_TYPE,
     CONNECTION_TYPE_SERIAL, SERVER_STATUS_UNKNOWN,
-    LASER_PRINT_MODE_AUTO
+    LASER_PRINT_MODE_AUTO, CONNECTION_STATUS_IDLE
 } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
@@ -16,10 +16,6 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 
-
-// const STATUS_IDLE = 'IDLE';
-// const STATUS_RUNNING = 'RUNNING';
-// const STATUS_PAUSED = 'PAUSED';
 
 const INITIAL_STATE = {
 
@@ -38,6 +34,7 @@ const INITIAL_STATE = {
     port: controller.port || '',
     ports: [],
 
+    connectionStatus: CONNECTION_STATUS_IDLE,
     // Connection state
     isOpen: false,
     isConnected: false,
@@ -189,10 +186,17 @@ export const actions = {
                             if (err) {
                                 dispatch(actions.updateState({
                                     isConnected: false,
-                                    isOpen: false
+                                    isOpen: false,
+                                    isHomed: null
                                 }));
                                 return;
                             }
+                            const { isHomed } = getState().machine;
+                            const { homed } = data;
+                            if (!isHomed && isHomed === null) {
+                                dispatch(actions.updateState({ isHomed: homed }));
+                            }
+
                             dispatch(actions.updateState({ serverStatus: data.status }));
                         });
                     }
