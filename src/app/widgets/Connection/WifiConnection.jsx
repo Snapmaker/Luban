@@ -8,7 +8,7 @@ import { map } from 'lodash';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
-import { ABSENT_OBJECT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING, SERVER_STATUS_UNKNOWN } from '../../constants';
+import { ABSENT_OBJECT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
 import MachineSelection from './MachineSelection';
 
 
@@ -16,48 +16,21 @@ class WifiConnection extends PureComponent {
     static propTypes = {
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
-        serverToken: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         isOpen: PropTypes.bool.isRequired,
         isConnected: PropTypes.bool.isRequired,
-        discoverServers: PropTypes.func.isRequired,
-        updateState: PropTypes.func.isRequired,
-        updateServerToken: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired,
-        setServer: PropTypes.func.isRequired
-    };
 
-    controllerEvents = {
-        'http:confirm': (data) => {
-            const { series, headType, status } = data.state;
-            this.props.updateState({
-                serverStatus: status || SERVER_STATUS_UNKNOWN,
-                isConnected: true
-            });
-            if (series && headType) {
-                this.props.updateMachineState({
-                    series: series,
-                    headType: headType
-                });
-            } else {
-                series && this.props.updateMachineState({ series: series });
-                headType && this.props.updateMachineState({ headType: headType });
-                this.actions.openModal();
-            }
-        },
-        'http:refuse': () => {
-            this.props.updateServerToken('');
-            this.props.updateState({
-                isOpen: false
-            });
-        }
+
+        discoverServers: PropTypes.func.isRequired,
+        openServer: PropTypes.func.isRequired,
+        closeServer: PropTypes.func.isRequired,
+        setServer: PropTypes.func.isRequired
     };
 
     state = {
         server: {},
-        showMachineSelected: false,
-        err: ''
+        showMachineSelected: false
     };
 
     actions = {
@@ -87,64 +60,10 @@ class WifiConnection extends PureComponent {
             this.props.setServer(server);
         },
         openServer: () => {
-            const { server, serverToken } = this.props;
-            server.open(serverToken, (err, data) => {
-                if (err) {
-                    this.setState({
-                        err
-                    });
-                    console.log(this.state.err);
-                    return;
-                }
-                const { token } = data;
-                this.props.updateServerToken(token || server.token);
-                this.props.updateState({
-                    isOpen: true
-                });
-                server.once('http:confirm', this.actions.onServerConfirm);
-            });
+            this.props.openServer();
         },
         closeServer: () => {
-            const { server } = this.props;
-            server.close((err) => {
-                if (err) {
-                    this.setState({
-                        err
-                    });
-                    return;
-                }
-                this.props.updateServerToken('');
-                this.props.updateState({
-                    serverStatus: SERVER_STATUS_UNKNOWN,
-                    isOpen: false,
-                    isConnected: false
-                });
-            });
-        },
-        onServerConfirm: (result) => {
-            const { err, data } = result;
-            if (err) {
-                this.props.updateServerToken('');
-                this.props.updateState({
-                    isOpen: false
-                });
-                return;
-            }
-            const { series, headType, status } = data;
-            this.props.updateState({
-                serverStatus: status || SERVER_STATUS_UNKNOWN,
-                isConnected: true
-            });
-            if (series && headType) {
-                this.props.updateMachineState({
-                    series: series,
-                    headType: headType
-                });
-            } else {
-                series && this.props.updateMachineState({ series: series });
-                headType && this.props.updateMachineState({ headType: headType });
-                this.actions.openModal();
-            }
+            this.props.closeServer();
         }
     };
 
@@ -215,7 +134,7 @@ class WifiConnection extends PureComponent {
                             noResultsText={i18n._('No machines detected.')}
                             onChange={this.actions.onChangeServerOption}
                             optionRenderer={this.renderServerOptions}
-                            disabled={isConnected}
+                            disabled={isOpen}
                             options={map(servers, (s) => ({
                                 name: s.name,
                                 address: s.address
@@ -230,7 +149,7 @@ class WifiConnection extends PureComponent {
                                 className="btn btn-default"
                                 name="btn-refresh"
                                 title={i18n._('Refresh')}
-                                disabled={isConnected}
+                                disabled={isOpen}
                                 onClick={this.actions.onRefreshServers}
                             >
                                 <i
@@ -297,13 +216,12 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { servers, discovering, server, serverStatus, isOpen, isConnected, serverToken } = machine;
+    const { servers, discovering, server, serverStatus, isOpen, isConnected } = machine;
 
     return {
         servers,
         discovering,
         server,
-        serverToken,
         serverStatus,
         isOpen,
         isConnected
@@ -312,10 +230,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
     discoverServers: () => dispatch(machineActions.discoverServers()),
-    updateState: (state) => dispatch(machineActions.updateState(state)),
-    updateServerToken: (token) => dispatch(machineActions.updateServerToken(token)),
-    setServer: (server) => dispatch(machineActions.setServer(server)),
-    updateMachineState: (state) => dispatch(machineActions.updateMachineState(state))
+    openServer: () => dispatch(machineActions.openServer()),
+    closeServer: (state) => dispatch(machineActions.closeServer(state)),
+    setServer: (server) => dispatch(machineActions.setServer(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

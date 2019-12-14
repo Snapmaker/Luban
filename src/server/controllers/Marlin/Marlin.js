@@ -328,6 +328,62 @@ class MarlinLineParserResultTemperature {
     }
 }
 
+class MarlinParserSelectedOrigin {
+    static parse(line) {
+        const r = line.match(/^Selected origin num: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            message: r[1]
+        };
+
+        return {
+            type: MarlinParserSelectedOrigin,
+            payload: payload
+        };
+    }
+}
+
+
+class MarlinParserSelectedCurrent {
+    static parse(line) {
+        const r = line.match(/^Selected == Current: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            message: r[1]
+        };
+
+        return {
+            type: MarlinParserSelectedCurrent,
+            payload: payload
+        };
+    }
+}
+
+class MarlinParserOriginOffset {
+    static parse(line) {
+        const r = line.match(/^Origin offset ([XYZ]): (.*)$/);
+        if (!r) {
+            return null;
+        }
+
+        const key = r[1].toLowerCase();
+        const data = parseFloat(r[2]);
+        const originOffset = {};
+        originOffset[key] = data;
+
+        return {
+            type: MarlinParserOriginOffset,
+            payload: {
+                originOffset
+            }
+        };
+    }
+}
+
 class MarlinParserHomeState {
     static parse(line) {
         const r = line.match(/^Homed: (.*)$/);
@@ -392,7 +448,13 @@ class MarlinLineParser {
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
             MarlinLineParserResultTemperature,
             // Homed: YES
-            MarlinParserHomeState
+            MarlinParserHomeState,
+
+            MarlinParserOriginOffset,
+
+            MarlinParserSelectedCurrent,
+
+            MarlinParserSelectedOrigin
 
         ];
 
@@ -536,6 +598,14 @@ class Marlin extends events.EventEmitter {
             this.emit('start', payload);
         } else if (type === MarlinReplyParserEmergencyStop) {
             this.emit('cnc:stop', payload);
+        } else if (type === MarlinParserOriginOffset) {
+            this.setState({
+                originOffset: {
+                    ...this.state.originOffset,
+                    ...payload.originOffset
+                }
+            });
+            this.emit('originOffset', payload);
         } else if (type === MarlinLineParserResultPosition) {
             const nextState = {
                 ...this.state,
@@ -579,6 +649,10 @@ class Marlin extends events.EventEmitter {
         } else if (type === MarlinParserHomeState) {
             this.setState({ isHomed: payload.isHomed });
             this.emit('home', payload);
+        } else if (type === MarlinParserSelectedOrigin) {
+            this.emit('selected', payload);
+        } else if (type === MarlinParserSelectedCurrent) {
+            this.emit('selected', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }

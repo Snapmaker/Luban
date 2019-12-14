@@ -26,6 +26,7 @@ import PacketManager from '../PacketManager';
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
+    QUERY_TYPE_ORIGIN_OFFSET,
     QUERY_TYPE_TEMPERATURE,
     WRITE_SOURCE_CLIENT,
     WRITE_SOURCE_FEEDER,
@@ -135,6 +136,8 @@ class MarlinController {
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_ENCLOSURE) {
                 this.writeln('M1010');
+            } else if (this.query.type === QUERY_TYPE_ORIGIN_OFFSET) {
+                this.writeln('M1007');
             } else {
                 log.error('Unsupported query type: ', this.query.type);
             }
@@ -146,7 +149,7 @@ class MarlinController {
     queryState = (() => {
         let index = 0;
         const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE];
-        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ENCLOSURE];
+        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE];
 
         return () => {
             if (!this.ready) {
@@ -455,6 +458,14 @@ class MarlinController {
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
+        this.controller.on('originOffset', (res) => {
+            // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
+            //      line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
         this.controller.on('headType', (res) => {
             log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -483,6 +494,12 @@ class MarlinController {
             }
         });
         this.controller.on('enclosure', (res) => {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('selected', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });

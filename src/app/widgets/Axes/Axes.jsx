@@ -83,6 +83,7 @@ class Axes extends PureComponent {
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
         executeGcode: PropTypes.func,
+        executeGcodeAutoHome: PropTypes.func,
         isConnected: PropTypes.bool.isRequired,
         laserPrintMode: PropTypes.string.isRequired,
         materialThickness: PropTypes.number.isRequired,
@@ -564,7 +565,7 @@ class Axes extends PureComponent {
                         type="button"
                         className="btn btn-default"
                         disabled={!canClick}
-                        onClick={() => this.actions.executeGcode('G28')}
+                        onClick={() => this.props.executeGcodeAutoHome()}
                     >
                         {i18n._('Home')}
                     </button>
@@ -617,6 +618,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+        executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
         updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value)),
         updateState: (state) => dispatch(machineActions.updateState(state))
     };
