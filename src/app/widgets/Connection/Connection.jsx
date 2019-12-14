@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import { connect } from 'react-redux';
-import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
+import { Button } from '@trendmicro/react-buttons';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, EXPERIMENTAL_WIFI_CONTROL, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
 import Notifications from '../../components/Notifications';
@@ -11,6 +12,7 @@ import Notifications from '../../components/Notifications';
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 import { actions as machineActions } from '../../flux/machine';
+import Modal from '../../components/Modal';
 
 
 class Connection extends PureComponent {
@@ -18,12 +20,16 @@ class Connection extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         dataSource: PropTypes.string.isRequired,
         connectionType: PropTypes.string.isRequired,
+        series: PropTypes.string.isRequired,
+        isHomed: PropTypes.bool,
         isConnected: PropTypes.bool.isRequired,
-        updateConnectionState: PropTypes.func.isRequired
+        updateConnectionState: PropTypes.func.isRequired,
+        executeGcodeAutoHome: PropTypes.func.isRequired
     };
 
     state = {
-        alertMessage: ''
+        alertMessage: '',
+        showHomeReminder: false
     };
 
     actions = {
@@ -41,6 +47,22 @@ class Connection extends PureComponent {
             this.props.updateConnectionState({
                 connectionType: CONNECTION_TYPE_WIFI
             });
+        },
+        openHomeModal: () => {
+            this.setState({
+                showHomeReminder: true
+            });
+        },
+        closeHomeModal: () => {
+            this.setState({
+                showHomeReminder: false
+            });
+        },
+        clickHomeModalOk: () => {
+            this.props.executeGcodeAutoHome();
+            this.setState({
+                showHomeReminder: false
+            });
         }
     };
 
@@ -49,10 +71,24 @@ class Connection extends PureComponent {
         this.props.setTitle(i18n._('Connection'));
     }
 
+    componentWillReceiveProps(nextProps) {
+        const { isHomed } = nextProps;
+        if (this.props.isHomed !== isHomed && !isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.openHomeModal();
+            }
+        }
+        if (this.props.isHomed !== isHomed && isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.closeHomeModal();
+            }
+        }
+    }
 
     render() {
-        const { connectionType, isConnected } = this.props;
-        const { alertMessage } = this.state;
+        const { connectionType, isConnected, series, isHomed } = this.props;
+        const { alertMessage, showHomeReminder } = this.state;
+        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
 
         return (
             <div>
@@ -98,6 +134,28 @@ class Connection extends PureComponent {
                         style={{ marginTop: '10px' }}
                     />
                 )}
+                {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
+                    <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
+                        <Modal.Header>
+                            <Modal.Title>
+                                {i18n._('Home Reminder')}
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div>
+                                {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={this.actions.clickHomeModalOk}
+                            >
+                                {i18n._('OK')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
         );
     }
@@ -106,16 +164,19 @@ const mapStateToProps = (state, ownPros) => {
     const { widgets } = state.widget;
     const dataSource = widgets[ownPros.widgetId].dataSource;
 
-    const { connectionType, isConnected } = state.machine;
+    const { connectionType, isConnected, series, isHomed } = state.machine;
 
     return {
         dataSource,
         connectionType,
-        isConnected
+        isConnected,
+        series,
+        isHomed
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
     updateConnectionState: (state) => dispatch(machineActions.updateConnectionState(state))
 });
 

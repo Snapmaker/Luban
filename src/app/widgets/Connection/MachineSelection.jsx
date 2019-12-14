@@ -18,6 +18,7 @@ class MachineSelection extends PureComponent {
         display: PropTypes.bool.isRequired,
         closeModal: PropTypes.func.isRequired,
 
+        executeGcode: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
 
@@ -32,10 +33,10 @@ class MachineSelection extends PureComponent {
                 headType: v.value
             });
         },
-        onClickOk: () => {
-            this.props.closeModal();
-        },
-        onClickCancel: () => {
+        onClickClose: () => {
+            if (this.props.series !== MACHINE_SERIES.ORIGINAL.value) {
+                this.props.executeGcode('G54');
+            }
             this.props.closeModal();
         }
     }
@@ -137,13 +138,13 @@ class MachineSelection extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
-                        onClick={this.actions.onClickCancel}
+                        onClick={this.actions.onClickClose}
                     >
                         {i18n._('Cancel')}
                     </Button>
                     <Button
                         btnStyle="primary"
-                        onClick={this.actions.onClickOk}
+                        onClick={this.actions.onClickClose}
                     >
                         {i18n._('OK')}
                     </Button>
@@ -163,6 +164,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state))
     };
 };
