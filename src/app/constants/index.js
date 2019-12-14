@@ -23,6 +23,12 @@ export const SERVER_STATUS_PAUSED = 'paused';
 export const SERVER_STATUS_IDLE = 'idle';
 export const SERVER_STATUS_UNKNOWN = 'unknown';
 
+
+// Connection Status
+export const CONNECTION_STATUS_IDLE = 'idle';
+export const CONNECTION_STATUS_WAITING = 'waiting';
+export const CONNECTION_STATUS_CONNECTED = 'connected';
+
 // G-code Macro
 export const MODAL_NONE = 'none';
 export const MODAL_ADD_MACRO = 'add';

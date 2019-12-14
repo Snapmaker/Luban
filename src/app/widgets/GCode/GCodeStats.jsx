@@ -1,11 +1,14 @@
 import moment from 'moment';
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import {
     METRIC_UNITS
 } from '../../constants';
 import styles from './index.styl';
+import Anchor from '../../components/Anchor';
+import widgetStyles from '../styles.styl';
 
 const formatISODateTime = (time) => {
     return time > 0 ? moment.unix(time / 1000).format('YYYY-MM-DD HH:mm:ss') : '–';
@@ -28,7 +31,7 @@ const formatRemainingTime = (remainingTime) => {
 };
 
 const GCodeStats = (props) => {
-    const { state } = props;
+    const { state, actions } = props;
     const { units, total, sent, received, bbox } = state;
     const displayUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
     const startTime = formatISODateTime(state.startTime);
@@ -102,12 +105,77 @@ const GCodeStats = (props) => {
                     <div>{remainingTime}</div>
                 </div>
             </div>
+            <div>
+                <input
+                    value={state.varValue.var1}
+                    onChange={(event) => {
+                        actions.onChangeVar('var1', event.target.value);
+                    }}
+                />
+                <Anchor
+                    className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                    onClick={() => {
+                        actions.onTest('var1');
+                    }}
+                >
+                    laserPower
+                </Anchor>
+            </div>
+            <div>
+                <input
+                    value={state.varValue.var2}
+                    onChange={(event) => {
+                        actions.onChangeVar('var2', event.target.value);
+                    }}
+                />
+                <Anchor
+                    className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                    onClick={() => {
+                        actions.onTest('var2');
+                    }}
+                >
+                    workSpeed
+                </Anchor>
+            </div>
+            <div>
+                <input
+                    value={state.varValue.var3}
+                    onChange={(event) => {
+                        actions.onChangeVar('var3', event.target.value);
+                    }}
+                />
+                <Anchor
+                    className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                    onClick={() => {
+                        actions.onTest('var3');
+                    }}
+                >
+                    nozzle
+                </Anchor>
+            </div>
+            <div>
+                <input
+                    value={state.varValue.var4}
+                    onChange={(event) => {
+                        actions.onChangeVar('var4', event.target.value);
+                    }}
+                />
+                <Anchor
+                    className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                    onClick={() => {
+                        actions.onTest('var4');
+                    }}
+                >
+                    bed
+                </Anchor>
+            </div>
         </div>
     );
 };
 
 GCodeStats.propTypes = {
-    state: PropTypes.object
+    state: PropTypes.object,
+    actions: PropTypes.object
 };
 
 export default GCodeStats;

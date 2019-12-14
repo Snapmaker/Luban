@@ -22,7 +22,6 @@ class WifiTransport extends PureComponent {
         setTitle: PropTypes.func.isRequired,
 
         gcodeFiles: PropTypes.array.isRequired,
-        isConnected: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
 
         clearGcode: PropTypes.func.isRequired,
@@ -72,8 +71,17 @@ class WifiTransport extends PureComponent {
             this.fileInput.current.click();
         },
         sendFile: () => {
-            console.log(this.props.isConnected);
-            console.log(this.props.server);
+            const selectFileName = this.state.selectFileName;
+            const find = this.props.gcodeFiles.find(v => v.name === selectFileName);
+            if (!find) {
+                return;
+            }
+            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
+            jQuery.get(gcodePath, (result) => {
+                const blob = new Blob([result], { type: 'text/plain' });
+                const file = new File([blob], find.uploadName);
+                this.props.server.uploadFile(find.uploadName, file);
+            });
         },
         loadGcodeToWorkspace: () => {
             const selectFileName = this.state.selectFileName;
@@ -187,7 +195,7 @@ class WifiTransport extends PureComponent {
                         <button
                             type="button"
                             className="sm-btn-small sm-btn-default"
-                            onClick={actions.removeBackgroundImage}
+                            onClick={actions.sendFile}
                             style={{ display: 'block', width: '100%' }}
                         >
                             {i18n._('Transfer By WiFi')}
@@ -202,12 +210,11 @@ class WifiTransport extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { gcodeFiles } = state.workspace;
-    const { server, isConnected } = state.machine;
+    const { server } = state.machine;
 
     return {
         gcodeFiles,
-        server,
-        isConnected
+        server
     };
 };
 
