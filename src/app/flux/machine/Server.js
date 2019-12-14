@@ -7,33 +7,62 @@ import { valueOf } from '../../lib/contants-utils';
  * Server represents HTTP Server on Snapmaker 2.
  */
 
+const isNotNull = (value) => {
+    return value !== null && value !== undefined;
+};
+
 export class Server extends events.EventEmitter {
     statusTimer = null;
 
     errorCount = 0;
 
+    gcodeInfos = [];
+
+    isGcodeExecuting = false;
+
     constructor(name, address, model, port) {
         super();
         this.name = name;
-        this.token = '';
-        this.isConnected = false;
-        this.waitConfirm = false;
         this.address = address;
         this.port = port || 8080;
         this.model = model || 'Unknown Model';
         this.selected = false;
+        this._stateInit();
+    }
 
+    _stateInit() {
+        this.token = '';
+        this.isConnected = false;
+        this.waitConfirm = false;
+        this.status = SERVER_STATUS_UNKNOWN;
         this.state = {
             series: '',
             pattern: '',
             isHomed: null,
-            enclosure: false
+            enclosure: false,
+            laserFocalLength: null,
+            laserPower: null,
+            workSpeed: null,
+            nozzleTemperature: 0,
+            nozzleTargetTemperature: 0,
+            heatedBedTemperature: 0,
+            heatedBedTargetTemperature: 0,
+            workPosition: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
         };
+    }
 
-        this.status = SERVER_STATUS_UNKNOWN; // UNKNOWN, IDLE, RUNNING, PAUSED
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
+    _closeServer() {
+        this._stateInit();
+        this.endRequestStatus();
     }
 
     get host() {
@@ -85,20 +114,8 @@ export class Server extends events.EventEmitter {
             .post(api)
             .send(`token=${this.token}`)
             .end((err, res) => {
+                this._closeServer();
                 const { msg, data } = this._getResult(err, res);
-                if (msg) {
-                    callback && callback(msg);
-                    return;
-                }
-                this.token = '';
-                this.waitConfirm = false;
-                this.state = {
-                    series: '',
-                    pattern: '',
-                    isHomed: null,
-                    enclosure: false
-                };
-                this.endRequestStatus();
                 callback && callback(msg, data);
             });
     };
@@ -134,33 +151,21 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    requestStatus = (callback) => {
+    requestStatus = () => {
         if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
             return;
         }
         const api = `${this.host}/api/v1/status?token=${this.token}`;
         request
             .get(api)
-            .timeout(1000)
+            .timeout(2000)
             .end((err, res) => {
                 const { data, msg, code } = this._getResult(err, res);
                 if (msg) {
-                    if (callback) {
-                        callback(msg);
-                    } else {
-                        this.errorCount++;
-                        if (this.errorCount >= 3) {
-                            if (this.waitConfirm) {
-                                this.waitConfirm = false;
-                                this.emit('http:confirm', { err: msg });
-                            }
-
-                            this.emit('http:status', { err: msg });
-                            this.endRequestStatus();
-                        }
+                    this.errorCount++;
+                    if (this.errorCount >= 3) {
+                        this._closeServer();
+                        this.emit('http:close', { err: msg });
                     }
                     return;
                 }
@@ -168,16 +173,29 @@ export class Server extends events.EventEmitter {
                 if (code === 204) {
                     return;
                 }
-                if (this.waitConfirm) {
-                    this.emit('http:confirm', { data: this._getStatus() });
-                }
-                const { status, x, y, z } = data;
+                const { status, x, y, z, offsetX, offsetY, offsetZ } = data;
                 this.status = status.toLowerCase();
-                this.x = x;
-                this.y = y;
-                this.z = z;
-                if (callback) {
-                    callback(null, { data: this._getStatus() });
+                this.state.workPosition = {
+                    x: x,
+                    y: y,
+                    z: z
+                };
+                this.state.originOffset = {
+                    x: offsetX,
+                    y: offsetY,
+                    z: offsetZ
+                };
+                isNotNull(data.homed) && (this.state.isHomed = data.homed);
+                isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
+                isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
+                isNotNull(data.workSpeed) && (this.state.workSpeed = data.workSpeed);
+                isNotNull(data.nozzleTemperature) && (this.state.nozzleTemperature = data.nozzleTemperature);
+                isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
+                isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
+                isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
+                if (this.waitConfirm) {
+                    this.waitConfirm = false;
+                    this.emit('http:confirm', { data: this._getStatus() });
                 } else {
                     this.emit('http:status', { data: this._getStatus() });
                 }
@@ -196,6 +214,47 @@ export class Server extends events.EventEmitter {
             .post(api)
             .field('token', this.token)
             .field('type', type)
+            .attach('file', file, filename)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                if (callback) {
+                    callback(msg, data);
+                }
+            });
+    };
+
+
+    getGcodeFile = (callback) => {
+        if (!this.token) {
+            callback && callback({
+                msg: 'this token is null'
+            });
+            return;
+        }
+        const api = `${this.host}/api/v1/print_file?token=${this.token}`;
+        request
+            .get(api)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                console.log(data);
+                if (callback) {
+                    callback(msg, data);
+                }
+            });
+    };
+
+
+    uploadFile = (filename, file, callback) => {
+        if (!this.token) {
+            callback && callback({
+                msg: 'this token is null'
+            });
+            return;
+        }
+        const api = `${this.host}/api/v1/upload`;
+        request
+            .post(api)
+            .field('token', this.token)
             .attach('file', file, filename)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
@@ -289,37 +348,122 @@ export class Server extends events.EventEmitter {
 
     executeGcode = (gcode, callback) => {
         if (!this.token) {
-            callback && callback({
-                msg: 'this token is null'
-            });
             return;
         }
+        const split = gcode.split('\n');
+        this.gcodeInfos.push({
+            gcodes: split,
+            callback: callback
+        });
+        this.startExecuteGcode();
+    };
+
+    _executeGcode = (gcode) => {
         const api = `${this.host}/api/v1/execute_code`;
-        // const formData = new FormData();
-        // formData.append('gcode', gcode);
-        const gcodes = gcode.split('\n');
-        for (const gcode1 of gcodes) {
+        return new Promise((resolve) => {
             request
                 .post(api)
                 .send(`token=${this.token}`)
-                .send(`code=${gcode1}`)
+                .send(`code=${gcode}`)
                 // .send(formData)
                 .end((err, res) => {
-                    const { msg, data } = this._getResult(err, res);
-                    callback && callback({ msg, data });
+                    const { data } = this._getResult(err, res);
+                    resolve(data);
                 });
+        });
+    };
+
+    startExecuteGcode = async () => {
+        if (this.isGcodeExecuting) {
+            return;
         }
+        this.isGcodeExecuting = true;
+        while (this.gcodeInfos.length > 0) {
+            const splice = this.gcodeInfos.splice(0, 1)[0];
+            for (const gcode of splice.gcodes) {
+                await this._executeGcode(gcode);
+            }
+            splice.callback && splice.callback();
+        }
+        this.isGcodeExecuting = false;
     };
 
     _getStatus = () => {
         return {
             status: this.status,
-            x: this.x,
-            y: this.y,
-            z: this.z,
+            x: this.state.workPosition.x,
+            y: this.state.workPosition.y,
+            z: this.state.workPosition.z,
+            offsetX: this.state.originOffset.x,
+            offsetY: this.state.originOffset.y,
+            offsetZ: this.state.originOffset.z,
             series: this.state.series,
-            headType: this.state.headType
+            headType: this.state.headType,
+            isHomed: this.state.isHomed,
+            enclosure: this.state.enclosure,
+            laserFocalLength: this.state.laserFocalLength,
+            workSpeed: this.state.workSpeed
         };
+    };
+
+    uploadNozzleTemperature = (nozzleTemp, callback) => {
+        const api = `${this.host}/api/v1/override_nozzle_temperature`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`nozzleTemp=${nozzleTemp}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    uploadBedTemperature = (bedTemperature, callback) => {
+        const api = `${this.host}/api/v1/override_bed_temperature`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`heatedBedTemp=${bedTemperature}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    uploadZOffset = (zOffset, callback) => {
+        const api = `${this.host}/api/v1/override_z_offset`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`zOffset=${zOffset}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    uploadWorkSpeedFactor = (workSpeedFactor, callback) => {
+        const api = `${this.host}/api/v1/override_work_speed`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`workSpeed=${workSpeedFactor}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    uploadLaserPower = (laserPower, callback) => {
+        const api = `${this.host}/api/v1/override_laser_power`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`laserPower=${laserPower}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
     };
 
     _getResult = (err, res) => {
@@ -331,7 +475,7 @@ export class Server extends events.EventEmitter {
         }
         const code = res.status;
         const data = res.body;
-        if (code !== 200 && code !== 204) {
+        if (code !== 200 && code !== 204 && code !== 203) {
             return {
                 code,
                 msg: err

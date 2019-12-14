@@ -24,7 +24,7 @@ class Connection extends PureComponent {
         isHomed: PropTypes.bool,
         isConnected: PropTypes.bool.isRequired,
         updateConnectionState: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired
+        executeGcodeAutoHome: PropTypes.func.isRequired
     };
 
     state = {
@@ -59,7 +59,7 @@ class Connection extends PureComponent {
             });
         },
         clickHomeModalOk: () => {
-            this.props.executeGcode('G28');
+            this.props.executeGcodeAutoHome();
             this.setState({
                 showHomeReminder: false
             });
@@ -176,7 +176,7 @@ const mapStateToProps = (state, ownPros) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+    executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
     updateConnectionState: (state) => dispatch(machineActions.updateConnectionState(state))
 });
 

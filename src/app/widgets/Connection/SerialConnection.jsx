@@ -26,6 +26,7 @@ class SerialConnection extends PureComponent {
         port: PropTypes.string.isRequired,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
 
@@ -68,7 +69,6 @@ class SerialConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
-            this.actions.closeHomeModal();
         },
         openModal: () => {
             this.setState({
@@ -198,6 +198,9 @@ class SerialConnection extends PureComponent {
                 series: machineSeries.value,
                 headType: machineHeadType.value
             });
+            if (machineSeries.value !== MACHINE_SERIES.ORIGINAL.value) {
+                this.props.executeGcode('G54');
+            }
         } else {
             machineHeadType && this.props.updateMachineState({ headType: machineHeadType.value });
             machineSeries && this.props.updateMachineState({ series: machineSeries.value });
@@ -416,6 +419,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
         updatePort: (port) => dispatch(machineActions.updatePort(port))
     };
 };

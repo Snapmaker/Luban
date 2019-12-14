@@ -2,6 +2,7 @@ import _ from 'lodash';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { controller } from '../../lib/controller';
 import { mm2in } from '../../lib/units';
 import GCodeStates from './GCodeStats';
@@ -27,7 +28,9 @@ const toFixedUnits = (units, val) => {
 
 class GCode extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+
+        server: PropTypes.object.isRequired
     };
 
     state = this.getInitialState();
@@ -43,6 +46,22 @@ class GCode extends PureComponent {
         toggleMinimized: () => {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
+        },
+        onChangeVar: (key, value) => {
+            console.log(value);
+            this.state.varValue[key] = value;
+        },
+        onTest: (key) => {
+            console.log(key);
+            if (key === 'var1') {
+                this.props.server.uploadLaserPower(this.state.varValue[key]);
+            } else if (key === 'var2') {
+                this.props.server.uploadWorkSpeedFactor(this.state.varValue[key]);
+            } else if (key === 'var3') {
+                this.props.server.uploadNozzleTemperature(this.state.varValue[key]);
+            } else if (key === 'var4') {
+                this.props.server.uploadBedTemperature(this.state.varValue[key]);
+            }
         }
     };
 
@@ -129,7 +148,8 @@ class GCode extends PureComponent {
                     y: 0,
                     z: 0
                 }
-            }
+            },
+            varValue: {}
         };
     }
 
@@ -238,4 +258,13 @@ class GCode extends PureComponent {
     }
 }
 
-export default GCode;
+const mapStateToProps = (state) => {
+    const { server } = state.machine;
+
+    return {
+        server
+    };
+};
+
+
+export default connect(mapStateToProps)(GCode);

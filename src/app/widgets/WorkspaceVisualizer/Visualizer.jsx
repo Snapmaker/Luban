@@ -23,7 +23,8 @@ import {
 import { ensureRange } from '../../lib/numeric-utils';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
-import { actions, getGcodeName, getGcodeType } from '../../flux/workspace';
+import { actions } from '../../flux/workspace';
+import { actions as machineActions } from '../../flux/machine';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
 import GCodeRenderer from './GCodeRenderer';
@@ -48,14 +49,18 @@ class Visualizer extends Component {
         headType: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
-        backgroundGroup: PropTypes.object.isRequired
+        backgroundGroup: PropTypes.object.isRequired,
+
+        startServerGcode: PropTypes.func.isRequired,
+        pauseServerGcode: PropTypes.func.isRequired,
+        resumeServerGcode: PropTypes.func.isRequired,
+        stopServerGcode: PropTypes.func.isRequired
     };
 
     printableArea = null;
@@ -287,24 +292,12 @@ class Visualizer extends Component {
                     }
                 }
             } else {
-                const { server, serverStatus } = this.props;
+                const { serverStatus } = this.props;
                 if (serverStatus === SERVER_STATUS_IDLE) {
-                    const gcode = this.props.gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-                    const filename = getGcodeName(this.props.gcodeList);
-                    const type = getGcodeType(this.props.gcodeList);
-
-                    const blob = new Blob([gcode], { type: 'text/plain' });
-                    const file = new File([blob], filename);
-                    server.uploadGcodeFile(filename, file, type, (msg) => {
-                        if (msg) {
-                            return;
-                        }
-                        console.log(111);
-                        server.startGcode();
-                    });
+                    this.props.startServerGcode();
                 }
                 if (serverStatus === SERVER_STATUS_PAUSED) {
-                    server.resumeGcode();
+                    this.props.resumeServerGcode();
                 }
             }
         },
@@ -362,9 +355,9 @@ class Visualizer extends Component {
                     this.actions.tryPause();
                 }
             } else {
-                const { server, serverStatus } = this.props;
+                const { serverStatus } = this.props;
                 if (serverStatus === SERVER_STATUS_RUNNING) {
-                    server.pauseGcode();
+                    this.props.pauseServerGcode();
                 }
             }
         },
@@ -376,9 +369,9 @@ class Visualizer extends Component {
                     controller.command('gcode:stop');
                 }
             } else {
-                const { server, serverStatus } = this.props;
+                const { serverStatus } = this.props;
                 if (serverStatus !== SERVER_STATUS_IDLE) {
-                    server.stopGcode();
+                    this.props.stopServerGcode();
                 }
             }
         },
@@ -841,7 +834,6 @@ const mapStateToProps = (state) => {
         enclosure: machine.enclosure,
         enclosureDoor: machine.enclosureDoor,
         headType: machine.headType,
-        server: machine.server,
         serverStatus: machine.serverStatus,
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
@@ -855,7 +847,14 @@ const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
-    unloadGcode: () => dispatch(actions.unloadGcode())
+    unloadGcode: () => dispatch(actions.unloadGcode()),
+
+    startServerGcode: () => dispatch(machineActions.startServerGcode()),
+    pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
+    resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+
+
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

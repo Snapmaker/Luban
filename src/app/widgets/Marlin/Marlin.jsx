@@ -18,7 +18,7 @@ import {
     HEAD_LASER,
     HEAD_CNC,
     HEAD_UNKNOWN,
-    MACHINE_HEAD_TYPE
+    MACHINE_HEAD_TYPE, CONNECTION_TYPE_WIFI
 } from '../../constants';
 import { actions as widgetActions } from '../../flux/widget';
 
@@ -33,6 +33,7 @@ class MarlinWidget extends PureComponent {
 
         port: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         headType: PropTypes.string.isRequired,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
@@ -207,6 +208,19 @@ class MarlinWidget extends PureComponent {
         this.addControllerEvents();
     }
 
+
+    componentWillReceiveProps(nextProps) {
+        const { connectionType, isConnected } = nextProps;
+        if (connectionType === CONNECTION_TYPE_WIFI) {
+            if (isConnected && !this.state.isConnected) {
+                this.props.setDisplay(true);
+            }
+            if (!isConnected) {
+                this.props.setDisplay(false);
+            }
+        }
+    }
+
     componentDidUpdate(prevProps, prevState) {
         if (prevProps.headType !== this.props.headType) {
             this.actions.setTitle();
@@ -237,6 +251,7 @@ class MarlinWidget extends PureComponent {
     componentWillUnmount() {
         this.removeControllerEvents();
     }
+
 
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
@@ -308,7 +323,7 @@ class MarlinWidget extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { headType, port, isConnected } = state.machine;
+    const { headType, port, isConnected, connectionType } = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const {
@@ -327,6 +342,7 @@ const mapStateToProps = (state, ownProps) => {
     return {
         port,
         isConnected,
+        connectionType,
         headType: headType,
         statusSectionExpanded,
         machineModalSectionExpanded,

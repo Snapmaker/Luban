@@ -116,6 +116,12 @@ export const actions = {
         const state = getState().workspace;
         const { group } = state.background;
         group.remove(...group.children);
+        dispatch(actions.updateState({
+            background: {
+                enabled: false,
+                group: group
+            }
+        }));
     },
 
     loadBackgroundToWorkspace: (background) => (dispatch, getState) => {
@@ -123,8 +129,16 @@ export const actions = {
         const backgroundGroup = background.group;
 
         workspaceBackgroundGroup.remove(...workspaceBackgroundGroup.children);
-        for (const child of backgroundGroup.children) {
-            workspaceBackgroundGroup.add(child.clone());
+        if (backgroundGroup.children.length > 0) {
+            for (const child of backgroundGroup.children) {
+                workspaceBackgroundGroup.add(child.clone());
+            }
+            dispatch(actions.updateState({
+                background: {
+                    enabled: true,
+                    group: backgroundGroup
+                }
+            }));
         }
     }
 };
