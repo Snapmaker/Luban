@@ -64,6 +64,9 @@ const INITIAL_STATE = {
     // printing configurations
     materialDefinitions: [],
     qualityDefinitions: [],
+    isAdvised: true,
+    defaultMaterialId: 'material.pla',
+    defaultQualityId: 'quality.fast_print',
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
@@ -351,11 +354,11 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
-    duplicateMaterialDefinition: (definition) => async (dispatch, getState) => {
+    duplicateMaterialDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: `material.${timestamp()}`,
+            definitionId: newDefinitionId || `material.${timestamp()}`,
             name: `#${definition.name}`,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
@@ -376,18 +379,20 @@ export const actions = {
 
         const createdDefinition = await definitionManager.createDefinition(newDefinition);
 
+
         dispatch(actions.updateState({
             materialDefinitions: [...state.materialDefinitions, createdDefinition]
         }));
 
+
         return createdDefinition;
     },
 
-    duplicateQualityDefinition: (definition) => async (dispatch, getState) => {
+    duplicateQualityDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: `quality.${timestamp()}`,
+            definitionId: newDefinitionId || `quality.${timestamp()}`,
             name: `#${definition.name}`,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
@@ -575,6 +580,114 @@ export const actions = {
                 }
                 case 'LOAD_MODEL_FAILED': {
                     worker.terminate();
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        progress: 0
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
+    },
+    // Upload model
+    // @param file
+    uploadCaseModel: (file) => async (dispatch, getState) => {
+        // Notice user that model is being loading
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.LOADING_MODEL,
+            progress: 0
+        }));
+
+        // Upload model to backend
+        const { modelGroup } = getState().printing;
+        // const formData = new FormData();
+        // formData.append('file', file);
+        const res = await api.uploadCaseFile(file);
+
+        // const { name, filename } = res.body;
+        const { originalName, uploadName } = res.body;
+        // const modelPath = `${DATA_PREFIX}/${filename}`;
+        // const modelName = name;
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+
+        const { size } = getState().machine;
+        const modelInfo = new ModelInfo(size);
+        const headerType = '3dp';
+        const sourceType = '3d';
+        const mode = '3d';
+        const width = 0;
+        const height = 0;
+        modelInfo.setHeaderType(headerType);
+        // modelInfo.setSource(sourceType, originalName, uploadName);
+        modelInfo.setSource(sourceType, originalName, uploadName, width, height);
+        modelInfo.setMode(mode);
+        modelInfo.generateDefaults();
+
+        dispatch(actions.updateState({ progress: 0.25 }));
+
+        // Tell worker to generate geometry for model
+        const worker = new LoadModelWorker();
+        worker.postMessage({ uploadPath });
+        worker.onmessage = (e) => {
+            const data = e.data;
+
+            const { type } = data;
+            switch (type) {
+                case 'LOAD_MODEL_POSITIONS': {
+                    const { positions } = data;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+
+                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.computeVertexNormals();
+                    modelInfo.setGeometry(bufferGeometry);
+                    modelInfo.setMaterial(material);
+
+                    // Create model
+                    const model = new Model(modelInfo);
+                    modelGroup.addModel(model);
+
+                    dispatch(actions.displayModel());
+                    dispatch(actions.destroyGcodeLine());
+
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
+                        progress: 1
+                    }));
+                    break;
+                }
+                case 'LOAD_MODEL_CONVEX': {
+                    worker.terminate();
+                    const { positions } = data;
+
+                    const convexGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                    convexGeometry.addAttribute('position', positionAttribute);
+
+                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
+                    const model = modelGroup.models.find(m => m.uploadName === uploadName);
+
+                    if (model !== null) {
+                        model.setConvexGeometry(convexGeometry);
+                    }
+
+                    break;
+                }
+                case 'LOAD_MODEL_PROGRESS': {
+                    const state = getState().printing;
+                    const progress = 0.25 + data.progress * 0.5;
+                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                        dispatch(actions.updateState({ progress }));
+                    }
+                    break;
+                }
+                case 'LOAD_MODEL_FAILED': {
+                    worker.terminate();
+                    console.error(data);
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0

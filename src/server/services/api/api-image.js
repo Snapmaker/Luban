@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import mv from 'mv';
 import jimp from 'jimp';
 import async from 'async';
@@ -23,6 +24,7 @@ export const set = (req, res) => {
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
+    console.log('inside set ', file.path, uploadPath);
     async.series([
         (next) => {
             mv(file.path, uploadPath, () => {
@@ -66,7 +68,56 @@ export const set = (req, res) => {
     });
 };
 
+export const laserCaseImage = (req, res) => {
+    const { name, casePath } = req.body;
+    const originalName = path.basename(name);
 
+    const uploadName = pathWithRandomSuffix(originalName);
+    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+
+    async.series([
+        (next) => {
+            console.log('inside series', path.resolve(casePath, name), uploadPath);
+            fs.copyFile(path.resolve(casePath, name), uploadPath, () => {
+                next();
+            });
+        },
+        async (next) => {
+            if (path.extname(uploadName) === '.svg') {
+                const svgParser = new SVGParser();
+                const svg = await svgParser.parseFile(uploadPath);
+
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width: svg.width,
+                    height: svg.height
+                });
+                console.log('inside svg>>>>>>>>>>>>', res);
+                next();
+            } else {
+                jimp.read(uploadPath).then((image) => {
+                    res.send({
+                        originalName: originalName,
+                        uploadName: uploadName,
+                        width: image.bitmap.width,
+                        height: image.bitmap.height
+                    });
+                    next();
+                }).catch((err) => {
+                    next(err);
+                });
+            }
+        }
+    ], (err) => {
+        if (err) {
+            log.error(`Failed to read image ${uploadName}`);
+            res.status(ERR_INTERNAL_SERVER_ERROR).end();
+        } else {
+            res.end();
+        }
+    });
+};
 /**
  * Process Image for Laser.
  *

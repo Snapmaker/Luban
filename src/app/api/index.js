@@ -56,10 +56,12 @@ const signin = defaultAPIFactory((options) => {
 //
 
 const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
+const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/uploadCaseFile').send(formData));
 const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
+const uploadLaserCaseImage = defaultAPIFactory((formdata) => request.post('/api/image/laserCaseImage').send(formdata));
 
 
 // Stock Remap
@@ -265,9 +267,11 @@ export default {
     utils,
 
     uploadFile,
+    uploadCaseFile,
     uploadGcodeFile,
     uploadUpdateFile,
     uploadImage,
+    uploadLaserCaseImage,
     stockRemapProcess,
     processImage,
     processTrace,

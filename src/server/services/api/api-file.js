@@ -1,11 +1,13 @@
 import path from 'path';
 import mv from 'mv';
+import fs from 'fs';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
 import DataStorage from '../../DataStorage';
 import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import parseGcodeHeader from '../../lib/parseGcodeHeader';
+
 
 const log = logger('api:file');
 
@@ -14,6 +16,7 @@ export const set = (req, res) => {
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    console.log('uploadFile,req>>>>', file.path);
     mv(file.path, uploadPath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
@@ -26,6 +29,25 @@ export const set = (req, res) => {
         }
     });
 };
+
+export const uploadCaseFile = (req, res) => {
+    const { name, casePath } = req.body;
+    const originalName = path.basename(name);
+    const uploadName = pathWithRandomSuffix(originalName);
+    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    fs.copyFile(path.resolve(casePath, name), uploadPath, (err) => {
+        if (err) {
+            log.error(`Failed to upload file ${originalName}`);
+        } else {
+            res.send({
+                originalName,
+                uploadName
+            });
+            res.end();
+        }
+    });
+};
+
 
 export const uploadGcodeFile = (req, res) => {
     const file = req.files.file;

@@ -76,6 +76,7 @@ function registerApis(app) {
 
     // Image
     app.post(urljoin(settings.route, 'api/image'), api.image.set);
+    app.post(urljoin(settings.route, 'api/image/laserCaseImage'), api.image.laserCaseImage);
     app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
     app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
     app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
@@ -136,6 +137,7 @@ function registerApis(app) {
 
     // print3D
     app.post(urljoin(settings.route, 'api/file'), api.file.set);
+    app.post(urljoin(settings.route, 'api/file/uploadCaseFile'), api.file.uploadCaseFile);
     app.post(urljoin(settings.route, 'api/file/uploadGcodeFile'), api.file.uploadGcodeFile);
     app.post(urljoin(settings.route, 'api/file/uploadUpdateFile'), api.file.uploadUpdateFile);
 
