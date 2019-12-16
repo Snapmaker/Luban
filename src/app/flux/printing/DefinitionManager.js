@@ -9,6 +9,7 @@ class DefinitionManager {
 
     qualityDefinitions = [];
 
+
     async init() {
         let res;
 

@@ -23,6 +23,7 @@ import Laser from './Laser';
 import Cnc from './Cnc';
 import DevelopTools from './DevelopTools';
 import Settings from './Settings';
+import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
 
 
@@ -136,6 +137,7 @@ class App extends PureComponent {
             '/cnc',
             '/settings',
             '/developTools',
+            '/caselibrary',
             '/settings/general',
             '/settings/machine',
             '/settings/config'
@@ -194,6 +196,10 @@ class App extends PureComponent {
 
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />
+                        )}
+
+                        {location.pathname.indexOf('/caselibrary') === 0 && (
+                            <CaseLibrary {...this.props} />
                         )}
                     </div>
                 </div>
