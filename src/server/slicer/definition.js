@@ -86,6 +86,7 @@ export class DefinitionLoader {
                 this.loadJSONSettings(definitionId, setting.children);
             }
         }
+        // console.log('settings',this.settings);
     }
 
     toJSON() {
