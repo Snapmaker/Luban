@@ -37,8 +37,9 @@ class ModelGroup {
     };
 
     _getState(model) {
-        const { sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
+        const { headerType, sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
         return {
+            headerType: headerType,
             sourceType: sourceType,
             originalName: originalName,
             mode: mode,
@@ -46,6 +47,7 @@ class ModelGroup {
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp
+            estimatedTime: this.estimatedTime,
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };
@@ -511,6 +513,36 @@ class ModelGroup {
             }
         }
         return { x: 0, z: 0 };
+    }
+
+    getAllBoundingBox() {
+        const boundingBox = { max: { x: null, y: null, z: null }, min: { x: null, y: null, z: null } };
+        for (const model of this.models) {
+            let modelBoundingBox;
+            if (model.headerType === '3dp') {
+                modelBoundingBox = model.boundingBox;
+            } else {
+                modelBoundingBox = {
+                    max: {
+                        x: model.transformation.positionX + model.transformation.width / 2,
+                        y: model.transformation.positionY + model.transformation.height / 2,
+                        z: 0
+                    },
+                    min: {
+                        x: model.transformation.positionX - model.transformation.width / 2,
+                        y: model.transformation.positionY - model.transformation.height / 2,
+                        z: 0
+                    }
+                };
+            }
+            boundingBox.max.x = boundingBox.max.x ? Math.max(boundingBox.max.x, modelBoundingBox.max.x) : modelBoundingBox.max.x;
+            boundingBox.max.y = boundingBox.max.y ? Math.max(boundingBox.max.y, modelBoundingBox.max.y) : modelBoundingBox.max.y;
+            boundingBox.max.z = boundingBox.max.z ? Math.max(boundingBox.max.z, modelBoundingBox.max.z) : modelBoundingBox.max.z;
+            boundingBox.min.x = boundingBox.min.x ? Math.min(boundingBox.min.x, modelBoundingBox.min.x) : modelBoundingBox.min.x;
+            boundingBox.min.y = boundingBox.min.y ? Math.min(boundingBox.min.y, modelBoundingBox.min.y) : modelBoundingBox.min.y;
+            boundingBox.min.z = boundingBox.min.z ? Math.min(boundingBox.min.z, modelBoundingBox.min.z) : modelBoundingBox.min.z;
+        }
+        return boundingBox;
     }
 
     _checkAnyModelOverstepped() {

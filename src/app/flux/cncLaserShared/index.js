@@ -1,7 +1,7 @@
 import path from 'path';
 import * as THREE from 'three';
 import api from '../../api';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkParams } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
@@ -90,6 +90,36 @@ export const actions = {
             });
     },
 
+    uploadCaseImage: (headerType, file, mode, onError) => (dispatch) => {
+        // check params
+        if (!['cnc', 'laser'].includes(headerType)) {
+            onError(`Params error: func = ${headerType}`);
+            return;
+        }
+        if (!file) {
+            onError(`Params error: file = ${file}`);
+            return;
+        }
+        if (!['greyscale', 'bw', 'vector', 'trace'].includes(mode)) {
+            onError(`Params error: mode = ${mode}`);
+            return;
+        }
+
+        // const formData = new FormData();
+        // formData.append('image', file);
+        console.log('inside uploadCaseImage', file);
+        api.uploadLaserCaseImage(file)
+            .then((res) => {
+                const { width, height, originalName, uploadName } = res.body;
+                console.log('inside api', res);
+                dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
+            })
+            .catch((err) => {
+                console.error(err);
+                onError && onError(err);
+            });
+    },
+    // generateModel: (from, name, filename, width, height, mode) => (dispatch, getState) => {
     generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
@@ -282,19 +312,58 @@ export const actions = {
     },
 
     // gcode
-    generateGcode: (from) => (dispatch, getState) => {
+    generateGcode: (from, thumbnail) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const gcodeBeans = toolPathModelGroup.generateGcode();
+        let estimatedTime = 0;
+        let fileTotalLines = 0;
         for (const gcodeBean of gcodeBeans) {
             const modelState = modelGroup.getModelState(gcodeBean.modelInfo.modelID);
             gcodeBean.modelInfo.mode = modelState.mode;
             gcodeBean.modelInfo.originalName = modelState.originalName;
+            gcodeBean.modelInfo.headerType = modelState.headerType;
+            estimatedTime += gcodeBean.modelInfo.estimatedTime;
+            fileTotalLines += gcodeBean.gcode.split('\n').length;
         }
         dispatch(actions.updateState(from, {
             isGcodeGenerated: true,
             gcodeBeans
         }));
+
+        const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo;
+        const boundingBox = modelGroup.getAllBoundingBox();
+
+        const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
+
+        let headerStart = ';Header Start\n'
+        + `;header_type: ${headerType}\n`
+        + `;thumbnail: ${thumbnail}\n`
+        + ';file_total_lines: fileTotalLines\n'
+        + `;estimated_time(s): ${estimatedTime}\n`
+        + `;max_x(mm): ${boundingBox.max.x}\n`
+        + `;max_y(mm): ${boundingBox.max.y}\n`
+        + `;max_z(mm): ${boundingBox.max.z}\n`
+        + `;min_x(mm): ${boundingBox.min.x}\n`
+        + `;min_y(mm): ${boundingBox.min.y}\n`
+        + `;min_z(mm): ${boundingBox.min.z}\n`
+        + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
+        + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
+        + `;power(%): ${power}\n`
+        + ';Header End\n';
+        fileTotalLines += headerStart.split('\n').length;
+        headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
+
+        gcodeBeans[0].gcode = `${headerStart}\n${gcodeBeans[0].gcode}`;
+        gcodeBeans[0].img = thumbnail;
+
+        dispatch(actions.updateState(
+            from,
+            {
+                isGcodeGenerated: true,
+                gcodeBeans
+            }
+        ));
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {

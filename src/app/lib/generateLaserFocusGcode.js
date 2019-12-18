@@ -47,7 +47,7 @@ function generateLaserFocusGcode(power, workSpeed, jogSpeed) {
         const square = generateSqaure(p0, squareLength);
 
         gcodeArray.push(`G0 X${p0.x} Y${p0.y} Z${z}`);
-        gcodeArray.push('M3');
+        gcodeArray.push('M3 P100 S255');
         for (let j = 0; j < 4; j++) {
             const p = square[(j + 1) % 4];
             gcodeArray.push(`G1 X${p.x} Y${p.y}`);
@@ -64,7 +64,7 @@ function generateLaserFocusGcode(power, workSpeed, jogSpeed) {
         const square = generateSqaure(p0, squareLength);
 
         gcodeArray.push(`G0 X${p0.x} Y${p0.y} Z${z}`);
-        gcodeArray.push('M3');
+        gcodeArray.push('M3 P100 S255');
         for (let j = 0; j < 4; j++) {
             const p = square[(j + 1) % 4];
             gcodeArray.push(`G1 X${p.x} Y${p.y}`);

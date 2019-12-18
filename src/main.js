@@ -88,6 +88,8 @@ const main = () => {
     */
 
     // Electron 2
+    // Allow multiple instances for controlling more machines
+    /*
     const shouldQuit = app.makeSingleInstance(() => {
         if (window) {
             if (window.isMinimized()) {
@@ -101,6 +103,7 @@ const main = () => {
         app.quit();
         return;
     }
+    */
 
     // Allow max 4G memory usage
     if (process.arch === 'x64') {

@@ -4,7 +4,7 @@ import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
-import controller from '../../../lib/controller';
+import { controller } from '../../../lib/controller';
 import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import PrintPreview from './PrintPreview';
@@ -106,7 +106,7 @@ class PrintSquareTrace extends PureComponent {
 
             const gcodeStr = generateSquareGcode(size, sideLength, power);
             this.props.clearGcode();
-            this.props.addGcode('Laser Coordinating G-code', gcodeStr);
+            this.props.addGcode('Laser Coordinating G-code.nc', gcodeStr);
 
             setTimeout(() => {
                 controller.command('gcode:start');

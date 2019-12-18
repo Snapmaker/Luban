@@ -2,26 +2,38 @@ import cx from 'classnames';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
+import { connect } from 'react-redux';
 import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
 import portal from '../../lib/portal';
 import Space from '../../components/Space';
 import Widget from '../../components/Widget';
-import { WidgetConfig } from '../../components/SMWidget';
 
 import Settings from './Settings';
 import styles from './index.styl';
 import { MEDIA_SOURCE_LOCAL } from './constants';
+import { actions as widgetActions } from '../../flux/widget';
 
 class WebcamWidget extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
         onRemove: PropTypes.func.isRequired,
-        sortable: PropTypes.object
-    };
+        sortable: PropTypes.object,
 
-    config = new WidgetConfig(this.props.widgetId);
+        disabled: PropTypes.bool.isRequired,
+        minimized: PropTypes.bool.isRequired,
+        isFullscreen: PropTypes.bool.isRequired,
+        mediaSource: PropTypes.string.isRequired,
+        deviceId: PropTypes.string.isRequired,
+        url: PropTypes.string.isRequired,
+        scale: PropTypes.number.isRequired,
+        rotation: PropTypes.number.isRequired,
+        flipHorizontally: PropTypes.bool.isRequired,
+        flipVertically: PropTypes.bool.isRequired,
+        crosshair: PropTypes.bool.isRequired,
+        muted: PropTypes.bool.isRequired,
+
+        updateWidgetState: PropTypes.func.isRequired
+    };
 
     state = this.getInitialState();
 
@@ -37,9 +49,9 @@ class WebcamWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        changeImageScale: (value) => {
-            this.setState({ scale: value });
-        },
+        // changeImageScale: (value) => {
+        //     this.setState({ scale: value });
+        // },
         rotateLeft: () => {
             const { flipHorizontally, flipVertically, rotation } = this.state;
             const rotateLeft = (flipHorizontally && flipVertically) || (!flipHorizontally && !flipVertically);
@@ -77,20 +89,48 @@ class WebcamWidget extends PureComponent {
     video = React.createRef();
 
     getInitialState() {
+        const {
+            disabled,
+            minimized,
+            isFullscreen,
+            mediaSource,
+            deviceId,
+            url,
+            scale,
+            rotation,
+            flipHorizontally,
+            flipVertically,
+            crosshair,
+            muted
+        } = this.props;
         return {
-            disabled: true, // this.config.get('disabled', true),
-            minimized: this.config.get('minimized', false),
-            isFullscreen: false,
-            mediaSource: this.config.get('mediaSource', MEDIA_SOURCE_LOCAL),
-            deviceId: this.config.get('deviceId', ''),
-            url: this.config.get('url', ''),
-            scale: this.config.get('geometry.scale', 1.0),
-            rotation: this.config.get('geometry.rotation', 0),
-            flipHorizontally: this.config.get('geometry.flipHorizontally', false),
-            flipVertically: this.config.get('geometry.flipVertically', false),
-            crosshair: this.config.get('crosshair', false),
-            muted: this.config.get('muted', false)
+            disabled,
+            minimized,
+            isFullscreen,
+            mediaSource,
+            deviceId,
+            url,
+            scale,
+            rotation,
+            flipHorizontally,
+            flipVertically,
+            crosshair,
+            muted
         };
+        // return {
+        //     disabled: true, // this.config.get('disabled', true),
+        //     minimized: this.config.get('minimized', false),
+        //     isFullscreen: false,
+        //     mediaSource: this.config.get('mediaSource', MEDIA_SOURCE_LOCAL),
+        //     deviceId: this.config.get('deviceId', ''),
+        //     url: this.config.get('url', ''),
+        //     scale: this.config.get('geometry.scale', 1.0),
+        //     rotation: this.config.get('geometry.rotation', 0),
+        //     flipHorizontally: this.config.get('geometry.flipHorizontally', false),
+        //     flipVertically: this.config.get('geometry.flipVertically', false),
+        //     crosshair: this.config.get('crosshair', false),
+        //     muted: this.config.get('muted', false)
+        // };
     }
 
     componentDidMount() {
@@ -115,19 +155,37 @@ class WebcamWidget extends PureComponent {
             flipVertically,
             crosshair,
             muted
-        } = this.state;
+        } = this.props;
 
-        this.config.set('disabled', disabled);
-        this.config.set('minimized', minimized);
-        this.config.set('mediaSource', mediaSource);
-        this.config.set('deviceId', deviceId);
-        this.config.set('url', url);
-        this.config.set('geometry.scale', scale);
-        this.config.set('geometry.rotation', rotation);
-        this.config.set('geometry.flipHorizontally', flipHorizontally);
-        this.config.set('geometry.flipVertically', flipVertically);
-        this.config.set('crosshair', crosshair);
-        this.config.set('muted', muted);
+        // this.config.set('disabled', disabled);
+        // this.config.set('minimized', minimized);
+        // this.config.set('mediaSource', mediaSource);
+        // this.config.set('deviceId', deviceId);
+        // this.config.set('url', url);
+        // this.config.set('geometry.scale', scale);
+        // this.config.set('geometry.rotation', rotation);
+        // this.config.set('geometry.flipHorizontally', flipHorizontally);
+        // this.config.set('geometry.flipVertically', flipVertically);
+        // this.config.set('crosshair', crosshair);
+        // this.config.set('muted', muted);
+
+        this.props.updateWidgetState(
+            {
+                disabled,
+                minimized,
+                mediaSource,
+                deviceId,
+                url,
+                geometry: {
+                    scale,
+                    rotation,
+                    flipHorizontally,
+                    flipVertically
+                },
+                crosshair,
+                muted
+            }
+        );
 
         if (!prevState.disabled && disabled) {
             this.video.current.pause();
@@ -149,9 +207,7 @@ class WebcamWidget extends PureComponent {
     };
 
     render() {
-        const { widgetId } = this.props;
         const { disabled, minimized, isFullscreen } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w-]+/);
         const actions = {
             ...this.actions
         };
@@ -169,9 +225,6 @@ class WebcamWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <Space width="8" />
                         </Widget.Sortable>
-                        {isForkedWidget && (
-                            <i className="fa fa-code-fork" style={{ marginRight: 5 }} />
-                        )}
                         {i18n._('Webcam')}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
@@ -228,8 +281,6 @@ class WebcamWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
                                 } else if (eventKey === 'remove') {
                                     this.props.onRemove();
                                 }
@@ -244,11 +295,6 @@ class WebcamWidget extends PureComponent {
                                 />
                                 <Space width="4" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <Space width="4" />
-                                {i18n._('Fork Widget')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="remove">
                                 <i className="fa fa-fw fa-times" />
@@ -281,4 +327,44 @@ class WebcamWidget extends PureComponent {
     }
 }
 
-export default WebcamWidget;
+const mapStateToProps = (state, ownProps) => {
+    const { widgets } = state.widget;
+    const { widgetId } = ownProps;
+    const {
+        disabled = true, // this.config.get('disabled', true),
+        minimized = false,
+        isFullscreen = false,
+        mediaSource = MEDIA_SOURCE_LOCAL,
+        deviceId = '',
+        url = '',
+
+        crosshair = false,
+        muted = false
+    } = widgets[widgetId];
+    const {
+        scale = 1.0,
+        rotation = 0,
+        flipHorizontally = false,
+        flipVertically = false
+    } = widgets[widgetId].geometry;
+    return {
+        disabled,
+        minimized,
+        isFullscreen,
+        mediaSource,
+        deviceId,
+        url,
+        scale,
+        rotation,
+        flipHorizontally,
+        flipVertically,
+        crosshair,
+        muted
+    };
+};
+const mapDispatchToProps = (dispatch, ownProps) => {
+    return {
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', state))
+    };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(WebcamWidget);

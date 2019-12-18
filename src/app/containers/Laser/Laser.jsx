@@ -8,19 +8,21 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
-import { actions } from '../../flux/cncLaserShared';
+import { actions as cncLaserActions } from '../../flux/cncLaserShared';
+import { actions as widgetActions } from '../../flux/widget';
 import styles from './styles.styl';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 
 class Laser extends Component {
     static propTypes = {
+        widgets: PropTypes.array.isRequired,
         style: PropTypes.object,
-        uploadImage: PropTypes.func.isRequired
+        uploadImage: PropTypes.func.isRequired,
+        updateTabContainer: PropTypes.func.isRequired
     };
 
     state = {
-        widgets: ['laser-set-background', 'laser-params', 'laser-output'],
         isDraggingWidget: false
     };
 
@@ -52,28 +54,15 @@ class Laser extends Component {
         }
     };
 
-    widgetMap = {};
-
-    constructor(props) {
-        super(props);
-
-        for (const widgetId of this.state.widgets) {
-            this.widgetMap[widgetId] = (
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget widgetId={widgetId} />
-                </div>
-            );
-        }
-    }
 
     onChangeWidgetOrder = (widgets) => {
-        this.setState({ widgets });
+        this.props.updateTabContainer({ widgets });
     };
 
     render() {
         const style = this.props.style;
         const state = this.state;
-        const widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
+        const widgets = this.props.widgets;
 
         return (
             <div style={style}>
@@ -109,7 +98,13 @@ class Laser extends Component {
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >
-                                    {widgets}
+                                    {widgets.map(widget => {
+                                        return (
+                                            <div data-widget-id={widget} key={widget}>
+                                                <Widget widgetId={widget} />
+                                            </div>
+                                        );
+                                    })}
                                 </Sortable>
                             </form>
                         </div>
@@ -119,12 +114,20 @@ class Laser extends Component {
         );
     }
 }
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const widgets = widget.laser.default.widgets;
+    return {
+        widgets
+    };
+};
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure))
+        uploadImage: (file, mode, onFailure) => dispatch(cncLaserActions.uploadImage('laser', file, mode, onFailure)),
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('laser', 'default', widgets))
     };
 };
 
 // https://stackoverflow.com/questions/47657365/can-i-mapdispatchtoprops-without-mapstatetoprops-in-redux
-export default connect(null, mapDispatchToProps)(Laser);
+export default connect(mapStateToProps, mapDispatchToProps)(Laser);

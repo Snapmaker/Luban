@@ -6,16 +6,25 @@ import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import modal from '../../lib/modal';
+import { CONNECTION_TYPE_WIFI } from '../../constants';
+import FileTransitModal from '../WorkspaceVisualizer/FileTransitModal';
 
 
 class VisualizerTopLeft extends PureComponent {
     static propTypes = {
         canUndo: PropTypes.bool.isRequired,
         canRedo: PropTypes.bool.isRequired,
+        gcodeLine: PropTypes.object,
+        isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         uploadModel: PropTypes.func.isRequired,
         undo: PropTypes.func.isRequired,
         redo: PropTypes.func.isRequired
     };
+
+    state = {
+        fileTransitModalVisible: false
+    }
 
     fileInput = React.createRef();
 
@@ -26,6 +35,7 @@ class VisualizerTopLeft extends PureComponent {
         },
         onChangeFile: async (event) => {
             const file = event.target.files[0];
+            console.log('onChangeFile', file);
             try {
                 await this.props.uploadModel(file);
             } catch (e) {
@@ -45,7 +55,8 @@ class VisualizerTopLeft extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { canUndo, canRedo } = this.props;
+        const { canUndo, canRedo, gcodeLine, isConnected, connectionType } = this.props;
+        const { fileTransitModalVisible } = this.state;
         return (
             <React.Fragment>
                 <input
@@ -81,18 +92,44 @@ class VisualizerTopLeft extends PureComponent {
                 >
                     <div className={styles['btn-redo']} />
                 </Anchor>
+                {isConnected && connectionType === CONNECTION_TYPE_WIFI && (
+                    <div className="btn-group btn-group-sm">
+                        <button
+                            type="button"
+                            className="sm-btn-small sm-btn-primary"
+                            style={{
+                                marginLeft: '10px'
+                            }}
+                            disabled={!gcodeLine}
+                            onClick={actions.handleSend}
+                            title={i18n._('File Transit via Wi-Fi')}
+                        >
+                            {i18n._('File Transit via Wi-Fi')}
+                        </button>
+                    </div>
+                )}
+                {fileTransitModalVisible && (
+                    <FileTransitModal
+                        // gcodeList={this.props.gcodeList}
+                        onClose={this.actions.handleCancelSend}
+                    />
+                )}
             </React.Fragment>
         );
     }
 }
 
 const mapStateToProps = (state) => {
+    const { isConnected, connectionType } = state.machine;
     const printing = state.printing;
-    const { canUndo, canRedo } = printing;
+    const { canUndo, canRedo, gcodeLine } = printing;
 
     return {
         canUndo,
-        canRedo
+        canRedo,
+        gcodeLine,
+        isConnected,
+        connectionType
     };
 };
 

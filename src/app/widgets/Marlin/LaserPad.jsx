@@ -4,11 +4,10 @@ import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
 import styles from '../styles.styl';
-
 
 class LaserPad extends PureComponent {
     static propTypes = {
@@ -34,13 +33,12 @@ class LaserPad extends PureComponent {
         },
         toggleToolHead: () => {
             if (!this.actions.isLaserOn()) {
-                this.props.executeGcode(`M3 P${this.state.headPower}`);
+                this.props.executeGcode(`M3 P${this.state.headPower} S${this.state.headPower * 255 / 100}`);
             } else {
                 this.props.executeGcode('M5');
             }
         },
         laserSave: () => {
-            // TODO: deal with commands
             controller.command('lasertest:on', this.state.headPower, 1);
             this.props.executeGcode('M500');
         }

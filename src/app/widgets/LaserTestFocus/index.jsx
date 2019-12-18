@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
@@ -8,30 +10,19 @@ import {
     SMMinimizeButton,
     SMDropdownButton
 } from '../../components/SMWidget';
-import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
+import { MACHINE_HEAD_TYPE } from '../../constants';
 
 
 class LaserTestFocusWidget extends PureComponent {
-    state = {
-        isConnected: false,
-        isLaser: false,
-        showInstructions: false
+    static propTypes = {
+        headType: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired
     };
 
-    controllerEvents = {
-        'serialport:open': () => {
-            this.setState({ isConnected: true });
-        },
-        'serialport:close': () => {
-            this.setState({ isConnected: false });
-        },
-        'Marlin:state': (state) => {
-            const headType = state.headType;
-            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-            this.setState({ isLaser });
-        }
+    state = {
+        showInstructions: false
     };
 
     actions = {
@@ -48,34 +39,11 @@ class LaserTestFocusWidget extends PureComponent {
         WidgetState.bind(this);
     }
 
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
     render() {
         const state = this.state;
         const actions = this.actions;
 
-        // TODO: move this condition to widget's filter
-        if (!state.isLaser || !state.isConnected) {
+        if (!this.props.isConnected || !(this.props.headType === MACHINE_HEAD_TYPE.LASER.value)) {
             return null;
         }
 
@@ -112,5 +80,11 @@ class LaserTestFocusWidget extends PureComponent {
         );
     }
 }
-
-export default LaserTestFocusWidget;
+const mapStateToProps = (state) => {
+    const { headType, isConnected } = state.machine;
+    return {
+        headType: headType,
+        isConnected
+    };
+};
+export default connect(mapStateToProps)(LaserTestFocusWidget);

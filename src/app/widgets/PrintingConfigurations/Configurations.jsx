@@ -36,13 +36,17 @@ function isOfficialDefinition(definition) {
 class Configurations extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
-
+        isAdvised: PropTypes.bool.isRequired,
+        defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         removeQualityDefinition: PropTypes.func.isRequired,
-        updateQualityDefinitionName: PropTypes.func.isRequired
+        updateQualityDefinitionName: PropTypes.func.isRequired,
+
+        updateDefaultAdvised: PropTypes.func.isRequired,
+        updateDefaultQualityId: PropTypes.func.isRequired
     };
 
     state = {
@@ -76,7 +80,8 @@ class Configurations extends PureComponent {
                 fields: [
                     'wall_thickness',
                     'top_thickness',
-                    'bottom_thickness'
+                    'bottom_thickness',
+                    'outer_inset_first'
                 ]
             },
             {
@@ -160,11 +165,14 @@ class Configurations extends PureComponent {
                 isOfficialTab: true,
                 officialQualityDefinition: definition
             });
+            this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
         onSelectCustomDefinitionById: (definitionId) => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === definitionId);
 
+            // has to update defaultQualityId
+            this.props.updateDefaultQualityId(definitionId);
             this.actions.onSelectCustomDefinition(definition);
         },
         onSelectCustomDefinition: (definition) => {
@@ -173,6 +181,7 @@ class Configurations extends PureComponent {
                 customQualityDefinition: definition,
                 isRenaming: false
             });
+            // this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
         // Extended operations
@@ -257,6 +266,21 @@ class Configurations extends PureComponent {
             if (this.props.qualityDefinitions.length) {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
+        },
+        onSetOfficoalTab: (isAdvised) => {
+            if (isAdvised) {
+                this.setState({
+                    isOfficialTab: true
+                });
+                this.props.updateDefaultQualityId('quality.fast_print');
+            } else {
+                this.setState({
+                    isOfficialTab: false
+                });
+                this.props.updateDefaultQualityId('quality.fast_print');
+                // this.actions.onSelectOfficialDefinition()
+            }
+            this.props.updateDefaultAdvised(isAdvised);
         }
     };
 
@@ -293,6 +317,30 @@ class Configurations extends PureComponent {
 
             this.setState(newState);
         }
+
+        // console.log('>>>>>', nextProps.isAdvised, nextProps.defaultQualityId);
+        if (nextProps.isAdvised !== this.props.isAdvised) {
+            if (nextProps.isAdvised) {
+                this.actions.onSetOfficoalTab(true);
+            } else {
+                this.actions.onSetOfficoalTab(false);
+            }
+            if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
+                const definition = this.props.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+                if (nextProps.isAdvised) {
+                    this.actions.onSelectOfficialDefinition(definition);
+                } else {
+                    this.actions.onSelectCustomDefinition(definition);
+                }
+            }
+        } else if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+            if (nextProps.isAdvised) {
+                this.actions.onSelectOfficialDefinition(definition);
+            } else {
+                this.actions.onSelectCustomDefinition(definition);
+            }
+        }
     }
 
     render() {
@@ -320,9 +368,7 @@ class Configurations extends PureComponent {
                         style={{ width: '50%' }}
                         className={classNames('sm-tab', { 'sm-selected': isOfficialTab })}
                         onClick={() => {
-                            this.setState({
-                                isOfficialTab: true
-                            });
+                            this.actions.onSetOfficoalTab(true);
                         }}
                     >
                         {i18n._('Recommended')}
@@ -332,9 +378,7 @@ class Configurations extends PureComponent {
                         style={{ width: '50%' }}
                         className={classNames('sm-tab', { 'sm-selected': !isOfficialTab })}
                         onClick={() => {
-                            this.setState({
-                                isOfficialTab: false
-                            });
+                            this.actions.onSetOfficoalTab(false);
                         }}
                     >
                         {i18n._('Customize')}
@@ -509,10 +553,10 @@ class Configurations extends PureComponent {
                                         {group.expanded && group.fields.map((key) => {
                                             const setting = qualityDefinition.settings[key];
 
-                                            const { label, description, type, unit = '', enabled = '', options } = setting;
+                                            const { label, description, type, unit = '', enabled, options } = setting;
                                             const defaultValue = setting.default_value;
 
-                                            if (enabled) {
+                                            if (typeof enabled === 'string') {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
@@ -562,6 +606,8 @@ class Configurations extends PureComponent {
                                                         return null;
                                                     }
                                                 }
+                                            } else if (typeof enabled === 'boolean' && enabled === false) {
+                                                return null;
                                             }
 
                                             const opts = [];
@@ -643,15 +689,18 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { qualityDefinitions, activeDefinition } = printing;
+    const { qualityDefinitions, defaultQualityId, isAdvised } = printing;
     return {
         qualityDefinitions,
-        activeDefinition
+        defaultQualityId,
+        isAdvised
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
+        updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
         updateActiveDefinition: (definition) => dispatch(printingActions.updateActiveDefinition(definition)),
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
         removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),

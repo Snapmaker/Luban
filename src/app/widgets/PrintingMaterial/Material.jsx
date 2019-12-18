@@ -39,13 +39,15 @@ function isOfficialDefinition(definition) {
 class Material extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
-
+        defaultMaterialId: PropTypes.string.isRequired,
         materialDefinitions: PropTypes.array.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         updateMaterialDefinitionName: PropTypes.func.isRequired,
         removeMaterialDefinition: PropTypes.func.isRequired,
-        updateDefinitionSettings: PropTypes.func.isRequired
+        updateDefinitionSettings: PropTypes.func.isRequired,
+
+        updateDefaultMaterialId: PropTypes.func.isRequired
     };
 
     state = {
@@ -64,6 +66,8 @@ class Material extends PureComponent {
                     materialDefinition: definition,
                     isRenaming: false
                 });
+
+                this.props.updateDefaultMaterialId(definition.definitionId);
                 this.props.updateActiveDefinition(definition);
             }
         },
@@ -78,7 +82,6 @@ class Material extends PureComponent {
             this.props.updateDefinitionSettings(definition, {
                 [key]: { default_value: value }
             });
-
             this.props.updateActiveDefinition(definition);
         },
         onDuplicateMaterialDefinition: async () => {
@@ -89,6 +92,7 @@ class Material extends PureComponent {
             this.actions.onChangeMaterial(newDefinition.definitionId);
         },
         isMaterialSelected: (option) => {
+            // console.log(this.state.materialDefinition, option);
             return this.state.materialDefinition && this.state.materialDefinition.name === option.label;
         },
         onChangeNewName: (event) => {
@@ -180,6 +184,9 @@ class Material extends PureComponent {
             });
 
             this.setState(newState);
+        }
+        if (nextProps.defaultMaterialId !== this.props.defaultMaterialId) {
+            this.actions.onChangeMaterial(nextProps.defaultMaterialId);
         }
     }
 
@@ -310,12 +317,13 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     return {
         materialDefinitions: printing.materialDefinitions,
-        activeDefinition: printing.activeDefinition
+        defaultMaterialId: printing.defaultMaterialId
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
         updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
         duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),

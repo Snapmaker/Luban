@@ -1,10 +1,10 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import ensureArray from '../lib/ensure-array';
-import store from '../store';
+import { machineStore } from '../store/local-storage';
 
 const bearer = (request) => {
-    const token = store.get('session.token');
+    const token = machineStore.get('session.token');
     if (token) {
         request.set('Authorization', `Bearer ${token}`);
     }
@@ -56,8 +56,13 @@ const signin = defaultAPIFactory((options) => {
 //
 
 const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
+const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/uploadCaseFile').send(formData));
+const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
+const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
+const uploadLaserCaseImage = defaultAPIFactory((formdata) => request.post('/api/image/laserCaseImage').send(formdata));
+
 
 // Stock Remap
 // options
@@ -72,6 +77,20 @@ const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/imag
 const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
 
 const processTrace = defaultAPIFactory((options) => request.post('/api/image/trace', options));
+
+const processStitch = defaultAPIFactory((options) => request.post('/api/image/stitch', options));
+
+const processStitchEach = defaultAPIFactory((options) => request.post('/api/image/stitchEach', options));
+
+const processGetPhoto = defaultAPIFactory((options) => request.post('/api/image/getPhoto', options));
+
+const processTakePhoto = defaultAPIFactory((options) => request.post('/api/image/takePhoto', options));
+
+const getCameraCalibration = defaultAPIFactory((options) => request.post('/api/image/getCameraCalibration', options));
+
+const cameraCalibrationPhoto = defaultAPIFactory((options) => request.post('/api/image/cameraCalibrationPhoto', options));
+
+const setCameraCalibrationMatrix = defaultAPIFactory((options) => request.post('/api/image/setCameraCalibrationMatrix', options));
 
 //
 // svg
@@ -129,19 +148,19 @@ const setState = defaultAPIFactory((options) => {
         .send(data);
 });
 
-const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key: key }));
+const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key }));
 
 //
 // G-code
 //
 const loadGCode = defaultAPIFactory((options) => {
-    const { port = '', name = '', gcode = '' } = { ...options };
+    const { port = '', dataSource = '', name = '', gcode = '' } = { ...options };
     return request
         .post('/api/gcode')
-        .send({ port, name, gcode });
+        .send({ port, dataSource, name, gcode });
 });
 
-const fetchGCode = defaultAPIFactory(({ port = '' }) => request.get('/api/gcode').query({ port: port }));
+const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({ port, dataSource }));
 
 //
 // Users
@@ -216,10 +235,29 @@ printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print
 printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
 
 printingConfigs.getDefinition = defaultAPIFactory((definitionId) => request.get(`/api/printingDefinition/${definitionId}`));
+
 printingConfigs.getDefinitionsByType = defaultAPIFactory((type) => request.get(`/api/printingDefinitionsByType/${type}`));
+
 printingConfigs.createDefinition = defaultAPIFactory((definition) => request.post('/api/printingDefinition').send(definition));
+
 printingConfigs.removeDefinition = defaultAPIFactory((definitionId) => request.delete(`/api/printingDefinition/${definitionId}`));
+
 printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition) => request.put(`/api/printingDefinition/${definitionId}`).send(definition));
+
+//
+// Macros
+//
+const macros = {};
+
+macros.fetch = defaultAPIFactory((options) => request.get('/api/macros').query(options));
+
+macros.create = defaultAPIFactory((options) => request.post('/api/macros').send(options));
+
+macros.read = defaultAPIFactory((id) => request.get(`/api/macros/${id}`));
+
+macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id}`).send(options));
+
+macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
 
 export default {
     // version
@@ -229,11 +267,21 @@ export default {
     utils,
 
     uploadFile,
+    uploadCaseFile,
+    uploadGcodeFile,
+    uploadUpdateFile,
     uploadImage,
+    uploadLaserCaseImage,
     stockRemapProcess,
     processImage,
     processTrace,
-
+    processStitch,
+    processStitchEach,
+    processGetPhoto,
+    processTakePhoto,
+    getCameraCalibration,
+    cameraCalibrationPhoto,
+    setCameraCalibrationMatrix,
     // svg
     convertRasterToSvg,
     convertTextToSvg,
@@ -254,5 +302,6 @@ export default {
     signin,
     controllers, // Controllers
     // users, // Users
+    macros,
     watch // Watch Directory
 };

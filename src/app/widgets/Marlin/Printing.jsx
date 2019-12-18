@@ -1,10 +1,9 @@
-import get from 'lodash/get';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -12,7 +11,8 @@ import { NumberInput as Input } from '../../components/Input';
 import Overrides from './Overrides';
 import MachineModal from './MachineModal';
 import styles from './index.styl';
-import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
+import { TEMPERATURE_MAX, TEMPERATURE_MIN } from '../../constants';
+
 
 class Printing extends PureComponent {
     static propTypes = {
@@ -21,22 +21,39 @@ class Printing extends PureComponent {
         actions: PropTypes.object
     };
 
+    state = {
+        nozzleTargetTemperature: null,
+        bedTargetTemperature: null
+    }
+
     actions = {
         onApplyHeadTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M104 S${state.nozzleTemperature}`);
+            controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
         },
         onCancelHeadTemperature: () => {
-            this.props.actions.changeNozzleTemperature(0);
+            this.props.actions.changeNozzleTargetTemperature(0);
             controller.command('gcode', 'M104 S0');
         },
-        onApplyBedTemperature: () => {
+        onApplybedTargetTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M140 S${state.bedTemperature}`);
+            controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
         },
-        onCancelBedTemperature: () => {
-            this.props.actions.changeBedTemperature(0);
+        onCancelbedTargetTemperature: () => {
+            this.props.actions.changeBedTargetTemperature(0);
             controller.command('gcode', 'M140 S0');
+        },
+        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+            this.setState({
+                nozzleTargetTemperature
+            });
+            this.props.actions.changeNozzleTargetTemperature(nozzleTargetTemperature);
+        },
+        changeBedTargetTemperature: (bedTargetTemperature) => {
+            this.setState({
+                bedTargetTemperature
+            });
+            this.props.actions.changeBedTargetTemperature(bedTargetTemperature);
         }
     };
 
@@ -44,9 +61,11 @@ class Printing extends PureComponent {
         const { headType, state, actions } = this.props;
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
-        const ovF = get(controllerState, 'ovF', 0);
-        const ovS = get(controllerState, 'ovS', 0);
-        // const spindle = get(controllerState, 'spindle') || none;
+        // const { speedFactor, extruderFactor, temperature = {} } = controllerState;
+        const { temperature = {} } = controllerState;
+        const { speedFactor, extruderFactor } = state;
+        const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || temperature.tTarget || state.nozzleTargetTemperature);
+        const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || temperature.bTarget || state.bedTargetTemperature);
 
         return (
             <div>
@@ -93,26 +112,26 @@ class Printing extends PureComponent {
                         <tbody>
                             <tr>
                                 <td style={{ padding: '0' }}>
-                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Nozzle')}</p>
+                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Extruder')}</p>
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {controllerState.temperature.t}°C
+                                        {temperature.t}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
                                     <TipTrigger
-                                        title={i18n._('Nozzle')}
+                                        title={i18n._('Extruder')}
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.nozzleTemperature}
+                                                value={nozzleTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeNozzleTemperature}
+                                                onChange={this.actions.changeNozzleTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
@@ -138,7 +157,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {controllerState.temperature.b}°C
+                                        {temperature.b}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -150,10 +169,10 @@ class Printing extends PureComponent {
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.bedTemperature}
+                                                value={bedTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeBedTemperature}
+                                                onChange={this.actions.changeBedTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
@@ -165,12 +184,12 @@ class Printing extends PureComponent {
                                         className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                         aria-hidden="true"
                                         disabled={!canClick}
-                                        onClick={this.actions.onApplyBedTemperature}
+                                        onClick={this.actions.onApplybedTargetTemperature}
                                     />
                                     <Anchor
                                         className={classNames('fa', 'fa-times', styles['fa-btn'])}
                                         disabled={!canClick}
-                                        onClick={this.actions.onCancelBedTemperature}
+                                        onClick={this.actions.onCancelbedTargetTemperature}
                                     />
                                 </td>
                             </tr>
@@ -179,7 +198,7 @@ class Printing extends PureComponent {
                 )}
                 <Anchor className="sm-parameter-header" onClick={actions.toggleOverridesSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Overrides')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Speed Factor')}</span>
                     <span className={classNames(
                         'fa',
                         overridesSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
@@ -190,8 +209,8 @@ class Printing extends PureComponent {
                 </Anchor>
                 {overridesSectionExpanded && (
                     <Overrides
-                        ovF={ovF}
-                        ovS={ovS}
+                        speedFactor={speedFactor}
+                        extruderFactor={extruderFactor}
                         actions={actions}
                     />
                 )}

@@ -4,29 +4,37 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { CNC_GCODE_SUFFIX } from '../../constants';
+import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
+import api from '../../api';
 
 
 class Output extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
+        minimized: PropTypes.bool.isRequired,
 
+        modelGroup: PropTypes.object.isRequired,
+        toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
-        workState: PropTypes.string.isRequired,
+        workflowState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
+        addGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired
     };
+
+    thumbnail = React.createRef();
 
     actions = {
         onGenerateGcode: () => {
@@ -37,7 +45,8 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            this.props.generateGcode();
+            const thumbnail = this.thumbnail.current.getThumbnail();
+            this.props.generateGcode(thumbnail);
         },
         onLoadGcode: () => {
             const { gcodeBeans } = this.props;
@@ -49,11 +58,44 @@ class Output extends PureComponent {
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                this.props.addGcode('CNC carving object(s)', gcode, renderMethod);
+                const fileName = pathWithRandomSuffix(`${gcodeBeans[i].modelInfo.originalName}.${CNC_GCODE_SUFFIX}`);
+                this.props.addGcode(fileName, gcode, renderMethod);
             }
 
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
+
+            this.actions.onSaveGcode();
+        },
+        onSaveGcode: () => {
+            const { gcodeBeans } = this.props;
+            if (gcodeBeans.length === 0) {
+                return;
+            }
+
+            const gcodeArr = [];
+            for (let i = 0; i < gcodeBeans.length; i++) {
+                const { gcode } = gcodeBeans[i];
+                gcodeArr.push(gcode);
+            }
+            const gcodeStr = gcodeArr.join('\n');
+            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
+            const fileName = `${gcodeBeans[0].modelInfo.originalName}${LASER_GCODE_SUFFIX}`;
+            const file = new File([blob], fileName);
+            const formData = new FormData();
+            formData.append('file', file);
+            api.uploadFile(formData).then((res) => {
+                const response = res.body;
+                this.props.addGcodeFile({
+                    name: fileName,
+                    uploadName: response.uploadName,
+                    size: file.size,
+                    lastModifiedDate: file.lastModifiedDate,
+                    img: gcodeBeans[0].img
+                });
+            }).catch(() => {
+                // Ignore error
+            });
         },
         onExport: () => {
             const { gcodeBeans } = this.props;
@@ -92,70 +134,80 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
+        const { workflowState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
 
         return (
             <div>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    disabled={autoPreviewEnabled}
-                    onClick={manualPreview}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Preview')}
-                </button>
-                <TipTrigger
-                    title={i18n._('Auto Preview')}
-                    content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
-                >
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
-                        <input
-                            type="checkbox"
-                            className="sm-parameter-row__checkbox"
-                            checked={autoPreviewEnabled}
-                            onChange={actions.onToggleAutoPreview}
-                        />
-                    </div>
-                </TipTrigger>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onGenerateGcode}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onLoadGcode}
-                    disabled={workState === 'running' || !isGcodeGenerated}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Load G-code to Workspace')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onExport}
-                    disabled={workState === 'running' || !isGcodeGenerated}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    {i18n._('Export G-code to file')}
-                </button>
+                <div>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        disabled={autoPreviewEnabled}
+                        onClick={manualPreview}
+                        style={{ display: 'block', width: '100%' }}
+                    >
+                        {i18n._('Preview')}
+                    </button>
+                    <TipTrigger
+                        title={i18n._('Auto Preview')}
+                        content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
+                            <input
+                                type="checkbox"
+                                className="sm-parameter-row__checkbox"
+                                checked={autoPreviewEnabled}
+                                onChange={actions.onToggleAutoPreview}
+                            />
+                        </div>
+                    </TipTrigger>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onGenerateGcode}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Generate G-code')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onLoadGcode}
+                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Load G-code to Workspace')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onExport}
+                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Export G-code to file')}
+                    </button>
+                </div>
+                <Thumbnail
+                    ref={this.thumbnail}
+                    modelGroup={this.props.modelGroup}
+                    toolPathModelGroup={this.props.toolPathModelGroup}
+                    minimized={this.props.minimized}
+                />
             </div>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { workState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled } = state.cnc;
+    const { workflowState } = state.machine;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.cnc;
     return {
+        modelGroup,
+        toolPathModelGroup,
         isGcodeGenerated,
-        workState,
+        workflowState,
         gcodeBeans,
         isAllModelsPreviewed,
         previewFailed,
@@ -165,8 +217,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
+        generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('cnc', thumbnail)),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+        addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         manualPreview: () => dispatch(sharedActions.manualPreview('cnc', true)),
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value))

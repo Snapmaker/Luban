@@ -2,26 +2,34 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
-import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
+import { connect } from 'react-redux';
+import { Button } from '@trendmicro/react-buttons';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, EXPERIMENTAL_WIFI_CONTROL, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
 import Notifications from '../../components/Notifications';
 
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
+import { actions as machineActions } from '../../flux/machine';
+import Modal from '../../components/Modal';
 
 
 class Connection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+        dataSource: PropTypes.string.isRequired,
+        connectionType: PropTypes.string.isRequired,
+        series: PropTypes.string.isRequired,
+        isHomed: PropTypes.bool,
+        isConnected: PropTypes.bool.isRequired,
+        updateConnectionState: PropTypes.func.isRequired,
+        executeGcodeAutoHome: PropTypes.func.isRequired
     };
 
     state = {
-        // connection types: serial, wifi
-        connectionType: 'serial',
-        connected: false,
-        alertMessage: ''
+        alertMessage: '',
+        showHomeReminder: false
     };
 
     actions = {
@@ -31,20 +39,31 @@ class Connection extends PureComponent {
             });
         },
         onSelectTabSerial: () => {
-            this.setState({
-                connectionType: 'serial'
+            this.props.updateConnectionState({
+                connectionType: CONNECTION_TYPE_SERIAL
             });
         },
         onSelectTabWifi: () => {
+            this.props.updateConnectionState({
+                connectionType: CONNECTION_TYPE_WIFI
+            });
+        },
+        openHomeModal: () => {
             this.setState({
-                connectionType: 'wifi'
+                showHomeReminder: true
+            });
+        },
+        closeHomeModal: () => {
+            this.setState({
+                showHomeReminder: false
+            });
+        },
+        clickHomeModalOk: () => {
+            this.props.executeGcodeAutoHome();
+            this.setState({
+                showHomeReminder: false
             });
         }
-    };
-
-    controllerEvents = {
-        'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:close': (options) => this.onPortClosed(options)
     };
 
     constructor(props) {
@@ -52,38 +71,24 @@ class Connection extends PureComponent {
         this.props.setTitle(i18n._('Connection'));
     }
 
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    onPortOpened() {
-        this.setState({ connected: true });
-    }
-
-    onPortClosed() {
-        this.setState({ connected: false });
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
+    componentWillReceiveProps(nextProps) {
+        const { isHomed } = nextProps;
+        if (this.props.isHomed !== isHomed && !isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.openHomeModal();
+            }
+        }
+        if (this.props.isHomed !== isHomed && isHomed) {
+            if (this.props.dataSource === PROTOCOL_TEXT) {
+                this.actions.closeHomeModal();
+            }
+        }
     }
 
     render() {
-        const { connectionType, connected, alertMessage } = this.state;
+        const { connectionType, isConnected, series, isHomed } = this.props;
+        const { alertMessage, showHomeReminder } = this.state;
+        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
 
         return (
             <div>
@@ -98,18 +103,18 @@ class Connection extends PureComponent {
                         <button
                             type="button"
                             style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_SERIAL) })}
                             onClick={this.actions.onSelectTabSerial}
-                            disabled={connected}
+                            disabled={isConnected}
                         >
                             {i18n._('Serial Port')}
                         </button>
                         <button
                             type="button"
                             style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'wifi') })}
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === CONNECTION_TYPE_WIFI) })}
                             onClick={this.actions.onSelectTabWifi}
-                            disabled={connected}
+                            disabled={isConnected}
                         >
                             {i18n._('Wi-Fi')}
                         </button>
@@ -118,21 +123,61 @@ class Connection extends PureComponent {
                 {!EXPERIMENTAL_WIFI_CONTROL && (
                     <p>{i18n._('Serial Port')}</p>
                 )}
-                {connectionType === 'serial' && (
+                {connectionType === CONNECTION_TYPE_SERIAL && (
                     <SerialConnection
+                        dataSource={this.props.dataSource}
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
                 )}
-                {connectionType === 'wifi' && (
+                {connectionType === CONNECTION_TYPE_WIFI && (
                     <WifiConnection
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
+                )}
+                {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
+                    <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
+                        <Modal.Header>
+                            <Modal.Title>
+                                {i18n._('Home Reminder')}
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div>
+                                {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={this.actions.clickHomeModalOk}
+                            >
+                                {i18n._('OK')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
                 )}
             </div>
         );
     }
 }
+const mapStateToProps = (state, ownPros) => {
+    const { widgets } = state.widget;
+    const dataSource = widgets[ownPros.widgetId].dataSource;
 
-export default Connection;
+    const { connectionType, isConnected, series, isHomed } = state.machine;
+
+    return {
+        dataSource,
+        connectionType,
+        isConnected,
+        series,
+        isHomed
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
+    updateConnectionState: (state) => dispatch(machineActions.updateConnectionState(state))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Connection);

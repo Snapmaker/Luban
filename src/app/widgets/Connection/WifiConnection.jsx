@@ -8,19 +8,29 @@ import { map } from 'lodash';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
-import { ABSENT_OBJECT } from '../../constants';
+import { ABSENT_OBJECT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
+import MachineSelection from './MachineSelection';
 
 
 class WifiConnection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
+        isOpen: PropTypes.bool.isRequired,
+        isConnected: PropTypes.bool.isRequired,
+
+
         discoverServers: PropTypes.func.isRequired,
-        setServer: PropTypes.func.isRequired,
-        unsetServer: PropTypes.func.isRequired
+        openServer: PropTypes.func.isRequired,
+        closeServer: PropTypes.func.isRequired,
+        setServer: PropTypes.func.isRequired
+    };
+
+    state = {
+        server: {},
+        showMachineSelected: false
     };
 
     actions = {
@@ -28,12 +38,32 @@ class WifiConnection extends PureComponent {
             this.props.discoverServers();
         },
         onChangeServerOption: (option) => {
-            for (const server of this.props.servers) {
-                if (server.name === option.name && server.address === option.address) {
-                    this.props.setServer(server);
-                    break;
-                }
+            const find = this.props.servers.find(v => v.name === option.name && v.address === option.address);
+            if (find) {
+                this.actions.setServer(find);
+                this.setState({
+                    server: find
+                });
             }
+        },
+        openModal: () => {
+            this.setState({
+                showMachineSelected: true
+            });
+        },
+        closeModal: () => {
+            this.setState({
+                showMachineSelected: false
+            });
+        },
+        setServer: (server) => {
+            this.props.setServer(server);
+        },
+        openServer: () => {
+            this.props.openServer();
+        },
+        closeServer: () => {
+            this.props.closeServer();
         }
     };
 
@@ -49,41 +79,26 @@ class WifiConnection extends PureComponent {
     componentWillReceiveProps(nextProps) {
         // Simply compare 2 arrays
         if (nextProps.servers !== this.props.servers) {
-            // Auto set server on server changes
             this.autoSetServer(nextProps.servers);
         }
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.server !== ABSENT_OBJECT && this.props.server !== prevProps.server) {
-            const { config, server } = this.props;
-            config.set('server.name', server.name);
-            config.set('server.address', server.address);
-        }
-    }
-
-    componentWillUnmount() {
-        this.props.unsetServer();
-    }
-
     autoSetServer(servers) {
-        const { config } = this.props;
+        const { server } = this.props;
 
-        const name = config.get('server.name');
-        const address = config.get('server.address');
-
-        // Found recently used server
-        let found = false;
-        for (const server of servers) {
-            if (server.name === name && server.address === address) {
-                found = true;
-                this.props.setServer(server);
-                break;
-            }
+        const find = servers.find(v => v.name === server.name && v.address === server.address);
+        if (find) {
+            this.setState({
+                server: find
+            });
+            this.props.setServer(find);
         }
 
         // Default select first server
-        if (!found && servers.length) {
+        if (!find && servers.length) {
+            this.setState({
+                server: servers[0]
+            });
             this.props.setServer(servers[0]);
         }
     }
@@ -105,8 +120,8 @@ class WifiConnection extends PureComponent {
     };
 
     render() {
-        const { servers, server, serverStatus, discovering } = this.props;
-
+        const { servers, serverStatus, discovering, isConnected, isOpen } = this.props;
+        const { server } = this.state;
         return (
             <div>
                 <div className="form-group" style={{ marginTop: '10px' }}>
@@ -119,6 +134,7 @@ class WifiConnection extends PureComponent {
                             noResultsText={i18n._('No machines detected.')}
                             onChange={this.actions.onChangeServerOption}
                             optionRenderer={this.renderServerOptions}
+                            disabled={isOpen}
                             options={map(servers, (s) => ({
                                 name: s.name,
                                 address: s.address
@@ -133,6 +149,7 @@ class WifiConnection extends PureComponent {
                                 className="btn btn-default"
                                 name="btn-refresh"
                                 title={i18n._('Refresh')}
+                                disabled={isOpen}
                                 onClick={this.actions.onRefreshServers}
                             >
                                 <i
@@ -147,14 +164,50 @@ class WifiConnection extends PureComponent {
                     </div>
                 </div>
                 <div>
-                    {i18n._('Status')}:
-                    <Space width={4} />
-                    {serverStatus}
-                    <Space width={4} />
-                    {serverStatus === 'IDLE' && <i className="sm-icon-14 sm-icon-idle" />}
-                    {serverStatus === 'PAUSED' && <i className="sm-icon-14 sm-icon-paused" />}
-                    {serverStatus === 'RUNNING' && <i className="sm-icon-14 sm-icon-running" />}
+                    <div
+                        className="btn-group btn-group-sm"
+                        style={{
+                            width: '50%'
+                        }}
+                    >
+                        {!isConnected && (
+                            <button
+                                type="button"
+                                className="sm-btn-small sm-btn-primary"
+                                onClick={this.actions.openServer}
+                                disabled={isOpen}
+                            >
+                                <i className="fa fa-toggle-off" />
+                                <span className="space" />
+                                {i18n._('Open')}
+                            </button>
+                        )}
+                        {isConnected && (
+                            <button
+                                type="button"
+                                className="sm-btn-small sm-btn-danger"
+                                onClick={this.actions.closeServer}
+                            >
+                                <i className="fa fa-toggle-on" />
+                                <Space width={4} />
+                                {i18n._('Close')}
+                            </button>
+                        )}
+                    </div>
+                    <div className="btn-group btn-group-sm">
+                        {i18n._('Status')}:
+                        <Space width={4} />
+                        {serverStatus}
+                        <Space width={4} />
+                        {serverStatus === SERVER_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
+                        {serverStatus === SERVER_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
+                        {serverStatus === SERVER_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
+                    </div>
                 </div>
+                <MachineSelection
+                    display={this.state.showMachineSelected}
+                    closeModal={this.actions.closeModal}
+                />
             </div>
         );
     }
@@ -163,20 +216,23 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { servers, discovering, server, serverStatus } = machine;
+    const { servers, discovering, server, serverStatus, isOpen, isConnected } = machine;
 
     return {
         servers,
         discovering,
         server,
-        serverStatus
+        serverStatus,
+        isOpen,
+        isConnected
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
     discoverServers: () => dispatch(machineActions.discoverServers()),
-    setServer: (server) => dispatch(machineActions.setServer(server)),
-    unsetServer: (server) => dispatch(machineActions.unsetServer(server))
+    openServer: () => dispatch(machineActions.openServer()),
+    closeServer: (state) => dispatch(machineActions.closeServer(state)),
+    setServer: (server) => dispatch(machineActions.setServer(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

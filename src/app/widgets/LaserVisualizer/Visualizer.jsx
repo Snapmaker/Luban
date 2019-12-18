@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 
 import { EPSILON } from '../../constants';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
@@ -17,6 +17,7 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 
 
@@ -282,6 +283,9 @@ class Visualizer extends Component {
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft />
                 </div>
+                <div className={styles['visualizer-top-right']}>
+                    <VisualizerTopRight />
+                </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
                         ref={this.canvas}
@@ -300,7 +304,11 @@ class Visualizer extends Component {
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar actions={this.actions} />
+                    <SecondaryToolbar
+                        zoomIn={this.actions.zoomIn}
+                        zoomOut={this.actions.zoomOut}
+                        autoFocus={this.actions.autoFocus}
+                    />
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>

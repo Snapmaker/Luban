@@ -1,10 +1,10 @@
 import serialport from 'serialport';
 import store from '../../store';
 import logger from '../../lib/logger';
-import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import { MarlinController } from '../../controllers';
 import ensureArray from '../../lib/ensure-array';
 import config from '../configstore';
+import { WRITE_SOURCE_CLIENT } from '../../controllers/constants';
 
 const log = logger('service:socket-server');
 

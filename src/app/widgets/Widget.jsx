@@ -1,9 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import AxesWidget from './Axes/index';
+import DevelopAxesWidget from './DevelopAxes/index';
 import ConnectionWidget from './Connection';
+import ScreenConnectionWidget from './ScreenConnection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
+import MacroWidget from './Macro';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
@@ -17,17 +20,23 @@ import CNCOutputWidget from './CNCOutput';
 import PrintingMaterialWidget from './PrintingMaterial';
 import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
+import WifiTransport from './WifiTransport';
 
 
 const getWidgetByName = (name) => {
     const Widget = {
         'axes': AxesWidget,
+        'axesPanel': DevelopAxesWidget,
         'connection': ConnectionWidget,
+        'connectionPanel': ScreenConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
+        'macro': MacroWidget,
+        'macroPanel': MacroWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
+        'wifi-transport': WifiTransport,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,

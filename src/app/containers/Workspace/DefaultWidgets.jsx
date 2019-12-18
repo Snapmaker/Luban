@@ -1,31 +1,39 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import React from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
 
-const DefaultWidgets = (props) => {
-    const { className } = props;
-    const defaultWidgets = store.get('workspace.container.default.widgets');
-    const widgets = _.map(defaultWidgets, (widgetId) => (
-        <div data-widget-id={widgetId} key={widgetId}>
-            <Widget
-                widgetId={widgetId}
-            />
-        </div>
-    ));
+class DefaultWidgets extends PureComponent {
+    static propTypes = {
+        className: PropTypes.string,
+        defaultWidgets: PropTypes.array.isRequired,
+        toggleFromDefault: PropTypes.func.isRequired
+    };
 
-    return (
-        <div className={classNames(className, styles.widgets)}>
-            {widgets}
-        </div>
-    );
-};
+    render() {
+        const { className } = this.props;
+        const defaultWidgets = _.slice(this.props.defaultWidgets);
+        const widgets = _.map(defaultWidgets, (widgetId) => (
+            <div data-widget-id={widgetId} key={widgetId}>
+                <Widget
+                    widgetId={widgetId}
+                    onToggle={this.props.toggleFromDefault(widgetId)}
+                    sortable={{
+                        handleClassName: 'sortable-handle',
+                        filterClassName: 'sortable-filter'
+                    }}
+                />
+            </div>
+        ));
 
-DefaultWidgets.propTypes = {
-    className: PropTypes.string
-};
+        return (
+            <div className={classNames(className, styles['default-widgets'])}>
+                {widgets}
+            </div>
+        );
+    }
+}
 
 export default DefaultWidgets;

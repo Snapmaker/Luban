@@ -2,17 +2,19 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PROTOCOL_TEXT } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
 import ModelGroup from '../models/ModelGroup';
-import controller from '../../lib/controller';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
+import SerialClient from '../../lib/serialClient';
 
-// return true if tran1 equals tran2
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
+
+// // return true if tran1 equals tran2 uploadModel
 // const customCompareTransformation = (tran1, tran2) => {
 //     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
 //     const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
@@ -27,6 +29,22 @@ import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 //         && Math.abs(sz1 - sz2) < EPSILON
 //     );
 // };
+// return true if tran1 equals tran2 uploadModel
+// eslint-disable-next-line no-unused-vars
+const customCompareTransformation = (tran1, tran2) => {
+    const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
+    const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
+    return (
+        Math.abs(px1 - px2) < EPSILON
+        && Math.abs(pz1 - pz2) < EPSILON
+        && Math.abs(rx1 - rx2) < EPSILON
+        && Math.abs(ry1 - ry2) < EPSILON
+        && Math.abs(rz1 - rz2) < EPSILON
+        && Math.abs(sx1 - sx2) < EPSILON
+        && Math.abs(sy1 - sy2) < EPSILON
+        && Math.abs(sz1 - sz2) < EPSILON
+    );
+};
 
 export const PRINTING_STAGE = {
     EMPTY: 0,
@@ -46,6 +64,9 @@ const INITIAL_STATE = {
     // printing configurations
     materialDefinitions: [],
     qualityDefinitions: [],
+    isAdvised: true,
+    defaultMaterialId: 'material.pla',
+    defaultQualityId: 'quality.fast_print',
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
@@ -333,11 +354,11 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
-    duplicateMaterialDefinition: (definition) => async (dispatch, getState) => {
+    duplicateMaterialDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: `material.${timestamp()}`,
+            definitionId: newDefinitionId || `material.${timestamp()}`,
             name: `#${definition.name}`,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
@@ -358,18 +379,20 @@ export const actions = {
 
         const createdDefinition = await definitionManager.createDefinition(newDefinition);
 
+
         dispatch(actions.updateState({
             materialDefinitions: [...state.materialDefinitions, createdDefinition]
         }));
 
+
         return createdDefinition;
     },
 
-    duplicateQualityDefinition: (definition) => async (dispatch, getState) => {
+    duplicateQualityDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: `quality.${timestamp()}`,
+            definitionId: newDefinitionId || `quality.${timestamp()}`,
             name: `#${definition.name}`,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
@@ -568,6 +591,109 @@ export const actions = {
             }
         };
     },
+    // Upload model
+    // @param file
+    uploadCaseModel: (file) => async (dispatch, getState) => {
+        // Notice user that model is being loading
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.LOADING_MODEL,
+            progress: 0
+        }));
+
+        // Upload model to backend
+        const { modelGroup } = getState().printing;
+        const { size } = getState().machine;
+
+        const res = await api.uploadCaseFile(file);
+        const { originalName, uploadName } = res.body;
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+
+        const headerType = '3dp';
+        const sourceType = '3d';
+        const mode = '3d';
+        const width = 0;
+        const height = 0;
+
+        dispatch(actions.updateState({ progress: 0.25 }));
+
+        // Tell worker to generate geometry for model
+        const worker = new LoadModelWorker();
+        worker.postMessage({ uploadPath });
+        worker.onmessage = (e) => {
+            const data = e.data;
+
+            const { type } = data;
+            switch (type) {
+                case 'LOAD_MODEL_POSITIONS': {
+                    const { positions } = data;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+
+                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.computeVertexNormals();
+                    // Create model
+                    // modelGroup.generateModel(modelInfo);
+
+                    const modelState = modelGroup.generateModel({
+                        limitSize: size,
+                        headerType,
+                        sourceType,
+                        originalName,
+                        uploadName,
+                        mode: mode,
+                        sourceWidth: width,
+                        sourceHeight: height,
+                        geometry: bufferGeometry,
+                        material: material,
+                        transformation: {}
+                    });
+
+                    dispatch(actions.updateState(modelState));
+                    dispatch(actions.displayModel());
+                    dispatch(actions.destroyGcodeLine());
+                    dispatch(actions.recordSnapshot());
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
+                        progress: 1
+                    }));
+                    break;
+                }
+                case 'LOAD_MODEL_CONVEX': {
+                    worker.terminate();
+                    const { positions } = data;
+
+                    const convexGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                    convexGeometry.addAttribute('position', positionAttribute);
+
+                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
+                    modelGroup.setConvexGeometry(uploadName, convexGeometry);
+
+                    break;
+                }
+                case 'LOAD_MODEL_PROGRESS': {
+                    const state = getState().printing;
+                    const progress = 0.25 + data.progress * 0.5;
+                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                        dispatch(actions.updateState({ progress }));
+                    }
+                    break;
+                }
+                case 'LOAD_MODEL_FAILED': {
+                    worker.terminate();
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        progress: 0
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
+    },
 
     setTransformMode: (value) => (dispatch) => {
         dispatch(actions.updateState({
@@ -586,8 +712,8 @@ export const actions = {
         }
     },
 
-    generateGcode: () => async (dispatch, getState) => {
-        const { hasModel, activeDefinition } = getState().printing;
+    generateGcode: (thumbnail) => async (dispatch, getState) => {
+        const { hasModel, activeDefinition, boundingBox } = getState().printing;
         if (!hasModel) {
             return;
         }
@@ -620,7 +746,9 @@ export const actions = {
         */
         const params = {
             originalName: originalName,
-            uploadName: uploadName
+            uploadName: uploadName,
+            boundingBox: boundingBox,
+            thumbnail: thumbnail
         };
         controller.slice(params);
     },
@@ -841,7 +969,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-
+    // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
         if (undoSnapshots.length <= 1) {

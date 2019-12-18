@@ -37,6 +37,9 @@
                 },
                 "bottom_layers": {
                     "default_value": 3
+                },
+                "outer_inset_first": {
+                    "default_value": false
                 }
             }
         },

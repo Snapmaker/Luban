@@ -7,12 +7,15 @@ import TWEEN from '@tweenjs/tween.js';
 import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
+import { Button } from '@trendmicro/react-buttons';
 import Canvas from '../../components/SMCanvas';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from '../styles.styl';
-import controller from '../../lib/controller';
+import styles from './index.styl';
+import { controller } from '../../lib/controller';
 import {
+    CONNECTION_TYPE_SERIAL,
+    MACHINE_HEAD_TYPE,
     MARLIN,
+    PROTOCOL_TEXT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
@@ -21,6 +24,7 @@ import { ensureRange } from '../../lib/numeric-utils';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
 import { actions } from '../../flux/workspace';
+import { actions as machineActions } from '../../flux/machine';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
 import GCodeRenderer from './GCodeRenderer';
@@ -29,20 +33,34 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
-import PrimaryToolbar from './PrimaryToolbar';
 import FileTransitModal from './FileTransitModal';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import Modal from '../../components/Modal';
+import i18n from '../../lib/i18n';
 
 
 class Visualizer extends Component {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
+        enclosure: PropTypes.bool.isRequired,
+        enclosureDoor: PropTypes.bool.isRequired,
         uploadState: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
+        serverStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
-        unloadGcode: PropTypes.func.isRequired
+        unloadGcode: PropTypes.func.isRequired,
+        backgroundGroup: PropTypes.object.isRequired,
+
+        startServerGcode: PropTypes.func.isRequired,
+        pauseServerGcode: PropTypes.func.isRequired,
+        resumeServerGcode: PropTypes.func.isRequired,
+        stopServerGcode: PropTypes.func.isRequired
     };
 
     printableArea = null;
@@ -81,7 +99,8 @@ class Visualizer extends Component {
         port: controller.port,
         controller: {
             type: controller.type,
-            state: controller.state
+            state: controller.state,
+            settings: controller.settings
         },
         workflowState: controller.workflowState,
         workPosition: {
@@ -100,21 +119,29 @@ class Visualizer extends Component {
             total: 0,
             sent: 0,
             received: 0
-        }
+        },
+        showEnclosureDoorWarn: false
     };
 
     controllerEvents = {
         'serialport:open': (options) => {
+            const { port, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
-            const { port } = options;
-            this.setState({ port: port }, () => {
+            this.setState({ port }, () => {
                 this.loadGcode();
             });
         },
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
@@ -131,7 +158,12 @@ class Visualizer extends Component {
 
             this.unloadGcode();
         },
-        'sender:status': (data) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const { name, size, total, sent, received } = data;
             this.setState({
                 gcode: {
@@ -146,9 +178,13 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
             this.renderScene();
         },
-        'workflow:state': (workflowState) => {
+        'workflow:state': (options) => {
+            const { dataSource, workflowState } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             if (this.state.workflowState !== workflowState) {
-                this.setState({ workflowState: workflowState });
+                this.setState({ workflowState });
                 switch (workflowState) {
                     case WORKFLOW_STATE_IDLE:
                         this.stopToolheadRotationAnimation();
@@ -167,69 +203,102 @@ class Visualizer extends Component {
             }
         },
         // FIXME
-        'Marlin:state': (state) => {
-            const { pos } = { ...state };
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            const { pos } = state;
             this.setState({
                 controller: {
                     type: MARLIN,
-                    state: state
+                    ...this.state.controller,
+                    state
                 }
             });
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
                 this.updateWorkPosition(pos);
             }
+        },
+        'Marlin:settings': (options) => {
+            const { settings, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            this.setState({
+                controller: {
+                    type: MARLIN,
+                    ...this.state.controller,
+                    settings
+                }
+            });
         }
     };
 
     actions = {
         isCNC: () => {
-            return (this.state.controller.state.headType === 'CNC');
+            return (this.props.headType === MACHINE_HEAD_TYPE.CNC.value);
         },
         is3DP: () => {
-            return (this.state.controller.state.headType === '3DP');
+            return (this.props.headType === MACHINE_HEAD_TYPE['3DP'].value);
         },
         isLaser: () => {
-            const headType = this.state.controller.state.headType;
-            return (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
+            return (this.props.headType === MACHINE_HEAD_TYPE.LASER.value);
         },
         handleRun: () => {
-            const { workflowState } = this.state;
-
-            if (workflowState === WORKFLOW_STATE_IDLE) {
-                controller.command('gcode:start');
+            const { enclosure, enclosureDoor } = this.props;
+            if (!this.actions.is3DP() && enclosure && !enclosureDoor) {
+                this.actions.openModal();
+                return;
             }
-            if (workflowState === WORKFLOW_STATE_PAUSED) {
-                if (this.actions.is3DP()) {
-                    this.pause3dpStatus.pausing = false;
-                    const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
-                    controller.command('gcode', cmd);
-                    controller.command('gcode:resume');
-                } else if (this.actions.isLaser()) {
-                    if (this.pauseStatus.headStatus === 'on') {
-                        // resume laser power
-                        const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
-                        const powerStrength = Math.floor(powerPercent * 255 / 100);
-                        if (powerPercent !== 0) {
-                            controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                        } else {
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
+
+                if (workflowState === WORKFLOW_STATE_IDLE) {
+                    controller.command('gcode:start');
+                }
+                if (workflowState === WORKFLOW_STATE_PAUSED) {
+                    if (this.actions.is3DP()) {
+                        this.pause3dpStatus.pausing = false;
+                        const pos = this.pause3dpStatus.pos;
+                        const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
+                        controller.command('gcode', cmd);
+                        controller.command('gcode:resume');
+                    } else if (this.actions.isLaser()) {
+                        if (this.pauseStatus.headStatus === 'on') {
+                            // resume laser power
+                            const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
+                            const powerStrength = Math.floor(powerPercent * 255 / 100);
+                            if (powerPercent !== 0) {
+                                controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
+                            } else {
+                                controller.command('gcode', 'M3');
+                            }
+                        }
+
+                        controller.command('gcode:resume');
+                    } else {
+                        if (this.pauseStatus.headStatus === 'on') {
+                            // resume spindle
                             controller.command('gcode', 'M3');
+
+                            // for CNC machine, resume need to wait >500ms to let the tool head started
+                            setTimeout(() => {
+                                controller.command('gcode:resume');
+                            }, 1000);
+                        } else {
+                            controller.command('gcode:resume');
                         }
                     }
-
-                    controller.command('gcode:resume');
-                } else {
-                    if (this.pauseStatus.headStatus === 'on') {
-                        // resume spindle
-                        controller.command('gcode', 'M3');
-
-                        // for CNC machine, resume need to wait >500ms to let the tool head started
-                        setTimeout(() => {
-                            controller.command('gcode:resume');
-                        }, 1000);
-                    } else {
-                        controller.command('gcode:resume');
-                    }
+                }
+            } else {
+                const { serverStatus } = this.props;
+                if (serverStatus === SERVER_STATUS_IDLE) {
+                    this.props.startServerGcode();
+                }
+                if (serverStatus === SERVER_STATUS_PAUSED) {
+                    this.props.resumeServerGcode();
                 }
             }
         },
@@ -273,22 +342,38 @@ class Visualizer extends Component {
             }, 50);
         },
         handlePause: () => {
-            const { workflowState } = this.state;
-            if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
-                controller.command('gcode:pause');
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
+                if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
+                    controller.command('gcode:pause');
 
-                if (this.actions.is3DP()) {
-                    this.pause3dpStatus.pausing = true;
-                    this.pause3dpStatus.pos = null;
+                    if (this.actions.is3DP()) {
+                        this.pause3dpStatus.pausing = true;
+                        this.pause3dpStatus.pos = null;
+                    }
+
+                    this.actions.tryPause();
                 }
-
-                this.actions.tryPause();
+            } else {
+                const { serverStatus } = this.props;
+                if (serverStatus === SERVER_STATUS_RUNNING) {
+                    this.props.pauseServerGcode();
+                }
             }
         },
         handleStop: () => {
-            const { workflowState } = this.state;
-            if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
-                controller.command('gcode:stop');
+            const { connectionType } = this.props;
+            if (connectionType === CONNECTION_TYPE_SERIAL) {
+                const { workflowState } = this.state;
+                if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
+                    controller.command('gcode:stop');
+                }
+            } else {
+                const { serverStatus } = this.props;
+                if (serverStatus !== SERVER_STATUS_IDLE) {
+                    this.props.stopServerGcode();
+                }
             }
         },
         handleClose: () => {
@@ -349,6 +434,26 @@ class Visualizer extends Component {
             this.toolhead.visible = visible;
             this.setState({ toolheadVisible: visible });
             this.renderScene();
+        },
+        openModal: () => {
+            this.setState({
+                showEnclosureDoorWarn: true
+            });
+        },
+        closeModal: () => {
+            this.setState({
+                showEnclosureDoorWarn: false
+            });
+        },
+        onOpen: () => {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+        },
+        onClose: () => {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
         }
     };
 
@@ -433,6 +538,7 @@ class Visualizer extends Component {
         const bbox = { min: box.min, max: box.max };
 
         // Set gcode bounding box
+        /*
         controller.context = {
             ...controller.context,
             xmin: bbox.min.x,
@@ -442,6 +548,17 @@ class Visualizer extends Component {
             zmin: bbox.min.z,
             zmax: bbox.max.z
         };
+        */
+        const context = {
+            ...controller.context,
+            xmin: bbox.min.x,
+            xmax: bbox.max.x,
+            ymin: bbox.min.y,
+            ymax: bbox.max.y,
+            zmin: bbox.min.z,
+            zmax: bbox.max.z
+        };
+        controller.context = context;
 
         pubsub.publish('gcode:bbox', bbox);
 
@@ -646,14 +763,14 @@ class Visualizer extends Component {
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
-                </div>
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {state.gcode.renderState === 'rendering' && <Rendering />}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
                         <WorkflowControl
+                            serverStatus={this.props.serverStatus}
+                            isConnected={this.props.isConnected}
+                            connectionType={this.props.connectionType}
                             state={state}
                             actions={this.actions}
                             uploadState={this.props.uploadState}
@@ -668,14 +785,43 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
+                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar actions={this.actions} />
+                    <SecondaryToolbar
+                        zoomIn={this.actions.zoomIn}
+                        zoomOut={this.actions.zoomOut}
+                        autoFocus={this.actions.autoFocus}
+                    />
                 </div>
+                {state.showEnclosureDoorWarn && (
+                    <Modal
+                        disableOverlay
+                        showCloseButton={false}
+                    >
+                        <Modal.Body>
+                            <div style={{ display: 'flex' }}>
+                                <i className="fa fa-exclamation-circle fa-4x text-danger" />
+                                <div style={{ marginLeft: 25 }}>
+                                    <h5>{i18n._('Enclosure door was opened')}</h5>
+                                    <p>{i18n._('The enclosure door needs to be closed before laser or CNC printing')}</p>
+                                </div>
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={this.actions.closeModal}
+                            >
+                                {i18n._('Ok')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
             </div>
         );
     }
@@ -686,16 +832,30 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: machine.size,
+        enclosure: machine.enclosure,
+        enclosureDoor: machine.enclosureDoor,
+        headType: machine.headType,
+        serverStatus: machine.serverStatus,
+        isConnected: machine.isConnected,
+        connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
-        gcodeList: workspace.gcodeList
+        gcodeList: workspace.gcodeList,
+        backgroundGroup: workspace.background.group
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
-    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),
-    unloadGcode: () => dispatch(actions.unloadGcode())
+    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
+    unloadGcode: () => dispatch(actions.unloadGcode()),
+
+    startServerGcode: () => dispatch(machineActions.startServerGcode()),
+    pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
+    resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+
+
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

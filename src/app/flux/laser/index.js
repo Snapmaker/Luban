@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
 import { DATA_PREFIX } from '../../constants';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
 import {
@@ -90,6 +90,7 @@ export const actions = {
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
+        // console.log(imgPath);
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,

@@ -132,6 +132,7 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
         };
     }
 
+
     function onMouseDown(event) {
         if (!scope.enabled || !scope.visible) {
             return;

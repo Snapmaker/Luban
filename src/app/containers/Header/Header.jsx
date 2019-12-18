@@ -8,7 +8,7 @@ import api from '../../api';
 import Anchor from '../../components/Anchor';
 import settings from '../../config/settings';
 import combokeys from '../../lib/combokeys';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import styles from './styles.styl';

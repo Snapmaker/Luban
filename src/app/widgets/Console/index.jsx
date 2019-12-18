@@ -1,288 +1,172 @@
-import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import settings from '../../config/settings';
-import Widget from '../../components/Widget';
-import { WidgetConfig } from '../../components/SMWidget';
-import controller from '../../lib/controller';
-import i18n from '../../lib/i18n';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import Console from './Console';
-import styles from './index.styl';
-import { ABSENT_OBJECT } from '../../constants';
+import { actions as widgetActions } from '../../flux/widget';
+import Widget from '../../components/Widget';
+import SMSortableHandle from '../../components/SMWidget/SMSortableHandle';
+import i18n from '../../lib/i18n';
 
 class ConsoleWidget extends PureComponent {
     static propTypes = {
+        minimized: PropTypes.bool.isRequired,
         widgetId: PropTypes.string.isRequired,
-        sortable: PropTypes.object,
+        isDefault: PropTypes.bool.isRequired,
 
-        // redux
-        port: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired
+        updateWidgetState: PropTypes.func.isRequired,
+        toggleWorkspaceWidgetToDefault: PropTypes.func.isRequired
     };
 
-    config = new WidgetConfig(this.props.widgetId);
-
-    state = this.getInitialState();
+    state = {
+        // trigger termininal render
+        clearRenderStamp: 0,
+        minimized: this.props.minimized
+    };
 
     actions = {
-        toggleFullscreen: () => {
-            const { minimized, isFullscreen } = this.state;
-            this.setState(() => ({
-                minimized: isFullscreen ? minimized : false,
-                isFullscreen: !isFullscreen
-            }));
-
-            setTimeout(() => {
-                this.resizeTerminal();
-            }, 0);
-        },
         toggleMinimized: () => {
             const { minimized } = this.state;
             this.setState(() => ({
                 minimized: !minimized
             }));
-
-            setTimeout(() => {
-                this.resizeTerminal();
-            }, 0);
-        },
-        setTerminal: (terminal) => {
-            this.terminal = terminal;
-
-            if (terminal) {
-                this.actions.greetings();
-            }
-        },
-        greetings: () => {
-            if (this.props.port) {
-                const { name, version } = settings;
-
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
-                }
-            }
-
-            if (this.props.server !== ABSENT_OBJECT) {
-                const { name, version } = settings;
-
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected via Wi-Fi'));
-                }
-            }
+            this.props.updateWidgetState({ minimized: !minimized });
         },
         clearAll: () => {
-            this.terminal && this.terminal.clear();
+            const clearRenderStamp = this.state.clearRenderStamp + 1;
+            this.setState({
+                clearRenderStamp
+            });
+        },
+        toggleWorkspaceWidgetToDefault: () => {
+            this.props.toggleWorkspaceWidgetToDefault();
         }
     };
-
-    controllerEvents = {
-        'serialport:close': () => {
-            this.actions.clearAll();
-
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
-        },
-        'serialport:write': (data, context) => {
-            if (context && (context.__sender__ === this.props.widgetId)) {
-                // Do not write to the terminal console if the sender is the widget itself
-                return;
-            }
-            if (data.endsWith('\n')) {
-                data = data.slice(0, -1);
-            }
-            this.terminal && this.terminal.writeln(data);
-        },
-        'serialport:read': (data) => {
-            this.terminal && this.terminal.writeln(data);
-        }
-    };
-
-    terminal = null;
-
-    pubsubTokens = [];
-
-    getInitialState() {
-        return {
-            minimized: this.config.get('minimized', false),
-            isFullscreen: false,
-
-            // Terminal
-            terminal: {
-                cursorBlink: true,
-                scrollback: 1000,
-                tabStopWidth: 4
-            }
-        };
-    }
-
-    componentDidMount() {
-        this.addControllerEvents();
-        this.subscribe();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.port !== this.props.port) {
-            const { name, version } = settings;
-
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
-            }
-        }
-
-        if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
-            const { name, version } = settings;
-
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected via Wi-Fi'));
-            }
-        }
-    }
-
-    componentDidUpdate() {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        const tokens = [
-            pubsub.subscribe('resize', () => {
-                this.resizeTerminal();
-            })
-        ];
-        this.pubsubTokens = this.pubsubTokens.concat(tokens);
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    resizeTerminal() {
-        this.terminal && this.terminal.resize();
-    }
 
     render() {
-        const { minimized, isFullscreen } = this.state;
-        const state = {
-            ...this.state
-        };
-        const actions = {
-            ...this.actions
-        };
+        const { clearRenderStamp, minimized } = this.state;
+        const { widgetId, isDefault } = this.props;
 
         return (
-            <Widget fullscreen={isFullscreen}>
-                <Widget.Header>
-                    <Widget.Title>
-                        <Widget.Sortable className={this.props.sortable.handleClassName}>
-                            <i className="fa fa-bars" />
-                            <span className="space" />
-                        </Widget.Sortable>
-                        {i18n._('Console')}
-                    </Widget.Title>
-                    <Widget.Controls className={this.props.sortable.filterClassName}>
-                        <Widget.Button
-                            title={i18n._('Clear all')}
-                            onClick={actions.clearAll}
-                        >
-                            <i className="fa fa-ban fa-flip-horizontal" />
-                        </Widget.Button>
-                        <Widget.Button
-                            disabled={isFullscreen}
-                            title={minimized ? i18n._('Expand') : i18n._('Collapse')}
-                            onClick={actions.toggleMinimized}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    { 'fa-chevron-up': !minimized },
-                                    { 'fa-chevron-down': minimized }
-                                )}
-                            />
-                        </Widget.Button>
-                        <Widget.DropdownButton
-                            title={i18n._('More')}
-                            toggle={<i className="fa fa-ellipsis-v" />}
-                            onSelect={(eventKey) => {
-                                if (eventKey === 'fullscreen') {
-                                    actions.toggleFullscreen();
-                                }
-                            }}
-                        >
-                            <Widget.DropdownMenuItem eventKey="fullscreen">
+            <Widget>
+                {!isDefault && (
+                    <Widget.Header>
+                        <Widget.Title>
+                            <SMSortableHandle />
+                            {i18n._('Console')}
+                        </Widget.Title>
+                        <Widget.Controls className="sortable-filter">
+                            <Widget.Button
+                                title={i18n._('Clear All')}
+                                onClick={this.actions.clearAll}
+                            >
+                                <i
+                                    className="fa fa-ban fa-flip-horizontal"
+                                />
+                            </Widget.Button>
+                            <Widget.Button
+                                title={minimized ? i18n._('Expand') : i18n._('Collapse')}
+                                onClick={this.actions.toggleMinimized}
+                            >
                                 <i
                                     className={classNames(
                                         'fa',
                                         'fa-fw',
-                                        { 'fa-expand': !isFullscreen },
-                                        { 'fa-compress': isFullscreen }
+                                        { 'fa-chevron-up': !minimized },
+                                        { 'fa-chevron-down': minimized }
                                     )}
                                 />
-                                <span className="space space-sm" />
-                                {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                        </Widget.DropdownButton>
-                    </Widget.Controls>
-                </Widget.Header>
+                            </Widget.Button>
+                            <Widget.Button
+                                title={i18n._('fullscreen')}
+                                onClick={this.actions.toggleWorkspaceWidgetToDefault}
+                            >
+                                <i
+                                    className={classNames(
+                                        'fa',
+                                        'fa-fw',
+                                        { 'fa-expand': !isDefault },
+                                        { 'fa-compress': isDefault }
+                                    )}
+                                />
+                            </Widget.Button>
+
+                        </Widget.Controls>
+                    </Widget.Header>
+                )}
                 <Widget.Content
-                    className={classNames(
-                        styles.widgetContent,
-                        { [styles.hidden]: minimized },
-                        { [styles.fullscreen]: isFullscreen }
-                    )}
+                    style={{
+                        position: isDefault ? 'absolute' : 'relative',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: '32px',
+                        display: !isDefault && minimized ? 'none' : 'block'
+                    }}
                 >
                     <Console
-                        state={state}
-                        setTerminal={this.actions.setTerminal}
+                        minimized={minimized}
+                        isDefault={isDefault}
+                        widgetId={widgetId}
+                        clearRenderStamp={clearRenderStamp}
                     />
                 </Widget.Content>
+                {isDefault && (
+                    <Widget.Footer style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '32px'
+                    }}
+                    >
+                        <Widget.Controls className="sortable-filter">
+                            <Widget.Button
+                                title={i18n._('Clear All')}
+                                onClick={this.actions.clearAll}
+                            >
+                                <i
+                                    className="fa fa-ban fa-flip-horizontal"
+                                />
+                            </Widget.Button>
+                            <Widget.Button
+                                title={i18n._('fullscreen')}
+                                onClick={this.actions.toggleWorkspaceWidgetToDefault}
+                            >
+                                <i
+                                    className={classNames(
+                                        'fa',
+                                        'fa-fw',
+                                        { 'fa-expand': !isDefault },
+                                        { 'fa-compress': isDefault }
+                                    )}
+                                />
+                            </Widget.Button>
+
+                        </Widget.Controls>
+                    </Widget.Footer>
+                )}
             </Widget>
         );
     }
 }
 
-const mapStateToProps = (state) => {
-    const machine = state.machine;
-
-    const { port, workState, workPosition, server, serverStatus } = machine;
+const mapStateToProps = (state, ownProps) => {
+    const widget = state.widget;
+    const { minimized = false } = widget.widgets[ownProps.widgetId];
+    const defaultWidgets = widget.workspace.default.widgets;
+    const isDefault = defaultWidgets.indexOf(ownProps.widgetId) !== -1;
 
     return {
-        port,
-        workState,
-        workPosition,
-        server,
-        serverStatus
+        minimized,
+        isDefault
     };
 };
 
-export default connect(mapStateToProps)(ConsoleWidget);
+const mapDispatchToProps = (dispatch, ownProps) => ({
+    updateWidgetState: (value) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', value)),
+    toggleWorkspaceWidgetToDefault: () => dispatch(widgetActions.toggleWorkspaceWidgetToDefault(ownProps.widgetId))
+});
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConsoleWidget);

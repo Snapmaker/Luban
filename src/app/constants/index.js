@@ -5,10 +5,7 @@ export const METRIC_UNITS = 'mm';
 export const EPSILON = 1e-6;
 
 // Controller
-export const GRBL = 'Grbl';
 export const MARLIN = 'Marlin';
-export const SMOOTHIE = 'Smoothie';
-export const TINYG = 'TinyG';
 
 // Workflow State
 export const WORKFLOW_STATE_RUNNING = 'running';
@@ -20,6 +17,23 @@ export const HEAD_TYPE_UNKNOWN = 'UNKNOWN';
 export const HEAD_TYPE_3DP = '3DP';
 export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
+// Workflow State
+export const SERVER_STATUS_RUNNING = 'running';
+export const SERVER_STATUS_PAUSED = 'paused';
+export const SERVER_STATUS_IDLE = 'idle';
+export const SERVER_STATUS_UNKNOWN = 'unknown';
+
+
+// Connection Status
+export const CONNECTION_STATUS_IDLE = 'idle';
+export const CONNECTION_STATUS_WAITING = 'waiting';
+export const CONNECTION_STATUS_CONNECTED = 'connected';
+
+// G-code Macro
+export const MODAL_NONE = 'none';
+export const MODAL_ADD_MACRO = 'add';
+export const MODAL_EDIT_MACRO = 'edit';
+export const MODAL_RUN_MACRO = 'run';
 
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
@@ -56,8 +70,107 @@ export const ABSENT_VALUE = 896745231;
 export const ABSENT_OBJECT = Object.freeze({});
 
 // Experimental features
-export const EXPERIMENTAL_WIFI_CONTROL = false;
+export const EXPERIMENTAL_WIFI_CONTROL = true;
 export const EXPERIMENTAL_LASER_CAMERA = false;
 export const EXPERIMENTAL_IMAGE_TRACING = false;
 export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;
+
+export const PROTOCOL_TEXT = 'text';
+export const PROTOCOL_SCREEN = 'screen';
+
+export const MAX_LINE_POINTS = 300;
+export const TEMPERATURE_MIN = 0;
+export const TEMPERATURE_MAX = 300;
+export const SPEED_FACTOR_MIN = 0;
+export const SPEED_FACTOR_MAX = 500;
+
+export const HEAD_3DP = '3dp';
+export const HEAD_LASER = 'laser';
+export const HEAD_CNC = 'cnc';
+export const HEAD_UNKNOWN = 'unknown';
+
+export const CONNECTION_TYPE_SERIAL = 'serial';
+export const CONNECTION_TYPE_WIFI = 'wifi';
+
+export const LASER_PRINT_MODE_AUTO = 'auto';
+export const LASER_PRINT_MODE_MANUAL = 'manual';
+
+export const MACHINE_SERIES = {
+    ORIGINAL: {
+        value: 'original',
+        label: 'Snapmaker Original',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        }
+    },
+    A150: {
+        value: 'A150',
+        label: 'Snapmaker 2.0 A150',
+        setting: {
+            size: {
+                x: 160,
+                y: 160,
+                z: 145
+            }
+        },
+        alias: ['SM2-S', 'Snapmaker 2.0 A150']
+    },
+    A250: {
+        value: 'A250',
+        label: 'Snapmaker 2.0 A250',
+        setting: {
+            size: {
+                x: 230,
+                y: 250,
+                z: 235
+                // x: 240,
+                // y: 260,
+                // z: 235
+            }
+        },
+        alias: ['SM2-M', 'Snapmaker 2.0 A250']
+
+    },
+    A350: {
+        value: 'A350',
+        label: 'Snapmaker 2.0 A350',
+        setting: {
+            size: {
+                x: 320,
+                y: 350,
+                z: 330
+                // x: 336,
+                // y: 360,
+                // z: 334
+            }
+        },
+        alias: ['SM2-L', 'Snapmaker 2.0 A350']
+    }
+};
+
+export const MACHINE_HEAD_TYPE = {
+    WORKSPACE: {
+        value: 'workspace',
+        label: 'Workspace'
+    },
+    '3DP': {
+        value: '3dp',
+        label: '3D Printing',
+        alias: ['3DP', '1']
+    },
+    LASER: {
+        value: 'laser',
+        label: 'Laser',
+        alias: ['LASER', 'LASER350', 'LASER1600', '3']
+    },
+    CNC: {
+        value: 'cnc',
+        label: 'CNC',
+        alias: ['CNC', '2']
+    }
+};

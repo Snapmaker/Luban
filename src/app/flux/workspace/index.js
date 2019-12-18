@@ -1,5 +1,6 @@
 // Reducer for Workspace
 import path from 'path';
+import * as THREE from 'three';
 import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
@@ -11,7 +12,14 @@ const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
     gcodeList: [],
-    uploadState: 'idle' // uploading, uploaded
+    uploadState: 'idle', // uploading, uploaded
+    gcodeFiles: [],
+
+
+    background: {
+        enabled: false,
+        group: new THREE.Group()
+    }
 };
 
 
@@ -32,6 +40,24 @@ export function getGcodeName(gcodeList) {
     return `${filename}.gcode`;
 }
 
+export function getGcodeType(gcodeList) {
+    if (gcodeList.length === 0) {
+        return null;
+    }
+
+    const gcodeBean = gcodeList[0];
+    const filename = path.basename(gcodeBean.name);
+
+    if (filename.endsWith('.nc')) {
+        return 'Laser';
+    }
+    if (filename.endsWith('.cnc')) {
+        return 'CNC';
+    }
+
+    return '3DP';
+}
+
 export const actions = {
     updateState: (state) => {
         return {
@@ -50,15 +76,28 @@ export const actions = {
         };
     },
 
+    addGcodeFile: (fileInfo) => (dispatch, getState) => {
+        const { gcodeFiles } = getState().workspace;
+        const files = [];
+        files.push(fileInfo);
+        const len = Math.min(gcodeFiles.length, 4);
+        for (let i = 0; i < len; i++) {
+            files.push(gcodeFiles[i]);
+        }
+        dispatch(actions.updateState({
+            gcodeFiles: files
+        }));
+    },
+
     // Clear G-code list
     clearGcode: () => {
         return actions.updateState({ gcodeList: [] });
     },
 
-    loadGcode: (port, name, gcode) => async (dispatch) => {
+    loadGcode: (port, dataSource, name, gcode) => async (dispatch) => {
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
-            await api.loadGCode({ port, name, gcode });
+            await api.loadGCode({ port, dataSource, name, gcode });
 
             dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {
@@ -71,6 +110,36 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         // TODO: unload G-code in controller
         dispatch(actions.updateState({ uploadState: 'idle' }));
+    },
+
+    removeBackgroundImage: () => (dispatch, getState) => {
+        const state = getState().workspace;
+        const { group } = state.background;
+        group.remove(...group.children);
+        dispatch(actions.updateState({
+            background: {
+                enabled: false,
+                group: group
+            }
+        }));
+    },
+
+    loadBackgroundToWorkspace: (background) => (dispatch, getState) => {
+        const workspaceBackgroundGroup = getState().workspace.background.group;
+        const backgroundGroup = background.group;
+
+        workspaceBackgroundGroup.remove(...workspaceBackgroundGroup.children);
+        if (backgroundGroup.children.length > 0) {
+            for (const child of backgroundGroup.children) {
+                workspaceBackgroundGroup.add(child.clone());
+            }
+            dispatch(actions.updateState({
+                background: {
+                    enabled: true,
+                    group: backgroundGroup
+                }
+            }));
+        }
     }
 };
 

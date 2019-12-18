@@ -3,7 +3,8 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
-import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
+// import PacketManager from '../PacketManager';
+import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from '../constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -44,6 +45,60 @@ class MarlinReplyParserFirmwareVersion {
         };
     }
 }
+
+/**
+ * Marlin SM2-1.2.1.0
+ */
+class MarlinReplyParserSeries {
+    static parse(line) {
+        const r = line.match(/^Marlin (.*)-([0-9.]+)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeries,
+            payload: {
+                series: r[1],
+                version: semver.coerce(r[2]).version
+            }
+        };
+    }
+}
+
+/**
+ * Machine Size: L
+ */
+class MarlinReplyParserSeriesSize {
+    static parse(line) {
+        const r = line.match(/^Machine Size: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserSeriesSize,
+            payload: {
+                seriesSize: r[1].trim()
+            }
+        };
+    }
+}
+
+
+class MarlinReplyParserEmergencyStop {
+    static parse(line) {
+        const r = line.match(/;Locked UART/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserEmergencyStop,
+            payload: {
+                releaseDate: r[2]
+            }
+        };
+    }
+}
+
 
 class MarlinReplyParserReleaseDate {
     static parse(line) {
@@ -87,6 +142,22 @@ class MarlinReplyParserEnclosure {
             type: MarlinReplyParserEnclosure,
             payload: {
                 enclosure: r[1] === 'On'
+            }
+        };
+    }
+}
+
+class MarlinReplyParserEnclosureDoor {
+    static parse(line) {
+        const r = line.match(/^Door: (Open|Closed)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosure,
+            payload: {
+                enclosure: r[1] === 'Open'
             }
         };
     }
@@ -144,7 +215,7 @@ class MarlinLineParserResultPosition {
 class MarlinLineParserResultOk {
     // ok
     static parse(line) {
-        const r = line.match(/^ok$/);
+        const r = line.match(/^ok($| [0-9]+$)/);
         if (!r) {
             return null;
         }
@@ -198,7 +269,7 @@ class MarlinLineParserResultError {
 
 class MarlinLineParserResultOkTemperature {
     static parse(line) {
-        const re = /ok (T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /ok (T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -207,15 +278,18 @@ class MarlinLineParserResultOkTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultOkTemperature,
@@ -226,7 +300,7 @@ class MarlinLineParserResultOkTemperature {
 
 class MarlinLineParserResultTemperature {
     static parse(line) {
-        const re = /(T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /(T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -235,19 +309,99 @@ class MarlinLineParserResultTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultTemperature,
             payload: payload
+        };
+    }
+}
+
+class MarlinParserSelectedOrigin {
+    static parse(line) {
+        const r = line.match(/^Selected origin num: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            message: r[1]
+        };
+
+        return {
+            type: MarlinParserSelectedOrigin,
+            payload: payload
+        };
+    }
+}
+
+
+class MarlinParserSelectedCurrent {
+    static parse(line) {
+        const r = line.match(/^Selected == Current: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            message: r[1]
+        };
+
+        return {
+            type: MarlinParserSelectedCurrent,
+            payload: payload
+        };
+    }
+}
+
+class MarlinParserOriginOffset {
+    static parse(line) {
+        const r = line.match(/^Origin offset ([XYZ]): (.*)$/);
+        if (!r) {
+            return null;
+        }
+
+        const key = r[1].toLowerCase();
+        const data = parseFloat(r[2]);
+        const originOffset = {};
+        originOffset[key] = data;
+
+        return {
+            type: MarlinParserOriginOffset,
+            payload: {
+                originOffset
+            }
+        };
+    }
+}
+
+class MarlinParserHomeState {
+    static parse(line) {
+        const r = line.match(/^Homed: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        let isHomed = null;
+        if (r[1] === 'YES') {
+            isHomed = true;
+        } else if (r[1] === 'NO') {
+            isHomed = false;
+        }
+
+        return {
+            type: MarlinParserHomeState,
+            payload: {
+                isHomed
+            }
         };
     }
 }
@@ -258,14 +412,25 @@ class MarlinLineParser {
             // ok
             MarlinLineParserResultOk,
 
-            // New Parsers (follow pattern `MarlinReplyParserXXX`)
+            // cnc emergency stop when enclosure open
+            MarlinReplyParserEmergencyStop,
+
+            // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
+
+            // Marlin SM2-1.2.1.0
+            MarlinReplyParserSeries,
+
+            // Machine Size: L
+            MarlinReplyParserSeriesSize,
+
             MarlinReplyParserReleaseDate,
             // M1006
             MarlinReplyParserToolHead,
             // M1010
             MarlinReplyParserEnclosure,
+            MarlinReplyParserEnclosureDoor,
 
             // start
             MarlinLineParserResultStart,
@@ -281,7 +446,16 @@ class MarlinLineParser {
 
             MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature
+            MarlinLineParserResultTemperature,
+            // Homed: YES
+            MarlinParserHomeState,
+
+            MarlinParserOriginOffset,
+
+            MarlinParserSelectedCurrent,
+
+            MarlinParserSelectedOrigin
+
         ];
 
         for (const parser of parsers) {
@@ -303,6 +477,8 @@ class MarlinLineParser {
 
 class Marlin extends events.EventEmitter {
     state = {
+        series: '',
+        seriesSize: '',
         // firmware version
         version: '1.0.0',
         // tool head type
@@ -320,26 +496,50 @@ class Marlin extends events.EventEmitter {
             feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
             spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
         },
-        ovF: 100,
-        ovS: 100,
+        speedFactor: 100,
+        extruderFactor: 100,
         temperature: {
             b: '0.0',
-            t: '0.0'
+            bTarget: '0.0',
+            t: '0.0',
+            tTarget: '0.0'
         },
         spindle: 0, // Related to M3, M4, M5
         jogSpeed: 0, // G0
         workSpeed: 0, // G1
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
-        headPower: 0
+        headPower: 0,
+        gcodeFile: null,
+        updateFile: null,
+        calibrationMargin: 0,
+        updateProgress: 0,
+        updateCount: 0,
+        firmwareVersion: '',
+        moduleID: 0,
+        moduleVersion: '',
+        machineSetting: {},
+        zFocus: 15,
+        gcodeHeader: 0,
+        isHomed: null,
+        originOffset: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        hexModeEnabled: false,
+        isScreenProtocol: false
     };
 
     settings = {
         // whether enclosure is turned on
-        enclosure: false
+        enclosure: false,
+        enclosureDoor: false
     };
 
     parser = new MarlinLineParser();
+
+    // packetManager = new PacketManager();
 
     setState(state) {
         const nextState = { ...this.state, ...state };
@@ -371,6 +571,12 @@ class Marlin extends events.EventEmitter {
         if (type === MarlinReplyParserFirmwareVersion) {
             this.setState({ version: payload.version });
             this.emit('firmware', payload);
+        } else if (type === MarlinReplyParserSeries) {
+            this.setState({ series: payload.series, version: payload.version });
+            this.emit('series', payload);
+        } else if (type === MarlinReplyParserSeriesSize) {
+            this.setState({ seriesSize: payload.seriesSize });
+            this.emit('series', payload);
         } else if (type === MarlinReplyParserReleaseDate) {
             this.emit('firmware', payload);
         } else if (type === MarlinReplyParserToolHead) {
@@ -383,8 +589,23 @@ class Marlin extends events.EventEmitter {
                 this.set({ enclosure: payload.enclosure });
             }
             this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserEnclosureDoor) {
+            if (this.settings.enclosureDoor !== payload.enclosureDoor) {
+                this.set({ enclosureDoor: payload.enclosureDoor });
+            }
+            this.emit('enclosure', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
+        } else if (type === MarlinReplyParserEmergencyStop) {
+            this.emit('cnc:stop', payload);
+        } else if (type === MarlinParserOriginOffset) {
+            this.setState({
+                originOffset: {
+                    ...this.state.originOffset,
+                    ...payload.originOffset
+                }
+            });
+            this.emit('originOffset', payload);
         } else if (type === MarlinLineParserResultPosition) {
             const nextState = {
                 ...this.state,
@@ -417,6 +638,7 @@ class Marlin extends events.EventEmitter {
                 }
                 // just regard this M105 command as a M1005 request
                 this.emit('firmware', { version: this.state.version, ...payload });
+                this.emit('ok', payload);
             } else {
                 this.setState({ temperature: payload.temperature });
                 this.emit('temperature', payload);
@@ -424,6 +646,13 @@ class Marlin extends events.EventEmitter {
                     this.emit('ok', payload);
                 }
             }
+        } else if (type === MarlinParserHomeState) {
+            this.setState({ isHomed: payload.isHomed });
+            this.emit('home', payload);
+        } else if (type === MarlinParserSelectedOrigin) {
+            this.emit('selected', payload);
+        } else if (type === MarlinParserSelectedCurrent) {
+            this.emit('selected', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
@@ -446,6 +675,7 @@ export {
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
-    MarlinLineParserResultOkTemperature
+    MarlinLineParserResultOkTemperature,
+    MarlinParserHomeState
 };
 export default Marlin;

@@ -1,28 +1,29 @@
 import map from 'lodash/map';
+import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
 
+import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { preventDefault } from '../../lib/dom-events';
 import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
 import { actions as machineActions } from '../../flux/machine';
-
+import { actions as widgetActions } from '../../flux/widget';
 import {
-    ABSENT_OBJECT,
     HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
-    METRIC_UNITS,
-    // Workflow
-    WORKFLOW_STATE_IDLE
+    METRIC_UNITS, SERVER_STATUS_IDLE,
+    LASER_PRINT_MODE_AUTO, LASER_PRINT_MODE_MANUAL,
+    WORKFLOW_STATE_IDLE, SERVER_STATUS_UNKNOWN
 } from '../../constants';
 import {
     DISTANCE_MIN,
@@ -30,19 +31,7 @@ import {
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
-
-/*
-const toFixedUnits = (units, val) => {
-    val = Number(val) || 0;
-    if (units === IMPERIAL_UNITS) {
-        val = mm2in(val).toFixed(4);
-    }
-    if (units === METRIC_UNITS) {
-        val = val.toFixed(3);
-    }
-
-    return val;
-};*/
+import { NumberInput as Input } from '../../components/Input';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -87,16 +76,29 @@ const normalizeToRange = (n, min, max) => {
 
 class Axes extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
+        widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
 
-        port: PropTypes.string.isRequired,
         headType: PropTypes.string.isRequired,
-        workState: PropTypes.string.isRequired,
-        workPosition: PropTypes.object.isRequired,
-        server: PropTypes.object.isRequired,
+        dataSource: PropTypes.string.isRequired,
+        workflowState: PropTypes.string.isRequired,
         serverStatus: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired
+        workPosition: PropTypes.object.isRequired,
+        originOffset: PropTypes.object.isRequired,
+        executeGcode: PropTypes.func,
+        executeGcodeAutoHome: PropTypes.func,
+        isConnected: PropTypes.bool.isRequired,
+        laserPrintMode: PropTypes.string.isRequired,
+        materialThickness: PropTypes.number.isRequired,
+
+        axes: PropTypes.array.isRequired,
+        speed: PropTypes.number.isRequired,
+        keypad: PropTypes.bool.isRequired,
+        selectedDistance: PropTypes.string.isRequired,
+        customDistance: PropTypes.number.isRequired,
+
+        updateWidgetState: PropTypes.func.isRequired,
+        updateState: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -116,12 +118,12 @@ class Axes extends PureComponent {
         },
         getJogDistance: () => {
             const { units } = this.state;
-            const selectedDistance = this.props.config.get('jog.selectedDistance');
+            const selectedDistance = this.props.selectedDistance;
             if (selectedDistance) {
                 return Number(selectedDistance) || 0;
             }
 
-            const customDistance = this.props.config.get('jog.customDistance');
+            const customDistance = this.props.customDistance;
             return toUnits(units, customDistance);
         },
         // actions
@@ -129,14 +131,17 @@ class Axes extends PureComponent {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
-                this.props.executeGcode(gcode.join('\n'));
+                this.actions.executeGcode(gcode.join('\n'));
             }
         },
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                this.props.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
+                this.actions.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
             }
+        },
+        executeGcode: (gcode) => {
+            this.props.executeGcode(gcode);
         },
         toggleKeypadJogging: () => {
             this.setState(state => ({
@@ -193,7 +198,17 @@ class Axes extends PureComponent {
                 gcode.push('G91', 'G0 Z-5 F400', 'G90');
             }
 
-            this.props.executeGcode(gcode.join('\n'));
+            this.actions.executeGcode(gcode.join('\n'));
+        },
+        onSelectMode: (mode) => {
+            this.props.updateState({
+                laserPrintMode: mode
+            });
+        },
+        onChangeMaterialThickness: (value) => {
+            this.props.updateState({
+                materialThickness: value
+            });
         }
     };
 
@@ -236,12 +251,20 @@ class Axes extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== this.props.dataSource) {
+                return;
+            }
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
         // FIXME
-        'Marlin:state': (state) => {
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            if (dataSource !== this.props.dataSource) {
+                return;
+            }
             this.setState({
                 controller: {
                     state: state
@@ -258,7 +281,7 @@ class Axes extends PureComponent {
     }
 
     getInitialState() {
-        const jogSpeed = this.props.config.get('jog.speed') || 1500;
+        const jogSpeed = this.props.speed;
 
         // init jog speed options, add saved speed when it doesn't exists in default options
         const jogSpeedOptions = DEFAULT_SPEED_OPTIONS;
@@ -269,13 +292,13 @@ class Axes extends PureComponent {
 
         return {
             // config
-            axes: this.props.config.get('axes', DEFAULT_AXES),
-            keypadJogging: this.props.config.get('jog.keypad'),
+            axes: this.props.axes || DEFAULT_AXES,
+            keypadJogging: this.props.keypad,
             jogSpeed,
             jogSpeedOptions,
             selectedAxis: '', // Defaults to empty
-            selectedDistance: this.props.config.get('jog.selectedDistance'),
-            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
+            selectedDistance: this.props.selectedDistance,
+            customDistance: toUnits(METRIC_UNITS, this.props.customDistance),
 
             // display
             canClick: true, // Defaults to true
@@ -285,6 +308,17 @@ class Axes extends PureComponent {
                 state: controller.state
             },
 
+            workPosition: { // work position
+                x: '0.000',
+                y: '0.000',
+                z: '0.000'
+            },
+
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
 
             // Bounding box
             bbox: {
@@ -309,14 +343,30 @@ class Axes extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.workState !== this.props.workState) {
+        if (nextProps.workflowState !== this.props.workflowState) {
             const { keypadJogging, selectedAxis } = this.state;
 
             // Disable keypad jogging and shuttle wheel when the workflow is not in the idle state.
             // This prevents accidental movement while sending G-code commands.
             this.setState({
-                keypadJogging: (nextProps.workState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-                selectedAxis: (nextProps.workState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+                keypadJogging: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+                selectedAxis: (nextProps.workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            });
+        }
+        if (nextProps.workPosition !== this.props.workPosition) {
+            this.setState({
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...nextProps.workPosition
+                }
+            });
+        }
+        if (nextProps.originOffset !== this.props.originOffset) {
+            this.setState({
+                originOffset: {
+                    ...this.state.originOffset,
+                    ...nextProps.originOffset
+                }
             });
         }
     }
@@ -324,7 +374,6 @@ class Axes extends PureComponent {
     componentDidUpdate(prevProps, prevState) {
         const {
             units,
-            minimized,
             axes,
             jogSpeed,
             keypadJogging,
@@ -332,17 +381,29 @@ class Axes extends PureComponent {
             customDistance
         } = this.state;
 
-        this.props.config.set('minimized', minimized);
-        this.props.config.set('axes', axes);
-        this.props.config.set('jog.speed', jogSpeed);
-        this.props.config.set('jog.keypad', keypadJogging);
-        this.props.config.set('jog.selectedDistance', selectedDistance);
+        this.props.updateWidgetState(this.props.widgetId, {
+            axes: axes,
+            jog: {
+                speed: jogSpeed,
+                keypad: keypadJogging,
+                selectedDistance: selectedDistance
+            }
+        });
+        // this.props.config.set('axes', axes);
+        // this.props.config.set('jog.speed', jogSpeed);
+        // this.props.config.set('jog.keypad', keypadJogging);
+        // this.props.config.set('jog.selectedDistance', selectedDistance);
 
         // The custom distance will not persist while toggling between in and mm
         if ((prevState.customDistance !== customDistance) && (prevState.units === units)) {
             const distance = (units === IMPERIAL_UNITS) ? in2mm(customDistance) : customDistance;
             // Save customDistance in mm
-            this.props.config.set('jog.customDistance', Number(distance));
+            // this.props.config.set('jog.customDistance', Number(distance));
+            this.props.updateWidgetState(this.props.widgetId, {
+                jog: {
+                    customDistance: Number(distance)
+                }
+            });
         }
     }
 
@@ -425,10 +486,10 @@ class Axes extends PureComponent {
     }
 
     canClick() {
-        // TODO: move to redux state
-        const { port, workState, server, serverStatus } = this.props;
-        return (port && workState === WORKFLOW_STATE_IDLE
-            || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
+        const { isConnected, workflowState, serverStatus } = this.props;
+        return (isConnected
+            && includes([WORKFLOW_STATE_IDLE], workflowState)
+            && includes([SERVER_STATUS_IDLE, SERVER_STATUS_UNKNOWN], serverStatus));
     }
 
     render() {
@@ -442,13 +503,53 @@ class Axes extends PureComponent {
             ...this.actions
         };
 
-        const { workPosition } = this.props;
+        const { workPosition, originOffset } = this.state;
+        const { laserPrintMode, materialThickness } = this.props;
 
         return (
             <div>
+                <div
+                    className="sm-tabs"
+                    style={{
+                        'marginBottom': '10px'
+                    }}
+                >
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_AUTO) })}
+                        onClick={() => {
+                            this.actions.onSelectMode(LASER_PRINT_MODE_AUTO);
+                        }}
+                    >
+                        {i18n._('Auto Mode')}
+                    </button>
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_MANUAL) })}
+                        onClick={() => {
+                            this.actions.onSelectMode(LASER_PRINT_MODE_MANUAL);
+                        }}
+                    >
+                        {i18n._('Manual Mode')}
+                    </button>
+                </div>
+                {laserPrintMode === 'auto' && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
+                        <Input
+                            className="sm-parameter-row__input"
+                            value={materialThickness}
+                            onChange={this.actions.onChangeMaterialThickness}
+                        />
+                        <span className="sm-parameter-row__input-unit">mm</span>
+                    </div>
+                )}
                 <DisplayPanel
                     workPosition={workPosition}
-                    executeGcode={this.props.executeGcode}
+                    originOffset={originOffset}
+                    executeGcode={this.actions.executeGcode}
                     state={state}
                 />
 
@@ -470,10 +571,18 @@ class Axes extends PureComponent {
                     </KeypadOverlay>
                 </div>
                 <div className="sm-parameter-row">
-                    <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        disabled={!canClick}
+                        onClick={() => this.props.executeGcodeAutoHome()}
+                    >
+                        {i18n._('Home')}
+                    </button>
+                    <span className="sm-parameter-row__label" style={{ width: '80px', margin: '0 0 0 30px' }}>{i18n._('Jog Speed')}</span>
                     <Creatable
                         backspaceRemoves={false}
-                        className="sm-parameter-row__select-lg"
+                        className="sm-parameter-row__select"
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         options={this.state.jogSpeedOptions}
@@ -483,30 +592,48 @@ class Axes extends PureComponent {
                         onChange={this.actions.onChangeJogSpeed}
                     />
                 </div>
-                <ControlPanel state={state} actions={actions} executeGcode={this.props.executeGcode} />
+                <ControlPanel state={state} actions={actions} executeGcode={this.actions.executeGcode} />
             </div>
         );
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
+    const { widgets } = state.widget;
+    const { widgetId } = ownProps;
+    const { jog, axes, dataSource } = widgets[widgetId];
 
-    const { port, headType, workState, workPosition, server, serverStatus } = machine;
+
+    const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
+    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, serverStatus, laserPrintMode, materialThickness } = machine;
 
     return {
         port,
         headType,
-        workState,
+        isConnected,
+        dataSource,
+        workflowState,
         workPosition,
-        server,
-        serverStatus
+        originOffset,
+        serverStatus,
+        axes,
+        speed,
+        keypad,
+        selectedDistance,
+        customDistance,
+
+        laserPrintMode,
+        materialThickness
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
+        executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
+        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value)),
+        updateState: (state) => dispatch(machineActions.updateState(state))
     };
 };
 
