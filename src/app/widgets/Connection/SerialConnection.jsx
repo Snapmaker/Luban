@@ -237,7 +237,6 @@ class SerialConnection extends PureComponent {
             }
         }, 5000);
 
-        console.log('listPorts');
         controller.listPorts();
     }
 

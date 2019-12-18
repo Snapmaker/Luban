@@ -602,28 +602,17 @@ export const actions = {
 
         // Upload model to backend
         const { modelGroup } = getState().printing;
-        // const formData = new FormData();
-        // formData.append('file', file);
-        const res = await api.uploadCaseFile(file);
+        const { size } = getState().machine;
 
-        // const { name, filename } = res.body;
+        const res = await api.uploadCaseFile(file);
         const { originalName, uploadName } = res.body;
-        // const modelPath = `${DATA_PREFIX}/${filename}`;
-        // const modelName = name;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
-        const { size } = getState().machine;
-        const modelInfo = new ModelInfo(size);
         const headerType = '3dp';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
-        modelInfo.setHeaderType(headerType);
-        // modelInfo.setSource(sourceType, originalName, uploadName);
-        modelInfo.setSource(sourceType, originalName, uploadName, width, height);
-        modelInfo.setMode(mode);
-        modelInfo.generateDefaults();
 
         dispatch(actions.updateState({ progress: 0.25 }));
 
@@ -644,16 +633,27 @@ export const actions = {
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
-                    modelInfo.setGeometry(bufferGeometry);
-                    modelInfo.setMaterial(material);
-
                     // Create model
-                    const model = new Model(modelInfo);
-                    modelGroup.addModel(model);
+                    // modelGroup.generateModel(modelInfo);
 
+                    const modelState = modelGroup.generateModel({
+                        limitSize: size,
+                        headerType,
+                        sourceType,
+                        originalName,
+                        uploadName,
+                        mode: mode,
+                        sourceWidth: width,
+                        sourceHeight: height,
+                        geometry: bufferGeometry,
+                        material: material,
+                        transformation: {}
+                    });
+
+                    dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-
+                    dispatch(actions.recordSnapshot());
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
                         progress: 1
@@ -669,11 +669,7 @@ export const actions = {
                     convexGeometry.addAttribute('position', positionAttribute);
 
                     // const model = modelGroup.children.find(m => m.uploadName === uploadName);
-                    const model = modelGroup.models.find(m => m.uploadName === uploadName);
-
-                    if (model !== null) {
-                        model.setConvexGeometry(convexGeometry);
-                    }
+                    modelGroup.setConvexGeometry(uploadName, convexGeometry);
 
                     break;
                 }
@@ -687,7 +683,6 @@ export const actions = {
                 }
                 case 'LOAD_MODEL_FAILED': {
                     worker.terminate();
-                    console.error(data);
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0

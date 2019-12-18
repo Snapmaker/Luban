@@ -19,6 +19,7 @@ class Output extends PureComponent {
         minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
+        toolPathModelGroup: PropTypes.object.isRequired,
         background: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
@@ -197,6 +198,7 @@ class Output extends PureComponent {
                 <Thumbnail
                     ref={this.thumbnail}
                     modelGroup={this.props.modelGroup}
+                    toolPathModelGroup={this.props.toolPathModelGroup}
                     minimized={this.props.minimized}
                 />
             </div>
@@ -206,9 +208,10 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, background } = state.laser;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup, background } = state.laser;
     return {
         modelGroup,
+        toolPathModelGroup,
         isGcodeGenerated,
         workflowState,
         gcodeBeans,

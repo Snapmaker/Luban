@@ -119,6 +119,7 @@ function registerApis(app) {
     // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
 
     // Macros
+    console.log(api.macros.fetch);
     app.get(urljoin(settings.route, 'api/macros'), api.macros.fetch);
     app.post(urljoin(settings.route, 'api/macros'), api.macros.create);
     app.get(urljoin(settings.route, 'api/macros/:id'), api.macros.read);

@@ -37,8 +37,9 @@ class ModelGroup {
     };
 
     _getState(model) {
-        const { sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
+        const { headerType, sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
         return {
+            headerType: headerType,
             sourceType: sourceType,
             originalName: originalName,
             mode: mode,
@@ -46,6 +47,7 @@ class ModelGroup {
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp
+            estimatedTime: this.estimatedTime,
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };

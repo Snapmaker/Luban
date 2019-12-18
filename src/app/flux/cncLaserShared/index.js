@@ -1,7 +1,7 @@
 import path from 'path';
 import * as THREE from 'three';
 import api from '../../api';
-import controller from '../../lib/controller';
+import { controller } from '../../lib/controller';
 import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkParams } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
@@ -120,7 +120,7 @@ export const actions = {
             });
     },
     // generateModel: (from, name, filename, width, height, mode) => (dispatch, getState) => {
-    generateModel: (headerType, originalName, uploadName, width, height, mode) => (dispatch, getState) => {
+    generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
@@ -320,9 +320,10 @@ export const actions = {
         let fileTotalLines = 0;
         for (const gcodeBean of gcodeBeans) {
             const modelState = modelGroup.getModelState(gcodeBean.modelInfo.modelID);
-            estimatedTime += modelState.estimatedTime;
             gcodeBean.modelInfo.mode = modelState.mode;
             gcodeBean.modelInfo.originalName = modelState.originalName;
+            gcodeBean.modelInfo.headerType = modelState.headerType;
+            estimatedTime += gcodeBean.modelInfo.estimatedTime;
             fileTotalLines += gcodeBean.gcode.split('\n').length;
         }
         dispatch(actions.updateState(from, {
@@ -330,7 +331,7 @@ export const actions = {
             gcodeBeans
         }));
 
-        const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo.config;
+        const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo;
         const boundingBox = modelGroup.getAllBoundingBox();
 
         const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;

@@ -1,6 +1,6 @@
 import ensureArray from 'ensure-array';
 import fs from 'fs';
-import { parseLine } from 'gcode-parser';
+import { parseLine } from '../../shared/lib/gcodeParser';
 
 const HEADTYPE_3DP = '3dp';
 const HEADTYPE_LASER = 'laser';

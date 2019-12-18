@@ -5,7 +5,8 @@ import PropTypes from 'prop-types';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired,
+        toolPathModelGroup: PropTypes.object.isRequired
         // thumbnail: PropTypes.string.isRequired
     };
 
@@ -65,7 +66,7 @@ class Thumbnail extends PureComponent {
 
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
-        this.object = this.props.modelGroup.object.clone();
+        this.object = this.props.toolPathModelGroup.object.clone();
         const boundingBox = this.props.modelGroup.getAllBoundingBox();
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;

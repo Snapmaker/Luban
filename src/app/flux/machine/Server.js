@@ -63,6 +63,8 @@ export class Server extends events.EventEmitter {
     _closeServer() {
         this._stateInit();
         this.endRequestStatus();
+        this.gcodeInfos = [];
+        this.isGcodeExecuting = false;
     }
 
     get host() {
@@ -363,6 +365,7 @@ export class Server extends events.EventEmitter {
         return new Promise((resolve) => {
             request
                 .post(api)
+                .timeout(12000)
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)
