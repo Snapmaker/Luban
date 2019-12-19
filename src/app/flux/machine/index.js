@@ -63,6 +63,7 @@ const INITIAL_STATE = {
     enclosure: false,
     enclosureDoor: false,
     laserFocalLength: null,
+    laserPower: null,
 
     workPosition: { // work position
         x: '0.000',
@@ -416,11 +417,12 @@ export const actions = {
             });
             server.on('http:status', (result) => {
                 const { workPosition, originOffset } = getState().machine;
-                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ, laserFocalLength } = result.data;
+                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ, laserFocalLength, laserPower } = result.data;
 
                 dispatch(actions.updateState({
                     serverStatus: status,
                     laserFocalLength: laserFocalLength,
+                    laserPower: laserPower,
                     isHomed: isHomed
                 }));
                 if (workPosition.x !== x
@@ -462,7 +464,7 @@ export const actions = {
     },
 
     uploadCloseServerState: () => (dispatch) => {
-        dispatch(actions.updateServerToken(''));
+        // dispatch(actions.updateServerToken(''));
         dispatch(actions.updateState({
             isOpen: false,
             isConnected: false,
@@ -494,7 +496,7 @@ export const actions = {
         if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
             if (laserPrintMode === LASER_PRINT_MODE_AUTO && laserFocalLength) {
                 const promise = new Promise((resolve) => {
-                    server.executeGcode(`G55;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                    server.executeGcode(`G53;\nG28;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
                         resolve();
                     });
                 });
@@ -502,7 +504,7 @@ export const actions = {
             }
             if (background.enabled) {
                 const promise = new Promise((resolve) => {
-                    server.executeGcode('G55;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
+                    server.executeGcode('G53;\nG28;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
                         resolve();
                     });
                 });

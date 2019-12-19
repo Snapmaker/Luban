@@ -109,6 +109,7 @@ export const actions = {
         group.remove(...group.children);
         group.add(mesh);
         dispatch(actions.setBackgroundEnabled(true));
+        dispatch(sharedActions.render('laser'));
     },
 
     removeBackgroundImage: () => (dispatch, getState) => {
@@ -116,6 +117,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         dispatch(actions.setBackgroundEnabled(false));
+        dispatch(sharedActions.render('laser'));
     }
 };
 
