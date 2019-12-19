@@ -26,7 +26,11 @@ class ExtractSquareTrace extends PureComponent {
 
     extractingPreview = [];
 
+    close = false;
+
     state = {
+        getPhotoTasks: [],
+        imageNames: [],
         isStitched: false,
         canTakePhoto: true,
         canStart: true,
@@ -47,11 +51,10 @@ class ExtractSquareTrace extends PureComponent {
 
     actions = {
         startCameraAid: async () => {
-            // parse 1: request_camera_calibration
-
             if (!this.state.canTakePhoto) {
                 return;
             }
+            await this.props.server.executeGcode('G53;');
             this.setState({
                 canStart: false,
                 canTakePhoto: false
@@ -68,11 +71,11 @@ class ExtractSquareTrace extends PureComponent {
                     getPoints: getPoints
                 }
             });
-            let imagesName = new Set();
             const position = [];
             let centerDis;
             const cameraOffsetX = 20;
             const cameraOffsetY = -8.5;
+            let length;
             if (this.props.series === MACHINE_SERIES.A150.value) {
                 centerDis = 80;
                 [1, 2, 4, 3].forEach((item) => {
@@ -82,6 +85,7 @@ class ExtractSquareTrace extends PureComponent {
                         'index': item - 1
                     });
                 });
+                length = 4;
             } else {
                 centerDis = 100;
                 for (let j = 1; j >= -1; j--) {
@@ -105,6 +109,7 @@ class ExtractSquareTrace extends PureComponent {
                         }
                     }
                 }
+                length = 9;
             }
 
             this.setState({
@@ -115,111 +120,222 @@ class ExtractSquareTrace extends PureComponent {
                     currentArrIndex: 0
                 }
             });
-            // parse 2
-
-            let idx = 0;
-            for (let i = 0; i < position.length; i++) {
-                if (this.state.options.currentArrIndex !== i) {
-                    break;
-                }
-                await api.processTakePhoto({
-                    'index': position[i].index,
-                    'x': position[i].x,
-                    'y': position[i].y,
-                    'z': 170,
-                    'feedRate': 3000,
-                    'address': address
-                });
-
-                let requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
-                let xSize, ySize;
-                if (this.state.options.picAmount === 4) {
-                    xSize = this.props.size.x / 2;
-                    ySize = this.props.size.y / 2;
+            const takePhotos = this.actions.takePhotos(address, position);
+            const getPhototTasks = this.actions.startGetPhotoTasks(length);
+            Promise.all([takePhotos, getPhototTasks]).then(() => {
+                if (this.props.series !== MACHINE_SERIES.A150.value) {
+                    this.swapItem(this.state.imageNames, 3, 5);
                 } else {
-                    if (parseInt(position[i].index / 3, 10) === 1) {
-                        ySize = centerDis;
-                    } else {
-                        ySize = Math.floor((this.props.size.y - centerDis) / 2);
-                    }
-                    if (position[i].index % 3 === 1) {
-                        xSize = centerDis;
-                    } else {
-                        xSize = Math.floor((this.props.size.x - centerDis) / 2);
-                    }
+                    this.swapItem(this.state.imageNames, 2, 3);
                 }
-                this.extractingPreview[position[i].index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, position[i].index);
-
-                let requestPicStatus = false;
                 this.setState({
                     options: {
                         ...this.state.options,
-                        currentArrIndex: this.state.options.currentArrIndex + 1
+                        fileNames: this.state.imageNames
                     }
                 });
-                if (this.state.options.currentArrIndex !== i + 1) {
-                    break;
-                }
-                const time = Date.now();
-                const timer = setInterval(() => {
-                    const diff = Date.now() - time;
-                    if (requestPicStatus || diff > 30000) {
-                        if (idx === position.length) {
-                            imagesName = Array.from(imagesName);
-                            if (this.props.series !== MACHINE_SERIES.A150.value) {
-                                this.swapItem(imagesName, 3, 5);
-                            } else {
-                                this.swapItem(imagesName, 2, 3);
-                            }
-                            this.setState({
-                                options: {
-                                    ...this.state.options,
-                                    fileNames: imagesName
-                                }
-                            });
-                            this.actions.processStitch(this.state.options);
-                            this.setState({
-                                canTakePhoto: true
-                            });
-                        }
-                        clearInterval(timer);
+                this.actions.processStitch(this.state.options);
+                this.setState({
+                    canTakePhoto: true
+                });
+            });
+
+            // parse 2
+
+            // const idx = 0;
+            // for (let i = 0; i < position.length; i++) {
+            //     if (this.state.options.currentArrIndex !== i) {
+            //         break;
+            //     }
+            //     await api.processTakePhoto({
+            //         'index': position[i].index,
+            //         'x': position[i].x,
+            //         'y': position[i].y,
+            //         'z': 170,
+            //         'feedRate': 3000,
+            //         'address': address
+            //     });
+
+            // const requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
+            //
+            //
+            // const requestPicStatus = false;
+            // this.setState({
+            //     options: {
+            //         ...this.state.options
+            //     }
+            // });
+            // if (this.state.options.currentArrIndex !== i + 1) {
+            //     break;
+            // }
+            // const time = Date.now();
+            // const timer = setInterval(() => {
+            //     const diff = Date.now() - time;
+            //     if (requestPicStatus || diff > 30000) {
+            //         if (idx === position.length) {
+            //             imagesName = Array.from(imagesName);
+            //             if (this.props.series !== MACHINE_SERIES.A150.value) {
+            //                 this.swapItem(imagesName, 3, 5);
+            //             } else {
+            //                 this.swapItem(imagesName, 2, 3);
+            //             }
+            //             this.setState({
+            //                 options: {
+            //                     ...this.state.options,
+            //                     fileNames: imagesName
+            //                 }
+            //             });
+            //             this.actions.processStitch(this.state.options);
+            //             this.setState({
+            //                 canTakePhoto: true
+            //             });
+            //         }
+            //         clearInterval(timer);
+            //         return;
+            //     }
+            //     requestPic.then((res) => {
+            //         if (!JSON.parse(res.text).fileName && JSON.parse(res.text).status === 404) {
+            //             requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
+            //         } else {
+            //             requestPicStatus = true;
+            //             const { fileName } = JSON.parse(res.text);
+            //             this.setState({
+            //                 options: {
+            //                     ...this.state.options,
+            //                     currentIndex: position[i].index,
+            //                     stitchFileName: fileName
+            //                 }
+            //             });
+            //             imagesName.add(fileName);
+            //
+            //
+            //             api.processStitchEach(this.state.options).then((stitchImg) => {
+            //                 const { filename } = JSON.parse(stitchImg.text);
+            //                 if (this.extractingPreview[position[i].index].current) {
+            //                     this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize * 2, ySize * 2, position[i].index);
+            //                 }
+            //             });
+            //             idx++;
+            //         }
+            //     });
+            // }, 700);
+            // this.timers.push(timer);
+            // }
+        },
+
+        takePhotos: (address, position) => {
+            const getPhotoTasks = this.state.getPhotoTasks;
+            return new Promise(async (resolve, reject) => {
+                for (let i = 0; i < position.length; i++) {
+                    if (this.close) {
+                        this.props.server.executeGcode('G54');
+                        reject();
                         return;
                     }
-                    requestPic.then((res) => {
-                        if (!JSON.parse(res.text).fileName && JSON.parse(res.text).status === 404) {
-                            requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
-                        } else {
-                            requestPicStatus = true;
-                            const { fileName } = JSON.parse(res.text);
-                            this.setState({
-                                options: {
-                                    ...this.state.options,
-                                    currentIndex: position[i].index,
-                                    stitchFileName: fileName
-                                }
-                            });
-                            imagesName.add(fileName);
-
-
-                            api.processStitchEach(this.state.options).then((stitchImg) => {
-                                const { filename } = JSON.parse(stitchImg.text);
-                                if (this.extractingPreview[position[i].index].current) {
-                                    this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize * 2, ySize * 2, position[i].index);
-                                }
-                            });
-                            idx++;
-                        }
+                    await api.processTakePhoto({
+                        'index': position[i].index,
+                        'x': position[i].x,
+                        'y': position[i].y,
+                        'z': 170,
+                        'feedRate': 3000,
+                        'address': address
                     });
-                }, 700);
-                this.timers.push(timer);
-            }
+                    getPhotoTasks.push({
+                        address: address,
+                        index: position[i].index,
+                        status: 0
+                    });
+                }
+                resolve();
+            });
         },
+
+        startGetPhotoTasks: (length) => {
+            if (this.timer) {
+                return Promise.reject();
+            }
+            const getPhotoTasks = this.state.getPhotoTasks;
+            return new Promise(((resolve, reject) => {
+                this.timer = setInterval(() => {
+                    if (this.close) {
+                        this.timer && clearInterval(this.timer);
+                        this.timer = null;
+                        reject();
+                    }
+                    const success = getPhotoTasks.filter(v => v.status === 2).length;
+                    if (success === length) {
+                        this.timer && clearInterval(this.timer);
+                        this.timer = null;
+                        resolve();
+                    }
+                    const post = getPhotoTasks.filter(v => v.status === 1).length;
+                    if (post === 1) {
+                        return;
+                    }
+                    const task = getPhotoTasks.find(v => v.status === 0);
+                    if (!task) {
+                        return;
+                    }
+                    task.status = 1;
+                    api
+                        .processGetPhoto({ 'index': task.index, 'address': task.address })
+                        .then((res) => {
+                            if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
+                                let xSize, ySize;
+
+                                if (this.state.options.picAmount === 4) {
+                                    xSize = this.props.size.x / 2;
+                                    ySize = this.props.size.y / 2;
+                                } else {
+                                    if (parseInt(task.index / 3, 10) === 1) {
+                                        ySize = this.state.options.centerDis;
+                                    } else {
+                                        ySize = Math.floor((this.props.size.y - this.state.options.centerDis) / 2);
+                                    }
+                                    if (task.index % 3 === 1) {
+                                        xSize = this.state.options.centerDis;
+                                    } else {
+                                        xSize = Math.floor((this.props.size.x - this.state.options.centerDis) / 2);
+                                    }
+                                }
+                                this.extractingPreview[task.index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, task.index);
+
+                                const { fileName } = JSON.parse(res.text);
+                                this.setState({
+                                    options: {
+                                        ...this.state.options,
+                                        currentIndex: task.index,
+                                        stitchFileName: fileName
+                                    }
+                                });
+                                this.state.imageNames.push(fileName);
+
+                                api.processStitchEach(this.state.options).then((stitchImg) => {
+                                    const { filename } = JSON.parse(stitchImg.text);
+                                    if (this.extractingPreview[task.index].current) {
+                                        this.extractingPreview[task.index].current.onChangeImage(filename, xSize * 2, ySize * 2, task.index);
+                                    }
+                                    task.status = 2;
+                                });
+                            } else {
+                                task.status = 0;
+                            }
+                        })
+                        .catch(() => {
+                            this.close = true;
+                        });
+                }, 500);
+            }));
+        },
+
+
         processStitch: (options) => {
             api.processStitch(options).then((res) => {
                 this.setState({
                     outputFilename: res.body.filename,
                     isStitched: true
                 });
+                this.props.server.executeGcode('G54');
             });
         },
         setBackgroundImage: () => {
@@ -231,7 +347,7 @@ class ExtractSquareTrace extends PureComponent {
     };
 
 
-    timers = [];
+    timer = null;
 
     componentDidMount() {
         for (let i = 0; i < this.state.options.picAmount; i++) {
@@ -240,11 +356,8 @@ class ExtractSquareTrace extends PureComponent {
     }
 
     componentWillUnmount() {
-        this.timers.forEach(v => {
-            clearInterval(v);
-        });
+        this.close = true;
     }
-
 
     swapItem(imagesName, item1, item2) {
         const swap = imagesName[item1];

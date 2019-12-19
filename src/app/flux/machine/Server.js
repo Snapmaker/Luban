@@ -350,14 +350,19 @@ export class Server extends events.EventEmitter {
 
     executeGcode = (gcode, callback) => {
         if (!this.token) {
-            return;
+            return Promise.resolve();
         }
-        const split = gcode.split('\n');
-        this.gcodeInfos.push({
-            gcodes: split,
-            callback: callback
+        return new Promise(resolve => {
+            const split = gcode.split('\n');
+            this.gcodeInfos.push({
+                gcodes: split,
+                callback: () => {
+                    callback && callback();
+                    resolve();
+                }
+            });
+            this.startExecuteGcode();
         });
-        this.startExecuteGcode();
     };
 
     _executeGcode = (gcode) => {
@@ -365,7 +370,7 @@ export class Server extends events.EventEmitter {
         return new Promise((resolve) => {
             request
                 .post(api)
-                .timeout(12000)
+                .timeout(300000)
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)
@@ -405,6 +410,7 @@ export class Server extends events.EventEmitter {
             isHomed: this.state.isHomed,
             enclosure: this.state.enclosure,
             laserFocalLength: this.state.laserFocalLength,
+            laserPower: this.state.laserPower,
             workSpeed: this.state.workSpeed
         };
     };
