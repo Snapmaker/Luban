@@ -12,21 +12,23 @@ export const WORKFLOW_STATE_RUNNING = 'running';
 export const WORKFLOW_STATE_PAUSED = 'paused';
 export const WORKFLOW_STATE_IDLE = 'idle';
 
+// Workflow status
+export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
+export const WORKFLOW_STATUS_IDLE = 'idle';
+export const WORKFLOW_STATUS_RUNNING = 'running';
+export const WORKFLOW_STATUS_PAUSED = 'paused';
+
 // Head Type
 export const HEAD_TYPE_UNKNOWN = 'UNKNOWN';
 export const HEAD_TYPE_3DP = '3DP';
 export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
 // Workflow State
-export const SERVER_STATUS_RUNNING = 'running';
-export const SERVER_STATUS_PAUSED = 'paused';
-export const SERVER_STATUS_IDLE = 'idle';
-export const SERVER_STATUS_UNKNOWN = 'unknown';
 
 
 // Connection Status
 export const CONNECTION_STATUS_IDLE = 'idle';
-export const CONNECTION_STATUS_WAITING = 'waiting';
+export const CONNECTION_STATUS_CONNECTING = 'connecting';
 export const CONNECTION_STATUS_CONNECTED = 'connected';
 
 // G-code Macro

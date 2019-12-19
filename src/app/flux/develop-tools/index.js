@@ -169,7 +169,7 @@ export const actions = {
         if (port) {
             // controller.command('gcode', gcode, context);
             screenController.command('gcode', gcode, context);
-            // } else if (server && serverStatus === STATUS_IDLE) {
+            // } else if (server && workflowStatus === STATUS_IDLE) {
         } else if (server) {
             server.executeGcode(gcode);
         }
@@ -178,9 +178,9 @@ export const actions = {
     // takePhoto: (index, position) => (dispatch, getState) => {
     //     const machine = getState().machine;
     //
-    //     const { server, serverStatus } = machine;
+    //     const { server, workflowStatus } = machine;
     //
-    //     if (server && serverStatus === STATUS_IDLE) {
+    //     if (server && workflowStatus === STATUS_IDLE) {
     //         server.takePhoto(index, position);
     //     } else {
     //         console.error('please connect through wifi');
@@ -190,9 +190,9 @@ export const actions = {
     // getPhoto: (index, callback) => (dispatch, getState) => {
     //     const machine = getState().machine;
     //
-    //     const { server, serverStatus } = machine;
+    //     const { server, workflowStatus } = machine;
     //
-    //     if (server && serverStatus === STATUS_IDLE) {
+    //     if (server && workflowStatus === STATUS_IDLE) {
     //         server.getPhoto(index, callback);
     //     } else {
     //         console.error('please connect through wifi');
@@ -226,7 +226,7 @@ export const actions = {
         // Update server
         dispatch(actions.updateState({
             server,
-            serverStatus: STATUS_UNKNOWN,
+            workflowStatus: STATUS_UNKNOWN,
             isConnected: true,
             connectionType: CONNECTION_TYPE_WIFI
         }));
@@ -243,7 +243,7 @@ export const actions = {
             server.requestStatus((err, res) => {
                 if (!err) {
                     dispatch(actions.updateState({
-                        serverStatus: res.body.status,
+                        workflowStatus: res.body.status,
                         workPosition: {
                             x: server.x.toFixed(3),
                             y: server.y.toFixed(3),
@@ -251,7 +251,7 @@ export const actions = {
                         }
                     }));
                 } else {
-                    dispatch(actions.updateState({ serverStatus: STATUS_UNKNOWN }));
+                    dispatch(actions.updateState({ workflowStatus: STATUS_UNKNOWN }));
                 }
 
                 // If status timer is not cancelled, then re-schedule a new timeout
@@ -265,7 +265,7 @@ export const actions = {
     unsetServer: () => (dispatch) => {
         dispatch(actions.updateState({
             server: ABSENT_OBJECT,
-            serverStatus: STATUS_UNKNOWN,
+            workflowStatus: STATUS_UNKNOWN,
             isConnected: false,
             connectionType: ''
         }));

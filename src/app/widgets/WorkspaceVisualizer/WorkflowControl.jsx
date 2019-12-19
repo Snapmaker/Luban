@@ -6,7 +6,7 @@ import {
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_IDLE,
-    EXPERIMENTAL_WIFI_CONTROL, SERVER_STATUS_IDLE, SERVER_STATUS_RUNNING, SERVER_STATUS_PAUSED, CONNECTION_TYPE_WIFI
+    EXPERIMENTAL_WIFI_CONTROL, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -16,7 +16,7 @@ import log from '../../lib/log';
 class WorkflowControl extends PureComponent {
     static propTypes = {
         uploadState: PropTypes.string.isRequired,
-        serverStatus: PropTypes.string,
+        workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
         state: PropTypes.object,
@@ -71,18 +71,18 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, actions, connectionType, serverStatus, isConnected } = this.props;
+        const { state, actions, connectionType, workflowStatus, isConnected } = this.props;
         const { gcode, workflowState } = state;
 
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
-        const status = isWifi ? serverStatus : workflowState;
+        const status = isWifi ? workflowStatus : workflowState;
         const isRendered = gcode.renderState === 'rendered';
         const isUploaded = isWifi ? true : this.props.uploadState === 'uploaded';
-        const canUpload = _.includes([WORKFLOW_STATE_IDLE, SERVER_STATUS_IDLE], status);
-        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, SERVER_STATUS_IDLE], status);
-        const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, SERVER_STATUS_RUNNING], status);
-        const canPause = _.includes([WORKFLOW_STATE_RUNNING, SERVER_STATUS_RUNNING], status);
-        const canStop = _.includes([WORKFLOW_STATE_PAUSED, SERVER_STATUS_PAUSED], status);
+        const canUpload = _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], status);
+        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], status);
+        const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
+        const canPause = _.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
+        const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
 
         return (
             <div>

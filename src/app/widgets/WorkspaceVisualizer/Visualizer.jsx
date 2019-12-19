@@ -15,7 +15,7 @@ import {
     CONNECTION_TYPE_SERIAL,
     MACHINE_HEAD_TYPE,
     MARLIN,
-    PROTOCOL_TEXT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING,
+    PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
@@ -49,7 +49,7 @@ class Visualizer extends Component {
         headType: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        serverStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
@@ -293,11 +293,11 @@ class Visualizer extends Component {
                     }
                 }
             } else {
-                const { serverStatus } = this.props;
-                if (serverStatus === SERVER_STATUS_IDLE) {
+                const { workflowStatus } = this.props;
+                if (workflowStatus === WORKFLOW_STATUS_IDLE) {
                     this.props.startServerGcode();
                 }
-                if (serverStatus === SERVER_STATUS_PAUSED) {
+                if (workflowStatus === WORKFLOW_STATUS_PAUSED) {
                     this.props.resumeServerGcode();
                 }
             }
@@ -356,8 +356,8 @@ class Visualizer extends Component {
                     this.actions.tryPause();
                 }
             } else {
-                const { serverStatus } = this.props;
-                if (serverStatus === SERVER_STATUS_RUNNING) {
+                const { workflowStatus } = this.props;
+                if (workflowStatus === WORKFLOW_STATUS_RUNNING) {
                     this.props.pauseServerGcode();
                 }
             }
@@ -370,8 +370,8 @@ class Visualizer extends Component {
                     controller.command('gcode:stop');
                 }
             } else {
-                const { serverStatus } = this.props;
-                if (serverStatus !== SERVER_STATUS_IDLE) {
+                const { workflowStatus } = this.props;
+                if (workflowStatus !== WORKFLOW_STATUS_IDLE) {
                     this.props.stopServerGcode();
                 }
             }
@@ -768,7 +768,7 @@ class Visualizer extends Component {
                     {state.gcode.renderState === 'rendering' && <Rendering />}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
                         <WorkflowControl
-                            serverStatus={this.props.serverStatus}
+                            workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
                             connectionType={this.props.connectionType}
                             state={state}
@@ -835,7 +835,7 @@ const mapStateToProps = (state) => {
         enclosure: machine.enclosure,
         enclosureDoor: machine.enclosureDoor,
         headType: machine.headType,
-        serverStatus: machine.serverStatus,
+        workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,

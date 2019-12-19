@@ -1,6 +1,6 @@
 import request from 'superagent';
 import events from 'events';
-import { MACHINE_HEAD_TYPE, MACHINE_SERIES, SERVER_STATUS_UNKNOWN } from '../../constants';
+import { MACHINE_HEAD_TYPE, MACHINE_SERIES, WORKFLOW_STATUS_UNKNOWN } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 
 /**
@@ -34,7 +34,7 @@ export class Server extends events.EventEmitter {
         this.token = '';
         this.isConnected = false;
         this.waitConfirm = false;
-        this.status = SERVER_STATUS_UNKNOWN;
+        this.status = WORKFLOW_STATUS_UNKNOWN;
         this.state = {
             series: '',
             pattern: '',

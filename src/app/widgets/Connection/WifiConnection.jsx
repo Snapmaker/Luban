@@ -8,7 +8,7 @@ import { map } from 'lodash';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
-import { ABSENT_OBJECT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
+import { ABSENT_OBJECT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 import MachineSelection from './MachineSelection';
 
 
@@ -17,7 +17,7 @@ class WifiConnection extends PureComponent {
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
-        serverStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         isOpen: PropTypes.bool.isRequired,
         isConnected: PropTypes.bool.isRequired,
 
@@ -120,7 +120,7 @@ class WifiConnection extends PureComponent {
     };
 
     render() {
-        const { servers, serverStatus, discovering, isConnected, isOpen } = this.props;
+        const { servers, workflowStatus, discovering, isConnected, isOpen } = this.props;
         const { server } = this.state;
         return (
             <div>
@@ -197,11 +197,11 @@ class WifiConnection extends PureComponent {
                     <div className="btn-group btn-group-sm">
                         {i18n._('Status')}:
                         <Space width={4} />
-                        {serverStatus}
+                        {workflowStatus}
                         <Space width={4} />
-                        {serverStatus === SERVER_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
-                        {serverStatus === SERVER_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
-                        {serverStatus === SERVER_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
+                        {workflowStatus === WORKFLOW_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
+                        {workflowStatus === WORKFLOW_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
+                        {workflowStatus === WORKFLOW_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
                     </div>
                 </div>
                 <MachineSelection
@@ -216,13 +216,13 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { servers, discovering, server, serverStatus, isOpen, isConnected } = machine;
+    const { servers, discovering, server, workflowStatus, isOpen, isConnected } = machine;
 
     return {
         servers,
         discovering,
         server,
-        serverStatus,
+        workflowStatus,
         isOpen,
         isConnected
     };
