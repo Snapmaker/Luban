@@ -39,6 +39,8 @@ class ManualCalibration extends Component {
         this.translatePosition = { x: 0, y: 0 }; // todo
         this.offset = { x: 0, y: 0 }; // todo
         this.lastPosition = { x: 0, y: 0 }; // todo
+        this.mouseWheelX = 0;
+        this.mouseWheelY = 0;
         this.scale = 1;
     }
 
@@ -88,7 +90,8 @@ class ManualCalibration extends Component {
     onMouseWheel = (event) => {
         event.preventDefault();
         event.stopPropagation();
-
+        this.mouseWheelX = event.offsetX;
+        this.mouseWheelY = event.offsetY;
         this.handleMouseWheel(event);
     };
 
@@ -191,14 +194,14 @@ class ManualCalibration extends Component {
         const { width, height } = this.props;
         if (event.deltaY < 0) {
             this.scale /= 1.05;
-            this.camera.position.set(event.offsetX * 2 - width / 2,
-                height / 2 - event.offsetY * 2,
+            this.camera.position.set(this.mouseWheelX * 2 - width / 2,
+                height / 2 - this.mouseWheelY * 2,
                 Math.max(this.props.width, this.props.height) * 0.5 * this.scale);
         } else if (this.scale < 1 && event.deltaY > 0) {
             this.scale *= 1.05;
             this.camera.position.set(
-                event.offsetX * 2 - width / 2,
-                height / 2 - event.offsetY * 2,
+                this.mouseWheelX * 2 - width / 2,
+                height / 2 - this.mouseWheelY * 2,
                 Math.max(this.props.width, this.props.height) * 0.5 * this.scale
             );
             if (this.scale >= 1) {
@@ -257,7 +260,7 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div ref={this.node} />
+            <div style={{ float: 'left' }} ref={this.node} />
         );
     }
 }

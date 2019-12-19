@@ -75,11 +75,12 @@ export const stitchEach = async (options) => {
             startySize = (size.y - ySize) / 2;
             endySize = (size.y + ySize) / 2;
         } else if (parseInt((currentIndex) / 3, 10) === 2) {
-            // endySize = ySize;
-            endySize = size.y - ySize;
+            endySize = ySize;
+            // endySize = size.y - ySize;
         }
         if (currentIndex % 3 === 0) {
-            endxSize = size.x - xSize;
+            // endxSize = size.x - xSize;
+            endxSize = xSize;
         } else if (currentIndex % 3 === 1) {
             startxSize = Math.floor((size.x - xSize) / 2);
             endxSize = Math.floor((size.x + xSize) / 2);

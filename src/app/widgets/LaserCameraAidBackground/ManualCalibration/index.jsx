@@ -16,6 +16,7 @@ class ManualCalibration extends PureComponent {
         server: PropTypes.object.isRequired,
         getPoints: PropTypes.array.isRequired,
         matrix: PropTypes.object.isRequired,
+        backtoCalibrationModal: PropTypes.func.isRequired,
         displayExtractTrace: PropTypes.func.isRequired,
         calibrationOnOff: PropTypes.func.isRequired,
         updateAffinePoints: PropTypes.func.isRequired
@@ -24,6 +25,7 @@ class ManualCalibration extends PureComponent {
     calibrationPreview = React.createRef();
 
     state = {
+        isComfirmPoints: false,
         width: 1024,
         height: 1280
     };
@@ -38,9 +40,15 @@ class ManualCalibration extends PureComponent {
                 });
                 this.calibrationPreview.current.onChangeImage(fileName, width, height);
             });
+            this.setState({
+                isComfirmPoints: false
+            });
         },
-        calibrate: () => {
+        onClickToConfirm: () => {
             const { size } = this.props;
+            this.setState({
+                isComfirmPoints: true
+            });
             this.calibrationPreview.current.updateMatrix(
                 size.x,
                 size.y,
@@ -60,8 +68,13 @@ class ManualCalibration extends PureComponent {
                 }
                 await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
             }
+            this.props.backtoCalibrationModal();
         }
     };
+
+    componentDidMount() {
+        this.actions.onClickToUpload();
+    }
 
     render() {
         return (
@@ -70,7 +83,7 @@ class ManualCalibration extends PureComponent {
                 <div className={styles['laser-set-background-modal-title']}>
                     {i18n._('Calibration')}
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div className={styles['laser-set-background-modal-content']}>
                     <CalibrationPreview
                         ref={this.calibrationPreview}
                         getPoints={this.props.getPoints}
@@ -78,35 +91,52 @@ class ManualCalibration extends PureComponent {
                         height={this.state.height}
                         updateAffinePoints={this.props.updateAffinePoints}
                     />
-                </div>
-                <div className={styles['calibrate-background']}>
-                    <div className={classNames(styles['extract-actions'])}>
-                        <Anchor
-                            className={styles['extract-actions__btn']}
-                            onClick={this.actions.onClickToUpload}
-                        >
-                            <i className={styles['extract-actions__icon-upload']} />
-                        </Anchor>
-                        <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
-                    </div>
+                    <div className={styles['calibrate-background']}>
+                        <div className={classNames(styles['reset-actions'])}>
+                            <Anchor
+                                className={styles['reset-actions__btn']}
+                                onClick={this.actions.onClickToUpload}
+                            >
+                                <i className={styles['reset-actions__icon-reset']} />
+                            </Anchor>
+                            <span className={styles['reset-actions__text']}>
+                                {i18n._('Reset')}
+                            </span>
+                        </div>
 
-                    <div className={classNames(styles['extract-actions'])}>
-                        <Anchor
-                            className={styles['extract-actions__btn']}
-                            onClick={this.actions.calibrate}
+                        <div
+                            className={classNames(
+                                styles['confirm-actions'],
+                                styles[this.state.isComfirmPoints ? 'isBlue' : ''],
+                            )}
                         >
-                            <i className={styles['extract-actions__icon-conform']} />
-                        </Anchor>
-                        <span className={styles['extract-actions__text']}>{i18n._('Calibrate')}</span>
+                            <Anchor
+                                className={styles['confirm-actions__btn']}
+                                onClick={this.actions.onClickToConfirm}
+                            >
+                                <i className={styles['confirm-actions__icon-confirm']} />
+                            </Anchor>
+                            <span className={styles['reset-actions__text']}>
+                                {i18n._('Confirm')}
+                            </span>
+                        </div>
+                        <p style={{ margin: ' 10px 10px 0 0', textAlign: 'left' }}>
+                            {i18n._('滚轮来缩放，') }
+                        </p>
+                        <p style={{ textAlign: 'left' }}>
+                            {i18n._('按住右键左右来移动') }
+                        </p>
                     </div>
                 </div>
-                <div style={{ margin: '20px 60px' }}>
+                <div style={{ minHeight: 30, width: 710, margin: '0 auto' }}>
                     {!EXPERIMENTAL_LASER_CAMERA && (
                         <button
                             type="button"
-                            className="sm-btn-large sm-btn-primary"
+                            className={classNames(
+                                'sm-btn-large',
+                                styles['btn-camera'],
+                            )}
                             onClick={this.actions.previousPanel}
-                            style={{ width: '40%', float: 'left', margin: '10px 0 0 0' }}
                         >
                             {i18n._('Previous')}
                         </button>
@@ -114,9 +144,12 @@ class ManualCalibration extends PureComponent {
                     {!EXPERIMENTAL_LASER_CAMERA && (
                         <button
                             type="button"
-                            className="sm-btn-large sm-btn-primary"
+                            className={classNames(
+                                'sm-btn-large',
+                                styles[this.state.isComfirmPoints ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                            )}
+                            disabled={!this.state.isComfirmPoints}
                             onClick={this.actions.setCameraCalibrationMatrix}
-                            style={{ width: '40%', float: 'right', margin: '10px 0 0 0' }}
                         >
                             {i18n._('Apply')}
                         </button>
