@@ -411,7 +411,11 @@ export class Server extends events.EventEmitter {
             enclosure: this.state.enclosure,
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
-            workSpeed: this.state.workSpeed
+            workSpeed: this.state.workSpeed,
+            nozzleTemperature: 0,
+            nozzleTargetTemperature: 0,
+            heatedBedTemperature: 0,
+            heatedBedTargetTemperature: 0
         };
     };
 

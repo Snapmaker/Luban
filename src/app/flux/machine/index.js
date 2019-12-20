@@ -8,8 +8,15 @@ import {
     HEAD_TYPE_CNC,
     MACHINE_SERIES,
     MACHINE_HEAD_TYPE,
-    CONNECTION_TYPE_SERIAL, WORKFLOW_STATUS_UNKNOWN,
-    LASER_PRINT_MODE_AUTO, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING
+    CONNECTION_TYPE_SERIAL,
+    WORKFLOW_STATUS_UNKNOWN,
+    LASER_PRINT_MODE_AUTO,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
+    CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_CONNECTING,
+    CONNECTION_STATUS_CONNECTED
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -40,6 +47,7 @@ const INITIAL_STATE = {
     ports: [],
 
     // Connection state
+    connectionStatus: CONNECTION_STATUS_IDLE,
     isOpen: false,
     isConnected: false,
     connectionType: '',
@@ -64,6 +72,12 @@ const INITIAL_STATE = {
     enclosureDoor: false,
     laserFocalLength: null,
     laserPower: null,
+    nozzleTemperature: 0,
+    nozzleTargetTemperature: 0,
+    heatedBedTemperature: 0,
+    heatedBedTargetTemperature: 0,
+    laserCamera: true,
+    isFilamentOut: false,
 
     workPosition: { // work position
         x: '0.000',
@@ -232,6 +246,7 @@ export const actions = {
                     port,
                     ports,
                     isOpen: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTING,
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
@@ -241,7 +256,8 @@ export const actions = {
                     return;
                 }
                 dispatch(actions.updateState({
-                    isConnected: true
+                    isConnected: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
             },
             'serialport:close': (options) => {
@@ -258,7 +274,8 @@ export const actions = {
                         port: ports[0],
                         ports,
                         isOpen: false,
-                        isConnected: false
+                        isConnected: false,
+                        connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 } else {
                     // this.port = '';
@@ -266,7 +283,8 @@ export const actions = {
                         port: '',
                         ports,
                         isOpen: false,
-                        isConnected: false
+                        isConnected: false,
+                        connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 }
             },
@@ -394,7 +412,8 @@ export const actions = {
             const { token } = data;
             dispatch(actions.updateServerToken(token));
             dispatch(actions.updateState({
-                isOpen: true
+                isOpen: true,
+                connectionStatus: CONNECTION_STATUS_CONNECTING
             }));
             server.removeAllListeners('http:confirm');
             server.removeAllListeners('http:status');
@@ -405,6 +424,7 @@ export const actions = {
                 dispatch(actions.updateState({
                     workflowStatus: status,
                     isConnected: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTED,
                     isHomed: isHomed
                 }));
                 dispatch(actions.updateMachineState({
@@ -417,13 +437,23 @@ export const actions = {
             });
             server.on('http:status', (result) => {
                 const { workPosition, originOffset } = getState().machine;
-                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ, laserFocalLength, laserPower } = result.data;
+                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
+                    laserFocalLength,
+                    laserPower,
+                    nozzleTemperature,
+                    nozzleTargetTemperature,
+                    heatedBedTemperature,
+                    heatedBedTargetTemperature } = result.data;
 
                 dispatch(actions.updateState({
                     workflowStatus: status,
                     laserFocalLength: laserFocalLength,
                     laserPower: laserPower,
-                    isHomed: isHomed
+                    isHomed: isHomed,
+                    nozzleTemperature: nozzleTemperature,
+                    nozzleTargetTemperature: nozzleTargetTemperature,
+                    heatedBedTemperature: heatedBedTemperature,
+                    heatedBedTargetTemperature: heatedBedTargetTemperature
                 }));
                 if (workPosition.x !== x
                     || workPosition.y !== y
@@ -468,6 +498,7 @@ export const actions = {
         dispatch(actions.updateState({
             isOpen: false,
             isConnected: false,
+            connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
             workflowStatus: WORKFLOW_STATUS_UNKNOWN,
             laserFocalLength: null,
