@@ -142,7 +142,7 @@ export const stitchEach = async (options) => {
                 // const index = ((y)* xSize * density + x ) << 2;
 
                 const source = perspT.transformInverse((x - dx * d / 2 * density), (y - dy * d / 2 * density));
-                // const source = perspT.transformInverse((x), (y));
+                // const so`urce = perspT.transformInverse((x), (y));
                 const x0 = Math.round(source[0]);
                 const y0 = Math.round(source[1]);
                 if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {

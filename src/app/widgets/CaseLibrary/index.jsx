@@ -3,17 +3,21 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import api from '../../api';
 import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { CaseConfig } from './CaseConfig';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
+// import { actions as laserActions } from '../../flux/laser';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
 class CaseLibrary extends PureComponent {
     static propTypes = {
-        // ...withRouter.propTypes
+        // laser: PropTypes.object.isRequired,
+        insertDefaultCncTextVector: PropTypes.func.isRequired,
+        insertDefaultLaserTextVector: PropTypes.func.isRequired,
         updateDefaultAdvised: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired,
@@ -23,14 +27,12 @@ class CaseLibrary extends PureComponent {
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         uploadCaseModel: PropTypes.func.isRequired,
-        uploadCaseImage: PropTypes.func.isRequired
+        uploadCncCaseImage: PropTypes.func.isRequired,
+        uploadLaserCaseImage: PropTypes.func.isRequired
     };
 
 
     state = {
-        // materialDefinitionOptions: [],
-
-        // newName: null
     };
 
     actions = {
@@ -83,33 +85,43 @@ class CaseLibrary extends PureComponent {
                 this.props.updateDefaultQualityId(newDefinition.definitionId);
             }
         },
-        loadLaserCaseSettings: (config) => {
-            console.log(config);
-
+        loadLaserCncCaseSettings: async (config) => {
             if (config.mode === 'trace') {
-            //     this.setState({
-            //         mode: uploadMode
-            //     });
-            //     const formData = new FormData();
-            //     formData.append('image', file);
-            //     api.uploadImage(formData)
-            //         .then(async (res) => {
-            //             this.actions.updateOptions({
-            //                 originalName: res.body.originalName,
-            //                 uploadName: res.body.uploadName,
-            //                 width: res.body.width,
-            //                 height: res.body.height
-            //             });
-            //             await this.actions.processTrace();
-            //         });
-                console.log('inside trace');
-            } else {
-                this.props.uploadCaseImage(config.pathConfig, config.mode, () => {
+                const res = await api.uploadLaserCaseImage(config.pathConfig, config.mode, () => {
                     modal({
                         title: i18n._('Parse Image Error'),
                         body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
                     });
                 });
+                const result = await api.processTrace({
+                    originalName: res.body.originalName,
+                    uploadName: res.body.uploadName,
+                    width: res.body.width,
+                    height: res.body.height
+                });
+                console.log('trace', res, result);
+            } else if (config.mode === 'text') {
+                if (config.tag === 'laser') {
+                    await this.props.insertDefaultLaserTextVector(config.caseConfigs, config.caseTransformation);
+                } else {
+                    await this.props.insertDefaultCncTextVector(config.caseConfigs, config.caseTransformation);
+                }
+            } else {
+                if (config.tag === 'laser') {
+                    await this.props.uploadLaserCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
+                        modal({
+                            title: i18n._('Parse Image Error'),
+                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                        });
+                    });
+                } else {
+                    await this.props.uploadCncCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
+                        modal({
+                            title: i18n._('Parse Image Error'),
+                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                        });
+                    });
+                }
             }
         }
 
@@ -120,13 +132,12 @@ class CaseLibrary extends PureComponent {
         if (config.tag === '3dp') {
             this.actions.load3dpCaseSettings(config);
             this.props.uploadCaseModel(config.pathConfig);
-        } else if (config.tag === 'laser') {
-            this.actions.loadLaserCaseSettings(config);
+        } else {
+            this.actions.loadLaserCncCaseSettings(config);
         }
     }
 
     render() {
-    // console.log(CaseConfig);
         return (
             <div className={styles.caselibrary}>
 
@@ -141,7 +152,7 @@ class CaseLibrary extends PureComponent {
                                     type="button"
                                     className={styles.column}
                                     onClick={() => this.loadCase(config)}
-                                    key={config.imgSrc + timestamp()}
+                                    key={config.pathConfig.name + timestamp()}
                                 >
 
                                     <img className={styles.imgIcon} src={config.imgSrc} alt="" />
@@ -191,7 +202,6 @@ class CaseLibrary extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    // console.log('store', printing);
     const { qualityDefinitions, materialDefinitions, defaultMaterialId, activeDefinition } = printing;
     return {
         materialDefinitions,
@@ -203,7 +213,14 @@ const mapStateToProps = (state) => {
 
 
 const mapDispatchToProps = (dispatch) => ({
-    uploadCaseImage: (file, mode, onFailure) => dispatch(sharedActions.uploadCaseImage('laser', file, mode, onFailure)),
+    insertDefaultLaserTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('laser', caseConfigs, caseTransformation)),
+    insertDefaultCncTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('cnc', caseConfigs, caseTransformation)),
+    // uploadFont: (file) => dispatch(textActions.uploadFont(file)),
+    updateLaserState: (params) => dispatch(sharedActions.updateState('laser', params)),
+    uploadLaserCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('laser', file, mode, caseConfigs, caseTransformation, onFailure)),
+    uploadCncCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('cnc', file, mode, caseConfigs, caseTransformation, onFailure)),
+
+
     updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
     updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
     updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),

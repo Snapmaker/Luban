@@ -40,6 +40,7 @@ export const actions = {
     },
 
     updateConfig: (from, config) => {
+        console.log('updateConfig', config);
         return {
             type: ACTION_UPDATE_CONFIG,
             from,
@@ -63,6 +64,7 @@ export const actions = {
 
     uploadImage: (headerType, file, mode, onError) => (dispatch) => {
         // check params
+
         if (!['cnc', 'laser'].includes(headerType)) {
             onError(`Params error: func = ${headerType}`);
             return;
@@ -90,34 +92,31 @@ export const actions = {
             });
     },
 
-    uploadCaseImage: (headerType, file, mode, onError) => (dispatch) => {
+    uploadCaseImage: (headerType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch) => {
         // check params
+
         if (!['cnc', 'laser'].includes(headerType)) {
             onError(`Params error: func = ${headerType}`);
+
             return;
         }
-        if (!file) {
-            onError(`Params error: file = ${file}`);
-            return;
-        }
+
         if (!['greyscale', 'bw', 'vector', 'trace'].includes(mode)) {
             onError(`Params error: mode = ${mode}`);
             return;
         }
-
-        // const formData = new FormData();
-        // formData.append('image', file);
         api.uploadLaserCaseImage(file)
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
-                dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
+                dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode, caseConfigs, caseTransformation));
             })
             .catch((err) => {
                 onError && onError(err);
             });
     },
-    // generateModel: (from, name, filename, width, height, mode) => (dispatch, getState) => {
-    generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode) => (dispatch, getState) => {
+    generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode, caseConfigs, caseTransformation) => (dispatch, getState) => {
+        console.log('inside 2', headerType);
+
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
@@ -125,6 +124,7 @@ export const actions = {
 
         const { width, height } = sizeModelByMachineSize(size, sourceWidth, sourceHeight);
         // Generate geometry
+
         const geometry = new THREE.PlaneGeometry(width, height);
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
@@ -140,11 +140,31 @@ export const actions = {
             const { toolDiameter, toolAngle } = getState().cnc.toolParams;
             config = { ...config, toolDiameter, toolAngle };
         }
-        let transformation = {};
+        // Pay attention to judgment conditions
+        if (caseConfigs && caseConfigs.config) {
+            Object.entries(caseConfigs.config).forEach(([key, value]) => {
+                if (config[key]) {
+                    config[key] = value;
+                }
+            });
+        }
+        if (caseConfigs && caseConfigs.gcodeConfig) {
+            Object.entries(caseConfigs.gcodeConfig).forEach(([key, value]) => {
+                if (gcodeConfig[key]) {
+                    gcodeConfig[key] = value;
+                }
+            });
+        }
+
+        console.log('modelDefaultConfigs 1', modelDefaultConfigs);
+
+        let transformation = caseTransformation || {};
+
         if (`${headerType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             // model.updateTransformation({ width: 40 });
             transformation = { ...transformation, width: 40 };
         }
+
 
         const modelState = modelGroup.generateModel({
             limitSize: size,
@@ -180,7 +200,7 @@ export const actions = {
         dispatch(actions.render(headerType));
     },
 
-    insertDefaultTextVector: (from) => (dispatch, getState) => {
+    insertDefaultTextVector: (from, caseConfigs, caseTransformation) => (dispatch, getState) => {
         const { size } = getState().machine;
 
         api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
@@ -201,10 +221,32 @@ export const actions = {
                 }
 
                 const modelDefaultConfigs = generateModelDefaultConfigs(from, sourceType, mode);
+
                 const config = { ...modelDefaultConfigs.config, ...DEFAULT_TEXT_CONFIG };
                 const { gcodeConfig } = modelDefaultConfigs;
 
+                if (caseConfigs && caseConfigs.config) {
+                    Object.entries(caseConfigs.config).forEach(([key, value]) => {
+                        if (config[key]) {
+                            config[key] = value;
+                        }
+                    });
+                }
+
+                if (caseConfigs && caseConfigs.gcodeConfig) {
+                    Object.entries(caseConfigs.gcodeConfig).forEach(([key, value]) => {
+                        gcodeConfig[key] = value;
+                    });
+                }
+                console.log('text modelDefaultConfigs', modelDefaultConfigs);
                 // const model = new Model(modelInfo);
+                let transformation = caseTransformation || {};
+                transformation = {
+                    ...transformation,
+                    width: textSize.width,
+                    height: textSize.height
+                };
+
                 const modelState = modelGroup.generateModel({
                     limitSize: size,
                     headerType: from,
@@ -216,10 +258,7 @@ export const actions = {
                     sourceHeight: height,
                     geometry,
                     material,
-                    transformation: {
-                        width: textSize.width,
-                        height: textSize.height
-                    }
+                    transformation
                 });
                 const toolPathModelState = toolPathModelGroup.generateToolPathModel({
                     modelID: modelState.selectedModelID,
