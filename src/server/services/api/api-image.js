@@ -24,7 +24,6 @@ export const set = (req, res) => {
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
-    console.log('inside set ', file.path, uploadPath);
     async.series([
         (next) => {
             mv(file.path, uploadPath, () => {
@@ -77,7 +76,6 @@ export const laserCaseImage = (req, res) => {
 
     async.series([
         (next) => {
-            console.log('inside series', path.resolve(casePath, name), uploadPath);
             fs.copyFile(path.resolve(casePath, name), uploadPath, () => {
                 next();
             });
@@ -93,7 +91,6 @@ export const laserCaseImage = (req, res) => {
                     width: svg.width,
                     height: svg.height
                 });
-                console.log('inside svg>>>>>>>>>>>>', res);
                 next();
             } else {
                 jimp.read(uploadPath).then((image) => {

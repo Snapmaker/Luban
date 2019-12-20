@@ -107,15 +107,12 @@ export const actions = {
 
         // const formData = new FormData();
         // formData.append('image', file);
-        console.log('inside uploadCaseImage', file);
         api.uploadLaserCaseImage(file)
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
-                console.log('inside api', res);
                 dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
             })
             .catch((err) => {
-                console.error(err);
                 onError && onError(err);
             });
     },

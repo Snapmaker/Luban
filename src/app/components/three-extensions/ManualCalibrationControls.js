@@ -128,10 +128,18 @@ THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, dom
             new THREE.Vector2(-width / 2, -height / 2),
             new THREE.Vector2(width / 2, height / 2)
         );
-        const [leftBottomX, leftBottomY] = [ensureRange(pointArray[3].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[3].y - height / 2), -height / 2, 0)];
-        const [rightBottomX, rightBottomY] = [ensureRange(pointArray[2].x - width / 2, 0, width / 2), ensureRange(-(pointArray[2].y - height / 2), -height / 2, 0)];
-        const [rightTopX, rightTopY] = [ensureRange(pointArray[1].x - width / 2, 0, width / 2), ensureRange(-(pointArray[1].y - height / 2), 0, height / 2)];
-        const [leftTopX, leftTopY] = [ensureRange(pointArray[0].x - width / 2, -width / 2, 0), ensureRange(-(pointArray[0].y - height / 2), 0, height / 2)];
+        const [leftBottomX, leftBottomY] = [
+            ensureRange(pointArray[3].x - width / 2, -width / 2, 0),
+            ensureRange(-(pointArray[3].y - height / 2), -height / 2, 0)];
+        const [rightBottomX, rightBottomY] = [
+            ensureRange(pointArray[2].x - width / 2, 0, width / 2),
+            ensureRange(-(pointArray[2].y - height / 2), -height / 2, 0)];
+        const [rightTopX, rightTopY] = [
+            ensureRange(pointArray[1].x - width / 2, 0, width / 2),
+            ensureRange(-(pointArray[1].y - height / 2), 0, height / 2)];
+        const [leftTopX, leftTopY] = [
+            ensureRange(pointArray[0].x - width / 2, -width / 2, 0),
+            ensureRange(-(pointArray[0].y - height / 2), 0, height / 2)];
         cornerPositions = {
             leftTop: new THREE.Vector3(leftTopX, leftTopY, 0),
             rightTop: new THREE.Vector3(rightTopX, rightTopY, 0),

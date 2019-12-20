@@ -238,7 +238,6 @@ export class Server extends events.EventEmitter {
             .get(api)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
-                console.log(data);
                 if (callback) {
                     callback(msg, data);
                 }

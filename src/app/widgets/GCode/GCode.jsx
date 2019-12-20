@@ -48,11 +48,9 @@ class GCode extends PureComponent {
             this.setState({ minimized: !minimized });
         },
         onChangeVar: (key, value) => {
-            console.log(value);
             this.state.varValue[key] = value;
         },
         onTest: (key) => {
-            console.log(key);
             if (key === 'var1') {
                 this.props.server.uploadLaserPower(this.state.varValue[key]);
             } else if (key === 'var2') {
