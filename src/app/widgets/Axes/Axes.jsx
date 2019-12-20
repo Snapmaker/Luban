@@ -21,9 +21,9 @@ import {
     HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
-    METRIC_UNITS, SERVER_STATUS_IDLE,
+    METRIC_UNITS, WORKFLOW_STATUS_IDLE,
     LASER_PRINT_MODE_AUTO, LASER_PRINT_MODE_MANUAL,
-    WORKFLOW_STATE_IDLE, SERVER_STATUS_UNKNOWN
+    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
     DISTANCE_MIN,
@@ -82,7 +82,7 @@ class Axes extends PureComponent {
         headType: PropTypes.string.isRequired,
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
-        serverStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
         executeGcode: PropTypes.func,
@@ -486,10 +486,10 @@ class Axes extends PureComponent {
     }
 
     canClick() {
-        const { isConnected, workflowState, serverStatus } = this.props;
+        const { isConnected, workflowState, workflowStatus } = this.props;
         return (isConnected
             && includes([WORKFLOW_STATE_IDLE], workflowState)
-            && includes([SERVER_STATUS_IDLE, SERVER_STATUS_UNKNOWN], serverStatus));
+            && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus));
     }
 
     render() {
@@ -606,7 +606,7 @@ const mapStateToProps = (state, ownProps) => {
 
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, serverStatus, laserPrintMode, materialThickness } = machine;
+    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus, laserPrintMode, materialThickness } = machine;
 
     return {
         port,
@@ -616,7 +616,7 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         workPosition,
         originOffset,
-        serverStatus,
+        workflowStatus,
         axes,
         speed,
         keypad,

@@ -150,7 +150,6 @@ class ToolPathModelGroup {
             }
         });
         return toolPathModels.map(model => {
-            console.log(model);
             return {
                 gcode: model.generateGcode(),
                 modelInfo: {

@@ -8,19 +8,31 @@ import { map } from 'lodash';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
-import { ABSENT_OBJECT, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
+import {
+    ABSENT_OBJECT,
+    MACHINE_HEAD_TYPE,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
+    WORKFLOW_STATUS_UNKNOWN
+} from '../../constants';
 import MachineSelection from './MachineSelection';
+import widgetStyles from '../styles.styl';
+import styles from './index.styl';
+import PrintingState from './PrintingState';
+import LaserState from './LaserState';
+import CNCState from './CNCState';
 
 
 class WifiConnection extends PureComponent {
     static propTypes = {
+        headType: PropTypes.string,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
-        serverStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         isOpen: PropTypes.bool.isRequired,
         isConnected: PropTypes.bool.isRequired,
-
 
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
@@ -120,7 +132,7 @@ class WifiConnection extends PureComponent {
     };
 
     render() {
-        const { servers, serverStatus, discovering, isConnected, isOpen } = this.props;
+        const { headType, servers, workflowStatus, discovering, isConnected, isOpen } = this.props;
         const { server } = this.state;
         return (
             <div>
@@ -163,6 +175,35 @@ class WifiConnection extends PureComponent {
                         </div>
                     </div>
                 </div>
+                {isConnected && (
+                    <div style={{
+                        marginBottom: '10px'
+                    }}
+                    >
+                        <div
+                            className={styles['connection-state']}
+                        >
+                            <span className={styles['connection-state-name']}>
+                                {server.name}
+                            </span>
+                            <span className={styles['connection-state-icon']}>
+                                {workflowStatus === WORKFLOW_STATUS_UNKNOWN && <i className="sm-icon-14 sm-icon-idle" />}
+                                {workflowStatus === WORKFLOW_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
+                                {workflowStatus === WORKFLOW_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
+                                {workflowStatus === WORKFLOW_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
+                            </span>
+                        </div>
+                        <div
+                            className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
+                            style={{
+                                marginTop: '10px'
+                            }}
+                        />
+                        {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
+                        {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
+                        {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
+                    </div>
+                )}
                 <div>
                     <div
                         className="btn-group btn-group-sm"
@@ -194,15 +235,6 @@ class WifiConnection extends PureComponent {
                             </button>
                         )}
                     </div>
-                    <div className="btn-group btn-group-sm">
-                        {i18n._('Status')}:
-                        <Space width={4} />
-                        {serverStatus}
-                        <Space width={4} />
-                        {serverStatus === SERVER_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
-                        {serverStatus === SERVER_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
-                        {serverStatus === SERVER_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
-                    </div>
                 </div>
                 <MachineSelection
                     display={this.state.showMachineSelected}
@@ -216,13 +248,14 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { servers, discovering, server, serverStatus, isOpen, isConnected } = machine;
+    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected } = machine;
 
     return {
+        headType,
         servers,
         discovering,
         server,
-        serverStatus,
+        workflowStatus,
         isOpen,
         isConnected
     };

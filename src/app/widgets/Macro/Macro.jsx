@@ -29,7 +29,7 @@ class Macro extends PureComponent {
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
         workflowState: PropTypes.string.isRequired,
-        serverStatus: PropTypes.string.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
         developToolsExecuteGcode: PropTypes.func.isRequired
     };
@@ -66,12 +66,12 @@ class Macro extends PureComponent {
                 });
         },
         canClick: () => {
-            const { port, server, workflowState, serverStatus } = this.props;
+            const { port, server, workflowState, workflowStatus } = this.props;
             if (!port && _.isEmpty(server)) {
                 return false;
             }
 
-            if (workflowState !== WORKFLOW_STATE_IDLE && serverStatus !== STATUS_IDLE) {
+            if (workflowState !== WORKFLOW_STATE_IDLE && workflowStatus !== STATUS_IDLE) {
                 return false;
             }
             return true;
@@ -140,14 +140,14 @@ class Macro extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { port, server, workflowState, serverStatus } = state.machine;
+    const { port, server, workflowState, workflowStatus } = state.machine;
     const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
         port,
         server,
         workflowState,
-        serverStatus,
+        workflowStatus,
         dataSource
     };
 };

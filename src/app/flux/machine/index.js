@@ -8,8 +8,15 @@ import {
     HEAD_TYPE_CNC,
     MACHINE_SERIES,
     MACHINE_HEAD_TYPE,
-    CONNECTION_TYPE_SERIAL, SERVER_STATUS_UNKNOWN,
-    LASER_PRINT_MODE_AUTO, SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING
+    CONNECTION_TYPE_SERIAL,
+    WORKFLOW_STATUS_UNKNOWN,
+    LASER_PRINT_MODE_AUTO,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING,
+    CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_CONNECTING,
+    CONNECTION_STATUS_CONNECTED
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -40,6 +47,7 @@ const INITIAL_STATE = {
     ports: [],
 
     // Connection state
+    connectionStatus: CONNECTION_STATUS_IDLE,
     isOpen: false,
     isConnected: false,
     connectionType: '',
@@ -48,7 +56,7 @@ const INITIAL_STATE = {
     server: ABSENT_OBJECT,
     serverToken: '',
     servers: [],
-    serverStatus: SERVER_STATUS_UNKNOWN,
+    workflowStatus: WORKFLOW_STATUS_UNKNOWN,
     discovering: false,
 
     // Console
@@ -64,6 +72,12 @@ const INITIAL_STATE = {
     enclosureDoor: false,
     laserFocalLength: null,
     laserPower: null,
+    nozzleTemperature: 0,
+    nozzleTargetTemperature: 0,
+    heatedBedTemperature: 0,
+    heatedBedTargetTemperature: 0,
+    laserCamera: true,
+    isFilamentOut: false,
 
     workPosition: { // work position
         x: '0.000',
@@ -232,6 +246,7 @@ export const actions = {
                     port,
                     ports,
                     isOpen: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTING,
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
@@ -241,7 +256,8 @@ export const actions = {
                     return;
                 }
                 dispatch(actions.updateState({
-                    isConnected: true
+                    isConnected: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
             },
             'serialport:close': (options) => {
@@ -258,7 +274,8 @@ export const actions = {
                         port: ports[0],
                         ports,
                         isOpen: false,
-                        isConnected: false
+                        isConnected: false,
+                        connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 } else {
                     // this.port = '';
@@ -266,7 +283,8 @@ export const actions = {
                         port: '',
                         ports,
                         isOpen: false,
-                        isConnected: false
+                        isConnected: false,
+                        connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 }
             },
@@ -334,7 +352,7 @@ export const actions = {
         if (connectionType === CONNECTION_TYPE_SERIAL) {
             // controller.command('gcode', gcode, context);
             controller.command('gcode', gcode, context);
-            // } else if (server && serverStatus === STATUS_IDLE) {
+            // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
             server.executeGcode(gcode);
         }
@@ -394,7 +412,8 @@ export const actions = {
             const { token } = data;
             dispatch(actions.updateServerToken(token));
             dispatch(actions.updateState({
-                isOpen: true
+                isOpen: true,
+                connectionStatus: CONNECTION_STATUS_CONNECTING
             }));
             server.removeAllListeners('http:confirm');
             server.removeAllListeners('http:status');
@@ -403,8 +422,9 @@ export const actions = {
             server.once('http:confirm', (result) => {
                 const { series, headType, status, isHomed } = result.data;
                 dispatch(actions.updateState({
-                    serverStatus: status,
+                    workflowStatus: status,
                     isConnected: true,
+                    connectionStatus: CONNECTION_STATUS_CONNECTED,
                     isHomed: isHomed
                 }));
                 dispatch(actions.updateMachineState({
@@ -417,13 +437,23 @@ export const actions = {
             });
             server.on('http:status', (result) => {
                 const { workPosition, originOffset } = getState().machine;
-                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ, laserFocalLength, laserPower } = result.data;
+                const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
+                    laserFocalLength,
+                    laserPower,
+                    nozzleTemperature,
+                    nozzleTargetTemperature,
+                    heatedBedTemperature,
+                    heatedBedTargetTemperature } = result.data;
 
                 dispatch(actions.updateState({
-                    serverStatus: status,
+                    workflowStatus: status,
                     laserFocalLength: laserFocalLength,
                     laserPower: laserPower,
-                    isHomed: isHomed
+                    isHomed: isHomed,
+                    nozzleTemperature: nozzleTemperature,
+                    nozzleTargetTemperature: nozzleTargetTemperature,
+                    heatedBedTemperature: heatedBedTemperature,
+                    heatedBedTargetTemperature: heatedBedTargetTemperature
                 }));
                 if (workPosition.x !== x
                     || workPosition.y !== y
@@ -468,8 +498,9 @@ export const actions = {
         dispatch(actions.updateState({
             isOpen: false,
             isConnected: false,
+            connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
-            serverStatus: SERVER_STATUS_UNKNOWN,
+            workflowStatus: WORKFLOW_STATUS_UNKNOWN,
             laserFocalLength: null,
             workPosition: { // work position
                 x: '0.000',
@@ -481,9 +512,9 @@ export const actions = {
     },
 
     startServerGcode: () => (dispatch, getState) => {
-        const { server, serverStatus, laserPrintMode, series, laserFocalLength, materialThickness } = getState().machine;
+        const { server, workflowStatus, laserPrintMode, series, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeList, background } = getState().workspace;
-        if (serverStatus !== SERVER_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
+        if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
             return;
         }
         const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
@@ -496,7 +527,7 @@ export const actions = {
         if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
             if (laserPrintMode === LASER_PRINT_MODE_AUTO && laserFocalLength) {
                 const promise = new Promise((resolve) => {
-                    server.executeGcode(`G53;\nG28;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                    server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
                         resolve();
                     });
                 });
@@ -504,7 +535,7 @@ export const actions = {
             }
             if (background.enabled) {
                 const promise = new Promise((resolve) => {
-                    server.executeGcode('G53;\nG28;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
+                    server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
                         resolve();
                     });
                 });
@@ -521,7 +552,7 @@ export const actions = {
                         return;
                     }
                     dispatch(actions.updateState({
-                        serverStatus: SERVER_STATUS_RUNNING
+                        workflowStatus: WORKFLOW_STATUS_RUNNING
                     }));
                 });
             });
@@ -535,14 +566,14 @@ export const actions = {
                 return;
             }
             dispatch(actions.updateState({
-                serverStatus: SERVER_STATUS_RUNNING
+                workflowStatus: WORKFLOW_STATUS_RUNNING
             }));
         });
     },
 
     pauseServerGcode: () => (dispatch, getState) => {
-        const { server, serverStatus } = getState().machine;
-        if (serverStatus !== SERVER_STATUS_RUNNING) {
+        const { server, workflowStatus } = getState().machine;
+        if (workflowStatus !== WORKFLOW_STATUS_RUNNING) {
             return;
         }
         server.pauseGcode((msg) => {
@@ -550,14 +581,14 @@ export const actions = {
                 return;
             }
             dispatch(actions.updateState({
-                serverStatus: SERVER_STATUS_PAUSED
+                workflowStatus: WORKFLOW_STATUS_PAUSED
             }));
         });
     },
 
     stopServerGcode: () => (dispatch, getState) => {
-        const { server, serverStatus } = getState().machine;
-        if (serverStatus === SERVER_STATUS_IDLE) {
+        const { server, workflowStatus } = getState().machine;
+        if (workflowStatus === WORKFLOW_STATUS_IDLE) {
             return;
         }
         server.stopGcode((msg) => {
@@ -565,7 +596,7 @@ export const actions = {
                 return;
             }
             dispatch(actions.updateState({
-                serverStatus: SERVER_STATUS_IDLE
+                workflowStatus: WORKFLOW_STATUS_IDLE
             }));
         });
     }

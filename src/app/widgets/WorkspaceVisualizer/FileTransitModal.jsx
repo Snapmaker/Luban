@@ -11,7 +11,7 @@ import modal from '../../lib/modal';
 import { actions as machineActions } from '../../flux/machine';
 import { getGcodeName } from '../../flux/workspace';
 import styles from './index.styl';
-import { SERVER_STATUS_IDLE, SERVER_STATUS_PAUSED, SERVER_STATUS_RUNNING } from '../../constants';
+import { WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 
 
 class FileTransitModal extends PureComponent {
@@ -99,7 +99,7 @@ class FileTransitModal extends PureComponent {
             if (server.name.startsWith('My')) {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
-                    server.status = SERVER_STATUS_RUNNING;
+                    server.status = WORKFLOW_STATUS_RUNNING;
                     if (this.isComponentMounted) {
                         this.setState(state => ({
                             servers: state.servers.slice()
@@ -212,11 +212,11 @@ class FileTransitModal extends PureComponent {
                                 {
                                     this.state.servers.map(server => {
                                         let statusIconStyle = '';
-                                        if (server.status === SERVER_STATUS_IDLE) {
+                                        if (server.status === WORKFLOW_STATUS_IDLE) {
                                             statusIconStyle = styles['icon-idle'];
-                                        } else if (server.status === SERVER_STATUS_RUNNING) {
+                                        } else if (server.status === WORKFLOW_STATUS_RUNNING) {
                                             statusIconStyle = styles['icon-running'];
-                                        } else if (server.status === SERVER_STATUS_PAUSED) {
+                                        } else if (server.status === WORKFLOW_STATUS_PAUSED) {
                                             statusIconStyle = styles['icon-paused'];
                                         } else {
                                             statusIconStyle = styles['icon-loading'];
