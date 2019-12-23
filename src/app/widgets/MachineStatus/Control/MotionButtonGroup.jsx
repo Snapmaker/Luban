@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import i18n from '../../lib/i18n';
+import i18n from '../../../lib/i18n';
 // import controller from '../../lib/controller';
-import TipTrigger from '../../components/TipTrigger';
-import styles from './index.styl';
+import TipTrigger from '../../../components/TipTrigger';
+import styles from '../shard/index.styl';
 
 
 const MotionButtonGroup = (props) => {

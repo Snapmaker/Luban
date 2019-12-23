@@ -49,7 +49,7 @@
 //                 secondary: {
 //                     show: true,
 //                     widgets: [
-//                         'webcam', 'axes', 'macro', 'gcode'
+//                         'webcam', 'control', 'macro', 'gcode'
 //                     ]
 //                 }
 //             }

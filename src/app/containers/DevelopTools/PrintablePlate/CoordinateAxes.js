@@ -45,7 +45,7 @@ class CoordinateAxes {
 
     // Creates an axisHelper with lines of length size.
     // @param {number} size Define the size of the line representing the axes.
-    // @see [Drawing the Coordinate Axes]{@http://soledadpenades.com/articles/three-js-tutorials/drawing-the-coordinate-axes/}
+    // @see [Drawing the Coordinate Control]{@http://soledadpenades.com/articles/three-js-tutorials/drawing-the-coordinate-axes/}
     constructor(offsetX, width, height) {
         const red = colornames('red');
         const green = colornames('green');

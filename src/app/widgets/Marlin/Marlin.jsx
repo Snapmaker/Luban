@@ -34,7 +34,7 @@ class MarlinWidget extends PureComponent {
         port: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         statusSectionExpanded: PropTypes.bool.isRequired,
         machineModalSectionExpanded: PropTypes.bool.isRequired,
         heaterControlSectionExpanded: PropTypes.bool.isRequired,
@@ -176,7 +176,7 @@ class MarlinWidget extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setDisplay(false);
+        this.props.setDisplay(true);
         this.actions.setTitle();
     }
 
@@ -216,7 +216,7 @@ class MarlinWidget extends PureComponent {
                 this.props.setDisplay(true);
             }
             if (!isConnected) {
-                this.props.setDisplay(false);
+                this.props.setDisplay(true);
             }
         }
     }
@@ -269,9 +269,10 @@ class MarlinWidget extends PureComponent {
 
     render() {
         const { isConnected } = this.props;
-        if (!isConnected) {
-            return null;
-        }
+        console.log(isConnected);
+        // if (!isConnected) {
+        //     return null;
+        // }
         const state = {
             ...this.state,
             canClick: !!this.props.port
@@ -296,27 +297,21 @@ class MarlinWidget extends PureComponent {
         }
         return (
             <div>
-                {actions.is3DPrinting() && (
-                    <Printing
-                        headType={headType}
-                        state={state}
-                        actions={actions}
-                    />
-                )}
-                {actions.isLaser() && (
-                    <Laser
-                        headType={headType}
-                        state={state}
-                        actions={actions}
-                    />
-                )}
-                {actions.isCNC() && (
-                    <CNC
-                        headType={headType}
-                        state={state}
-                        actions={actions}
-                    />
-                )}
+                <Printing
+                    headType={headType}
+                    state={state}
+                    actions={actions}
+                />
+                <Laser
+                    headType={headType}
+                    state={state}
+                    actions={actions}
+                />
+                <CNC
+                    headType={headType}
+                    state={state}
+                    actions={actions}
+                />
             </div>
         );
     }

@@ -19,7 +19,7 @@ const defaultState = {
         secondary: {
             show: true,
             widgets: [
-                'wifi-transport', 'axes', 'macro', 'gcode'
+                'wifi-transport', 'control', 'macro', 'gcode'
             ]
         }
     },
@@ -49,7 +49,7 @@ const defaultState = {
         }
     },
     widgets: {
-        axes: {
+        control: {
             minimized: false,
             axes: ['x', 'y', 'z'],
             jog: {

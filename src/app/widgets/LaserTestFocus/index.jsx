@@ -17,7 +17,7 @@ import { MACHINE_HEAD_TYPE } from '../../constants';
 
 class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired
     };
 

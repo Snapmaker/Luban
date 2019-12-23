@@ -7,7 +7,6 @@ import {
     HEAD_TYPE_LASER,
     HEAD_TYPE_CNC,
     MACHINE_SERIES,
-    MACHINE_HEAD_TYPE,
     CONNECTION_TYPE_SERIAL,
     WORKFLOW_STATUS_UNKNOWN,
     LASER_PRINT_MODE_AUTO,
@@ -33,7 +32,7 @@ const INITIAL_STATE = {
 
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
-    headType: MACHINE_HEAD_TYPE['3DP'].value,
+    headType: null,
 
     isCustom: false,
     size: {
@@ -340,7 +339,6 @@ export const actions = {
     resetHomeState: () => (dispatch) => {
         dispatch(actions.updateState({ isHomed: null }));
     },
-    // executeGcode: (gcode, context) => (dispatch, getState) => {
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
@@ -355,6 +353,39 @@ export const actions = {
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
             server.executeGcode(gcode);
+        }
+    },
+
+    executePrintingGcode: (gcode, context) => (dispatch, getState) => {
+        const machine = getState().machine;
+
+        const { isConnected, connectionType, workflowStatus, server } = machine;
+        if (!isConnected) {
+            return;
+        }
+        if (connectionType === CONNECTION_TYPE_SERIAL) {
+            controller.command('gcode', gcode, context);
+        } else {
+            if (workflowStatus === WORKFLOW_STATUS_IDLE) {
+                server.executeGcode(gcode);
+            } else {
+                const split = gcode.split(' +');
+                if (split.length <= 1) {
+                    return;
+                }
+                const data = parseFloat(split[1].substring(1));
+                if (split[0] === 'M104') {
+                    server.uploadNozzleTemperature(data);
+                } else if (split[0] === 'M140') {
+                    server.uploadBedTemperature(data);
+                } else if (split[0] === 'M221') {
+                    server.uploadWorkSpeedFactor(data);
+                } else if (split[0] === 'zOffset') {
+                    server.uploadZOffset(data);
+                } else if (split[0] === 'M3') {
+                    server.uploadLaserPower(data);
+                }
+            }
         }
     },
 

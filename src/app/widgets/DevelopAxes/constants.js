@@ -4,7 +4,7 @@ import constants from 'namespace-constants';
 export const {
     MODAL_NONE,
     MODAL_SETTINGS
-} = constants('widgets/Axes', [
+} = constants('widgets/Control', [
     'MODAL_NONE',
     'MODAL_SETTINGS'
 ]);
@@ -14,5 +14,5 @@ export const DISTANCE_MIN = 0;
 export const DISTANCE_MAX = 10000;
 export const DISTANCE_STEP = 1;
 
-// Axes
+// Control
 export const DEFAULT_AXES = ['x', 'y', 'z'];

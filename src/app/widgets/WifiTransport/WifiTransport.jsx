@@ -22,6 +22,7 @@ class WifiTransport extends PureComponent {
         setTitle: PropTypes.func.isRequired,
 
         gcodeFiles: PropTypes.array.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
 
         clearGcode: PropTypes.func.isRequired,
@@ -61,6 +62,7 @@ class WifiTransport extends PureComponent {
                         lastModifiedDate: file.lastModifiedDate,
                         img: ''
                     });
+                    this.actions.onSelectFile(file.name);
                 })
                 .catch(() => {
                     // Ignore error
@@ -104,104 +106,98 @@ class WifiTransport extends PureComponent {
     }
 
     render() {
-        const { gcodeFiles } = this.props;
+        const { gcodeFiles, isConnected } = this.props;
         const { selectFileName } = this.state;
         const actions = this.actions;
         const hasFile = gcodeFiles.length > 0;
 
         return (
             <div>
-                <input
-                    ref={this.fileInput}
-                    type="file"
-                    accept=".gcode, .nc .cnc"
-                    style={{ display: 'none' }}
-                    multiple={false}
-                    onChange={actions.onChangeFile}
-                />
+                <div>
+                    <div>
+                        <input
+                            ref={this.fileInput}
+                            type="file"
+                            accept=".gcode, .nc .cnc"
+                            style={{ display: 'none' }}
+                            multiple={false}
+                            onChange={actions.onChangeFile}
+                        />
+                        <Anchor
+                            className={classNames(styles['gcode-file'], styles['gcode-file-upload'])}
+                            onClick={actions.onClickToUpload}
+                        >
+                            <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
+                            {i18n._('Upload Files')}
+                        </Anchor>
+                    </div>
+
+                    {_.map(gcodeFiles, (gcodeFile) => {
+                        const name = gcodeFile.name.length > 33
+                            ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
+                            : gcodeFile.name;
+                        let size = '';
+                        if (gcodeFile.size / 1024 / 1024 > 1) {
+                            size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
+                        } else if (gcodeFile.size / 1024 > 1) {
+                            size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
+                        } else {
+                            size = `${(gcodeFile.size).toFixed(2)} B`;
+                        }
+                        const lastModifiedDate = gcodeFile.lastModifiedDate;
+                        const date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
+
+                        return (
+                            <div key={gcodeFile.uploadName}>
+                                <Anchor
+                                    className={classNames(
+                                        styles['gcode-file'],
+                                        { [styles.selected]: selectFileName === gcodeFile.name }
+                                    )}
+                                    onClick={() => {
+                                        actions.onSelectFile(gcodeFile.name);
+                                    }}
+                                >
+                                    <div className={styles['gcode-file-img']}>
+                                        <img
+                                            src={gcodeFile.img}
+                                            alt=""
+                                        />
+                                    </div>
+                                    <div className={styles['gcode-file-text']}>
+                                        <div className={styles['gcode-file-text-name']}>
+                                            {name}
+                                        </div>
+                                        <div className={styles['gcode-file-text-info']}>
+                                            <span>{size}</span>
+                                            <span>{date}</span>
+                                        </div>
+                                    </div>
+                                </Anchor>
+                            </div>
+                        );
+                    })}
+
+                </div>
+                <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                 <button
                     type="button"
                     className="sm-btn-small sm-btn-default"
-                    onClick={actions.onClickToUpload}
-                    style={{ display: 'block', width: '50%' }}
+                    disabled={!hasFile}
+                    onClick={actions.loadGcodeToWorkspace}
+                    style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                 >
-                    {i18n._('Upload File')}
+                    {i18n._('Load G-code to Workspace')}
                 </button>
-                {hasFile && (
-                    <div>
-                        <div style={{
-                            'marginTop': '6px'
-                        }}
-                        >
-                            {i18n._('Stack')}
-                        </div>
-                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-
-                        {_.map(gcodeFiles, (gcodeFile) => {
-                            const name = gcodeFile.name.length > 33
-                                ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
-                                : gcodeFile.name;
-                            let size = '';
-                            if (gcodeFile.size / 1024 / 1024 > 1) {
-                                size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
-                            } else if (gcodeFile.size / 1024 > 1) {
-                                size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
-                            } else {
-                                size = `${(gcodeFile.size).toFixed(2)} B`;
-                            }
-                            const lastModifiedDate = gcodeFile.lastModifiedDate;
-                            const date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
-
-                            return (
-                                <div key={gcodeFile.uploadName}>
-                                    <Anchor
-                                        className={classNames(
-                                            styles['gcode-file'],
-                                            { [styles.selected]: selectFileName === gcodeFile.name }
-                                        )}
-                                        onClick={() => {
-                                            actions.onSelectFile(gcodeFile.name);
-                                        }}
-                                    >
-                                        <div className={styles['gcode-file-img']}>
-                                            <img
-                                                src={gcodeFile.img}
-                                                alt=""
-                                            />
-                                        </div>
-                                        <div className={styles['gcode-file-text']}>
-                                            <div className={styles['gcode-file-text-name']}>
-                                                {name}
-                                            </div>
-                                            <div className={styles['gcode-file-text-info']}>
-                                                <span>{size}</span>
-                                                <span>{date}</span>
-                                            </div>
-                                        </div>
-                                    </Anchor>
-                                </div>
-                            );
-                        })}
-
-                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-default"
-                            onClick={actions.loadGcodeToWorkspace}
-                            style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                        >
-                            {i18n._('Load G-code to Workspace')}
-                        </button>
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-default"
-                            onClick={actions.sendFile}
-                            style={{ display: 'block', width: '100%' }}
-                        >
-                            {i18n._('Transfer By WiFi')}
-                        </button>
-                    </div>
-                )}
+                <button
+                    type="button"
+                    className="sm-btn-small sm-btn-default"
+                    disabled={!(hasFile && isConnected)}
+                    onClick={actions.sendFile}
+                    style={{ display: 'block', width: '100%' }}
+                >
+                    {i18n._('Transfer By WiFi')}
+                </button>
             </div>
 
         );
@@ -210,10 +206,11 @@ class WifiTransport extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { gcodeFiles } = state.workspace;
-    const { server } = state.machine;
+    const { server, isConnected } = state.machine;
 
     return {
         gcodeFiles,
+        isConnected,
         server
     };
 };

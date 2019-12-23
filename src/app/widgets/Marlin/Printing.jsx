@@ -18,7 +18,10 @@ class Printing extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
         state: PropTypes.object,
-        actions: PropTypes.object
+        actions: PropTypes.object,
+
+        printingExpanded: PropTypes.bool,
+        updateWidgetState: PropTypes.func
     };
 
     state = {
@@ -54,11 +57,17 @@ class Printing extends PureComponent {
                 bedTargetTemperature
             });
             this.props.actions.changeBedTargetTemperature(bedTargetTemperature);
+        },
+        togglePrinting: () => {
+            this.props.updateWidgetState({
+                printingExpanded: !this.props.printingExpanded
+            });
         }
     };
 
     render() {
-        const { headType, state, actions } = this.props;
+        const { headType, state, actions, printingExpanded } = this.props;
+        // eslint-disable-next-line no-unused-vars
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
         // const { speedFactor, extruderFactor, temperature = {} } = controllerState;
@@ -69,34 +78,7 @@ class Printing extends PureComponent {
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={actions.toggleStatusSection}>
-                    <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Status Pad')}</span>
-                    <span className={classNames(
-                        'fa',
-                        statusSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                    )}
-                    />
-                </Anchor>
-                {statusSectionExpanded && (
-                    <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '50%', padding: '0 6px' }}>
-                                    <div>{i18n._('Jog Speed')} (G0)</div>
-                                    <div>{controllerState.jogSpeed}</div>
-                                </td>
-                                <td style={{ width: '50%', padding: '0 6px' }}>
-                                    <div>{i18n._('Work Speed')} (G1)</div>
-                                    <div>{controllerState.workSpeed}</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                )}
-                <Anchor className="sm-parameter-header" onClick={actions.toggleHeaterControlSection}>
+                <Anchor className="sm-parameter-header" onClick={actions.togglePrinting}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Heater Control')}</span>
                     <span className={classNames(
@@ -107,7 +89,7 @@ class Printing extends PureComponent {
                     )}
                     />
                 </Anchor>
-                {heaterControlSectionExpanded && (
+                {!printingExpanded && (
                     <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                         <tbody>
                             <tr>

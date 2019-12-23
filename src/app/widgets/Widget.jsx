@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import AxesWidget from './Axes/index';
+import ControlWidget from './MachineStatus/Control/index';
 import DevelopAxesWidget from './DevelopAxes/index';
 import ConnectionWidget from './Connection';
 import ScreenConnectionWidget from './ScreenConnection';
 import ConsoleWidget from './Console';
-import GCodeWidget from './GCode';
+import GCodeWidget from './MachineStatus/GCode';
 import MacroWidget from './Macro';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
@@ -25,7 +25,7 @@ import WifiTransport from './WifiTransport';
 
 const getWidgetByName = (name) => {
     const Widget = {
-        'axes': AxesWidget,
+        'control': ControlWidget,
         'axesPanel': DevelopAxesWidget,
         'connection': ConnectionWidget,
         'connectionPanel': ScreenConnectionWidget,
