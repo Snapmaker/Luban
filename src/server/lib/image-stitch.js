@@ -175,8 +175,7 @@ export const stitch = async (options) => {
     const { fileNames, getPoints, corners, size, centerDis } = options;
     const density = 3;
     const d = centerDis;
-    const width = 1024;
-    const height = 1280;
+    let width, height;
 
     // phrase 1 - perspective transform matrix
     const points = [];
@@ -201,6 +200,8 @@ export const stitch = async (options) => {
     for (let j = 0; j < fileNames.length; j++) {
         const fileName = fileNames[j];
         const image = await readImage(`${DataStorage.tmpDir}/${fileName}`);
+        width = image.bitmap.width;
+        height = image.bitmap.height;
         images.push(image);
     }
 

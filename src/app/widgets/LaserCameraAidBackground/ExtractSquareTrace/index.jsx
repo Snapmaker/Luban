@@ -113,7 +113,7 @@ class ExtractSquareTrace extends PureComponent {
                 }
                 length = 9;
             }
-
+            console.log('position', position);
             this.setState({
                 options: {
                     ...this.state.options,
@@ -291,12 +291,12 @@ class ExtractSquareTrace extends PureComponent {
                                     if (parseInt(task.index / 3, 10) === 1) {
                                         ySize = this.state.options.centerDis;
                                     } else {
-                                        ySize = Math.floor((this.props.size.y - this.state.options.centerDis) / 2);
+                                        ySize = ((this.props.size.y - this.state.options.centerDis) / 2);
                                     }
                                     if (task.index % 3 === 1) {
                                         xSize = this.state.options.centerDis;
                                     } else {
-                                        xSize = Math.floor((this.props.size.x - this.state.options.centerDis) / 2);
+                                        xSize = ((this.props.size.x - this.state.options.centerDis) / 2);
                                     }
                                 }
                                 this.extractingPreview[task.index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, task.index);
