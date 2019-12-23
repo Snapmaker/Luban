@@ -3,16 +3,19 @@ import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { controller } from '../../lib/controller';
-import { mm2in } from '../../lib/units';
+import { controller } from '../../../lib/controller';
+import { mm2in } from '../../../lib/units';
 import GCodeStates from './GCodeStats';
 import {
     // Units
     PROTOCOL_TEXT,
     IMPERIAL_UNITS,
-    METRIC_UNITS
-} from '../../constants';
-import i18n from '../../lib/i18n';
+    METRIC_UNITS, MACHINE_HEAD_TYPE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN
+} from '../../../constants';
+import i18n from '../../../lib/i18n';
+import Printing from '../shard/Printing';
+import Laser from '../shard/Laser';
+import CNC from '../shard/CNC';
 
 const toFixedUnits = (units, val) => {
     val = Number(val) || 0;
@@ -29,8 +32,8 @@ const toFixedUnits = (units, val) => {
 class GCode extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
-
-        server: PropTypes.object.isRequired
+        headType: PropTypes.string,
+        workflowStatus: PropTypes.string
     };
 
     state = this.getInitialState();
@@ -46,20 +49,6 @@ class GCode extends PureComponent {
         toggleMinimized: () => {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
-        },
-        onChangeVar: (key, value) => {
-            this.state.varValue[key] = value;
-        },
-        onTest: (key) => {
-            if (key === 'var1') {
-                this.props.server.uploadLaserPower(this.state.varValue[key]);
-            } else if (key === 'var2') {
-                this.props.server.uploadWorkSpeedFactor(this.state.varValue[key]);
-            } else if (key === 'var3') {
-                this.props.server.uploadNozzleTemperature(this.state.varValue[key]);
-            } else if (key === 'var4') {
-                this.props.server.uploadBedTemperature(this.state.varValue[key]);
-            }
         }
     };
 
@@ -235,6 +224,8 @@ class GCode extends PureComponent {
     }
 
     render() {
+        const { headType, workflowStatus } = this.props;
+        const isRunning = workflowStatus !== WORKFLOW_STATUS_IDLE && workflowStatus !== WORKFLOW_STATUS_UNKNOWN;
         const { units, bbox } = this.state;
         const state = {
             ...this.state,
@@ -248,21 +239,30 @@ class GCode extends PureComponent {
         };
 
         return (
-            <GCodeStates
-                state={state}
-                actions={actions}
-            />
+            <div>
+                <GCodeStates
+                    state={state}
+                    actions={actions}
+                />
+                <div style={{
+                    marginBottom: '10px'
+                }}
+                />
+                {isRunning && headType === MACHINE_HEAD_TYPE['3DP'].value && <Printing />}
+                <Printing />
+                {isRunning && headType === MACHINE_HEAD_TYPE.LASER.value && <Laser />}
+                {isRunning && headType === MACHINE_HEAD_TYPE.CNC.value && <CNC />}
+            </div>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { server } = state.machine;
-
+    const { headType, workflowStatus } = state.machine;
     return {
-        server
+        headType,
+        workflowStatus
     };
 };
-
 
 export default connect(mapStateToProps)(GCode);

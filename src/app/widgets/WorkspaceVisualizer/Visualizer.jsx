@@ -46,7 +46,7 @@ class Visualizer extends Component {
         enclosure: PropTypes.bool.isRequired,
         enclosureDoor: PropTypes.bool.isRequired,
         uploadState: PropTypes.string.isRequired,
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,

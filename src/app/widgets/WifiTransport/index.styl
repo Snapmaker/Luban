@@ -1,5 +1,17 @@
 @import "../../styles/variables.styl"
 
+
+.icon-24
+    display: inline-block
+    width: 24px
+    height: 24px
+
+.icon-plus
+    background-image: url("../../images/24x24/ic_plus_24x24.png")
+
+.icon-tick
+    background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
+
 .gcode-file
     display: block
     margin-bottom: 6px
@@ -11,6 +23,11 @@
 
     &.selected
         border-color: $blue-color
+        background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
+        background-repeat: no-repeat
+        -webkit-background-size: 24px
+        background-size: 24px
+        background-position: 292px 24px
 
     &-img
         display: inline-block
@@ -37,3 +54,16 @@
 
             span
                 margin-right: 12px
+
+
+.gcode-file-upload
+    background-color: $grey-color3
+    text-align: center
+    vertical-align: middle
+    line-height: 40px
+    font-size: $font-size-large
+
+    i
+        position: absolute
+        top: 32px;
+        left: 102px;

@@ -7,31 +7,34 @@ import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
 
 import classNames from 'classnames';
-import i18n from '../../lib/i18n';
-import combokeys from '../../lib/combokeys';
-import { controller } from '../../lib/controller';
-import { preventDefault } from '../../lib/dom-events';
-import { in2mm, mm2in } from '../../lib/units';
+import i18n from '../../../lib/i18n';
+import combokeys from '../../../lib/combokeys';
+import { controller } from '../../../lib/controller';
+import { preventDefault } from '../../../lib/dom-events';
+import { in2mm, mm2in } from '../../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../flux/machine';
-import { actions as widgetActions } from '../../flux/widget';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as widgetActions } from '../../../flux/widget';
 import {
     HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
     LASER_PRINT_MODE_AUTO, LASER_PRINT_MODE_MANUAL,
-    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN
-} from '../../constants';
+    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN, MACHINE_HEAD_TYPE
+} from '../../../constants';
 import {
     DISTANCE_MIN,
     DISTANCE_MAX,
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
-import { NumberInput as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../../components/Input';
+import Printing from '../shard/Printing';
+import Laser from '../shard/Laser';
+import CNC from '../shard/CNC';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -74,12 +77,12 @@ const normalizeToRange = (n, min, max) => {
     return n;
 };
 
-class Axes extends PureComponent {
+class Control extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
 
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         dataSource: PropTypes.string.isRequired,
         workflowState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
@@ -277,7 +280,7 @@ class Axes extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Axes'));
+        this.props.setTitle(i18n._('Control'));
     }
 
     getInitialState() {
@@ -504,7 +507,7 @@ class Axes extends PureComponent {
         };
 
         const { workPosition, originOffset } = this.state;
-        const { laserPrintMode, materialThickness } = this.props;
+        const { laserPrintMode, materialThickness, headType } = this.props;
 
         return (
             <div>
@@ -592,7 +595,15 @@ class Axes extends PureComponent {
                         onChange={this.actions.onChangeJogSpeed}
                     />
                 </div>
-                <ControlPanel state={state} actions={actions} executeGcode={this.actions.executeGcode} />
+                <ControlPanel
+                    state={state}
+                    actions={actions}
+                    executeGcode={this.actions.executeGcode}
+                />
+                <div style={{ marginBottom: '10px' }} />
+                {headType === MACHINE_HEAD_TYPE['3DP'].value && <Printing />}
+                {headType === MACHINE_HEAD_TYPE.LASER.value && <Laser />}
+                {headType === MACHINE_HEAD_TYPE.CNC.value && <CNC />}
             </div>
         );
     }
@@ -603,7 +614,6 @@ const mapStateToProps = (state, ownProps) => {
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const { jog, axes, dataSource } = widgets[widgetId];
-
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
     const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus, laserPrintMode, materialThickness } = machine;
@@ -637,4 +647,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Axes);
+export default connect(mapStateToProps, mapDispatchToProps)(Control);

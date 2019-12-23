@@ -1,7 +1,7 @@
 import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import i18n from '../../lib/i18n';
+import i18n from '../../../lib/i18n';
 
 const FEEDRATE_RANGE = [100, 2500];
 const FEEDRATE_STEP = 50;

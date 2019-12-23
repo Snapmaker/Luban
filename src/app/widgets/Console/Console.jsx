@@ -151,7 +151,7 @@ class Console extends PureComponent {
                 terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
                 terminal.writeln(color.yellow('  M204: Set Default Acceleration'));
                 terminal.writeln(color.yellow('  M205: DevelopTools Settings'));
-                terminal.writeln(color.yellow('  M206: Set Axes Offset'));
+                terminal.writeln(color.yellow('  M206: Set Control Offset'));
                 terminal.writeln(color.yellow('  M301: Set PID Parameters'));
                 terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
                 terminal.writeln(color.yellow('  M421: Set a Mesh Bed Leveling Z coordinate'));

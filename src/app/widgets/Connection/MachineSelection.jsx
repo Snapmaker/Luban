@@ -13,7 +13,7 @@ import Anchor from '../../components/Anchor';
 class MachineSelection extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
-        headType: PropTypes.string.isRequired,
+        headType: PropTypes.string,
 
         display: PropTypes.bool.isRequired,
         closeModal: PropTypes.func.isRequired,
