@@ -2,11 +2,11 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
-import i18n from '../../../lib/i18n';
+import i18n from '../../lib/i18n';
 import {
     METRIC_UNITS
-} from '../../../constants';
-import styles from '../shard/index.styl';
+} from '../../constants';
+import styles from './index.styl';
 
 class DisplayPanel extends PureComponent {
     static propTypes = {

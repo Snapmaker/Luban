@@ -317,7 +317,8 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     return {
         materialDefinitions: printing.materialDefinitions,
-        defaultMaterialId: printing.defaultMaterialId
+        defaultMaterialId: printing.defaultMaterialId,
+        activeDefinition: printing.activeDefinition
     };
 };
 

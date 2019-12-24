@@ -1,210 +1,157 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
-
-import i18n from '../../lib/i18n';
-import { controller } from '../../lib/controller';
-import TipTrigger from '../../components/TipTrigger';
+import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
-
-import Overrides from './Overrides';
-import MachineModal from './MachineModal';
-import styles from './index.styl';
-import { TEMPERATURE_MAX, TEMPERATURE_MIN } from '../../constants';
+import { actions as machineActions } from '../../flux/machine';
+import JogDistance from './JogDistance';
+import WorkSpeed from './WorkSpeed';
 
 
 class Printing extends PureComponent {
     static propTypes = {
-        headType: PropTypes.string,
-        state: PropTypes.object,
-        actions: PropTypes.object,
+        isConnected: PropTypes.bool,
+        nozzleTemperature: PropTypes.number.isRequired,
+        nozzleTargetTemperature: PropTypes.number.isRequired,
+        heatedBedTemperature: PropTypes.number.isRequired,
+        heatedBedTargetTemperature: PropTypes.number.isRequired,
 
-        printingExpanded: PropTypes.bool,
-        updateWidgetState: PropTypes.func
+        executePrintingGcode: PropTypes.func.isRequired
     };
 
     state = {
-        nozzleTargetTemperature: null,
-        bedTargetTemperature: null
-    }
+        nozzleTemperatureValue: this.props.nozzleTargetTemperature,
+        heatedBedTemperatureValue: this.props.heatedBedTargetTemperature,
+        zOffsetValue: 0.05,
+        zOffsetMarks: [0.05, 0.1, 0.2]
+    };
 
     actions = {
-        onApplyHeadTemperature: () => {
-            const { state } = this.props;
-            controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
-        },
-        onCancelHeadTemperature: () => {
-            this.props.actions.changeNozzleTargetTemperature(0);
-            controller.command('gcode', 'M104 S0');
-        },
-        onApplybedTargetTemperature: () => {
-            const { state } = this.props;
-            controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
-        },
-        onCancelbedTargetTemperature: () => {
-            this.props.actions.changeBedTargetTemperature(0);
-            controller.command('gcode', 'M140 S0');
-        },
-        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+        onChangeNozzleTemperatureValue: (value) => {
             this.setState({
-                nozzleTargetTemperature
+                nozzleTemperatureValue: value
             });
-            this.props.actions.changeNozzleTargetTemperature(nozzleTargetTemperature);
         },
-        changeBedTargetTemperature: (bedTargetTemperature) => {
+        onClickNozzleTemperature: () => {
+            this.props.executePrintingGcode(`M104 S${this.state.nozzleTemperatureValue}`);
+        },
+        onChangeHeatedBedTemperatureValue: (value) => {
             this.setState({
-                bedTargetTemperature
+                heatedBedTemperatureValue: value
             });
-            this.props.actions.changeBedTargetTemperature(bedTargetTemperature);
         },
-        togglePrinting: () => {
-            this.props.updateWidgetState({
-                printingExpanded: !this.props.printingExpanded
+        onClickHeatedBedTemperature: () => {
+            this.props.executePrintingGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
+        },
+        onChangeZOffset: (value) => {
+            this.setState({
+                zOffsetValue: value
             });
+        },
+        onClickPlusZOffset: () => {
+            const value = this.state.zOffsetValue;
+            this.props.executePrintingGcode(`zOffset ${value}`);
+        },
+        onClickMinusZOffset: () => {
+            const value = this.state.zOffsetValue;
+            this.props.executePrintingGcode(`zOffset -${value}`);
         }
     };
 
     render() {
-        const { headType, state, actions, printingExpanded } = this.props;
-        // eslint-disable-next-line no-unused-vars
-        const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
-        const controllerState = state.controller.state || {};
-        // const { speedFactor, extruderFactor, temperature = {} } = controllerState;
-        const { temperature = {} } = controllerState;
-        const { speedFactor, extruderFactor } = state;
-        const nozzleTargetTemperature = parseFloat(this.state.nozzleTargetTemperature || temperature.tTarget || state.nozzleTargetTemperature);
-        const bedTargetTemperature = parseFloat(this.state.bedTargetTemperature || temperature.bTarget || state.bedTargetTemperature);
-
+        const { isConnected, nozzleTemperature, heatedBedTemperature } = this.props;
+        const { nozzleTemperatureValue, heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
+        const actions = this.actions;
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={actions.togglePrinting}>
-                    <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Heater Control')}</span>
-                    <span className={classNames(
-                        'fa',
-                        heaterControlSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
+                <div className="sm-parameter-container">
+                    <WorkSpeed />
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label-lg">{i18n._('Nozzle Temp')}</span>
+                        <span className="sm-parameter-row__input2-text">{nozzleTemperature}/</span>
+                        <Input
+                            className="sm-parameter-row__input2"
+                            value={nozzleTemperatureValue}
+                            max={250}
+                            min={0}
+                            onChange={actions.onChangeNozzleTemperatureValue}
+                        />
+                        <span className="sm-parameter-row__input2-unit">°C</span>
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
+                            onClick={actions.onClickNozzleTemperature}
+                        />
+                    </div>
+
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Heated Bed Temp')}</span>
+                        <span className="sm-parameter-row__input2-text">{heatedBedTemperature}/</span>
+                        <Input
+                            className="sm-parameter-row__input2"
+                            value={heatedBedTemperatureValue}
+                            max={80}
+                            min={0}
+                            onChange={actions.onChangeHeatedBedTemperatureValue}
+                        />
+                        <span className="sm-parameter-row__input2-unit">°C</span>
+                        <Anchor
+                            className="sm-parameter-row__input2-check fa fa-chevron-circle-right"
+                            onClick={actions.onClickHeatedBedTemperature}
+                        />
+                    </div>
+
+                    {isConnected && (
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Z Offset')}</span>
+                            <Anchor
+                                className="sm-parameter-row__input2"
+                                style={{
+                                    marginRight: '84px'
+                                }}
+                            >
+                                <JogDistance
+                                    marks={zOffsetMarks}
+                                    onChange={actions.onChangeZOffset}
+                                    defaultValue={zOffsetValue}
+                                />
+                            </Anchor>
+                            <Anchor
+                                className="sm-parameter-row__input2-check fa fa-plus"
+                                onClick={actions.onClickPlusZOffset}
+                            />
+                            <Anchor
+                                className="sm-parameter-row__input2-check fa fa-minus"
+                                style={{
+                                    right: '152px'
+                                }}
+                                onClick={actions.onClickMinusZOffset}
+                            />
+                        </div>
                     )}
-                    />
-                </Anchor>
-                {!printingExpanded && (
-                    <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
-                        <tbody>
-                            <tr>
-                                <td style={{ padding: '0' }}>
-                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Extruder')}</p>
-                                </td>
-                                <td style={{ width: '10%' }}>
-                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {temperature.t}°C
-                                    </div>
-                                </td>
-                                <td style={{ width: '35%' }}>
-                                    <TipTrigger
-                                        title={i18n._('Extruder')}
-                                        content={i18n._('Set the target temperature of the nozzle in real-time.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <span style={{ margin: '0 4px' }}>/</span>
-                                            <Input
-                                                style={{ width: '50px' }}
-                                                value={nozzleTargetTemperature}
-                                                min={TEMPERATURE_MIN}
-                                                max={TEMPERATURE_MAX}
-                                                onChange={this.actions.changeNozzleTargetTemperature}
-                                                disabled={!canClick}
-                                            />
-                                            <span style={{ marginLeft: '4px' }}>°C</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                                <td style={{ width: '20%' }}>
-                                    <Anchor
-                                        className={classNames('fa', 'fa-check', styles['fa-btn'])}
-                                        disabled={!canClick}
-                                        onClick={this.actions.onApplyHeadTemperature}
-                                    />
-                                    <Anchor
-                                        className={classNames('fa', 'fa-times', styles['fa-btn'])}
-                                        disabled={!canClick}
-                                        onClick={this.actions.onCancelHeadTemperature}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{ padding: '0' }}>
-                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Bed')}</p>
-                                </td>
-                                <td style={{ width: '10%' }}>
-                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
-                                        {temperature.b}°C
-                                    </div>
-                                </td>
-                                <td style={{ width: '35%' }}>
-                                    <TipTrigger
-                                        title={i18n._('Heated Bed')}
-                                        content={i18n._('Set the target temperature of the heated bed in real-time.')}
-                                    >
-                                        <div className="input-group input-group-sm">
-                                            <span style={{ margin: '0 4px' }}>/</span>
-                                            <Input
-                                                style={{ width: '50px' }}
-                                                value={bedTargetTemperature}
-                                                min={TEMPERATURE_MIN}
-                                                max={TEMPERATURE_MAX}
-                                                onChange={this.actions.changeBedTargetTemperature}
-                                                disabled={!canClick}
-                                            />
-                                            <span style={{ marginLeft: '4px' }}>°C</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                                <td>
-                                    <Anchor
-                                        className={classNames('fa', 'fa-check', styles['fa-btn'])}
-                                        aria-hidden="true"
-                                        disabled={!canClick}
-                                        onClick={this.actions.onApplybedTargetTemperature}
-                                    />
-                                    <Anchor
-                                        className={classNames('fa', 'fa-times', styles['fa-btn'])}
-                                        disabled={!canClick}
-                                        onClick={this.actions.onCancelbedTargetTemperature}
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                )}
-                <Anchor className="sm-parameter-header" onClick={actions.toggleOverridesSection}>
-                    <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Speed Factor')}</span>
-                    <span className={classNames(
-                        'fa',
-                        overridesSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                    )}
-                    />
-                </Anchor>
-                {overridesSectionExpanded && (
-                    <Overrides
-                        speedFactor={speedFactor}
-                        extruderFactor={extruderFactor}
-                        actions={actions}
-                    />
-                )}
-                <MachineModal
-                    headType={headType}
-                    controllerState={controllerState}
-                    expanded={machineModalSectionExpanded}
-                    toggleMachineModalSection={actions.toggleMachineModalSection}
-                />
+                </div>
             </div>
         );
     }
 }
 
-export default Printing;
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+    const { isConnected, nozzleTemperature, nozzleTargetTemperature, heatedBedTemperature, heatedBedTargetTemperature } = machine;
+
+    return {
+        isConnected,
+        nozzleTemperature,
+        nozzleTargetTemperature,
+        heatedBedTemperature,
+        heatedBedTargetTemperature
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        executePrintingGcode: (gcode) => dispatch(machineActions.executePrintingGcode(gcode))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Printing);

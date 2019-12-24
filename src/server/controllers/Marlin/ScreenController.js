@@ -118,7 +118,7 @@ class ScreenController {
                             if (packetData.headStatus !== 0) {
                                 if (!this.ready) {
                                     this.ready = true;
-                                    this.emitAll('serialport:ready', { state: this.controller.state });
+                                    this.emitAll('serialport:connected', { state: this.controller.state });
                                 }
                             }
                             const nextState = {
@@ -336,8 +336,8 @@ class ScreenController {
         return translateWithContext(line, context);
     };
 
-    constructor(port, dataSource, options) {
-        const { baudRate } = { ...options };
+    constructor(options) {
+        const { port, dataSource, baudRate } = { ...options };
 
         this.packetManager = new PacketManager();
 
@@ -480,7 +480,7 @@ class ScreenController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', {
+                this.emitAll('serialport:connected', {
                     state: this.controller.state,
                     dataSource
                 });
@@ -538,7 +538,7 @@ class ScreenController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', {
+                this.emitAll('serialport:connected', {
                     state: this.controller.state,
                     dataSource
                 });
@@ -860,7 +860,7 @@ class ScreenController {
                         workSpeed = params.F;
                     }
                     if (cmd === 'M3') {
-                        headStatus = 'on';
+                        headStatus = true;
                         if (params.P !== undefined) {
                             headPower = params.P;
                             headPower = ensureRange(headPower, 0, 100);
@@ -871,7 +871,7 @@ class ScreenController {
                         }
                     }
                     if (cmd === 'M5') {
-                        headStatus = 'off';
+                        headStatus = false;
                         headPower = 0;
                     }
                 });
@@ -1079,7 +1079,7 @@ class ScreenController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        this.emitAll('serialport:ready', {
+                        this.emitAll('serialport:connected', {
                             dataSource,
                             err: 'this machine is not ready'
                         });

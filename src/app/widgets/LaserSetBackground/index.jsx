@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
@@ -8,43 +10,19 @@ import {
     SMMinimizeButton,
     SMDropdownButton
 } from '../../components/SMWidget';
-import { controller } from '../../lib/controller';
 import styles from '../styles.styl';
 import SetBackground from './SetBackground';
-import { PROTOCOL_TEXT } from '../../constants';
+import { MACHINE_HEAD_TYPE } from '../../constants';
 
 
 class LaserSetBackgroundWidget extends PureComponent {
-    state = {
-        isConnected: false,
-        isLaser: false,
-        showInstructions: false
+    static propTypes = {
+        isConnected: PropTypes.bool,
+        headType: PropTypes.string
     };
 
-    controllerEvents = {
-        'serialport:open': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            this.setState({ isConnected: true });
-        },
-        'serialport:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            this.setState({ isConnected: false });
-        },
-        'Marlin:state': (options) => {
-            const { state, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            const headType = state.headType;
-            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-            this.setState({ isLaser });
-        }
+    state = {
+        showInstructions: false
     };
 
     actions = {
@@ -61,31 +39,12 @@ class LaserSetBackgroundWidget extends PureComponent {
         WidgetState.bind(this);
     }
 
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
 
     render() {
+        const { isConnected, headType } = this.props;
         const state = this.state;
         const actions = this.actions;
+        const isLaser = headType === MACHINE_HEAD_TYPE.LASER.value;
 
         return (
             <Widget fullscreen={state.fullscreen}>
@@ -109,9 +68,9 @@ class LaserSetBackgroundWidget extends PureComponent {
                     )}
                 >
                     <SetBackground
-                        showInstructions={this.state.showInstructions}
-                        isConnected={this.state.isConnected}
-                        isLaser={this.state.isLaser}
+                        showInstructions={state.showInstructions}
+                        isConnected={isConnected}
+                        isLaser={isLaser}
                         actions={actions}
                     />
                 </Widget.Content>
@@ -119,5 +78,13 @@ class LaserSetBackgroundWidget extends PureComponent {
         );
     }
 }
+const mapStateToProps = (state) => {
+    const { headType, isConnected } = state.machine;
 
-export default LaserSetBackgroundWidget;
+    return {
+        isConnected,
+        headType
+    };
+};
+
+export default connect(mapStateToProps)(LaserSetBackgroundWidget);

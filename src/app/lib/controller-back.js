@@ -41,7 +41,7 @@ class SocketController {
         // Serial Port events
         'serialport:list': [],
         'serialport:open': [],
-        'serialport:ready': [],
+        'serialport:connected': [],
         'serialport:close': [],
         'serialport:read': [],
         'serialport:write': [],

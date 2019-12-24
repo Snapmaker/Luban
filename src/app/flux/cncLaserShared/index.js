@@ -244,10 +244,12 @@ export const actions = {
 
     // call once
     initModelsPreviewChecker: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
+        const { modelGroup, isAllModelsPreviewed } = getState()[from];
         const check = () => {
-            const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
-            dispatch(actions.updateState(from, { isAllModelsPreviewed }));
+            const isAllModelsPreviewedN = checkIsAllModelsPreviewed(modelGroup);
+            if (isAllModelsPreviewedN !== isAllModelsPreviewed) {
+                dispatch(actions.updateState(from, { isAllModelsPreviewed: isAllModelsPreviewedN }));
+            }
             setTimeout(check, 100);
         };
         check();

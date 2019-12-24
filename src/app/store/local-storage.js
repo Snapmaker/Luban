@@ -13,7 +13,10 @@ if (isElectron()) {
     const electron = window.require('electron');
     const app = electron.remote.app;
     userData = {
-        path: path.join(app.getPath('userData'), 'cnc.json')
+        path: {
+            'widget': path.join(app.getPath('userData'), 'widget.json'),
+            'machine': path.join(app.getPath('userData'), 'machine.json')
+        }
     };
 }
 
@@ -28,8 +31,8 @@ const getUserConfig = (name) => {
 
         if (userData) {
             const fs = window.require('fs'); // Use window.require to require fs module in Electron
-            if (fs.existsSync(userData.path)) {
-                data = JSON.parse(fs.readFileSync(userData.path, 'utf8') || '{}');
+            if (fs.existsSync(userData.path[name])) {
+                data = JSON.parse(fs.readFileSync(userData.path[name], 'utf8') || '{}');
             }
         } else {
             data = JSON.parse(localStorage.getItem(`Snapmaker-${name}`) || '{}');
@@ -63,7 +66,7 @@ const getLocalStore = (name) => {
 
                 if (userData) {
                     const fs = window.require('fs'); // Use window.require to require fs module in Electron
-                    fs.writeFileSync(userData.path, value);
+                    fs.writeFileSync(userData.path[name], value);
                 }
                 localStorage.setItem(`Snapmaker-${name}`, value);
             } catch (e) {

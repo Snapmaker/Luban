@@ -2,14 +2,9 @@ import isEmpty from 'lodash/isEmpty';
 import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
-    HEAD_TYPE_UNKNOWN,
-    HEAD_TYPE_3DP,
-    HEAD_TYPE_LASER,
-    HEAD_TYPE_CNC,
     MACHINE_SERIES,
     CONNECTION_TYPE_SERIAL,
     WORKFLOW_STATUS_UNKNOWN,
-    LASER_PRINT_MODE_AUTO,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING,
@@ -71,6 +66,7 @@ const INITIAL_STATE = {
     enclosureDoor: false,
     laserFocalLength: null,
     laserPower: null,
+    headStatus: null,
     nozzleTemperature: 0,
     nozzleTargetTemperature: 0,
     heatedBedTemperature: 0,
@@ -92,24 +88,12 @@ const INITIAL_STATE = {
     },
 
     // laser print mode
-    laserPrintMode: LASER_PRINT_MODE_AUTO,
+    isLaserPrintAutoMode: true,
     materialThickness: 2.5
 
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
-
-function convertHeadType(headType) {
-    if (headType === '3DP') {
-        return HEAD_TYPE_3DP;
-    } else if (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600') {
-        return HEAD_TYPE_LASER;
-    } else if (headType === 'CNC') {
-        return HEAD_TYPE_CNC;
-    } else {
-        return HEAD_TYPE_UNKNOWN;
-    }
-}
 
 export const actions = {
     // Update state directly
@@ -158,9 +142,7 @@ export const actions = {
             // 'Marlin:state': (state) => {
             'Marlin:state': (options) => {
                 const { state } = options;
-                // TODO: bring other states here
-                // TODO: clear structure of state?
-                const { headType, pos, originOffset } = state;
+                const { pos, originOffset, headStatus, headPower } = state;
 
                 const machineState = getState().machine;
 
@@ -184,13 +166,10 @@ export const actions = {
                         }
                     }));
                 }
-                dispatch(actions.updateState({
-                    headType: convertHeadType(headType),
-                    workPosition: {
-                        ...machineState.position,
-                        ...pos
-                    }
 
+                dispatch(actions.updateState({
+                    headStatus: headStatus,
+                    laserPower: headPower
                 }));
             },
             // 'Marlin:settings': (settings) => {
@@ -249,7 +228,7 @@ export const actions = {
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
-            'serialport:ready': (data) => {
+            'serialport:connected': (data) => {
                 const { err } = data;
                 if (err) {
                     return;
@@ -378,7 +357,7 @@ export const actions = {
                     server.uploadNozzleTemperature(data);
                 } else if (split[0] === 'M140') {
                     server.uploadBedTemperature(data);
-                } else if (split[0] === 'M221') {
+                } else if (split[0] === 'M220') {
                     server.uploadWorkSpeedFactor(data);
                 } else if (split[0] === 'zOffset') {
                     server.uploadZOffset(data);
@@ -543,7 +522,7 @@ export const actions = {
     },
 
     startServerGcode: () => (dispatch, getState) => {
-        const { server, workflowStatus, laserPrintMode, series, laserFocalLength, materialThickness } = getState().machine;
+        const { server, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeList, background } = getState().workspace;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
             return;
@@ -556,7 +535,7 @@ export const actions = {
         const file = new File([blob], filename);
         const promises = [];
         if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
-            if (laserPrintMode === LASER_PRINT_MODE_AUTO && laserFocalLength) {
+            if (isLaserPrintAutoMode && laserFocalLength) {
                 const promise = new Promise((resolve) => {
                     server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
                         resolve();
@@ -639,7 +618,6 @@ export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE:
             return Object.assign({}, state, action.state);
-
         default:
             return state;
     }

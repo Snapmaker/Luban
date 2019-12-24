@@ -102,7 +102,7 @@ export const actions = {
                     connectionType: CONNECTION_TYPE_SERIAL
                 }));
             },
-            'serialport:ready': (data) => {
+            'serialport:connected': (data) => {
                 const { err } = data;
                 if (err) {
                     return;

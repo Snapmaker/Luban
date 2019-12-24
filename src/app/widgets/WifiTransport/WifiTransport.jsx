@@ -114,24 +114,6 @@ class WifiTransport extends PureComponent {
         return (
             <div>
                 <div>
-                    <div>
-                        <input
-                            ref={this.fileInput}
-                            type="file"
-                            accept=".gcode, .nc .cnc"
-                            style={{ display: 'none' }}
-                            multiple={false}
-                            onChange={actions.onChangeFile}
-                        />
-                        <Anchor
-                            className={classNames(styles['gcode-file'], styles['gcode-file-upload'])}
-                            onClick={actions.onClickToUpload}
-                        >
-                            <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
-                            {i18n._('Upload Files')}
-                        </Anchor>
-                    </div>
-
                     {_.map(gcodeFiles, (gcodeFile) => {
                         const name = gcodeFile.name.length > 33
                             ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
@@ -177,7 +159,23 @@ class WifiTransport extends PureComponent {
                             </div>
                         );
                     })}
-
+                    <div>
+                        <input
+                            ref={this.fileInput}
+                            type="file"
+                            accept=".gcode, .nc .cnc"
+                            style={{ display: 'none' }}
+                            multiple={false}
+                            onChange={actions.onChangeFile}
+                        />
+                        <Anchor
+                            className={classNames(styles['gcode-file'], styles['gcode-file-upload'])}
+                            onClick={actions.onClickToUpload}
+                        >
+                            <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
+                            {i18n._('Upload Files')}
+                        </Anchor>
+                    </div>
                 </div>
                 <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                 <button

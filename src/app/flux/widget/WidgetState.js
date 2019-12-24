@@ -51,6 +51,7 @@ const defaultState = {
     widgets: {
         control: {
             minimized: false,
+            headInfoExpanded: true,
             axes: ['x', 'y', 'z'],
             jog: {
                 keypad: false,

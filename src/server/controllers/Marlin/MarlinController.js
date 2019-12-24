@@ -22,7 +22,6 @@ import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
-import PacketManager from '../PacketManager';
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -165,81 +164,6 @@ class MarlinController {
         };
     })();
 
-    // queryPosition = (() => {
-    //     let lastQueryTime = 0;
-    //
-    //     return throttle(() => {
-    //         if (!this.ready) {
-    //             return;
-    //         }
-    //
-    //         const now = new Date().getTime();
-    //
-    //         if (!this.query.type) {
-    //             this.query.type = QUERY_TYPE_POSITION;
-    //             lastQueryTime = now;
-    //         } else {
-    //             const timespan = Math.abs(now - lastQueryTime);
-    //             const toleranceTime = 10000; // 10 seconds
-    //
-    //             if (timespan >= toleranceTime) {
-    //                 log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
-    //                 this.query.type = QUERY_TYPE_POSITION;
-    //                 lastQueryTime = now;
-    //             }
-    //         }
-    //     }, 1000);
-    // })();
-    //
-    // queryTemperature = (() => {
-    //     let lastQueryTime = 0;
-    //
-    //     return throttle(() => {
-    //         // Check the ready flag
-    //         if (!this.ready) {
-    //             return;
-    //         }
-    //         const now = new Date().getTime();
-    //         if (!this.query.type) {
-    //             this.query.type = QUERY_TYPE_TEMPERATURE;
-    //             lastQueryTime = now;
-    //         } else {
-    //             const timespan = Math.abs(now - lastQueryTime);
-    //             const toleranceTime = 2000; // 10 seconds
-    //
-    //             if (timespan >= toleranceTime) {
-    //                 log.silly(`Reschedule temperture report query: now=${now}ms, timespan=${timespan}ms`);
-    //                 this.query.type = QUERY_TYPE_TEMPERATURE;
-    //                 lastQueryTime = now;
-    //             }
-    //         }
-    //     }, 1000);
-    // })();
-    //
-    // queryEnclosure = (() => {
-    //     let lastQueryTime = 0;
-    //
-    //     return throttle(() => {
-    //         // Check the ready flag
-    //         if (!this.ready) {
-    //             return;
-    //         }
-    //         const now = new Date().getTime();
-    //         if (!this.query.type) {
-    //             this.query.type = QUERY_TYPE_ENCLOSURE;
-    //             lastQueryTime = now;
-    //         } else {
-    //             const timespan = Math.abs(now - lastQueryTime);
-    //             const toleranceTime = 10000; // 10 seconds
-    //
-    //             if (timespan >= toleranceTime) {
-    //                 log.silly(`Reschedule enclosure report query: now=${now}ms, timespan=${timespan}ms`);
-    //                 this.query.type = QUERY_TYPE_ENCLOSURE;
-    //                 lastQueryTime = now;
-    //             }
-    //         }
-    //     }, 1000);
-    // })();
 
     dataFilter = (line, context) => {
         // Current position
@@ -288,10 +212,8 @@ class MarlinController {
         return translateWithContext(line, context);
     };
 
-    constructor(port, dataSource, options) {
-        const { baudRate } = { ...options };
-
-        this.packetManager = new PacketManager();
+    constructor(options) {
+        const { port, dataSource, baudRate } = options;
 
         this.options = {
             ...this.options,
@@ -421,7 +343,8 @@ class MarlinController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+                console.log('emit:serialport:connected');
+                this.emitAll('serialport:connected', { state: this.controller.state });
 
                 // const version = this.controller.state.version;
                 // if (semver.gte(version, '2.4.0')) {
@@ -484,7 +407,8 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                this.emitAll('serialport:ready', { state: this.controller.state, dataSource });
+                console.log('2emit:serialport:connected');
+                this.emitAll('serialport:connected', { state: this.controller.state });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -808,7 +732,7 @@ class MarlinController {
                         workSpeed = params.F;
                     }
                     if (cmd === 'M3') {
-                        headStatus = 'on';
+                        headStatus = true;
                         if (params.P !== undefined) {
                             headPower = params.P;
                             headPower = ensureRange(headPower, 0, 100);
@@ -819,8 +743,8 @@ class MarlinController {
                         }
                     }
                     if (cmd === 'M5') {
-                        headStatus = 'off';
-                        headPower = 0;
+                        headStatus = false;
+                        // headPower = 0;
                     }
                 });
                 const nextState = {
@@ -845,12 +769,12 @@ class MarlinController {
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}/${dataSource}":`, err);
-                this.emitAll('serialport:open', { port, dataSource, err });
+                this.emitAll('serialport:open', { port, err });
                 callback(err); // notify error
                 return;
             }
 
-            this.emitAll('serialport:open', { port, dataSource });
+            this.emitAll('serialport:open', { port });
 
             callback(); // register controller
 
@@ -877,7 +801,8 @@ class MarlinController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        this.emitAll('serialport:ready', { dataSource, err: 'this machine is not ready' });
+                        console.log('3emit:serialport:connected');
+                        this.emitAll('serialport:connected', { err: 'this machine is not ready' });
                         this.close();
                     }
                 }, 2000);
@@ -915,7 +840,7 @@ class MarlinController {
 
         // this.emitAll('serialport:close', { port });
         // store.unset(`controllers["${port}"]`);
-        this.emitAll('serialport:close', { port, dataSource });
+        this.emitAll('serialport:close', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
@@ -935,13 +860,9 @@ class MarlinController {
         return this.serialport && this.serialport.isOpen;
     }
 
-    addConnection(port, socket) {
+    addConnection(socket) {
         if (!socket) {
             log.error('The socket parameter is not specified');
-            return;
-        }
-        if (port !== this.options.port) {
-            log.error('The socket port is different this port');
             return;
         }
 
@@ -953,23 +874,15 @@ class MarlinController {
         //
         const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
-            // controller state
-            // socket.emit('Marlin:state', this.state);
             socket.emit('Marlin:state', { state: this.state, dataSource });
         }
         if (!isEmpty(this.settings)) {
-            // controller setting
-            // socket.emit('Marlin:settings', this.settings);
             socket.emit('Marlin:settings', { settings: this.settings, dataSource });
         }
         if (this.workflow) {
-            // workflow state
-            // socket.emit('workflow:state', this.workflow.state);
             socket.emit('workflow:state', { workflowState: this.workflow.state, dataSource });
         }
         if (this.sender) {
-            // sender status
-            // socket.emit('sender:status', this.sender.toJSON(), dataSource);
             socket.emit('sender:status', { data: this.sender.toJSON(), dataSource });
         }
     }
@@ -1001,13 +914,10 @@ class MarlinController {
         }, 500);
     }
 
-    // emitAll(eventName, ...args) {
     emitAll(eventName, options) {
         Object.keys(this.connections).forEach(id => {
             const socket = this.connections[id];
-            const { dataSource } = this.options;
-            // socket.emit(eventName, ...args);
-            socket.emit(eventName, { ...options, dataSource });
+            socket.emit(eventName, { ...options, dataSource: this.options.dataSource });
         });
     }
 

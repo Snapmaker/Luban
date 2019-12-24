@@ -19,8 +19,6 @@ import { actions as machineActions } from '../../flux/machine';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
-        dataSource: PropTypes.string.isRequired,
-
         isOpen: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
@@ -49,7 +47,7 @@ class SerialConnection extends PureComponent {
     controllerEvents = {
         'serialport:list': (options) => this.onListPorts(options),
         'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:ready': (options) => this.onPortReady(options),
+        'serialport:connected': (options) => this.onPortReady(options),
         'serialport:close': (options) => this.onPortClosed(options)
     };
 
@@ -136,10 +134,8 @@ class SerialConnection extends PureComponent {
     }
 
     onPortOpened(options) {
-        const { port, dataSource, err } = options;
-        if (dataSource !== this.props.dataSource) {
-            return;
-        }
+        console.log('onPOrt');
+        const { port, err } = options;
         if (err && err !== 'inuse') {
             this.setState({
                 err: 'Can not open this port'
@@ -156,6 +152,7 @@ class SerialConnection extends PureComponent {
     }
 
     onPortReady(data) {
+        console.log('onPortReady', data);
         const { state, err } = data;
         if (err) {
             this.setState({
@@ -191,6 +188,7 @@ class SerialConnection extends PureComponent {
         const { series, seriesSize, headType } = state;
         const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
+        console.log(machineHeadType, machineHeadType);
 
 
         if (machineHeadType && machineSeries) {
@@ -209,11 +207,7 @@ class SerialConnection extends PureComponent {
     }
 
     onPortClosed(options) {
-        const { port, dataSource, err } = options;
-        // if (dataSource !== PROTOCOL_TEXT) {
-        if (dataSource !== this.props.dataSource) {
-            return;
-        }
+        const { port, err } = options;
         if (err) {
             this.setState({
                 err: 'Can not close this port'
