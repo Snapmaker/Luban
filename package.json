@@ -118,7 +118,8 @@
       "target": [
         "deb"
       ]
-    }
+    },
+    "publish": []
   },
   "keywords": [
     "snapmaker",
