@@ -507,7 +507,7 @@ class Marlin extends events.EventEmitter {
         spindle: 0, // Related to M3, M4, M5
         jogSpeed: 0, // G0
         workSpeed: 0, // G1
-        headStatus: 'off',
+        headStatus: false,
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0,
         gcodeFile: null,

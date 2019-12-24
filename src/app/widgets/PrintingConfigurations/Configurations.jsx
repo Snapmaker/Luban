@@ -689,11 +689,12 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { qualityDefinitions, defaultQualityId, isAdvised } = printing;
+    const { qualityDefinitions, defaultQualityId, isAdvised, activeDefinition } = printing;
     return {
         qualityDefinitions,
         defaultQualityId,
-        isAdvised
+        isAdvised,
+        activeDefinition
     };
 };
 

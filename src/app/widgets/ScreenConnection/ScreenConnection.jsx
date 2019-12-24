@@ -43,7 +43,7 @@ class ScreenConnection extends PureComponent {
     controllerEvents = {
         'serialport:list': (options) => this.onListPorts(options),
         'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:ready': (options) => this.onPortReady(options),
+        'serialport:connected': (options) => this.onPortReady(options),
         'serialport:close': (options) => this.onPortClosed(options)
     };
 

@@ -39,7 +39,7 @@ class SerialPortClient {
         // Serial Port events
         'serialport:list': [],
         'serialport:open': [],
-        'serialport:ready': [],
+        'serialport:connected': [],
         'serialport:close': [],
         'serialport:read': [],
         'serialport:write': [],
@@ -209,15 +209,15 @@ class SerialPortClient {
     }
 
     listPorts() {
-        socketController.emit('serialport:list', this.dataSource);
+        socketController.emit('serialport:list', { dataSource: this.dataSource });
     }
 
     openPort(port) {
-        socketController.emit('serialport:open', port, this.dataSource);
+        socketController.emit('serialport:open', { port, dataSource: this.dataSource });
     }
 
     closePort(port) {
-        socketController.emit('serialport:close', port, this.dataSource);
+        socketController.emit('serialport:close', { port, dataSource: this.dataSource });
     }
 
     // Discover Wi-Fi enabled Snapmakers
@@ -239,7 +239,12 @@ class SerialPortClient {
         if (!this.workspacePort) {
             return;
         }
-        socketController.emit('command', this.workspacePort, this.dataSource, cmd, ...args);
+        socketController.emit('command', {
+            port: this.workspacePort,
+            dataSource: this.dataSource,
+            cmd: cmd,
+            args: [...args]
+        });
     }
 
     // @param {object} [context] The associated context information.
@@ -248,7 +253,12 @@ class SerialPortClient {
         if (!this.workspacePort) {
             return;
         }
-        socketController.emit('writeln', this.workspacePort, this.dataSource, data, context);
+        socketController.emit('writeln', {
+            port: this.workspacePort,
+            dataSource: this.dataSource,
+            data,
+            context
+        });
     }
 }
 

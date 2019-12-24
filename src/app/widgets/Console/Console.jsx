@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import { controller } from '../../lib/controller';
 import Terminal from './Terminal';
-import { PROTOCOL_TEXT, ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../constants';
+import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
@@ -32,20 +32,13 @@ class Console extends PureComponent {
     pubsubTokens = [];
 
     controllerEvents = {
-        'serialport:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+        'serialport:close': () => {
             this.actions.clearAll();
         },
         // 'serialport:write': (data, context, dataSource) => {
         'serialport:write': (options) => {
-            const { context, dataSource } = options;
+            const { context } = options;
             let data = options.data;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
             if (context && (context.__sender__ === this.props.widgetId)) {
                 // Do not write to the terminal console if the sender is the widget itself
                 return;
@@ -58,10 +51,7 @@ class Console extends PureComponent {
         },
         // 'serialport:read': (data, dataSource) => {
         'serialport:read': (options) => {
-            const { data, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+            const { data } = options;
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         }

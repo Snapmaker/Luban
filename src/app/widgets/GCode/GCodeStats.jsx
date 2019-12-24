@@ -1,10 +1,10 @@
 import moment from 'moment';
 import React from 'react';
 import PropTypes from 'prop-types';
-import i18n from '../../../lib/i18n';
+import i18n from '../../lib/i18n';
 import {
     METRIC_UNITS
-} from '../../../constants';
+} from '../../constants';
 import styles from './index.styl';
 
 const formatISODateTime = (time) => {

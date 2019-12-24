@@ -2,14 +2,14 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
-import i18n from '../../../lib/i18n';
-import RepeatButton from '../../../components/RepeatButton';
+import i18n from '../../lib/i18n';
+import RepeatButton from '../../components/RepeatButton';
 import {
     DISTANCE_MIN,
     DISTANCE_MAX,
     DISTANCE_STEP
 } from './constants';
-import styles from '../shard/index.styl';
+import styles from './index.styl';
 
 const JogDistance = (props) => {
     const { state, actions } = props;

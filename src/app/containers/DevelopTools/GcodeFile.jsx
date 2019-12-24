@@ -127,7 +127,7 @@ class GcodeFile extends PureComponent {
                     this.pause3dpStatus.pausing = false;
                     controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
-                    if (this.pauseStatus.headStatus === 'on') {
+                    if (this.pauseStatus.headStatus) {
                         // resume laser power
                         const powerPercent = Math.max(Math.min(this.pauseStatus.headPower, 100), 0);
                         const powerStrength = Math.floor(powerPercent * 255 / 100);
@@ -139,7 +139,7 @@ class GcodeFile extends PureComponent {
                     }
                     controller.command('gcode:resume');
                 } else {
-                    if (this.pauseStatus.headStatus === 'on') {
+                    if (this.pauseStatus.headStatus) {
                         // resume spindle
                         controller.command('gcode', 'M3 P100 S255');
                         // for CNC machine, resume need to wait >500ms to let the tool head started
@@ -161,7 +161,7 @@ class GcodeFile extends PureComponent {
                         headPower: this.state.headPower
                     };
 
-                    if (this.pauseStatus.headStatus === 'on') {
+                    if (this.pauseStatus.headStatus) {
                         controller.command('gcode', 'M5');
                     }
 

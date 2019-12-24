@@ -4,7 +4,8 @@ import logger from '../../lib/logger';
 import { MarlinController } from '../../controllers';
 import ensureArray from '../../lib/ensure-array';
 import config from '../configstore';
-import { WRITE_SOURCE_CLIENT } from '../../controllers/constants';
+import { PROTOCOL_SCREEN, WRITE_SOURCE_CLIENT } from '../../controllers/constants';
+import ScreenController from '../../controllers/Marlin/ScreenController';
 
 const log = logger('service:socket-server');
 
@@ -19,7 +20,8 @@ const onDisconnection = (socket) => {
     });
 };
 
-const serialportList = (socket) => {
+const serialportList = (socket, options) => {
+    const { dataSource } = options;
     log.debug(`serialport:list(): id=${socket.id}`);
 
     serialport.list((err, ports) => {
@@ -45,16 +47,21 @@ const serialportList = (socket) => {
             };
         });
 
-        socket.emit('serialport:list', availablePorts);
+        socket.emit('serialport:list', { ports: availablePorts, dataSource });
     });
 };
 
-const serialportOpen = (socket, port) => {
+const serialportOpen = (socket, options) => {
+    const { port, dataSource } = options;
     log.debug(`socket.open("${port}"): socket=${socket.id}`);
 
-    let controller = store.get(`controllers["${port}"]`);
+    let controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
-        controller = new MarlinController(port, { baudrate: 115200 });
+        if (dataSource === PROTOCOL_SCREEN) {
+            controller = new ScreenController({ port, dataSource, baudrate: 115200 });
+        } else {
+            controller = new MarlinController({ port, dataSource, baudrate: 115200 });
+        }
     }
 
     controller.addConnection(socket);
@@ -64,35 +71,38 @@ const serialportOpen = (socket, port) => {
         // Join the room
         socket.join(port);
 
-        socket.emit('serialport:open', { port });
+        socket.emit('serialport:open', { port, dataSource });
+        socket.emit('serialport:connected', { state: controller.controller.state, dataSource });
     } else {
         controller.open((err = null) => {
             if (err) {
-                socket.emit('serialport:open', { port, err });
+                socket.emit('serialport:open', { port, err, dataSource });
                 return;
             }
 
-            if (store.get(`controllers["${port}"]`)) {
+            if (store.get(`controllers["${port}/${dataSource}"]`)) {
                 log.error(`Serial port "${port}" was not properly closed`);
             }
-            store.set(`controllers["${port}"]`, controller);
+            store.set(`controllers["${port}/${dataSource}"]`, controller);
 
             // Join the room
             socket.join(port);
 
-            socket.emit('serialport:open', { port });
+            socket.emit('serialport:open', { port, dataSource });
         });
     }
 };
 
-const serialportClose = (socket, port) => {
+const serialportClose = (socket, options) => {
+    const { port, dataSource } = options;
+
     log.debug(`socket.close("${port}"): id=${socket.id}`);
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         const err = `Serial port "${port}" not accessible`;
         log.error(err);
-        socket.emit('serialport:close', { port: port, err: new Error(err) });
+        socket.emit('serialport:close', { port: port, err: new Error(err), dataSource });
         return;
     }
 
@@ -101,17 +111,18 @@ const serialportClose = (socket, port) => {
 
     controller.close(() => {
         // Remove controller from store
-        store.unset(`controllers[${port}]`);
+        store.unset(`controllers["${port}/${dataSource}"]`);
 
         // Destroy controller
         controller.destroy();
     });
 };
 
-const command = (socket, port, cmd, ...args) => {
+const command = (socket, options) => {
+    const { port, dataSource, cmd, args } = options;
     log.debug(`socket.command("${port}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller || !controller.isOpen()) {
         log.error(`Serial port "${port}" not accessible`);
         return;
@@ -120,10 +131,12 @@ const command = (socket, port, cmd, ...args) => {
     controller.command(socket, cmd, ...args);
 };
 
-const writeln = (socket, port, data, context = {}) => {
+const writeln = (socket, options) => {
+    const { port, dataSource, data, context = {} } = options;
+
     log.debug(`socket.writeln("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller || !controller.isOpen()) {
         log.error(`Serial port "${port}" not accessible`);
         return;

@@ -82,7 +82,7 @@ class Visualizer extends Component {
     gcodeRenderer = null;
 
     pauseStatus = {
-        headStatus: 'off',
+        headStatus: false,
         headPower: 0
     };
 
@@ -266,7 +266,7 @@ class Visualizer extends Component {
                         controller.command('gcode', cmd);
                         controller.command('gcode:resume');
                     } else if (this.actions.isLaser()) {
-                        if (this.pauseStatus.headStatus === 'on') {
+                        if (this.pauseStatus.headStatus) {
                             // resume laser power
                             const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
                             const powerStrength = Math.floor(powerPercent * 255 / 100);
@@ -279,7 +279,7 @@ class Visualizer extends Component {
 
                         controller.command('gcode:resume');
                     } else {
-                        if (this.pauseStatus.headStatus === 'on') {
+                        if (this.pauseStatus.headStatus) {
                             // resume spindle
                             controller.command('gcode', 'M3');
 
@@ -311,7 +311,7 @@ class Visualizer extends Component {
                         headPower: this.state.controller.state.headPower
                     };
 
-                    if (this.pauseStatus.headStatus === 'on') {
+                    if (this.pauseStatus.headStatus) {
                         controller.command('gcode', 'M5');
                     }
 

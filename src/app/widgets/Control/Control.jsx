@@ -6,35 +6,29 @@ import { connect } from 'react-redux';
 import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
 
-import classNames from 'classnames';
-import i18n from '../../../lib/i18n';
-import combokeys from '../../../lib/combokeys';
-import { controller } from '../../../lib/controller';
-import { preventDefault } from '../../../lib/dom-events';
-import { in2mm, mm2in } from '../../../lib/units';
+import i18n from '../../lib/i18n';
+import combokeys from '../../lib/combokeys';
+import { controller } from '../../lib/controller';
+import { preventDefault } from '../../lib/dom-events';
+import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../../flux/machine';
-import { actions as widgetActions } from '../../../flux/widget';
+import { actions as machineActions } from '../../flux/machine';
+import { actions as widgetActions } from '../../flux/widget';
 import {
     HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS, WORKFLOW_STATUS_IDLE,
-    LASER_PRINT_MODE_AUTO, LASER_PRINT_MODE_MANUAL,
-    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN, MACHINE_HEAD_TYPE
-} from '../../../constants';
+    WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_UNKNOWN
+} from '../../constants';
 import {
     DISTANCE_MIN,
     DISTANCE_MAX,
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
-import { NumberInput as Input } from '../../../components/Input';
-import Printing from '../shard/Printing';
-import Laser from '../shard/Laser';
-import CNC from '../shard/CNC';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -91,8 +85,6 @@ class Control extends PureComponent {
         executeGcode: PropTypes.func,
         executeGcodeAutoHome: PropTypes.func,
         isConnected: PropTypes.bool.isRequired,
-        laserPrintMode: PropTypes.string.isRequired,
-        materialThickness: PropTypes.number.isRequired,
 
         axes: PropTypes.array.isRequired,
         speed: PropTypes.number.isRequired,
@@ -100,8 +92,7 @@ class Control extends PureComponent {
         selectedDistance: PropTypes.string.isRequired,
         customDistance: PropTypes.number.isRequired,
 
-        updateWidgetState: PropTypes.func.isRequired,
-        updateState: PropTypes.func.isRequired
+        updateWidgetState: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -202,16 +193,6 @@ class Control extends PureComponent {
             }
 
             this.actions.executeGcode(gcode.join('\n'));
-        },
-        onSelectMode: (mode) => {
-            this.props.updateState({
-                laserPrintMode: mode
-            });
-        },
-        onChangeMaterialThickness: (value) => {
-            this.props.updateState({
-                materialThickness: value
-            });
         }
     };
 
@@ -261,18 +242,6 @@ class Control extends PureComponent {
             }
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
-        },
-        // FIXME
-        'Marlin:state': (options) => {
-            const { state, dataSource } = options;
-            if (dataSource !== this.props.dataSource) {
-                return;
-            }
-            this.setState({
-                controller: {
-                    state: state
-                }
-            });
         }
     };
 
@@ -307,9 +276,6 @@ class Control extends PureComponent {
             canClick: true, // Defaults to true
 
             units: METRIC_UNITS,
-            controller: {
-                state: controller.state
-            },
 
             workPosition: { // work position
                 x: '0.000',
@@ -392,10 +358,6 @@ class Control extends PureComponent {
                 selectedDistance: selectedDistance
             }
         });
-        // this.props.config.set('axes', axes);
-        // this.props.config.set('jog.speed', jogSpeed);
-        // this.props.config.set('jog.keypad', keypadJogging);
-        // this.props.config.set('jog.selectedDistance', selectedDistance);
 
         // The custom distance will not persist while toggling between in and mm
         if ((prevState.customDistance !== customDistance) && (prevState.units === units)) {
@@ -496,7 +458,6 @@ class Control extends PureComponent {
     }
 
     render() {
-        // const { units } = this.state;
         const canClick = this.canClick();
         const state = {
             ...this.state,
@@ -507,48 +468,9 @@ class Control extends PureComponent {
         };
 
         const { workPosition, originOffset } = this.state;
-        const { laserPrintMode, materialThickness, headType } = this.props;
 
         return (
             <div>
-                <div
-                    className="sm-tabs"
-                    style={{
-                        'marginBottom': '10px'
-                    }}
-                >
-                    <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_AUTO) })}
-                        onClick={() => {
-                            this.actions.onSelectMode(LASER_PRINT_MODE_AUTO);
-                        }}
-                    >
-                        {i18n._('Auto Mode')}
-                    </button>
-                    <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': (laserPrintMode === LASER_PRINT_MODE_MANUAL) })}
-                        onClick={() => {
-                            this.actions.onSelectMode(LASER_PRINT_MODE_MANUAL);
-                        }}
-                    >
-                        {i18n._('Manual Mode')}
-                    </button>
-                </div>
-                {laserPrintMode === 'auto' && (
-                    <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
-                        <Input
-                            className="sm-parameter-row__input"
-                            value={materialThickness}
-                            onChange={this.actions.onChangeMaterialThickness}
-                        />
-                        <span className="sm-parameter-row__input-unit">mm</span>
-                    </div>
-                )}
                 <DisplayPanel
                     workPosition={workPosition}
                     originOffset={originOffset}
@@ -600,10 +522,6 @@ class Control extends PureComponent {
                     actions={actions}
                     executeGcode={this.actions.executeGcode}
                 />
-                <div style={{ marginBottom: '10px' }} />
-                {headType === MACHINE_HEAD_TYPE['3DP'].value && <Printing />}
-                {headType === MACHINE_HEAD_TYPE.LASER.value && <Laser />}
-                {headType === MACHINE_HEAD_TYPE.CNC.value && <CNC />}
             </div>
         );
     }
@@ -616,7 +534,7 @@ const mapStateToProps = (state, ownProps) => {
     const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
-    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus, laserPrintMode, materialThickness } = machine;
+    const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus } = machine;
 
     return {
         port,
@@ -631,10 +549,7 @@ const mapStateToProps = (state, ownProps) => {
         speed,
         keypad,
         selectedDistance,
-        customDistance,
-
-        laserPrintMode,
-        materialThickness
+        customDistance
     };
 };
 
@@ -642,8 +557,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
         executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
-        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value)),
-        updateState: (state) => dispatch(machineActions.updateState(state))
+        updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };
 };
 

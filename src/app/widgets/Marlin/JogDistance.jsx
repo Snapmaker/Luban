@@ -3,8 +3,8 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import PropTypes from 'prop-types';
 import styles from './index.styl';
-import i18n from '../../../lib/i18n';
-import RepeatButton from '../../../components/RepeatButton';
+import i18n from '../../lib/i18n';
+import RepeatButton from '../../components/RepeatButton';
 
 class JogDistance extends PureComponent {
     static propTypes = {

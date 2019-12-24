@@ -2,20 +2,16 @@ import _ from 'lodash';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { controller } from '../../../lib/controller';
-import { mm2in } from '../../../lib/units';
+import { controller } from '../../lib/controller';
+import { mm2in } from '../../lib/units';
 import GCodeStates from './GCodeStats';
 import {
     // Units
     PROTOCOL_TEXT,
     IMPERIAL_UNITS,
-    METRIC_UNITS, MACHINE_HEAD_TYPE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN
-} from '../../../constants';
-import i18n from '../../../lib/i18n';
-import Printing from '../shard/Printing';
-import Laser from '../shard/Laser';
-import CNC from '../shard/CNC';
+    METRIC_UNITS
+} from '../../constants';
+import i18n from '../../lib/i18n';
 
 const toFixedUnits = (units, val) => {
     val = Number(val) || 0;
@@ -25,15 +21,12 @@ const toFixedUnits = (units, val) => {
     if (units === METRIC_UNITS) {
         val = val.toFixed(3);
     }
-
     return val;
 };
 
 class GCode extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
-        headType: PropTypes.string,
-        workflowStatus: PropTypes.string
+        setTitle: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -224,8 +217,6 @@ class GCode extends PureComponent {
     }
 
     render() {
-        const { headType, workflowStatus } = this.props;
-        const isRunning = workflowStatus !== WORKFLOW_STATUS_IDLE && workflowStatus !== WORKFLOW_STATUS_UNKNOWN;
         const { units, bbox } = this.state;
         const state = {
             ...this.state,
@@ -239,30 +230,12 @@ class GCode extends PureComponent {
         };
 
         return (
-            <div>
-                <GCodeStates
-                    state={state}
-                    actions={actions}
-                />
-                <div style={{
-                    marginBottom: '10px'
-                }}
-                />
-                {isRunning && headType === MACHINE_HEAD_TYPE['3DP'].value && <Printing />}
-                <Printing />
-                {isRunning && headType === MACHINE_HEAD_TYPE.LASER.value && <Laser />}
-                {isRunning && headType === MACHINE_HEAD_TYPE.CNC.value && <CNC />}
-            </div>
+            <GCodeStates
+                state={state}
+                actions={actions}
+            />
         );
     }
 }
 
-const mapStateToProps = (state) => {
-    const { headType, workflowStatus } = state.machine;
-    return {
-        headType,
-        workflowStatus
-    };
-};
-
-export default connect(mapStateToProps)(GCode);
+export default GCode;
