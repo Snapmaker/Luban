@@ -52,6 +52,7 @@ class Visualizer extends Component {
         workflowStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
+        uploadGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
@@ -401,6 +402,9 @@ class Visualizer extends Component {
         handleAddGcode: (name, gcode, renderMethod = 'line') => {
             this.props.clearGcode();
             this.props.addGcode(name, gcode, renderMethod);
+        },
+        handleUploadGcodeFile: (file) => {
+            this.props.uploadGcodeFile(file);
         },
         // canvas
         switchCoordinateVisibility: () => {
@@ -846,6 +850,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
+    uploadGcodeFile: (file) => dispatch(actions.uploadGcodeFile(file)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode()),

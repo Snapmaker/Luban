@@ -318,6 +318,7 @@ export const actions = {
     resetHomeState: () => (dispatch) => {
         dispatch(actions.updateState({ isHomed: null }));
     },
+
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
@@ -332,39 +333,6 @@ export const actions = {
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
             server.executeGcode(gcode);
-        }
-    },
-
-    executePrintingGcode: (gcode, context) => (dispatch, getState) => {
-        const machine = getState().machine;
-
-        const { isConnected, connectionType, workflowStatus, server } = machine;
-        if (!isConnected) {
-            return;
-        }
-        if (connectionType === CONNECTION_TYPE_SERIAL) {
-            controller.command('gcode', gcode, context);
-        } else {
-            if (workflowStatus === WORKFLOW_STATUS_IDLE) {
-                server.executeGcode(gcode);
-            } else {
-                const split = gcode.split(' +');
-                if (split.length <= 1) {
-                    return;
-                }
-                const data = parseFloat(split[1].substring(1));
-                if (split[0] === 'M104') {
-                    server.uploadNozzleTemperature(data);
-                } else if (split[0] === 'M140') {
-                    server.uploadBedTemperature(data);
-                } else if (split[0] === 'M220') {
-                    server.uploadWorkSpeedFactor(data);
-                } else if (split[0] === 'zOffset') {
-                    server.uploadZOffset(data);
-                } else if (split[0] === 'M3') {
-                    server.uploadLaserPower(data);
-                }
-            }
         }
     },
 
@@ -454,6 +422,7 @@ export const actions = {
                     nozzleTargetTemperature,
                     heatedBedTemperature,
                     heatedBedTargetTemperature } = result.data;
+                console.log(heatedBedTemperature);
 
                 dispatch(actions.updateState({
                     workflowStatus: status,

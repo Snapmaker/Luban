@@ -11,7 +11,6 @@ import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import { DATA_PREFIX } from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
-import api from '../../api';
 
 
 // import controller from '../../lib/controller';
@@ -27,7 +26,7 @@ class WifiTransport extends PureComponent {
 
         clearGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
-        addGcodeFile: PropTypes.func.isRequired
+        uploadGcodeFile: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -50,23 +49,7 @@ class WifiTransport extends PureComponent {
         },
         onChangeFile: async (event) => {
             const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            api.uploadFile(formData)
-                .then((res) => {
-                    const response = res.body;
-                    this.props.addGcodeFile({
-                        name: file.name,
-                        uploadName: response.uploadName,
-                        size: file.size,
-                        lastModifiedDate: file.lastModifiedDate,
-                        img: ''
-                    });
-                    this.actions.onSelectFile(file.name);
-                })
-                .catch(() => {
-                    // Ignore error
-                });
+            this.props.uploadGcodeFile(file);
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
@@ -99,10 +82,15 @@ class WifiTransport extends PureComponent {
         }
     };
 
-
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Wi-Fi Transport'));
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.gcodeFiles.length > 0 && nextProps.gcodeFiles.length !== this.props.gcodeFiles.length) {
+            this.actions.onSelectFile(nextProps.gcodeFiles[0].name);
+        }
     }
 
     render() {
@@ -217,7 +205,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo))
+        uploadGcodeFile: (fileInfo) => dispatch(workspaceActions.uploadGcodeFile(fileInfo))
     };
 };
 

@@ -411,14 +411,14 @@ export class Server extends events.EventEmitter {
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
             workSpeed: this.state.workSpeed,
-            nozzleTemperature: 0,
-            nozzleTargetTemperature: 0,
-            heatedBedTemperature: 0,
-            heatedBedTargetTemperature: 0
+            nozzleTemperature: this.state.nozzleTemperature,
+            nozzleTargetTemperature: this.state.nozzleTargetTemperature,
+            heatedBedTemperature: this.state.heatedBedTemperature,
+            heatedBedTargetTemperature: this.state.heatedBedTargetTemperature
         };
     };
 
-    uploadNozzleTemperature = (nozzleTemp, callback) => {
+    updateNozzleTemperature = (nozzleTemp, callback) => {
         const api = `${this.host}/api/v1/override_nozzle_temperature`;
         request
             .post(api)
@@ -430,7 +430,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadBedTemperature = (bedTemperature, callback) => {
+    updateBedTemperature = (bedTemperature, callback) => {
         const api = `${this.host}/api/v1/override_bed_temperature`;
         request
             .post(api)
@@ -442,7 +442,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadZOffset = (zOffset, callback) => {
+    updateZOffset = (zOffset, callback) => {
         const api = `${this.host}/api/v1/override_z_offset`;
         request
             .post(api)
@@ -454,7 +454,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadWorkSpeedFactor = (workSpeedFactor, callback) => {
+    updateWorkSpeedFactor = (workSpeedFactor, callback) => {
         const api = `${this.host}/api/v1/override_work_speed`;
         request
             .post(api)
@@ -466,12 +466,34 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadLaserPower = (laserPower, callback) => {
+    updateLaserPower = (laserPower, callback) => {
         const api = `${this.host}/api/v1/override_laser_power`;
         request
             .post(api)
             .send(`token=${this.token}`)
             .send(`laserPower=${laserPower}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    loadFilament = (callback) => {
+        const api = `${this.host}/api/v1/filament_load`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    unloadFilament = (callback) => {
+        const api = `${this.host}/api/v1/filament_unload`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
                 callback && callback(msg, data);

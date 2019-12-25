@@ -1,15 +1,20 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
+import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 
 
 class WorkSpeed extends PureComponent {
     static propTypes = {
-        executePrintingGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired,
+        workflowStatus: PropTypes.string,
+        connectionType: PropTypes.string,
+        server: PropTypes.func
     };
 
 
@@ -19,6 +24,11 @@ class WorkSpeed extends PureComponent {
     };
 
     actions = {
+        isWifiPrinting: () => {
+            const { workflowStatus, connectionType } = this.props;
+            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
+                && connectionType === CONNECTION_TYPE_WIFI;
+        },
         onChangeWorkSpeedValue: (value) => {
             this.setState({
                 workSpeedValue: value
@@ -29,7 +39,11 @@ class WorkSpeed extends PureComponent {
             this.setState({
                 workSpeed: workSpeedValue
             });
-            this.props.executePrintingGcode(`M220 S${workSpeedValue}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateWorkSpeedFactor(workSpeedValue);
+            } else {
+                this.props.executeGcode(`M220 S${workSpeedValue}`);
+            }
         }
     };
 
@@ -58,10 +72,22 @@ class WorkSpeed extends PureComponent {
     }
 }
 
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+    const { workflowStatus, connectionType, server } = machine;
+
     return {
-        executePrintingGcode: (gcode) => dispatch(machineActions.executePrintingGcode(gcode))
+        workflowStatus,
+        connectionType,
+        server
     };
 };
 
-export default connect(null, mapDispatchToProps)(WorkSpeed);
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(WorkSpeed);

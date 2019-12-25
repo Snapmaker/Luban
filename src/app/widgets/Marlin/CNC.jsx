@@ -10,7 +10,7 @@ class Printing extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
 
-        executePrintingGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired
     };
 
     state = {
@@ -20,9 +20,9 @@ class Printing extends PureComponent {
     actions = {
         onClickToolHead: () => {
             if (this.state.headStatus) {
-                this.props.executePrintingGcode('M5');
+                this.props.executeGcode('M5');
             } else {
-                this.props.executePrintingGcode('M3');
+                this.props.executeGcode('M3');
             }
             this.setState({
                 headStatus: !this.state.headStatus
@@ -61,7 +61,7 @@ class Printing extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executePrintingGcode: (gcode) => dispatch(machineActions.executePrintingGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 

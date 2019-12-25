@@ -2,11 +2,13 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider/es/Slider';
+import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
 import WorkSpeed from './WorkSpeed';
+import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 
 
 class Printing extends PureComponent {
@@ -16,8 +18,11 @@ class Printing extends PureComponent {
         isLaserPrintAutoMode: PropTypes.bool,
         materialThickness: PropTypes.number,
         laserFocalLength: PropTypes.number,
+        workflowStatus: PropTypes.string,
+        connectionType: PropTypes.string,
+        server: PropTypes.object,
 
-        executePrintingGcode: PropTypes.func.isRequired,
+        executeGcode: PropTypes.func.isRequired,
         updateState: PropTypes.func.isRequired
     };
 
@@ -37,29 +42,41 @@ class Printing extends PureComponent {
     };
 
     actions = {
+        isWifiPrinting: () => {
+            const { workflowStatus, connectionType } = this.props;
+            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
+                && connectionType === CONNECTION_TYPE_WIFI;
+        },
         onChangeLaserPower: (value) => {
             this.setState({
                 laserPower: value
             });
         },
         onClickLaserPower: () => {
+            if (this.actions.isWifiPrinting()) {
+                return;
+            }
             if (this.state.laserPowerOpen) {
-                this.props.executePrintingGcode('M5');
+                this.props.executeGcode('M5');
             } else {
-                this.props.executePrintingGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
             }
             this.setState({
                 laserPowerOpen: !this.state.laserPowerOpen
             });
         },
         onSaveLaserPower: () => {
-            if (this.state.laserPowerOpen) {
-                this.props.executePrintingGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateLaserPower(this.state.laserPower);
             } else {
-                this.props.executePrintingGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
-                this.props.executePrintingGcode('M5');
+                if (this.state.laserPowerOpen) {
+                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                } else {
+                    this.props.executeGcode(`M3 P${this.state.laserPower} S${this.state.laserPower * 255 / 100}`);
+                    this.props.executeGcode('M5');
+                }
+                this.props.executeGcode('M500');
             }
-            this.props.executePrintingGcode('M500');
         },
         onChangeLaserPrintMode: () => {
             this.props.updateState({
@@ -77,6 +94,8 @@ class Printing extends PureComponent {
         const { isLaserPrintAutoMode, materialThickness, laserFocalLength } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
+        const isWifiPrinting = this.actions.isWifiPrinting();
+
         return (
             <div>
                 <div className="sm-parameter-container">
@@ -140,6 +159,7 @@ class Printing extends PureComponent {
                                     float: 'right'
                                 }}
                                 onClick={this.actions.onClickLaserPower}
+                                disabled={isWifiPrinting}
                             >
                                 {laserPowerOpen && <i className="fa fa-toggle-off" />}
                                 {!laserPowerOpen && <i className="fa fa-toggle-on" />}
@@ -178,9 +198,11 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { laserPower, headStatus, isLaserPrintAutoMode, materialThickness, laserFocalLength } = machine;
+    const { workflowStatus, connectionType, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, laserFocalLength } = machine;
 
     return {
+        workflowStatus,
+        connectionType,
         laserPower,
         headStatus,
         isLaserPrintAutoMode,
@@ -191,7 +213,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executePrintingGcode: (gcode) => dispatch(machineActions.executePrintingGcode(gcode)),
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
         updateState: (state) => dispatch(machineActions.updateState(state))
     };
 };

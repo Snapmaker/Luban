@@ -76,6 +76,25 @@ export const actions = {
         };
     },
 
+    uploadGcodeFile: (file) => (dispatch) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        api.uploadFile(formData)
+            .then((res) => {
+                const response = res.body;
+                dispatch(actions.addGcodeFile({
+                    name: file.name,
+                    uploadName: response.uploadName,
+                    size: file.size,
+                    lastModifiedDate: file.lastModifiedDate,
+                    img: ''
+                }));
+            })
+            .catch(() => {
+                // Ignore error
+            });
+    },
+
     addGcodeFile: (fileInfo) => (dispatch, getState) => {
         const { gcodeFiles } = getState().workspace;
         const files = [];

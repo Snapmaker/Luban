@@ -1,23 +1,28 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import _ from 'lodash';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
 import JogDistance from './JogDistance';
 import WorkSpeed from './WorkSpeed';
+import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 
 
 class Printing extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
+        connectionType: PropTypes.string,
+        server: PropTypes.object,
         nozzleTemperature: PropTypes.number.isRequired,
         nozzleTargetTemperature: PropTypes.number.isRequired,
         heatedBedTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
 
-        executePrintingGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired
     };
 
     state = {
@@ -28,13 +33,22 @@ class Printing extends PureComponent {
     };
 
     actions = {
+        isWifiPrinting: () => {
+            const { workflowStatus, connectionType } = this.props;
+            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
+                && connectionType === CONNECTION_TYPE_WIFI;
+        },
         onChangeNozzleTemperatureValue: (value) => {
             this.setState({
                 nozzleTemperatureValue: value
             });
         },
         onClickNozzleTemperature: () => {
-            this.props.executePrintingGcode(`M104 S${this.state.nozzleTemperatureValue}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateNozzleTemperature(this.state.nozzleTemperatureValue);
+            } else {
+                this.props.executeGcode(`M104 S${this.state.nozzleTemperatureValue}`);
+            }
         },
         onChangeHeatedBedTemperatureValue: (value) => {
             this.setState({
@@ -42,7 +56,11 @@ class Printing extends PureComponent {
             });
         },
         onClickHeatedBedTemperature: () => {
-            this.props.executePrintingGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateBedTemperature(this.state.heatedBedTemperatureValue);
+            } else {
+                this.props.executeGcode(`M140 S${this.state.heatedBedTemperatureValue}`);
+            }
         },
         onChangeZOffset: (value) => {
             this.setState({
@@ -51,16 +69,34 @@ class Printing extends PureComponent {
         },
         onClickPlusZOffset: () => {
             const value = this.state.zOffsetValue;
-            this.props.executePrintingGcode(`zOffset ${value}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateZOffset(value);
+            }
         },
         onClickMinusZOffset: () => {
             const value = this.state.zOffsetValue;
-            this.props.executePrintingGcode(`zOffset -${value}`);
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.updateZOffset(-value);
+            }
+        },
+        onClickLoad: () => {
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.loadFilament();
+            } else {
+                this.props.executeGcode('G91;\nG0 E60 F200;\nG90;');
+            }
+        },
+        onClickUnload: () => {
+            if (this.actions.isWifiPrinting()) {
+                this.props.server.unloadFilament();
+            } else {
+                this.props.executeGcode('G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;');
+            }
         }
     };
 
     render() {
-        const { isConnected, nozzleTemperature, heatedBedTemperature } = this.props;
+        const { isConnected, nozzleTemperature, heatedBedTemperature, workflowStatus } = this.props;
         const { nozzleTemperatureValue, heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
         return (
@@ -101,7 +137,34 @@ class Printing extends PureComponent {
                         />
                     </div>
 
-                    {isConnected && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Filament')}</span>
+                        <button
+                            type="button"
+                            className="btn btn-default"
+                            style={{
+                                width: '82px',
+                                float: 'right'
+                            }}
+                            onClick={actions.onClickUnload}
+                        >
+                            {i18n._('Unload')}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-default"
+                            style={{
+                                width: '82px',
+                                float: 'right',
+                                marginRight: '2px'
+                            }}
+                            onClick={actions.onClickLoad}
+                        >
+                            {i18n._('load')}
+                        </button>
+                    </div>
+
+                    {isConnected && _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus) && (
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Z Offset')}</span>
                             <Anchor
@@ -137,20 +200,30 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { isConnected, nozzleTemperature, nozzleTargetTemperature, heatedBedTemperature, heatedBedTargetTemperature } = machine;
+    const { isConnected,
+        connectionType,
+        nozzleTemperature,
+        server,
+        nozzleTargetTemperature,
+        heatedBedTemperature,
+        heatedBedTargetTemperature,
+        workflowStatus } = machine;
 
     return {
         isConnected,
+        connectionType,
+        server,
         nozzleTemperature,
         nozzleTargetTemperature,
         heatedBedTemperature,
-        heatedBedTargetTemperature
+        heatedBedTargetTemperature,
+        workflowStatus
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executePrintingGcode: (gcode) => dispatch(machineActions.executePrintingGcode(gcode))
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
     };
 };
 
