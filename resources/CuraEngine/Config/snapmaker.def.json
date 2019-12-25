@@ -60,8 +60,7 @@
         },
         "support_pattern": {
             "default_value": "zigzag",
-            "options":
-            {
+            "options": {
                 "lines": "Lines",
                 "grid": "Grid",
                 "zigzag": "Zig Zag"
@@ -70,6 +69,138 @@
         "outer_inset_first": {
             "default_value": false,
             "enabled": true
+        },
+        "resolution": {
+            "type": "category",
+            "children": {}
+        },
+        "shell": {
+            "type": "category",
+            "children": {
+                "skin_angles": {
+                    "label": "Top/Bottom Line Directions",
+                    "default_value": "[  ]"
+                },
+                "optimize_wall_printing_order": {
+                    "label": "Optimize Wall Printing Order",
+                    "default_value": true
+                },
+                "alternate_extra_perimeter": {
+                    "label": "Alternate Extra Wall",
+                    "default_value": true
+                },
+                "travel_compensate_overlapping_walls_enabled": {
+                    "label": "Compensate Wall Overlaps",
+                    "default_value": true
+                },
+                "travel_compensate_overlapping_walls_0_enabled": {
+                    "label": "Compensate Outer Wall Overlaps",
+                    "default_value": true
+                },
+                "travel_compensate_overlapping_walls_x_enabled": {
+                    "label": "Compensate Inner Wall Overlaps",
+                    "default_value": true
+                },
+                "filter_out_tiny_gaps": {
+                    "label": "Filter Out Tiny Gaps",
+                    "default_value": true
+                },
+                "z_seam_type": {
+                    "label": "Z Seam Alignment",
+                    "default_value": "sharpest co"
+                },
+                "z_seam_corner": {
+                    "label": "Seam Corner Preference",
+                    "default_value": "hide seam"
+                }
+            }
+        },
+        "infill": {
+            "type": "category",
+            "children": {
+                "infill_pattern": {
+                    "label": "Infill Pattern",
+                    "default_value": "tri-hexagon"
+                },
+                "zig_zaggify_infill": {
+                    "label": "Connect Infill Lines",
+                    "default_value": true
+                },
+                "infill_angles": {
+                    "label": "Infill Line Directions",
+                    "default_value": "[  ]"
+                },
+                "infill_wipe_dist": {
+                    "label": "Infill Wipe Distance",
+                    "default_value": 0.1
+                },
+                "infill_before_walls": {
+                    "label": "Infill Before Walls",
+                    "default_value": true
+                },
+                "min_skin_width_for_expansion": {
+                    "label": "Minimum Skin Width for Expansion",
+                    "default_value": 0
+                }
+            }
+        },
+        "material": {
+            "type": "category",
+            "children": {
+                "default_material_print_temperature": {
+                    "label": "Default Printing Temperature",
+                    "default_value": 205
+                },
+                "material_print_temperature": {
+                    "label": "Printing Temperature",
+                    "default_value": 205
+                },
+                "material_print_temperature_layer_0": {
+                    "label": "Printing Temperature Initial Layer",
+                    "default_value": 205
+                },
+                "material_initial_print_temperature": {
+                    "label": "Initial Printing Temperature",
+                    "default_value": 205
+                },
+                "material_final_print_temperature": {
+                    "label": "Final Printing Temperature",
+                    "default_value": 200
+                },
+                "material_bed_temperature_layer_0": {
+                    "label": "Build Plate Temperature Initial Layer",
+                    "default_value": 70
+                },
+                "retraction_retract_speed": {
+                    "label": "Retraction Retract Speed",
+                    "default_value": 60
+                },
+                "retraction_prime_speed": {
+                    "label": "Retraction Prime Speed",
+                    "default_value": 60
+                },
+                "retraction_min_travel": {
+                    "label": "Retraction Minimum Travel",
+                    "default_value": 0.8
+                },
+                "retraction_extrusion_window": {
+                    "label": "Minimum Extrusion Distance Window",
+                    "default_value": 5
+                },
+                "switch_extruder_retraction_amount": {
+                    "label": "Nozzle Switch Retraction Distance",
+                    "default_value": 16
+                }
+            }
+        },
+        "speed": {
+            "type": "category",
+            "children": {
+                "speed_layer_0": {
+                    "label": "Initial Layer Speed",
+                    "default_value": 18
+                }
+            }
         }
     }
 }

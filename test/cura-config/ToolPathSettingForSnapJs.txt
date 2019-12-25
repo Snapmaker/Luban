@@ -1,0 +1,105 @@
+resolution
+layer height	0.24	0.16	0.08
+initial layer height	0.2	0.2	0.16
+line width	0.4	0.4	0.4
+wall line width	0.4	0.4	0.4
+outer wall line width	0.4	0.4	0.4
+inner wall(s) line width	0.4	0.4	0.4
+top/bottom line width	0.4	0.4	0.4
+infill line width	0.4	0.4	0.4
+skirt/brim line width	0.4	0.4	0.4
+initial layer line width	100	100	100
+
+Shell
+wall thickness	0.8	1.2	1.2
+wall line count	2	3	3
+outer wall wipe distance	0.2	0.2	0.2
+top surface skin layers	0	0	0
+top/bottom thickness	0.8	0.8	0.8
+top thickness	0.8	0.8	0.8
+bottom thickness	0.8	0.8	0.8
+top layers	4	5	10
+bottom layers	4	5	10
+top/bottom pattern	lines	lines	lines
+bottom pattern initial layer	lines	lines	lines
+top/bottom line directions	[  ]	[  ]	[  ]
+outer wall inset	0	0	0
+optimize wall printing order	✔	✔	✔
+alternate extra wall	✔	✔	✔
+compensate wall overlaps	✔	✔	✔
+compensate outer wall overlaps	✔	✔	✔
+compensate inner wall overlaps	✔	✔	✔
+minimum wall flow	0	0	0
+fill gaps between walls	everywhere	everywhere	everywhere
+filter out tiny gaps	✔	✔	✔
+horizontal expansion	0	0	0
+initial layer horizontal expansion	0	0	0
+z seam alignment	sharpest co	sharpest co	sharpest co
+seam corner preference	hide seam	hide seam	hide seam
+extra skin wall count	0	0	1
+
+Infill
+infill density	15	15	15
+infill line distance	8	8	8
+infill pattern	tri-hexagon	tri-hexagon	tri-hexagon
+connect infill lines	✔	✔	✔
+infill line directions	[  ]	[  ]	[  ]
+infill line multiplier	1	1	1
+extra infill wall count	0	0	0
+infill overlap percentage	10	10	10
+infill overlap	0.04	0.04	0.04
+skin overlap percentage	5	5	5
+skin overlap	0.02	0.02	0.02
+infill wipe distance	0.1	0.1	0.1
+infill layer thickness	0.24	0.16	0.08
+gradual infill steps	0	0	0
+infill before walls	✔	✔	✔
+minimum infill area	0	0	0
+skin removal width	0.8	1.2	1.2
+top skin removal width	0.8	1.2	1.2
+bottom skin removal width	0.8	1.2	1.2
+skin expand distance	0.8	1.2	1.2
+top skin expand distance	0.8	1.2	1.2
+bottom skin expand distance	0.8	1.2	1.2
+maximum skin angle for expansion	90	90	90
+minimum skin width for expansion	0	0	0
+
+Material
+default printing temperature	205	205	205
+printing temperature	205	205	205
+printing temperature initial layer	205	205	205
+initial printing temperature	205	205	205
+final printing temperature	200	200	200
+default build plate temperature	60	60	60
+build plate temperature	60	60	60
+build plate temperature initial layer	70	70	70
+flow	100	100	100
+initial layer flow	100	100	100
+enable retraction	✔	✔	✔
+retraction distance	5	5	5
+retraction speed	60	60	60
+retraction retract speed	60	60	60
+retraction prime speed	60	60	60
+retraction extra prime amount	0	0	0
+retraction minimum travel	0.8	0.8	0.8
+maximum retraction count	90	90	90
+minimum extrusion distance window	5	5	5
+nozzle switch retraction distance	16	16	16
+nozzle switch retraction speed	20	20	20
+nozzle switch retract speed	20	20	20
+nozzle switch prime speed	20	20	20
+
+Speed
+print speed	60	50	40
+infill speed	60	50	40
+outer wall speed	20	15	10
+inner wall speed	25	20	15
+top/bottom speed	30	25	20
+travel speed	80	70	60
+initial layer speed	18	18	18
+initial layer print speed	18	18	18
+initial layer travel speed	24	24	24
+skirt/brim speed	18	18	18
+maximum z speed	0	0	0
+number of slower layers	2	2	2
+top surface skin acceleration	3000	3000	3000
