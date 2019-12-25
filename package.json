@@ -38,7 +38,7 @@
     "build-i18n": "gulp server:i18n app:i18n",
     "build-dev": "cross-env NODE_ENV=development gulp dev",
     "build-prod": "cross-env NODE_ENV=production gulp prod",
-    "electron-builder": "electron-builder",
+    "electron-builder": "electron-builder --publish never",
     "electron-rebuild": "electron-rebuild",
     "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
     "build:linux-ia32": "bash -c 'build/electron-builder.sh --linux --ia32'",
