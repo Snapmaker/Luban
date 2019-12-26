@@ -6,7 +6,7 @@ import styles from './styles.styl';
 import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
-import warningModal from '../../lib/warningModal';
+import warningModal from '../../lib/warning-modal';
 import Modal from '../../components/Modal';
 import Space from '../../components/Space';
 
@@ -17,7 +17,7 @@ import ManualCalibration from './ManualCalibration';
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
 const PANEL_NOT_CALIBRATION = 3;
-const iconSrc = 'images/cameraAid/ic_warning-64x64.png';
+const iconSrc = 'images/camera-aid/ic_warning-64x64.png';
 
 class SetBackground extends PureComponent {
     static propTypes = {

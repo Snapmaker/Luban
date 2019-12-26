@@ -11,7 +11,7 @@ import { MACHINE_SERIES } from '../../../constants';
 
 
 const PANEL_MANUAL_CALIBRATION = 2;
-const DefaultBgiName = '../../../images/cameraAid/Loading.gif';
+const DefaultBgiName = '../../../images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
@@ -113,7 +113,6 @@ class ExtractSquareTrace extends PureComponent {
                 }
                 length = 9;
             }
-            console.log('position', position);
             this.setState({
                 options: {
                     ...this.state.options,

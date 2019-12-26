@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../components/Modal';
 
-class ModalHOC extends PureComponent {
+class WarningModalHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         container: PropTypes.object,
@@ -107,5 +107,5 @@ export default (options) => new Promise((resolve) => {
         container: container
     };
 
-    ReactDOM.render(<ModalHOC {...props} />, container);
+    ReactDOM.render(<WarningModalHOC {...props} />, container);
 });
