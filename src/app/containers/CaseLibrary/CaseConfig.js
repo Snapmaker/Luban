@@ -2,10 +2,10 @@ export const CaseConfig = [
     {
         // default_value
         tag: '3dp',
-        imgSrc: '../../images/usercase/3d01.jpg',
+        imgSrc: '../../images/user-case/3d01.jpg',
         pathConfig: {
             name: 'blade.STL',
-            casePath: '../../resources/usercase/'
+            casePath: '../../resources/user-case/'
         },
         material: {
             definitionId: 'material.abs1',
@@ -36,10 +36,10 @@ export const CaseConfig = [
         // mode: 'greyscale',
         mode: 'vector',
         // mode: 'trace',
-        imgSrc: '../../images/usercase/laser01.jpg',
+        imgSrc: '../../images/user-case/laser01.jpg',
         pathConfig: {
             name: 'LaserTestA250Box.svg',
-            casePath: '../../resources/usercase/'
+            casePath: '../../resources/user-case/'
         },
         material: {
             definitionId: 'material.abs',
@@ -66,10 +66,10 @@ export const CaseConfig = [
     },
     {
         tag: '3dp',
-        imgSrc: '../../images/usercase/cnc01.jpg',
+        imgSrc: '../../images/user-case/cnc01.jpg',
         pathConfig: {
             name: 'blade.STL',
-            casePath: '../../resources/usercase/'
+            casePath: '../../resources/user-case/'
         },
         material: {
             definitionId: 'material.abs1',

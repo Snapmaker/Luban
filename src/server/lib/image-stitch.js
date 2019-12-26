@@ -75,11 +75,12 @@ export const stitchEach = async (options) => {
             startySize = (size.y - ySize) / 2;
             endySize = (size.y + ySize) / 2;
         } else if (parseInt((currentIndex) / 3, 10) === 2) {
-            // endySize = ySize;
-            endySize = size.y - ySize;
+            endySize = ySize;
+            // endySize = size.y - ySize;
         }
         if (currentIndex % 3 === 0) {
-            endxSize = size.x - xSize;
+            // endxSize = size.x - xSize;
+            endxSize = xSize;
         } else if (currentIndex % 3 === 1) {
             startxSize = Math.floor((size.x - xSize) / 2);
             endxSize = Math.floor((size.x + xSize) / 2);
@@ -174,8 +175,7 @@ export const stitch = async (options) => {
     const { fileNames, getPoints, corners, size, centerDis } = options;
     const density = 3;
     const d = centerDis;
-    const width = 1024;
-    const height = 1280;
+    let width, height;
 
     // phrase 1 - perspective transform matrix
     const points = [];
@@ -200,6 +200,8 @@ export const stitch = async (options) => {
     for (let j = 0; j < fileNames.length; j++) {
         const fileName = fileNames[j];
         const image = await readImage(`${DataStorage.tmpDir}/${fileName}`);
+        width = image.bitmap.width;
+        height = image.bitmap.height;
         images.push(image);
     }
 

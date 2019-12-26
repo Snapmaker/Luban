@@ -11,13 +11,15 @@ import { MACHINE_SERIES } from '../../../constants';
 
 
 const PANEL_MANUAL_CALIBRATION = 2;
-const DefaultBgiName = '../../../images/snap-logo-badge-256x256.png';
+const DefaultBgiName = '../../../images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
+        canTakePhoto: PropTypes.bool.isRequired,
+        changeCanTakePhoto: PropTypes.func.isRequired,
         shouldCalibrate: PropTypes.bool.isRequired,
         getPoints: PropTypes.array.isRequired,
         setBackgroundImage: PropTypes.func.isRequired,
@@ -32,7 +34,6 @@ class ExtractSquareTrace extends PureComponent {
         getPhotoTasks: [],
         imageNames: [],
         isStitched: false,
-        canTakePhoto: true,
         canStart: true,
         outputFilename: '',
         options: {
@@ -51,14 +52,15 @@ class ExtractSquareTrace extends PureComponent {
 
     actions = {
         startCameraAid: async () => {
-            if (!this.state.canTakePhoto) {
+            if (!this.props.canTakePhoto) {
                 return;
             }
+            console.log(this.props.size);
             await this.props.server.executeGcode('G53;');
             this.setState({
-                canStart: false,
-                canTakePhoto: false
+                canStart: false
             });
+            this.props.changeCanTakePhoto(false);
             const { address } = this.props.server;
             const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
@@ -111,7 +113,6 @@ class ExtractSquareTrace extends PureComponent {
                 }
                 length = 9;
             }
-
             this.setState({
                 options: {
                     ...this.state.options,
@@ -135,9 +136,7 @@ class ExtractSquareTrace extends PureComponent {
                     }
                 });
                 this.actions.processStitch(this.state.options);
-                this.setState({
-                    canTakePhoto: true
-                });
+                this.props.changeCanTakePhoto(true);
             });
 
             // parse 2
@@ -228,6 +227,7 @@ class ExtractSquareTrace extends PureComponent {
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
                     if (this.close) {
+                        this.props.changeCanTakePhoto(true);
                         this.props.server.executeGcode('G54');
                         reject();
                         return;
@@ -290,12 +290,12 @@ class ExtractSquareTrace extends PureComponent {
                                     if (parseInt(task.index / 3, 10) === 1) {
                                         ySize = this.state.options.centerDis;
                                     } else {
-                                        ySize = Math.floor((this.props.size.y - this.state.options.centerDis) / 2);
+                                        ySize = ((this.props.size.y - this.state.options.centerDis) / 2);
                                     }
                                     if (task.index % 3 === 1) {
                                         xSize = this.state.options.centerDis;
                                     } else {
-                                        xSize = Math.floor((this.props.size.x - this.state.options.centerDis) / 2);
+                                        xSize = ((this.props.size.x - this.state.options.centerDis) / 2);
                                     }
                                 }
                                 this.extractingPreview[task.index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, task.index);
@@ -406,17 +406,16 @@ class ExtractSquareTrace extends PureComponent {
                         </div>
                     </div>
                 </div>
-                <div style={{ margin: '0 60px', minHeight: '30px' }}>
-
+                <div style={{ minHeight: 30, width: this.props.size.x * 2 + 2, margin: '0 auto' }}>
                     <div className="clearfix" />
                     <button
                         type="button"
                         className={classNames(
                             'sm-btn-large',
-                            styles[this.state.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
+                            styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
                         )}
                         onClick={this.actions.displayManualCalibration}
-                        disabled={!this.state.canTakePhoto}
+                        disabled={!this.props.canTakePhoto}
 
                     >
                         {i18n._('Calibration')}

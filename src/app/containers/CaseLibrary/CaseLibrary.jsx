@@ -162,25 +162,25 @@ class CaseLibrary extends PureComponent {
                         <div className={styles.column}>
                             <h4>Leopard</h4>
                             <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/usercase/3d01.jpg" alt="" />
+                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
                             </div>
                         </div>
                         <div className={styles.column}>
                             <h4>Leopard</h4>
                             <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/usercase/3d01.jpg" alt="" />
+                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
                             </div>
                         </div>
                         <div className={styles.column}>
                             <h4>Leopard</h4>
                             <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/usercase/3d01.jpg" alt="" />
+                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
                             </div>
                         </div>
                         <div className={styles.column}>
                             <h4>Leopard</h4>
                             <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/usercase/3d01.jpg" alt="" />
+                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
                             </div>
                         </div>
                     </div>

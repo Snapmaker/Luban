@@ -65,8 +65,70 @@
 .laser-set-background-modal-title
     display: block
     font: bold 24px "Arial Black", Gadget, sans-serif
-    margin: -25px 0 25px 0
+    margin: -44px 0 10px 0;
     text-align: left
+.laser-set-background-modal-content
+    text-align: center
+    position: relative
+    overflow: hidden;
+    .calibrate-background
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 190px
+
+
+        .confirm-actions
+            display: inline-block;
+            position: relative;
+            width: 100%;
+            border-radius: 4px;
+            margin: 10px 10px 0 0;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+            border: solid 1px #c8c8c8;
+            background-color: #fff;
+
+            &__btn
+                display: block
+
+                > i
+                    display: block
+                    width: 18px
+                    height: 42px
+                    margin-left: 16px
+
+            &__icon-confirm
+                background: url("/images/cameraAid/ic_confirm_18x18.png") no-repeat center
+            &:hover
+                border: 1px solid $dark-blue-color
+        .isBlue
+            background-color: #28a7e1
+        .reset-actions
+            display: inline-block;
+            position: relative;
+            width: 100%;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+            border: solid 1px #c8c8c8;
+            background-color: #fff;
+            &__btn
+                display: block
+
+                > i
+                    display: block
+                    width: 18px
+                    height: 42px
+                    margin-left: 16px
+            &__icon-reset
+                background: url("/images/cameraAid/ic_reset_18x18.png") no-repeat center
+            &__text
+                position: absolute;
+                right: 22px;
+                top: 50%;
+                transform: translateY(-50%);
+            &:hover
+                border: 1px solid $dark-blue-color
+
 .photo-display
     margin: auto
     position: relative
@@ -92,9 +154,8 @@
             border: 1px solid $dark-blue-color
 
 .btn-camera
-   position: absolute
+   float: left
    width: 20%
-   left: 5%
    background-color: #fff
    color: #088fcd
    border-color: #088fcd
@@ -103,9 +164,8 @@
      background-color:$dark-blue-color
      color: #fff
 .btn-right-camera
-   position: absolute
+   float: right
    width: 20%
-   right: 5%
    border-color: #088fcd
    background-color: #28a7e1
    color: #fff
@@ -114,54 +174,14 @@
      background-color:$dark-blue-color
      color: #fff
 .btn-camera-disabled
-   position: absolute
+   float: left
    width: 20%
-   left: 5%
    color: #fff
    background-color: #DBDBDB
    margin: 10px 0 0 0
 .btn-right-camera-disabled
-   position: absolute
+   float: right
    width: 20%
-   right: 5%
    color: #fff
    background-color: #DBDBDB
    margin: 10px 0 0 0
-.calibrate-background
-    display: block
-    height: 74px
-    width: 400px
-    margin: 20px auto
-    border: 1px solid $grey-color2
-
-    .extract-actions
-        display: inline-block
-        width: 50%
-        height: 100%
-        border: 1px solid transparent
-
-        &__btn
-            display: block
-
-            > i
-                display: block
-                margin-top: 8px
-                width: 100%
-                height: 40px
-
-        &__icon-conform
-            background: url("./images/conform.png") no-repeat center
-        &__icon-reset
-            background: url("./images/reset.png") no-repeat center
-        &__icon-upload
-            background: url("./images/upload.png") no-repeat center
-
-        &__text
-            display: block
-            width: 100%
-            text-align: center
-            color: $grey-color
-
-
-        &:hover
-            border: 1px solid $dark-blue-color
