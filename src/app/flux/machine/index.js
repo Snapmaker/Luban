@@ -21,7 +21,7 @@ import { actions as widgetActions } from '../widget';
 import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
-import { getGcodeName, getGcodeType } from '../workspace';
+import { actions as workspaceActions, getGcodeName, getGcodeType } from '../workspace';
 
 const INITIAL_STATE = {
 
@@ -89,8 +89,17 @@ const INITIAL_STATE = {
 
     // laser print mode
     isLaserPrintAutoMode: true,
-    materialThickness: 2.5
+    materialThickness: 2.5,
 
+    gcodePrintingInfo: {
+        sent: 0,
+        received: 0,
+        total: 0,
+        startTime: 0,
+        finishTime: 0,
+        elapsedTime: 0,
+        remainingTime: 0
+    }
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -271,6 +280,21 @@ export const actions = {
                 dispatch(actions.updateState({
                     workflowState
                 }));
+            },
+            'sender:status': (options) => {
+                const { data } = options;
+                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
+                dispatch(actions.updateState({
+                    gcodePrintingInfo: {
+                        total,
+                        sent,
+                        received,
+                        startTime,
+                        finishTime,
+                        elapsedTime,
+                        remainingTime
+                    }
+                }));
             }
         };
 
@@ -411,10 +435,16 @@ export const actions = {
                 }));
                 dispatch(actions.executeGcode('G54'));
 
-                server.getGcodeFile();
+                server.getGcodeFile((msg, gcode) => {
+                    if (msg) {
+                        return;
+                    }
+                    dispatch(workspaceActions.clearGcode());
+                    dispatch(workspaceActions.addGcode('print.gcode', gcode));
+                });
             });
             server.on('http:status', (result) => {
-                const { workPosition, originOffset } = getState().machine;
+                const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
                 const { status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
                     laserFocalLength,
                     laserPower,
@@ -422,7 +452,6 @@ export const actions = {
                     nozzleTargetTemperature,
                     heatedBedTemperature,
                     heatedBedTargetTemperature } = result.data;
-                console.log(heatedBedTemperature);
 
                 dispatch(actions.updateState({
                     workflowStatus: status,
@@ -458,6 +487,13 @@ export const actions = {
                         }
                     }));
                 }
+
+                dispatch(actions.updateState({
+                    gcodePrintingInfo: {
+                        ...gcodePrintingInfo,
+                        ...result.data.gcodePrintingInfo
+                    }
+                }));
             });
             server.once('http:close', () => {
                 dispatch(actions.uploadCloseServerState());

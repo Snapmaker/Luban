@@ -56,6 +56,15 @@ export class Server extends events.EventEmitter {
                 x: 0,
                 y: 0,
                 z: 0
+            },
+            gcodePrintingInfo: {
+                sent: 0,
+                received: 0,
+                total: 0,
+                startTime: 0,
+                finishTime: 0,
+                elapsedTime: 0,
+                remainingTime: 0
             }
         };
     }
@@ -195,6 +204,9 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
                 isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
                 isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
+
+                this._updateGcodePrintingInfo(data);
+
                 if (this.waitConfirm) {
                     this.waitConfirm = false;
                     this.emit('http:confirm', { data: this._getStatus() });
@@ -237,9 +249,9 @@ export class Server extends events.EventEmitter {
         request
             .get(api)
             .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
+                const { msg } = this._getResult(err, res);
                 if (callback) {
-                    callback(msg, data);
+                    callback(msg, res.text);
                 }
             });
     };
@@ -282,6 +294,7 @@ export class Server extends events.EventEmitter {
                     callback && callback(msg);
                     return;
                 }
+                this.state.gcodePrintingInfo.startTime = new Date().getTime();
                 callback && callback(msg, data);
             });
     };
@@ -414,7 +427,8 @@ export class Server extends events.EventEmitter {
             nozzleTemperature: this.state.nozzleTemperature,
             nozzleTargetTemperature: this.state.nozzleTargetTemperature,
             heatedBedTemperature: this.state.heatedBedTemperature,
-            heatedBedTargetTemperature: this.state.heatedBedTargetTemperature
+            heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
+            gcodePrintingInfo: this.state.gcodePrintingInfo
         };
     };
 
@@ -518,6 +532,38 @@ export class Server extends events.EventEmitter {
         return {
             code,
             data
+        };
+    }
+
+    _updateGcodePrintingInfo(data) {
+        if (!data) {
+            return;
+        }
+        const { currentLine, estimatedTime, totalLines } = data;
+        if (!currentLine || !estimatedTime || !totalLines) {
+            return;
+        }
+        const sent = currentLine || 0;
+        const received = currentLine || 0;
+        const total = totalLines || 0;
+        let elapsedTime = 0;
+        let remainingTime = 0;
+        if (this.state.gcodePrintingInfo.startTime) {
+            elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
+            remainingTime = estimatedTime - elapsedTime;
+        }
+        let finishTime = 0;
+        if (received > 0 && received >= totalLines) {
+            finishTime = new Date().getTime();
+        }
+        this.state.gcodePrintingInfo = {
+            ...this.state.gcodePrintingInfo,
+            sent,
+            received,
+            total,
+            finishTime,
+            elapsedTime,
+            remainingTime
         };
     }
 }

@@ -14,7 +14,7 @@ class WorkSpeed extends PureComponent {
         executeGcode: PropTypes.func.isRequired,
         workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
-        server: PropTypes.func
+        server: PropTypes.object
     };
 
 
