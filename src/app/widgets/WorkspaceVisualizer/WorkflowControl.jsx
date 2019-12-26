@@ -26,7 +26,8 @@ class WorkflowControl extends PureComponent {
             handleRun: PropTypes.func.isRequired,
             handlePause: PropTypes.func.isRequired,
             handleStop: PropTypes.func.isRequired,
-            handleAddGcode: PropTypes.func.isRequired
+            handleAddGcode: PropTypes.func.isRequired,
+            handleUploadGcodeFile: PropTypes.func.isRequired
         })
     };
 
@@ -40,8 +41,9 @@ class WorkflowControl extends PureComponent {
     onChangeFile = (event) => {
         const { actions } = this.props;
         const file = event.target.files[0];
-        const reader = new FileReader();
+        actions.handleUploadGcodeFile(file);
 
+        const reader = new FileReader();
         reader.onloadend = (e) => {
             const { result, error } = e.target;
 

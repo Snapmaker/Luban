@@ -56,6 +56,15 @@ export class Server extends events.EventEmitter {
                 x: 0,
                 y: 0,
                 z: 0
+            },
+            gcodePrintingInfo: {
+                sent: 0,
+                received: 0,
+                total: 0,
+                startTime: 0,
+                finishTime: 0,
+                elapsedTime: 0,
+                remainingTime: 0
             }
         };
     }
@@ -195,6 +204,9 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
                 isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
                 isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
+
+                this._updateGcodePrintingInfo(data);
+
                 if (this.waitConfirm) {
                     this.waitConfirm = false;
                     this.emit('http:confirm', { data: this._getStatus() });
@@ -237,9 +249,9 @@ export class Server extends events.EventEmitter {
         request
             .get(api)
             .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
+                const { msg } = this._getResult(err, res);
                 if (callback) {
-                    callback(msg, data);
+                    callback(msg, res.text);
                 }
             });
     };
@@ -282,6 +294,7 @@ export class Server extends events.EventEmitter {
                     callback && callback(msg);
                     return;
                 }
+                this.state.gcodePrintingInfo.startTime = new Date().getTime();
                 callback && callback(msg, data);
             });
     };
@@ -411,14 +424,15 @@ export class Server extends events.EventEmitter {
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
             workSpeed: this.state.workSpeed,
-            nozzleTemperature: 0,
-            nozzleTargetTemperature: 0,
-            heatedBedTemperature: 0,
-            heatedBedTargetTemperature: 0
+            nozzleTemperature: this.state.nozzleTemperature,
+            nozzleTargetTemperature: this.state.nozzleTargetTemperature,
+            heatedBedTemperature: this.state.heatedBedTemperature,
+            heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
+            gcodePrintingInfo: this.state.gcodePrintingInfo
         };
     };
 
-    uploadNozzleTemperature = (nozzleTemp, callback) => {
+    updateNozzleTemperature = (nozzleTemp, callback) => {
         const api = `${this.host}/api/v1/override_nozzle_temperature`;
         request
             .post(api)
@@ -430,7 +444,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadBedTemperature = (bedTemperature, callback) => {
+    updateBedTemperature = (bedTemperature, callback) => {
         const api = `${this.host}/api/v1/override_bed_temperature`;
         request
             .post(api)
@@ -442,7 +456,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadZOffset = (zOffset, callback) => {
+    updateZOffset = (zOffset, callback) => {
         const api = `${this.host}/api/v1/override_z_offset`;
         request
             .post(api)
@@ -454,7 +468,7 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadWorkSpeedFactor = (workSpeedFactor, callback) => {
+    updateWorkSpeedFactor = (workSpeedFactor, callback) => {
         const api = `${this.host}/api/v1/override_work_speed`;
         request
             .post(api)
@@ -466,12 +480,34 @@ export class Server extends events.EventEmitter {
             });
     };
 
-    uploadLaserPower = (laserPower, callback) => {
+    updateLaserPower = (laserPower, callback) => {
         const api = `${this.host}/api/v1/override_laser_power`;
         request
             .post(api)
             .send(`token=${this.token}`)
             .send(`laserPower=${laserPower}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    loadFilament = (callback) => {
+        const api = `${this.host}/api/v1/filament_load`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    unloadFilament = (callback) => {
+        const api = `${this.host}/api/v1/filament_unload`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
                 callback && callback(msg, data);
@@ -496,6 +532,38 @@ export class Server extends events.EventEmitter {
         return {
             code,
             data
+        };
+    }
+
+    _updateGcodePrintingInfo(data) {
+        if (!data) {
+            return;
+        }
+        const { currentLine, estimatedTime, totalLines } = data;
+        if (!currentLine || !estimatedTime || !totalLines) {
+            return;
+        }
+        const sent = currentLine || 0;
+        const received = currentLine || 0;
+        const total = totalLines || 0;
+        let elapsedTime = 0;
+        let remainingTime = 0;
+        if (this.state.gcodePrintingInfo.startTime) {
+            elapsedTime = new Date().getTime() - this.state.gcodePrintingInfo.startTime;
+            remainingTime = estimatedTime - elapsedTime;
+        }
+        let finishTime = 0;
+        if (received > 0 && received >= totalLines) {
+            finishTime = new Date().getTime();
+        }
+        this.state.gcodePrintingInfo = {
+            ...this.state.gcodePrintingInfo,
+            sent,
+            received,
+            total,
+            finishTime,
+            elapsedTime,
+            remainingTime
         };
     }
 }

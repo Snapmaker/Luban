@@ -18,7 +18,7 @@ import {
     PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import TextSprite from '../../components/three-extensions/TextSprite';
@@ -52,6 +52,7 @@ class Visualizer extends Component {
         workflowStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
+        uploadGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
@@ -60,7 +61,12 @@ class Visualizer extends Component {
         startServerGcode: PropTypes.func.isRequired,
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
-        stopServerGcode: PropTypes.func.isRequired
+        stopServerGcode: PropTypes.func.isRequired,
+
+        gcodePrintingInfo: PropTypes.shape({
+            sent: PropTypes.number
+        }),
+        workPosition: PropTypes.object
     };
 
     printableArea = null;
@@ -125,10 +131,7 @@ class Visualizer extends Component {
 
     controllerEvents = {
         'serialport:open': (options) => {
-            const { port, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+            const { port } = options;
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
@@ -402,6 +405,9 @@ class Visualizer extends Component {
             this.props.clearGcode();
             this.props.addGcode(name, gcode, renderMethod);
         },
+        handleUploadGcodeFile: (file) => {
+            this.props.uploadGcodeFile(file);
+        },
         // canvas
         switchCoordinateVisibility: () => {
             const visible = !this.state.coordinateVisible;
@@ -490,6 +496,28 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
+        }
+
+        if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+        }
+        if (this.props.workflowStatus !== WORKFLOW_STATUS_UNKNOWN && nextProps.workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
+            this.stopToolheadRotationAnimation();
+            this.updateWorkPositionToZero();
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+        }
+        if (this.props.workflowStatus !== WORKFLOW_STATUS_RUNNING && nextProps.workflowStatus === WORKFLOW_STATUS_RUNNING) {
+            this.startToolheadRotationAnimation();
+        }
+        if (this.props.workflowStatus !== WORKFLOW_STATUS_PAUSED && nextProps.workflowStatus === WORKFLOW_STATUS_PAUSED) {
+            this.stopToolheadRotationAnimation();
+        }
+        if (nextProps.gcodePrintingInfo.sent > 0 && nextProps.gcodePrintingInfo.sent !== this.props.gcodePrintingInfo.sent) {
+            this.updateWorkPosition(this.props.workPosition);
+            this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(nextProps.gcodePrintingInfo.sent);
+            this.renderScene();
         }
     }
 
@@ -650,10 +678,12 @@ class Visualizer extends Component {
     }
 
     startToolheadRotationAnimation() {
+        console.log('startToolheadRotationAnimation');
         this.toolheadRotationAnimation.start();
     }
 
     stopToolheadRotationAnimation() {
+        console.log('stopToolheadRotationAnimation');
         this.toolheadRotationAnimation.stop();
     }
 
@@ -840,12 +870,15 @@ const mapStateToProps = (state) => {
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
-        backgroundGroup: workspace.background.group
+        backgroundGroup: workspace.background.group,
+        gcodePrintingInfo: machine.gcodePrintingInfo,
+        workPosition: machine.workPosition
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
+    uploadGcodeFile: (file) => dispatch(actions.uploadGcodeFile(file)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode()),

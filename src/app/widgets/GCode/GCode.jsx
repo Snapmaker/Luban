@@ -1,10 +1,11 @@
 import _ from 'lodash';
+import moment from 'moment';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { controller } from '../../lib/controller';
 import { mm2in } from '../../lib/units';
-import GCodeStates from './GCodeStats';
 import {
     // Units
     PROTOCOL_TEXT,
@@ -12,6 +13,7 @@ import {
     METRIC_UNITS
 } from '../../constants';
 import i18n from '../../lib/i18n';
+import styles from './index.styl';
 
 const toFixedUnits = (units, val) => {
     val = Number(val) || 0;
@@ -24,35 +26,48 @@ const toFixedUnits = (units, val) => {
     return val;
 };
 
+const formatISODateTime = (time) => {
+    return time > 0 ? moment.unix(time / 1000).format('YYYY-MM-DD HH:mm:ss') : '–';
+};
+
+const formatElapsedTime = (elapsedTime) => {
+    if (!elapsedTime || elapsedTime < 0) {
+        return '–';
+    }
+    const d = moment.duration(elapsedTime, 'ms');
+    return moment(d._data).format('HH:mm:ss');
+};
+
+const formatRemainingTime = (remainingTime) => {
+    if (!remainingTime || remainingTime < 0) {
+        return '–';
+    }
+    const d = moment.duration(remainingTime, 'ms');
+    return moment(d._data).format('HH:mm:ss');
+};
+
 class GCode extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+
+        gcodePrintingInfo: PropTypes.shape({
+            sent: PropTypes.number,
+            received: PropTypes.number,
+            total: PropTypes.number,
+            startTime: PropTypes.number,
+            finishTime: PropTypes.number,
+            elapsedTime: PropTypes.number,
+            remainingTime: PropTypes.number
+        })
     };
 
     state = this.getInitialState();
 
     actions = {
-        toggleFullscreen: () => {
-            const { minimized, isFullscreen } = this.state;
-            this.setState({
-                minimized: isFullscreen ? minimized : false,
-                isFullscreen: !isFullscreen
-            });
-        },
-        toggleMinimized: () => {
-            const { minimized } = this.state;
-            this.setState({ minimized: !minimized });
-        }
+
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            this.setState({ port: port });
-        },
         'serialport:close': (options) => {
             const { dataSource } = options;
             if (dataSource !== PROTOCOL_TEXT) {
@@ -60,23 +75,6 @@ class GCode extends PureComponent {
             }
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
-        },
-        // 'sender:status': (data, dataSource) => {
-        'sender:status': (options) => {
-            const { data, dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
-            const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime } = data;
-            this.setState({
-                total,
-                sent,
-                received,
-                startTime,
-                finishTime,
-                elapsedTime,
-                remainingTime
-            });
         },
         'workflow:state': (options) => {
             const { workflowState, dataSource } = options;
@@ -217,25 +215,98 @@ class GCode extends PureComponent {
     }
 
     render() {
-        const { units, bbox } = this.state;
+        const { gcodePrintingInfo } = this.props;
+        const { total, sent, received } = gcodePrintingInfo;
         const state = {
             ...this.state,
-            bbox: _.mapValues(bbox, (position) => {
-                position = _.mapValues(position, (val) => toFixedUnits(units, val));
+            bbox: _.mapValues(this.state.bbox, (position) => {
+                position = _.mapValues(position, (val) => toFixedUnits(this.state.units, val));
                 return position;
             })
         };
-        const actions = {
-            ...this.actions
-        };
+        const { units, bbox } = state;
+        const displayUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
+        const startTime = formatISODateTime(gcodePrintingInfo.startTime);
+        const finishTime = formatISODateTime(gcodePrintingInfo.finishTime);
+        const elapsedTime = formatElapsedTime(gcodePrintingInfo.elapsedTime);
+        const remainingTime = formatRemainingTime(gcodePrintingInfo.remainingTime);
 
         return (
-            <GCodeStates
-                state={state}
-                actions={actions}
-            />
+            <div className={styles['gcode-stats']}>
+                <div className="row no-gutters" style={{ marginBottom: 10 }}>
+                    <div className="col-xs-12">
+                        <table className="table-bordered" data-table="dimension">
+                            <thead>
+                                <tr>
+                                    <th className={styles.axis}>{i18n._('Axis')}</th>
+                                    <th>{i18n._('Min')}</th>
+                                    <th>{i18n._('Max')}</th>
+                                    <th>{i18n._('Dimension')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className={styles.axis}>X</td>
+                                    <td>{bbox.min.x} {displayUnits}</td>
+                                    <td>{bbox.max.x} {displayUnits}</td>
+                                    <td>{bbox.delta.x} {displayUnits}</td>
+                                </tr>
+                                <tr>
+                                    <td className={styles.axis}>Y</td>
+                                    <td>{bbox.min.y} {displayUnits}</td>
+                                    <td>{bbox.max.y} {displayUnits}</td>
+                                    <td>{bbox.delta.y} {displayUnits}</td>
+                                </tr>
+                                <tr>
+                                    <td className={styles.axis}>Z</td>
+                                    <td>{bbox.min.z} {displayUnits}</td>
+                                    <td>{bbox.max.z} {displayUnits}</td>
+                                    <td>{bbox.delta.z} {displayUnits}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div className="row no-gutters" style={{ marginBottom: 10 }}>
+                    <div className="col-xs-6">
+                        <div>{i18n._('Sent')}</div>
+                        <div>{total > 0 ? `${sent} / ${total}` : '–'}</div>
+                    </div>
+                    <div className="col-xs-6">
+                        <div>{i18n._('Received')}</div>
+                        <div>{total > 0 ? `${received} / ${total}` : '–'}</div>
+                    </div>
+                </div>
+                <div className="row no-gutters" style={{ marginBottom: 10 }}>
+                    <div className="col-xs-6">
+                        <div>{i18n._('Start Time')}</div>
+                        <div>{startTime}</div>
+                    </div>
+                    <div className="col-xs-6">
+                        <div>{i18n._('Elapsed Time')}</div>
+                        <div>{elapsedTime}</div>
+                    </div>
+                </div>
+                <div className="row no-gutters">
+                    <div className="col-xs-6">
+                        <div>{i18n._('Finish Time')}</div>
+                        <div>{finishTime}</div>
+                    </div>
+                    <div className="col-xs-6">
+                        <div>{i18n._('Remaining Time')}</div>
+                        <div>{remainingTime}</div>
+                    </div>
+                </div>
+            </div>
         );
     }
 }
+const mapStateToProps = (state) => {
+    const { gcodePrintingInfo } = state.machine;
 
-export default GCode;
+    return {
+        gcodePrintingInfo
+    };
+};
+
+export default connect(mapStateToProps)(GCode);
