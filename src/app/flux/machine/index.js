@@ -10,7 +10,7 @@ import {
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_STATUS_CONNECTING,
-    CONNECTION_STATUS_CONNECTED
+    CONNECTION_STATUS_CONNECTED, MACHINE_HEAD_TYPE
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -56,6 +56,7 @@ const INITIAL_STATE = {
     // Console
     terminalHistory: new FixedArray(1000),
     history: new History(1000),
+    consoleLogs: [],
     // Serial port
 
     // from workflowState: idle, running, paused
@@ -357,6 +358,8 @@ export const actions = {
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
             server.executeGcode(gcode);
+
+            dispatch(actions.addConsoleLogs([gcode]));
         }
     },
 
@@ -402,13 +405,14 @@ export const actions = {
         state.connectionType && machineStore.set('connection.type', state.connectionType);
     },
 
-    openServer: () => (dispatch, getState) => {
+    openServer: (callback) => (dispatch, getState) => {
         const { server, serverToken, isOpen } = getState().machine;
         if (isOpen) {
             return;
         }
         server.open(serverToken, (err, data) => {
             if (err) {
+                callback && callback(err, data);
                 return;
             }
             const { token } = data;
@@ -440,7 +444,13 @@ export const actions = {
                         return;
                     }
                     dispatch(workspaceActions.clearGcode());
-                    dispatch(workspaceActions.addGcode('print.gcode', gcode));
+                    let suffix = 'gcode';
+                    if (headType === MACHINE_HEAD_TYPE.LASER.value) {
+                        suffix = 'nc';
+                    } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
+                        suffix = 'cnc';
+                    }
+                    dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
                 });
             });
             server.on('http:status', (result) => {
@@ -498,6 +508,7 @@ export const actions = {
             server.once('http:close', () => {
                 dispatch(actions.uploadCloseServerState());
             });
+            callback && callback(null, data);
         });
     },
 
@@ -614,8 +625,13 @@ export const actions = {
                 workflowStatus: WORKFLOW_STATUS_IDLE
             }));
         });
-    }
+    },
 
+    addConsoleLogs: (consoleLogs) => (dispatch) => {
+        dispatch(actions.updateState({
+            consoleLogs: consoleLogs
+        }));
+    }
 
 };
 

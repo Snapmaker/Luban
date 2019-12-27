@@ -100,22 +100,22 @@ export class Server extends events.EventEmitter {
                     this.open('', callback);
                 }
                 if (msg) {
-                    callback(msg);
+                    callback({ message: msg, status: code }, data);
                     return;
                 }
                 if (data) {
-                    let { series, headType } = data;
-                    series = valueOf(MACHINE_SERIES, 'alias', series).value;
-                    headType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType).value;
-                    data.series = series;
-                    data.headType = headType;
-                    this.state.series = series;
-                    this.state.headType = headType;
+                    const { series, headType } = data;
+                    const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
+                    const headTypeValue = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
+                    data.series = seriesValue ? seriesValue.value : null;
+                    data.headType = headTypeValue ? headTypeValue.value : null;
+                    this.state.series = data.series;
+                    this.state.headType = data.headType;
                 }
                 this.token || (this.token = data.token);
                 this.waitConfirm = true;
                 this.startRequestStatus();
-                callback(msg, data);
+                callback(null, data);
             });
     };
 
@@ -515,13 +515,14 @@ export class Server extends events.EventEmitter {
     };
 
     _getResult = (err, res) => {
+        const code = res.status;
         if (err) {
             return {
                 msg: err.message,
-                code: res && res.status
+                code: res && res.status,
+                data: res.text
             };
         }
-        const code = res.status;
         const data = res.body;
         if (code !== 200 && code !== 204 && code !== 203) {
             return {

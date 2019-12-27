@@ -155,7 +155,7 @@ export const actions = {
             dispatch(actions.updateState({
                 background: {
                     enabled: true,
-                    group: backgroundGroup
+                    group: workspaceBackgroundGroup
                 }
             }));
         }

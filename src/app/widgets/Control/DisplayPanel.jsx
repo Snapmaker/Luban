@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
 import {
+    MACHINE_HEAD_TYPE,
     METRIC_UNITS
 } from '../../constants';
 import styles from './index.styl';
@@ -12,6 +13,7 @@ class DisplayPanel extends PureComponent {
     static propTypes = {
         executeGcode: PropTypes.func.isRequired,
         workPosition: PropTypes.object.isRequired,
+        headType: PropTypes.string,
         originOffset: PropTypes.object.isRequired,
         state: PropTypes.object
     };
@@ -26,13 +28,18 @@ class DisplayPanel extends PureComponent {
     };
 
     render() {
-        const { state, workPosition, originOffset } = this.props;
+        const { state, workPosition, originOffset, headType } = this.props;
         const { x, y, z } = originOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
-        const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
-        const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
-        const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
+        let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
+        let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
+        let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
+        if (headType === MACHINE_HEAD_TYPE['3DP'].value) {
+            machinePositionX = workPosition.x;
+            machinePositionY = workPosition.y;
+            machinePositionZ = workPosition.z;
+        }
 
         return (
             <div className={styles['display-panel']}>

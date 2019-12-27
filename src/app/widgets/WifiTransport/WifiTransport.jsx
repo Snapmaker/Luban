@@ -57,7 +57,7 @@ class WifiTransport extends PureComponent {
         },
         sendFile: () => {
             const selectFileName = this.state.selectFileName;
-            const find = this.props.gcodeFiles.find(v => v.name === selectFileName);
+            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
@@ -70,7 +70,7 @@ class WifiTransport extends PureComponent {
         },
         loadGcodeToWorkspace: () => {
             const selectFileName = this.state.selectFileName;
-            const find = this.props.gcodeFiles.find(v => v.name === selectFileName);
+            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
             if (!find) {
                 return;
             }
@@ -89,7 +89,7 @@ class WifiTransport extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.gcodeFiles.length > 0 && nextProps.gcodeFiles.length !== this.props.gcodeFiles.length) {
-            this.actions.onSelectFile(nextProps.gcodeFiles[0].name);
+            this.actions.onSelectFile(nextProps.gcodeFiles[0].uploadName);
         }
     }
 
@@ -122,10 +122,10 @@ class WifiTransport extends PureComponent {
                                 <Anchor
                                     className={classNames(
                                         styles['gcode-file'],
-                                        { [styles.selected]: selectFileName === gcodeFile.name }
+                                        { [styles.selected]: selectFileName === gcodeFile.uploadName }
                                     )}
                                     onClick={() => {
-                                        actions.onSelectFile(gcodeFile.name);
+                                        actions.onSelectFile(gcodeFile.uploadName);
                                     }}
                                 >
                                     <div className={styles['gcode-file-img']}>
