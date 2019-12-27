@@ -12,7 +12,7 @@ class LaserState extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
         laserCamera: PropTypes.bool,
-        laserFocalLength: PropTypes.number.isRequired
+        laserFocalLength: PropTypes.number
     };
 
 

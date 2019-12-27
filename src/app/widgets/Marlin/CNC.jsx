@@ -22,7 +22,7 @@ class Printing extends PureComponent {
             if (this.state.headStatus) {
                 this.props.executeGcode('M5');
             } else {
-                this.props.executeGcode('M3');
+                this.props.executeGcode('M3 P100');
             }
             this.setState({
                 headStatus: !this.state.headStatus
@@ -37,7 +37,7 @@ class Printing extends PureComponent {
                 <div className="sm-parameter-container">
                     <WorkSpeed />
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Laser Power')}</span>
+                        <span className="sm-parameter-row__label-lg">{i18n._('Tool Head')}</span>
                         <button
                             type="button"
                             className={!headStatus ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}

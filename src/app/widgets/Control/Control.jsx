@@ -474,6 +474,7 @@ class Control extends PureComponent {
                 <DisplayPanel
                     workPosition={workPosition}
                     originOffset={originOffset}
+                    headType={this.props.headType}
                     executeGcode={this.actions.executeGcode}
                     state={state}
                 />

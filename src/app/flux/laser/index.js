@@ -91,7 +91,9 @@ export const actions = {
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
         // console.log(imgPath);
-        const texture = new THREE.TextureLoader().load(imgPath);
+        const texture = new THREE.TextureLoader().load(imgPath, () => {
+            dispatch(sharedActions.render('laser'));
+        });
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,

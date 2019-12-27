@@ -14,7 +14,7 @@ class WarningModalHOC extends PureComponent {
         body: PropTypes.node,
         insideHideModal: PropTypes.func.isRequired,
         iconSrc: PropTypes.string,
-        bobyTitle: PropTypes.string,
+        bodyTitle: PropTypes.string,
         footer: PropTypes.node
     };
 
@@ -50,7 +50,7 @@ class WarningModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, bobyTitle, body, footer, size, iconSrc } = this.props;
+        const { title, bodyTitle, body, footer, size, iconSrc } = this.props;
         const { show } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
@@ -75,7 +75,7 @@ class WarningModalHOC extends PureComponent {
                         alt=""
                     />
                     <p style={{ fontWeight: 'blod', textAlign: 'center' }}>
-                        {bobyTitle}
+                        {bodyTitle}
                     </p>
                     <div style={{ textAlign: 'center' }}>
                         {body}

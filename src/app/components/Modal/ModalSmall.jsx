@@ -8,9 +8,10 @@ import i18n from '../../lib/i18n';
 class ModalSmall extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
+        showCloseButton: PropTypes.bool,
         img: PropTypes.string,
-        text: PropTypes.string.isRequired,
-        hit: PropTypes.string
+        title: PropTypes.string.isRequired,
+        text: PropTypes.string
     };
 
     static defaultProps = {
@@ -18,14 +19,15 @@ class ModalSmall extends PureComponent {
     };
 
     render() {
-        const { onClose, ...props } = this.props;
+        const { onClose, showCloseButton = true, ...props } = this.props;
         const img = this.props.img || '../../images/ic_warning-64x64.png';
         const text = this.props.text;
-        const hit = this.props.hit;
+        const title = this.props.title;
 
         return (
             <Modal
                 {...props}
+                showCloseButton={showCloseButton}
                 onClose={onClose}
                 style={{
                     borderRadius: '4px'
@@ -36,14 +38,14 @@ class ModalSmall extends PureComponent {
                 }}
                 >
                     <div className={styles['modal-small-img']}>
-                        <img src={img} alt="warning" />
+                        <img src={img} alt="......" />
                     </div>
                     <div className={styles['modal-small-body-text']}>
-                        {i18n._(text)}
+                        {i18n._(title)}
                     </div>
-                    {hit && (
+                    {text && (
                         <div className={styles['modal-small-body-hit']}>
-                            {i18n._(hit)}
+                            {i18n._(text)}
                         </div>
                     )}
 

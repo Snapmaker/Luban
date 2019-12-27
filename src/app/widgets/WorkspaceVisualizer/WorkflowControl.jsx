@@ -6,7 +6,7 @@ import {
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_IDLE,
-    EXPERIMENTAL_WIFI_CONTROL, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI
+    WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -19,6 +19,7 @@ class WorkflowControl extends PureComponent {
         workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
+        backgroundEnabled: PropTypes.bool,
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
@@ -27,7 +28,8 @@ class WorkflowControl extends PureComponent {
             handlePause: PropTypes.func.isRequired,
             handleStop: PropTypes.func.isRequired,
             handleAddGcode: PropTypes.func.isRequired,
-            handleUploadGcodeFile: PropTypes.func.isRequired
+            handleUploadGcodeFile: PropTypes.func.isRequired,
+            removeBackgroundImage: PropTypes.func.isRequired
         })
     };
 
@@ -73,7 +75,7 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, actions, connectionType, workflowStatus, isConnected } = this.props;
+        const { state, actions, connectionType, workflowStatus, isConnected, backgroundEnabled } = this.props;
         const { gcode, workflowState } = state;
 
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
@@ -152,16 +154,24 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
-                    {EXPERIMENTAL_WIFI_CONTROL && (
-                        <div className="btn-group btn-group-sm">
+                    {backgroundEnabled && (
+                        <div
+                            className="btn-group btn-group-sm"
+                            style={{
+                                float: 'right'
+                            }}
+                        >
                             <button
                                 type="button"
-                                className="sm-btn-small sm-btn-primary"
-                                disabled={!isRendered}
-                                onClick={actions.handleSend}
-                                title={i18n._('File Transit via Wi-Fi')}
+                                className="btn btn-default"
+                                style={{ height: '30px',
+                                    color: '#d0021b',
+                                    borderColor: '#d0021b' }}
+                                title={i18n._('Close')}
+                                onClick={actions.removeBackgroundImage}
+                                disabled={!canClose}
                             >
-                                {i18n._('File Transit via Wi-Fi')}
+                                {i18n._('Remove Background')}
                             </button>
                         </div>
                     )}

@@ -93,6 +93,9 @@ const Sidebar = (props) => {
                             'text-center',
                             { [styles.active]: pathname.indexOf('/developTools') === 0 }
                         )}
+                        style={{
+                            display: 'none'
+                        }}
                     >
                         <Link to="/developTools" title={i18n._('DevelopTools')}>
                             <i

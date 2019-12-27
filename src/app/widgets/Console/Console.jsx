@@ -18,6 +18,7 @@ class Console extends PureComponent {
         isDefault: PropTypes.bool.isRequired,
         terminalHistory: PropTypes.object.isRequired,
         history: PropTypes.object.isRequired,
+        consoleLogs: PropTypes.array,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -174,6 +175,19 @@ class Console extends PureComponent {
         clearAll: () => {
             const terminal = this.terminal.current;
             terminal && terminal.clear();
+        },
+
+        printConsoleLogs: (consoleLogs) => {
+            for (let consoleLog of consoleLogs) {
+                if (consoleLog.endsWith('\n')) {
+                    consoleLog = consoleLog.slice(0, -1);
+                }
+                const terminal = this.terminal.current;
+                const split = consoleLog.split('\n');
+                for (const splitElement of split) {
+                    terminal && terminal.writeln(splitElement);
+                }
+            }
         }
     };
 
@@ -214,6 +228,10 @@ class Console extends PureComponent {
 
         if (nextProps.clearRenderStamp !== this.props.clearRenderStamp) {
             this.actions.clearAll();
+        }
+
+        if (nextProps.consoleLogs !== this.props.consoleLogs) {
+            this.actions.printConsoleLogs(nextProps.consoleLogs);
         }
     }
 
@@ -292,7 +310,7 @@ class Console extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { port, server, isConnected, connectionType, terminalHistory, history } = machine;
+    const { port, server, isConnected, connectionType, terminalHistory, history, consoleLogs } = machine;
 
     return {
         port,
@@ -300,7 +318,8 @@ const mapStateToProps = (state) => {
         isConnected,
         connectionType,
         terminalHistory,
-        history
+        history,
+        consoleLogs
     };
 };
 

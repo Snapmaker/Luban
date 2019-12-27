@@ -57,11 +57,13 @@ class Visualizer extends Component {
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
         backgroundGroup: PropTypes.object.isRequired,
+        backgroundEnabled: PropTypes.bool.isRequired,
 
         startServerGcode: PropTypes.func.isRequired,
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
+        removeBackgroundImage: PropTypes.func.isRequired,
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -460,6 +462,10 @@ class Visualizer extends Component {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+        },
+        removeBackgroundImage: () => {
+            this.props.removeBackgroundImage();
+            this.renderScene();
         }
     };
 
@@ -678,12 +684,10 @@ class Visualizer extends Component {
     }
 
     startToolheadRotationAnimation() {
-        console.log('startToolheadRotationAnimation');
         this.toolheadRotationAnimation.start();
     }
 
     stopToolheadRotationAnimation() {
-        console.log('stopToolheadRotationAnimation');
         this.toolheadRotationAnimation.stop();
     }
 
@@ -801,6 +805,7 @@ class Visualizer extends Component {
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
                             connectionType={this.props.connectionType}
+                            backgroundEnabled={this.props.backgroundEnabled}
                             state={state}
                             actions={this.actions}
                             uploadState={this.props.uploadState}
@@ -871,6 +876,7 @@ const mapStateToProps = (state) => {
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
         backgroundGroup: workspace.background.group,
+        backgroundEnabled: workspace.background.enabled,
         gcodePrintingInfo: machine.gcodePrintingInfo,
         workPosition: machine.workPosition
     };
@@ -886,7 +892,8 @@ const mapDispatchToProps = (dispatch) => ({
     startServerGcode: () => dispatch(machineActions.startServerGcode()),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
-    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
+    removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
 
 
 });
