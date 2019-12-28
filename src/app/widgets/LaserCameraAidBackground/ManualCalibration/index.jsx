@@ -19,6 +19,7 @@ class ManualCalibration extends PureComponent {
         backtoCalibrationModal: PropTypes.func.isRequired,
         displayExtractTrace: PropTypes.func.isRequired,
         calibrationOnOff: PropTypes.func.isRequired,
+        updateStitchEach: PropTypes.func.isRequired,
         updateAffinePoints: PropTypes.func.isRequired
     };
 
@@ -69,6 +70,7 @@ class ManualCalibration extends PureComponent {
                 await api.setCameraCalibrationMatrix({ 'address': address, 'matrix': JSON.stringify(matrix) });
             }
             this.props.backtoCalibrationModal();
+            this.props.updateStitchEach();
         }
     };
 
@@ -84,13 +86,6 @@ class ManualCalibration extends PureComponent {
                     {i18n._('Calibration')}
                 </div>
                 <div className={styles['laser-set-background-modal-content']}>
-                    <CalibrationPreview
-                        ref={this.calibrationPreview}
-                        getPoints={this.props.getPoints}
-                        width={this.state.width}
-                        height={this.state.height}
-                        updateAffinePoints={this.props.updateAffinePoints}
-                    />
                     <div className={styles['calibrate-background']}>
                         <div className={classNames(styles['reset-actions'])}>
                             <Anchor
@@ -98,10 +93,10 @@ class ManualCalibration extends PureComponent {
                                 onClick={this.actions.onClickToUpload}
                             >
                                 <i className={styles['reset-actions__icon-reset']} />
+                                <span className={styles['reset-actions__text']}>
+                                    {i18n._('Reset')}
+                                </span>
                             </Anchor>
-                            <span className={styles['reset-actions__text']}>
-                                {i18n._('Reset')}
-                            </span>
                         </div>
 
                         <div
@@ -115,16 +110,24 @@ class ManualCalibration extends PureComponent {
                                 onClick={this.actions.onClickToConfirm}
                             >
                                 <i className={styles['confirm-actions__icon-confirm']} />
+                                <span className={styles['reset-actions__text']}>
+                                    {i18n._(' Confirm')}
+                                </span>
                             </Anchor>
-                            <span className={styles['reset-actions__text']}>
-                                {i18n._('Confirm')}
-                            </span>
                         </div>
-                        <p style={{ margin: ' 10px 10px 0 0', textAlign: 'left' }}>
-                            {i18n._('滚轮来缩放，') }
-                        </p>
-                        <p style={{ textAlign: 'left' }}>
-                            {i18n._('按住右键左右来移动') }
+
+                    </div>
+                    <CalibrationPreview
+                        ref={this.calibrationPreview}
+                        getPoints={this.props.getPoints}
+                        width={this.state.width}
+                        height={this.state.height}
+                        updateAffinePoints={this.props.updateAffinePoints}
+                    />
+
+                    <div className={styles['calibrate-advise']}>
+                        <p style={{ margin: '0', textAlign: 'center' }}>
+                            {i18n._('滚轮来缩放，按住右键左右来移动') }
                         </p>
                     </div>
                 </div>

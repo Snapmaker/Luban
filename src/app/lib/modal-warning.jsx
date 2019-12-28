@@ -74,7 +74,7 @@ class WarningModalHOC extends PureComponent {
                         src={iconSrc}
                         alt=""
                     />
-                    <p style={{ fontWeight: 'blod', textAlign: 'center' }}>
+                    <p style={{ fontWeight: 'blod', margin: '20px 0', textAlign: 'center' }}>
                         {bodyTitle}
                     </p>
                     <div style={{ textAlign: 'center' }}>

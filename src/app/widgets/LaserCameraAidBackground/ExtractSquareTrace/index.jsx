@@ -7,9 +7,10 @@ import i18n from '../../../lib/i18n';
 import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
+import ManualCalibration from '../ManualCalibration';
 import { MACHINE_SERIES } from '../../../constants';
 
-
+const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
 const DefaultBgiName = '../../../images/camera-aid/Loading.gif';
 
@@ -19,11 +20,13 @@ class ExtractSquareTrace extends PureComponent {
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
         canTakePhoto: PropTypes.bool.isRequired,
+        lastFileNames: PropTypes.array,
+        xSize: PropTypes.array.isRequired,
+        ySize: PropTypes.array.isRequired,
+        updateEachPicSize: PropTypes.func.isRequired,
+        changeLastFileNames: PropTypes.func.isRequired,
         changeCanTakePhoto: PropTypes.func.isRequired,
-        shouldCalibrate: PropTypes.bool.isRequired,
-        getPoints: PropTypes.array.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired,
-        displayManualCalibration: PropTypes.func.isRequired
+        setBackgroundImage: PropTypes.func.isRequired
     };
 
     extractingPreview = [];
@@ -31,8 +34,14 @@ class ExtractSquareTrace extends PureComponent {
     close = false;
 
     state = {
+        panel: PANEL_EXTRACT_TRACE,
         getPhotoTasks: [],
         imageNames: [],
+        manualPoints: [],
+        matrix: '',
+        xSize: this.props.xSize,
+        ySize: this.props.ySize,
+        shouldCalibrate: false,
         isStitched: false,
         canStart: true,
         outputFilename: '',
@@ -50,14 +59,35 @@ class ExtractSquareTrace extends PureComponent {
         }
     };
 
+
     actions = {
+        backtoCalibrationModal: () => {
+            this.setState({
+                panel: PANEL_EXTRACT_TRACE
+            });
+        },
+        updateAffinePoints: (manualPoints) => {
+            this.setState({
+                manualPoints
+            });
+        },
+        displayExtractTrace: () => {
+            this.setState({ panel: PANEL_EXTRACT_TRACE });
+        },
+        calibrationOnOff: (shouldCalibrate) => {
+            this.setState({
+                shouldCalibrate
+            });
+        },
         startCameraAid: async () => {
+            console.log('startCameraAid', this.state.options);
             if (!this.props.canTakePhoto) {
                 return;
             }
-            console.log(this.props.size);
             await this.props.server.executeGcode('G53;');
+
             this.setState({
+                isStitched: false,
                 canStart: false
             });
             this.props.changeCanTakePhoto(false);
@@ -65,12 +95,12 @@ class ExtractSquareTrace extends PureComponent {
             const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
 
-            const getPoints = (this.props.shouldCalibrate && this.props.getPoints.length === 4) ? this.props.getPoints : resData.points;
+            // const getPoints = (this.state.shouldCalibrate && this.state.manualPoints.length === 4) ? this.state.manualPoints : resData.points;
             this.setState({
                 options: {
                     ...this.state.options,
                     corners: resData.corners,
-                    getPoints: getPoints
+                    getPoints: resData.points
                 }
             });
             const position = [];
@@ -135,95 +165,21 @@ class ExtractSquareTrace extends PureComponent {
                         fileNames: this.state.imageNames
                     }
                 });
+                this.props.changeLastFileNames(this.state.imageNames);
+                this.props.updateEachPicSize('xSize', this.xSize);
+                this.props.updateEachPicSize('ySize', this.ySize);
+
                 this.actions.processStitch(this.state.options);
                 this.props.changeCanTakePhoto(true);
             });
-
-            // parse 2
-
-            // const idx = 0;
-            // for (let i = 0; i < position.length; i++) {
-            //     if (this.state.options.currentArrIndex !== i) {
-            //         break;
-            //     }
-            //     await api.processTakePhoto({
-            //         'index': position[i].index,
-            //         'x': position[i].x,
-            //         'y': position[i].y,
-            //         'z': 170,
-            //         'feedRate': 3000,
-            //         'address': address
-            //     });
-
-            // const requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
-            //
-            //
-            // const requestPicStatus = false;
-            // this.setState({
-            //     options: {
-            //         ...this.state.options
-            //     }
-            // });
-            // if (this.state.options.currentArrIndex !== i + 1) {
-            //     break;
-            // }
-            // const time = Date.now();
-            // const timer = setInterval(() => {
-            //     const diff = Date.now() - time;
-            //     if (requestPicStatus || diff > 30000) {
-            //         if (idx === position.length) {
-            //             imagesName = Array.from(imagesName);
-            //             if (this.props.series !== MACHINE_SERIES.A150.value) {
-            //                 this.swapItem(imagesName, 3, 5);
-            //             } else {
-            //                 this.swapItem(imagesName, 2, 3);
-            //             }
-            //             this.setState({
-            //                 options: {
-            //                     ...this.state.options,
-            //                     fileNames: imagesName
-            //                 }
-            //             });
-            //             this.actions.processStitch(this.state.options);
-            //             this.setState({
-            //                 canTakePhoto: true
-            //             });
-            //         }
-            //         clearInterval(timer);
-            //         return;
-            //     }
-            //     requestPic.then((res) => {
-            //         if (!JSON.parse(res.text).fileName && JSON.parse(res.text).status === 404) {
-            //             requestPic = api.processGetPhoto({ 'index': position[i].index, 'address': address });
-            //         } else {
-            //             requestPicStatus = true;
-            //             const { fileName } = JSON.parse(res.text);
-            //             this.setState({
-            //                 options: {
-            //                     ...this.state.options,
-            //                     currentIndex: position[i].index,
-            //                     stitchFileName: fileName
-            //                 }
-            //             });
-            //             imagesName.add(fileName);
-            //
-            //
-            //             api.processStitchEach(this.state.options).then((stitchImg) => {
-            //                 const { filename } = JSON.parse(stitchImg.text);
-            //                 if (this.extractingPreview[position[i].index].current) {
-            //                     this.extractingPreview[position[i].index].current.onChangeImage(filename, xSize * 2, ySize * 2, position[i].index);
-            //                 }
-            //             });
-            //             idx++;
-            //         }
-            //     });
-            // }, 700);
-            // this.timers.push(timer);
-            // }
         },
 
         takePhotos: (address, position) => {
             const getPhotoTasks = this.state.getPhotoTasks;
+            let z = 170;
+            if (this.state.options.picAmount === 4) {
+                z = 140;
+            }
             return new Promise(async (resolve, reject) => {
                 for (let i = 0; i < position.length; i++) {
                     if (this.close) {
@@ -236,7 +192,7 @@ class ExtractSquareTrace extends PureComponent {
                         'index': position[i].index,
                         'x': position[i].x,
                         'y': position[i].y,
-                        'z': 170,
+                        'z': z,
                         'feedRate': 3000,
                         'address': address
                     });
@@ -281,24 +237,27 @@ class ExtractSquareTrace extends PureComponent {
                         .processGetPhoto({ 'index': task.index, 'address': task.address })
                         .then((res) => {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
-                                let xSize, ySize;
-
                                 if (this.state.options.picAmount === 4) {
-                                    xSize = this.props.size.x / 2;
-                                    ySize = this.props.size.y / 2;
+                                    this.state.xSize[task.index] = this.props.size.x / 2;
+                                    this.state.ySize[task.index] = this.props.size.y / 2;
                                 } else {
                                     if (parseInt(task.index / 3, 10) === 1) {
-                                        ySize = this.state.options.centerDis;
+                                        this.state.ySize[task.index] = this.state.options.centerDis;
                                     } else {
-                                        ySize = ((this.props.size.y - this.state.options.centerDis) / 2);
+                                        this.state.ySize[task.index] = ((this.props.size.y - this.state.options.centerDis) / 2);
                                     }
                                     if (task.index % 3 === 1) {
-                                        xSize = this.state.options.centerDis;
+                                        this.state.xSize[task.index] = this.state.options.centerDis;
                                     } else {
-                                        xSize = ((this.props.size.x - this.state.options.centerDis) / 2);
+                                        this.state.xSize[task.index] = ((this.props.size.x - this.state.options.centerDis) / 2);
                                     }
                                 }
-                                this.extractingPreview[task.index].current.onChangeImage(DefaultBgiName, xSize * 2, ySize * 2, task.index);
+                                this.props.updateEachPicSize('xSize', this.state.xSize);
+                                this.props.updateEachPicSize('ySize', this.state.ySize);
+
+                                this.extractingPreview[task.index].current.onChangeImage(
+                                    DefaultBgiName, this.state.xSize[task.index] * 2, this.state.ySize[task.index] * 2, task.index
+                                );
 
                                 const { fileName } = JSON.parse(res.text);
                                 this.setState({
@@ -313,7 +272,9 @@ class ExtractSquareTrace extends PureComponent {
                                 api.processStitchEach(this.state.options).then((stitchImg) => {
                                     const { filename } = JSON.parse(stitchImg.text);
                                     if (this.extractingPreview[task.index].current) {
-                                        this.extractingPreview[task.index].current.onChangeImage(filename, xSize * 2, ySize * 2, task.index);
+                                        this.extractingPreview[task.index].current.onChangeImage(
+                                            filename, this.state.xSize[task.index] * 2, this.state.ySize[task.index] * 2, task.index
+                                        );
                                     }
                                     task.status = 2;
                                 });
@@ -327,7 +288,67 @@ class ExtractSquareTrace extends PureComponent {
                 }, 500);
             }));
         },
+        updateStitchEach: async () => {
+            // await this.props.server.executeGcode('G53;');
+            if (this.state.shouldCalibrate && this.state.manualPoints.length === 4) {
+                this.setState({
+                    options: {
+                        ...this.state.options,
+                        getPoints: this.state.manualPoints
+                    }
+                });
+            } else {
+                const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+                const resData = JSON.parse(resPro.body.res.text);
+                this.setState({
+                    options: {
+                        ...this.state.options,
+                        getPoints: resData.points,
+                        corners: resData.corners
+                    }
+                });
+            }
 
+            for (let i = 0; i < this.props.lastFileNames.length; i++) {
+                if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
+                    this.extractingPreview[i].current.onChangeImage(
+                        DefaultBgiName, this.state.xSize[i] * 2, this.state.ySize[i] * 2, i
+                    );
+                } else {
+                    this.extractingPreview[i].current.onChangeImage(
+                        DefaultBgiName, this.props.xSize[i] * 2, this.props.ySize[i] * 2, i
+                    );
+                }
+                const stitchImg = await api.processStitchEach(
+                    {
+                        ...this.state.options,
+                        currentIndex: i,
+                        stitchFileName: this.props.lastFileNames[i]
+                    }
+                );
+                const { filename } = JSON.parse(stitchImg.text);
+
+                if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
+                    this.extractingPreview[i].current.onChangeImage(
+                        filename, this.state.xSize[i] * 2, this.state.ySize[i] * 2, i
+                    );
+                } else {
+                    this.extractingPreview[i].current.onChangeImage(
+                        filename, this.props.xSize[i] * 2, this.props.ySize[i] * 2, i
+                    );
+                }
+            }
+            api.processStitch({
+                ...this.state.options,
+                fileNames: this.props.lastFileNames
+            }).then((res) => {
+                this.setState({
+                    outputFilename: res.body.filename,
+                    isStitched: true
+                });
+            });
+            this.props.changeCanTakePhoto(true);
+        },
 
         processStitch: (options) => {
             api.processStitch(options).then((res) => {
@@ -339,10 +360,19 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         setBackgroundImage: () => {
+            // this.props.changeLastFileNames(this.state.imageNames);
             this.props.setBackgroundImage(this.state.outputFilename);
         },
-        displayManualCalibration: () => {
-            this.props.displayManualCalibration({ panel: PANEL_MANUAL_CALIBRATION });
+        displayManualCalibration: async () => {
+            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
+            const res = JSON.parse(resPro.body.res.text);
+            this.setState({
+                manualPoints: res.points,
+                matrix: res
+            });
+            this.setState({
+                panel: PANEL_MANUAL_CALIBRATION
+            });
         }
     };
 
@@ -352,6 +382,16 @@ class ExtractSquareTrace extends PureComponent {
     componentDidMount() {
         for (let i = 0; i < this.state.options.picAmount; i++) {
             this.extractingPreview[i] = React.createRef();
+        }
+
+        if (this.props.lastFileNames && this.props.lastFileNames.length > 0) {
+            this.setState({
+                canStart: false
+            });
+            this.actions.updateStitchEach();
+            this.setState({
+                canStart: true
+            });
         }
     }
 
@@ -370,68 +410,78 @@ class ExtractSquareTrace extends PureComponent {
         return (
             <div>
                 <div className="clearfix" />
-                <div className={styles['laser-set-background-modal-title']}>
-                    {i18n._('Camera Aid Background')}
-                </div>
-                <div className={styles['photo-display']} style={{ height: this.props.size.y * 2 + 2, width: this.props.size.x * 2 + 2 }}>
-                    {this.extractingPreview.map((previewId, index) => {
-                        const key = previewId + index;
-                        return (
-                            <ExtractPreview
-                                size={this.props.size}
-                                series={this.props.series}
-                                ref={previewId}
-                                key={key}
-                            />
-                        );
-                    })}
-                    <div
-                        className={styles['start-background']}
-                        style={{ display: this.state.canStart ? 'block' : 'none', width: '100%' }}
-
-                    >
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-primary start-actions"
-                            onClick={this.actions.startCameraAid}
-                            style={{ display: 'block', width: '50%', margin: 'auto' }}
-
-                        >
-                            {i18n._('Start')}
-                        </button>
+                <div style={{ display: this.state.panel === PANEL_EXTRACT_TRACE ? 'block' : 'none' }}>
+                    <div className={styles['laser-set-background-modal-title']}>
+                        {i18n._('Camera Aid Background')}
+                    </div>
+                    <div className={styles['photo-display']} style={{ height: this.props.size.y * 2 + 2, width: this.props.size.x * 2 + 2 }}>
+                        {this.extractingPreview.map((previewId, index) => {
+                            const key = previewId + index;
+                            return (
+                                <ExtractPreview
+                                    size={this.props.size}
+                                    series={this.props.series}
+                                    ref={previewId}
+                                    key={key}
+                                />
+                            );
+                        })}
                         <div
-                            style={{ textAlign: 'center' }}
+                            className={styles['start-background']}
+                            style={{ display: this.state.canStart ? 'block' : 'none', width: '100%' }}
+
                         >
-                            {i18n._('Type Something')}
+                            <button
+                                type="button"
+                                className="sm-btn-large sm-btn-primary start-actions"
+                                onClick={this.actions.startCameraAid}
+                                style={{ display: 'block', width: '50%', margin: 'auto' }}
+
+                            >
+                                {i18n._('Start')}
+                            </button>
                         </div>
                     </div>
-                </div>
-                <div style={{ minHeight: 30, width: this.props.size.x * 2 + 2, margin: '0 auto' }}>
-                    <div className="clearfix" />
-                    <button
-                        type="button"
-                        className={classNames(
-                            'sm-btn-large',
-                            styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
-                        )}
-                        onClick={this.actions.displayManualCalibration}
-                        disabled={!this.props.canTakePhoto}
+                    <div style={{ minHeight: 30, width: this.props.size.x * 2 + 2, margin: '0 auto' }}>
+                        <div className="clearfix" />
+                        <button
+                            type="button"
+                            className={classNames(
+                                'sm-btn-large',
+                                styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
+                            )}
+                            onClick={this.actions.displayManualCalibration}
+                            disabled={!this.props.canTakePhoto}
 
-                    >
-                        {i18n._('Calibration')}
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames(
-                            'sm-btn-large',
-                            styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
-                        )}
-                        onClick={this.actions.setBackgroundImage}
-                        disabled={!this.state.isStitched}
-                    >
-                        {i18n._('Comfirm')}
-                    </button>
+                        >
+                            {i18n._('Calibration')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(
+                                'sm-btn-large',
+                                styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
+                            )}
+                            onClick={this.actions.setBackgroundImage}
+                            disabled={!this.state.isStitched}
+                        >
+                            {i18n._('Comfirm')}
+                        </button>
+                    </div>
                 </div>
+                {this.state.panel === PANEL_MANUAL_CALIBRATION && (
+                    <ManualCalibration
+                        backtoCalibrationModal={this.actions.backtoCalibrationModal}
+                        getPoints={this.state.manualPoints}
+                        matrix={this.state.matrix}
+                        updateAffinePoints={this.actions.updateAffinePoints}
+                        shouldCalibrate={this.state.shouldCalibrate}
+                        displayExtractTrace={this.actions.displayExtractTrace}
+                        updateStitchEach={this.actions.updateStitchEach}
+                        calibrationOnOff={this.actions.calibrationOnOff}
+                    />
+                )}
+
             </div>
         );
     }
