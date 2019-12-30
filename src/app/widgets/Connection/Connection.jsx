@@ -135,7 +135,7 @@ class Connection extends PureComponent {
                     />
                 )}
                 {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
-                    <Modal disableOverlay size="sm" onClose={this.actions.closeHomeModal}>
+                    <Modal disableOverlay size="sm" showCloseButton={false}>
                         <Modal.Header>
                             <Modal.Title>
                                 {i18n._('Home Reminder')}

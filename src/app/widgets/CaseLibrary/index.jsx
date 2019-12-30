@@ -16,6 +16,7 @@ import styles from './index.styl';
 class CaseLibrary extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         // laser: PropTypes.object.isRequired,
         insertDefaultCncTextVector: PropTypes.func.isRequired,
         insertDefaultLaserTextVector: PropTypes.func.isRequired,
@@ -176,6 +177,7 @@ class CaseLibrary extends PureComponent {
                                             'sm-btn-default',
                                             styles.load,
                                         )}
+                                        disabled={this.props.headType !== config.tag}
                                         onClick={() => this.loadCase(config)}
                                     >
                                         {i18n._('load')}
@@ -230,6 +232,7 @@ const mapStateToProps = (state) => {
     return {
         materialDefinitions,
         series: machine.series,
+        headType: machine.headType,
         defaultMaterialId,
         qualityDefinitions,
         activeDefinition

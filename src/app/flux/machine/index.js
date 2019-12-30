@@ -11,7 +11,7 @@ import {
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_STATUS_CONNECTING,
-    CONNECTION_STATUS_CONNECTED, MACHINE_HEAD_TYPE
+    CONNECTION_STATUS_CONNECTED, MACHINE_HEAD_TYPE, LASER_MOCK_PLATE_HEIGHT
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -154,7 +154,7 @@ export const actions = {
             // 'Marlin:state': (state) => {
             'Marlin:state': (options) => {
                 const { state } = options;
-                const { pos, originOffset, headStatus, headPower } = state;
+                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed } = state;
 
                 const machineState = getState().machine;
 
@@ -181,7 +181,13 @@ export const actions = {
 
                 dispatch(actions.updateState({
                     headStatus: headStatus,
-                    laserPower: headPower
+                    laserPower: headPower,
+                    laserFocalLength: zFocus + LASER_MOCK_PLATE_HEIGHT,
+                    nozzleTemperature: parseFloat(temperature.t),
+                    nozzleTargetTemperature: parseFloat(temperature.tTarget),
+                    heatedBedTemperature: parseFloat(temperature.b),
+                    heatedBedTargetTemperature: parseFloat(temperature.bTarget),
+                    isHomed: isHomed
                 }));
             },
             // 'Marlin:settings': (settings) => {

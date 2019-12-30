@@ -9,19 +9,25 @@ import pubsub from 'pubsub-js';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import { controller } from '../../lib/controller';
-import { MACHINE_SERIES, MACHINE_HEAD_TYPE } from '../../constants';
+import {
+    MACHINE_SERIES,
+    MACHINE_HEAD_TYPE
+} from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 import api from '../../api';
 import Space from '../../components/Space';
 import MachineSelection from './MachineSelection';
 import { actions as machineActions } from '../../flux/machine';
-
+import PrintingState from './PrintingState';
+import LaserState from './LaserState';
+import CNCState from './CNCState';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
         isOpen: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
+        headType: PropTypes.string,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired,
@@ -152,7 +158,6 @@ class SerialConnection extends PureComponent {
     }
 
     onPortReady(data) {
-        console.log('onPortReady', data);
         const { state, err } = data;
         if (err) {
             this.setState({
@@ -188,8 +193,6 @@ class SerialConnection extends PureComponent {
         const { series, seriesSize, headType } = state;
         const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
-        console.log(machineHeadType, machineHeadType);
-
 
         if (machineHeadType && machineSeries) {
             this.props.updateMachineState({
@@ -312,7 +315,7 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { isOpen, isConnected } = this.props;
+        const { isOpen, isConnected, headType } = this.props;
         const { err, ports, port, loadingPorts,
             showMachineSelected } = this.state;
 
@@ -362,6 +365,17 @@ class SerialConnection extends PureComponent {
                         </div>
                     </div>
                 </div>
+                {isConnected && (
+                    <div style={{
+                        marginBottom: '10px'
+                    }}
+                    >
+                        {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
+                        {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
+                        {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
+                    </div>
+                )}
+
                 <div className="btn-group btn-group-sm">
                     {!isConnected && (
                         <button
@@ -401,11 +415,12 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isOpen, isConnected } = machine;
+    const { port, isOpen, isConnected, headType } = machine;
 
     return {
         port,
         isOpen,
+        headType,
         isConnected
     };
 };

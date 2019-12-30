@@ -104,7 +104,7 @@ export const actions = {
         const mesh = new THREE.Mesh(geometry, material);
         const x = dx + width / 2;
         const y = dy + height / 2;
-        mesh.position.set(x, y, 0);
+        mesh.position.set(x, y, -10);
 
         const state = getState().laser;
         const { group } = state.background;

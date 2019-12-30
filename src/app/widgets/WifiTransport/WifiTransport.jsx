@@ -10,7 +10,7 @@ import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import styles from './index.styl';
-import { DATA_PREFIX, IMAGE_WIFI_CONNECTED, IMAGE_WIFI_ERROR, MACHINE_HEAD_TYPE } from '../../constants';
+import { CONNECTION_TYPE_WIFI, DATA_PREFIX, IMAGE_WIFI_CONNECTED, IMAGE_WIFI_ERROR, MACHINE_HEAD_TYPE } from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
 import modalSmallHOC from '../../components/Modal/modal-small';
 
@@ -25,6 +25,7 @@ class WifiTransport extends PureComponent {
         gcodeFiles: PropTypes.array.isRequired,
         headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired,
+        connectionType: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
 
         clearGcode: PropTypes.func.isRequired,
@@ -126,7 +127,7 @@ class WifiTransport extends PureComponent {
     }
 
     render() {
-        const { gcodeFiles, isConnected, headType } = this.props;
+        const { gcodeFiles, isConnected, headType, connectionType } = this.props;
         const { selectFileName, selectFileType } = this.state;
         const isHeadType = selectFileType === headType;
         const actions = this.actions;
@@ -211,11 +212,11 @@ class WifiTransport extends PureComponent {
                 <button
                     type="button"
                     className="sm-btn-small sm-btn-default"
-                    disabled={!(hasFile && isConnected && isHeadType)}
+                    disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
                     onClick={actions.sendFile}
                     style={{ display: 'block', width: '100%' }}
                 >
-                    {i18n._('Transfer via Wi-F')}
+                    {i18n._('Transfer via Wi-Fi')}
                 </button>
             </div>
 
@@ -225,12 +226,13 @@ class WifiTransport extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { gcodeFiles } = state.workspace;
-    const { server, isConnected, headType } = state.machine;
+    const { server, isConnected, headType, connectionType } = state.machine;
 
     return {
         gcodeFiles,
         headType,
         isConnected,
+        connectionType,
         server
     };
 };

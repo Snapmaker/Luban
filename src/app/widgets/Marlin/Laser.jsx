@@ -91,7 +91,7 @@ class Printing extends PureComponent {
     };
 
     render() {
-        const { isLaserPrintAutoMode, materialThickness, laserFocalLength } = this.props;
+        const { isLaserPrintAutoMode, materialThickness, laserFocalLength, connectionType } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
         const isWifiPrinting = this.actions.isWifiPrinting();
@@ -100,53 +100,67 @@ class Printing extends PureComponent {
             <div>
                 <div className="sm-parameter-container">
                     <div>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label-lg">{i18n._('Printing Auto Mode')}</span>
-                            <span>
-                                <input
-                                    className="sm-parameter-row__input2-check"
-                                    style={{
-                                        margin: '0 0'
-                                    }}
-                                    type="checkbox"
-                                    checked={isLaserPrintAutoMode}
-                                    onChange={actions.onChangeLaserPrintMode}
-                                />
-                            </span>
-                        </div>
-                        {isLaserPrintAutoMode && (
+                        {connectionType === CONNECTION_TYPE_WIFI && (
                             <div>
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Printing Auto Mode')}</span>
                                     <span>
-                                        <Input
-                                            className="sm-parameter-row__input"
-                                            value={materialThickness}
-                                            max={20}
-                                            min={0}
-                                            onChange={actions.onChangeMaterialThickness}
+                                        <input
+                                            className="sm-parameter-row__input2-check"
+                                            style={{
+                                                margin: '0 0'
+                                            }}
+                                            type="checkbox"
+                                            checked={isLaserPrintAutoMode}
+                                            onChange={actions.onChangeLaserPrintMode}
                                         />
                                     </span>
-                                    <span className="sm-parameter-row__input-unit">mm</span>
                                 </div>
-                            </div>
-                        )}
-                        {isLaserPrintAutoMode && laserFocalLength && (
-                            <div>
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Laser Focus')}</span>
-                                    <span className="sm-parameter-row__input">
-                                        {laserFocalLength}
-                                    </span>
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Z Offset')}</span>
-                                    <span className="sm-parameter-row__input">
-                                        {laserFocalLength + materialThickness}
-                                    </span>
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
+                                {isLaserPrintAutoMode && (
+                                    <div>
+                                        <div className="sm-parameter-row">
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
+                                            <span>
+                                                <Input
+                                                    className="sm-parameter-row__input"
+                                                    value={materialThickness}
+                                                    max={20}
+                                                    min={0}
+                                                    onChange={actions.onChangeMaterialThickness}
+                                                />
+                                            </span>
+                                            <span className="sm-parameter-row__input-unit">mm</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {isLaserPrintAutoMode && laserFocalLength && (
+                                    <div>
+                                        <div className="sm-parameter-row">
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Laser Focus')}</span>
+                                            <span
+                                                className="sm-parameter-row__input"
+                                                style={{
+                                                    paddingLeft: '44px'
+                                                }}
+                                            >
+                                                {laserFocalLength}
+                                            </span>
+                                            <span className="sm-parameter-row__input-unit">mm</span>
+                                        </div>
+                                        <div className="sm-parameter-row">
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Z Offset')}</span>
+                                            <span
+                                                className="sm-parameter-row__input"
+                                                style={{
+                                                    paddingLeft: '44px'
+                                                }}
+                                            >
+                                                {laserFocalLength + materialThickness}
+                                            </span>
+                                            <span className="sm-parameter-row__input-unit">mm</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <WorkSpeed />

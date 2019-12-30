@@ -168,7 +168,6 @@ class WorkflowControl extends PureComponent {
                                     borderColor: '#d0021b' }}
                                 title={i18n._('Close')}
                                 onClick={actions.removeBackgroundImage}
-                                disabled={!canClose}
                             >
                                 {i18n._('Remove Background')}
                             </button>
