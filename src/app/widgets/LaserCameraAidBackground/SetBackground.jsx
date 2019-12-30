@@ -6,7 +6,7 @@ import styles from './styles.styl';
 import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
-import warningModal from '../../lib/modal-warning';
+import WarningModal from '../../lib/modal-warning';
 import Modal from '../../components/Modal';
 import Space from '../../components/Space';
 
