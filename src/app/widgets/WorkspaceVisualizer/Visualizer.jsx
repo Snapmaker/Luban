@@ -18,7 +18,7 @@ import {
     PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import TextSprite from '../../components/three-extensions/TextSprite';
@@ -33,10 +33,10 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
-import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
+import modalSmallHOC from '../../components/Modal/modal-small';
 
 
 class Visualizer extends Component {
@@ -103,7 +103,6 @@ class Visualizer extends Component {
         coordinateVisible: true,
         toolheadVisible: true,
         gcodeFilenameVisible: true,
-        fileTransitModalVisible: false,
         port: controller.port,
         controller: {
             type: controller.type,
@@ -300,10 +299,42 @@ class Visualizer extends Component {
             } else {
                 const { workflowStatus } = this.props;
                 if (workflowStatus === WORKFLOW_STATUS_IDLE) {
-                    this.props.startServerGcode();
+                    this.props.startServerGcode((err) => {
+                        if (err) {
+                            if (err.status === 202) {
+                                modalSmallHOC({
+                                    title: i18n._('Filament Runout Recovery'),
+                                    text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            } else {
+                                modalSmallHOC({
+                                    title: i18n._(`Error ${err.status}`),
+                                    text: i18n._('Unable to start the job.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            }
+                        }
+                    });
                 }
                 if (workflowStatus === WORKFLOW_STATUS_PAUSED) {
-                    this.props.resumeServerGcode();
+                    this.props.resumeServerGcode((err) => {
+                        if (err) {
+                            if (err.status === 202) {
+                                modalSmallHOC({
+                                    title: i18n._('Filament Runout Recovery'),
+                                    text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            } else {
+                                modalSmallHOC({
+                                    title: i18n._(`Error ${err.status}`),
+                                    text: i18n._('Unable to resume the job.'),
+                                    img: IMAGE_WIFI_ERROR
+                                });
+                            }
+                        }
+                    });
                 }
             }
         },
@@ -390,17 +421,6 @@ class Visualizer extends Component {
                 // this.destroyPreviousGcodeObject();
                 controller.command('gcode:unload');
                 pubsub.publish('gcode:unload'); // Unload the G-code
-            }
-        },
-        handleSend: () => {
-            const { workflowState } = this.state;
-            if (workflowState === WORKFLOW_STATE_IDLE) {
-                this.setState({ fileTransitModalVisible: true });
-            }
-        },
-        handleCancelSend: () => {
-            if (this.state.fileTransitModalVisible) {
-                this.setState({ fileTransitModalVisible: false });
             }
         },
         handleAddGcode: (name, gcode, renderMethod = 'line') => {
@@ -515,7 +535,11 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_RUNNING && nextProps.workflowStatus === WORKFLOW_STATUS_RUNNING) {
+            for (let i = 0; i < nextProps.gcodePrintingInfo.sent; i++) {
+                this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(i);
+            }
             this.startToolheadRotationAnimation();
+            this.renderScene();
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_PAUSED && nextProps.workflowStatus === WORKFLOW_STATUS_PAUSED) {
             this.stopToolheadRotationAnimation();
@@ -811,12 +835,6 @@ class Visualizer extends Component {
                             uploadState={this.props.uploadState}
                         />
                     </div>
-                    {state.fileTransitModalVisible && (
-                        <FileTransitModal
-                            gcodeList={this.props.gcodeList}
-                            onClose={this.actions.handleCancelSend}
-                        />
-                    )}
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
@@ -889,7 +907,7 @@ const mapDispatchToProps = (dispatch) => ({
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode()),
 
-    startServerGcode: () => dispatch(machineActions.startServerGcode()),
+    startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
     stopServerGcode: () => dispatch(machineActions.stopServerGcode()),

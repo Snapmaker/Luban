@@ -1,4 +1,5 @@
 import isEmpty from 'lodash/isEmpty';
+import _ from 'lodash';
 import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
@@ -28,6 +29,7 @@ const INITIAL_STATE = {
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
     headType: null,
+    machineSelect: false,
 
     isCustom: false,
     size: {
@@ -357,9 +359,11 @@ export const actions = {
             controller.command('gcode', gcode, context);
             // } else if (server && workflowStatus === STATUS_IDLE) {
         } else {
-            server.executeGcode(gcode);
-
-            dispatch(actions.addConsoleLogs([gcode]));
+            server.executeGcode(gcode, (result) => {
+                if (result) {
+                    dispatch(actions.addConsoleLogs(result));
+                }
+            });
         }
     },
 
@@ -437,21 +441,28 @@ export const actions = {
                     series: series,
                     headType: headType
                 }));
+                if (!series || !headType) {
+                    dispatch(actions.updateState({
+                        machineSelect: true
+                    }));
+                }
                 dispatch(actions.executeGcode('G54'));
 
-                server.getGcodeFile((msg, gcode) => {
-                    if (msg) {
-                        return;
-                    }
-                    dispatch(workspaceActions.clearGcode());
-                    let suffix = 'gcode';
-                    if (headType === MACHINE_HEAD_TYPE.LASER.value) {
-                        suffix = 'nc';
-                    } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
-                        suffix = 'cnc';
-                    }
-                    dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
-                });
+                if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                    server.getGcodeFile((msg, gcode) => {
+                        if (msg) {
+                            return;
+                        }
+                        dispatch(workspaceActions.clearGcode());
+                        let suffix = 'gcode';
+                        if (headType === MACHINE_HEAD_TYPE.LASER.value) {
+                            suffix = 'nc';
+                        } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
+                            suffix = 'cnc';
+                        }
+                        dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
+                    });
+                }
             });
             server.on('http:status', (result) => {
                 const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
@@ -537,7 +548,7 @@ export const actions = {
         }));
     },
 
-    startServerGcode: () => (dispatch, getState) => {
+    startServerGcode: (callback) => (dispatch, getState) => {
         const { server, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeList, background } = getState().workspace;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
@@ -573,8 +584,9 @@ export const actions = {
                 if (msg) {
                     return;
                 }
-                server.startGcode((msg1) => {
-                    if (msg1) {
+                server.startGcode((err) => {
+                    if (err) {
+                        callback && callback(err);
                         return;
                     }
                     dispatch(actions.updateState({
@@ -585,10 +597,11 @@ export const actions = {
         });
     },
 
-    resumeServerGcode: () => (dispatch, getState) => {
+    resumeServerGcode: (callback) => (dispatch, getState) => {
         const { server } = getState().machine;
-        server.resumeGcode((msg) => {
-            if (msg) {
+        server.resumeGcode((err) => {
+            if (err) {
+                callback && callback(err);
                 return;
             }
             dispatch(actions.updateState({

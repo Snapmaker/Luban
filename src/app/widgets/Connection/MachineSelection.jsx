@@ -90,7 +90,7 @@ class MachineSelection extends PureComponent {
 
 
         return (
-            <Modal disableOverlay size="md" onClose={this.actions.onClickCancel}>
+            <Modal disableOverlay size="md" onClose={this.actions.onClickClose}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Machine Select')}

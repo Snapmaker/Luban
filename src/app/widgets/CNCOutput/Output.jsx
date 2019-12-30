@@ -4,7 +4,7 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX } from '../../constants';
+import { CNC_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
@@ -80,7 +80,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = `${gcodeBeans[0].modelInfo.originalName}${LASER_GCODE_SUFFIX}`;
+            const fileName = `${gcodeBeans[0].modelInfo.originalName}${CNC_GCODE_SUFFIX}`;
             const file = new File([blob], fileName);
             const formData = new FormData();
             formData.append('file', file);

@@ -173,3 +173,8 @@ export const MACHINE_HEAD_TYPE = {
         alias: ['CNC', '2']
     }
 };
+
+export const IMAGE_WIFI_CONNECTING = '../../images/connection/Screen.png';
+export const IMAGE_WIFI_CONNECTED = '../../images/connection/ic_complete_64x64.png';
+export const IMAGE_WIFI_ERROR = '../../images/connection/ic_error_64x64.png';
+export const IMAGE_WIFI_WAITING = '../../images/connection/ic_Wi-FI_64x64.png';

@@ -5,12 +5,14 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import jQuery from 'jquery';
+import path from 'path';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import styles from './index.styl';
-import { DATA_PREFIX } from '../../constants';
+import { DATA_PREFIX, IMAGE_WIFI_CONNECTED, IMAGE_WIFI_ERROR, MACHINE_HEAD_TYPE } from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
+import modalSmallHOC from '../../components/Modal/modal-small';
 
 
 // import controller from '../../lib/controller';
@@ -21,6 +23,7 @@ class WifiTransport extends PureComponent {
         setTitle: PropTypes.func.isRequired,
 
         gcodeFiles: PropTypes.array.isRequired,
+        headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
 
@@ -32,18 +35,33 @@ class WifiTransport extends PureComponent {
     fileInput = React.createRef();
 
     state = {
-        selectFileName: ''
+        selectFileName: '',
+        selectFileType: ''
     };
 
     actions = {
         onSelectFile: (selectFileName) => {
+            const filename = path.basename(selectFileName);
+
+            let type = '';
+            if (filename.endsWith('.gcode')) {
+                type = MACHINE_HEAD_TYPE['3DP'].value;
+            }
+            if (filename.endsWith('.nc')) {
+                type = MACHINE_HEAD_TYPE.LASER.value;
+            }
+            if (filename.endsWith('.cnc')) {
+                type = MACHINE_HEAD_TYPE.CNC.value;
+            }
             if (this.state.selectFileName === selectFileName) {
                 this.setState({
-                    selectFileName: ''
+                    selectFileName: '',
+                    selectFileType: type
                 });
             } else {
                 this.setState({
-                    selectFileName: selectFileName
+                    selectFileName: selectFileName,
+                    selectFileType: type
                 });
             }
         },
@@ -65,7 +83,21 @@ class WifiTransport extends PureComponent {
             jQuery.get(gcodePath, (result) => {
                 const blob = new Blob([result], { type: 'text/plain' });
                 const file = new File([blob], find.uploadName);
-                this.props.server.uploadFile(find.uploadName, file);
+                this.props.server.uploadFile(find.uploadName, file, (err, data, text) => {
+                    if (err) {
+                        modalSmallHOC({
+                            title: i18n._('Send File Error'),
+                            text: text,
+                            img: IMAGE_WIFI_ERROR
+                        });
+                    } else {
+                        modalSmallHOC({
+                            title: i18n._('Send File Success'),
+                            text: i18n._('Please go to the screen to confirm whether to start print.'),
+                            img: IMAGE_WIFI_CONNECTED
+                        });
+                    }
+                });
             });
         },
         loadGcodeToWorkspace: () => {
@@ -94,8 +126,9 @@ class WifiTransport extends PureComponent {
     }
 
     render() {
-        const { gcodeFiles, isConnected } = this.props;
-        const { selectFileName } = this.state;
+        const { gcodeFiles, isConnected, headType } = this.props;
+        const { selectFileName, selectFileType } = this.state;
+        const isHeadType = selectFileType === headType;
         const actions = this.actions;
         const hasFile = gcodeFiles.length > 0;
 
@@ -151,7 +184,7 @@ class WifiTransport extends PureComponent {
                         <input
                             ref={this.fileInput}
                             type="file"
-                            accept=".gcode, .nc .cnc"
+                            accept=".gcode,.nc,.cnc"
                             style={{ display: 'none' }}
                             multiple={false}
                             onChange={actions.onChangeFile}
@@ -178,11 +211,11 @@ class WifiTransport extends PureComponent {
                 <button
                     type="button"
                     className="sm-btn-small sm-btn-default"
-                    disabled={!(hasFile && isConnected)}
+                    disabled={!(hasFile && isConnected && isHeadType)}
                     onClick={actions.sendFile}
                     style={{ display: 'block', width: '100%' }}
                 >
-                    {i18n._('Transfer By WiFi')}
+                    {i18n._('Transfer via Wi-F')}
                 </button>
             </div>
 
@@ -192,10 +225,11 @@ class WifiTransport extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { gcodeFiles } = state.workspace;
-    const { server, isConnected } = state.machine;
+    const { server, isConnected, headType } = state.machine;
 
     return {
         gcodeFiles,
+        headType,
         isConnected,
         server
     };

@@ -23,7 +23,6 @@ class WorkflowControl extends PureComponent {
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
-            handleSend: PropTypes.func.isRequired,
             handleRun: PropTypes.func.isRequired,
             handlePause: PropTypes.func.isRequired,
             handleStop: PropTypes.func.isRequired,

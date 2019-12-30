@@ -94,13 +94,13 @@ export class Server extends events.EventEmitter {
             .post(api)
             .send(token ? `token=${token}` : '')
             .end((err, res) => {
-                const { msg, data, code } = this._getResult(err, res);
+                const { msg, data, code, text } = this._getResult(err, res);
 
                 if (token && code === 403) {
                     this.open('', callback);
                 }
                 if (msg) {
-                    callback({ message: msg, status: code }, data);
+                    callback({ message: msg, status: code }, text);
                     return;
                 }
                 if (data) {
@@ -169,7 +169,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/status?token=${this.token}`;
         request
             .get(api)
-            .timeout(2000)
+            .timeout(3000)
             .end((err, res) => {
                 const { data, msg, code } = this._getResult(err, res);
                 if (msg) {
@@ -270,9 +270,9 @@ export class Server extends events.EventEmitter {
             .field('token', this.token)
             .attach('file', file, filename)
             .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
+                const { msg, data, text } = this._getResult(err, res);
                 if (callback) {
-                    callback(msg, data);
+                    callback(msg, data, text);
                 }
             });
     };
@@ -289,13 +289,13 @@ export class Server extends events.EventEmitter {
             .post(api)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
+                const { msg, code, data } = this._getResult(err, res);
                 if (msg) {
-                    callback && callback(msg);
+                    callback && callback({ message: msg, status: code });
                     return;
                 }
                 this.state.gcodePrintingInfo.startTime = new Date().getTime();
-                callback && callback(msg, data);
+                callback && callback(null, data);
             });
     };
 
@@ -332,12 +332,12 @@ export class Server extends events.EventEmitter {
             .post(api)
             .send(`token=${this.token}`)
             .end((err, res) => {
-                const { msg, data } = this._getResult(err, res);
+                const { msg, code, data } = this._getResult(err, res);
                 if (msg) {
-                    callback && callback(msg);
+                    callback && callback({ status: code, message: msg });
                     return;
                 }
-                callback && callback(msg, data);
+                callback && callback(null, data);
             });
     };
 
@@ -368,9 +368,9 @@ export class Server extends events.EventEmitter {
             const split = gcode.split('\n');
             this.gcodeInfos.push({
                 gcodes: split,
-                callback: () => {
-                    callback && callback();
-                    resolve();
+                callback: (result) => {
+                    callback && callback(result);
+                    resolve(result);
                 }
             });
             this.startExecuteGcode();
@@ -387,8 +387,8 @@ export class Server extends events.EventEmitter {
                 .send(`code=${gcode}`)
                 // .send(formData)
                 .end((err, res) => {
-                    const { data } = this._getResult(err, res);
-                    resolve(data);
+                    const { data, text } = this._getResult(err, res);
+                    resolve({ data, text });
                 });
         });
     };
@@ -400,10 +400,15 @@ export class Server extends events.EventEmitter {
         this.isGcodeExecuting = true;
         while (this.gcodeInfos.length > 0) {
             const splice = this.gcodeInfos.splice(0, 1)[0];
+            const result = [];
             for (const gcode of splice.gcodes) {
-                await this._executeGcode(gcode);
+                const { text } = await this._executeGcode(gcode);
+                result.push(gcode);
+                if (text) {
+                    result.push(text);
+                }
             }
-            splice.callback && splice.callback();
+            splice.callback && splice.callback(result);
         }
         this.isGcodeExecuting = false;
     };
@@ -515,24 +520,34 @@ export class Server extends events.EventEmitter {
     };
 
     _getResult = (err, res) => {
-        const code = res.status;
         if (err) {
-            return {
-                msg: err.message,
-                code: res && res.status,
-                data: res.text
-            };
+            if (res && res.text === 'code = 202') {
+                return {
+                    msg: err.message,
+                    code: 202,
+                    text: res && res.text,
+                    data: res && res.body
+                };
+            } else {
+                return {
+                    msg: err.message,
+                    code: res && res.status,
+                    text: res && res.text,
+                    data: res && res.body
+                };
+            }
         }
-        const data = res.body;
+        const code = res.status;
         if (code !== 200 && code !== 204 && code !== 203) {
             return {
                 code,
-                msg: err
+                msg: res && res.text
             };
         }
         return {
             code,
-            data
+            data: res.body,
+            text: res.text
         };
     }
 

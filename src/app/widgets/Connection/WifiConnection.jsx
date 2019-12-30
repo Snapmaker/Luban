@@ -3,13 +3,19 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import { map } from 'lodash';
+import { map, includes } from 'lodash';
 
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
 import {
-    ABSENT_OBJECT, CONNECTION_STATUS_CONNECTED, CONNECTION_STATUS_CONNECTING, CONNECTION_TYPE_WIFI,
+    ABSENT_OBJECT,
+    CONNECTION_STATUS_CONNECTED,
+    CONNECTION_STATUS_CONNECTING,
+    CONNECTION_STATUS_IDLE,
+    CONNECTION_TYPE_WIFI, IMAGE_WIFI_CONNECTED,
+    IMAGE_WIFI_CONNECTING, IMAGE_WIFI_ERROR,
+    IMAGE_WIFI_WAITING,
     MACHINE_HEAD_TYPE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -25,14 +31,10 @@ import CNCState from './CNCState';
 import ModalSmall from '../../components/Modal/ModalSmall';
 
 
-const IMAGE_WIFI_CONNECTING = '../../images/connection/Screen.png';
-const IMAGE_WIFI_CONNECTED = '../../images/connection/ic_complete_64x64.png';
-const IMAGE_WIFI_ERROR = '../../images/connection/ic_error_64x64.png';
-const IMAGE_WIFI_WAITING = '../../images/connection/ic_Wi-FI_64x64.png';
-
 class WifiConnection extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
+        machineSelect: PropTypes.bool,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
@@ -45,18 +47,20 @@ class WifiConnection extends PureComponent {
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
-        setServer: PropTypes.func.isRequired
+        setServer: PropTypes.func.isRequired,
+        updateState: PropTypes.func.isRequired
     };
 
     state = {
         server: {},
-        showMachineSelected: false,
         showConnectionMessage: false,
         connectionMessage: {
             text: '',
             title: '',
             img: IMAGE_WIFI_WAITING,
-            showCloseButton: false
+            showCloseButton: false,
+            onCancel: null,
+            onConfirm: null
         }
     };
 
@@ -73,14 +77,9 @@ class WifiConnection extends PureComponent {
                 });
             }
         },
-        openModal: () => {
-            this.setState({
-                showMachineSelected: true
-            });
-        },
         closeModal: () => {
-            this.setState({
-                showMachineSelected: false
+            this.props.updateState({
+                machineSelect: false
             });
         },
         setServer: (server) => {
@@ -95,7 +94,27 @@ class WifiConnection extends PureComponent {
             });
         },
         closeServer: () => {
-            this.props.closeServer();
+            const workflowStatus = this.props.workflowStatus;
+            if (includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], workflowStatus)) {
+                this.setState({
+                    showConnectionMessage: true,
+                    connectionMessage: {
+                        text: i18n._('Print job is not finish yet, disconnect will stop current print job.'),
+                        title: i18n._('Disconnect To Screen'),
+                        img: IMAGE_WIFI_WAITING,
+                        showCloseButton: false,
+                        onCancel: () => {
+                            this.actions.hideWifiConnectionMessage();
+                        },
+                        onConfirm: () => {
+                            this.actions.hideWifiConnectionMessage();
+                            this.props.closeServer();
+                        }
+                    }
+                });
+            } else {
+                this.props.closeServer();
+            }
         },
         hideWifiConnectionMessage: () => {
             this.setState({
@@ -109,7 +128,9 @@ class WifiConnection extends PureComponent {
                     text: i18n._('Please tap Yes on screen to confirm'),
                     title: i18n._('Screen Authorization Needed'),
                     img: IMAGE_WIFI_CONNECTING,
-                    showCloseButton: true
+                    showCloseButton: true,
+                    onCancel: null,
+                    onConfirm: null
                 }
             });
         },
@@ -120,7 +141,25 @@ class WifiConnection extends PureComponent {
                     text: i18n._(''),
                     title: i18n._('Connected'),
                     img: IMAGE_WIFI_CONNECTED,
-                    showCloseButton: false
+                    showCloseButton: false,
+                    onCancel: null,
+                    onConfirm: null
+                }
+            });
+            setTimeout(() => {
+                this.actions.hideWifiConnectionMessage();
+            }, 1000);
+        },
+        showWifiDisConnected: () => {
+            this.setState({
+                showConnectionMessage: true,
+                connectionMessage: {
+                    text: i18n._(''),
+                    title: i18n._('Disconnected'),
+                    img: IMAGE_WIFI_ERROR,
+                    showCloseButton: false,
+                    onCancel: null,
+                    onConfirm: null
                 }
             });
             setTimeout(() => {
@@ -134,7 +173,9 @@ class WifiConnection extends PureComponent {
                     text: i18n._(data || ''),
                     title: i18n._(`Error ${err.status}  ${err.message}`),
                     img: IMAGE_WIFI_ERROR,
-                    showCloseButton: true
+                    showCloseButton: true,
+                    onCancel: null,
+                    onConfirm: null
                 }
             });
         },
@@ -165,6 +206,9 @@ class WifiConnection extends PureComponent {
             }
             if (this.props.connectionStatus !== CONNECTION_STATUS_CONNECTED && nextProps.connectionStatus === CONNECTION_STATUS_CONNECTED) {
                 this.actions.showWifiConnected();
+            }
+            if (this.props.connectionStatus !== CONNECTION_STATUS_IDLE && nextProps.connectionStatus === CONNECTION_STATUS_IDLE) {
+                this.actions.showWifiDisConnected();
             }
         }
     }
@@ -311,7 +355,7 @@ class WifiConnection extends PureComponent {
                     </div>
                 </div>
                 <MachineSelection
-                    display={this.state.showMachineSelected}
+                    display={this.props.machineSelect}
                     closeModal={this.actions.closeModal}
                 />
                 {showConnectionMessage && (
@@ -321,6 +365,8 @@ class WifiConnection extends PureComponent {
                         text={connectionMessage.text}
                         title={connectionMessage.title}
                         onClose={this.actions.onCloseWifiConnectionMessage}
+                        onCancel={connectionMessage.onCancel}
+                        onConfirm={connectionMessage.onConfirm}
                     />
                 )}
             </div>
@@ -331,10 +377,11 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType } = machine;
+    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, machineSelect } = machine;
 
     return {
         headType,
+        machineSelect,
         servers,
         discovering,
         server,
@@ -350,7 +397,8 @@ const mapDispatchToProps = (dispatch) => ({
     discoverServers: () => dispatch(machineActions.discoverServers()),
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
-    setServer: (server) => dispatch(machineActions.setServer(server))
+    setServer: (server) => dispatch(machineActions.setServer(server)),
+    updateState: (state) => dispatch(machineActions.updateState(state))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

@@ -50,6 +50,8 @@ class DataStorage {
 
     static fontDir;
 
+    static userCaseDir;
+
     static async init() {
         if (isElectron()) {
             this.userDataDir = app.getPath('userData');
@@ -62,6 +64,7 @@ class DataStorage {
         this.tmpDir = `${this.userDataDir}/Tmp`;
         this.configDir = `${this.userDataDir}/Config`;
         this.fontDir = `${this.userDataDir}/Fonts`;
+        this.userCaseDir = `${this.userDataDir}/UserCase`;
 
         mkdirp.sync(this.tmpDir);
         mkdirp.sync(this.sessionDir);
@@ -71,6 +74,7 @@ class DataStorage {
         this.initSlicer();
 
         await this.initFonts();
+        await this.initUserCase();
     }
 
     static initSlicer() {
@@ -82,8 +86,10 @@ class DataStorage {
             for (const file of files) {
                 const src = path.join(CURA_ENGINE_CONFIG_LOCAL, file);
                 const dst = path.join(this.configDir, file);
-                if (fs.statSync(src).isFile()) {
-                    fs.copyFileSync(src, dst, () => {});
+                if (fs.statSync(src)
+                    .isFile()) {
+                    fs.copyFileSync(src, dst, () => {
+                    });
                 }
             }
         }
@@ -98,12 +104,32 @@ class DataStorage {
             for (const file of files) {
                 const src = path.join(FONTS_LOCAL, file);
                 const dst = path.join(this.fontDir, file);
-                if (fs.statSync(src).isFile()) {
-                    fs.copyFileSync(src, dst, () => {});
+                if (fs.statSync(src)
+                    .isFile()) {
+                    fs.copyFileSync(src, dst, () => {
+                    });
                 }
             }
         }
         await initFonts(this.fontDir);
+    }
+
+    static async initUserCase() {
+        mkdirp.sync(this.userCaseDir);
+
+        const USER_CASE_LOCAL = '../resources/user-case';
+        if (fs.existsSync(USER_CASE_LOCAL)) {
+            const files = fs.readdirSync(USER_CASE_LOCAL);
+            for (const file of files) {
+                const src = path.join(USER_CASE_LOCAL, file);
+                const dst = path.join(this.userCaseDir, file);
+                if (fs.statSync(src)
+                    .isFile()) {
+                    fs.copyFileSync(src, dst, () => {
+                    });
+                }
+            }
+        }
     }
 }
 

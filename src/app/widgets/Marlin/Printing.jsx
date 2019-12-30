@@ -16,9 +16,7 @@ class Printing extends PureComponent {
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
         server: PropTypes.object,
-        nozzleTemperature: PropTypes.number.isRequired,
         nozzleTargetTemperature: PropTypes.number.isRequired,
-        heatedBedTemperature: PropTypes.number.isRequired,
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
 
@@ -96,7 +94,7 @@ class Printing extends PureComponent {
     };
 
     render() {
-        const { isConnected, nozzleTemperature, heatedBedTemperature, workflowStatus } = this.props;
+        const { isConnected, nozzleTargetTemperature, heatedBedTargetTemperature, workflowStatus } = this.props;
         const { nozzleTemperatureValue, heatedBedTemperatureValue, zOffsetMarks, zOffsetValue } = this.state;
         const actions = this.actions;
         return (
@@ -105,7 +103,7 @@ class Printing extends PureComponent {
                     <WorkSpeed />
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label-lg">{i18n._('Nozzle Temp')}</span>
-                        <span className="sm-parameter-row__input2-text">{nozzleTemperature}/</span>
+                        <span className="sm-parameter-row__input2-text">{nozzleTargetTemperature}/</span>
                         <Input
                             className="sm-parameter-row__input2"
                             value={nozzleTemperatureValue}
@@ -122,7 +120,7 @@ class Printing extends PureComponent {
 
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label">{i18n._('Heated Bed Temp')}</span>
-                        <span className="sm-parameter-row__input2-text">{heatedBedTemperature}/</span>
+                        <span className="sm-parameter-row__input2-text">{heatedBedTargetTemperature}/</span>
                         <Input
                             className="sm-parameter-row__input2"
                             value={heatedBedTemperatureValue}

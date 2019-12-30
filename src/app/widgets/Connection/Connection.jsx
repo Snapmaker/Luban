@@ -13,7 +13,6 @@ import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 import { actions as machineActions } from '../../flux/machine';
 import Modal from '../../components/Modal';
-import warningModal from '../../lib/modal-warning';
 
 
 class Connection extends PureComponent {
@@ -47,11 +46,6 @@ class Connection extends PureComponent {
         onSelectTabWifi: () => {
             this.props.updateConnectionState({
                 connectionType: CONNECTION_TYPE_WIFI
-            });
-            warningModal({
-                body: i18n._('Failed to parse image file {{filename}}'),
-                bodyTitle: i18n._('Warning'),
-                insideHideModal: this.actions.insideHideModal
             });
         },
         openHomeModal: () => {

@@ -13,12 +13,14 @@ class PrintingState extends PureComponent {
         headType: PropTypes.string,
         isFilamentOut: PropTypes.bool,
         nozzleTemperature: PropTypes.number.isRequired,
-        heatedBedTemperature: PropTypes.number.isRequired
+        nozzleTargetTemperature: PropTypes.number.isRequired,
+        heatedBedTemperature: PropTypes.number.isRequired,
+        heatedBedTargetTemperature: PropTypes.number.isRequired
     };
 
 
     render() {
-        const { headType, isFilamentOut, nozzleTemperature, heatedBedTemperature } = this.props;
+        const { headType, isFilamentOut, nozzleTemperature, nozzleTargetTemperature, heatedBedTemperature, heatedBedTargetTemperature } = this.props;
         const isHeadTYpe = headType === MACHINE_HEAD_TYPE['3DP'].value;
         return (
             <div>
@@ -70,11 +72,11 @@ class PrintingState extends PureComponent {
                         }}
                     >
                         <div className={styles['color-grey-color']}>{i18n._('Nozzle Temp')}</div>
-                        <div>{nozzleTemperature}°C</div>
+                        <div>{nozzleTemperature}°C / {nozzleTargetTemperature}°C</div>
                     </div>
                     <div className="col-xs-6">
                         <div className={styles['color-grey-color']}>{i18n._('Heated Bed Temp')}</div>
-                        <div>{heatedBedTemperature}°C</div>
+                        <div>{heatedBedTemperature}°C / {heatedBedTargetTemperature}°C</div>
                     </div>
                 </div>
             </div>
@@ -83,12 +85,13 @@ class PrintingState extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const machine = state.machine;
-
-    const { nozzleTemperature, heatedBedTemperature, isFilamentOut } = machine;
+    const { nozzleTemperature, nozzleTargetTemperature, heatedBedTemperature, heatedBedTargetTemperature, isFilamentOut } = machine;
 
     return {
         nozzleTemperature,
+        nozzleTargetTemperature,
         heatedBedTemperature,
+        heatedBedTargetTemperature,
         isFilamentOut
     };
 };
