@@ -3,18 +3,19 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { MACHINE_SERIES } from '../../constants';
 import api from '../../api';
 import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
-import { CaseConfig } from './CaseConfig';
+import { CaseConfig150, CaseConfig250, CaseConfig350 } from './CaseConfig';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-// import { actions as laserActions } from '../../flux/laser';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
 class CaseLibrary extends PureComponent {
     static propTypes = {
+        series: PropTypes.string.isRequired,
         // laser: PropTypes.object.isRequired,
         insertDefaultCncTextVector: PropTypes.func.isRequired,
         insertDefaultLaserTextVector: PropTypes.func.isRequired,
@@ -68,7 +69,7 @@ class CaseLibrary extends PureComponent {
                 this.props.updateDefaultQualityId(qualityDefinitionId);
                 this.props.updateActiveDefinition(qualityDefinition);
             } else {
-                const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
+                const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
                 const addDefinition = config.quality;
                 const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId);
                 for (const key of defaultDefinition.ownKeys) {
@@ -124,7 +125,6 @@ class CaseLibrary extends PureComponent {
                 }
             }
         }
-
     }
 
     loadCase = (config) => {
@@ -138,73 +138,98 @@ class CaseLibrary extends PureComponent {
     }
 
     render() {
+        let CaseConfig;
+        if (this.props.series === MACHINE_SERIES.A150.value) {
+            CaseConfig = CaseConfig150;
+        } else if (this.props.series === MACHINE_SERIES.A250.value) {
+            CaseConfig = CaseConfig250;
+        } else if (this.props.series === MACHINE_SERIES.A350.value) {
+            CaseConfig = CaseConfig350;
+        } else {
+            CaseConfig = CaseConfig150;
+        }
         return (
             <div className={styles.caselibrary}>
 
                 <div className={classNames(styles.container, styles.usecase)}>
                     <h2 className={styles.mainTitle}>
-                        {i18n._('Use Case')}
+                        {i18n._('featured Projects')}
                     </h2>
                     <div className={styles.columns}>
                         { CaseConfig.map((config) => {
                             return (
-                                <button
-                                    type="button"
+                                <div
                                     className={styles.column}
-                                    onClick={() => this.loadCase(config)}
                                     key={config.pathConfig.name + timestamp()}
                                 >
-
-                                    <img className={styles.imgIcon} src={config.imgSrc} alt="" />
-                                    <div className={styles.cardtext}>
-                                        <h4>Leopard</h4>
-                                        <p>by Snapmaker</p>
+                                    <div>
+                                        <img className={styles.imgIcon} src={config.imgSrc} alt="" />
                                     </div>
-                                </button>
+                                    <div className={styles.cardtext}>
+                                        <h4>{config.title}</h4>
+                                        <p>{i18n._('by Snapmaker')}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={classNames(
+                                            'sm-btn-large',
+                                            'sm-btn-default',
+                                            styles.load,
+                                        )}
+                                        onClick={() => this.loadCase(config)}
+                                    >
+                                        {i18n._('load')}
+                                    </button>
+                                </div>
                             );
                         })}
-                    </div>
-                </div>
-                <div className={classNames(styles.container, styles.videoTutorials)}>
-                    <h2 className={styles.mainTitle}>
-                        {i18n._('Video Tutorials')}
-                    </h2>
-                    <div className={styles.columns}>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         );
     }
 }
+// <div className={classNames(styles.container, styles.videoTutorials)}>
+//     <h2 className={styles.mainTitle}>
+//         {i18n._('Video Tutorials')}
+//     </h2>
+//     <div className={styles.columns}>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/Assemble.png" alt="" />
+//             </div>
+//             <p>{i18n._('How to Assemble The Machine')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
+//
+//             </div>
+//             <p>{i18n._('How to Use the 3D Printer')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/Laser-Cutter.png" alt="" />
+//
+//             </div>
+//             <p>{i18n._('How to Use the Laser Carver')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/CNC-Carver.png" alt="" />
+//             </div>
+//
+//             <p>{i18n._('How to Use the CNC Carver')}</p>
+//         </div>
+//     </div>
+// </div>
 const mapStateToProps = (state) => {
     const printing = state.printing;
+    const machine = state.machine;
     const { qualityDefinitions, materialDefinitions, defaultMaterialId, activeDefinition } = printing;
     return {
         materialDefinitions,
+        series: machine.series,
         defaultMaterialId,
         qualityDefinitions,
         activeDefinition

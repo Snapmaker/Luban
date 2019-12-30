@@ -40,7 +40,6 @@ export const actions = {
     },
 
     updateConfig: (from, config) => {
-        console.log('updateConfig', config);
         return {
             type: ACTION_UPDATE_CONFIG,
             from,
@@ -115,8 +114,6 @@ export const actions = {
             });
     },
     generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode, caseConfigs, caseTransformation) => (dispatch, getState) => {
-        console.log('inside 2', headerType);
-
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
@@ -156,7 +153,7 @@ export const actions = {
             });
         }
 
-        console.log('modelDefaultConfigs 1', modelDefaultConfigs);
+        console.log('modelDefaultConfigs 1', config, gcodeConfig);
 
         let transformation = caseTransformation || {};
 
@@ -238,7 +235,6 @@ export const actions = {
                         gcodeConfig[key] = value;
                     });
                 }
-                console.log('text modelDefaultConfigs', modelDefaultConfigs);
                 // const model = new Model(modelInfo);
                 let transformation = caseTransformation || {};
                 transformation = {

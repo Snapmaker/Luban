@@ -120,7 +120,7 @@ const Sidebar = (props) => {
                                 className={classNames(
                                     styles.icon,
                                     styles.iconInvert,
-                                    styles.iconGear
+                                    styles.iconLibrary
                                 )}
                             />
                         </Link>
