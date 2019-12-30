@@ -202,7 +202,7 @@ class CaseLibrary extends PureComponent {
 //         </div>
 //         <div className={styles.column}>
 //             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
+//                <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
 //
 //             </div>
 //             <p>{i18n._('How to Use the 3D Printer')}</p>

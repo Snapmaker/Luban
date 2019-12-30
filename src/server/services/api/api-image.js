@@ -71,12 +71,13 @@ export const laserCaseImage = (req, res) => {
     const { name, casePath } = req.body;
     const originalName = path.basename(name);
 
+    const originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
     async.series([
         (next) => {
-            fs.copyFile(path.resolve(casePath, name), uploadPath, () => {
+            fs.copyFile(originalPath, uploadPath, () => {
                 next();
             });
         },

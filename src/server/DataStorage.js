@@ -125,8 +125,27 @@ class DataStorage {
                 const dst = path.join(this.userCaseDir, file);
                 if (fs.statSync(src)
                     .isFile()) {
-                    fs.copyFileSync(src, dst, () => {
-                    });
+                    fs.copyFileSync(src, dst);
+                } else {
+                    const srcPath = `${USER_CASE_LOCAL}/${file}`;
+                    const dstPath = `${this.userCaseDir}/${file}`;
+                    await this.copyDir(srcPath, dstPath);
+                }
+            }
+        }
+    }
+
+    static async copyDir(src, dst) {
+        mkdirp.sync(dst);
+
+        if (fs.existsSync(src)) {
+            const files = fs.readdirSync(src);
+            for (const file of files) {
+                const srcPath = path.join(src, file);
+                const dstPath = path.join(dst, file);
+                if (fs.statSync(srcPath)
+                    .isFile()) {
+                    fs.copyFileSync(srcPath, dstPath);
                 }
             }
         }

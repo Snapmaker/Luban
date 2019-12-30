@@ -4,8 +4,8 @@ export const CaseConfig150 = [
         title: '3D Printing Spiral Vase',
         imgSrc: '../../images/user-case/A150/3D-A150.png',
         pathConfig: {
-            name: '3DP test A150.stl',
-            casePath: '../../resources/usercase/A150/'
+            name: '3DP_test_A150.stl',
+            casePath: './A150/'
         },
         material: {
             definitionId: 'material.pla'// pla,stl
@@ -79,8 +79,8 @@ export const CaseConfig150 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/Laser-A150.png',
         pathConfig: {
-            name: 'Laser test A150.svg',
-            casePath: '../../resources/usercase/A150'
+            name: 'Laser_test_A150.svg',
+            casePath: './A150'
         },
         caseConfigs: {
             config: {
@@ -153,8 +153,8 @@ export const CaseConfig150 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/CNC-A150.png',
         pathConfig: {
-            name: 'CNC test A150.svg',
-            casePath: '../../resources/usercase/A150/'
+            name: 'CNC_test_A150.svg',
+            casePath: './A150/'
         },
         caseConfigs: {
             config: {
@@ -240,8 +240,8 @@ export const CaseConfig250 = [
         tag: '3dp', // 3dp、laser、cnc
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
-            name: '3DP test A250.stl',
-            casePath: '../../resources/usercase/A250/'
+            name: '3DP_test_A250.stl',
+            casePath: './A250/'
         },
         material: {
             definitionId: 'material.pla'// pla,stl
@@ -260,8 +260,8 @@ export const CaseConfig250 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
         pathConfig: {
-            name: 'Laser test A150.svg',
-            casePath: '../../resources/usercase/A150'
+            name: 'Laser_test_A150.svg',
+            casePath: './A150'
         },
         caseConfigs: {
             config: {
@@ -290,8 +290,8 @@ export const CaseConfig250 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {
-            name: 'CNC test A250.svg',
-            casePath: '../../resources/usercase/A250/'
+            name: 'CNC_test_A250.svg',
+            casePath: './A250/'
         },
         caseConfigs: {
             config: {
@@ -316,8 +316,8 @@ export const CaseConfig350 = [
         tag: '3dp', // 3dp、laser、cnc
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
-            name: '3DP test A350.stl',
-            casePath: '../../resources/usercase/A350/'
+            name: '3DP_test_A350.stl',
+            casePath: './A350/'
         },
         material: {
             definitionId: 'material.pla'// pla,stl
@@ -336,8 +336,8 @@ export const CaseConfig350 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
-            name: 'Laser test A350.svg',
-            casePath: '../../resources/usercase/A350'
+            name: 'Laser_test_A350.svg',
+            casePath: './A350'
         },
         caseConfigs: {
             config: {
@@ -361,8 +361,8 @@ export const CaseConfig350 = [
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {
-            name: 'CNC test A350.svg',
-            casePath: '../../resources/usercase/A350/'
+            name: 'CNC_test_A350.svg',
+            casePath: './A350/'
         },
         caseConfigs: {
             config: {
