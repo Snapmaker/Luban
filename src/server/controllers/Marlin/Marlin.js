@@ -83,6 +83,51 @@ class MarlinReplyParserSeriesSize {
     }
 }
 
+class MarlinReplyParserHeadStatus {
+    static parse(line) {
+        const r = line.match(/^Current Status: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserHeadStatus,
+            payload: {
+                headStatus: parseFloat(r[1])
+            }
+        };
+    }
+}
+
+class MarlinReplyParserHeadPower {
+    static parse(line) {
+        const r = line.match(/^Current Power: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserHeadPower,
+            payload: {
+                headPower: parseFloat(r[1])
+            }
+        };
+    }
+}
+
+class MarlinReplyParserFocusHeight {
+    static parse(line) {
+        const r = line.match(/^Focus Height: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserFocusHeight,
+            payload: {
+                zFocus: parseFloat(r[1])
+            }
+        };
+    }
+}
+
 
 class MarlinReplyParserEmergencyStop {
     static parse(line) {
@@ -454,8 +499,13 @@ class MarlinLineParser {
 
             MarlinParserSelectedCurrent,
 
-            MarlinParserSelectedOrigin
+            MarlinParserSelectedOrigin,
 
+            MarlinReplyParserFocusHeight,
+
+            MarlinReplyParserHeadPower,
+
+            MarlinReplyParserHeadStatus
         ];
 
         for (const parser of parsers) {
@@ -519,7 +569,7 @@ class Marlin extends events.EventEmitter {
         moduleID: 0,
         moduleVersion: '',
         machineSetting: {},
-        zFocus: 15,
+        zFocus: 0,
         gcodeHeader: 0,
         isHomed: null,
         originOffset: {
@@ -584,6 +634,21 @@ class Marlin extends events.EventEmitter {
                 this.setState({ headType: payload.headType });
             }
             this.emit('headType', payload);
+        } else if (type === MarlinReplyParserFocusHeight) {
+            if (this.state.zFocus !== payload.zFocus) {
+                this.setState({ zFocus: payload.zFocus });
+            }
+            this.emit('focusHeight', payload);
+        } else if (type === MarlinReplyParserHeadPower) {
+            if (this.state.headPower !== payload.headPower) {
+                this.setState({ headPower: payload.headPower });
+            }
+            this.emit('headPower', payload);
+        } else if (type === MarlinReplyParserHeadStatus) {
+            if (this.state.headStatus !== payload.headStatus) {
+                this.setState({ headStatus: payload.headStatus });
+            }
+            this.emit('headStatus', payload);
         } else if (type === MarlinReplyParserEnclosure) {
             if (this.settings.enclosure !== payload.enclosure) {
                 this.set({ enclosure: payload.enclosure });
