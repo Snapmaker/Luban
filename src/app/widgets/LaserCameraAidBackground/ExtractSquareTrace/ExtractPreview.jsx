@@ -23,7 +23,7 @@ class ExtractPreview extends Component {
 
     isAbsolute;
 
-    onChangeImage(filename, width, height, index) {
+    onChangeImage(filename, width = 100, height = 100, index) {
         if (this.props.series === MACHINE_SERIES.A150.value) {
             this.calcuStyle(index, width, height, 2);
         } else {

@@ -65,23 +65,26 @@
 .laser-set-background-modal-title
     display: block
     font: bold 24px "Arial Black", Gadget, sans-serif
-    margin: -44px 0 10px 0;
+    margin: -44px 0 60px 0;
     text-align: left
 .laser-set-background-modal-content
     text-align: center
     position: relative
-    overflow: hidden;
+    .calibrate-advise
+        width:100%;
     .calibrate-background
         position: absolute;
-        top: 0;
+        top: -54px;
+        width: 512px;
+        left: 0;
         right: 0;
-        width: 190px
-
+        margin: auto;
 
         .confirm-actions
             display: inline-block;
             position: relative;
-            width: 100%;
+            width: 20%;
+            left: 107px;
             border-radius: 4px;
             margin: 10px 10px 0 0;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
@@ -98,7 +101,7 @@
                     margin-left: 16px
 
             &__icon-confirm
-                background: url("/images/cameraAid/ic_confirm_18x18.png") no-repeat center
+                background: url("/images/camera-aid/ic_confirm_18x18.png") no-repeat center
             &:hover
                 border: 1px solid $dark-blue-color
         .isBlue
@@ -106,7 +109,8 @@
         .reset-actions
             display: inline-block;
             position: relative;
-            width: 100%;
+            right: 99px;
+            width: 20%;
             border-radius: 4px;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
             border: solid 1px #c8c8c8;
@@ -120,10 +124,10 @@
                     height: 42px
                     margin-left: 16px
             &__icon-reset
-                background: url("/images/cameraAid/ic_reset_18x18.png") no-repeat center
+                background: url("/images/camera-aid/ic_reset_18x18.png") no-repeat center
             &__text
                 position: absolute;
-                right: 22px;
+                right: 1rem;
                 top: 50%;
                 transform: translateY(-50%);
             &:hover
@@ -155,7 +159,7 @@
 
 .btn-camera
    float: left
-   width: 20%
+   width: 25%
    background-color: #fff
    color: #088fcd
    border-color: #088fcd
@@ -165,7 +169,7 @@
      color: #fff
 .btn-right-camera
    float: right
-   width: 20%
+   width: 25%
    border-color: #088fcd
    background-color: #28a7e1
    color: #fff
@@ -175,13 +179,13 @@
      color: #fff
 .btn-camera-disabled
    float: left
-   width: 20%
+   width: 25%
    color: #fff
    background-color: #DBDBDB
    margin: 10px 0 0 0
 .btn-right-camera-disabled
    float: right
-   width: 20%
+   width: 25%
    color: #fff
    background-color: #DBDBDB
    margin: 10px 0 0 0

@@ -6,16 +6,15 @@ import styles from './styles.styl';
 import api from '../../api';
 import { CONNECTION_TYPE_WIFI } from '../../constants';
 import i18n from '../../lib/i18n';
-import warningModal from '../../lib/modal-warning';
+import WarningModal from '../../lib/modal-warning';
 import Modal from '../../components/Modal';
 import Space from '../../components/Space';
 
 import { actions } from '../../flux/laser';
 import ExtractSquareTrace from './ExtractSquareTrace';
-import ManualCalibration from './ManualCalibration';
+// import ManualCalibration from './ManualCalibration';
 
 const PANEL_EXTRACT_TRACE = 1;
-const PANEL_MANUAL_CALIBRATION = 2;
 const PANEL_NOT_CALIBRATION = 3;
 const iconSrc = 'images/camera-aid/ic_warning-64x64.png';
 
@@ -35,11 +34,11 @@ class SetBackground extends PureComponent {
     state = {
         showModal: false,
         canTakePhoto: true,
+        xSize: [],
+        ySize: [],
+        lastFileNames: [],
         showCalibrationModal: true,
-        panel: PANEL_EXTRACT_TRACE,
-        shouldCalibrate: false,
-        matrix: '',
-        getPoints: []
+        panel: PANEL_EXTRACT_TRACE
     };
 
     actions = {
@@ -57,15 +56,24 @@ class SetBackground extends PureComponent {
                 });
             }
         },
-        backtoCalibrationModal: () => {
+        changeLastFileNames: (lastFileNames) => {
             this.setState({
-                showModal: true,
-                panel: PANEL_EXTRACT_TRACE
+                lastFileNames: lastFileNames
+            });
+        },
+        updateEachPicSize: (size, value) => {
+            this.setState({
+                size: value
             });
         },
         changeCanTakePhoto: (bool) => {
             this.setState({
                 canTakePhoto: bool
+            });
+        },
+        updateAffinePoints: (manualPoints) => {
+            this.setState({
+                manualPoints
             });
         },
         insideHideModal: () => {
@@ -75,8 +83,8 @@ class SetBackground extends PureComponent {
         },
         hideModal: () => {
             if (!this.state.canTakePhoto && this.state.panel === PANEL_EXTRACT_TRACE) {
-                warningModal({
-                    body: i18n._('Failed to parse image file {{filename}}'),
+                WarningModal({
+                    body: i18n._('This actions cannot be undone. Do you want to stop the job?'),
                     iconSrc,
                     bodyTitle: i18n._('Warning'),
                     insideHideModal: this.actions.insideHideModal
@@ -91,33 +99,11 @@ class SetBackground extends PureComponent {
 
             this.actions.hideModal();
         },
-        calibrationOnOff: (shouldCalibrate) => {
-            this.setState({
-                shouldCalibrate
-            });
-        },
-        updateAffinePoints: (getPoints) => {
-            this.setState({
-                getPoints
-            });
-        },
+
+
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
-        },
-
-        displayExtractTrace: () => {
-            this.setState({ panel: PANEL_EXTRACT_TRACE });
-        },
-        displayManualCalibration: async () => {
-            const resPro = await api.getCameraCalibration({ 'address': this.props.server.address });
-            const res = JSON.parse(resPro.body.res.text);
-            this.setState({
-                getPoints: res.points,
-                matrix: res,
-                panel: PANEL_MANUAL_CALIBRATION
-            });
         }
-
 
     };
 
@@ -132,32 +118,19 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {state.showModal && (
                     <Modal style={{ width: '760px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
-                        {state.panel === PANEL_EXTRACT_TRACE && (
-                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
-                                <ExtractSquareTrace
-                                    shouldCalibrate={this.state.shouldCalibrate}
-                                    getPoints={this.state.getPoints}
-                                    canTakePhoto={this.state.canTakePhoto}
-                                    changeCanTakePhoto={this.actions.changeCanTakePhoto}
-                                    setBackgroundImage={this.actions.setBackgroundImage}
-                                    displayManualCalibration={this.actions.displayManualCalibration}
-                                />
-                            </Modal.Body>
-
-                        )}
-                        {state.panel === PANEL_MANUAL_CALIBRATION && (
-                            <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
-                                <ManualCalibration
-                                    backtoCalibrationModal={this.actions.backtoCalibrationModal}
-                                    getPoints={this.state.getPoints}
-                                    matrix={this.state.matrix}
-                                    shouldCalibrate={this.state.shouldCalibrate}
-                                    displayExtractTrace={this.actions.displayExtractTrace}
-                                    calibrationOnOff={this.actions.calibrationOnOff}
-                                    updateAffinePoints={this.actions.updateAffinePoints}
-                                />
-                            </Modal.Body>
-                        )}
+                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                            <ExtractSquareTrace
+                                canTakePhoto={this.state.canTakePhoto}
+                                changeCanTakePhoto={this.actions.changeCanTakePhoto}
+                                ySize={this.state.ySize}
+                                xSize={this.state.xSize}
+                                lastFileNames={this.state.lastFileNames}
+                                updateEachPicSize={this.actions.updateEachPicSize}
+                                changeLastFileNames={this.actions.changeLastFileNames}
+                                setBackgroundImage={this.actions.setBackgroundImage}
+                                updateAffinePoints={this.actions.updateAffinePoints}
+                            />
+                        </Modal.Body>
                         {state.panel === PANEL_NOT_CALIBRATION && (
                             <div>
                                 <Modal.Header>
