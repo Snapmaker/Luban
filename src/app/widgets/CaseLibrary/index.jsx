@@ -3,9 +3,11 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { MACHINE_SERIES } from '../../constants';
+import api from '../../api';
 import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
-import { CaseConfig } from './CaseConfig';
+import { CaseConfig150, CaseConfig250, CaseConfig350 } from './CaseConfig';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
 import i18n from '../../lib/i18n';
@@ -13,7 +15,10 @@ import styles from './index.styl';
 
 class CaseLibrary extends PureComponent {
     static propTypes = {
-        // ...withRouter.propTypes
+        series: PropTypes.string.isRequired,
+        // laser: PropTypes.object.isRequired,
+        insertDefaultCncTextVector: PropTypes.func.isRequired,
+        insertDefaultLaserTextVector: PropTypes.func.isRequired,
         updateDefaultAdvised: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired,
@@ -23,14 +28,12 @@ class CaseLibrary extends PureComponent {
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         uploadCaseModel: PropTypes.func.isRequired,
-        uploadCaseImage: PropTypes.func.isRequired
+        uploadCncCaseImage: PropTypes.func.isRequired,
+        uploadLaserCaseImage: PropTypes.func.isRequired
     };
 
 
     state = {
-        // materialDefinitionOptions: [],
-
-        // newName: null
     };
 
     actions = {
@@ -66,7 +69,7 @@ class CaseLibrary extends PureComponent {
                 this.props.updateDefaultQualityId(qualityDefinitionId);
                 this.props.updateActiveDefinition(qualityDefinition);
             } else {
-                const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
+                const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
                 const addDefinition = config.quality;
                 const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId);
                 for (const key of defaultDefinition.ownKeys) {
@@ -83,36 +86,45 @@ class CaseLibrary extends PureComponent {
                 this.props.updateDefaultQualityId(newDefinition.definitionId);
             }
         },
-        loadLaserCaseSettings: (config) => {
-            console.log(config);
-
+        loadLaserCncCaseSettings: async (config) => {
             if (config.mode === 'trace') {
-            //     this.setState({
-            //         mode: uploadMode
-            //     });
-            //     const formData = new FormData();
-            //     formData.append('image', file);
-            //     api.uploadImage(formData)
-            //         .then(async (res) => {
-            //             this.actions.updateOptions({
-            //                 originalName: res.body.originalName,
-            //                 uploadName: res.body.uploadName,
-            //                 width: res.body.width,
-            //                 height: res.body.height
-            //             });
-            //             await this.actions.processTrace();
-            //         });
-                console.log('inside trace');
-            } else {
-                this.props.uploadCaseImage(config.pathConfig, config.mode, () => {
+                const res = await api.uploadLaserCaseImage(config.pathConfig, config.mode, () => {
                     modal({
                         title: i18n._('Parse Image Error'),
                         body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
                     });
                 });
+                const result = await api.processTrace({
+                    originalName: res.body.originalName,
+                    uploadName: res.body.uploadName,
+                    width: res.body.width,
+                    height: res.body.height
+                });
+                console.log('trace', res, result);
+            } else if (config.mode === 'text') {
+                if (config.tag === 'laser') {
+                    await this.props.insertDefaultLaserTextVector(config.caseConfigs, config.caseTransformation);
+                } else {
+                    await this.props.insertDefaultCncTextVector(config.caseConfigs, config.caseTransformation);
+                }
+            } else {
+                if (config.tag === 'laser') {
+                    await this.props.uploadLaserCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
+                        modal({
+                            title: i18n._('Parse Image Error'),
+                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                        });
+                    });
+                } else {
+                    await this.props.uploadCncCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
+                        modal({
+                            title: i18n._('Parse Image Error'),
+                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                        });
+                    });
+                }
             }
         }
-
     }
 
     loadCase = (config) => {
@@ -120,81 +132,104 @@ class CaseLibrary extends PureComponent {
         if (config.tag === '3dp') {
             this.actions.load3dpCaseSettings(config);
             this.props.uploadCaseModel(config.pathConfig);
-        } else if (config.tag === 'laser') {
-            this.actions.loadLaserCaseSettings(config);
+        } else {
+            this.actions.loadLaserCncCaseSettings(config);
         }
     }
 
     render() {
-    // console.log(CaseConfig);
+        let CaseConfig;
+        if (this.props.series === MACHINE_SERIES.A150.value) {
+            CaseConfig = CaseConfig150;
+        } else if (this.props.series === MACHINE_SERIES.A250.value) {
+            CaseConfig = CaseConfig250;
+        } else if (this.props.series === MACHINE_SERIES.A350.value) {
+            CaseConfig = CaseConfig350;
+        } else {
+            CaseConfig = CaseConfig150;
+        }
         return (
             <div className={styles.caselibrary}>
 
                 <div className={classNames(styles.container, styles.usecase)}>
                     <h2 className={styles.mainTitle}>
-                        {i18n._('Use Case')}
+                        {i18n._('featured Projects')}
                     </h2>
                     <div className={styles.columns}>
                         { CaseConfig.map((config) => {
                             return (
-                                <button
-                                    type="button"
+                                <div
                                     className={styles.column}
-                                    onClick={() => this.loadCase(config)}
-                                    key={config.imgSrc + timestamp()}
+                                    key={config.pathConfig.name + timestamp()}
                                 >
-
-                                    <img className={styles.imgIcon} src={config.imgSrc} alt="" />
-                                    <div className={styles.cardtext}>
-                                        <h4>Leopard</h4>
-                                        <p>by Snapmaker</p>
+                                    <div>
+                                        <img className={styles.imgIcon} src={config.imgSrc} alt="" />
                                     </div>
-                                </button>
+                                    <div className={styles.cardtext}>
+                                        <h4>{config.title}</h4>
+                                        <p>{i18n._('by Snapmaker')}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={classNames(
+                                            'sm-btn-large',
+                                            'sm-btn-default',
+                                            styles.load,
+                                        )}
+                                        onClick={() => this.loadCase(config)}
+                                    >
+                                        {i18n._('load')}
+                                    </button>
+                                </div>
                             );
                         })}
-                    </div>
-                </div>
-                <div className={classNames(styles.container, styles.videoTutorials)}>
-                    <h2 className={styles.mainTitle}>
-                        {i18n._('Video Tutorials')}
-                    </h2>
-                    <div className={styles.columns}>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
-                        <div className={styles.column}>
-                            <h4>Leopard</h4>
-                            <div className={styles.cardtext}>
-                                <img className={styles.imgIcon} src="../../images/user-case/3d01.jpg" alt="" />
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         );
     }
 }
+// <div className={classNames(styles.container, styles.videoTutorials)}>
+//     <h2 className={styles.mainTitle}>
+//         {i18n._('Video Tutorials')}
+//     </h2>
+//     <div className={styles.columns}>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/Assemble.png" alt="" />
+//             </div>
+//             <p>{i18n._('How to Assemble The Machine')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
+//
+//             </div>
+//             <p>{i18n._('How to Use the 3D Printer')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/Laser-Cutter.png" alt="" />
+//
+//             </div>
+//             <p>{i18n._('How to Use the Laser Carver')}</p>
+//         </div>
+//         <div className={styles.column}>
+//             <div className={styles.cardtext}>
+//                 <img className={styles.imgIcon} src="../../images/user-case/CNC-Carver.png" alt="" />
+//             </div>
+//
+//             <p>{i18n._('How to Use the CNC Carver')}</p>
+//         </div>
+//     </div>
+// </div>
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    // console.log('store', printing);
+    const machine = state.machine;
     const { qualityDefinitions, materialDefinitions, defaultMaterialId, activeDefinition } = printing;
     return {
         materialDefinitions,
+        series: machine.series,
         defaultMaterialId,
         qualityDefinitions,
         activeDefinition
@@ -203,7 +238,14 @@ const mapStateToProps = (state) => {
 
 
 const mapDispatchToProps = (dispatch) => ({
-    uploadCaseImage: (file, mode, onFailure) => dispatch(sharedActions.uploadCaseImage('laser', file, mode, onFailure)),
+    insertDefaultLaserTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('laser', caseConfigs, caseTransformation)),
+    insertDefaultCncTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('cnc', caseConfigs, caseTransformation)),
+    // uploadFont: (file) => dispatch(textActions.uploadFont(file)),
+    updateLaserState: (params) => dispatch(sharedActions.updateState('laser', params)),
+    uploadLaserCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('laser', file, mode, caseConfigs, caseTransformation, onFailure)),
+    uploadCncCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('cnc', file, mode, caseConfigs, caseTransformation, onFailure)),
+
+
     updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
     updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
     updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),

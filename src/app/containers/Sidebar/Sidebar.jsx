@@ -109,22 +109,24 @@ const Sidebar = (props) => {
                     </li>
                 </ul>
                 <ul className={styles.navFixedBottom}>
-                    <li
-                        className={classNames(
-                            'text-center',
-                            { [styles.active]: pathname.indexOf('/caselibrary') === 0 }
-                        )}
-                    >
-                        <Link to="/caselibrary" title={i18n._('CaseLibrary')}>
-                            <i
-                                className={classNames(
-                                    styles.icon,
-                                    styles.iconInvert,
-                                    styles.iconGear
-                                )}
-                            />
-                        </Link>
-                    </li>
+                    {isConnected && (
+                        <li
+                            className={classNames(
+                                'text-center',
+                                { [styles.active]: pathname.indexOf('/caselibrary') === 0 }
+                            )}
+                        >
+                            <Link to="/caselibrary" title={i18n._('CaseLibrary')}>
+                                <i
+                                    className={classNames(
+                                        styles.icon,
+                                        styles.iconInvert,
+                                        styles.iconLibrary
+                                    )}
+                                />
+                            </Link>
+                        </li>
+                    )}
                     <li
                         className={classNames(
                             'text-center',

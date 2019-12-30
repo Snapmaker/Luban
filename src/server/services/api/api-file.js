@@ -30,12 +30,12 @@ export const set = (req, res) => {
 };
 
 export const uploadCaseFile = (req, res) => {
-    const { name } = req.body;
+    const { name, casePath } = req.body;
     const originalName = path.basename(name);
-    const casePath = `${DataStorage.userCaseDir}/${originalName}`;
+    const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    fs.copyFile(casePath, uploadPath, (err) => {
+    fs.copyFile(originalPath, uploadPath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {

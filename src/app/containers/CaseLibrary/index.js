@@ -1,3 +1,3 @@
-import CaseLibrary from './CaseLibrary';
+import CaseLibrary from '../../widgets/CaseLibrary';
 
 export default CaseLibrary;

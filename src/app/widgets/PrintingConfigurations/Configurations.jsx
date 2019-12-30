@@ -236,6 +236,7 @@ class Configurations extends PureComponent {
             }
 
             definition.settings[key].default_value = value;
+            console.log('onChangeCustomDefinition', definition);
 
             this.props.updateDefinitionSettings(definition, {
                 [key]: { default_value: value }
