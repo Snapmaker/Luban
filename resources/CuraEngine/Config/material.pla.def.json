@@ -10,16 +10,16 @@
             "default_value": true
         },
         "material_final_print_temperature": {
-            "default_value": 198
-        },
-        "material_print_temperature_layer_0": {
             "default_value": 200
         },
+        "material_print_temperature_layer_0": {
+            "default_value": 205
+        },
         "material_print_temperature": {
-            "default_value": 198
+            "default_value": 205
         },
         "material_bed_temperature_layer_0": {
-            "default_value": 50
+            "default_value": 70
         },
         "material_bed_temperature": {
             "default_value": 50

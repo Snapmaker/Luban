@@ -28,14 +28,8 @@
         "machine_height": {
             "default_value": 125
         },
-        "machine_heated_bed": {
-            "default_value": true
-        },
         "machine_nozzle_size": {
             "default_value": 0.4
-        },
-        "material_diameter": {
-            "default_value": 1.75
         },
         "machine_max_acceleration_x": {
             "default_value": 1000
@@ -151,25 +145,9 @@
                     "label": "Default Printing Temperature",
                     "default_value": 205
                 },
-                "material_print_temperature": {
-                    "label": "Printing Temperature",
-                    "default_value": 205
-                },
-                "material_print_temperature_layer_0": {
-                    "label": "Printing Temperature Initial Layer",
-                    "default_value": 205
-                },
                 "material_initial_print_temperature": {
                     "label": "Initial Printing Temperature",
                     "default_value": 205
-                },
-                "material_final_print_temperature": {
-                    "label": "Final Printing Temperature",
-                    "default_value": 200
-                },
-                "material_bed_temperature_layer_0": {
-                    "label": "Build Plate Temperature Initial Layer",
-                    "default_value": 70
                 },
                 "retraction_retract_speed": {
                     "label": "Retraction Retract Speed",
