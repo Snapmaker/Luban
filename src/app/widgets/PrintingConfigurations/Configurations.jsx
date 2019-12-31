@@ -236,7 +236,6 @@ class Configurations extends PureComponent {
             }
 
             definition.settings[key].default_value = value;
-            console.log('onChangeCustomDefinition', definition);
 
             this.props.updateDefinitionSettings(definition, {
                 [key]: { default_value: value }
@@ -262,6 +261,7 @@ class Configurations extends PureComponent {
             });
 
             await this.props.removeQualityDefinition(definition);
+            this.props.updateDefaultQualityId('quality.fast_print');
 
             // After removal, select the first definition
             if (this.props.qualityDefinitions.length) {
@@ -273,14 +273,12 @@ class Configurations extends PureComponent {
                 this.setState({
                     isOfficialTab: true
                 });
-                this.props.updateDefaultQualityId('quality.fast_print');
             } else {
                 this.setState({
                     isOfficialTab: false
                 });
-                this.props.updateDefaultQualityId('quality.fast_print');
-                // this.actions.onSelectOfficialDefinition()
             }
+            this.props.updateDefaultQualityId('quality.fast_print');
             this.props.updateDefaultAdvised(isAdvised);
         }
     };
@@ -319,7 +317,6 @@ class Configurations extends PureComponent {
             this.setState(newState);
         }
 
-        // console.log('>>>>>', nextProps.isAdvised, nextProps.defaultQualityId);
         if (nextProps.isAdvised !== this.props.isAdvised) {
             if (nextProps.isAdvised) {
                 this.actions.onSetOfficoalTab(true);

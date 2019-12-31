@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import Select from 'react-select';
 // import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
@@ -37,6 +38,7 @@ class CaseLibrary extends PureComponent {
 
 
     state = {
+        currentSize: ['A150', 'A250', 'A350'].indexOf(this.props.series) > -1 ? this.props.series : 'A150'
     };
 
     actions = {
@@ -131,6 +133,11 @@ class CaseLibrary extends PureComponent {
                     });
                 }
             }
+        },
+        onChangeSizeType: (option) => {
+            this.setState({
+                currentSize: option.value
+            });
         }
     }
 
@@ -146,11 +153,11 @@ class CaseLibrary extends PureComponent {
 
     render() {
         let CaseConfig;
-        if (this.props.series === MACHINE_SERIES.A150.value) {
+        if (this.state.currentSize === MACHINE_SERIES.A150.value) {
             CaseConfig = CaseConfig150;
-        } else if (this.props.series === MACHINE_SERIES.A250.value) {
+        } else if (this.state.currentSize === MACHINE_SERIES.A250.value) {
             CaseConfig = CaseConfig250;
-        } else if (this.props.series === MACHINE_SERIES.A350.value) {
+        } else if (this.state.currentSize === MACHINE_SERIES.A350.value) {
             CaseConfig = CaseConfig350;
         } else {
             CaseConfig = CaseConfig150;
@@ -160,8 +167,25 @@ class CaseLibrary extends PureComponent {
 
                 <div className={classNames(styles.container, styles.usecase)}>
                     <h2 className={styles.mainTitle}>
-                        {i18n._('featured Projects')}
+                        {i18n._('Featured Projects')}
                     </h2>
+                    <Select
+                        clearable={false}
+                        className={styles.sizeSelect}
+                        options={[{
+                            value: 'A150',
+                            label: i18n._('A150')
+                        }, {
+                            value: 'A250',
+                            label: i18n._('A250')
+                        }, {
+                            value: 'A350',
+                            label: i18n._('A350')
+                        }]}
+                        value={this.state.currentSize}
+                        searchable={false}
+                        onChange={this.actions.onChangeSizeType}
+                    />
                     <div className={styles.columns}>
                         { CaseConfig.map((config) => {
                             return (
@@ -174,8 +198,9 @@ class CaseLibrary extends PureComponent {
                                     </div>
                                     <div className={styles.cardtext}>
                                         <h4>{config.title}</h4>
-                                        <p>{i18n._('by Snapmaker')}</p>
+                                        <p>{i18n._('By Snapmaker')}</p>
                                     </div>
+
                                     <button
                                         type="button"
                                         className={classNames(
@@ -193,10 +218,12 @@ class CaseLibrary extends PureComponent {
                         })}
                     </div>
                 </div>
+
             </div>
         );
     }
 }
+
 // <div className={classNames(styles.container, styles.videoTutorials)}>
 //     <h2 className={styles.mainTitle}>
 //         {i18n._('Video Tutorials')}
@@ -210,7 +237,7 @@ class CaseLibrary extends PureComponent {
 //         </div>
 //         <div className={styles.column}>
 //             <div className={styles.cardtext}>
-//                <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
+//                 <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
 //
 //             </div>
 //             <p>{i18n._('How to Use the 3D Printer')}</p>

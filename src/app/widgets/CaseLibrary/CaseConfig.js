@@ -193,6 +193,7 @@ export const CaseConfig150 = [
 export const CaseConfig250 = [
     {
         tag: '3dp', // 3dp、laser、cnc
+        title: '3D Printing Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
             name: '3DP_test_A250.stl',
@@ -211,6 +212,7 @@ export const CaseConfig250 = [
     },
     {
         tag: 'laser',
+        title: 'Laser Cutting Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
@@ -242,6 +244,7 @@ export const CaseConfig250 = [
     },
     {
         tag: 'cnc',
+        title: 'CNC Cutting Smartphone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {
@@ -269,6 +272,7 @@ export const CaseConfig250 = [
 export const CaseConfig350 = [
     {
         tag: '3dp', // 3dp、laser、cnc
+        title: '3D Printing Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
             name: '3DP_test_A350.stl',
@@ -287,6 +291,7 @@ export const CaseConfig350 = [
     },
     {
         tag: 'laser',
+        title: 'Laser Cutting Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
@@ -313,6 +318,7 @@ export const CaseConfig350 = [
     },
     {
         tag: 'cnc',
+        title: 'CNC Cutting Smartphone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {

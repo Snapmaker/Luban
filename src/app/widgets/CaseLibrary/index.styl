@@ -11,20 +11,33 @@
     margin-bottom: 50px
 
     .mainTitle{
+      display: inline-block;
       font-size: 30px;
+      margin-bottom: 2rem;
+      font-weight: bold;
+      color: #808080;
+      vertical-align: middle;
+      
     }
-
+    .sizeSelect{
+      display: inline-block;
+      width: 10rem;
+      vertical-align: middle;
+      margin-left: 3rem;
+    }
     &.usecase {
-      width: 70%
+      min-width: 1050px;
       .columns{
         display: flex;
-        justify-content: space-between
+        justify-content: flex-start;
+        flex-wrap: wrap;
         .column{
-          width: 30%;
+          width: 330px;
           border-width: 1px;
           border-style: solid;
           border-color: #e6e6e6;
           border-radius: 4px;
+          margin: 0 2rem 2rem 0;
           overflow: hidden;
           background-color: white;
           padding: 8px;
@@ -32,8 +45,8 @@
           box-shadow: 0px 0px 5px #999999;
           .imgIcon{
             display: block
-            margin-top: 1rem;
-            width: 384px
+            margin: 1rem auto;
+            width: 300px
           }
           .cardtext{
             padding: 1.25rem 0;
