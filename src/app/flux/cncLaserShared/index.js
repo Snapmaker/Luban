@@ -365,7 +365,7 @@ export const actions = {
         }));
 
         const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo;
-        const boundingBox = modelGroup.getAllBoundingBox();
+        const boundingBox = toolPathModelGroup.getAllBoundingBox();
 
         const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 

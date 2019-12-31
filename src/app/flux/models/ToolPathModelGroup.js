@@ -85,6 +85,27 @@ class ToolPathModelGroup {
         return null;
     }
 
+    getAllBoundingBox() {
+        let boundingBox = null;
+        for (const model of this.toolPathModels) {
+            if (!model.toolPath || !model.toolPath.boundingBox) {
+                continue;
+            }
+            const modelBoundingBox = model.toolPath.boundingBox;
+            if (boundingBox === null) {
+                boundingBox = modelBoundingBox;
+            } else {
+                boundingBox.max.x = boundingBox.max.x ? Math.max(boundingBox.max.x, modelBoundingBox.max.x) : modelBoundingBox.max.x;
+                boundingBox.max.y = boundingBox.max.y ? Math.max(boundingBox.max.y, modelBoundingBox.max.y) : modelBoundingBox.max.y;
+                boundingBox.max.z = boundingBox.max.z ? Math.max(boundingBox.max.z, modelBoundingBox.max.z) : modelBoundingBox.max.z;
+                boundingBox.min.x = boundingBox.min.x ? Math.min(boundingBox.min.x, modelBoundingBox.min.x) : modelBoundingBox.min.x;
+                boundingBox.min.y = boundingBox.min.y ? Math.min(boundingBox.min.y, modelBoundingBox.min.y) : modelBoundingBox.min.y;
+                boundingBox.min.z = boundingBox.min.z ? Math.min(boundingBox.min.z, modelBoundingBox.min.z) : modelBoundingBox.min.z;
+            }
+        }
+        return boundingBox;
+    }
+
     updateSelectedPrintOrder(printOrder) {
         this.selectedToolPathModel && (this.selectedToolPathModel.printOrder = printOrder);
     }

@@ -27,6 +27,18 @@ class GcodeParser {
             Y: undefined,
             G: undefined
         };
+        const boundingBox = {
+            min: {
+                x: null,
+                y: null,
+                z: 0
+            },
+            max: {
+                x: null,
+                y: null,
+                z: 0
+            }
+        };
         for (let i = 0; i < lines.length; i++) {
             this.parseLine(lines[i].trim());
             const lineObject = this.data[i];
@@ -46,7 +58,13 @@ class GcodeParser {
             }
             lineObject.X !== undefined && (startPoint.X = lineObject.X);
             lineObject.Y !== undefined && (startPoint.Y = lineObject.Y);
+
+            this.setBoundingBox(boundingBox, lineObject);
         }
+        boundingBox.max.x += positionX;
+        boundingBox.min.x += positionX;
+        boundingBox.max.y += positionY;
+        boundingBox.min.y += positionY;
         return {
             headerType: headerType,
             mode: mode,
@@ -55,8 +73,37 @@ class GcodeParser {
             estimatedTime: this.estimatedTime * 1.4,
             positionX: positionX,
             positionY: positionY,
-            positionZ: positionZ
+            positionZ: positionZ,
+            boundingBox: boundingBox
         };
+    }
+
+    setBoundingBox(boundingBox, linePoint) {
+        if (linePoint.X !== undefined) {
+            if (boundingBox.min.x === null) {
+                boundingBox.min.x = linePoint.X;
+            } else {
+                boundingBox.min.x = Math.min(boundingBox.min.x, linePoint.X);
+            }
+            if (boundingBox.max.x === null) {
+                boundingBox.max.x = linePoint.X;
+            } else {
+                boundingBox.max.x = Math.max(boundingBox.max.x, linePoint.X);
+            }
+        }
+
+        if (linePoint.Y !== undefined) {
+            if (boundingBox.min.y === null) {
+                boundingBox.min.y = linePoint.Y;
+            } else {
+                boundingBox.min.y = Math.min(boundingBox.min.y, linePoint.Y);
+            }
+            if (boundingBox.max.y === null) {
+                boundingBox.max.y = linePoint.Y;
+            } else {
+                boundingBox.max.y = Math.max(boundingBox.max.y, linePoint.Y);
+            }
+        }
     }
 
     getLineLength(startPoint, endPoint) {

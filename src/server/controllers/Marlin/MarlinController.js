@@ -343,7 +343,6 @@ class MarlinController {
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                console.log('emit:serialport:connected');
                 this.emitAll('serialport:connected', { state: this.controller.state });
 
                 // const version = this.controller.state.version;
@@ -431,7 +430,6 @@ class MarlinController {
         this.controller.on('temperature', (res) => {
             if (!this.ready) {
                 this.ready = true;
-                console.log('2emit:serialport:connected');
                 this.emitAll('serialport:connected', { state: this.controller.state });
             }
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
@@ -825,7 +823,6 @@ class MarlinController {
                     if (this.handler && !this.ready) {
                         log.error('this machine is not ready');
                         clearInterval(this.handler);
-                        console.log('3emit:serialport:connected');
                         this.emitAll('serialport:connected', { err: 'this machine is not ready' });
                         this.close();
                     }
