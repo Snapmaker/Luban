@@ -27,7 +27,6 @@ import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
-import CNCState from './CNCState';
 import ModalSmall from '../../components/Modal/ModalSmall';
 
 
@@ -319,7 +318,6 @@ class WifiConnection extends PureComponent {
                         />
                         {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
                         {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
-                        {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
                     </div>
                 )}
                 <div>

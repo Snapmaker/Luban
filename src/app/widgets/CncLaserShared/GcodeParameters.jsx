@@ -92,8 +92,6 @@ class GcodeParameters extends PureComponent {
             multiPassEnabled = null, multiPasses, multiPassDepth
         } = this.props.gcodeConfig;
 
-        console.log(this.props.gcodeConfig);
-
         return (
             <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
