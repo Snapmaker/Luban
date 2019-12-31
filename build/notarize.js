@@ -7,6 +7,13 @@ module.exports = async function notarizing(context) {
         return;
     }
 
+    // Notarize only when running on Travis-CI and has a tag.
+    const isTravis = process.env.TRAVIS;
+    const tag = process.env.TRAVIS_TAG;
+    if (!isTravis || !tag) {
+        return;
+    }
+
     const appName = context.packager.appInfo.productFilename;
 
     const ascProvider = 'CTHX7X38C3';

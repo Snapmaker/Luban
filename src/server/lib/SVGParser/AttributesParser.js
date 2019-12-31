@@ -8,7 +8,7 @@ const log = logger('SVGParser:AttributesParser');
 function parseDAttribute(value) {
     const items = [];
 
-    const re = /([A-Za-z]|(-?[0-9]+\.?[0-9]*(e-?[0-9]*)?))/g;
+    const re = /([A-Za-z]|(-?(([0-9]+\.?[0-9]*)|(\.[0-9]+))(e-?[0-9]*)?))/g;
     let m = re.exec(value);
     while (m) {
         const f = parseFloat(m[1]);
