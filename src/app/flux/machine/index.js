@@ -546,6 +546,7 @@ export const actions = {
             isHomed: null,
             workflowStatus: WORKFLOW_STATUS_UNKNOWN,
             laserFocalLength: null,
+            isServerWaiting: false,
             workPosition: { // work position
                 x: '0.000',
                 y: '0.000',
