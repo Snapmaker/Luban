@@ -1,6 +1,6 @@
 import request from 'superagent';
 import events from 'events';
-import { MACHINE_HEAD_TYPE, MACHINE_SERIES, WORKFLOW_STATUS_UNKNOWN } from '../../constants';
+import { MACHINE_HEAD_TYPE, MACHINE_SERIES, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN } from '../../constants';
 import { valueOf } from '../../lib/contants-utils';
 
 /**
@@ -209,6 +209,7 @@ export class Server extends events.EventEmitter {
 
                 if (this.waitConfirm) {
                     this.waitConfirm = false;
+                    this.isConnected = true;
                     this.emit('http:confirm', { data: this._getStatus() });
                 } else {
                     this.emit('http:status', { data: this._getStatus() });
@@ -267,6 +268,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/upload`;
         request
             .post(api)
+            .timeout(300000)
             .field('token', this.token)
             .attach('file', file, filename)
             .end((err, res) => {
@@ -287,6 +289,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/start_print`;
         request
             .post(api)
+            .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, code, data } = this._getResult(err, res);
@@ -309,6 +312,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/pause_print`;
         request
             .post(api)
+            .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
@@ -330,6 +334,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/resume_print`;
         request
             .post(api)
+            .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, code, data } = this._getResult(err, res);
@@ -349,6 +354,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/stop_print`;
         request
             .post(api)
+            .timeout(120000)
             .send(`token=${this.token}`)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
@@ -362,6 +368,9 @@ export class Server extends events.EventEmitter {
 
     executeGcode = (gcode, callback) => {
         if (!this.token) {
+            return Promise.resolve();
+        }
+        if (this.isConnected && this.status !== WORKFLOW_STATUS_IDLE) {
             return Promise.resolve();
         }
         return new Promise(resolve => {

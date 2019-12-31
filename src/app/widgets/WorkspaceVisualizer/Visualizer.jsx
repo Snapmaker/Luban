@@ -48,6 +48,7 @@ class Visualizer extends Component {
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
         isConnected: PropTypes.bool.isRequired,
+        isServerWaiting: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
@@ -828,6 +829,7 @@ class Visualizer extends Component {
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
+                            isServerWaiting={this.props.isServerWaiting}
                             connectionType={this.props.connectionType}
                             backgroundEnabled={this.props.backgroundEnabled}
                             state={state}
@@ -890,6 +892,7 @@ const mapStateToProps = (state) => {
         headType: machine.headType,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,
+        isServerWaiting: machine.isServerWaiting,
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
