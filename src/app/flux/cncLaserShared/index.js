@@ -133,6 +133,7 @@ export const actions = {
         let { config } = modelDefaultConfigs;
         const { gcodeConfig } = modelDefaultConfigs;
 
+
         if (headerType === 'cnc') {
             const { toolDiameter, toolAngle } = getState().cnc.toolParams;
             config = { ...config, toolDiameter, toolAngle };
@@ -140,20 +141,18 @@ export const actions = {
         // Pay attention to judgment conditions
         if (caseConfigs && caseConfigs.config) {
             Object.entries(caseConfigs.config).forEach(([key, value]) => {
-                if (config[key]) {
+                if (config[key] !== null && config[key] !== undefined) {
                     config[key] = value;
                 }
             });
         }
         if (caseConfigs && caseConfigs.gcodeConfig) {
             Object.entries(caseConfigs.gcodeConfig).forEach(([key, value]) => {
-                if (gcodeConfig[key]) {
+                if (gcodeConfig[key] !== null && gcodeConfig[key] !== undefined) {
                     gcodeConfig[key] = value;
                 }
             });
         }
-
-        console.log('modelDefaultConfigs 1', config, gcodeConfig);
 
         let transformation = caseTransformation || {};
 

@@ -169,7 +169,7 @@ class SetBackground extends PureComponent {
                     onClick={this.actions.showModal}
                     style={{ display: (connectionType !== CONNECTION_TYPE_WIFI || !isConnected || hasBackground) ? 'none' : 'block' }}
                 >
-                    {i18n._('Add Background')}
+                    {i18n._('Camera Capture')}
                 </button>
                 <button
                     type="button"

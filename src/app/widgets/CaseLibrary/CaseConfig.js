@@ -22,55 +22,10 @@ export const CaseConfig150 = [
             isRecommand: false,
             definitionId: 'quality.normal_quality1',
             layer_height: 0.16,
-            // top_thickness: 0.8,
-            // infill_sparse_density: 0.08,
-            // speed_infill: 60,
-            // speed_wall_0: 60,
-            // speed_wall_x: 60,
-            // speed_travel: 70
 
             // layer_height: 0.16,
             layer_height_0: 0.25,
-            // initial_layer_line_width_factor
-            // wall_thickness
-            // wall_line_count
-            // top_thickness
-            // top_layers
-            // bottom_thickness
-            // bottom_layers
-            // outer_inset_first
-            // infill_line_distance
-            // infill_sparse_density
-            // retraction_enable
-            // retraction_speed
-            // retraction_amount
-            // retract_at_layer_change
-            // speed_travel
-            // speed_topbottom
-            // speed_wall_x
-            // speed_wall_0
-            // speed_wall
-            // speed_infill
-            // speed_print
-            // speed_print_layer_0
-            // speed_travel_layer_0
-            // skirt_brim_speed
-            // retraction_hop
-            // retraction_hop_enabled
             magic_spiralize: true
-            // magic_mesh_surface_mode
-            // adhesion_type
-            // skirt_line_count: 1
-            // brim_width
-            // brim_line_count
-            // raft_margin
-            // support_enable
-            // support_type
-            // support_pattern
-            // support_angle
-            // support_infill_rate
-            // support_line_distance
-            // support_initial_layer_line_distance
         }
     },
     {
@@ -334,7 +289,7 @@ export const CaseConfig350 = [
         tag: 'laser',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
+        imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
         pathConfig: {
             name: 'Laser_test_A350.svg',
             casePath: './A350'

@@ -92,6 +92,8 @@ class GcodeParameters extends PureComponent {
             multiPassEnabled = null, multiPasses, multiPassDepth
         } = this.props.gcodeConfig;
 
+        console.log(this.props.gcodeConfig);
+
         return (
             <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
@@ -144,7 +146,7 @@ class GcodeParameters extends PureComponent {
                                         step={1}
                                         onChange={actions.onChangeJogSpeed}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                    <span className="sm-parameter-row__input-unit">mm/min</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -163,7 +165,7 @@ class GcodeParameters extends PureComponent {
                                         max={6000}
                                         onChange={actions.onChangeWorkSpeed}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                    <span className="sm-parameter-row__input-unit">mm/min</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -182,7 +184,7 @@ class GcodeParameters extends PureComponent {
                                         step={0.1}
                                         onChange={actions.onChangeDwellTime}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                    <span className="sm-parameter-row__input-unit">mm/min</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -201,7 +203,7 @@ class GcodeParameters extends PureComponent {
                                         step={0.1}
                                         onChange={actions.onChangePlungeSpeed}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                    <span className="sm-parameter-row__input-unit">mm/min</span>
                                 </div>
                             </TipTrigger>
                         )}

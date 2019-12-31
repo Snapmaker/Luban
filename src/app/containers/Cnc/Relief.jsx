@@ -53,7 +53,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeWorkSpeed}
                                     disabled={stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/min</span>
                             </div>
                         </td>
                     </tr>
@@ -73,7 +73,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangePlungeSpeed}
                                     disabled={stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/min</span>
                             </div>
                         </td>
                     </tr>
@@ -94,7 +94,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeJogSpeed}
                                     disabled={stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/min</span>
                             </div>
                         </td>
                     </tr>

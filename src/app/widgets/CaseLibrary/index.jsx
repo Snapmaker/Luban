@@ -17,6 +17,7 @@ class CaseLibrary extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
         headType: PropTypes.string,
+        isConnected: PropTypes.bool,
         // laser: PropTypes.object.isRequired,
         insertDefaultCncTextVector: PropTypes.func.isRequired,
         insertDefaultLaserTextVector: PropTypes.func.isRequired,
@@ -26,6 +27,7 @@ class CaseLibrary extends PureComponent {
         qualityDefinitions: PropTypes.array.isRequired,
         materialDefinitions: PropTypes.array.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
+        updateDefinitionSettings: PropTypes.func.isRequired,
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         uploadCaseModel: PropTypes.func.isRequired,
@@ -57,6 +59,8 @@ class CaseLibrary extends PureComponent {
                 }
                 // Select new definition after creation
                 this.props.updateDefaultMaterialId(newDefinition.definitionId);
+                this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
+                this.props.updateActiveDefinition(newDefinition);
             }
 
             const qualityDefinitionId = config.quality.definitionId;
@@ -85,6 +89,8 @@ class CaseLibrary extends PureComponent {
                 this.props.updateDefaultAdvised(false);
 
                 this.props.updateDefaultQualityId(newDefinition.definitionId);
+                this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
+                this.props.updateActiveDefinition(newDefinition);
             }
         },
         loadLaserCncCaseSettings: async (config) => {
@@ -177,7 +183,7 @@ class CaseLibrary extends PureComponent {
                                             'sm-btn-default',
                                             styles.load,
                                         )}
-                                        disabled={this.props.headType !== config.tag}
+                                        disabled={this.props.isConnected && this.props.headType !== config.tag}
                                         onClick={() => this.loadCase(config)}
                                     >
                                         {i18n._('load')}
@@ -233,6 +239,7 @@ const mapStateToProps = (state) => {
         materialDefinitions,
         series: machine.series,
         headType: machine.headType,
+        isConnected: machine.isConnected,
         defaultMaterialId,
         qualityDefinitions,
         activeDefinition
@@ -253,6 +260,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
     updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
     updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
+    updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
     duplicateMaterialDefinition: (definition, newDefinitionId) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId)),
     duplicateQualityDefinition: (definition, newDefinitionId) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId)),
     uploadCaseModel: (file) => dispatch(printingActions.uploadCaseModel(file))
