@@ -130,9 +130,9 @@ function generateOverridesConfig() {
                     normalConfig.overrides[key].children[setting.key].default_value = parseFloat(value.v2);
                     highConfig.overrides[key].children[setting.key].default_value = parseFloat(value.v3);
                 } else if (type === 'boolean') {
-                    fastConfig.overrides[key].children[setting.key].default_value = value.v1 === 'true';
-                    normalConfig.overrides[key].children[setting.key].default_value = value.v2 === 'true';
-                    highConfig.overrides[key].children[setting.key].default_value = value.v3 === 'true';
+                    fastConfig.overrides[key].children[setting.key].default_value = value.v1 === '✔';
+                    normalConfig.overrides[key].children[setting.key].default_value = value.v2 === '✔';
+                    highConfig.overrides[key].children[setting.key].default_value = value.v3 === '✔';
                 } else {
                     console.log('type error', type);
                 }

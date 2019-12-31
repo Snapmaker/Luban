@@ -20,7 +20,8 @@ class Printing extends PureComponent {
         heatedBedTargetTemperature: PropTypes.number.isRequired,
         workflowStatus: PropTypes.string.isRequired,
 
-        executeGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func.isRequired,
+        addConsoleLogs: PropTypes.func.isRequired
     };
 
     state = {
@@ -68,13 +69,23 @@ class Printing extends PureComponent {
         onClickPlusZOffset: () => {
             const value = this.state.zOffsetValue;
             if (this.actions.isWifiPrinting()) {
-                this.props.server.updateZOffset(value);
+                this.props.server.updateZOffset(value, (err) => {
+                    if (err) {
+                        return;
+                    }
+                    this.props.addConsoleLogs([`Z Offset ${value} ok`]);
+                });
             }
         },
         onClickMinusZOffset: () => {
             const value = this.state.zOffsetValue;
             if (this.actions.isWifiPrinting()) {
-                this.props.server.updateZOffset(-value);
+                this.props.server.updateZOffset(-value, (err) => {
+                    if (err) {
+                        return;
+                    }
+                    this.props.addConsoleLogs([`Z Offset ${-value} ok`]);
+                });
             }
         },
         onClickLoad: () => {
@@ -221,7 +232,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
+        addConsoleLogs: (gcode, context) => dispatch(machineActions.addConsoleLogs(gcode, context))
     };
 };
 

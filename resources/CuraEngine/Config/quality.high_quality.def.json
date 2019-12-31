@@ -101,7 +101,7 @@
             "type": "category",
             "children": {
                 "retraction_enable": {
-                    "default_value": false,
+                    "default_value": true,
                     "label": "Enable Retraction"
                 },
                 "retraction_speed": {

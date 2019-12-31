@@ -53,6 +53,7 @@ const INITIAL_STATE = {
     serverToken: '',
     servers: [],
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
+    isServerWaiting: false,
     discovering: false,
 
     // Console
@@ -567,6 +568,9 @@ export const actions = {
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], filename);
         const promises = [];
+        dispatch(actions.updateState({
+            isServerWaiting: true
+        }));
         if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
             if (isLaserPrintAutoMode && laserFocalLength) {
                 const promise = new Promise((resolve) => {
@@ -588,9 +592,15 @@ export const actions = {
         Promise.all(promises).then(() => {
             server.uploadGcodeFile(filename, file, type, (msg) => {
                 if (msg) {
+                    dispatch(actions.updateState({
+                        isServerWaiting: false
+                    }));
                     return;
                 }
                 server.startGcode((err) => {
+                    dispatch(actions.updateState({
+                        isServerWaiting: false
+                    }));
                     if (err) {
                         callback && callback(err);
                         return;
@@ -605,7 +615,13 @@ export const actions = {
 
     resumeServerGcode: (callback) => (dispatch, getState) => {
         const { server } = getState().machine;
+        dispatch(actions.updateState({
+            isServerWaiting: true
+        }));
         server.resumeGcode((err) => {
+            dispatch(actions.updateState({
+                isServerWaiting: false
+            }));
             if (err) {
                 callback && callback(err);
                 return;
@@ -621,7 +637,13 @@ export const actions = {
         if (workflowStatus !== WORKFLOW_STATUS_RUNNING) {
             return;
         }
+        dispatch(actions.updateState({
+            isServerWaiting: true
+        }));
         server.pauseGcode((msg) => {
+            dispatch(actions.updateState({
+                isServerWaiting: false
+            }));
             if (msg) {
                 return;
             }
@@ -636,7 +658,13 @@ export const actions = {
         if (workflowStatus === WORKFLOW_STATUS_IDLE) {
             return;
         }
+        dispatch(actions.updateState({
+            isServerWaiting: true
+        }));
         server.stopGcode((msg) => {
+            dispatch(actions.updateState({
+                isServerWaiting: false
+            }));
             if (msg) {
                 return;
             }

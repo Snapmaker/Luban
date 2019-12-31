@@ -6,7 +6,7 @@ import {
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI
+    WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -18,6 +18,7 @@ class WorkflowControl extends PureComponent {
         uploadState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
+        isServerWaiting: PropTypes.bool,
         connectionType: PropTypes.string,
         backgroundEnabled: PropTypes.bool,
         state: PropTypes.object,
@@ -74,15 +75,15 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, actions, connectionType, workflowStatus, isConnected, backgroundEnabled } = this.props;
+        const { state, actions, connectionType, workflowStatus, isConnected, backgroundEnabled, isServerWaiting } = this.props;
         const { gcode, workflowState } = state;
 
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = gcode.renderState === 'rendered';
         const isUploaded = isWifi ? true : this.props.uploadState === 'uploaded';
-        const canUpload = _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], status);
-        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], status);
+        const canUpload = _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
+        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
         const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
         const canPause = _.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
         const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
@@ -118,7 +119,7 @@ class WorkflowControl extends PureComponent {
                             style={{ height: '30px' }}
                             title={i18n._('Run')}
                             onClick={actions.handleRun}
-                            disabled={!canPlay}
+                            disabled={isServerWaiting || !canPlay}
                         >
                             <i className="fa fa-play" />
                         </button>
@@ -128,7 +129,7 @@ class WorkflowControl extends PureComponent {
                             style={{ height: '30px' }}
                             title={i18n._('Pause')}
                             onClick={actions.handlePause}
-                            disabled={!canPause}
+                            disabled={isServerWaiting || !canPause}
                         >
                             <i className="fa fa-pause" />
                         </button>
@@ -138,7 +139,7 @@ class WorkflowControl extends PureComponent {
                             style={{ height: '30px' }}
                             title={i18n._('Stop')}
                             onClick={actions.handleStop}
-                            disabled={!canStop}
+                            disabled={isServerWaiting || !canStop}
                         >
                             <i className="fa fa-stop" />
                         </button>
@@ -148,7 +149,7 @@ class WorkflowControl extends PureComponent {
                             style={{ height: '30px' }}
                             title={i18n._('Close')}
                             onClick={actions.handleClose}
-                            disabled={!canClose}
+                            disabled={isServerWaiting || !canClose}
                         >
                             <i className="fa fa-close" />
                         </button>
