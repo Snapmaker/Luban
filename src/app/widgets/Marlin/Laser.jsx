@@ -119,7 +119,7 @@ class Printing extends PureComponent {
                                 {isLaserPrintAutoMode && (
                                     <div>
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Set Material Thickness')}</span>
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Material Thickness')}</span>
                                             <span>
                                                 <Input
                                                     className="sm-parameter-row__input"

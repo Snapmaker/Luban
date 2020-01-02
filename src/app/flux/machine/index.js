@@ -93,7 +93,7 @@ const INITIAL_STATE = {
 
     // laser print mode
     isLaserPrintAutoMode: true,
-    materialThickness: 2.5,
+    materialThickness: 1.5,
 
     gcodePrintingInfo: {
         sent: 0,

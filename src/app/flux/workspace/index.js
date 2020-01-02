@@ -97,12 +97,21 @@ export const actions = {
 
     addGcodeFile: (fileInfo) => (dispatch, getState) => {
         const { gcodeFiles } = getState().workspace;
+
         const files = [];
         files.push(fileInfo);
-        const len = Math.min(gcodeFiles.length, 4);
-        for (let i = 0; i < len; i++) {
-            files.push(gcodeFiles[i]);
+
+        let added = 1, i = 0;
+        while (added < 5 && i < gcodeFiles.length) {
+            const gcodeFile = gcodeFiles[i];
+            // G-code file with the same uploadName will be replaced with current one
+            if (gcodeFile.uploadName !== fileInfo.uploadName) {
+                files.push(gcodeFile);
+                added++;
+            }
+            i++;
         }
+
         dispatch(actions.updateState({
             gcodeFiles: files
         }));

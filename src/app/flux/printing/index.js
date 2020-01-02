@@ -592,7 +592,11 @@ export const actions = {
         };
     },
     // Upload model
-    // @param file
+    // @param file: JSON describe the file
+    // pathConfig: {
+    //     name: '3DP_test_A150.stl',
+    //     casePath: './A150/'
+    // }
     uploadCaseModel: (file) => async (dispatch, getState) => {
         // Notice user that model is being loading
         dispatch(actions.updateState({

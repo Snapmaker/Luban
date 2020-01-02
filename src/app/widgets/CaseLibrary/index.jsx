@@ -31,6 +31,7 @@ class CaseLibrary extends PureComponent {
         updateDefinitionSettings: PropTypes.func.isRequired,
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
+        removeAllModels: PropTypes.func.isRequired,
         uploadCaseModel: PropTypes.func.isRequired,
         uploadCncCaseImage: PropTypes.func.isRequired,
         uploadLaserCaseImage: PropTypes.func.isRequired
@@ -139,17 +140,18 @@ class CaseLibrary extends PureComponent {
                 currentSize: option.value
             });
         }
-    }
+    };
 
     loadCase = (config) => {
         document.location.href = `/#/${config.tag}`;
         if (config.tag === '3dp') {
             this.actions.load3dpCaseSettings(config);
+            this.props.removeAllModels();
             this.props.uploadCaseModel(config.pathConfig);
         } else {
             this.actions.loadLaserCncCaseSettings(config);
         }
-    }
+    };
 
     render() {
         let CaseConfig;
@@ -256,6 +258,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
     duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId, newDefinitionName)),
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId, newDefinitionName)),
+    removeAllModels: () => dispatch(printingActions.removeAllModels()),
     uploadCaseModel: (file) => dispatch(printingActions.uploadCaseModel(file))
 });
 

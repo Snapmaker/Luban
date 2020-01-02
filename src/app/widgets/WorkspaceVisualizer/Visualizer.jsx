@@ -788,29 +788,32 @@ class Visualizer extends Component {
             }
         }));
 
-        this.gcodeRenderer = new GCodeRenderer();
-        this.modelGroup.add(this.gcodeRenderer.group);
-
-        for (const gcodeInfo of gcodeList) {
-            this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
-        }
-
         // Change state back to 'rendered' after a while
-        setTimeout(() => this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                renderState: 'rendered'
+        setTimeout(() => {
+            this.gcodeRenderer = new GCodeRenderer();
+            this.modelGroup.add(this.gcodeRenderer.group);
+
+            for (const gcodeInfo of gcodeList) {
+                this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
             }
-        })), 300);
 
-        // Auto focus on first item
-        this.autoFocus(gcodeList[0].uniqueName);
+            // Change state to 'rendered'
+            this.setState(state => ({
+                gcode: {
+                    ...state.gcode,
+                    renderState: 'rendered'
+                }
+            }));
 
-        // Update bounding box & filename
-        const bbox = this.calculateBoundingBox(gcodeList);
-        const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
-        const y = bbox.min.y - 5;
-        this.updateGcodeFilename(gcodeList[0].name, x, y);
+            // Auto focus on first item
+            this.autoFocus(gcodeList[0].uniqueName);
+
+            // Update bounding box & filename
+            const bbox = this.calculateBoundingBox(gcodeList);
+            const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
+            const y = bbox.min.y - 5;
+            this.updateGcodeFilename(gcodeList[0].name, x, y);
+        }, 100);
     }
 
     renderScene() {
@@ -915,8 +918,6 @@ const mapDispatchToProps = (dispatch) => ({
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
     stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
     removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
-
-
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

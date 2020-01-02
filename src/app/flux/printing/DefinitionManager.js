@@ -185,10 +185,9 @@ class DefinitionManager {
         }
 
         gcode.push('G92 E0');
-        gcode.push('G1 F200 E20');
+        gcode.push('G1 E20 F200');
         gcode.push('G92 E0');
         gcode.push(';Start GCode end');
-
 
         definition.settings.machine_start_gcode = { default_value: gcode.join('\n') };
     }
