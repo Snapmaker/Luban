@@ -16,6 +16,7 @@ const DefaultBgiName = '../../../images/camera-aid/Loading.gif';
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
+        laserSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
@@ -32,6 +33,8 @@ class ExtractSquareTrace extends PureComponent {
     extractingPreview = [];
 
     close = false;
+
+    multiple = 2;
 
     state = {
         panel: PANEL_EXTRACT_TRACE,
@@ -80,7 +83,7 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         startCameraAid: async () => {
-            console.log('startCameraAid', this.state.options);
+            console.log('laserSize', this.props.laserSize, this.props.size);
             if (!this.props.canTakePhoto) {
                 return;
             }
@@ -112,8 +115,8 @@ class ExtractSquareTrace extends PureComponent {
                 centerDis = 80;
                 [1, 2, 4, 3].forEach((item) => {
                     position.push({
-                        'x': this.props.size.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
-                        'y': this.props.size.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
+                        'x': this.props.laserSize.x / 2 + cameraOffsetX + centerDis / 2 * (item % 2 === 1 ? -1 : 1),
+                        'y': this.props.laserSize.y / 2 + cameraOffsetY + centerDis / 2 * (Math.ceil(item / 2) === 1 ? 1 : -1),
                         'index': item - 1
                     });
                 });
@@ -123,14 +126,14 @@ class ExtractSquareTrace extends PureComponent {
                 for (let j = 1; j >= -1; j--) {
                     if (j === 1 || j === -1) {
                         for (let i = -1; i <= 1; i++) {
-                            const x = this.props.size.x / 2 + cameraOffsetX + centerDis * i;
-                            const y = this.props.size.y / 2 + cameraOffsetY + centerDis * j;
+                            const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
+                            const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
                             position.push({ 'x': x, 'y': y, 'index': position.length });
                         }
                     } else if (j === 0) {
                         for (let i = 1; i >= -1; i--) {
-                            const x = this.props.size.x / 2 + cameraOffsetX + centerDis * i;
-                            const y = this.props.size.y / 2 + cameraOffsetY + centerDis * j;
+                            const x = this.props.laserSize.x / 2 + cameraOffsetX + centerDis * i;
+                            const y = this.props.laserSize.y / 2 + cameraOffsetY + centerDis * j;
                             if (position.length === 3) {
                                 position.push({ 'x': x, 'y': y, 'index': 5 });
                             } else if (position.length === 5) {
@@ -238,25 +241,25 @@ class ExtractSquareTrace extends PureComponent {
                         .then((res) => {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
                                 if (this.state.options.picAmount === 4) {
-                                    this.state.xSize[task.index] = this.props.size.x / 2;
-                                    this.state.ySize[task.index] = this.props.size.y / 2;
+                                    this.state.xSize[task.index] = this.props.laserSize.x / 2;
+                                    this.state.ySize[task.index] = this.props.laserSize.y / 2;
                                 } else {
                                     if (parseInt(task.index / 3, 10) === 1) {
                                         this.state.ySize[task.index] = this.state.options.centerDis;
                                     } else {
-                                        this.state.ySize[task.index] = ((this.props.size.y - this.state.options.centerDis) / 2);
+                                        this.state.ySize[task.index] = ((this.props.laserSize.y - this.state.options.centerDis) / 2);
                                     }
                                     if (task.index % 3 === 1) {
                                         this.state.xSize[task.index] = this.state.options.centerDis;
                                     } else {
-                                        this.state.xSize[task.index] = ((this.props.size.x - this.state.options.centerDis) / 2);
+                                        this.state.xSize[task.index] = ((this.props.laserSize.x - this.state.options.centerDis) / 2);
                                     }
                                 }
                                 this.props.updateEachPicSize('xSize', this.state.xSize);
                                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
                                 this.extractingPreview[task.index].current.onChangeImage(
-                                    DefaultBgiName, this.state.xSize[task.index] * 2, this.state.ySize[task.index] * 2, task.index
+                                    DefaultBgiName, this.state.xSize[task.index] * this.multiple, this.state.ySize[task.index] * this.multiple, task.index, this.multiple
                                 );
 
                                 const { fileName } = JSON.parse(res.text);
@@ -273,7 +276,7 @@ class ExtractSquareTrace extends PureComponent {
                                     const { filename } = JSON.parse(stitchImg.text);
                                     if (this.extractingPreview[task.index].current) {
                                         this.extractingPreview[task.index].current.onChangeImage(
-                                            filename, this.state.xSize[task.index] * 2, this.state.ySize[task.index] * 2, task.index
+                                            filename, this.state.xSize[task.index] * this.multiple, this.state.ySize[task.index] * this.multiple, task.index, this.multiple
                                         );
                                     }
                                     task.status = 2;
@@ -289,7 +292,11 @@ class ExtractSquareTrace extends PureComponent {
             }));
         },
         updateStitchEach: async () => {
-            // await this.props.server.executeGcode('G53;');
+            if (this.props.series === MACHINE_SERIES.A350.value) {
+                this.multiple = 1.5;
+            } else {
+                this.multiple = 2;
+            }
             if (this.state.shouldCalibrate && this.state.manualPoints.length === 4) {
                 this.setState({
                     options: {
@@ -312,11 +319,11 @@ class ExtractSquareTrace extends PureComponent {
             for (let i = 0; i < this.props.lastFileNames.length; i++) {
                 if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
                     this.extractingPreview[i].current.onChangeImage(
-                        DefaultBgiName, this.state.xSize[i] * 2, this.state.ySize[i] * 2, i
+                        DefaultBgiName, this.state.xSize[i] * this.multiple, this.state.ySize[i] * this.multiple, i, this.multiple
                     );
                 } else {
                     this.extractingPreview[i].current.onChangeImage(
-                        DefaultBgiName, this.props.xSize[i] * 2, this.props.ySize[i] * 2, i
+                        DefaultBgiName, this.props.xSize[i] * this.multiple, this.props.ySize[i] * this.multiple, i, this.multiple
                     );
                 }
                 const stitchImg = await api.processStitchEach(
@@ -330,11 +337,11 @@ class ExtractSquareTrace extends PureComponent {
 
                 if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
                     this.extractingPreview[i].current.onChangeImage(
-                        filename, this.state.xSize[i] * 2, this.state.ySize[i] * 2, i
+                        filename, this.state.xSize[i] * this.multiple, this.state.ySize[i] * this.multiple, i, this.multiple
                     );
                 } else {
                     this.extractingPreview[i].current.onChangeImage(
-                        filename, this.props.xSize[i] * 2, this.props.ySize[i] * 2, i
+                        filename, this.props.xSize[i] * this.multiple, this.props.ySize[i] * this.multiple, i, this.multiple
                     );
                 }
             }
@@ -360,7 +367,6 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         setBackgroundImage: () => {
-            // this.props.changeLastFileNames(this.state.imageNames);
             this.props.setBackgroundImage(this.state.outputFilename);
         },
         displayManualCalibration: async () => {
@@ -407,6 +413,11 @@ class ExtractSquareTrace extends PureComponent {
 
 
     render() {
+        if (this.props.series === MACHINE_SERIES.A350.value) {
+            this.multiple = 1.5;
+        } else {
+            this.multiple = 2;
+        }
         return (
             <div>
                 <div className="clearfix" />
@@ -414,12 +425,19 @@ class ExtractSquareTrace extends PureComponent {
                     <div className={styles['laser-set-background-modal-title']}>
                         {i18n._('Camera Aid Background')}
                     </div>
-                    <div className={styles['photo-display']} style={{ height: this.props.size.y * 2 + 2, width: this.props.size.x * 2 + 2 }}>
+                    <div>
+                        {i18n._('If you reinstalled the laser cutting module,  please go to the touchscreen to start camera calibration before proceeding.')}
+                    </div>
+                    <div
+                        className={styles['photo-display']}
+                        style={{ height: this.props.laserSize.y * this.multiple + 2, width: this.props.laserSize.x * this.multiple + 2 }}
+                    >
+
                         {this.extractingPreview.map((previewId, index) => {
                             const key = previewId + index;
                             return (
                                 <ExtractPreview
-                                    size={this.props.size}
+                                    size={this.props.laserSize}
                                     series={this.props.series}
                                     ref={previewId}
                                     key={key}
@@ -442,7 +460,7 @@ class ExtractSquareTrace extends PureComponent {
                             </button>
                         </div>
                     </div>
-                    <div style={{ minHeight: 30, width: this.props.size.x * 2 + 2, margin: '0 auto' }}>
+                    <div style={{ minHeight: 30, width: this.props.laserSize.x * this.multiple + 2, margin: '0 auto' }}>
                         <div className="clearfix" />
                         <button
                             type="button"
@@ -491,8 +509,9 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
         series: machine.series,
+        size: machine.size,
         server: machine.server,
-        size: machine.size
+        laserSize: machine.laserSize
     };
 };
 export default connect(mapStateToProps)(ExtractSquareTrace);

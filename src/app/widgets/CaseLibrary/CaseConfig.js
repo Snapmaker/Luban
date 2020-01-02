@@ -104,7 +104,7 @@ export const CaseConfig150 = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Smartphone Holder',
+        title: 'CNC Cutting Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/CNC-A150.png',
         pathConfig: {

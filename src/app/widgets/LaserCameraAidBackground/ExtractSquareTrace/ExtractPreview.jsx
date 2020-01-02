@@ -23,11 +23,11 @@ class ExtractPreview extends Component {
 
     isAbsolute;
 
-    onChangeImage(filename, width = 100, height = 100, index) {
+    onChangeImage(filename, width = 100, height = 100, index, multiple) {
         if (this.props.series === MACHINE_SERIES.A150.value) {
-            this.calcuStyle(index, width, height, 2);
+            this.calcuStyle(index, width, height, 2, multiple);
         } else {
-            this.calcuStyle(index, width, height, 3);
+            this.calcuStyle(index, width, height, 3, multiple);
         }
 
         this.setState({
@@ -38,30 +38,30 @@ class ExtractPreview extends Component {
         });
     }
 
-    calcuStyle(index, width, height, divideNumber) {
+    calcuStyle(index, width, height, divideNumber, multiple) {
         if (parseInt(index / divideNumber, 10) === 1) {
             this.isAbsolute = true;
             if (index % divideNumber === 0) {
-                this.top = divideNumber === 3 ? (this.props.size.y * 2 - height) / 2 : (this.props.size.y * 2 - height);
+                this.top = divideNumber === 3 ? (this.props.size.y * multiple - height) / 2 : (this.props.size.y * multiple - height);
                 this.left = 0;
             } else if (index % divideNumber === 2) {
-                this.top = (this.props.size.y * 2 - height) / 2;
-                this.left = (this.props.size.x * 2 - width);
+                this.top = (this.props.size.y * multiple - height) / 2;
+                this.left = (this.props.size.x * multiple - width);
             } else if (index % divideNumber === 1) {
-                this.top = divideNumber === 3 ? (this.props.size.y * 2 - height) / 2 : (this.props.size.y * 2 - height);
-                this.left = divideNumber === 3 ? (this.props.size.x * 2 - width) / 2 : (this.props.size.x * 2 - width);
+                this.top = divideNumber === 3 ? (this.props.size.y * multiple - height) / 2 : (this.props.size.y * multiple - height);
+                this.left = divideNumber === 3 ? (this.props.size.x * multiple - width) / 2 : (this.props.size.x * multiple - width);
             }
         } else if (parseInt(index / divideNumber, 10) === 2) {
             this.isAbsolute = true;
             if (index % divideNumber === 0) {
-                this.top = (this.props.size.y * 2 - height);
+                this.top = (this.props.size.y * multiple - height);
                 this.left = 0;
             } else if (index % divideNumber === 1) {
-                this.top = (this.props.size.y * 2 - height);
-                this.left = (this.props.size.x * 2 - width) / 2;
+                this.top = (this.props.size.y * multiple - height);
+                this.left = (this.props.size.x * multiple - width) / 2;
             } else if (index % divideNumber === 2) {
-                this.top = (this.props.size.y * 2 - height);
-                this.left = (this.props.size.x * 2 - width);
+                this.top = (this.props.size.y * multiple - height);
+                this.left = (this.props.size.x * multiple - width);
             }
         }
     }

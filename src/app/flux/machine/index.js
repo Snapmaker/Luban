@@ -327,6 +327,7 @@ export const actions = {
         dispatch(actions.updateState({ series }));
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
         seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
+        seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
         dispatch(widgetActions.updateMachineSeries(series));
     },
 
@@ -348,6 +349,17 @@ export const actions = {
         dispatch(actions.updateState({ size }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
+    },
+    updateLaserSize: (laserSize) => (dispatch) => {
+        laserSize.x = Math.min(laserSize.x, 1000);
+        laserSize.y = Math.min(laserSize.y, 1000);
+        laserSize.z = Math.min(laserSize.z, 1000);
+
+        machineStore.set('machine.laserSize', laserSize);
+
+        dispatch(actions.updateState({ laserSize }));
+
+        dispatch(printingActions.updateActiveDefinitionMachineSize(laserSize));
     },
     resetHomeState: () => (dispatch) => {
         dispatch(actions.updateState({ isHomed: null }));
@@ -558,7 +570,7 @@ export const actions = {
 
     startServerGcode: (callback) => (dispatch, getState) => {
         const { server, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeList, background } = getState().workspace;
+        const { gcodeList } = getState().workspace;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
             return;
         }
@@ -581,14 +593,14 @@ export const actions = {
                 });
                 promises.push(promise);
             }
-            if (background.enabled) {
-                const promise = new Promise((resolve) => {
-                    server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
-                        resolve();
-                    });
+            // if (background.enabled) {
+            const promise = new Promise((resolve) => {
+                server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
+                    resolve();
                 });
-                promises.push(promise);
-            }
+            });
+            promises.push(promise);
+            // }
         }
         Promise.all(promises).then(() => {
             server.uploadGcodeFile(filename, file, type, (msg) => {

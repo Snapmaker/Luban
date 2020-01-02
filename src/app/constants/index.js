@@ -115,12 +115,14 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A150',
         setting: {
             size: {
+                x: 160,
+                y: 160,
+                z: 145
+            },
+            laserSize: {
                 x: 166,
                 y: 168,
                 z: 150
-                // x: 160,
-                // y: 160,
-                // z: 145
             }
         },
         alias: ['SM2-S', 'Snapmaker 2.0 A150']
@@ -130,6 +132,11 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A250',
         setting: {
             size: {
+                x: 230,
+                y: 250,
+                z: 235
+            },
+            laserSize: {
                 x: 252,
                 y: 260,
                 z: 235
@@ -143,6 +150,11 @@ export const MACHINE_SERIES = {
         label: 'Snapmaker 2.0 A350',
         setting: {
             size: {
+                x: 320,
+                y: 350,
+                z: 330
+            },
+            laserSize: {
                 x: 345,
                 y: 360,
                 z: 334

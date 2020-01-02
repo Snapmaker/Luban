@@ -77,7 +77,6 @@ class WorkflowControl extends PureComponent {
     render() {
         const { state, actions, connectionType, workflowStatus, isConnected, backgroundEnabled, isServerWaiting } = this.props;
         const { gcode, workflowState } = state;
-
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = gcode.renderState === 'rendered';

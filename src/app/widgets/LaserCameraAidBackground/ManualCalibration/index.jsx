@@ -82,7 +82,7 @@ class ManualCalibration extends PureComponent {
         return (
             <div>
                 <div className="clearfix" />
-                <div className={styles['laser-set-background-modal-title']}>
+                <div className={styles['laser-set-background-calibration-title']}>
                     {i18n._('Calibration')}
                 </div>
                 <div className={styles['laser-set-background-modal-content']}>
@@ -127,7 +127,7 @@ class ManualCalibration extends PureComponent {
 
                     <div className={styles['calibrate-advise']}>
                         <p style={{ margin: '0', textAlign: 'center' }}>
-                            {i18n._('滚轮来缩放，按住右键左右来移动') }
+                            {i18n._('Zoom with Scroll Wheel; Move horizontally with Right Mouse Button') }
                         </p>
                     </div>
                 </div>

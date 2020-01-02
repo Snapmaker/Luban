@@ -293,7 +293,6 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => () => {
-        console.log('updateDefinitionSettings');
         settings = definitionManager.calculateDependencies(definition, settings);
 
         return definitionManager.updateDefinition({
@@ -343,7 +342,6 @@ export const actions = {
                 activeDefinition.settings[key].from = definition.definitionId;
             }
         }
-
         if (shouldSave) {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {

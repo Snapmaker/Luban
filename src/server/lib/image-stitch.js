@@ -35,7 +35,6 @@ export const stitchEach = async (options) => {
     // phrase 2 - stitch
     // const images = [];
     const image = await readImage(`${DataStorage.tmpDir}/${stitchFileName}`);
-    console.log('stitchEach>>>>>>>>>>>>>', stitchFileName);
     // add to show stitch pic
     const { width, height } = image.bitmap;
     let xSize = 0, ySize = 0;
