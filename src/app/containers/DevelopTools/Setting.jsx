@@ -84,7 +84,7 @@ class Setting extends PureComponent {
         return (
             <div>
                 <div>
-                    <p>{i18n._('Machine Setting')}</p>
+                    <p>{i18n._('Machine Settings')}</p>
                     <ul style={{ listStyle: 'none' }}>
                         <li>
                             <p className={styles['title-row']}>{i18n._('Size')}</p>

@@ -87,14 +87,14 @@ class WifiTransport extends PureComponent {
                 this.props.server.uploadFile(find.uploadName, file, (err, data, text) => {
                     if (err) {
                         modalSmallHOC({
-                            title: i18n._('Send File Error'),
+                            title: i18n._('Failed to Send File'),
                             text: text,
                             img: IMAGE_WIFI_ERROR
                         });
                     } else {
                         modalSmallHOC({
-                            title: i18n._('Send File Success'),
-                            text: i18n._('Please go to the screen to confirm whether to start print.'),
+                            title: i18n._('Send File Successfully'),
+                            text: i18n._('Please confirm and choose whether to start print this file on the touchscreen.'),
                             img: IMAGE_WIFI_CONNECTED
                         });
                     }
@@ -195,7 +195,7 @@ class WifiTransport extends PureComponent {
                             onClick={actions.onClickToUpload}
                         >
                             <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
-                            {i18n._('Upload Files')}
+                            {i18n._('Upload')}
                         </Anchor>
                     </div>
                 </div>

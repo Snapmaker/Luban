@@ -117,7 +117,7 @@ class EditMacro extends PureComponent {
                                         </Modal.Title>
                                     </Modal.Header>
                                     <Modal.Body>
-                                        {i18n._('Are you sure you want to delete this macro?')}
+                                        {i18n._('Delete this macro?')}
                                         <p><strong>{name_}</strong></p>
                                     </Modal.Body>
                                     <Modal.Footer>

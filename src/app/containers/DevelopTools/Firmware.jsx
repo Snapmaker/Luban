@@ -181,10 +181,10 @@ class Firmware extends PureComponent {
                                     clearable={false}
                                     options={[{
                                         value: 'MainControl',
-                                        label: i18n._('MainControl')
+                                        label: i18n._('Main Controller')
                                     }, {
                                         value: 'Module',
-                                        label: i18n._('Module')
+                                        label: i18n._('Modules')
                                     }]}
                                     value={originFileUpdateType}
                                     searchable={false}

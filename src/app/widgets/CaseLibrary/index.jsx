@@ -198,7 +198,7 @@ class CaseLibrary extends PureComponent {
                                     </div>
                                     <div className={styles.cardtext}>
                                         <h4>{config.title}</h4>
-                                        <p>{i18n._('By Snapmaker')}</p>
+                                        <p>{i18n._('by Snapmaker')}</p>
                                     </div>
 
                                     <button
@@ -224,40 +224,6 @@ class CaseLibrary extends PureComponent {
     }
 }
 
-// <div className={classNames(styles.container, styles.videoTutorials)}>
-//     <h2 className={styles.mainTitle}>
-//         {i18n._('Video Tutorials')}
-//     </h2>
-//     <div className={styles.columns}>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/Assemble.png" alt="" />
-//             </div>
-//             <p>{i18n._('How to Assemble The Machine')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
-//
-//             </div>
-//             <p>{i18n._('How to Use the 3D Printer')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/Laser-Cutter.png" alt="" />
-//
-//             </div>
-//             <p>{i18n._('How to Use the Laser Carver')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/CNC-Carver.png" alt="" />
-//             </div>
-//
-//             <p>{i18n._('How to Use the CNC Carver')}</p>
-//         </div>
-//     </div>
-// </div>
 const mapStateToProps = (state) => {
     const printing = state.printing;
     const machine = state.machine;

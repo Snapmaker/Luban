@@ -91,7 +91,7 @@ class GCode extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('G-Code'));
+        this.props.setTitle(i18n._('G-code'));
     }
 
     getInitialState() {

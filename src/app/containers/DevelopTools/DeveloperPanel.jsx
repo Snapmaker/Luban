@@ -604,7 +604,7 @@ class DeveloperPanel extends PureComponent {
                         </Tab>
                         <Tab
                             eventKey="gcodefile"
-                            title={i18n._('G-Code')}
+                            title={i18n._('G-code')}
                         >
                             <GcodeFile
                                 port={this.props.port}

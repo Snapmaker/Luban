@@ -143,7 +143,7 @@ class Connection extends PureComponent {
                         </Modal.Header>
                         <Modal.Body>
                             <div>
-                                {i18n._('The motors are homed yet. Please execute Home(G28) command before any movement.')}
+                                {i18n._('To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.')}
                             </div>
                         </Modal.Body>
                         <Modal.Footer>

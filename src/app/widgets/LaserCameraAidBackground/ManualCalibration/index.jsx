@@ -117,7 +117,7 @@ class ManualCalibration extends PureComponent {
                             >
                                 <i className={styles['confirm-actions__icon-confirm']} />
                                 <span className={styles['reset-actions__text']}>
-                                    {i18n._(' Confirm')}
+                                    {i18n._('Confirm')}
                                 </span>
                             </Anchor>
                         </div>
