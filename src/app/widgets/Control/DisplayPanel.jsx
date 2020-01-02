@@ -47,8 +47,8 @@ class DisplayPanel extends PureComponent {
                     <thead>
                         <tr>
                             <th className="nowrap" title={i18n._('Axis')}>{i18n._('Axis')}</th>
-                            <th title={i18n._('Machine Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Machine Coordinates')}</th>
-                            <th title={i18n._('Work Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Work Coordinates')}</th>
+                            <th className={styles['coordinate-title']} title={i18n._('Machine Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Machine Coordinates')}</th>
+                            <th className={styles['coordinate-title']} title={i18n._('Work Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Work Coordinates')}</th>
                             <th className="nowrap" title={i18n._('Action')}>{i18n._('Action')}</th>
                         </tr>
                     </thead>
@@ -56,7 +56,7 @@ class DisplayPanel extends PureComponent {
                         {includes(axes, 'x') && (
                             <tr>
                                 <td className={styles.coordinate}>X</td>
-                                <td className={styles.workPosition}>
+                                <td className={styles['work-position']}>
                                     <span className={styles.dimensionUnits}>{lengthUnits}</span>
                                     <div>
                                         <span className={styles.integerPart}>{machinePositionX}</span>
