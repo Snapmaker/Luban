@@ -57,14 +57,11 @@ class Visualizer extends Component {
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
-        backgroundGroup: PropTypes.object.isRequired,
-        backgroundEnabled: PropTypes.bool.isRequired,
 
         startServerGcode: PropTypes.func.isRequired,
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
-        removeBackgroundImage: PropTypes.func.isRequired,
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -483,10 +480,6 @@ class Visualizer extends Component {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-        },
-        removeBackgroundImage: () => {
-            this.props.removeBackgroundImage();
-            this.renderScene();
         }
     };
 
@@ -834,7 +827,6 @@ class Visualizer extends Component {
                             isConnected={this.props.isConnected}
                             isServerWaiting={this.props.isServerWaiting}
                             connectionType={this.props.connectionType}
-                            backgroundEnabled={this.props.backgroundEnabled}
                             state={state}
                             actions={this.actions}
                             uploadState={this.props.uploadState}
@@ -843,7 +835,6 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
-                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
@@ -899,8 +890,6 @@ const mapStateToProps = (state) => {
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
-        backgroundGroup: workspace.background.group,
-        backgroundEnabled: workspace.background.enabled,
         gcodePrintingInfo: machine.gcodePrintingInfo,
         workPosition: machine.workPosition
     };
@@ -916,8 +905,7 @@ const mapDispatchToProps = (dispatch) => ({
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
-    stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
-    removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);
