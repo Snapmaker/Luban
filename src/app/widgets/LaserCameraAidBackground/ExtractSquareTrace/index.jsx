@@ -83,7 +83,6 @@ class ExtractSquareTrace extends PureComponent {
             });
         },
         startCameraAid: async () => {
-            console.log('laserSize', this.props.laserSize, this.props.size);
             if (!this.props.canTakePhoto) {
                 return;
             }
@@ -98,7 +97,6 @@ class ExtractSquareTrace extends PureComponent {
             const resPro = await api.getCameraCalibration({ 'address': address });
             const resData = JSON.parse(resPro.body.res.text);
 
-            // const getPoints = (this.state.shouldCalibrate && this.state.manualPoints.length === 4) ? this.state.manualPoints : resData.points;
             this.setState({
                 options: {
                     ...this.state.options,
@@ -294,8 +292,13 @@ class ExtractSquareTrace extends PureComponent {
         updateStitchEach: async () => {
             if (this.props.series === MACHINE_SERIES.A350.value) {
                 this.multiple = 1.5;
-            } else {
-                this.multiple = 2;
+            } else if (this.props.series === MACHINE_SERIES.A150.value) {
+                this.setState({
+                    options: {
+                        ...this.state.options,
+                        centerDis: 80
+                    }
+                });
             }
             if (this.state.shouldCalibrate && this.state.manualPoints.length === 4) {
                 this.setState({
@@ -315,7 +318,7 @@ class ExtractSquareTrace extends PureComponent {
                     }
                 });
             }
-
+            // fileNames, getPoints, corners, size, centerDis
             for (let i = 0; i < this.props.lastFileNames.length; i++) {
                 if (this.state.xSize.length > 0 && this.state.ySize.length > 0) {
                     this.extractingPreview[i].current.onChangeImage(
@@ -425,7 +428,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className={styles['laser-set-background-modal-title']}>
                         {i18n._('Camera Aid Background')}
                     </div>
-                    <div>
+                    <div style={{ margin: '1rem 0' }}>
                         {i18n._('If you reinstalled the laser cutting module,  please go to the touchscreen to start camera calibration before proceeding.')}
                     </div>
                     <div
@@ -468,6 +471,7 @@ class ExtractSquareTrace extends PureComponent {
                                 'sm-btn-large',
                                 styles[this.props.canTakePhoto ? 'btn-camera' : 'btn-camera-disabled'],
                             )}
+                            style={{ marginTop: '1rem' }}
                             onClick={this.actions.displayManualCalibration}
                             disabled={!this.props.canTakePhoto}
 
@@ -480,6 +484,7 @@ class ExtractSquareTrace extends PureComponent {
                                 'sm-btn-large',
                                 styles[this.state.isStitched ? 'btn-right-camera' : 'btn-right-camera-disabled'],
                             )}
+                            style={{ marginTop: '1rem' }}
                             onClick={this.actions.setBackgroundImage}
                             disabled={!this.state.isStitched}
                         >

@@ -87,7 +87,11 @@ class ManualCalibration extends PureComponent {
                 </div>
                 <div className={styles['laser-set-background-modal-content']}>
                     <div className={styles['calibrate-background']}>
-                        <div className={classNames(styles['reset-actions'])}>
+                        <div className={classNames(
+                            styles['reset-actions'],
+                            'sm-btn-large',
+                        )}
+                        >
                             <Anchor
                                 className={styles['reset-actions__btn']}
                                 onClick={this.actions.onClickToUpload}
@@ -102,6 +106,8 @@ class ManualCalibration extends PureComponent {
                         <div
                             className={classNames(
                                 styles['confirm-actions'],
+                                'sm-btn-large',
+                                'sm-btn-default',
                                 styles[this.state.isComfirmPoints ? 'isBlue' : ''],
                             )}
                         >
@@ -126,12 +132,12 @@ class ManualCalibration extends PureComponent {
                     />
 
                     <div className={styles['calibrate-advise']}>
-                        <p style={{ margin: '0', textAlign: 'center' }}>
+                        <p style={{ margin: '1rem 0', textAlign: 'center' }}>
                             {i18n._('Zoom with Scroll Wheel; Move horizontally with Right Mouse Button') }
                         </p>
                     </div>
                 </div>
-                <div style={{ minHeight: 30, width: 710, margin: '0 auto' }}>
+                <div style={{ minHeight: 30, margin: '0 auto' }}>
                     {!EXPERIMENTAL_LASER_CAMERA && (
                         <button
                             type="button"

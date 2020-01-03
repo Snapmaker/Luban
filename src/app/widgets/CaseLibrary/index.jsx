@@ -51,9 +51,9 @@ class CaseLibrary extends PureComponent {
             } else {
                 const defaultDefinition = this.props.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 const addDefinition = config.material;
-                const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId);
-                for (const key of defaultDefinition.ownKeys) {
-                    if (newDefinition.settings[key] === undefined) {
+                const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionId);
+                for (const key of defaultDefinition.ownKeys.concat(['material_bed_temperature', 'material_bed_temperature_layer_0'])) {
+                    if (addDefinition[key] === undefined) {
                         continue;
                     }
                     newDefinition.settings[key].default_value = addDefinition[key];
@@ -78,7 +78,7 @@ class CaseLibrary extends PureComponent {
             } else {
                 const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
                 const addDefinition = config.quality;
-                const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId);
+                const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId, qualityDefinitionId);
                 for (const key of defaultDefinition.ownKeys) {
                     if (newDefinition.settings[key] === undefined) {
                         continue;
@@ -288,8 +288,8 @@ const mapDispatchToProps = (dispatch) => ({
     updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
     updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
     updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
-    duplicateMaterialDefinition: (definition, newDefinitionId) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId)),
-    duplicateQualityDefinition: (definition, newDefinitionId) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId)),
+    duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId, newDefinitionName)),
+    duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId, newDefinitionName)),
     uploadCaseModel: (file) => dispatch(printingActions.uploadCaseModel(file))
 });
 

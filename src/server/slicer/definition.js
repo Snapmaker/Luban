@@ -195,6 +195,7 @@ export function loadDefinitionsByType(type) {
         if (!includes(predefined, filename) && regex.test(filename)) {
             const definitionLoader = loadDefinitionLoaderByFilename(filename);
             if (defaultDefinitionLoader) {
+                console.log('defaultDefinitionLoader', Array.from(defaultDefinitionLoader.ownKeys));
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {
                     for (const ownKey of ownKeys) {
