@@ -90,7 +90,6 @@ export const actions = {
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
-        // console.log(imgPath);
         const texture = new THREE.TextureLoader().load(imgPath, () => {
             dispatch(sharedActions.render('laser'));
         });
@@ -104,7 +103,7 @@ export const actions = {
         const mesh = new THREE.Mesh(geometry, material);
         const x = dx + width / 2;
         const y = dy + height / 2;
-        mesh.position.set(x, y, -10);
+        mesh.position.set(x, y, -0.001);
 
         const state = getState().laser;
         const { group } = state.background;

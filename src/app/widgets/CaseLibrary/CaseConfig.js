@@ -8,19 +8,19 @@ export const CaseConfig150 = [
             casePath: './A150/'
         },
         material: {
-            definitionId: 'material.pla'// pla,stl
+            definitionId: 'Caselibrary.Vase.A150.material', // pla,stl
             // material_diameter: 1.75,
             // material_flow: 100,
             // material_print_temperature: 198,
             // material_print_temperature_layer_0: 200,
             // material_final_print_temperature: 198,
-            // machine_heated_bed: 1,
-            // material_bed_temperature: 100,
-            // material_bed_temperature_layer_0: 100
+            machine_heated_bed: 1,
+            material_bed_temperature: 50,
+            material_bed_temperature_layer_0: 50
         },
         quality: {
             isRecommand: false,
-            definitionId: 'quality.normal_quality1',
+            definitionId: 'Caselibrary.Vase.A150.quality',
             layer_height: 0.16,
 
             // layer_height: 0.16,
@@ -104,7 +104,7 @@ export const CaseConfig150 = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Smartphone Holder',
+        title: 'CNC Cutting Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/CNC-A150.png',
         pathConfig: {
@@ -200,11 +200,14 @@ export const CaseConfig250 = [
             casePath: './A250/'
         },
         material: {
-            definitionId: 'material.pla'// pla,stl
+            // pla,stl
+            definitionId: 'Caselibrary.Vase.A250.material',
+            material_bed_temperature_layer_0: 50
+
         },
         quality: {
             isRecommand: false,
-            definitionId: 'quality.normal_quality1',
+            definitionId: 'Caselibrary.Vase.A250.quality',
             layer_height: 0.16,
             layer_height_0: 0.25,
             magic_spiralize: true
@@ -279,11 +282,13 @@ export const CaseConfig350 = [
             casePath: './A350/'
         },
         material: {
-            definitionId: 'material.pla'// pla,stl
+            definitionId: 'Caselibrary.Vase.A350.material',
+            material_bed_temperature_layer_0: 50
+
         },
         quality: {
             isRecommand: false,
-            definitionId: 'quality.normal_quality1',
+            definitionId: 'Caselibrary.Vase.A350.quality',
             layer_height: 0.16,
             layer_height_0: 0.25,
             magic_spiralize: true

@@ -293,7 +293,6 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => () => {
-        console.log('updateDefinitionSettings');
         settings = definitionManager.calculateDependencies(definition, settings);
 
         return definitionManager.updateDefinition({
@@ -343,7 +342,6 @@ export const actions = {
                 activeDefinition.settings[key].from = definition.definitionId;
             }
         }
-
         if (shouldSave) {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {
@@ -355,12 +353,12 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
-    duplicateMaterialDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
+    duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
-
+        const name = newDefinitionName || definition.name;
         const newDefinition = {
             definitionId: newDefinitionId || `material.${timestamp()}`,
-            name: `#${definition.name}`,
+            name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
             settings: {}
@@ -389,12 +387,13 @@ export const actions = {
         return createdDefinition;
     },
 
-    duplicateQualityDefinition: (definition, newDefinitionId) => async (dispatch, getState) => {
+    duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
+        const name = newDefinitionName || definition.name;
 
         const newDefinition = {
             definitionId: newDefinitionId || `quality.${timestamp()}`,
-            name: `#${definition.name}`,
+            name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
             settings: {}

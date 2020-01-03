@@ -130,7 +130,6 @@ class ManualCalibration extends Component {
     setupThreejs() {
         const width = this.props.width / 2;
         const height = this.props.width / 2;
-        console.log('setupThreejs', this.props.width, this.props.height);
         // width *= 2;
         // height *= 2;
 
@@ -261,7 +260,7 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div ref={this.node} />
+            <div style={{ border: '1px solid #c8c8c8', boxSizing: 'border-box' }} ref={this.node} />
         );
     }
 }

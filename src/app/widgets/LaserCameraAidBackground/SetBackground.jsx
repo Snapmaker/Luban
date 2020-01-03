@@ -26,6 +26,8 @@ class SetBackground extends PureComponent {
         server: PropTypes.object.isRequired,
 
         // redux
+        series: PropTypes.string.isRequired,
+        laserSize: PropTypes.object,
         size: PropTypes.object.isRequired,
         setBackgroundImage: PropTypes.func.isRequired,
         removeBackgroundImage: PropTypes.func.isRequired
@@ -84,7 +86,7 @@ class SetBackground extends PureComponent {
         hideModal: () => {
             if (!this.state.canTakePhoto && this.state.panel === PANEL_EXTRACT_TRACE) {
                 WarningModal({
-                    body: i18n._('This actions cannot be undone. Do you want to stop the job?'),
+                    body: i18n._('This action cannot be undone. Are you sure you want to stop the job?'),
                     iconSrc,
                     bodyTitle: i18n._('Warning'),
                     insideHideModal: this.actions.insideHideModal
@@ -113,12 +115,23 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { connectionType, isConnected, hasBackground } = this.props;
+        const { connectionType, isConnected, hasBackground, laserSize, series } = this.props;
+        let fullWidth;
+        if (series === 'A350') {
+            fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
+        } else {
+            fullWidth = laserSize ? (laserSize.x * 2 + 72 + 4) : 512;
+        }
         return (
             <React.Fragment>
                 {state.showModal && (
-                    <Modal style={{ width: '760px', paddingBottom: '20px' }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
+                    <Modal style={{ width: fullWidth, paddingBottom: '10px' }} size="lg" onClose={this.actions.hideModal}>
+                        <Modal.Body
+                            style={{ margin: '0', padding: '72px 36px 36px 36px', height: '100%' }}
+                            className={classNames(
+                                styles['modal-body']
+                            )}
+                        >
                             <ExtractSquareTrace
                                 canTakePhoto={this.state.canTakePhoto}
                                 changeCanTakePhoto={this.actions.changeCanTakePhoto}
@@ -194,7 +207,9 @@ const mapStateToProps = (state) => {
         isConnected: machine.isConnected,
         connectionType: machine.connectionType,
         server: machine.server,
+        series: machine.series,
         hasBackground: laser.background.enabled,
+        laserSize: machine.laserSize,
         size: machine.size
     };
 };

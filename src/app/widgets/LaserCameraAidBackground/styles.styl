@@ -6,7 +6,8 @@
 
         li
             line-height: 1.5em
-
+.modal-body
+    padding: 36px;
 .laser-set-background-instruction-step-detail
     > ol
         list-style-type: lower-alpha
@@ -62,10 +63,15 @@
   &:hover
     background-color: #28a7e1
 
-.laser-set-background-modal-title
+.laser-set-background-calibration-title
     display: block
     font: bold 24px "Arial Black", Gadget, sans-serif
     margin: -44px 0 60px 0;
+    text-align: left
+.laser-set-background-modal-title
+    display: block
+    font: bold 24px "Arial Black", Gadget, sans-serif
+    margin-top: -44px;
     text-align: left
 .laser-set-background-modal-content
     text-align: center
@@ -75,7 +81,6 @@
     .calibrate-background
         position: absolute;
         top: -54px;
-        width: 512px;
         left: 0;
         right: 0;
         margin: auto;
@@ -84,9 +89,8 @@
             display: inline-block;
             position: relative;
             width: 20%;
-            left: 107px;
+            float: right;
             border-radius: 4px;
-            margin: 10px 10px 0 0;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
             border: solid 1px #c8c8c8;
             background-color: #fff;
@@ -98,7 +102,7 @@
                     display: block
                     width: 18px
                     height: 42px
-                    margin-left: 16px
+                    transform: translateY(-20%);
 
             &__icon-confirm
                 background: url("/images/camera-aid/ic_confirm_18x18.png") no-repeat center
@@ -108,8 +112,8 @@
             background-color: #28a7e1
         .reset-actions
             display: inline-block;
+            float: left;
             position: relative;
-            right: 99px;
             width: 20%;
             border-radius: 4px;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
@@ -122,7 +126,7 @@
                     display: block
                     width: 18px
                     height: 42px
-                    margin-left: 16px
+                    transform: translateY(-20%);
             &__icon-reset
                 background: url("/images/camera-aid/ic_reset_18x18.png") no-repeat center
             &__text

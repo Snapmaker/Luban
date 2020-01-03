@@ -4,7 +4,8 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { LASER_GCODE_SUFFIX } from '../../constants';
+import { LASER_GCODE_SUFFIX, CONNECTION_TYPE_WIFI } from '../../constants';
+
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
@@ -18,6 +19,7 @@ class Output extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
+        connectionType: PropTypes.string.isRequired,
         modelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
         background: PropTypes.object.isRequired,
@@ -51,7 +53,7 @@ class Output extends PureComponent {
             this.props.generateGcode(thumbnail);
         },
         onLoadGcode: () => {
-            const { gcodeBeans } = this.props;
+            const { gcodeBeans, connectionType } = this.props;
             if (gcodeBeans.length === 0) {
                 return;
             }
@@ -68,8 +70,9 @@ class Output extends PureComponent {
             window.scrollTo(0, 0);
 
             this.actions.onSaveGcode();
-
-            this.props.loadBackgroundToWorkspace(this.props.background);
+            if (connectionType !== CONNECTION_TYPE_WIFI) {
+                this.props.loadBackgroundToWorkspace(this.props.background);
+            }
         },
         onSaveGcode: () => {
             const { gcodeBeans } = this.props;
@@ -207,10 +210,11 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { workflowState } = state.machine;
+    const { workflowState, connectionType } = state.machine;
     const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup, background } = state.laser;
     return {
         modelGroup,
+        connectionType,
         toolPathModelGroup,
         isGcodeGenerated,
         workflowState,
