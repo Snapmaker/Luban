@@ -98,8 +98,8 @@ class WifiConnection extends PureComponent {
                 this.setState({
                     showConnectionMessage: true,
                     connectionMessage: {
-                        text: i18n._('Print job is not finish yet, disconnect will stop current print job.'),
-                        title: i18n._('Disconnect To Screen'),
+                        text: i18n._('The machine is working, disconnect will stop current print.'),
+                        title: i18n._('Disconnection'),
                         img: IMAGE_WIFI_WAITING,
                         showCloseButton: false,
                         onCancel: () => {
@@ -124,7 +124,7 @@ class WifiConnection extends PureComponent {
             this.setState({
                 showConnectionMessage: true,
                 connectionMessage: {
-                    text: i18n._('Please tap Yes on screen to confirm'),
+                    text: i18n._('Please tap Yes on Snapmaker touchscreen to confirm Wi-Fi connection.'),
                     title: i18n._('Screen Authorization Needed'),
                     img: IMAGE_WIFI_CONNECTING,
                     showCloseButton: true,

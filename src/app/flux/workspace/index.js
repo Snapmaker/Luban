@@ -1,6 +1,5 @@
 // Reducer for Workspace
 import path from 'path';
-import * as THREE from 'three';
 import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
@@ -13,13 +12,7 @@ const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 const INITIAL_STATE = {
     gcodeList: [],
     uploadState: 'idle', // uploading, uploaded
-    gcodeFiles: [],
-
-
-    background: {
-        enabled: false,
-        group: new THREE.Group()
-    }
+    gcodeFiles: []
 };
 
 
@@ -97,12 +90,21 @@ export const actions = {
 
     addGcodeFile: (fileInfo) => (dispatch, getState) => {
         const { gcodeFiles } = getState().workspace;
+
         const files = [];
         files.push(fileInfo);
-        const len = Math.min(gcodeFiles.length, 4);
-        for (let i = 0; i < len; i++) {
-            files.push(gcodeFiles[i]);
+
+        let added = 1, i = 0;
+        while (added < 5 && i < gcodeFiles.length) {
+            const gcodeFile = gcodeFiles[i];
+            // G-code file with the same uploadName will be replaced with current one
+            if (gcodeFile.uploadName !== fileInfo.uploadName) {
+                files.push(gcodeFile);
+                added++;
+            }
+            i++;
         }
+
         dispatch(actions.updateState({
             gcodeFiles: files
         }));
@@ -129,36 +131,6 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         // TODO: unload G-code in controller
         dispatch(actions.updateState({ uploadState: 'idle' }));
-    },
-
-    removeBackgroundImage: () => (dispatch, getState) => {
-        const state = getState().workspace;
-        const { group } = state.background;
-        group.remove(...group.children);
-        dispatch(actions.updateState({
-            background: {
-                enabled: false,
-                group: group
-            }
-        }));
-    },
-
-    loadBackgroundToWorkspace: (background) => (dispatch, getState) => {
-        const workspaceBackgroundGroup = getState().workspace.background.group;
-        const backgroundGroup = background.group;
-
-        workspaceBackgroundGroup.remove(...workspaceBackgroundGroup.children);
-        if (backgroundGroup.children.length > 0) {
-            for (const child of backgroundGroup.children) {
-                workspaceBackgroundGroup.add(child.clone());
-            }
-            dispatch(actions.updateState({
-                background: {
-                    enabled: true,
-                    group: workspaceBackgroundGroup
-                }
-            }));
-        }
     }
 };
 

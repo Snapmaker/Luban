@@ -113,8 +113,8 @@ class Printing extends PureComponent {
                 <div className="sm-parameter-container">
                     <WorkSpeed />
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Nozzle Temp')}</span>
-                        <span className="sm-parameter-row__input2-text">{nozzleTargetTemperature}/</span>
+                        <span className="sm-parameter-row__label-lg">{i18n._('Nozzle Temp.')}</span>
+                        <span className="sm-parameter-row__input2-text">{nozzleTargetTemperature} / </span>
                         <Input
                             className="sm-parameter-row__input2"
                             value={nozzleTemperatureValue}
@@ -130,8 +130,8 @@ class Printing extends PureComponent {
                     </div>
 
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label">{i18n._('Heated Bed Temp')}</span>
-                        <span className="sm-parameter-row__input2-text">{heatedBedTargetTemperature}/</span>
+                        <span className="sm-parameter-row__label">{i18n._('Heated Bed Temp.')}</span>
+                        <span className="sm-parameter-row__input2-text">{heatedBedTargetTemperature} / </span>
                         <Input
                             className="sm-parameter-row__input2"
                             value={heatedBedTemperatureValue}

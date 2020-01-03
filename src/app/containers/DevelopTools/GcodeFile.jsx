@@ -286,7 +286,7 @@ class GcodeFile extends PureComponent {
 
         return (
             <div>
-                <p style={{ margin: '0' }}>{i18n._('G-Code File')}</p>
+                <p style={{ margin: '0' }}>{i18n._('G-code File')}</p>
                 <input
                     ref={this.gcodeFileRef}
                     type="file"

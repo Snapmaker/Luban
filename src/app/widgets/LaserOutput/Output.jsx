@@ -4,7 +4,7 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { LASER_GCODE_SUFFIX, CONNECTION_TYPE_WIFI } from '../../constants';
+import { LASER_GCODE_SUFFIX } from '../../constants';
 
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -19,10 +19,8 @@ class Output extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
-        connectionType: PropTypes.string.isRequired,
         modelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
-        background: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
@@ -34,8 +32,7 @@ class Output extends PureComponent {
         addGcodeFile: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
-        loadBackgroundToWorkspace: PropTypes.func.isRequired
+        setAutoPreview: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -53,7 +50,7 @@ class Output extends PureComponent {
             this.props.generateGcode(thumbnail);
         },
         onLoadGcode: () => {
-            const { gcodeBeans, connectionType } = this.props;
+            const { gcodeBeans } = this.props;
             if (gcodeBeans.length === 0) {
                 return;
             }
@@ -70,9 +67,6 @@ class Output extends PureComponent {
             window.scrollTo(0, 0);
 
             this.actions.onSaveGcode();
-            if (connectionType !== CONNECTION_TYPE_WIFI) {
-                this.props.loadBackgroundToWorkspace(this.props.background);
-            }
         },
         onSaveGcode: () => {
             const { gcodeBeans } = this.props;
@@ -210,19 +204,18 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { workflowState, connectionType } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup, background } = state.laser;
+    const { workflowState } = state.machine;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.laser;
+
     return {
         modelGroup,
-        connectionType,
         toolPathModelGroup,
         isGcodeGenerated,
         workflowState,
         gcodeBeans,
         isAllModelsPreviewed,
         previewFailed,
-        autoPreviewEnabled,
-        background
+        autoPreviewEnabled
     };
 };
 
@@ -233,8 +226,7 @@ const mapDispatchToProps = (dispatch) => {
         addGcodeFile: (fileName) => dispatch(workspaceActions.addGcodeFile(fileName)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
         manualPreview: () => dispatch(sharedActions.manualPreview('laser', true)),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value)),
-        loadBackgroundToWorkspace: (background) => dispatch(workspaceActions.loadBackgroundToWorkspace(background))
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
     };
 };
 

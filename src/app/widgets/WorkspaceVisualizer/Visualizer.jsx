@@ -57,14 +57,11 @@ class Visualizer extends Component {
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
         unloadGcode: PropTypes.func.isRequired,
-        backgroundGroup: PropTypes.object.isRequired,
-        backgroundEnabled: PropTypes.bool.isRequired,
 
         startServerGcode: PropTypes.func.isRequired,
         pauseServerGcode: PropTypes.func.isRequired,
         resumeServerGcode: PropTypes.func.isRequired,
         stopServerGcode: PropTypes.func.isRequired,
-        removeBackgroundImage: PropTypes.func.isRequired,
 
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
@@ -483,10 +480,6 @@ class Visualizer extends Component {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-        },
-        removeBackgroundImage: () => {
-            this.props.removeBackgroundImage();
-            this.renderScene();
         }
     };
 
@@ -788,29 +781,32 @@ class Visualizer extends Component {
             }
         }));
 
-        this.gcodeRenderer = new GCodeRenderer();
-        this.modelGroup.add(this.gcodeRenderer.group);
-
-        for (const gcodeInfo of gcodeList) {
-            this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
-        }
-
         // Change state back to 'rendered' after a while
-        setTimeout(() => this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                renderState: 'rendered'
+        setTimeout(() => {
+            this.gcodeRenderer = new GCodeRenderer();
+            this.modelGroup.add(this.gcodeRenderer.group);
+
+            for (const gcodeInfo of gcodeList) {
+                this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
             }
-        })), 300);
 
-        // Auto focus on first item
-        this.autoFocus(gcodeList[0].uniqueName);
+            // Change state to 'rendered'
+            this.setState(state => ({
+                gcode: {
+                    ...state.gcode,
+                    renderState: 'rendered'
+                }
+            }));
 
-        // Update bounding box & filename
-        const bbox = this.calculateBoundingBox(gcodeList);
-        const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
-        const y = bbox.min.y - 5;
-        this.updateGcodeFilename(gcodeList[0].name, x, y);
+            // Auto focus on first item
+            this.autoFocus(gcodeList[0].uniqueName);
+
+            // Update bounding box & filename
+            const bbox = this.calculateBoundingBox(gcodeList);
+            const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
+            const y = bbox.min.y - 5;
+            this.updateGcodeFilename(gcodeList[0].name, x, y);
+        }, 100);
     }
 
     renderScene() {
@@ -831,7 +827,6 @@ class Visualizer extends Component {
                             isConnected={this.props.isConnected}
                             isServerWaiting={this.props.isServerWaiting}
                             connectionType={this.props.connectionType}
-                            backgroundEnabled={this.props.backgroundEnabled}
                             state={state}
                             actions={this.actions}
                             uploadState={this.props.uploadState}
@@ -840,7 +835,6 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
-                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
@@ -896,8 +890,6 @@ const mapStateToProps = (state) => {
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
-        backgroundGroup: workspace.background.group,
-        backgroundEnabled: workspace.background.enabled,
         gcodePrintingInfo: machine.gcodePrintingInfo,
         workPosition: machine.workPosition
     };
@@ -913,10 +905,7 @@ const mapDispatchToProps = (dispatch) => ({
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),
     resumeServerGcode: (callback) => dispatch(machineActions.resumeServerGcode(callback)),
-    stopServerGcode: () => dispatch(machineActions.stopServerGcode()),
-    removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
-
-
+    stopServerGcode: () => dispatch(machineActions.stopServerGcode())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

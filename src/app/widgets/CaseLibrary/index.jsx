@@ -31,6 +31,7 @@ class CaseLibrary extends PureComponent {
         updateDefinitionSettings: PropTypes.func.isRequired,
         duplicateMaterialDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
+        removeAllModels: PropTypes.func.isRequired,
         uploadCaseModel: PropTypes.func.isRequired,
         uploadCncCaseImage: PropTypes.func.isRequired,
         uploadLaserCaseImage: PropTypes.func.isRequired
@@ -52,7 +53,7 @@ class CaseLibrary extends PureComponent {
                 const defaultDefinition = this.props.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 const addDefinition = config.material;
                 const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionId);
-                for (const key of defaultDefinition.ownKeys.concat(['material_bed_temperature', 'material_bed_temperature_layer_0'])) {
+                for (const key of defaultDefinition.ownKeys) {
                     if (addDefinition[key] === undefined) {
                         continue;
                     }
@@ -139,17 +140,18 @@ class CaseLibrary extends PureComponent {
                 currentSize: option.value
             });
         }
-    }
+    };
 
     loadCase = (config) => {
         document.location.href = `/#/${config.tag}`;
         if (config.tag === '3dp') {
             this.actions.load3dpCaseSettings(config);
+            this.props.removeAllModels();
             this.props.uploadCaseModel(config.pathConfig);
         } else {
             this.actions.loadLaserCncCaseSettings(config);
         }
-    }
+    };
 
     render() {
         let CaseConfig;
@@ -198,7 +200,7 @@ class CaseLibrary extends PureComponent {
                                     </div>
                                     <div className={styles.cardtext}>
                                         <h4>{config.title}</h4>
-                                        <p>{i18n._('By Snapmaker')}</p>
+                                        <p>{i18n._('by Snapmaker')}</p>
                                     </div>
 
                                     <button
@@ -224,40 +226,6 @@ class CaseLibrary extends PureComponent {
     }
 }
 
-// <div className={classNames(styles.container, styles.videoTutorials)}>
-//     <h2 className={styles.mainTitle}>
-//         {i18n._('Video Tutorials')}
-//     </h2>
-//     <div className={styles.columns}>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/Assemble.png" alt="" />
-//             </div>
-//             <p>{i18n._('How to Assemble The Machine')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/3D-Printer.png" alt="" />
-//
-//             </div>
-//             <p>{i18n._('How to Use the 3D Printer')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/Laser-Cutter.png" alt="" />
-//
-//             </div>
-//             <p>{i18n._('How to Use the Laser Carver')}</p>
-//         </div>
-//         <div className={styles.column}>
-//             <div className={styles.cardtext}>
-//                 <img className={styles.imgIcon} src="../../images/user-case/CNC-Carver.png" alt="" />
-//             </div>
-//
-//             <p>{i18n._('How to Use the CNC Carver')}</p>
-//         </div>
-//     </div>
-// </div>
 const mapStateToProps = (state) => {
     const printing = state.printing;
     const machine = state.machine;
@@ -290,6 +258,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
     duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId, newDefinitionName)),
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId, newDefinitionName)),
+    removeAllModels: () => dispatch(printingActions.removeAllModels()),
     uploadCaseModel: (file) => dispatch(printingActions.uploadCaseModel(file))
 });
 

@@ -14,8 +14,6 @@ export const CaseConfig150 = [
             // material_print_temperature: 198,
             // material_print_temperature_layer_0: 200,
             // material_final_print_temperature: 198,
-            machine_heated_bed: 1,
-            material_bed_temperature: 50,
             material_bed_temperature_layer_0: 50
         },
         quality: {
@@ -203,7 +201,6 @@ export const CaseConfig250 = [
             // pla,stl
             definitionId: 'Caselibrary.Vase.A250.material',
             material_bed_temperature_layer_0: 50
-
         },
         quality: {
             isRecommand: false,
@@ -284,7 +281,6 @@ export const CaseConfig350 = [
         material: {
             definitionId: 'Caselibrary.Vase.A350.material',
             material_bed_temperature_layer_0: 50
-
         },
         quality: {
             isRecommand: false,

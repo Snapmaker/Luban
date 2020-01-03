@@ -93,7 +93,7 @@ const INITIAL_STATE = {
 
     // laser print mode
     isLaserPrintAutoMode: true,
-    materialThickness: 2.5,
+    materialThickness: 1.5,
 
     gcodePrintingInfo: {
         sent: 0,
@@ -571,6 +571,7 @@ export const actions = {
     startServerGcode: (callback) => (dispatch, getState) => {
         const { server, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeList } = getState().workspace;
+        const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
             return;
         }
@@ -593,14 +594,16 @@ export const actions = {
                 });
                 promises.push(promise);
             }
-            // if (background.enabled) {
-            const promise = new Promise((resolve) => {
-                server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
-                    resolve();
+
+            // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+            if (background.enabled) {
+                const promise = new Promise((resolve) => {
+                    server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
+                        resolve();
+                    });
                 });
-            });
-            promises.push(promise);
-            // }
+                promises.push(promise);
+            }
         }
         Promise.all(promises).then(() => {
             server.uploadGcodeFile(filename, file, type, (msg) => {

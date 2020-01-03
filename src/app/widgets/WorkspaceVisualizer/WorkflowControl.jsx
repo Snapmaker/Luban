@@ -20,7 +20,6 @@ class WorkflowControl extends PureComponent {
         isConnected: PropTypes.bool,
         isServerWaiting: PropTypes.bool,
         connectionType: PropTypes.string,
-        backgroundEnabled: PropTypes.bool,
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
@@ -28,8 +27,7 @@ class WorkflowControl extends PureComponent {
             handlePause: PropTypes.func.isRequired,
             handleStop: PropTypes.func.isRequired,
             handleAddGcode: PropTypes.func.isRequired,
-            handleUploadGcodeFile: PropTypes.func.isRequired,
-            removeBackgroundImage: PropTypes.func.isRequired
+            handleUploadGcodeFile: PropTypes.func.isRequired
         })
     };
 
@@ -75,7 +73,7 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, actions, connectionType, workflowStatus, isConnected, backgroundEnabled, isServerWaiting } = this.props;
+        const { state, actions, connectionType, workflowStatus, isConnected, isServerWaiting } = this.props;
         const { gcode, workflowState } = state;
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
@@ -153,26 +151,6 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
-                    {backgroundEnabled && (
-                        <div
-                            className="btn-group btn-group-sm"
-                            style={{
-                                float: 'right'
-                            }}
-                        >
-                            <button
-                                type="button"
-                                className="btn btn-default"
-                                style={{ height: '30px',
-                                    color: '#d0021b',
-                                    borderColor: '#d0021b' }}
-                                title={i18n._('Close')}
-                                onClick={actions.removeBackgroundImage}
-                            >
-                                {i18n._('Remove Background')}
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
         );

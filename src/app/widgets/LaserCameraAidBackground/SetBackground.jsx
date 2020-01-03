@@ -153,10 +153,10 @@ class SetBackground extends PureComponent {
                                 </Modal.Header>
                                 <Modal.Body style={{ margin: '0', paddingBottom: '15px', height: '100%' }}>
                                     <div>
-                                        {i18n._('Imformation')}
+                                        {i18n._('Information')}
                                         <br />
                                         <Space width={4} />
-                                        {i18n._('The screen haven\'t  calibrated yet. Please go to the screen to execute camera calibration before any movement.')}
+                                        {i18n._('The camera hasn\'t calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}
                                     </div>
                                 </Modal.Body>
                                 <Modal.Footer>

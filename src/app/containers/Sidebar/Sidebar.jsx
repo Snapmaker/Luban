@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { PROTOCOL_TEXT, MACHINE_HEAD_TYPE } from '../../constants';
+import { MACHINE_HEAD_TYPE } from '../../constants';
 
 const Sidebar = (props) => {
     const { pathname = '' } = props.location;
@@ -24,7 +24,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/workspace') === 0 }
                         )}
                     >
-                        <Link to="/workspace" title={i18n._(PROTOCOL_TEXT)}>
+                        <Link to="/workspace" title={i18n._('Workspace')}>
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -115,7 +115,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/caselibrary') === 0 }
                         )}
                     >
-                        <Link to="/caselibrary" title={i18n._('CaseLibrary')}>
+                        <Link to="/caselibrary" title={i18n._('Case Library')}>
                             <i
                                 className={classNames(
                                     styles.icon,

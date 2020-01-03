@@ -24,9 +24,15 @@ class MarlinWidget extends PureComponent {
     actions = {
         setTitle: (headType) => {
             let title = 'Detecting...';
-            headType === MACHINE_HEAD_TYPE['3DP'].value && (title = '3D Printer');
-            headType === MACHINE_HEAD_TYPE.LASER.value && (title = 'Laser');
-            (headType === MACHINE_HEAD_TYPE.CNC.value) && (title = 'CNC');
+            if (headType === MACHINE_HEAD_TYPE['3DP'].value) {
+                title = '3D Printer';
+            }
+            if (headType === MACHINE_HEAD_TYPE.LASER.value) {
+                title = 'Laser';
+            }
+            if (headType === MACHINE_HEAD_TYPE.CNC.value) {
+                title = 'CNC';
+            }
             this.props.setTitle(title);
         }
     };

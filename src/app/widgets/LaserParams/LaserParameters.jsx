@@ -51,7 +51,8 @@ class LaserParameters extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired
+        onModelAfterTransform: PropTypes.func.isRequired,
+        setAutoPreview: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -126,6 +127,9 @@ class LaserParameters extends PureComponent {
                         await this.actions.processTrace();
                     });
             } else {
+                if (uploadMode === 'greyscale') {
+                    this.props.setAutoPreview(false);
+                }
                 this.props.uploadImage(file, uploadMode, () => {
                     modal({
                         title: i18n._('Parse Image Error'),
@@ -330,7 +334,8 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
-        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('laser'))
+        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('laser')),
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
     };
 };
 
