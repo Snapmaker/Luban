@@ -114,7 +114,7 @@
             "children": {
                 "infill_pattern": {
                     "label": "Infill Pattern",
-                    "default_value": "tri-hexagon"
+                    "default_value": "trihexagon"
                 },
                 "zig_zaggify_infill": {
                     "label": "Connect Infill Lines",

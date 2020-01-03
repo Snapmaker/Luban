@@ -198,7 +198,6 @@ class Sender extends events.EventEmitter {
                     sp.line = '';
                     sp.dataLength += line.length;
                     sp.queue.push(line.length);
-                    console.log('sender data line', line);
                     this.emit('data', line, this.state.context);
                 }
             });

@@ -41,7 +41,7 @@ extra skin wall count	0	0	1
 Infill
 infill density	15	15	15
 infill line distance	8	8	8
-infill pattern	tri-hexagon	tri-hexagon	tri-hexagon
+infill pattern	trihexagon	trihexagon	trihexagon
 connect infill lines	✔	✔	✔
 infill line directions	[  ]	[  ]	[  ]
 infill line multiplier	1	1	1
