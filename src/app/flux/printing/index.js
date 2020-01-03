@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
+import { isNil } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PROTOCOL_TEXT } from '../../constants';
@@ -356,11 +357,22 @@ export const actions = {
     duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
         const name = newDefinitionName || definition.name;
+
+        let metadata = definition.metadata;
+        // newDefinitionId is the same as newDefinitionName
+        if (isNil(newDefinitionId)) {
+            metadata = {
+                ...definition.metadata,
+                readonly: false
+            };
+        }
+
         const newDefinition = {
             definitionId: newDefinitionId || `material.${timestamp()}`,
             name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
+            metadata,
             settings: {}
         };
 
@@ -390,12 +402,20 @@ export const actions = {
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
         const name = newDefinitionName || definition.name;
-
+        let metadata = definition.metadata;
+        // newDefinitionId is the same as newDefinitionName
+        if (isNil(newDefinitionId)) {
+            metadata = {
+                ...definition.metadata,
+                readonly: false
+            };
+        }
         const newDefinition = {
             definitionId: newDefinitionId || `quality.${timestamp()}`,
             name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
+            metadata,
             settings: {}
         };
 

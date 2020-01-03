@@ -22,6 +22,7 @@ export const CaseConfig150 = [
             layer_height: 0.16,
 
             // layer_height: 0.16,
+            speed_wall_0: 40,
             layer_height_0: 0.25,
             magic_spiralize: true
         }
@@ -207,6 +208,7 @@ export const CaseConfig250 = [
             definitionId: 'Caselibrary.Vase.A250.quality',
             layer_height: 0.16,
             layer_height_0: 0.25,
+            speed_wall_0: 40,
             magic_spiralize: true
         }
     },
@@ -286,6 +288,7 @@ export const CaseConfig350 = [
             isRecommand: false,
             definitionId: 'Caselibrary.Vase.A350.quality',
             layer_height: 0.16,
+            speed_wall_0: 40,
             layer_height_0: 0.25,
             magic_spiralize: true
         }

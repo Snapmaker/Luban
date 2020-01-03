@@ -53,6 +53,7 @@ class CaseLibrary extends PureComponent {
                 const defaultDefinition = this.props.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 const addDefinition = config.material;
                 const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionId);
+                console.log('newDefinition', newDefinition.metadata);
                 for (const key of defaultDefinition.ownKeys) {
                     if (addDefinition[key] === undefined) {
                         continue;
