@@ -19,10 +19,6 @@ environment:
       secure: HJyWcgJc5e5ltkNY7zTUnuuGldoVv3SYJTRXTzrV/RnmMVwYqy6rnNagSRbZtnJZ
     GH_TOKEN:
       secure: HJyWcgJc5e5ltkNY7zTUnuuGldoVv3SYJTRXTzrV/RnmMVwYqy6rnNagSRbZtnJZ
-#    CSC_LINK:
-#      secure: a+2xo1z15zej505BjOcL6iIaGEbVgJd4usmxpKZWUP4sI2tLvQdBLMOXdxr/KGzVBtMYKDHJcl3Xpv+iOUXeRjd4iplIZkkSaCUkE9mbccs=
-#    CSC_KEY_PASSWORD:
-#      secure: vysRX38PjZMwcrzs07Kn7w==
 
 matrix:
   fast_finish: true
@@ -53,6 +49,7 @@ install:
 build_script:
   - ps: npm run build
   - ps: mkdir releases
+  - ps: $PRODUCT_NAME = 'Snapmaker Luban'
   - ps: $PACKAGE_NAME = node -e "console.log(require('./src/package.json').name)"
   - ps: $PACKAGE_VERSION = node -e "console.log(require('./src/package.json').version)"
   - ps: $COMMIT_LOG = git log -1 --format='%ci %H %s'
@@ -63,13 +60,13 @@ build_script:
       if ($env:platform -eq 'x64') {
         npm run build:win-x64
         Get-ChildItem output
-        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-x64.exe"
+        Copy-Item "output\${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-x64.exe"
       }
   - ps: |
       if ($env:platform -eq 'x64') {
         npm run build:win-ia32
         Get-ChildItem output
-        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-ia32.exe"
+        Copy-Item "output\${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-ia32.exe"
       }
 
 test: off

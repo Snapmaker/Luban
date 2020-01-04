@@ -60,7 +60,7 @@ export default function getMenuTemplate(options) {
                 { type: 'separator' },
                 {
                     role: 'hide',
-                    label: 'Hide Snapmakerjs'
+                    label: 'Hide'
                 },
                 { role: 'hideothers' },
                 { role: 'unhide' },

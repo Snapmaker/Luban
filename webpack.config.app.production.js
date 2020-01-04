@@ -85,7 +85,6 @@ module.exports = {
             preserve: false
         }),*/
         new HtmlWebpackPlugin({
-            // title: `Snapmakerjs ${pkg.version}`,
             filename: 'index.hbs',
             template: path.resolve(__dirname, 'src/app/assets/index.hbs'),
             chunksSortMode: 'dependency' // Sort chunks by dependency

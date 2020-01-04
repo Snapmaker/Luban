@@ -1,6 +1,6 @@
 {
-  "name": "snapmakerjs",
-  "version": "3.0.11",
+  "name": "snapmaker-luban",
+  "version": "3.1.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -11,7 +11,7 @@
   ],
   "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
-    "snapmakerjs": "bin/cli"
+    "luban": "bin/cli"
   },
   "files": [
     "bin",
@@ -38,7 +38,7 @@
     "build-i18n": "gulp server:i18n app:i18n",
     "build-dev": "cross-env NODE_ENV=development gulp dev",
     "build-prod": "cross-env NODE_ENV=production gulp prod",
-    "electron-builder": "build",
+    "electron-builder": "electron-builder --publish never",
     "electron-rebuild": "electron-rebuild",
     "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
     "build:linux-ia32": "bash -c 'build/electron-builder.sh --linux --ia32'",
@@ -60,10 +60,10 @@
     "coveralls": "tape -r babel-register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
   },
   "build": {
-    "appId": "com.snapmaker",
+    "appId": "com.snapmaker.luban",
     "asar": false,
     "asarUnpack": [],
-    "productName": "Snapmakerjs",
+    "productName": "Snapmaker Luban",
     "directories": {
       "buildResources": "build",
       "output": "output",
@@ -74,11 +74,16 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/electron/snap-icon.icns"
+      "icon": "build/electron/snapmaker-luban.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
+    "afterSign": "build/notarize.js",
     "dmg": {
       "background": "build/electron/background.png",
-      "icon": "build/electron/snap-icon.icns",
+      "icon": "build/electron/snapmaker-luban.icns",
       "iconSize": 80,
       "iconTextSize": 12,
       "contents": [
@@ -99,7 +104,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/electron/snap-icon.ico"
+      "icon": "build/electron/snapmaker-luban.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -113,14 +118,17 @@
       "target": [
         "deb"
       ]
-    }
+    },
+    "publish": []
   },
   "keywords": [
-    "snapmaker",
-    "snapmakerjs",
-    "cnc",
-    "gcode",
-    "marlin"
+    "Snapmaker",
+    "Luban",
+    "3D Printing",
+    "Laser",
+    "CNC",
+    "G-code",
+    "Marlin"
   ],
   "dependencies": {
     "@trendmicro/react-anchor": "~0.5.6",
@@ -267,8 +275,9 @@
     "css-loader": "~2.1.1",
     "css-split-webpack-plugin": "0.2.3",
     "electron": "~2.0.18",
-    "electron-builder": "~20.39.0",
-    "electron-rebuild": "~1.8.4",
+    "electron-builder": "~21.2.0",
+    "electron-notarize": "~0.2.1",
+    "electron-rebuild": "~1.8.8",
     "eslint": "~5.16.0",
     "eslint-config-snapmaker": "~0.0.2",
     "eslint-import-resolver-webpack": "~0.10.1",

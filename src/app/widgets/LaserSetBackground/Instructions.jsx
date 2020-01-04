@@ -55,7 +55,7 @@ const Instructions = ({ onClose }) => {
                                 <li>{i18n._('After the square is engraved, place the material inside the square and take a photo. The four corners of the square must be in the photo. Also, to achieve the best result, try to keep the lens and the heated bed parallel.')}</li>
                                 <li>{i18n._('Send the photo to your computer.')}</li>
                                 <li>
-                                    {i18n._('On Snapmakerjs')}
+                                    {i18n._('On the software')}
                                     {','}
                                     <Space width={4} />
                                     {i18n._('click')}
@@ -123,7 +123,7 @@ const Instructions = ({ onClose }) => {
                             role="presentation"
                             alt="x"
                         />
-                        <p>{i18n._('Note: If you use the USB disk to engrave, please make sure you set the work origin in Snapmakerjs instead of on the touch screen.')}</p>
+                        <p>{i18n._('Note: If you use the USB disk to engrave, please make sure you set the work origin in the software instead of on the touchscreen.')}</p>
                         <li>
                             8.
                             <Space width={4} />

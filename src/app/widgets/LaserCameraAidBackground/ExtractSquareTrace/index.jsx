@@ -429,7 +429,7 @@ class ExtractSquareTrace extends PureComponent {
                         {i18n._('Camera Aid Background')}
                     </div>
                     <div style={{ margin: '1rem 0' }}>
-                        {i18n._('If you reinstalled the laser cutting module,  please go to the touchscreen to start camera calibration before proceeding.')}
+                        {i18n._('If you reinstalled the laser module, please redo the Camera Calibration on the Touchscreen before proceeding.')}
                     </div>
                     <div
                         className={styles['photo-display']}
