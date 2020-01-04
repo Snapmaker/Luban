@@ -1,1 +1,1 @@
-# Snapmakerjs
+# Snapmaker Artisan

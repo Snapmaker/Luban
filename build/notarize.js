@@ -21,7 +21,7 @@ module.exports = async function notarizing(context) {
     const appleIdPassword = process.env.APPLEIDPASS;
 
     await notarize({
-        appBundleId: 'com.snapmaker.snapmakerjs',
+        appBundleId: 'com.snapmaker.artisan',
         appPath: `${appOutDir}/${appName}.app`,
         ascProvider,
         appleId,

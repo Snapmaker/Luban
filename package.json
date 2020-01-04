@@ -1,5 +1,5 @@
 {
-  "name": "snapmakerjs",
+  "name": "snapmaker-artisan",
   "version": "3.0.11",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
@@ -11,7 +11,7 @@
   ],
   "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
-    "snapmakerjs": "bin/cli"
+    "artisan": "bin/cli"
   },
   "files": [
     "bin",
@@ -63,7 +63,7 @@
     "appId": "com.snapmaker",
     "asar": false,
     "asarUnpack": [],
-    "productName": "Snapmakerjs",
+    "productName": "Snapmaker Artisan",
     "directories": {
       "buildResources": "build",
       "output": "output",
@@ -122,11 +122,13 @@
     "publish": []
   },
   "keywords": [
-    "snapmaker",
-    "snapmakerjs",
-    "cnc",
-    "gcode",
-    "marlin"
+    "Snapmaker",
+    "Artisan",
+    "3D Printing",
+    "Laser",
+    "CNC",
+    "G-code",
+    "Marlin"
   ],
   "dependencies": {
     "@trendmicro/react-anchor": "~0.5.6",

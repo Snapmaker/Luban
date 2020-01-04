@@ -305,7 +305,7 @@ export const actions = {
     updateActiveDefinitionMachineSize: (size) => (dispatch) => {
         // Update active definition on dimensions
         const definition = {
-            definitionId: 'Snapmakerjs',
+            definitionId: 'temporary',
             ownKeys: [
                 'machine_width',
                 'machine_depth',

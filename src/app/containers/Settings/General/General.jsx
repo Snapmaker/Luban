@@ -20,7 +20,7 @@ const About = () => {
             />
             <div className={styles['product-details']}>
                 <div className={styles['about-product-name']}>
-                    {`Snapmakerjs ${settings.version}`}
+                    {`Snapmaker Artisan ${settings.version}`}
                 </div>
                 <div className={styles['about-product-description']}>
                     {i18n._('A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
