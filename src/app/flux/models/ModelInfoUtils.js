@@ -61,9 +61,9 @@ const generateLaserDefaults = (mode, sourceType) => {
                 brightness: 50,
                 whiteClip: 255,
                 bwThreshold: 168,
-                algorithm: 'FloydSteinburg',
-                movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-                density: DEFAULT_FILL_DENSITY
+                algorithm: 'Atkinson',
+                movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
+                density: 7
             };
             break;
         }
@@ -115,26 +115,38 @@ const generateLaserDefaults = (mode, sourceType) => {
             // greyscale-line: workSpeed: 500, dwellTime: null
             // greyscale-dot: workSpeed: null, dwellTime: 42
             jogSpeed: 1500,
-            workSpeed: 500,
+            workSpeed: 2500,
+            plungeSpeed: ABSENT_VALUE,
+            dwellTime: 5,
+            fixedPowerEnabled: false,
+            fixedPower: 35,
+            multiPassEnabled: false,
+            multiPasses: 2,
+            multiPassDepth: 1
+        };
+    } else if (mode === 'bw') {
+        gcodeConfig = {
+            jogSpeed: 3000,
+            workSpeed: 800,
             plungeSpeed: ABSENT_VALUE,
             dwellTime: ABSENT_VALUE,
             fixedPowerEnabled: false,
-            fixedPower: 100,
+            fixedPower: 50,
             multiPassEnabled: false,
             multiPasses: 2,
             multiPassDepth: 1
         };
     } else {
         gcodeConfig = {
-            jogSpeed: 1500,
-            workSpeed: 220,
+            jogSpeed: 3000,
+            workSpeed: 140,
             plungeSpeed: ABSENT_VALUE,
             dwellTime: ABSENT_VALUE,
             fixedPowerEnabled: false,
             fixedPower: 100,
-            multiPassEnabled: false,
+            multiPassEnabled: true,
             multiPasses: 2,
-            multiPassDepth: 1
+            multiPassDepth: 0.6
         };
     }
     return { config, gcodeConfig };
@@ -148,8 +160,8 @@ const generateCNCDefaults = (mode) => {
                 toolDiameter: 3.175, // tool diameter (in mm)
                 toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                 targetDepth: 1.0,
-                stepDown: 0.2,
-                safetyHeight: 0.2,
+                stepDown: 0.1,
+                safetyHeight: 5.0,
                 stopHeight: 10,
                 isInvert: true,
                 density: 5
@@ -161,8 +173,8 @@ const generateCNCDefaults = (mode) => {
                 toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                 pathType: 'path',
                 targetDepth: 1.0,
-                stepDown: 0.2,
-                safetyHeight: 0.2,
+                stepDown: 0.5,
+                safetyHeight: 5.0,
                 stopHeight: 10,
                 enableTab: false,
                 tabWidth: 2,
@@ -193,9 +205,9 @@ const generateCNCDefaults = (mode) => {
     }
 
     const gcodeConfig = {
-        jogSpeed: 800,
-        workSpeed: 300,
-        plungeSpeed: 500,
+        jogSpeed: 3000,
+        workSpeed: 600,
+        plungeSpeed: 600,
         dwellTime: ABSENT_VALUE
     };
     return { config, gcodeConfig };
