@@ -4,7 +4,7 @@ os:
 
 # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
 # Default: 9.4
-osx_image: xcode9.4
+osx_image: xcode11.3  # macOS 10.14
 
 # Linux Ubuntu Precise
 sudo: required
@@ -63,7 +63,7 @@ after_success:
       # Temporarily Bypass Gatekeeper
       sudo spctl --master-disable;
       sudo spctl --status;
-      npm run build:mac-x64;
+      travis_wait 30 npm run build:mac-x64;
       ls -al output output/*;
       cp -af "output/${RELEASE}.dmg" "releases/${RELEASE}-mac-x64.dmg";
       ls -al releases/*;

@@ -38,7 +38,7 @@
     "build-i18n": "gulp server:i18n app:i18n",
     "build-dev": "cross-env NODE_ENV=development gulp dev",
     "build-prod": "cross-env NODE_ENV=production gulp prod",
-    "electron-builder": "build",
+    "electron-builder": "electron-builder --publish never",
     "electron-rebuild": "electron-rebuild",
     "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
     "build:linux-ia32": "bash -c 'build/electron-builder.sh --linux --ia32'",
@@ -74,8 +74,13 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/electron/snap-icon.icns"
+      "icon": "build/electron/snap-icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
+    "afterSign": "build/notarize.js",
     "dmg": {
       "background": "build/electron/background.png",
       "icon": "build/electron/snap-icon.icns",
@@ -113,7 +118,8 @@
       "target": [
         "deb"
       ]
-    }
+    },
+    "publish": []
   },
   "keywords": [
     "snapmaker",
@@ -267,8 +273,9 @@
     "css-loader": "~2.1.1",
     "css-split-webpack-plugin": "0.2.3",
     "electron": "~2.0.18",
-    "electron-builder": "~20.39.0",
-    "electron-rebuild": "~1.8.4",
+    "electron-builder": "~21.2.0",
+    "electron-notarize": "~0.2.1",
+    "electron-rebuild": "~1.8.8",
     "eslint": "~5.16.0",
     "eslint-config-snapmaker": "~0.0.2",
     "eslint-import-resolver-webpack": "~0.10.1",
