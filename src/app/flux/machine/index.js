@@ -49,7 +49,6 @@ const INITIAL_STATE = {
     serverToken: '',
     servers: [],
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
-    isServerWaiting: false,
     discovering: false,
 
     // Console
@@ -370,8 +369,6 @@ export const actions = {
         machineStore.set('machine.laserSize', laserSize);
 
         dispatch(actions.updateState({ laserSize }));
-
-        dispatch(printingActions.updateActiveDefinitionMachineSize(laserSize));
     },
     resetHomeState: () => (dispatch) => {
         dispatch(actions.updateState({ isHomed: null }));
@@ -445,9 +442,9 @@ export const actions = {
         if (isOpen) {
             return;
         }
-        server.open(serverToken, (err, data) => {
+        server.open(serverToken, (err, data, text) => {
             if (err) {
-                callback && callback(err, data);
+                callback && callback(err, data, text);
                 return;
             }
             const { token } = data;
@@ -570,7 +567,6 @@ export const actions = {
             isHomed: null,
             workflowStatus: WORKFLOW_STATUS_UNKNOWN,
             laserFocalLength: null,
-            isServerWaiting: false,
             workPosition: { // work position
                 x: '0.000',
                 y: '0.000',
@@ -600,9 +596,6 @@ export const actions = {
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], filename);
         const promises = [];
-        dispatch(actions.updateState({
-            isServerWaiting: true
-        }));
         if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
             if (isLaserPrintAutoMode && laserFocalLength) {
                 const promise = new Promise((resolve) => {
@@ -629,15 +622,9 @@ export const actions = {
         Promise.all(promises).then(() => {
             server.uploadGcodeFile(filename, file, type, (msg) => {
                 if (msg) {
-                    dispatch(actions.updateState({
-                        isServerWaiting: false
-                    }));
                     return;
                 }
                 server.startGcode((err) => {
-                    dispatch(actions.updateState({
-                        isServerWaiting: false
-                    }));
                     if (err) {
                         callback && callback(err);
                         return;
@@ -652,13 +639,7 @@ export const actions = {
 
     resumeServerGcode: (callback) => (dispatch, getState) => {
         const { server } = getState().machine;
-        dispatch(actions.updateState({
-            isServerWaiting: true
-        }));
         server.resumeGcode((err) => {
-            dispatch(actions.updateState({
-                isServerWaiting: false
-            }));
             if (err) {
                 callback && callback(err);
                 return;
@@ -674,13 +655,7 @@ export const actions = {
         if (workflowStatus !== WORKFLOW_STATUS_RUNNING) {
             return;
         }
-        dispatch(actions.updateState({
-            isServerWaiting: true
-        }));
         server.pauseGcode((msg) => {
-            dispatch(actions.updateState({
-                isServerWaiting: false
-            }));
             if (msg) {
                 return;
             }
@@ -695,13 +670,7 @@ export const actions = {
         if (workflowStatus === WORKFLOW_STATUS_IDLE) {
             return;
         }
-        dispatch(actions.updateState({
-            isServerWaiting: true
-        }));
         server.stopGcode((msg) => {
-            dispatch(actions.updateState({
-                isServerWaiting: false
-            }));
             if (msg) {
                 return;
             }

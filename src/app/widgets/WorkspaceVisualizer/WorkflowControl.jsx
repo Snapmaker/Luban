@@ -18,7 +18,6 @@ class WorkflowControl extends PureComponent {
         uploadState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string,
         isConnected: PropTypes.bool,
-        isServerWaiting: PropTypes.bool,
         connectionType: PropTypes.string,
         state: PropTypes.object,
         actions: PropTypes.shape({
@@ -32,6 +31,58 @@ class WorkflowControl extends PureComponent {
     };
 
     fileInput = React.createRef();
+
+
+    state ={
+        isServerWaiting: false
+    };
+
+    actions = {
+        handleRun: () => {
+            this.setState({
+                isServerWaiting: true
+            });
+            this.props.actions.handleRun();
+            setTimeout(() => {
+                this.setState({
+                    isServerWaiting: false
+                });
+            }, 1000);
+        },
+        handlePause: () => {
+            this.setState({
+                isServerWaiting: true
+            });
+            this.props.actions.handlePause();
+            setTimeout(() => {
+                this.setState({
+                    isServerWaiting: false
+                });
+            }, 1000);
+        },
+        handleClose: () => {
+            this.setState({
+                isServerWaiting: true
+            });
+            this.props.actions.handleClose();
+            setTimeout(() => {
+                this.setState({
+                    isServerWaiting: false
+                });
+            }, 1000);
+        },
+        handleStop: () => {
+            this.setState({
+                isServerWaiting: true
+            });
+            this.props.actions.handleStop();
+            setTimeout(() => {
+                this.setState({
+                    isServerWaiting: false
+                });
+            }, 1000);
+        }
+    }
 
     onClickToUpload = () => {
         this.fileInput.current.value = null;
@@ -73,8 +124,9 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { state, actions, connectionType, workflowStatus, isConnected, isServerWaiting } = this.props;
+        const { state, connectionType, workflowStatus, isConnected } = this.props;
         const { gcode, workflowState } = state;
+        const { isServerWaiting } = this.state;
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = gcode.renderState === 'rendered';
@@ -115,7 +167,7 @@ class WorkflowControl extends PureComponent {
                             className="btn btn-default"
                             style={{ height: '30px' }}
                             title={i18n._('Run')}
-                            onClick={actions.handleRun}
+                            onClick={this.actions.handleRun}
                             disabled={isServerWaiting || !canPlay}
                         >
                             <i className="fa fa-play" />
@@ -125,7 +177,7 @@ class WorkflowControl extends PureComponent {
                             className="btn btn-default"
                             style={{ height: '30px' }}
                             title={i18n._('Pause')}
-                            onClick={actions.handlePause}
+                            onClick={this.actions.handlePause}
                             disabled={isServerWaiting || !canPause}
                         >
                             <i className="fa fa-pause" />
@@ -135,7 +187,7 @@ class WorkflowControl extends PureComponent {
                             className="btn btn-default"
                             style={{ height: '30px' }}
                             title={i18n._('Stop')}
-                            onClick={actions.handleStop}
+                            onClick={this.actions.handleStop}
                             disabled={isServerWaiting || !canStop}
                         >
                             <i className="fa fa-stop" />
@@ -145,7 +197,7 @@ class WorkflowControl extends PureComponent {
                             className="btn btn-default"
                             style={{ height: '30px' }}
                             title={i18n._('Close')}
-                            onClick={actions.handleClose}
+                            onClick={this.actions.handleClose}
                             disabled={isServerWaiting || !canClose}
                         >
                             <i className="fa fa-close" />
