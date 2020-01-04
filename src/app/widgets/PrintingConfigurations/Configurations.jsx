@@ -27,8 +27,14 @@ const OFFICIAL_CONFIG_KEYS = [
     'speed_travel'
 ];
 
+
+function isDefinitionEditable(definition) {
+    return !definition.metadata.readonly;
+}
 function isOfficialDefinition(definition) {
-    return includes(['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'], definition.definitionId);
+    return includes(['quality.fast_print',
+        'quality.normal_quality',
+        'quality.high_quality'], definition.definitionId);
 }
 
 // config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
@@ -231,7 +237,7 @@ class Configurations extends PureComponent {
         },
         onChangeCustomDefinition: (key, value) => {
             const definition = this.state.customQualityDefinition;
-            if (isOfficialDefinition(definition)) {
+            if (!isDefinitionEditable(definition)) {
                 return;
             }
 
@@ -356,7 +362,7 @@ class Configurations extends PureComponent {
             return null;
         }
 
-        const editable = !isOfficialDefinition(qualityDefinition);
+        const editable = isDefinitionEditable(qualityDefinition);
 
         return (
             <div>

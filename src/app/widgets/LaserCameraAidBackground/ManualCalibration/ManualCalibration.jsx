@@ -260,7 +260,7 @@ class ManualCalibration extends Component {
             return null;
         }
         return (
-            <div style={{ border: '1px solid #c8c8c8', boxSizing: 'border-box' }} ref={this.node} />
+            <div style={{ border: '1px solid #c8c8c8', overflow: 'hidden', boxSizing: 'border-box' }} ref={this.node} />
         );
     }
 }

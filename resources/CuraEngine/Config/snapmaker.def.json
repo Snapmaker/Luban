@@ -5,6 +5,7 @@
     "inherits": "fdmprinter",
     "metadata": {
         "visible": true,
+        "readonly": true,
         "author": "walker",
         "manufacturer": "Snapmaker",
         "file_formats": "text/x-gcode",

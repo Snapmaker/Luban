@@ -1,5 +1,5 @@
 /**
- * ExtractControls
+ * ManualCalibrationControls
  *
  * @author walker https://github.com/liumingzw
  */
@@ -11,6 +11,7 @@ import ThreeUtils from './ThreeUtils';
  *
  * @param camera
  * @param domElement
+ * @param scale
  * @param remapBox2
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
@@ -18,7 +19,7 @@ import ThreeUtils from './ThreeUtils';
 THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions) {
     THREE.Object3D.call(this);
 
-    this.position.z = 0.1;
+    this.position.z = 1;
 
     // TODO: pass size to the control
     const initialSize = 100;

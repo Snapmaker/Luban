@@ -23,12 +23,9 @@ const MATERIAL_CONFIG_KEYS = [
     'material_bed_temperature',
     'material_bed_temperature_layer_0'
 ];
-
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
-    return definition
-        && definition.definitionId !== 'material.pla'
-        && definition.definitionId !== 'material.abs'
+    return !definition.metadata.readonly
         && key !== 'material_diameter';
 }
 
@@ -92,7 +89,6 @@ class Material extends PureComponent {
             this.actions.onChangeMaterial(newDefinition.definitionId);
         },
         isMaterialSelected: (option) => {
-            // console.log(this.state.materialDefinition, option);
             return this.state.materialDefinition && this.state.materialDefinition.name === option.label;
         },
         onChangeNewName: (event) => {
