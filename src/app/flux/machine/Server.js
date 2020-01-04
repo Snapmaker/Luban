@@ -92,6 +92,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/connect`;
         request
             .post(api)
+            .timeout(3000)
             .send(token ? `token=${token}` : '')
             .end((err, res) => {
                 const { msg, data, code, text } = this._getResult(err, res);
@@ -100,7 +101,7 @@ export class Server extends events.EventEmitter {
                     this.open('', callback);
                 }
                 if (msg) {
-                    callback({ message: msg, status: code }, text);
+                    callback({ message: msg, status: code }, data, text);
                     return;
                 }
                 if (data) {
@@ -123,6 +124,7 @@ export class Server extends events.EventEmitter {
         const api = `${this.host}/api/v1/disconnect`;
         request
             .post(api)
+            .timeout(3000)
             .send(`token=${this.token}`)
             .end((err, res) => {
                 this._closeServer();

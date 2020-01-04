@@ -85,10 +85,9 @@ class WifiConnection extends PureComponent {
             this.props.setServer(server);
         },
         openServer: () => {
-            this.props.openServer((err, data) => {
+            this.props.openServer((err, data, text) => {
                 if (err) {
-                    console.log('err');
-                    this.actions.showWifiError(err, data);
+                    this.actions.showWifiError(err, text);
                 }
             });
         },
@@ -169,8 +168,8 @@ class WifiConnection extends PureComponent {
             this.setState({
                 showConnectionMessage: true,
                 connectionMessage: {
-                    text: i18n._(data || ''),
-                    title: i18n._(`Error ${err.status}  ${err.message}`),
+                    text: i18n._(data || err.message),
+                    title: err.status ? i18n._(`Error ${err.status}`) : i18n._('Error'),
                     img: IMAGE_WIFI_ERROR,
                     showCloseButton: true,
                     onCancel: null,
