@@ -1,5 +1,5 @@
 {
-  "name": "snapmaker-artisan",
+  "name": "snapmaker-luban",
   "version": "3.0.11",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
@@ -11,7 +11,7 @@
   ],
   "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
-    "artisan": "bin/cli"
+    "luban": "bin/cli"
   },
   "files": [
     "bin",
@@ -60,10 +60,10 @@
     "coveralls": "tape -r babel-register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
   },
   "build": {
-    "appId": "com.snapmaker",
+    "appId": "com.snapmaker.luban",
     "asar": false,
     "asarUnpack": [],
-    "productName": "Snapmaker Artisan",
+    "productName": "Snapmaker Luban",
     "directories": {
       "buildResources": "build",
       "output": "output",
@@ -74,7 +74,7 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/electron/snap-icon.icns",
+      "icon": "build/electron/snapmaker-luban.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
@@ -83,7 +83,7 @@
     "afterSign": "build/notarize.js",
     "dmg": {
       "background": "build/electron/background.png",
-      "icon": "build/electron/snap-icon.icns",
+      "icon": "build/electron/snapmaker-luban.icns",
       "iconSize": 80,
       "iconTextSize": 12,
       "contents": [
@@ -104,7 +104,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/electron/snap-icon.ico"
+      "icon": "build/electron/snapmaker-luban.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -123,7 +123,7 @@
   },
   "keywords": [
     "Snapmaker",
-    "Artisan",
+    "Luban",
     "3D Printing",
     "Laser",
     "CNC",

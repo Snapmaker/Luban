@@ -1,1 +1,1 @@
-# Snapmaker Artisan
+# Snapmaker Luban
