@@ -26,8 +26,10 @@ class ToolParameters extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
 
+        toolSnap: PropTypes.string.isRequired,
         toolParams: PropTypes.object.isRequired,
-        changeToolParams: PropTypes.func.isRequired
+        changeToolParams: PropTypes.func.isRequired,
+        updateToolSnap: PropTypes.func.isRequired
     };
 
     state = {
@@ -48,6 +50,7 @@ class ToolParameters extends PureComponent {
             const config = map[tool];
             this.setState({ tool: tool });
             this.props.changeToolParams({ toolDiameter: config.diameter, toolAngle: config.angle });
+            this.props.updateToolSnap(tool);
         },
         onChangeToolDiameter: (toolDiameter) => {
             this.props.changeToolParams({ toolDiameter: toolDiameter });
@@ -60,6 +63,14 @@ class ToolParameters extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Carving Tool'));
+    }
+
+    componentWillReceiveProps(nextProps) {
+        console.log(nextProps.toolSnap);
+        console.log(this.props.toolSnap);
+        if (this.props.toolSnap !== nextProps.toolSnap) {
+            this.actions.onChangeTool(nextProps.toolSnap);
+        }
     }
 
     render() {
@@ -178,7 +189,8 @@ class ToolParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
-        toolParams: state.cnc.toolParams
+        toolParams: state.cnc.toolParams,
+        toolSnap: state.cnc.toolSnap
     };
 };
 
@@ -187,6 +199,9 @@ const mapDispatchToProps = (dispatch) => {
         changeToolParams: (params) => {
             dispatch(cncActions.changeToolParams(params));
             dispatch(sharedActions.updateAllModelConfig('cnc', params));
+        },
+        updateToolSnap: (toolSnap) => {
+            dispatch(sharedActions.updateState('cnc', { toolSnap: toolSnap }));
         }
     };
 };

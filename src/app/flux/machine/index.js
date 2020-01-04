@@ -32,11 +32,7 @@ const INITIAL_STATE = {
     machineSelect: false,
 
     isCustom: false,
-    size: {
-        x: 125,
-        y: 125,
-        z: 125
-    },
+    size: MACHINE_SERIES.ORIGINAL.setting.size,
 
     // Serial port
     port: controller.port || '',
@@ -135,9 +131,11 @@ export const actions = {
         const machinePort = machineStore.get('port') || '';
         const serverToken = machineStore.get('server.token') || '';
 
+        const seriesInfo = valueOf(MACHINE_SERIES, 'value', initialMachineState.series);
+
         dispatch(actions.updateState({
             series: initialMachineState.series,
-            size: initialMachineState.size,
+            size: seriesInfo ? seriesInfo.setting.size : initialMachineState.size,
             serverToken: serverToken,
             port: machinePort
         }));
@@ -284,6 +282,20 @@ export const actions = {
                         connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 }
+                dispatch(actions.updateState({
+                    workPosition: {
+                        x: '0.000',
+                        y: '0.000',
+                        z: '0.000',
+                        a: '0.000'
+                    },
+
+                    originOffset: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }
+                }));
             },
             'workflow:state': (options) => {
                 const { workflowState } = options;
@@ -564,6 +576,12 @@ export const actions = {
                 y: '0.000',
                 z: '0.000',
                 a: '0.000'
+            },
+
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
             }
         }));
     },
@@ -597,8 +615,11 @@ export const actions = {
 
             // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
             if (background.enabled) {
+                const { workPosition, originOffset } = getState().machine;
+                const x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                const y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
                 const promise = new Promise((resolve) => {
-                    server.executeGcode('G53;\nG0 X0 Y0;\nG54;\nG92 X0 Y0;', () => {
+                    server.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`, () => {
                         resolve();
                     });
                 });

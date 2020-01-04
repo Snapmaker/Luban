@@ -1,3 +1,5 @@
+import { CNC_TOOL_SNAP_FLAT_END_MILL } from '../../constants';
+
 export const CaseConfig150 = [
     {
         tag: '3dp', // 3dp、laser、cnc
@@ -111,6 +113,7 @@ export const CaseConfig150 = [
             casePath: './A150/'
         },
         caseConfigs: {
+            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
                 // //greyscale: {
                 // algorithm: 'FloydSteinburg',
@@ -254,6 +257,7 @@ export const CaseConfig250 = [
             casePath: './A250/'
         },
         caseConfigs: {
+            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
                 targetDepth: 3.2,
                 stepDown: 0.4,
@@ -304,6 +308,7 @@ export const CaseConfig350 = [
             casePath: './A350'
         },
         caseConfigs: {
+            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
 
             },

@@ -28,6 +28,7 @@ const INITIAL_STATE = {
     gcodeConfig: {},
     config: {},
 
+    toolSnap: '',
     toolParams: {
         toolDiameter: 3.175, // tool diameter (in mm)
         toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
