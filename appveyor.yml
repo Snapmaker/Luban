@@ -49,7 +49,7 @@ install:
 build_script:
   - ps: npm run build
   - ps: mkdir releases
-  - ps: PRODUCT_NAME = 'Snapmaker Luban'
+  - ps: $PRODUCT_NAME = 'Snapmaker Luban'
   - ps: $PACKAGE_NAME = node -e "console.log(require('./src/package.json').name)"
   - ps: $PACKAGE_VERSION = node -e "console.log(require('./src/package.json').version)"
   - ps: $COMMIT_LOG = git log -1 --format='%ci %H %s'
