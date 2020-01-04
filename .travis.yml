@@ -52,6 +52,7 @@ script:
 after_success:
   - npm run coveralls
   - mkdir -p releases
+  - PRODUCT_NAME='Snapmaker Luban'
   - PACKAGE_NAME=`node -e "console.log(require('./src/package.json').name)"`
   - PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
   - RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
@@ -65,7 +66,7 @@ after_success:
       sudo spctl --status;
       travis_wait 30 npm run build:mac-x64;
       ls -al output output/*;
-      cp -af "output/${RELEASE}.dmg" "releases/${RELEASE}-mac-x64.dmg";
+      cp -af "output/${PRODUCT_NAME}.dmg" "releases/${RELEASE}-mac-x64.dmg";
       ls -al releases/*;
     fi
   - |
