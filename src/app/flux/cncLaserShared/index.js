@@ -113,7 +113,7 @@ export const actions = {
                 onError && onError(err);
             });
     },
-    generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode, caseConfigs, caseTransformation) => (dispatch, getState) => {
+    generateModel: (headerType, originalName, uploadName, sourceWidth, sourceHeight, mode, configs, caseTransformation) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
@@ -139,15 +139,20 @@ export const actions = {
             config = { ...config, toolDiameter, toolAngle };
         }
         // Pay attention to judgment conditions
-        if (caseConfigs && caseConfigs.config) {
-            Object.entries(caseConfigs.config).forEach(([key, value]) => {
+        if (configs && configs.tool) {
+            dispatch(actions.updateState('cnc', {
+                toolSnap: configs.tool
+            }));
+        }
+        if (configs && configs.config) {
+            Object.entries(configs.config).forEach(([key, value]) => {
                 if (config[key] !== null && config[key] !== undefined) {
                     config[key] = value;
                 }
             });
         }
-        if (caseConfigs && caseConfigs.gcodeConfig) {
-            Object.entries(caseConfigs.gcodeConfig).forEach(([key, value]) => {
+        if (configs && configs.gcodeConfig) {
+            Object.entries(configs.gcodeConfig).forEach(([key, value]) => {
                 if (gcodeConfig[key] !== null && gcodeConfig[key] !== undefined) {
                     gcodeConfig[key] = value;
                 }
