@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const wrap = require('word-wrap');
 const commitizen = require('commitizen');
 
 function createQuestions(config) {
@@ -68,11 +69,6 @@ function createQuestions(config) {
         },
         {
             type: 'input',
-            name: 'breaking',
-            message: 'List any breaking changes:\n'
-        },
-        {
-            type: 'input',
             name: 'issues',
             message: 'List any issues closed by this change:\n'
         }
@@ -82,23 +78,36 @@ function createQuestions(config) {
 /**
  * Format the git commit message from given answers.
  *
- * @param {Object} answers Answers provide by `inquier.js`
- * @return {String} Formated git commit message
+ * @param {Object} answers Answers provide user
+ * @param {Object} config Config specified in package.json
+ *
+ * @return {String} Formatted git commit message
  */
-function format(answers) {
-    const issues = answers.issues
+function format(answers, config) {
+    config.bodyLineLength = config.bodyLineLength || 80;
+
+    const wrapOptions = {
+        trim: true,
+        newline: '\n',
+        indent: '',
+        cut: true,
+        width: config.bodyLineLength,
+    };
+
+    const head = answers.type + ': ' + answers.subject.trim();
+    const body = wrap(answers.body, wrapOptions);
+    const footer = answers.issues
         ? 'Closes ' + (answers.issues.match(/#\d+/g) || []).join(', closes')
         : '';
 
-    const head = answers.type + ' ' + answers.subject.trim();
-    const body = wrap();
+    return [head, body, footer].filter(x => x).join('\n\n');
 }
 
 module.exports = {
     prompter: (cz, commit) => {
         const config = commitizen.configLoader.load();
         cz.prompt(createQuestions(config))
-            .then(format)
+            .then(answers => format(answers, config))
             .then(commit);
     }
 };
