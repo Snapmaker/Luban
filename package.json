@@ -28,6 +28,7 @@
   },
   "preferGlobal": true,
   "scripts": {
+    "commit": "npx git-cz",
     "pkgsync": "babel-node build/pkgsync.js",
     "gettext": "node scripts/gettext.js",
     "prepare": "npm run clean",
@@ -270,10 +271,12 @@
     "babel-preset-react-hmre": "~1.1.1",
     "babel-preset-stage-0": "~6.24.1",
     "bundle-loader": "~0.5.5",
+    "commitizen": "~3.1.2",
     "coveralls": "~3.0.3",
     "cross-env": "~5.2.0",
     "css-loader": "~2.1.1",
     "css-split-webpack-plugin": "0.2.3",
+    "cz-conventional-changelog": "~3.0.2",
     "electron": "~2.0.18",
     "electron-builder": "~21.2.0",
     "electron-notarize": "~0.2.1",
@@ -297,6 +300,7 @@
     "html-webpack-inline-chunk-plugin": "~1.1.1",
     "html-webpack-plugin": "~3.2.0",
     "html-webpack-plugin-addons": "~0.1.1",
+    "husky": "~4.0.7",
     "i18next-scanner": "~2.6.5",
     "imports-loader": "~0.7.1",
     "json-loader": "~0.5.7",
@@ -305,7 +309,6 @@
     "optimize-css-assets-webpack-plugin": "~5.0.0",
     "plugin-error": "~1.0.1",
     "pofile": "~1.0.11",
-    "pre-push": "~0.1.1",
     "progress": "~2.0.0",
     "react-textarea-autosize": "^7.1.0",
     "redux-devtools": "~3.4.0",
@@ -320,11 +323,20 @@
     "url-loader": "~1.0.1",
     "webpack-dev-server": "~3.1.14",
     "webpack-manifest-plugin": "~2.0.4",
+    "word-wrap": "^1.2.3",
     "worker-loader": "~2.0.0",
     "write-file-webpack-plugin": "~4.3.2",
     "xlsx": "~0.13.3"
   },
-  "pre-push": [
-    "eslint:debug"
-  ]
+  "config": {
+    "commitizen": {
+      "path": "./.cz-conventional-changelog.js"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run eslint:debug",
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+    }
+  }
 }
