@@ -7,39 +7,39 @@ function createQuestions(config) {
 
     const types = [
         {
-            name: 'feature',
+            name: 'Feature',
             description: 'A new feature'
         },
         {
-            name: 'improvement',
+            name: 'Improvement',
             description: 'An improvement to a current feature'
         },
         {
-            name: 'fix',
+            name: 'Fix',
             description: 'A bug fix'
         },
         {
-            name: 'refactor',
+            name: 'Refactor',
             description: 'A code change that neither fixes a bug nor adds a feature'
         },
         {
-            name: 'perf',
+            name: 'Perf',
             description: 'A code change that improves performance'
         },
         {
-            name: 'test',
+            name: 'Test',
             description: 'Adding missing tests or correcting existing tests'
         },
         {
-            name: 'build',
+            name: 'Build',
             description: 'Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)'
         },
         {
-            name: 'style',
+            name: 'Style',
             description: 'Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)'
         },
         {
-            name: 'docs',
+            name: 'Docs',
             description: 'Documentation only changes'
         }
     ];
