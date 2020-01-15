@@ -199,10 +199,6 @@ export const actions = {
                 }));
             },
             'http:discover': (objects) => {
-                objects.push({
-                    name: 'test1',
-                    address: '172.18.1.26'
-                });
                 const { servers } = getState().machine;
                 const newServers = [];
                 for (const object of objects) {
