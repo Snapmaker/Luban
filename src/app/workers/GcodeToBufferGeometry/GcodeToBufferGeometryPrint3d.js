@@ -73,7 +73,7 @@ class GcodeToBufferGeometryPrint3d {
                 const typeSetting = this.getTypeSetting(typeCode);
 
                 // height change means layer changes
-                if (height !== v2.z) {
+                if ((v2.z - height).toFixed(3) >= modal.layerHeight) {
                     height = v2.z;
                     ++layerIndex;
                 }

@@ -94,7 +94,9 @@ class ToolPath {
         // Tool Select
         tool: 0,
 
-        gcodeType: 'end'
+        gcodeType: 'end',
+
+        layerHeight: 0.001
     };
 
     offsetG92 = (pos) => {
@@ -131,6 +133,13 @@ class ToolPath {
         ';End GCode begin': () => {
             if (this.modal.gcodeType !== 'end') {
                 this.modal.gcodeType = 'end';
+            }
+        },
+
+        ';Layer height': (params) => {
+            const layerHeight = parseFloat(params);
+            if (!Number.isNaN(layerHeight)) {
+                this.modal.layerHeight = layerHeight;
             }
         }
     }
