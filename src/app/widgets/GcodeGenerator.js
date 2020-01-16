@@ -102,7 +102,7 @@ class GcodeGenerator {
 
         // process "multi-pass, fix-power"
         gcodeStr = this.processGcodeMultiPass(gcodeStr, gcodeConfig);
-        gcodeStr = this.processGcodeForFixedPower(gcodeStr, gcodeConfig);
+        // gcodeStr = this.processGcodeForFixedPower(gcodeStr, gcodeConfig);
 
         return gcodeStr;
     }
