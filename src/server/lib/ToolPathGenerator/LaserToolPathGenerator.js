@@ -45,9 +45,9 @@ class LaserToolPathGenerator extends EventEmitter {
         }
 
         fakeGcode += '; G-code START <<<\n';
-        fakeGcode += 'M106 P0 S255\n';
+        fakeGcode += 'M106 P0 S255\n'; // Fan On
         fakeGcode += `${workingGcode}\n`;
-        fakeGcode += 'M107 P0\n';
+        fakeGcode += 'M107 P0\n'; // Fan Off
         fakeGcode += '; G-code END <<<\n';
 
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
@@ -55,7 +55,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateGcodeGreyscale(modelInfo, modelPath) {
-        const { gcodeConfigPlaceholder, config } = modelInfo;
+        const { gcodeConfigPlaceholder, config, gcodeConfig } = modelInfo;
+        const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         const { workSpeed, dwellTime } = gcodeConfigPlaceholder;
         const { bwThreshold } = config;
 
@@ -71,18 +72,29 @@ class LaserToolPathGenerator extends EventEmitter {
         });
 
         let progress = 0;
-        let content = '';
-        content += `G1 F${workSpeed}\n`;
+
+        let firstTurnOn = true;
+        function turnOnLaser() {
+            if (firstTurnOn && fixedPowerEnabled) {
+                firstTurnOn = false;
+                const powerStrength = Math.floor(fixedPower * 255 / 100);
+                return `M3 P${fixedPower} S${powerStrength}`;
+            }
+            return 'M3';
+        }
+
+        const content = [];
+        content.push(`G1 F${workSpeed}`);
 
         for (let i = 0; i < width; ++i) {
             const isReverse = (i % 2 === 0);
             for (let j = (isReverse ? height : 0); isReverse ? j >= 0 : j < height; isReverse ? j-- : j++) {
                 const idx = j * width * 4 + i * 4;
                 if (img.bitmap.data[idx] < bwThreshold) {
-                    content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
-                    content += 'M03\n';
-                    content += `G4 P${dwellTime}\n`;
-                    content += 'M05\n';
+                    content.push(`G1 X${normalizer.x(i)} Y${normalizer.y(j)}`);
+                    content.push(turnOnLaser());
+                    content.push(`G4 P${dwellTime}`);
+                    content.push('M05');
                 }
             }
             const p = i / width;
@@ -91,13 +103,14 @@ class LaserToolPathGenerator extends EventEmitter {
                 this.emit('progress', progress);
             }
         }
-        content += 'G0 X0 Y0';
+        content.push('G0 X0 Y0');
 
-        return content;
+        return `${content.join('\n')}\n`;
     }
 
     async generateGcodeBW(modelInfo, modelPath) {
-        const { gcodeConfigPlaceholder, config } = modelInfo;
+        const { gcodeConfigPlaceholder, config, gcodeConfig } = modelInfo;
+        const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const { bwThreshold } = config;
 
@@ -127,13 +140,23 @@ class LaserToolPathGenerator extends EventEmitter {
             return len;
         }
 
+        let firstTurnOn = true;
+        function turnOnLaser() {
+            if (firstTurnOn && fixedPowerEnabled) {
+                firstTurnOn = false;
+                const powerStrength = Math.floor(fixedPower * 255 / 100);
+                return `M3 P${fixedPower} S${powerStrength}`;
+            }
+            return 'M3';
+        }
+
         function genMovement(normalizer, start, end) {
             return [
                 `G0 X${normalizer.x(start.x)} Y${normalizer.y(start.y)}`,
-                'M3',
+                turnOnLaser(),
                 `G1 X${normalizer.x(end.x)} Y${normalizer.y(end.y)}`,
-                'M5\n'
-            ].join('\n');
+                'M5'
+            ];
         }
 
         const img = await Jimp.read(modelPath);
@@ -148,12 +171,15 @@ class LaserToolPathGenerator extends EventEmitter {
         });
 
         let progress = 0;
-        let content = '';
-        content += `G0 F${jogSpeed}\n`;
-        content += `G1 F${workSpeed}\n`;
+        const content = [];
+        content.push(`G0 F${jogSpeed}`);
+        content.push(`G1 F${workSpeed}`);
 
         if (!config.direction || config.direction === 'Horizontal') {
-            const direction = { x: 1, y: 0 };
+            const direction = {
+                x: 1,
+                y: 0
+            };
             for (let j = 0; j < height; j++) {
                 let len = 0;
                 const isReverse = (j % 2 !== 0);
@@ -170,7 +196,7 @@ class LaserToolPathGenerator extends EventEmitter {
                             x: start.x + direction.x * len * sign,
                             y: start.y + direction.y * len * sign
                         };
-                        content += genMovement(normalizer, start, end);
+                        content.push(...genMovement(normalizer, start, end));
                     } else {
                         len = 1;
                     }
@@ -182,7 +208,10 @@ class LaserToolPathGenerator extends EventEmitter {
                 }
             }
         } else if (config.direction === 'Vertical') {
-            const direction = { x: 0, y: 1 };
+            const direction = {
+                x: 0,
+                y: 1
+            };
             for (let i = 0; i < width; ++i) {
                 let len = 0;
                 const isReverse = (i % 2 !== 0);
@@ -199,7 +228,7 @@ class LaserToolPathGenerator extends EventEmitter {
                             x: start.x + direction.x * len * sign,
                             y: start.y + direction.y * len * sign
                         };
-                        content += genMovement(normalizer, start, end);
+                        content.push(...genMovement(normalizer, start, end));
                     } else {
                         len = 1;
                     }
@@ -211,7 +240,10 @@ class LaserToolPathGenerator extends EventEmitter {
                 }
             }
         } else if (config.direction === 'Diagonal') {
-            const direction = { x: 1, y: -1 };
+            const direction = {
+                x: 1,
+                y: -1
+            };
             for (let k = 0; k < width + height - 1; k++) {
                 let len = 0;
                 const isReverse = (k % 2 !== 0);
@@ -232,7 +264,7 @@ class LaserToolPathGenerator extends EventEmitter {
                                 x: start.x + direction.x * len * sign,
                                 y: start.y + direction.y * len * sign
                             };
-                            content += genMovement(normalizer, start, end);
+                            content.push(...genMovement(normalizer, start, end));
                         } else {
                             len = 1;
                         }
@@ -245,7 +277,10 @@ class LaserToolPathGenerator extends EventEmitter {
                 }
             }
         } else if (config.direction === 'Diagonal2') {
-            const direction = { x: 1, y: 1 };
+            const direction = {
+                x: 1,
+                y: 1
+            };
             for (let k = -height; k <= width; k++) {
                 const isReverse = (k % 2 !== 0);
                 const sign = isReverse ? -1 : 1;
@@ -266,7 +301,7 @@ class LaserToolPathGenerator extends EventEmitter {
                                 x: start.x + direction.x * len * sign,
                                 y: start.y + direction.y * len * sign
                             };
-                            content += genMovement(normalizer, start, end);
+                            content.push(...genMovement(normalizer, start, end));
                         } else {
                             len = 1;
                         }
@@ -279,14 +314,15 @@ class LaserToolPathGenerator extends EventEmitter {
                 }
             }
         }
-        content += 'G0 X0 Y0\n';
+        content.push('G0 X0 Y0');
 
-        return content;
+        return `${content.join('\n')}\n`;
     }
 
     async generateGcodeVector(modelInfo, modelPath) {
-        const { transformation, config, gcodeConfigPlaceholder } = modelInfo;
+        const { transformation, config, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
         const { fillEnabled, fillDensity, optimizePath } = config;
+        const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const originWidth = modelInfo.sourceWidth;
         const originHeight = modelInfo.sourceHeight;
@@ -318,7 +354,10 @@ class LaserToolPathGenerator extends EventEmitter {
             svg.viewBox[0] + svg.viewBox[2],
             svg.viewBox[1],
             svg.viewBox[1] + svg.viewBox[3],
-            { x: 1, y: 1 }
+            {
+                x: 1,
+                y: 1
+            }
         );
 
         const segments = svgToSegments(svg, {
@@ -328,27 +367,37 @@ class LaserToolPathGenerator extends EventEmitter {
             fillDensity: fillDensity
         });
 
+        let firstTurnOn = true;
+        function turnOnLaser() {
+            if (firstTurnOn && fixedPowerEnabled) {
+                firstTurnOn = false;
+                const powerStrength = Math.floor(fixedPower * 255 / 100);
+                return `M3 P${fixedPower} S${powerStrength}`;
+            }
+            return 'M3';
+        }
+
         // second pass generate gcode
         let progress = 0;
-        let content = '';
-        content += `G0 F${jogSpeed}\n`;
-        content += `G1 F${workSpeed}\n`;
+        const content = [];
+        content.push(`G0 F${jogSpeed}`);
+        content.push(`G1 F${workSpeed}`);
 
         let current = null;
         for (const segment of segments) {
             // G0 move to start
             if (!current || current && !(pointEqual(current, segment.start))) {
                 if (current) {
-                    content += 'M5\n';
+                    content.push('M5');
                 }
 
                 // Move to start point
-                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
-                content += 'M3\n';
+                content.push(`G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}`);
+                content.push(turnOnLaser());
             }
 
             // G0 move to end
-            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
+            content.push(`G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}`);
 
             current = segment.end;
 
@@ -360,13 +409,13 @@ class LaserToolPathGenerator extends EventEmitter {
         this.emit('progress', progress);
         // turn off
         if (current) {
-            content += 'M5\n';
+            content.push('M5');
         }
 
         // move to work zero
-        content += 'G0 X0 Y0\n';
+        content.push('G0 X0 Y0');
 
-        return content;
+        return `${content.join('\n')}\n`;
     }
 }
 
