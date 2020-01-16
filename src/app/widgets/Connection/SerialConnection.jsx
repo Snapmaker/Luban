@@ -140,7 +140,6 @@ class SerialConnection extends PureComponent {
     }
 
     onPortOpened(options) {
-        console.log('onPOrt');
         const { port, err } = options;
         if (err && err !== 'inuse') {
             this.setState({
