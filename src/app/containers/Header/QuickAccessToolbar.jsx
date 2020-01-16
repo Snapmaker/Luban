@@ -109,7 +109,7 @@ class QuickAccessToolbar extends PureComponent {
                             </li>
                         )}
                         <li>
-                            <a href="https://manual.snapmaker.com/" target="_blank" rel="noopener noreferrer">
+                            <a href="https://snapmaker.com/document" target="_blank" rel="noopener noreferrer">
                                 {i18n._('User Manual & FAQ')}
                             </a>
                         </li>
