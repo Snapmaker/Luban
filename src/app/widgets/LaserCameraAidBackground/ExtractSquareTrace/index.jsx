@@ -51,7 +51,7 @@ class ExtractSquareTrace extends PureComponent {
         options: {
             picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
             currentIndex: 0,
-            size: this.props.size,
+            size: this.props.laserSize,
             series: this.props.series,
             centerDis: 100,
             currentArrIndex: 0,
@@ -167,8 +167,8 @@ class ExtractSquareTrace extends PureComponent {
                     }
                 });
                 this.props.changeLastFileNames(this.state.imageNames);
-                this.props.updateEachPicSize('xSize', this.xSize);
-                this.props.updateEachPicSize('ySize', this.ySize);
+                this.props.updateEachPicSize('xSize', this.state.xSize);
+                this.props.updateEachPicSize('ySize', this.state.ySize);
 
                 this.actions.processStitch(this.state.options);
                 this.props.changeCanTakePhoto(true);
@@ -488,7 +488,7 @@ class ExtractSquareTrace extends PureComponent {
                             onClick={this.actions.setBackgroundImage}
                             disabled={!this.state.isStitched}
                         >
-                            {i18n._('Comfirm')}
+                            {i18n._('Confirm')}
                         </button>
                     </div>
                 </div>
