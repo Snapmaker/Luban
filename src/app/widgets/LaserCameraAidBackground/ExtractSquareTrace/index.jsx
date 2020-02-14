@@ -51,7 +51,7 @@ class ExtractSquareTrace extends PureComponent {
         options: {
             picAmount: this.props.series === MACHINE_SERIES.A150.value ? 4 : 9,
             currentIndex: 0,
-            size: this.props.laserSize,
+            size: this.props.size,
             series: this.props.series,
             centerDis: 100,
             currentArrIndex: 0,
