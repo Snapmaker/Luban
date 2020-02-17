@@ -9,7 +9,7 @@
     "parachvte <ryan@snapmaker.com>",
     "walker <walker@snapmaker.com>"
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "git@github.com:whimsycwd/Snapmakerjs.git"
