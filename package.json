@@ -256,7 +256,7 @@
     "webpack-hot-middleware": "~2.22.3",
     "winston": "~3.0.0",
     "xml2js": "~0.4.19",
-    "xterm": "~3.0.2"
+    "xterm": "~4.4.0"
   },
   "devDependencies": {
     "babel-cli": "~6.26.0",
