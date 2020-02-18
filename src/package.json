@@ -63,7 +63,7 @@
     "socket.io": "~2.2.0",
     "socketio-jwt": "~4.5.0",
     "spawn-default-shell": "~2.0.0",
-    "static-eval": "~1.1.1",
+    "static-eval": "~2.0.3",
     "superagent": "~3.8.3",
     "three": "~0.94.0",
     "uuid": "~3.3.2",
