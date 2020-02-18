@@ -73,7 +73,7 @@ function main() {
     Object.keys(col2lang).forEach((col) => {
         const item = col2lang[col];
 
-        const cellTitle = worksheet[col + '1'].v;
+        const cellTitle = worksheet[`${col}1`].v;
         if (cellTitle !== item[0]) {
             logger.error(':(');
             return;
@@ -83,11 +83,11 @@ function main() {
 
         const translations = {};
         for (let i = 2; ; i++) {
-            const cell = worksheet['A' + i];
+            const cell = worksheet[`A${i}`];
             if (cell === undefined) {
                 break;
             }
-            const key = worksheet['A' + i].v.trim();
+            const key = worksheet[`A${i}`].v.trim();
             try {
                 const value = worksheet[col + i].v.trim();
 

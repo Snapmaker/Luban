@@ -23,7 +23,7 @@ const I18N_DIR = path.resolve(__dirname, '../src/app/i18n');
 const LANGUAGES = ['de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'ru', 'zh-cn'];
 
 const translateMap = {};
-for (let lang of LANGUAGES) {
+for (const lang of LANGUAGES) {
     logger.info(`Dealing with ${lang}...`);
 
     const langDir = `${I18N_DIR}/${lang}`;

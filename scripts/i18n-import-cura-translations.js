@@ -52,7 +52,7 @@ Object.keys(languageMappings).forEach((lang) => {
     const printerConfigFile = `${curaLangDir}/fdmprinter.def.json.po`;
     const po = PO.parse(fs.readFileSync(printerConfigFile).toString());
 
-    for (let item of po.items) {
+    for (const item of po.items) {
         if (translates[item.msgid] === '') {
             console.log(typeof item.msgstr[0]);
             console.log(`[${lang}] ${item.msgid} -> ${item.msgstr[0]}`);
