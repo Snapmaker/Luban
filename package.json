@@ -242,7 +242,7 @@
     "sortablejs": "~1.7.0",
     "source-map": "~0.7.3",
     "spawn-default-shell": "~2.0.0",
-    "static-eval": "~1.1.1",
+    "static-eval": "~2.0.3",
     "superagent": "~3.8.3",
     "superagent-use": "~0.1.0",
     "three": "~0.94.0",
