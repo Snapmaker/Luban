@@ -95,7 +95,7 @@ before_deploy:
 deploy:
     provider: releases
     api_key:
-        secure: yzRhwVd3S04FHhkwoGlAnqtME5E4c3EKStnTigI52DQBXD6UU76FmIrLnCrkfi5G8q1i+qlWpOwm8pLBt24QV/FXFiWgIKXKS50xp/1vItCwXQxpOiPJnBixLTIaUTGsilh6WfA/+iP3eBX+4FkM/SkcnpBDq6xk4xfmoTBJ1Roe/Gj4c8AWner7vd5hdERCRPZSB+3ITMlOVMQ+vpbuyuDxnK8xsBnqtdvgJERyA4O+4fHgxlxp+5znRu78n740EX3VqPLJhn9oM7CVbf/ogKZ+ZaMVov8Is1a3yXN6BTjHb2Ar5i+DT0/TBiTuUy7wG2JnNOG/7EGDUJYl6mJNBBbIIrBD+KdfnpRgziSYNL17wGj1u2PNjviuXjdrjyG+wlSZeeXDoo+T76Z0v7mcDlgrFNWqaoNHQcegh4zRQ7JplKSnc1Ok0llmfXub5xT+v4IDuMJJ4XlZhdc5BurzkWNWCHXT3r8LUCySbW7tef0+sOpcqhzKLOOOnYaDUZV+FYzxzqmZEzbM2Envq98/umWyaDBsDik8K8ZYgxuoMo4PRDV5cpXhCoC7p0WzmPLjRqSJH+KNUtkiFh7GGXQrq06HrP31M/C04UxzVDTGOshg6GAbTCEMsX3BDtmKZVkl+LxW9R8u/f1Wk/3hIOcU0ZUeg0LkZTWd3mOz+YKa/ME=
+        secure: "QtewfRD/MvdNFkslx4GWC9cWUGcENWW29sOnfeggK+x41QZs7Z42142/Ca0k48B9vqKRaw3ORwuRb0CtItqH/LIZo4UhQ/m7qfkNRyVrU95a1fMImJ4G+FYmBdXj095SxFFIxaNAUeyeDB/xr1aCkXu4niG6ESes9nx4s2SBSj/XQs2zD1dVNMWwFWooXVflumyKSPpLd6KoD939rwAHPmv6qZHOawrI75zHuMuzxHR8PZw8XS4BSasq/J6pkLFmCedOrIvhGIO49j80YwaeaJQGCNionpNQNV0Tk7FQ73irz6apxr1n3WecenZZxYY6i0ohoSWNtRQ13GUrv4KJ74o+4kWWHq00tBEjpusYhBOOz/rn1MqtRi7+F5MnGwnMZC8BqjTE4fZujtknCeaJL+P+4c+Mj3qTTaE58Xc3SMIxJTo4sxQJnMvil5tGDZ+z7ToS3O+P8hjwdATlQDWQJq/FjRIMYHG8ZSJKzEl8If8qOXNptm2RS9T+nkI11z1ODww4t30VkHZwVsEUjPabklhFxVOar8bRx8zTeCxBz80tR1OjX2mbUzCX+i4oOpiGv0u3SSXivxlq3okPW9CmLjnQc0k3XV7uo3rceg5y1AXms5/SdCQowbG1mj/0pgCBvQX1fmvMY5ugxGgEOalDOOKS5BzP2C1Dj4bNA8pbEW4="
     file_glob: true
     file:
         - 'releases/*.*'
@@ -105,4 +105,4 @@ deploy:
         # https://docs.travis-ci.com/user/deployment#Conditional-Releases-with-on
         tags: true  # Deploy app only when a tag is applied to the commit
         node: '10'
-        repo: parachvte/Luban
+        repo: Snapmaker/Luban
