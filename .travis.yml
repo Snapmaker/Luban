@@ -54,12 +54,12 @@ after_success:
     - COMMIT_LOG=`git log -1 --format='%ci %H %s'`
     - |
         # build:mac-x64
-        travis_wait 30 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
             # https://github.com/electron-userland/electron-osx-sign/issues/83
             # Temporarily Bypass Gatekeeper
             sudo spctl --master-disable;
             sudo spctl --status;
-            npm run build:mac-x64;
+            travis_wait 30 npm run build:mac-x64;
             ls -al output output/*;
             cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg" "releases/${RELEASE}-mac-x64.dmg";
             ls -al releases/*;
