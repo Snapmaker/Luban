@@ -24,31 +24,30 @@ const serialportList = (socket, options) => {
     const { dataSource } = options;
     log.debug(`serialport:list(): id=${socket.id}`);
 
-    serialport.list((err, ports) => {
-        if (err) {
-            log.error(err);
-            return;
-        }
+    serialport.list()
+        .then(ports => {
+            const allPorts = ports.concat(ensureArray(config.get('ports', [])));
 
-        const allPorts = ports.concat(ensureArray(config.get('ports', [])));
+            const controllers = store.get('controllers', {});
+            const portsInUse = Object.keys(controllers)
+                .filter(port => {
+                    const controller = controllers[port];
+                    return controller && controller.isOpen();
+                });
 
-        const controllers = store.get('controllers', {});
-        const portsInUse = Object.keys(controllers)
-            .filter(port => {
-                const controller = controllers[port];
-                return controller && controller.isOpen();
+            const availablePorts = allPorts.map(port => {
+                return {
+                    port: port.path,
+                    manufacturer: port.manufacturer,
+                    inuse: portsInUse.indexOf(port.comName) >= 0
+                };
             });
 
-        const availablePorts = allPorts.map(port => {
-            return {
-                port: port.comName,
-                manufacturer: port.manufacturer,
-                inuse: portsInUse.indexOf(port.comName) >= 0
-            };
+            socket.emit('serialport:list', { ports: availablePorts, dataSource });
+        })
+        .catch(err => {
+            log.error(err);
         });
-
-        socket.emit('serialport:list', { ports: availablePorts, dataSource });
-    });
 };
 
 const serialportOpen = (socket, options) => {

@@ -14,6 +14,8 @@ module.exports = async function notarizing(context) {
         return;
     }
 
+    console.log('Notarizing application...');
+
     const appName = context.packager.appInfo.productFilename;
 
     const ascProvider = 'CTHX7X38C3';
