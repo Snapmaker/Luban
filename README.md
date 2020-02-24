@@ -82,8 +82,8 @@ versions:
 
 ## Feedback & Contributing
 
-- To submit a bug or feature request, [file an issue](https://github.com/whimsycwd/Snapmakerjs/issues/new) in github issues.
-- To contribute some code, make sure you read up and follow our guidelines for [contributing](https://github.com/whimsycwd/Snapmakerjs/blob/master/CONTRIBUTING.md) first.
+- To submit a bug or feature request, [file an issue](https://github.com/Snapmaker/Luban/issues/new) in github issues.
+- To contribute some code, make sure you read up and follow our guidelines for [contributing](https://github.com/Snapmaker/Luban/blob/master/CONTRIBUTING.md) first.
 
 
 ## License
