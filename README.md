@@ -1,13 +1,12 @@
 Snapmaker Luban
 ===============
 Snapmaker Luban is an easy-to-use 3-in-1 software tailor-made for Snapmaker machines.
-Through it you can connect to and control the machine, it also provides G-code generation
-for 3D models, laser engraving / cutting, and CNC milling.
+You can customize the printer settings and control the machine using the command panel in Luban anytime with ease.
+The software also provides G-code generation support for 3D models, laser engraving / cutting, and CNC milling.
 
-Our goal is to provide a more general multi-functional 3D software, remains ease of use
-as well as highly customizable.
+Our goal is to provide a multi-functional 3D software, while making it as accessible and customizable as possible for new users / beginners.
 
-TODO: add a screen shot of software here.
+The software is inspired by [cncjs](https://github.com/cncjs/cncjs) by cheton, we also use [CuraEngine](https://github.com/Ultimaker/CuraEngine) for 3D slicing.
 
 ## Features
 
@@ -41,10 +40,10 @@ TODO: add a screen shot of software here.
 
 ### Use released applications
 
-You can download latest releases of software under releases section.
-It's recommended to use a released version unless you want to do some modifications on the source code.
+You can download latest releases of software under the ["**Releases**"](https://github.com/Snapmaker/Luban/releases) section.
+It's recommended to use a stable release version unless you want to do some modifications on the source code.
 
-Or you can clone this repository, then follow the instructions in Development section below.
+Or you can clone this repository, then follow the instructions in "**Development**" section below.
 
 ## Development
 
@@ -80,10 +79,10 @@ versions:
 > npm run dev
 ```
 
-## Feedback & Contributing
+## Feedback & Contribution
 
 - To submit a bug or feature request, [file an issue](https://github.com/Snapmaker/Luban/issues/new) in github issues.
-- To contribute some code, make sure you read up and follow our guidelines for [contributing](https://github.com/Snapmaker/Luban/blob/master/CONTRIBUTING.md) first.
+- To contribute some code, make sure you have read and followed our guidelines for [contributing](https://github.com/Snapmaker/Luban/blob/master/CONTRIBUTING.md).
 
 
 ## License
