@@ -48,8 +48,10 @@ class MachineSettings extends PureComponent {
         updateMachineSize: PropTypes.func.isRequired,
 
         enclosure: PropTypes.bool.isRequired,
+        connectionTimeout: PropTypes.number.isRequired,
         getEnclosureState: PropTypes.func.isRequired,
-        setEnclosureState: PropTypes.func.isRequired
+        setEnclosureState: PropTypes.func.isRequired,
+        updateConnectionTimeout: PropTypes.func.isRequired
     };
 
     state = {
@@ -59,7 +61,8 @@ class MachineSettings extends PureComponent {
             y: 0,
             z: 0
         },
-        enclosure: false
+        enclosure: false,
+        connectionTimeout: 3000
     };
 
 
@@ -108,18 +111,26 @@ class MachineSettings extends PureComponent {
             });
         },
 
+        onChangeConnectionTimeoutState: (option) => {
+            this.setState({
+                connectionTimeout: option.value
+            });
+        },
+
         // Save & Cancel
         onCancel: () => {
             this.setState({
                 series: this.props.series,
                 size: this.props.size,
-                enclosure: this.props.enclosure
+                enclosure: this.props.enclosure,
+                connectionTimeout: this.props.connectionTimeout
             });
         },
         onSave: () => {
             this.props.updateMachineSeries(this.state.series);
             this.props.updateMachineSize(this.state.size);
             this.props.setEnclosureState(this.state.enclosure);
+            this.props.updateConnectionTimeout(this.state.connectionTimeout);
         }
     };
 
@@ -129,6 +140,7 @@ class MachineSettings extends PureComponent {
         this.state.series = props.series;
         this.state.size = props.size;
         this.state.enclosure = props.enclosure;
+        this.state.connectionTimeout = props.connectionTimeout;
     }
 
     componentDidMount() {
@@ -147,6 +159,10 @@ class MachineSettings extends PureComponent {
         if (!isEqual(nextProps.enclosure, this.state.enclosure)) {
             this.setState({ enclosure: nextProps.enclosure });
         }
+
+        if (!isEqual(nextProps.connectionTimeout, this.state.connectionTimeout)) {
+            this.setState({ connectionTimeout: nextProps.connectionTimeout });
+        }
     }
 
     render() {
@@ -163,9 +179,10 @@ class MachineSettings extends PureComponent {
 
         const stateChanged = (this.state.series !== this.props.series)
             || !isEqual(this.props.size, this.state.size)
-            || !isEqual(this.props.enclosure, this.state.enclosure);
+            || !isEqual(this.props.enclosure, this.state.enclosure)
+            || !isEqual(this.props.connectionTimeout, this.state.connectionTimeout);
 
-        const { series, size, enclosure } = this.state;
+        const { series, size, enclosure, connectionTimeout } = this.state;
         const editable = (this.state.series === 'custom');
         const isConnected = this.props.isConnected;
 
@@ -220,7 +237,7 @@ class MachineSettings extends PureComponent {
                 </div>
                 <p className={styles['form-title']}>{i18n._('Enclosure')}</p>
                 <div className={styles['form-group']}>
-                    <span>{i18n._('Door detection')}</span>
+                    <span>{i18n._('Door Detection')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <Select
                             clearable={false}
@@ -229,6 +246,33 @@ class MachineSettings extends PureComponent {
                             options={options}
                             value={enclosure}
                             onChange={this.actions.onChangeEnclosureState}
+                        />
+                    </div>
+                </div>
+                <p className={styles['form-title']}>{i18n._('Connection')}</p>
+                <div className={styles['form-group']}>
+                    <span>{i18n._('Time Out')}</span>
+                    <div className={classNames(styles['form-control'], styles.short)}>
+                        <Select
+                            clearable={false}
+                            searchable={false}
+                            name={i18n._('Wait Time')}
+                            options={[
+                                {
+                                    value: 3000,
+                                    label: i18n._('3s')
+                                },
+                                {
+                                    value: 15000,
+                                    label: i18n._('15s')
+                                },
+                                {
+                                    value: 30000,
+                                    label: i18n._('30s')
+                                }
+                            ]}
+                            value={connectionTimeout}
+                            onChange={this.actions.onChangeConnectionTimeoutState}
                         />
                     </div>
                 </div>
@@ -263,13 +307,14 @@ class MachineSettings extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { series, size, enclosure, isConnected } = machine;
+    const { series, size, enclosure, isConnected, connectionTimeout } = machine;
 
     return {
         series,
         isConnected,
         size,
-        enclosure
+        enclosure,
+        connectionTimeout
     };
 };
 
@@ -278,7 +323,8 @@ const mapDispatchToProps = (dispatch) => {
         updateMachineSeries: (series) => dispatch(actions.updateMachineSeries(series)),
         updateMachineSize: (size) => dispatch(actions.updateMachineSize(size)),
         getEnclosureState: () => dispatch(actions.getEnclosureState()),
-        setEnclosureState: (on) => dispatch(actions.setEnclosureState(on))
+        setEnclosureState: (on) => dispatch(actions.setEnclosureState(on)),
+        updateConnectionTimeout: (time) => dispatch(actions.updateConnectionTimeout(time))
     };
 };
 

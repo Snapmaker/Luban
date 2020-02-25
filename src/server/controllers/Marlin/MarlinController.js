@@ -49,7 +49,8 @@ class MarlinController {
     // SerialPort
     options = {
         port: '',
-        baudRate: 115200
+        baudRate: 115200,
+        connectionTimeout: 3000
     };
 
     serialport = null;
@@ -213,13 +214,14 @@ class MarlinController {
     };
 
     constructor(options) {
-        const { port, dataSource, baudRate } = options;
+        const { port, dataSource, baudRate, connectionTimeout = 3000 } = options;
 
         this.options = {
             ...this.options,
             port,
             dataSource,
-            baudRate
+            baudRate,
+            connectionTimeout
         };
         // Event Trigger
         this.event = new EventTrigger((event, trigger, commands) => {
@@ -682,7 +684,7 @@ class MarlinController {
         };
     }
 
-    open(callback = noop) {
+    open(callback = noop, connectionTimeout = this.options.connectionTimeout) {
         const { port, dataSource } = this.options;
 
         // Assertion check
@@ -826,7 +828,7 @@ class MarlinController {
                         this.emitAll('serialport:connected', { err: 'this machine is not ready' });
                         this.close();
                     }
-                }, 2000);
+                }, connectionTimeout - 1000);
             }, 1000);
 
             log.debug(`Connected to serial port "${port}/${dataSource}"`);
