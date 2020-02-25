@@ -43,7 +43,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 1. Search existing PRs for an open or closed PR relates to your submission to make sure it's not duplicated.
 2. Be sure that an issue describes the problem you've fixing / solving, or documents the design for the feature you'd like to add.
 Discussing the design up front helps to ensure that we're ready to accept your work.
-3. Fork the `whimsycwd/Snapmakerjs` repo.
+3. Fork the `Snapmaker/Luban` repo.
 4. Make your changes in a new git branch
     ```
     git checkout -b my-fix-branch master
@@ -62,7 +62,7 @@ We also have a git hook script to help you writing conventional commit message.
     ```
     git push origin my-fix-branch
     ```
-9. In Github, send a pull request to `whimsycwd/Snapmakerjs`.
+9. In Github, send a pull request to `Snapmaker/Luban`.
 
    If we suggest,
 
