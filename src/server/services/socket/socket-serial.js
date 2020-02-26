@@ -51,7 +51,7 @@ const serialportList = (socket, options) => {
 };
 
 const serialportOpen = (socket, options) => {
-    const { port, dataSource } = options;
+    const { port, dataSource, connectionTimeout } = options;
     log.debug(`socket.open("${port}"): socket=${socket.id}`);
 
     let controller = store.get(`controllers["${port}/${dataSource}"]`);
@@ -59,7 +59,7 @@ const serialportOpen = (socket, options) => {
         if (dataSource === PROTOCOL_SCREEN) {
             controller = new ScreenController({ port, dataSource, baudrate: 115200 });
         } else {
-            controller = new MarlinController({ port, dataSource, baudrate: 115200 });
+            controller = new MarlinController({ port, dataSource, baudrate: 115200, connectionTimeout: connectionTimeout });
         }
     }
 
@@ -88,7 +88,7 @@ const serialportOpen = (socket, options) => {
             socket.join(port);
 
             socket.emit('serialport:open', { port, dataSource });
-        });
+        }, connectionTimeout);
     }
 };
 

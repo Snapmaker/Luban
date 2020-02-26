@@ -28,6 +28,7 @@ class SerialConnection extends PureComponent {
 
         port: PropTypes.string.isRequired,
         headType: PropTypes.string,
+        connectionTimeout: PropTypes.number,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired,
@@ -237,7 +238,7 @@ class SerialConnection extends PureComponent {
     }
 
     openPort(port) {
-        controller.openPort(port);
+        controller.openPort(port, this.props.connectionTimeout);
     }
 
     closePort(port) {
@@ -414,13 +415,14 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isOpen, isConnected, headType } = machine;
+    const { port, isOpen, isConnected, headType, connectionTimeout } = machine;
 
     return {
         port,
         isOpen,
         headType,
-        isConnected
+        isConnected,
+        connectionTimeout
     };
 };
 const mapDispatchToProps = (dispatch) => {

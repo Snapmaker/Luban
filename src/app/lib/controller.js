@@ -212,8 +212,8 @@ class SerialPortClient {
         socketController.emit('serialport:list', { dataSource: this.dataSource });
     }
 
-    openPort(port) {
-        socketController.emit('serialport:open', { port, dataSource: this.dataSource });
+    openPort(port, connectionTimeout) {
+        socketController.emit('serialport:open', { port, dataSource: this.dataSource, connectionTimeout: connectionTimeout });
     }
 
     closePort(port) {

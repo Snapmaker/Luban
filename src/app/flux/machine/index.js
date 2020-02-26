@@ -98,7 +98,9 @@ const INITIAL_STATE = {
         finishTime: 0,
         elapsedTime: 0,
         remainingTime: 0
-    }
+    },
+
+    connectionTimeout: 3000
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -116,32 +118,22 @@ export const actions = {
     init: () => (dispatch, getState) => {
         // Machine
 
-        let initialMachineState = machineStore.get('machine');
-        if (!initialMachineState) {
-            initialMachineState = {
-                series: INITIAL_STATE.series,
-                size: INITIAL_STATE.size
-            };
-            machineStore.set('machine', {
-                series: INITIAL_STATE.series,
-                size: INITIAL_STATE.size
-            });
-        }
+        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
         const serverToken = machineStore.get('server.token') || '';
-
-        const seriesInfo = valueOf(MACHINE_SERIES, 'value', initialMachineState.series);
-
-        dispatch(actions.updateState({
-            series: initialMachineState.series,
-            size: seriesInfo ? seriesInfo.setting.size : initialMachineState.size,
-            serverToken: serverToken,
-            port: machinePort
-        }));
-
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
+        const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
+
+        const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+
+
         dispatch(actions.updateState({
-            connectionType: connectionType
+            series: series,
+            size: seriesInfo ? seriesInfo.setting.size : size,
+            serverToken: serverToken,
+            port: machinePort,
+            connectionType: connectionType,
+            connectionTimeout: connectionTimeout
         }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
@@ -406,6 +398,10 @@ export const actions = {
     },
     setEnclosureState: (doorDetection) => () => {
         controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+    },
+    updateConnectionTimeout: (time) => (dispatch) => {
+        machineStore.set('connection.timeout', time);
+        dispatch(actions.updateState({ connectionTimeout: time }));
     },
 
     // Server
