@@ -4,7 +4,7 @@ const COMMANDS = {
     // Linear Move
     RAPID_MOVE: 'G0',
     MOVE: 'G1',
-    SPINDLE_ON_CW: 'M3',
+    SPINDLE_ON_CW: 'M3 P100',
     SPINDLE_OFF: 'M5'
 };
 
