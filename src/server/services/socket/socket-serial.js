@@ -39,7 +39,7 @@ const serialportList = (socket, options) => {
                 return {
                     port: port.path,
                     manufacturer: port.manufacturer,
-                    inuse: portsInUse.indexOf(port.comName) >= 0
+                    inuse: portsInUse.indexOf(port.path) >= 0
                 };
             });
 
