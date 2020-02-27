@@ -76,10 +76,8 @@ export const stitchEach = async (options) => {
             endySize = (size.y + ySize) / 2;
         } else if (parseInt((currentIndex) / 3, 10) === 2) {
             endySize = ySize;
-            // endySize = size.y - ySize;
         }
         if (currentIndex % 3 === 0) {
-            // endxSize = size.x - xSize;
             endxSize = xSize;
         } else if (currentIndex % 3 === 1) {
             startxSize = Math.floor((size.x - xSize) / 2);
@@ -119,6 +117,7 @@ export const stitchEach = async (options) => {
                 if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
                     continue;
                 }
+
                 const index0 = ((y0) * width + x0) << 2;
                 stitched.bitmap.data[index] = image.bitmap.data[index0];
                 stitched.bitmap.data[index + 1] = image.bitmap.data[index0 + 1];
@@ -138,7 +137,6 @@ export const stitchEach = async (options) => {
                     dx = 1;
                 }
                 const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
-                // const index = ((y - startySize * density) * xSize * density + x - startxSize * density) << 2;
                 // const index = ((y)* xSize * density + x ) << 2;
 
                 const source = perspT.transformInverse((x - dx * d / 2 * density), (y - dy * d / 2 * density));
@@ -218,13 +216,37 @@ export const stitch = async (options) => {
                     dx = 1;
                 }
                 const index = (y * size.x * density + x) << 2;
-                const source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
-                const x0 = Math.round(source[0]);
-                const y0 = Math.round(source[1]);
-                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
-                    continue;
-                }
+                let source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                let x0 = Math.round(source[0]);
+                let y0 = Math.round(source[1]);
 
+                if (x0 < 0 || y0 < 0) {
+                    if (x0 < 0 && dx > -1) {
+                        dx = -1;
+                    }
+                    if (y0 < 0 && dy > -1) {
+                        dy = -1;
+                    }
+                    source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                    x0 = Math.round(source[0]);
+                    y0 = Math.round(source[1]);
+                    if (x0 < 0 || y0 < 0) {
+                        continue;
+                    }
+                } else if (x0 > width || y0 > height) {
+                    if (x0 > width && dx < 1) {
+                        dx = 1;
+                    }
+                    if (y0 > height && dy < 1) {
+                        dy = 1;
+                    }
+                    source = perspT.transformInverse(x - dx * d / 2 * density, y - dy * d / 2 * density);
+                    x0 = Math.round(source[0]);
+                    y0 = Math.round(source[1]);
+                    if (x0 > width || y0 > height) {
+                        continue;
+                    }
+                }
                 let from = dy > 0 ? 0 : 2;
                 if (dx > 0) {
                     from += 1;
@@ -255,11 +277,36 @@ export const stitch = async (options) => {
                     dx = 1;
                 }
                 const index = (y * size.x * density + x) << 2;
-                const source = perspT.transformInverse(x - dx * d * density, y - dy * d * density);
-                const x0 = Math.round(source[0]);
-                const y0 = Math.round(source[1]);
-                if (x0 < 0 || x0 >= width || y0 < 0 || y0 >= height) {
-                    continue;
+                let source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                let x0 = Math.round(source[0]);
+                let y0 = Math.round(source[1]);
+                if (x0 < 0 || y0 < 0) {
+                    if (x0 < 0 && dx > -1) {
+                        dx--;
+                    }
+                    if (y0 < 0 && dy > -1) {
+                        dy--;
+                    }
+                    source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                    x0 = Math.round(source[0]);
+                    y0 = Math.round(source[1]);
+                    // console.log('eachtotal方向<', x, y, x0, y0);
+                    if (x0 < 0 || y0 < 0) {
+                        continue;
+                    }
+                } else if (x0 > width || y0 > height) {
+                    if (x0 > width && dx < 1) {
+                        dx++;
+                    }
+                    if (y0 > height && dy < 1) {
+                        dy++;
+                    }
+                    source = perspT.transformInverse((x - dx * d * density), (y - dy * d * density));
+                    x0 = Math.round(source[0]);
+                    y0 = Math.round(source[1]);
+                    if (x0 > width || y0 > height) {
+                        continue;
+                    }
                 }
 
                 const from = 4 + (-dy) * 3 + dx;
