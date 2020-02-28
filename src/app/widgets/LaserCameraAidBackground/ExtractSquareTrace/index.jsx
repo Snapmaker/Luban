@@ -167,8 +167,8 @@ class ExtractSquareTrace extends PureComponent {
                     }
                 });
                 this.props.changeLastFileNames(this.state.imageNames);
-                this.props.updateEachPicSize('xSize', this.xSize);
-                this.props.updateEachPicSize('ySize', this.ySize);
+                this.props.updateEachPicSize('xSize', this.state.xSize);
+                this.props.updateEachPicSize('ySize', this.state.ySize);
 
                 this.actions.processStitch(this.state.options);
                 this.props.changeCanTakePhoto(true);
@@ -269,7 +269,6 @@ class ExtractSquareTrace extends PureComponent {
                                     }
                                 });
                                 this.state.imageNames.push(fileName);
-
                                 api.processStitchEach(this.state.options).then((stitchImg) => {
                                     const { filename } = JSON.parse(stitchImg.text);
                                     if (this.extractingPreview[task.index].current) {

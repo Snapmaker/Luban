@@ -119,8 +119,10 @@ class SetBackground extends PureComponent {
         let fullWidth;
         if (series === 'A350') {
             fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
-        } else {
+        } else if (series === 'A250') {
             fullWidth = laserSize ? (laserSize.x * 2 + 72 + 4) : 512;
+        } else {
+            fullWidth = 512 + 72 + 4;
         }
         return (
             <React.Fragment>
