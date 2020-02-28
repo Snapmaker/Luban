@@ -1,4 +1,3 @@
-import gulp from 'gulp';
 import del from 'del';
 
 const list = [
@@ -11,10 +10,11 @@ const list = [
     '!src/app/vendor/**'
 ];
 
-export default () => {
-    gulp.task('clean', (callback) => {
-        del(list).then(() => {
-            callback();
-        });
-    });
-};
+/**
+ * Clean
+ */
+function clean() {
+    return del(list);
+}
+
+export default clean;

@@ -172,16 +172,15 @@ function customTransform(file, enc, done) {
     done();
 }
 
-export default () => {
-    gulp.task('i18next:server', () => {
-        return gulp.src(serverConfig.src)
-            .pipe(i18nextScanner(serverConfig.options, customTransform))
-            .pipe(gulp.dest(serverConfig.dest));
-    });
-    gulp.task('i18next:app', () => {
-        return gulp.src(appConfig.src)
-            .pipe(sort()) // Sort files in stream by path
-            .pipe(i18nextScanner(appConfig.options, customTransform))
-            .pipe(gulp.dest(appConfig.dest));
-    });
-};
+export function i18nextServer() {
+    return gulp.src(serverConfig.src)
+        .pipe(i18nextScanner(serverConfig.options, customTransform))
+        .pipe(gulp.dest(serverConfig.dest));
+}
+
+export function i18nextApp() {
+    return gulp.src(appConfig.src)
+        .pipe(sort()) // Sort files in stream by path
+        .pipe(i18nextScanner(appConfig.options, customTransform))
+        .pipe(gulp.dest(appConfig.dest));
+}
