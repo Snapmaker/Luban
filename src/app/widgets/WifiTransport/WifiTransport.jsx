@@ -117,7 +117,7 @@ class WifiTransport extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Wi-Fi Transport'));
+        this.props.setTitle(i18n._('Send Files via Wi-Fi'));
     }
 
     componentWillReceiveProps(nextProps) {
@@ -195,7 +195,7 @@ class WifiTransport extends PureComponent {
                             onClick={actions.onClickToUpload}
                         >
                             <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
-                            {i18n._('Upload')}
+                            {i18n._('Upload File')}
                         </Anchor>
                     </div>
                 </div>
@@ -216,7 +216,7 @@ class WifiTransport extends PureComponent {
                     onClick={actions.sendFile}
                     style={{ display: 'block', width: '100%' }}
                 >
-                    {i18n._('Transfer via Wi-Fi')}
+                    {i18n._('Send via Wi-Fi')}
                 </button>
             </div>
 

@@ -425,10 +425,10 @@ class ExtractSquareTrace extends PureComponent {
                 <div className="clearfix" />
                 <div style={{ display: this.state.panel === PANEL_EXTRACT_TRACE ? 'block' : 'none' }}>
                     <div className={styles['laser-set-background-modal-title']}>
-                        {i18n._('Camera Aid Background')}
+                        {i18n._('Camera Capture')}
                     </div>
                     <div style={{ margin: '1rem 0' }}>
-                        {i18n._('If you reinstalled the laser module, please redo the Camera Calibration on the Touchscreen before proceeding.')}
+                        {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of camera calibration affects how the captured images are mapped with the machine coordinates. If you have reinstalled the laser module, please redo the Camera Calibration on the touch screen before proceeding.')}
                     </div>
                     <div
                         className={styles['photo-display']}
