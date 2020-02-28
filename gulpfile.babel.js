@@ -18,8 +18,7 @@ function prepareProduction() {
 const development = gulp.series(
     prepareDevelopment,
     clean,
-    gulp.parallel(serverBuildDevelopment, appBuildDevelopment),
-    serverStartDevelopment
+    gulp.parallel(serverBuildDevelopment, appBuildDevelopment)
 );
 
 const production = gulp.series(
@@ -29,9 +28,11 @@ const production = gulp.series(
 );
 
 export {
-    production,
-    development,
     i18nextServer,
-    i18nextApp
+    i18nextApp,
+    development,
+    serverBuildDevelopment,
+    serverStartDevelopment,
+    production
 };
 export default production;
