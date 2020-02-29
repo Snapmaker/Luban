@@ -3,7 +3,7 @@ import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
-export async function appBuildDevelopment() {
+export function appCopyDevelopment() {
     const files = [
         'src/app/*.{ico,png}',
         'src/app/{images,textures}/**/*',
@@ -14,12 +14,23 @@ export async function appBuildDevelopment() {
         .pipe(gulp.dest('output/app'));
 }
 
+export function appCopyProduction() {
+    const files = [
+        'src/app/*.{ico,png}',
+        'src/app/{images,textures}/**/*',
+        'src/app/i18n/**/*'
+    ];
+
+    return gulp.src(files, { base: 'src/app' })
+        .pipe(gulp.dest('dist/Snapmakerjs/app'));
+}
+
 
 //
 // Production Build
 //
-export async function appBuildProduction() {
-    await new Promise((resolve) => {
+export function appBuildProduction() {
+    return new Promise((resolve) => {
         const webpackConfig = require('../../webpack.config.app.production.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
@@ -29,13 +40,4 @@ export async function appBuildProduction() {
             resolve();
         });
     });
-
-    const files = [
-        'src/app/*.{ico,png}',
-        'src/app/{images,textures}/**/*',
-        'src/app/i18n/**/*'
-    ];
-
-    return gulp.src(files, { base: 'src/app' })
-        .pipe(gulp.dest('dist/Snapmakerjs/app'));
 }

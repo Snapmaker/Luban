@@ -4,11 +4,20 @@ import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
+
+export function serverCopyDevelopment() {
+    const files = [
+        'src/server/{i18n,views}/**/*'
+    ];
+    return gulp.src(files, { base: 'src/server' })
+        .pipe(gulp.dest('output/server'));
+}
+
 //
 // Development Build
 //
-export async function serverBuildDevelopment() {
-    await new Promise((resolve) => {
+export function serverBuildDevelopment() {
+    return new Promise((resolve) => {
         const webpackConfig = require('../../webpack.config.server.development.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
@@ -18,12 +27,6 @@ export async function serverBuildDevelopment() {
             resolve();
         });
     });
-
-    const files = [
-        'src/server/{i18n,views}/**/*'
-    ];
-    return gulp.src(files, { base: 'src/server' })
-        .pipe(gulp.dest('output/server'));
 }
 
 //
@@ -59,11 +62,20 @@ export function serverStartDevelopment(cb) {
     });
 }
 
+export function serverCopyProduction() {
+    const files = [
+        'src/server/{i18n,views}/**/*'
+    ];
+
+    return gulp.src(files, { base: 'src/server' })
+        .pipe(gulp.dest('dist/Snapmakerjs/server'));
+}
+
 //
 // Production Build
 //
-export async function serverBuildProduction() {
-    await new Promise((resolve) => {
+export function serverBuildProduction() {
+    return new Promise((resolve) => {
         const webpackConfig = require('../../webpack.config.server.production.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
@@ -73,11 +85,4 @@ export async function serverBuildProduction() {
             resolve();
         });
     });
-
-    const files = [
-        'src/server/{i18n,views}/**/*'
-    ];
-
-    return gulp.src(files, { base: 'src/server' })
-        .pipe(gulp.dest('dist/Snapmakerjs/server'));
 }

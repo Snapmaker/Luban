@@ -1,8 +1,11 @@
 // import _ from 'lodash';
 import gulp from 'gulp';
 import clean from './gulp/tasks/clean';
-import { serverBuildDevelopment, serverStartDevelopment, serverBuildProduction } from './gulp/tasks/server';
-import { appBuildDevelopment, appBuildProduction } from './gulp/tasks/app';
+import {
+    serverCopyDevelopment, serverBuildDevelopment, serverStartDevelopment,
+    serverCopyProduction, serverBuildProduction
+} from './gulp/tasks/server';
+import { appCopyDevelopment, appCopyProduction, appBuildProduction } from './gulp/tasks/app';
 import { i18nextServer, i18nextApp } from './gulp/tasks/i18next';
 
 function prepareDevelopment() {
@@ -18,13 +21,22 @@ function prepareProduction() {
 const development = gulp.series(
     prepareDevelopment,
     clean,
-    gulp.parallel(serverBuildDevelopment, appBuildDevelopment)
+    gulp.parallel(
+        serverBuildDevelopment,
+        serverCopyDevelopment,
+        appCopyDevelopment
+    )
 );
 
 const production = gulp.series(
     prepareProduction,
     clean,
-    gulp.parallel(serverBuildProduction, appBuildProduction)
+    gulp.parallel(
+        serverCopyProduction,
+        serverBuildProduction,
+        appBuildProduction,
+        appCopyProduction
+    )
 );
 
 export {
