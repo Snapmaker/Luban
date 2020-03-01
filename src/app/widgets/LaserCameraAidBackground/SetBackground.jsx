@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import styles from './styles.styl';
 import api from '../../api';
-import { CONNECTION_TYPE_WIFI } from '../../constants';
+import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_IDLE } from '../../constants';
 import i18n from '../../lib/i18n';
 import WarningModal from '../../lib/modal-warning';
 import Modal from '../../components/Modal';
@@ -21,6 +21,7 @@ const iconSrc = 'images/camera-aid/ic_warning-64x64.png';
 class SetBackground extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
+        workflowStatus: PropTypes.string.isRequired,
         connectionType: PropTypes.string.isRequired,
         hasBackground: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
@@ -115,7 +116,7 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { connectionType, isConnected, hasBackground, laserSize, series } = this.props;
+        const { connectionType, isConnected, hasBackground, laserSize, series, workflowStatus } = this.props;
         let fullWidth;
         if (series === 'A350') {
             fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
@@ -124,6 +125,7 @@ class SetBackground extends PureComponent {
         } else {
             fullWidth = 512 + 72 + 4;
         }
+        const canCameraCapture = workflowStatus === WORKFLOW_STATUS_IDLE;
         return (
             <React.Fragment>
                 {state.showModal && (
@@ -181,6 +183,7 @@ class SetBackground extends PureComponent {
                         'sm-btn-default',
                         styles['btn-addbackground'],
                     )}
+                    disabled={!canCameraCapture}
                     onClick={this.actions.showModal}
                     style={{ display: (connectionType !== CONNECTION_TYPE_WIFI || !isConnected || hasBackground) ? 'none' : 'block' }}
                 >
@@ -212,7 +215,8 @@ const mapStateToProps = (state) => {
         series: machine.series,
         hasBackground: laser.background.enabled,
         laserSize: machine.laserSize,
-        size: machine.size
+        size: machine.size,
+        workflowStatus: machine.workflowStatus
     };
 };
 

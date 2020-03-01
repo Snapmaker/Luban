@@ -575,7 +575,7 @@ export const actions = {
     },
 
     startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
+        const { server, size, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
         const { gcodeList } = getState().workspace;
         const { background } = getState().laser;
         if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
@@ -601,8 +601,13 @@ export const actions = {
             // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
             if (background.enabled) {
                 const { workPosition, originOffset } = getState().machine;
-                const x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                const y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+                let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+
+                // Fix bug for x or y out of range
+                x = Math.max(0, Math.min(x, size.x - 20));
+                y = Math.max(0, Math.min(y, size.y - 20));
+
                 const promise = new Promise((resolve) => {
                     server.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`, () => {
                         resolve();
