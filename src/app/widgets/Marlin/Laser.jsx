@@ -10,7 +10,6 @@ import { actions as machineActions } from '../../flux/machine';
 import WorkSpeed from './WorkSpeed';
 import { CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../constants';
 
-
 class Printing extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
@@ -21,6 +20,7 @@ class Printing extends PureComponent {
         workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
         server: PropTypes.object,
+        size: PropTypes.object,
 
         executeGcode: PropTypes.func.isRequired,
         updateState: PropTypes.func.isRequired
@@ -91,7 +91,7 @@ class Printing extends PureComponent {
     };
 
     render() {
-        const { isLaserPrintAutoMode, materialThickness, laserFocalLength, connectionType } = this.props;
+        const { size, isLaserPrintAutoMode, materialThickness, laserFocalLength, connectionType } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
         const isWifiPrinting = this.actions.isWifiPrinting();
@@ -124,7 +124,7 @@ class Printing extends PureComponent {
                                                 <Input
                                                     className="sm-parameter-row__input"
                                                     value={materialThickness}
-                                                    max={20}
+                                                    max={size.z - 40}
                                                     min={0}
                                                     onChange={actions.onChangeMaterialThickness}
                                                 />
@@ -212,9 +212,10 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { workflowStatus, connectionType, server, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, laserFocalLength } = machine;
+    const { size, workflowStatus, connectionType, server, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, laserFocalLength } = machine;
 
     return {
+        size,
         workflowStatus,
         connectionType,
         server,
