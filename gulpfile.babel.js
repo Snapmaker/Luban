@@ -2,10 +2,17 @@
 import gulp from 'gulp';
 import clean from './gulp/tasks/clean';
 import {
-    serverCopyDevelopment, serverBuildDevelopment, serverStartDevelopment,
-    serverCopyProduction, serverBuildProduction
+    serverCopyDevelopment,
+    serverBuildDevelopment,
+    serverStartDevelopment,
+    serverCopyProduction,
+    serverBuildProduction
 } from './gulp/tasks/server';
-import { appCopyDevelopment, appCopyProduction, appBuildProduction } from './gulp/tasks/app';
+import {
+    appCopyDevelopment,
+    appCopyProduction,
+    appBuildProduction
+} from './gulp/tasks/app';
 import { i18nextServer, i18nextApp } from './gulp/tasks/i18next';
 
 function prepareDevelopment() {
@@ -22,8 +29,8 @@ const development = gulp.series(
     prepareDevelopment,
     clean,
     gulp.parallel(
-        serverBuildDevelopment,
         serverCopyDevelopment,
+        serverBuildDevelopment,
         appCopyDevelopment
     )
 );
@@ -34,8 +41,8 @@ const production = gulp.series(
     gulp.parallel(
         serverCopyProduction,
         serverBuildProduction,
-        appBuildProduction,
-        appCopyProduction
+        appCopyProduction,
+        appBuildProduction
     )
 );
 

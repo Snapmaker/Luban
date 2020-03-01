@@ -3,6 +3,9 @@ import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
+//
+// Development Copy
+//
 export function appCopyDevelopment() {
     const files = [
         'src/app/*.{ico,png}',
@@ -14,6 +17,9 @@ export function appCopyDevelopment() {
         .pipe(gulp.dest('output/app'));
 }
 
+//
+// Production Copy
+//
 export function appCopyProduction() {
     const files = [
         'src/app/*.{ico,png}',

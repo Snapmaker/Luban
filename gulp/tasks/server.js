@@ -4,7 +4,9 @@ import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
-
+//
+// Development Copy
+//
 export function serverCopyDevelopment() {
     const files = [
         'src/server/{i18n,views}/**/*'
@@ -16,16 +18,14 @@ export function serverCopyDevelopment() {
 //
 // Development Build
 //
-export function serverBuildDevelopment() {
-    return new Promise((resolve) => {
-        const webpackConfig = require('../../webpack.config.server.development.js');
-        webpack(webpackConfig, (err, stats) => {
-            if (err) {
-                throw new PluginError('server:build', err);
-            }
-            log('[server:build]', stats.toString({ colors: true }));
-            resolve();
-        });
+export function serverBuildDevelopment(cb) {
+    const webpackConfig = require('../../webpack.config.server.development.js');
+    webpack(webpackConfig, (err, stats) => {
+        if (err) {
+            throw new PluginError('server:build', err);
+        }
+        log('[server:build]', stats.toString({ colors: true }));
+        cb();
     });
 }
 
@@ -62,6 +62,9 @@ export function serverStartDevelopment(cb) {
     });
 }
 
+//
+// Production Copy
+//
 export function serverCopyProduction() {
     const files = [
         'src/server/{i18n,views}/**/*'

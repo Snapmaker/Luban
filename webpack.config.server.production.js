@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const pkg = require('./package.json');
 
 const NODE_MODULES = path.resolve(__dirname, 'node_modules');
@@ -40,6 +41,21 @@ module.exports = {
         path: path.resolve(__dirname, 'dist/Snapmakerjs/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
+    },
+    optimization: {
+        // TerserPlugin@v1 uses a deprecated approach that causes Node.js 10 to print
+        // this warning to stderr:
+        //
+        // "Using a domain property in MakeCallback is deprecated. Use the async_context
+        // variant of MakeCallback or the AsyncResource class instead."
+        //
+        // For details: see
+        // https://www.bountysource.com/issues/72452391-fix-deprecation-warning
+        // and
+        // https://github.com/TNRIS/tnris.org/issues/9
+        //
+        // We explicitly specify to use terser-webpack-plugin@~2.3.5 to bypass the warning
+        minimizer: [new TerserPlugin()]
     },
     plugins: [
         new webpack.DefinePlugin({
