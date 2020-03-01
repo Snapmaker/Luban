@@ -328,6 +328,9 @@ class SerialConnection extends PureComponent {
                 <div className="form-group" style={{ marginTop: '10px' }}>
                     <div className="input-group input-group-sm">
                         <Select
+                            menuStyle={{
+                                height: '100px'
+                            }}
                             backspaceRemoves={false}
                             clearable={false}
                             searchable={false}
