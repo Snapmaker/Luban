@@ -54,10 +54,6 @@ module.exports = {
         publicPath: '',
         globalObject: 'this'
     },
-    optimization: {
-        splitChunks: {
-        }
-    },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new webpack.LoaderOptionsPlugin({

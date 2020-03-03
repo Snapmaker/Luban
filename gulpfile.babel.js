@@ -1,52 +1,57 @@
-import _ from 'lodash';
+// import _ from 'lodash';
 import gulp from 'gulp';
-import requireDir from 'require-dir';
-import runSequence from 'run-sequence';
+import clean from './gulp/tasks/clean';
+import {
+    serverCopyDevelopment,
+    serverBuildDevelopment,
+    serverStartDevelopment,
+    serverCopyProduction,
+    serverBuildProduction
+} from './gulp/tasks/server';
+import {
+    appCopyDevelopment,
+    appCopyProduction,
+    appBuildProduction
+} from './gulp/tasks/app';
+import { i18nextServer, i18nextApp } from './gulp/tasks/i18next';
 
-const loadGulpTasks = () => {
-    // Require all tasks in gulp/tasks, including subfolders
-    const tasks = requireDir('./gulp/tasks', { recurse: true });
-
-    // Get environment, for environment-specific activities
-    const env = process.env.NODE_ENV || 'production';
-
-    _.each(tasks, (task) => {
-        if (_.isObject(task) && _.isFunction(task.default)) {
-            task = task.default;
-        }
-
-        task({ env: env, watch: false });
-    });
-};
-
-loadGulpTasks();
-
-gulp.task('default', ['prod']);
-gulp.task('prod', ['production']);
-gulp.task('dev', ['development']);
-
-gulp.task('development', (callback) => {
+function prepareDevelopment() {
     process.env.NODE_ENV = 'development';
+    return Promise.resolve();
+}
 
-    runSequence(
-        'clean',
-        ['server:build-dev'], // omit 'app:build-dev'
-        ['server:i18n', 'app:i18n'],
-        ['server:output', 'app:output'],
-        ['server:start-dev'],
-        callback
-    );
-});
-
-
-gulp.task('production', (callback) => {
+function prepareProduction() {
     process.env.NODE_ENV = 'production';
+    return Promise.resolve();
+}
 
-    runSequence(
-        'clean',
-        ['server:build-prod', 'app:build-prod'],
-        ['server:i18n', 'app:i18n'],
-        ['server:dist', 'app:dist'],
-        callback
-    );
-});
+const development = gulp.series(
+    prepareDevelopment,
+    clean,
+    gulp.parallel(
+        serverCopyDevelopment,
+        serverBuildDevelopment,
+        appCopyDevelopment
+    )
+);
+
+const production = gulp.series(
+    prepareProduction,
+    clean,
+    gulp.parallel(
+        serverCopyProduction,
+        serverBuildProduction,
+        appCopyProduction,
+        appBuildProduction
+    )
+);
+
+export {
+    i18nextServer,
+    i18nextApp,
+    development,
+    serverBuildDevelopment,
+    serverStartDevelopment,
+    production
+};
+export default production;

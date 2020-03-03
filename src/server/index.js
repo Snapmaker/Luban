@@ -142,10 +142,7 @@ const createServer = (options, callback) => {
                 port: realPort
             });
 
-            if (realAddress !== '0.0.0.0') {
-                log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
-                return;
-            }
+            log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
 
             dns.lookup(os.hostname(), { family: 4, all: true }, (err, addresses) => {
                 if (err) {
