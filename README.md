@@ -49,7 +49,7 @@ Or you can clone this repository, then follow the instructions in "**Development
 
 ### Setup development environment
 
-- Install Node.js 10 (or higher? Node.js 12 not verified). You can use 
+- Install Node.js 10 (or higher). You can use
 [NVM (Node Version Manager)](https://github.com/nvm-sh/nvm) to install and manage multiple Node.js 
 versions:
 
