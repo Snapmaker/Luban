@@ -7,9 +7,9 @@
     "Relative (G91)": "Relativ (G91)",
     "Inverse Time (G93)": "Zeitanzeige umkehren (G93)",
     "Units/Min (G94)": "Einh./Min (G94)",
-    "Spindle On, CW (M3)": "",
-    "Spindle On, CCW (M4)": "",
-    "Spindle Off (M5)": "",
-    "Power On (M3)": "",
-    "Power Off (M5)": ""
+    "Spindle On, CW (M3)": "Spindel Ein, CW (M3)",
+    "Spindle On, CCW (M4)": "Spindel Ein, CCW (M4)",
+    "Spindle Off (M5)": "Spindel Aus (M5)",
+    "Power On (M3)": "Strom Ein (M3)",
+    "Power Off (M5)": "Strom Aus (M5)"
 }
