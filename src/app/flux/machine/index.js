@@ -23,6 +23,8 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions, getGcodeName, getGcodeType } from '../workspace';
+import MachineSelectModalHOC from '../../components/Modal/modal-machine-select';
+
 
 const INITIAL_STATE = {
 
@@ -350,6 +352,9 @@ export const actions = {
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
     updateLaserSize: (laserSize) => (dispatch) => {
+        if (!laserSize) {
+            return;
+        }
         laserSize.x = Math.min(laserSize.x, 1000);
         laserSize.y = Math.min(laserSize.y, 1000);
         laserSize.z = Math.min(laserSize.z, 1000);
@@ -457,30 +462,40 @@ export const actions = {
                     connectionStatus: CONNECTION_STATUS_CONNECTED,
                     isHomed: isHomed
                 }));
-                dispatch(actions.updateMachineState({
-                    series: series,
-                    headType: headType
-                }));
-                if (!series || !headType) {
-                    dispatch(actions.updateState({
-                        machineSelect: true
-                    }));
-                }
-                dispatch(actions.executeGcode('G54'));
 
-                if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
-                    server.getGcodeFile((msg, gcode) => {
-                        if (msg) {
-                            return;
+                if (series && headType) {
+                    dispatch(actions.updateMachineState({
+                        series: series,
+                        headType: headType
+                    }));
+                    dispatch(actions.executeGcode('G54'));
+                    if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                        server.getGcodeFile((msg, gcode) => {
+                            if (msg) {
+                                return;
+                            }
+                            dispatch(workspaceActions.clearGcode());
+                            let suffix = 'gcode';
+                            if (headType === MACHINE_HEAD_TYPE.LASER.value) {
+                                suffix = 'nc';
+                            } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
+                                suffix = 'cnc';
+                            }
+                            dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
+                        });
+                    }
+                } else {
+                    MachineSelectModalHOC({
+                        series: series,
+                        headType: headType,
+
+                        onConfirm: (seriesT, headTypeT) => {
+                            dispatch(actions.updateMachineState({
+                                series: seriesT,
+                                headType: headTypeT
+                            }));
+                            dispatch(actions.executeGcode('G54'));
                         }
-                        dispatch(workspaceActions.clearGcode());
-                        let suffix = 'gcode';
-                        if (headType === MACHINE_HEAD_TYPE.LASER.value) {
-                            suffix = 'nc';
-                        } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
-                            suffix = 'cnc';
-                        }
-                        dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
                     });
                 }
             });

@@ -21,6 +21,7 @@ const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 class TestFocus extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool,
+        workflowState: PropTypes.string,
         showInstructions: PropTypes.bool,
         actions: PropTypes.shape({
             hideInstructions: PropTypes.func
@@ -69,7 +70,7 @@ class TestFocus extends PureComponent {
             ...this.actions
         };
         const { isConnected, showInstructions } = this.props;
-        const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
+        const isIdle = this.props.workflowState === WORKFLOW_STATE_IDLE;
 
         return (
             <React.Fragment>

@@ -7,7 +7,7 @@
     .select-tool
         display: inline-block
         padding: 0 18px 15px 0
-        width: 33%
+        width: 25%
 
         .select-tool-btn
             display: block
@@ -16,6 +16,7 @@
 
             > img
                 border-radius: $border-radius
+                width: 100%
 
             &.selected
                 border: 2px solid $dark-blue-color
@@ -25,6 +26,8 @@
             float: left
             width: 100%
             text-align: center
+            color: $grey-color
+
 
 .connection-state
     width: 100%
@@ -53,3 +56,17 @@
     position: absolute
     top: 0
     border-right: 1px solid $grey-color
+
+.device-not-recognized
+    font-size: $font-size-h5
+    margin-bottom: 8px
+.device-not-recognized-detail
+    font-size: $font-size-base
+    color: $grey-color
+.which-model
+    margin-bottom: 12px
+    font-size: $font-size-lead
+.which-toolhead
+    margin-top: 16px
+    margin-bottom: 12px
+    font-size: $font-size-lead

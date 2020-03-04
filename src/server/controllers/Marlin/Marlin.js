@@ -4,7 +4,6 @@ import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
 // import PacketManager from '../PacketManager';
-import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from '../constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -690,27 +689,14 @@ class Marlin extends events.EventEmitter {
             this.emit('error', payload);
         } else if (type === MarlinLineParserResultEcho) {
             this.emit('echo', payload);
-        } else if (type === MarlinLineParserResultTemperature
-            || type === MarlinLineParserResultOkTemperature) {
+        } else if (type === MarlinLineParserResultTemperature) {
             // For firmware version < 2.4, we use temperature to determine head type
-            if (semver.lt(this.state.version, '2.4.0') && !this.state.headType) {
-                if (payload.temperature.t <= 275) {
-                    this.state.headType = HEAD_TYPE_3DP;
-                } else if (payload.temperature.t <= 400) {
-                    this.state.headType = HEAD_TYPE_LASER;
-                } else {
-                    this.state.headType = HEAD_TYPE_CNC;
-                }
-                // just regard this M105 command as a M1005 request
-                this.emit('firmware', { version: this.state.version, ...payload });
-                this.emit('ok', payload);
-            } else {
-                this.setState({ temperature: payload.temperature });
-                this.emit('temperature', payload);
-                if (type === MarlinLineParserResultOkTemperature) {
-                    this.emit('ok', payload);
-                }
-            }
+            this.setState({ temperature: payload.temperature });
+            this.emit('temperature', payload);
+        } else if (type === MarlinLineParserResultOkTemperature) {
+            this.setState({ temperature: payload.temperature });
+            this.emit('temperature', payload);
+            this.emit('ok');
         } else if (type === MarlinParserHomeState) {
             this.setState({ isHomed: payload.isHomed });
             this.emit('home', payload);

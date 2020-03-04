@@ -1,102 +1,121 @@
+/* eslint react/no-set-state: 0 */
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '@trendmicro/react-buttons';
-import { connect } from 'react-redux';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
+import { Button } from '@trendmicro/react-buttons';
 import i18n from '../../lib/i18n';
-import { MACHINE_SERIES, MACHINE_HEAD_TYPE } from '../../constants';
-import Modal from '../../components/Modal';
-import { actions as machineActions } from '../../flux/machine';
-import styles from '../CNCTool/styles.styl';
-import Anchor from '../../components/Anchor';
+import Modal from './index';
+import { MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
+import styles from '../../widgets/Connection/index.styl';
+import Anchor from '../Anchor';
+import widgetStyles from '../../widgets/styles.styl';
 
-class MachineSelection extends PureComponent {
+class MachineSelectModalHOC extends PureComponent {
     static propTypes = {
-        series: PropTypes.string.isRequired,
+        ...Modal.propTypes,
+        series: PropTypes.string,
         headType: PropTypes.string,
+        onConfirm: PropTypes.func
+    };
 
-        display: PropTypes.bool.isRequired,
-        closeModal: PropTypes.func.isRequired,
+    static defaultProps = {
+        ...Modal.defaultProps
+    };
 
-        executeGcode: PropTypes.func.isRequired,
-        updateMachineState: PropTypes.func.isRequired
+    state = {
+        series: this.props.series || MACHINE_SERIES.ORIGINAL.value,
+        headType: this.props.headType || MACHINE_HEAD_TYPE['3DP'].value
     };
 
     actions = {
         onChangeSeries: (v) => {
-            this.props.updateMachineState({
+            this.setState({
                 series: v.value
             });
         },
         onChangeHeadType: (v) => {
-            this.props.updateMachineState({
+            this.setState({
                 headType: v.value
             });
-        },
-        onClickClose: () => {
-            if (this.props.series !== MACHINE_SERIES.ORIGINAL.value) {
-                this.props.executeGcode('G54');
-            }
-            this.props.closeModal();
         }
+    };
+
+    handleClose = () => {
+        setTimeout(() => {
+            this.removeContainer();
+        });
+    };
+
+    handleConfirm = () => {
+        setTimeout(() => {
+            this.removeContainer();
+            this.props.onConfirm && this.props.onConfirm(this.state.series, this.state.headType);
+        });
+    };
+
+    removeContainer() {
+        const { container } = this.props;
+        ReactDOM.unmountComponentAtNode(container);
+        container.remove();
     }
 
     render() {
-        if (!this.props.display) {
-            return null;
-        }
-        const state = this.props;
+        const state = this.state;
         const actions = this.actions;
+
         const machineSeriesOptions = [
             {
                 value: MACHINE_SERIES.ORIGINAL.value,
                 label: MACHINE_SERIES.ORIGINAL.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/size-1.0-original.jpg'
             },
             {
                 value: MACHINE_SERIES.A150.value,
                 label: MACHINE_SERIES.A150.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/size-2.0-A150.jpg'
             },
             {
                 value: MACHINE_SERIES.A250.value,
                 label: MACHINE_SERIES.A250.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/size-2.0-A250.jpg'
             },
             {
                 value: MACHINE_SERIES.A350.value,
                 label: MACHINE_SERIES.A350.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/size-2.0-A350.jpg'
             }
         ];
         const machineHeadTypeOptions = [
             {
                 value: MACHINE_HEAD_TYPE['3DP'].value,
                 label: MACHINE_HEAD_TYPE['3DP'].label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/function-3d-printing.jpg'
             },
             {
                 value: MACHINE_HEAD_TYPE.LASER.value,
                 label: MACHINE_HEAD_TYPE.LASER.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/function-laser.jpg'
 
             },
             {
                 value: MACHINE_HEAD_TYPE.CNC.value,
                 label: MACHINE_HEAD_TYPE.CNC.label,
-                img: 'images/snap-logo-square-256x256.png'
+                img: 'images/machine/function-cnc.jpg'
             }
         ];
 
-
         return (
-            <Modal disableOverlay size="md" onClose={this.actions.onClickClose}>
+            <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
                     <Modal.Title>
-                        {i18n._('Select your machine model')}
+                        <div className={styles['device-not-recognized']}>{i18n._('Device Not Recognized')}</div>
+                        <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, Snapmaker Luban doesn\'t recognize your connected device.')}</div>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    <div className={styles['which-model']}>{i18n._('Which model is connected to Snapmaker Luban?')}
+                    </div>
                     <div className={styles['select-tools']}>
                         { machineSeriesOptions.map(v => {
                             return (
@@ -116,6 +135,8 @@ class MachineSelection extends PureComponent {
                             );
                         })}
                     </div>
+                    <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+                    <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
                     <div className={styles['select-tools']}>
                         { machineHeadTypeOptions.map(v => {
                             return (
@@ -138,15 +159,10 @@ class MachineSelection extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
-                        onClick={this.actions.onClickClose}
-                    >
-                        {i18n._('Cancel')}
-                    </Button>
-                    <Button
                         btnStyle="primary"
-                        onClick={this.actions.onClickClose}
+                        onClick={this.handleConfirm}
                     >
-                        {i18n._('OK')}
+                        {i18n._('Add Device')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -154,18 +170,17 @@ class MachineSelection extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const { series, headType } = state.machine;
-    return {
-        series,
-        headType: headType
-    };
-};
+export default (options) => new Promise((resolve) => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
-        updateMachineState: (state) => dispatch(machineActions.updateMachineState(state))
+    const props = {
+        ...options,
+        onClose: () => {
+            resolve();
+        },
+        container: container
     };
-};
-export default connect(mapStateToProps, mapDispatchToProps)(MachineSelection);
+
+    ReactDOM.render(<MachineSelectModalHOC {...props} />, container);
+});
