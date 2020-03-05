@@ -16,6 +16,8 @@ class MachineSelectModalHOC extends PureComponent {
         ...Modal.propTypes,
         series: PropTypes.string,
         headType: PropTypes.string,
+
+        hasHead: PropTypes.bool,
         onConfirm: PropTypes.func
     };
 
@@ -135,27 +137,31 @@ class MachineSelectModalHOC extends PureComponent {
                             );
                         })}
                     </div>
-                    <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                    <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
-                    <div className={styles['select-tools']}>
-                        { machineHeadTypeOptions.map(v => {
-                            return (
-                                <div key={v.value} className={styles['select-tool']}>
-                                    <Anchor
-                                        className={classNames(styles.selectToolBtn, { [styles.selected]: state.headType === v.value })}
-                                        onClick={() => actions.onChangeHeadType(v)}
-                                    >
-                                        <img
-                                            src={v.img}
-                                            role="presentation"
-                                            alt="V-Bit"
-                                        />
-                                    </Anchor>
-                                    <span className={styles.selectToolText}>{i18n._(v.label)}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    {this.props.hasHead !== false && (
+                        <div>
+                            <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+                            <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
+                            <div className={styles['select-tools']}>
+                                { machineHeadTypeOptions.map(v => {
+                                    return (
+                                        <div key={v.value} className={styles['select-tool']}>
+                                            <Anchor
+                                                className={classNames(styles.selectToolBtn, { [styles.selected]: state.headType === v.value })}
+                                                onClick={() => actions.onChangeHeadType(v)}
+                                            >
+                                                <img
+                                                    src={v.img}
+                                                    role="presentation"
+                                                    alt="V-Bit"
+                                                />
+                                            </Anchor>
+                                            <span className={styles.selectToolText}>{i18n._(v.label)}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button

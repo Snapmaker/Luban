@@ -11,6 +11,7 @@ import combokeys from '../../lib/combokeys';
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
+import MachineSelection from './MachineSelection';
 import styles from './styles.styl';
 
 const Logo = memo(() => (
@@ -281,6 +282,9 @@ class Header extends PureComponent {
                     <Navbar.Toggle />
                 </Navbar.Header>
                 <Navbar.Collapse>
+                    <Nav pullLeft>
+                        <MachineSelection />
+                    </Nav>
                     <Nav pullRight>
                         <NavDropdown
                             id="nav-dropdown-menu"

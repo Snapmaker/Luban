@@ -189,7 +189,8 @@ class SerialConnection extends PureComponent {
         if (machineSeries && machineHeadType) {
             this.props.updateMachineState({
                 series: machineSeries,
-                headType: machineHeadType
+                headType: machineHeadType,
+                canReselectMachine: false
             });
             if (machineSeries.value !== MACHINE_SERIES.ORIGINAL.value) {
                 this.props.executeGcode('G54');
@@ -202,7 +203,8 @@ class SerialConnection extends PureComponent {
                 onConfirm: (seriesT, headTypeT) => {
                     this.props.updateMachineState({
                         series: seriesT,
-                        headType: headTypeT
+                        headType: headTypeT,
+                        canReselectMachine: true
                     });
                     if (seriesT !== MACHINE_SERIES.ORIGINAL.value) {
                         this.props.executeGcode('G54');

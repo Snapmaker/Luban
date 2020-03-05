@@ -31,7 +31,7 @@ const INITIAL_STATE = {
     // Machine Info
     series: MACHINE_SERIES.ORIGINAL.value,
     headType: null,
-    machineSelect: false,
+    canReselectMachine: false,
 
     isCustom: false,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
@@ -316,9 +316,10 @@ export const actions = {
     },
 
     updateMachineState: (state) => (dispatch) => {
-        const { series, headType } = state;
+        const { series, headType, canReselectMachine = false } = state;
         headType && dispatch(actions.updateState({
-            headType: headType
+            headType: headType,
+            canReselectMachine
         }));
         series && dispatch(actions.updateMachineSeries(series));
     },
@@ -471,7 +472,8 @@ export const actions = {
                 if (series && headType) {
                     dispatch(actions.updateMachineState({
                         series: series,
-                        headType: headType
+                        headType: headType,
+                        canReselectMachine: false
                     }));
                     dispatch(actions.executeGcode('G54'));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
@@ -497,7 +499,8 @@ export const actions = {
                         onConfirm: (seriesT, headTypeT) => {
                             dispatch(actions.updateMachineState({
                                 series: seriesT,
-                                headType: headTypeT
+                                headType: headTypeT,
+                                canReselectMachine: true
                             }));
                             dispatch(actions.executeGcode('G54'));
                         }
