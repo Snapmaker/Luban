@@ -52,11 +52,18 @@ Discussing the design up front helps to ensure that we're ready to accept your w
 When you run `git push`, our git hook will call eslint to run a lint over source code automatically.
 6. Run all tests to ensure that all tests pass.
 7. Commit your changes using a descriptive commit message that follows [our commit message guidelines](#commit).
-We also have a git hook script to help you writing conventional commit message.
+We also have a git hook script to check your commit message, for convenience you can just type `npm run commit` to use
+[Commitizen's CLI tool](https://github.com/commitizen/cz-cli) to help you write commit messages.
 
     ```
-    git commit -a
+    npm run commit
     ```
+    Or
+
+    ```
+    git commit
+    ```
+    
 8. Push your branch to Github:
 
     ```

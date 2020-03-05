@@ -1,4 +1,4 @@
-Snapmaker Luban A
+Snapmaker Luban
 ===============
 Snapmaker Luban is an easy-to-use 3-in-1 software tailor-made for Snapmaker machines.
 You can customize the printer settings and control the machine using the command panel in Luban anytime with ease.
