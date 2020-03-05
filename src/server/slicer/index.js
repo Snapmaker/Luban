@@ -1,7 +1,8 @@
-import { loadDefinitionsByType, DefinitionLoader } from './definition';
+import { loadQualityDefinitions, loadMaterialDefinitions, DefinitionLoader } from './definition';
 
 
 export {
-    loadDefinitionsByType,
+    loadQualityDefinitions,
+    loadMaterialDefinitions,
     DefinitionLoader
 };

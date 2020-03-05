@@ -25,12 +25,13 @@ export class DefinitionLoader {
 
     metadata = {};
 
-    loadDefinition(definitionId) {
+    loadDefinition(definitionId, configPath) {
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
 
-        const filePath = path.join(DataStorage.configDir, `${definitionId}.def.json`);
+        const filePath = configPath ? path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`)
+            : path.join(DataStorage.configDir, `${definitionId}.def.json`);
 
         const data = fs.readFileSync(filePath, 'utf8');
         const json = JSON.parse(data);
@@ -148,36 +149,23 @@ function writeDefinition(filename, definitionLoader) {
     });
 }
 
-export function loadDefinitionLoaderByFilename(filename) {
+export function loadDefinitionLoaderByFilename(filename, configPath) {
     const definitionId = filename.substr(0, filename.length - 9);
 
     const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(definitionId);
+    definitionLoader.loadDefinition(definitionId, configPath);
 
     return definitionLoader;
 }
 
-export function loadDefinitionsByType(type) {
+export function loadMaterialDefinitions() {
     const predefined = [];
-    let regex = null;
-    let defaultDefinitionLoader = null;
-    switch (type) {
-        case 'quality':
-            regex = /^quality.([A-Za-z0-9_]+).def.json$/;
-            defaultDefinitionLoader = loadDefinitionLoaderByFilename('quality.fast_print.def.json');
-            predefined.push('quality.fast_print.def.json');
-            predefined.push('quality.normal_quality.def.json');
-            predefined.push('quality.high_quality.def.json');
-            break;
-        case 'material':
-            regex = /^material.([A-Za-z0-9_]+).def.json$/;
-            defaultDefinitionLoader = loadDefinitionLoaderByFilename('material.pla.def.json');
-            predefined.push('material.pla.def.json');
-            predefined.push('material.abs.def.json');
-            break;
-        default:
-            break;
-    }
+
+    const regex = /^material.([A-Za-z0-9_]+).def.json$/;
+    const defaultDefinitionLoader = loadDefinitionLoaderByFilename('material.pla.def.json');
+    predefined.push('material.pla.def.json');
+    predefined.push('material.abs.def.json');
+
 
     const configDir = DataStorage.configDir;
     const filenames = fs.readdirSync(configDir);
@@ -194,6 +182,45 @@ export function loadDefinitionsByType(type) {
     for (const filename of filenames) {
         if (!includes(predefined, filename) && regex.test(filename)) {
             const definitionLoader = loadDefinitionLoaderByFilename(filename);
+            if (defaultDefinitionLoader) {
+                const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
+                if (ownKeys && ownKeys.length > 0) {
+                    for (const ownKey of ownKeys) {
+                        definitionLoader.ownKeys.add(ownKey);
+                    }
+                    writeDefinition(filename, definitionLoader);
+                }
+            }
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    return definitions;
+}
+
+export function loadQualityDefinitions(configPath) {
+    const predefined = [];
+    const regex = /^quality.([A-Za-z0-9_]+).def.json$/;
+    const defaultDefinitionLoader = loadDefinitionLoaderByFilename('quality.fast_print.def.json', configPath);
+    predefined.push('quality.fast_print.def.json');
+    predefined.push('quality.normal_quality.def.json');
+    predefined.push('quality.high_quality.def.json');
+
+    const configDir = `${DataStorage.configDir}/${configPath}`;
+    const filenames = fs.readdirSync(configDir);
+
+    // Load pre-defined definitions first
+    const definitions = [];
+    for (const filename of predefined) {
+        if (includes(filenames, filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
+            definitions.push(definitionLoader.toObject());
+        }
+    }
+
+    for (const filename of filenames) {
+        if (!includes(predefined, filename) && regex.test(filename)) {
+            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
             if (defaultDefinitionLoader) {
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {

@@ -323,13 +323,18 @@ export const actions = {
         series && dispatch(actions.updateMachineSeries(series));
     },
 
-    updateMachineSeries: (series) => (dispatch) => {
+    updateMachineSeries: (series) => (dispatch, getState) => {
         machineStore.set('machine.series', series);
-        dispatch(actions.updateState({ series }));
-        const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-        seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
-        seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
-        dispatch(widgetActions.updateMachineSeries(series));
+
+        const oldSeries = getState().machine.series;
+        if (oldSeries !== series) {
+            dispatch(actions.updateState({ series }));
+            const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+            seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
+            seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
+            dispatch(widgetActions.updateMachineSeries(series));
+            dispatch(printingActions.init());
+        }
     },
 
     updatePort: (port) => (dispatch) => {

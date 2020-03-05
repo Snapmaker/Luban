@@ -156,7 +156,8 @@ export const actions = {
     },
 
     init: () => async (dispatch, getState) => {
-        await definitionManager.init();
+        const { series } = getState().machine;
+        await definitionManager.init(series);
 
         dispatch(actions.updateState({
             materialDefinitions: definitionManager.materialDefinitions,
