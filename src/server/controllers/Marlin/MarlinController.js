@@ -343,24 +343,6 @@ class MarlinController {
         this.controller = new Marlin();
 
         this.controller.on('firmware', (res) => {
-            if (!this.ready) {
-                this.ready = true;
-                this.emitAll('serialport:connected', { state: this.controller.state });
-
-                // const version = this.controller.state.version;
-                // if (semver.gte(version, '2.4.0')) {
-                //     // send M1006 to detect type of tool head
-                //     this.writeln('M1006');
-                // }
-                // outdated version format
-                /*
-                const version = this.controller.state.version;
-                if (semver.gte(version, '2.4.0')) {
-                    // send M1006 to detect type of tool head
-                    this.writeln('M1006');
-                }
-                */
-            }
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });

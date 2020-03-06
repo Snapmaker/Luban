@@ -18,7 +18,8 @@ import { MACHINE_HEAD_TYPE } from '../../constants';
 class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
-        isConnected: PropTypes.bool.isRequired
+        isConnected: PropTypes.bool.isRequired,
+        workflowState: PropTypes.string
     };
 
     state = {
@@ -71,7 +72,8 @@ class LaserTestFocusWidget extends PureComponent {
                     )}
                 >
                     <TestFocus
-                        isConnected={state.isConnected}
+                        isConnected={this.props.isConnected}
+                        workflowState={this.props.workflowState}
                         showInstructions={state.showInstructions}
                         actions={this.actions}
                     />
@@ -81,10 +83,11 @@ class LaserTestFocusWidget extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { headType, isConnected } = state.machine;
+    const { headType, isConnected, workflowState } = state.machine;
     return {
         headType: headType,
-        isConnected
+        isConnected,
+        workflowState
     };
 };
 export default connect(mapStateToProps)(LaserTestFocusWidget);

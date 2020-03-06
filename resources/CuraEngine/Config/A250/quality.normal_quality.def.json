@@ -1,13 +1,13 @@
 {
-    "name": "Fast Print",
+    "name": "Normal Quality",
     "version": 2,
-    "inherits": "snapmaker",
+    "inherits": "snapmaker2",
     "overrides": {
         "resolution": {
             "type": "category",
             "children": {
                 "layer_height": {
-                    "default_value": 0.24,
+                    "default_value": 0.16,
                     "label": "Layer Height"
                 },
                 "layer_height_0": {
@@ -24,11 +24,11 @@
             "type": "category",
             "children": {
                 "wall_thickness": {
-                    "default_value": 0.8,
+                    "default_value": 1.2,
                     "label": "Wall Thickness"
                 },
                 "wall_line_count": {
-                    "default_value": 2,
+                    "default_value": 3,
                     "label": "Wall Line Count"
                 },
                 "top_thickness": {
@@ -36,7 +36,7 @@
                     "label": "Top Thickness"
                 },
                 "top_layers": {
-                    "default_value": 4,
+                    "default_value": 5,
                     "label": "Top Layers"
                 },
                 "bottom_thickness": {
@@ -44,7 +44,7 @@
                     "label": "Bottom Thickness"
                 },
                 "bottom_layers": {
-                    "default_value": 4,
+                    "default_value": 5,
                     "label": "Bottom Layers"
                 },
                 "outer_inset_first": {
@@ -69,31 +69,31 @@
                 },
                 "infill_sparse_thickness": {
                     "label": "Infill Layer Thickness",
-                    "default_value": 0.24
+                    "default_value": 0.16
                 },
                 "skin_preshrink": {
                     "label": "Skin Removal Width",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 },
                 "top_skin_preshrink": {
                     "label": "Top Skin Removal Width",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 },
                 "bottom_skin_preshrink": {
                     "label": "Bottom Skin Removal Width",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 },
                 "expand_skins_expand_distance": {
                     "label": "Skin Expand Distance",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 },
                 "top_skin_expand_distance": {
                     "label": "Top Skin Expand Distance",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 },
                 "bottom_skin_expand_distance": {
                     "label": "Bottom Skin Expand Distance",
-                    "default_value": 0.8
+                    "default_value": 1.2
                 }
             }
         },
@@ -121,31 +121,27 @@
             "type": "category",
             "children": {
                 "speed_travel": {
-                    "default_value": 80,
+                    "default_value": 70,
                     "label": "Travel Speed"
                 },
                 "speed_topbottom": {
-                    "default_value": 30,
+                    "default_value": 25,
                     "label": "Top/Bottom Speed"
                 },
                 "speed_wall_x": {
-                    "default_value": 25,
+                    "default_value": 20,
                     "label": "Inner Wall Speed"
                 },
                 "speed_wall_0": {
-                    "default_value": 20,
+                    "default_value": 15,
                     "label": "Outer Wall Speed"
                 },
                 "speed_wall": {
-                    "default_value": 40
+                    "default_value": 30
                 },
                 "speed_infill": {
-                    "default_value": 60,
+                    "default_value": 50,
                     "label": "Infill Speed"
-                },
-                "speed_print": {
-                    "default_value": 60,
-                    "label": "Print Speed"
                 },
                 "speed_print_layer_0": {
                     "default_value": 18,
@@ -158,6 +154,10 @@
                 "skirt_brim_speed": {
                     "default_value": 18,
                     "label": "Skirt/Brim Speed"
+                },
+                "speed_print": {
+                    "label": "Print Speed",
+                    "default_value": 50
                 }
             }
         },

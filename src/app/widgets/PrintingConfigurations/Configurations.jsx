@@ -309,6 +309,17 @@ class Configurations extends PureComponent {
                 });
 
                 this.props.updateActiveDefinition(definition);
+            } else {
+                const officialQualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.officialQualityDefinition.definitionId)
+                || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                const customQualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.customQualityDefinition.definitionId)
+                    || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                Object.assign(newState, {
+                    officialQualityDefinition: officialQualityDefinition,
+                    customQualityDefinition: customQualityDefinition
+                });
+                this.props.updateActiveDefinition(officialQualityDefinition);
+                this.props.updateActiveDefinition(customQualityDefinition);
             }
 
             // Update custom definition options
@@ -322,6 +333,7 @@ class Configurations extends PureComponent {
 
             this.setState(newState);
         }
+
 
         if (nextProps.isAdvised !== this.props.isAdvised) {
             if (nextProps.isAdvised) {
@@ -692,8 +704,7 @@ class Configurations extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const printing = state.printing;
-    const { qualityDefinitions, defaultQualityId, isAdvised, activeDefinition } = printing;
+    const { qualityDefinitions, defaultQualityId, isAdvised, activeDefinition } = state.printing;
     return {
         qualityDefinitions,
         defaultQualityId,

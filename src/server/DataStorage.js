@@ -77,7 +77,7 @@ class DataStorage {
         await this.initUserCase();
     }
 
-    static initSlicer() {
+    static async initSlicer() {
         mkdirp.sync(this.configDir);
 
         const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
@@ -90,6 +90,10 @@ class DataStorage {
                     .isFile()) {
                     fs.copyFileSync(src, dst, () => {
                     });
+                } else {
+                    const srcPath = `${CURA_ENGINE_CONFIG_LOCAL}/${file}`;
+                    const dstPath = `${this.configDir}/${file}`;
+                    await this.copyDir(srcPath, dstPath);
                 }
             }
         }

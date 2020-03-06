@@ -1,4 +1,5 @@
 import api from '../../api';
+import { MACHINE_SERIES } from '../../constants';
 
 class DefinitionManager {
     snapmakerDefinition = null;
@@ -9,37 +10,44 @@ class DefinitionManager {
 
     qualityDefinitions = [];
 
+    series = '';
 
-    async init() {
+    async init(series) {
+        this.series = series;
         let res;
 
-        res = await api.printingConfigs.getDefinition('snapmaker');
-        this.snapmakerDefinition = res.body.definition;
+        if (this.series === MACHINE_SERIES.ORIGINAL.value) {
+            res = await api.printingConfigs.getDefinition('snapmaker');
+            this.snapmakerDefinition = res.body.definition;
+        } else {
+            res = await api.printingConfigs.getDefinition('snapmaker2');
+            this.snapmakerDefinition = res.body.definition;
+        }
 
         // active definition
         res = await api.printingConfigs.getDefinition('active');
         this.activeDefinition = res.body.definition;
 
-        res = await api.printingConfigs.getDefinitionsByType('material');
+        res = await api.printingConfigs.getMaterialDefinitions();
         this.materialDefinitions = res.body.definitions;
 
-        res = await api.printingConfigs.getDefinitionsByType('quality');
+        res = await api.printingConfigs.getQualityDefinitions(series);
         this.qualityDefinitions = res.body.definitions;
     }
 
     async createDefinition(definition) {
-        const res = await api.printingConfigs.createDefinition(definition);
+        const res = await api.printingConfigs.createDefinition(definition, this.series);
         return res.body.definition;
     }
 
     async removeDefinition(definition) {
-        await api.printingConfigs.removeDefinition(definition.definitionId);
+        await api.printingConfigs.removeDefinition(definition.definitionId, this.series);
     }
 
     // Update definition
     // Only name & settings are configurable
     async updateDefinition(definition) {
-        await api.printingConfigs.updateDefinition(definition.definitionId, definition);
+        await api.printingConfigs.updateDefinition(definition.definitionId, definition, this.series);
     }
 
     // Calculate hidden settings

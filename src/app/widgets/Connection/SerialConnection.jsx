@@ -16,11 +16,11 @@ import {
 import { valueOf } from '../../lib/contants-utils';
 import api from '../../api';
 import Space from '../../components/Space';
-import MachineSelection from './MachineSelection';
 import { actions as machineActions } from '../../flux/machine';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
 import CNCState from './CNCState';
+import MachineSelectModal from '../../modals/modal-machine-select';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
@@ -44,9 +44,8 @@ class SerialConnection extends PureComponent {
         err: null,
 
         // UI state
-        loadingPorts: false,
+        loadingPorts: false
 
-        showMachineSelected: false
     };
 
     loadingTimer = null;
@@ -74,17 +73,8 @@ class SerialConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
-        },
-        openModal: () => {
-            this.setState({
-                showMachineSelected: true
-            });
-        },
-        closeModal: () => {
-            this.setState({
-                showMachineSelected: false
-            });
         }
+
     };
 
     componentDidMount() {
@@ -191,21 +181,37 @@ class SerialConnection extends PureComponent {
                 // Empty block
             });
         const { series, seriesSize, headType } = state;
-        const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType);
-        const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`);
+        const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
+            ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value : null;
+        const machineHeadType = valueOf(MACHINE_HEAD_TYPE, 'alias', headType)
+            ? valueOf(MACHINE_HEAD_TYPE, 'alias', headType).value : null;
 
-        if (machineHeadType && machineSeries) {
+        if (machineSeries && machineHeadType) {
             this.props.updateMachineState({
-                series: machineSeries.value,
-                headType: machineHeadType.value
+                series: machineSeries,
+                headType: machineHeadType,
+                canReselectMachine: false
             });
             if (machineSeries.value !== MACHINE_SERIES.ORIGINAL.value) {
                 this.props.executeGcode('G54');
             }
         } else {
-            machineHeadType && this.props.updateMachineState({ headType: machineHeadType.value });
-            machineSeries && this.props.updateMachineState({ series: machineSeries.value });
-            this.actions.openModal();
+            MachineSelectModal({
+                series: machineSeries,
+                headType: machineHeadType,
+
+                onConfirm: (seriesT, headTypeT) => {
+                    this.props.updateMachineState({
+                        series: seriesT,
+                        headType: headTypeT,
+                        canReselectMachine: true
+                    });
+                    if (seriesT !== MACHINE_SERIES.ORIGINAL.value) {
+                        this.props.executeGcode('G54');
+                    }
+                }
+
+            });
         }
     }
 
@@ -316,8 +322,7 @@ class SerialConnection extends PureComponent {
 
     render() {
         const { isOpen, isConnected, headType } = this.props;
-        const { err, ports, port, loadingPorts,
-            showMachineSelected } = this.state;
+        const { err, ports, port, loadingPorts } = this.state;
 
         const canRefresh = !loadingPorts && !isOpen;
         const canChangePort = canRefresh;
@@ -407,10 +412,6 @@ class SerialConnection extends PureComponent {
                         <span style={{ margin: '0 8px' }}>{err}</span>
                     )}
                 </div>
-                <MachineSelection
-                    display={showMachineSelected}
-                    closeModal={this.actions.closeModal}
-                />
             </div>
         );
     }

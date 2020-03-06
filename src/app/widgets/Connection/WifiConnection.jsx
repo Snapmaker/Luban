@@ -22,18 +22,15 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
-import MachineSelection from './MachineSelection';
 import widgetStyles from '../styles.styl';
 import styles from './index.styl';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
 import ModalSmall from '../../components/Modal/ModalSmall';
 
-
 class WifiConnection extends PureComponent {
     static propTypes = {
         headType: PropTypes.string,
-        machineSelect: PropTypes.bool,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
@@ -46,8 +43,7 @@ class WifiConnection extends PureComponent {
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
-        setServer: PropTypes.func.isRequired,
-        updateState: PropTypes.func.isRequired
+        setServer: PropTypes.func.isRequired
     };
 
     state = {
@@ -75,11 +71,6 @@ class WifiConnection extends PureComponent {
                     server: find
                 });
             }
-        },
-        closeModal: () => {
-            this.props.updateState({
-                machineSelect: false
-            });
         },
         setServer: (server) => {
             this.props.setServer(server);
@@ -354,10 +345,6 @@ class WifiConnection extends PureComponent {
                         )}
                     </div>
                 </div>
-                <MachineSelection
-                    display={this.props.machineSelect}
-                    closeModal={this.actions.closeModal}
-                />
                 {showConnectionMessage && (
                     <ModalSmall
                         showCloseButton={connectionMessage.showCloseButton}
@@ -377,11 +364,10 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, machineSelect } = machine;
+    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType } = machine;
 
     return {
         headType,
-        machineSelect,
         servers,
         discovering,
         server,
@@ -397,8 +383,7 @@ const mapDispatchToProps = (dispatch) => ({
     discoverServers: () => dispatch(machineActions.discoverServers()),
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
-    setServer: (server) => dispatch(machineActions.setServer(server)),
-    updateState: (state) => dispatch(machineActions.updateState(state))
+    setServer: (server) => dispatch(machineActions.setServer(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

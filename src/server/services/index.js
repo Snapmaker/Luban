@@ -141,7 +141,8 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/uploadGcodeFile'), api.file.uploadGcodeFile);
     app.post(urljoin(settings.route, 'api/file/uploadUpdateFile'), api.file.uploadUpdateFile);
 
-    app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
+    app.get(urljoin(settings.route, 'api/printingQualityDefinitions/:series'), api.printingConfigs.getQualityDefinitions);
+    app.get(urljoin(settings.route, 'api/printingMaterialDefinitions'), api.printingConfigs.getMaterialDefinitions);
     app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
     app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
     app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);

@@ -66,8 +66,6 @@ class ToolParameters extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log(nextProps.toolSnap);
-        console.log(this.props.toolSnap);
         if (this.props.toolSnap !== nextProps.toolSnap) {
             this.actions.onChangeTool(nextProps.toolSnap);
         }
