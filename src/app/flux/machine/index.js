@@ -23,7 +23,7 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions, getGcodeName, getGcodeType } from '../workspace';
-import MachineSelectModalHOC from '../../components/Modal/modal-machine-select';
+import MachineSelectModal from '../../modals/modal-machine-select';
 
 
 const INITIAL_STATE = {
@@ -496,7 +496,7 @@ export const actions = {
                         });
                     }
                 } else {
-                    MachineSelectModalHOC({
+                    MachineSelectModal({
                         series: series,
                         headType: headType,
 

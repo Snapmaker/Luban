@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { actions as machineActions } from '../../flux/machine';
-import MachineSelectModalHOC from '../../components/Modal/modal-machine-select';
+import MachineSelectModal from '../../modals/modal-machine-select';
 import { CONNECTION_STATUS_CONNECTED } from '../../constants';
 
 class MachineSelection extends Component {
@@ -18,7 +18,7 @@ class MachineSelection extends Component {
     actions= {
         onClick: () => {
             const { series, headType, connectionStatus } = this.props;
-            MachineSelectModalHOC({
+            MachineSelectModal({
                 series,
                 headType,
                 hasHead: connectionStatus === CONNECTION_STATUS_CONNECTED,

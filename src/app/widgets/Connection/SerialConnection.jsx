@@ -20,7 +20,7 @@ import { actions as machineActions } from '../../flux/machine';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
 import CNCState from './CNCState';
-import MachineSelectModalHOC from '../../components/Modal/modal-machine-select';
+import MachineSelectModal from '../../modals/modal-machine-select';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
@@ -196,7 +196,7 @@ class SerialConnection extends PureComponent {
                 this.props.executeGcode('G54');
             }
         } else {
-            MachineSelectModalHOC({
+            MachineSelectModal({
                 series: machineSeries,
                 headType: machineHeadType,
 

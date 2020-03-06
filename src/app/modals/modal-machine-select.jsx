@@ -4,14 +4,13 @@ import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import { Button } from '@trendmicro/react-buttons';
-import i18n from '../../lib/i18n';
-import Modal from './index';
-import { MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../../constants';
-import styles from '../../widgets/Connection/index.styl';
-import Anchor from '../Anchor';
-import widgetStyles from '../../widgets/styles.styl';
+import i18n from '../lib/i18n';
+import Modal from '../components/Modal';
+import { MACHINE_HEAD_TYPE, MACHINE_SERIES } from '../constants';
+import Anchor from '../components/Anchor';
+import styles from './styles.styl';
 
-class MachineSelectModalHOC extends PureComponent {
+class MachineSelectModal extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         series: PropTypes.string,
@@ -139,7 +138,7 @@ class MachineSelectModalHOC extends PureComponent {
                     </div>
                     {this.props.hasHead !== false && (
                         <div>
-                            <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+                            <div className={classNames(styles.separator, styles['separator-underline'])} />
                             <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
@@ -168,7 +167,7 @@ class MachineSelectModalHOC extends PureComponent {
                         btnStyle="primary"
                         onClick={this.handleConfirm}
                     >
-                        {i18n._('Add Device')}
+                        {i18n._('Choose')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -188,5 +187,5 @@ export default (options) => new Promise((resolve) => {
         container: container
     };
 
-    ReactDOM.render(<MachineSelectModalHOC {...props} />, container);
+    ReactDOM.render(<MachineSelectModal {...props} />, container);
 });
