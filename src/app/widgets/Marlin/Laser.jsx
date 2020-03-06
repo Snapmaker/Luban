@@ -29,7 +29,7 @@ class Printing extends PureComponent {
 
     state = {
         laserPowerOpen: this.props.headStatus,
-        laserPower: this.props.laserPower || 1,
+        laserPower: this.props.laserPower || 5,
         laserPowerMarks: {
             0: 0,
             5: 5,
@@ -190,6 +190,7 @@ class Printing extends PureComponent {
                                 value={laserPower}
                                 onChange={actions.onChangeLaserPower}
                             />
+                            <span className="sm-parameter-row__input2-text">{this.props.laserPower}/</span>
                             <Input
                                 className="sm-parameter-row__input2"
                                 value={laserPower}

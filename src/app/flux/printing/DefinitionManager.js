@@ -153,7 +153,6 @@ class DefinitionManager {
 
     addMachineStartGcode(definition) {
         const settings = definition.settings;
-        console.log(settings);
 
         const machineHeatedBed = settings.machine_heated_bed.default_value;
         const printTemp = settings.material_print_temperature.default_value;

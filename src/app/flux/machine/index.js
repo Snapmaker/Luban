@@ -316,11 +316,15 @@ export const actions = {
     },
 
     updateMachineState: (state) => (dispatch) => {
-        const { series, headType, canReselectMachine = false } = state;
+        const { series, headType, canReselectMachine } = state;
         headType && dispatch(actions.updateState({
-            headType: headType,
-            canReselectMachine
+            headType: headType
         }));
+        if (canReselectMachine !== undefined && canReselectMachine !== null) {
+            dispatch(actions.updateState({
+                canReselectMachine
+            }));
+        }
         series && dispatch(actions.updateMachineSeries(series));
     },
 
