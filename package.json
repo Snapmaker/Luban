@@ -254,6 +254,7 @@
     "xterm": "~3.0.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
     "babel-cli": "~6.26.0",
     "babel-core": "~6.26.3",
     "babel-eslint": "~8.2.6",
@@ -332,8 +333,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run eslint:debug",
-      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-push": "npm run eslint:debug"
     }
   }
 }
