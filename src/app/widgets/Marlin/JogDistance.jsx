@@ -39,43 +39,39 @@ class JogDistance extends PureComponent {
             this.setState({
                 isCustom: false
             });
-            this.actions.onChange();
+            this.actions.onChange(value);
         },
         selectCustom: () => {
             this.setState({
                 isCustom: true
             });
-            this.actions.onChange();
+            this.actions.onChange(this.state.customValue);
         },
         onChangeCustomValue: (value) => {
             this.setState({
                 customValue: value
             });
-            this.actions.onChange();
+            this.actions.onChange(value);
         },
         increaseCustomDistance: () => {
-            const value = this.state.customValue + this.state.step;
+            const value = Math.min(this.state.customValue + this.state.step, this.state.max);
             this.setState({
-                customValue: Math.min(value, this.state.max)
+                customValue: value
             });
-            this.actions.onChange();
+            this.actions.onChange(value);
         },
         decreaseCustomDistance: () => {
-            const value = this.state.customValue - this.state.step;
+            const value = Math.max(this.state.customValue - this.state.step, this.state.min);
             this.setState({
-                customValue: Math.max(value, this.state.min)
+                customValue: value
             });
-            this.actions.onChange();
+            this.actions.onChange(value);
         },
-        onChange: () => {
+        onChange: (value) => {
             if (!this.props.onChange) {
                 return;
             }
-            if (this.state.isCustom) {
-                this.props.onChange(this.state.customValue);
-            } else {
-                this.props.onChange(this.state.value);
-            }
+            this.props.onChange(value);
         }
     };
 
