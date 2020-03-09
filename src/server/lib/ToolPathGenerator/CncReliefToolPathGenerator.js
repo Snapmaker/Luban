@@ -237,6 +237,19 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         // endPoint.Y !== undefined && (startPoint.Y = endPoint.Y);
         // endPoint.Z !== undefined && (startPoint.Z = endPoint.Z);
 
+        const boundingBox = {
+            min: {
+                x: null,
+                y: null,
+                z: 0
+            },
+            max: {
+                x: null,
+                y: null,
+                z: 0
+            }
+        };
+
         while (cutDown) {
             cutDown = false;
             for (let i = 0; i < this.targetWidth; ++i) {
@@ -257,6 +270,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
                             startPoint = { ...endPoint };
                             cutDown = true;
+                            this.setBoundingBox(boundingBox, { X: gX, Y: gY });
                         } else {
                             // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
                             this.toolPath.push({ G: 0, X: gX, Y: gY, F: this.workSpeed });
@@ -274,6 +288,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.plungeSpeed;
                             startPoint = { ...endPoint };
                             cutDown = true;
+                            this.setBoundingBox(boundingBox, { X: gX, Y: gY });
                         } else {
                             // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
                             this.toolPath.push({ G: 0, X: gX, Y: gY, Z: z, F: this.workSpeed });
@@ -316,6 +331,11 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
         startPoint = { ...endPoint };
 
+        boundingBox.max.x += positionX;
+        boundingBox.min.x += positionX;
+        boundingBox.max.y += positionY;
+        boundingBox.min.y += positionY;
+
         return {
             headerType: headerType,
             mode: mode,
@@ -324,9 +344,39 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             estimatedTime: this.estimatedTime * 3,
             positionX: positionX,
             positionY: positionY,
-            positionZ: positionZ
+            positionZ: positionZ,
+            boundingBox: boundingBox
         };
     };
+
+    setBoundingBox(boundingBox, linePoint) {
+        if (linePoint.X !== undefined) {
+            if (boundingBox.min.x === null) {
+                boundingBox.min.x = linePoint.X;
+            } else {
+                boundingBox.min.x = Math.min(boundingBox.min.x, linePoint.X);
+            }
+            if (boundingBox.max.x === null) {
+                boundingBox.max.x = linePoint.X;
+            } else {
+                boundingBox.max.x = Math.max(boundingBox.max.x, linePoint.X);
+            }
+        }
+
+        if (linePoint.Y !== undefined) {
+            if (boundingBox.min.y === null) {
+                boundingBox.min.y = linePoint.Y;
+            } else {
+                boundingBox.min.y = Math.min(boundingBox.min.y, linePoint.Y);
+            }
+            if (boundingBox.max.y === null) {
+                boundingBox.max.y = linePoint.Y;
+            } else {
+                boundingBox.max.y = Math.max(boundingBox.max.y, linePoint.Y);
+            }
+        }
+    }
+
 
     getLineLength3D(startPoint, endPoint) {
         if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6) && (endPoint.Z - startPoint.Z < 1e-6))
