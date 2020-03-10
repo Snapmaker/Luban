@@ -6,7 +6,7 @@ import jQuery from 'jquery';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
 
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+// import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing';
@@ -26,6 +26,7 @@ class Output extends PureComponent {
         workflowState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
         gcodePath: PropTypes.string.isRequired,
+        gcodeFileName: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
@@ -54,23 +55,31 @@ class Output extends PureComponent {
                 });
                 return;
             }
-
-            const gcodePath = this.props.gcodePath;
+            const { originalName, uploadName } = this.props.gcodeFileName;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            const filename = path.basename(gcodePath);
-            jQuery.get(gcodePath, (result) => {
+            let filename = path.basename(originalName);
+            filename = this.actions.changeFilenameExt(filename);
+
+            jQuery.get(this.props.gcodePath, (result) => {
                 this.props.clearGcode();
                 this.props.addGcode(filename, result);
 
                 this.props.addGcodeFile({
                     name: filename,
-                    uploadName: filename,
+                    uploadName: uploadName,
                     size: result.length,
                     lastModifiedDate: new Date(),
                     img: this.thumbnail.current.getDataURL()
                 });
             });
+        },
+        changeFilenameExt: (filename) => {
+            if (path.extname(filename) && ['.stl', '.obj'].includes(path.extname(filename).toLowerCase())) {
+                const extname = path.extname(filename);
+                filename = `${filename.slice(0, filename.lastIndexOf(extname))}.gcode`;
+            }
+            return filename;
         },
         onClickExportGcode: () => {
             if (this.props.isGcodeOverstepped) {
@@ -80,11 +89,12 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            const gcodePath = this.props.gcodePath;
-            const filename = path.basename(gcodePath);
-            jQuery.get(gcodePath, (data) => {
+            const { originalName } = this.props.gcodeFileName;
+            let filename = path.basename(originalName);
+            filename = this.actions.changeFilenameExt(filename);
+            jQuery.get(this.props.gcodePath, (data) => {
                 const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
-                const savedFilename = pathWithRandomSuffix(filename);
+                const savedFilename = filename;
                 FileSaver.saveAs(blob, savedFilename, true);
             });
         },
@@ -213,7 +223,7 @@ const mapStateToProps = (state) => {
     const {
         stage,
         modelGroup, hasModel, boundingBox, isAnyModelOverstepped,
-        isGcodeOverstepped, gcodeLine, gcodePath
+        isGcodeOverstepped, gcodeLine, gcodePath, gcodeFileName
     } = printing;
 
     return {
@@ -225,7 +235,8 @@ const mapStateToProps = (state) => {
         isAnyModelOverstepped,
         isGcodeOverstepped,
         gcodeLine,
-        gcodePath
+        gcodePath,
+        gcodeFileName
     };
 };
 

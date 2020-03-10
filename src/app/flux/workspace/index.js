@@ -4,7 +4,7 @@ import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
 import log from '../../lib/log';
-
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
@@ -72,11 +72,17 @@ export const actions = {
     uploadGcodeFile: (file) => (dispatch) => {
         const formData = new FormData();
         formData.append('file', file);
+        const displayName = file.name;
+        const uploadName = pathWithRandomSuffix(file.name);
+        formData.append('displayName', displayName);
+        formData.append('uploadName', uploadName);
+
+
         api.uploadFile(formData)
             .then((res) => {
                 const response = res.body;
                 dispatch(actions.addGcodeFile({
-                    name: file.name,
+                    name: displayName,
                     uploadName: response.uploadName,
                     size: file.size,
                     lastModifiedDate: file.lastModifiedDate,
@@ -90,10 +96,10 @@ export const actions = {
 
     addGcodeFile: (fileInfo) => (dispatch, getState) => {
         const { gcodeFiles } = getState().workspace;
-
         const files = [];
+        fileInfo.isRenaming = false;
+        fileInfo.newName = fileInfo.name;
         files.push(fileInfo);
-
         let added = 1, i = 0;
         while (added < 5 && i < gcodeFiles.length) {
             const gcodeFile = gcodeFiles[i];
@@ -104,6 +110,44 @@ export const actions = {
             }
             i++;
         }
+        dispatch(actions.updateState({
+            gcodeFiles: files
+        }));
+    },
+
+    renameGcodeFile: (uploadName, newName = '', isRenaming = false, isChangingName = false) => (dispatch, getState) => {
+        const { gcodeFiles } = getState().workspace;
+        const files = [];
+        let i = 0;
+        while (i < gcodeFiles.length) {
+            const gcodeFile = gcodeFiles[i];
+            if (uploadName === gcodeFile.uploadName) {
+                gcodeFile.isRenaming = isRenaming;
+                const basename = path.extname(gcodeFile.name);
+                if (newName !== gcodeFile.newName && newName.length > 0) {
+                    gcodeFile.newName = newName + basename;
+                }
+                if (isChangingName === true && gcodeFile.newName !== gcodeFile.name) {
+                    gcodeFile.name = gcodeFile.newName;
+                }
+            }
+
+            files.push(gcodeFile);
+            i++;
+        }
+
+        dispatch(actions.updateState({
+            gcodeFiles: files
+        }));
+    },
+
+    removeGcodeFile: (fileInfo) => (dispatch, getState) => {
+        const { gcodeFiles } = getState().workspace;
+
+        let files = [];
+        files = gcodeFiles.filter((item) => {
+            return item.uploadName !== fileInfo.uploadName;
+        });
 
         dispatch(actions.updateState({
             gcodeFiles: files

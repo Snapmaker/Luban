@@ -18,6 +18,8 @@ import PrimaryWidgets from './PrimaryWidgets';
 import SecondaryWidgets from './SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+
 import {
     DATA_PREFIX,
     WORKFLOW_STATE_IDLE,
@@ -87,9 +89,20 @@ class Workspace extends PureComponent {
             // upload then pubsub
             const formData = new FormData();
             formData.append('file', file);
+            const displayName = file.name;
+            const uploadName = pathWithRandomSuffix(file.name);
+            formData.append('displayName', displayName);
+            formData.append('uploadName', uploadName);
             api.uploadFile(formData).then((res) => {
                 const response = res.body;
                 const gcodePath = `${DATA_PREFIX}/${response.uploadName}`;
+                this.props.addGcodeFile({
+                    name: file.name,
+                    uploadName: response.uploadName,
+                    size: file.size,
+                    lastModifiedDate: file.lastModifiedDate,
+                    img: ''
+                });
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
                     this.props.addGcode(file.name, result, 'line');
@@ -374,9 +387,8 @@ const mapStateToProps = (state) => {
         secondaryWidgets
     };
 };
-
-
 const mapDispatchToProps = (dispatch) => ({
+    addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
     updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
