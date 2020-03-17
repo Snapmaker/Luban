@@ -117,7 +117,17 @@ export const actions = {
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
-        const sourceType = path.extname(uploadName).toLowerCase() === '.svg' ? 'svg' : 'raster';
+        // const extname = path.extname(uploadName).toLowerCase();
+        // let sourceType;
+        // if (extname === '.svg') {
+        //     sourceType = '.svg';
+        // } else if (extname === '.dxf') {
+        //     sourceType = '.dxf';
+        // } else {
+        //     sourceType = '.raster';
+        // }
+        const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
+        console.log('generateModel>>>', sourceType);
 
         const { width, height } = sizeModelByMachineSize(size, sourceWidth, sourceHeight);
         // Generate geometry

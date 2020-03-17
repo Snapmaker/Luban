@@ -63,7 +63,7 @@ class ToolPathModel {
         if (!this.toolPath) {
             return;
         }
-
+        console.log('generateToolPath3D', this.toolPath);
         this.toolPathObj3D = generateToolPathObject3D(this.toolPath);
     }
 

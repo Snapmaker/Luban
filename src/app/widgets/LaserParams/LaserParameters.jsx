@@ -28,7 +28,7 @@ const getAccept = (mode) => {
     if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
     } else if (['vector', 'trace'].includes(mode)) {
-        accept = '.svg, .png, .jpg, .jpeg, .bmp';
+        accept = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
     }
     return accept;
 };
@@ -184,7 +184,7 @@ class LaserParameters extends PureComponent {
         const isBW = (sourceType === 'raster' && mode === 'bw');
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
-        const isSvgVector = (sourceType === 'svg' && mode === 'vector');
+        const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (sourceType === 'text' && mode === 'vector');
 
         return (

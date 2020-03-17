@@ -273,6 +273,7 @@
     "css-loader": "~2.1.1",
     "css-split-webpack-plugin": "0.2.3",
     "cz-conventional-changelog": "~3.0.2",
+    "dxf-parser": "^1.0.0-alpha.2",
     "electron": "~2.0.18",
     "electron-builder": "~21.2.0",
     "electron-notarize": "~0.2.1",

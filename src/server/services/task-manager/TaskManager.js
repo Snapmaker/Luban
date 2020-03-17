@@ -24,7 +24,7 @@ const generateLaser = async (modelInfo, onProgress) => {
 
     let modelPath = null;
     // no need to process model
-    if ((sourceType === 'svg' && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
+    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
@@ -37,7 +37,9 @@ const generateLaser = async (modelInfo, onProgress) => {
         generator.on('progress', (p) => {
             onProgress(p);
         });
+
         const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
+        // console.log('generateLaser>>>', toolPath);
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                 if (err) {

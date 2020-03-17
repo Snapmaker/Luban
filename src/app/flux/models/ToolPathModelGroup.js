@@ -18,6 +18,12 @@ class ToolPathModelGroup {
 
     _getState(model) {
         const { modelID, config, gcodeConfig, printOrder } = model;
+        console.log('_getState<>>>>>>>', {
+            modelID: modelID,
+            config,
+            gcodeConfig,
+            printOrder
+        });
         return {
             modelID: modelID,
             config,

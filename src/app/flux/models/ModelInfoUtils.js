@@ -32,7 +32,7 @@ const checkParams = (headerType, sourceType, mode) => {
     if (headerType !== 'laser' && headerType !== 'cnc' && headerType !== '3dp') {
         return false;
     }
-    if (!['3d', 'raster', 'svg', 'text'].includes(sourceType)) {
+    if (!['3d', 'raster', 'svg', 'dxf', 'text'].includes(sourceType)) {
         return false;
     }
     if (!['bw', 'greyscale', 'vector', 'trace'].includes(mode)) {
@@ -81,6 +81,14 @@ const generateLaserDefaults = (mode, sourceType) => {
                     break;
                 }
                 case 'svg': {
+                    config = {
+                        optimizePath: false,
+                        fillEnabled: DEFAULT_FILL_ENABLED,
+                        fillDensity: DEFAULT_FILL_DENSITY
+                    };
+                    break;
+                }
+                case 'dxf': {
                     config = {
                         optimizePath: false,
                         fillEnabled: DEFAULT_FILL_ENABLED,

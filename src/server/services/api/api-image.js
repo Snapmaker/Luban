@@ -5,6 +5,7 @@ import jimp from 'jimp';
 import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../lib/SVGParser';
+import { parseDxf } from '../../lib/DXFParser/Parser';
 import imageProcess from '../../lib/image-process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';
@@ -40,6 +41,17 @@ export const set = (req, res) => {
                     uploadName: uploadName,
                     width: svg.width,
                     height: svg.height
+                });
+
+                next();
+            } else if (path.extname(uploadName) === '.dxf') {
+                const { width, height } = await parseDxf(uploadPath);
+
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width,
+                    height
                 });
 
                 next();
