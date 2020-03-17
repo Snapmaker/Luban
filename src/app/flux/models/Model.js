@@ -1,5 +1,7 @@
 import uuid from 'uuid';
 import * as THREE from 'three';
+import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
+
 import { DATA_PREFIX } from '../../constants';
 import { sizeModelByMachineSize } from './ModelInfoUtils';
 
@@ -84,9 +86,19 @@ class Model {
     }
 
     generateModelObject3D() {
-        if (this.sourceType !== '3d') {
-            // this.modelObject3D && this.remove(this.modelObject3D);
-            // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
+        if (this.sourceType === 'dxf') {
+            if (this.modelObject3D) {
+                this.meshObject.remove(this.modelObject3D);
+                this.modelObject3D = null;
+            }
+
+            const path = `${DATA_PREFIX}/${this.uploadName}`;
+            new ThreeDxfLoader({ width: this.transformation.width }).load(path, (group) => {
+                this.modelObject3D = group;
+                this.meshObject.add(this.modelObject3D);
+                this.meshObject.dispatchEvent(EVENTS.UPDATE);
+            });
+        } else if (this.sourceType !== '3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
@@ -103,12 +115,11 @@ class Model {
                 this.meshObject.remove(this.modelObject3D);
                 this.modelObject3D = null;
             }
-            // text transformation bug: async mismatch
-            // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
-            // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
             const { width, height } = sizeModelByMachineSize(this.limitSize, this.sourceWidth, this.sourceHeight);
             this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+
+
             this.meshObject.add(this.modelObject3D);
         }
 

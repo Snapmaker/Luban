@@ -6,9 +6,12 @@
 import EventEmitter from 'events';
 import PolygonOffset from './PolygonOffset';
 import { flip, scale, rotate, translate } from '../SVGParser';
+// import { dxfFlip, dxfScale, dxfRotate, dxfTranslate, measureBoundary } from '../DXFParser/Parser';
+
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 import { svgToSegments } from './SVGFill';
+// import { dxfToSegments } from './DXFFill';
 import Normalizer from './Normalizer';
 
 function distance(p, q) {
@@ -121,7 +124,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
     }
 
     // Static method to generate `ToolPath` from SVG
-    // static generateToolPathObj(svg, modelInfo) {
     generateToolPath(svg, modelInfo) {
         const { config, gcodeConfigPlaceholder } = modelInfo;
         const {
@@ -272,33 +274,10 @@ export default class CNCToolPathGenerator extends EventEmitter {
         return toolPath;
     }
 
-    // generateToolPath() {
-    //     const { sizeWidth, sizeHeight, originWidth, originHeight } = this.options;
-    //
-    //     // TODO: add pipelines to filter & process data
-    //     scale(this.svg, {
-    //         x: sizeWidth / originWidth,
-    //         y: sizeHeight / originHeight
-    //     });
-    //
-    //     if (this.options.clip) {
-    //         clip(this.svg);
-    //     }
-    //     if (this.options.anchor) {
-    //         CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
-    //     }
-    //
-    //     return CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
-    // }
-    //
-    // generateGcode() {
-    //     const toolPath = this.generateToolPath();
-    //     return toolPath.toGcode();
-    // }
 
     generateToolPathObj(svg, modelInfo) {
         // const { transformation, source } = modelInfo;
-        const { transformation, sourceHeight, sourceWidth } = modelInfo;
+        const { transformation, sourceHeight, sourceWidth, sourceType } = modelInfo;
         const originHeight = sourceHeight;
         const originWidth = sourceWidth;
         const targetHeight = transformation.height;
@@ -309,7 +288,10 @@ export default class CNCToolPathGenerator extends EventEmitter {
         const flipFlag = transformation.flip;
 
         // TODO: add pipelines to filter & process data
-        flip(svg, 1);
+        if (sourceType !== 'dxf') {
+            flip(svg, 1);
+        }
+
         flip(svg, flipFlag);
         scale(svg, {
             x: targetWidth / originWidth,
@@ -317,6 +299,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
         });
         rotate(svg, rotationZ);
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
+
 
         const toolPath = this.generateToolPath(svg, modelInfo);
         const fakeGcodes = toolPath.toGcode();

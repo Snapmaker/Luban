@@ -39,7 +39,6 @@ class ToolPathRenderer {
         if (!['cnc', 'laser'].includes(headerType)) {
             return null;
         }
-
         if (headerType === 'laser') {
             if (mode === 'greyscale' && movementMode === 'greyscale-dot') {
                 return this.parseToPoints(data);
@@ -87,7 +86,6 @@ class ToolPathRenderer {
                 gCodes.push(state.G);
             }
         }
-
         const bufferGeometry = new THREE.BufferGeometry();
         const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
