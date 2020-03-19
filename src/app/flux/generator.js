@@ -12,7 +12,7 @@ const generateImageObject3D = (imageSrc, width, height, anchor) => {
     if (!imageSrc || !width || !height || !anchor) {
         return null;
     }
-
+    console.log('generateImageObject3D', imageSrc, width, height, anchor);
     const geometry = new THREE.PlaneGeometry(width, height);
     const texture = new THREE.TextureLoader().load(imageSrc);
     const material = new THREE.MeshBasicMaterial({
@@ -59,6 +59,7 @@ const generateImageObject3D = (imageSrc, width, height, anchor) => {
 };
 
 const generateToolPathObject3D = (toolPath) => {
+    console.log('generateToolPathObject3D>>', toolPath);
     const toolPathRenderer = new ToolPathRenderer();
     const object3D = toolPathRenderer.render(toolPath);
 

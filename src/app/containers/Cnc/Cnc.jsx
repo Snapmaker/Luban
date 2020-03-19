@@ -12,7 +12,7 @@ import { actions as cncLaserActions } from '../../flux/cncLaserShared';
 import { actions as widgetActions } from '../../flux/widget';
 import styles from './styles.styl';
 
-const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
 class Cnc extends Component {
     static propTypes = {
@@ -29,7 +29,7 @@ class Cnc extends Component {
     actions = {
         onDropAccepted: (file) => {
             let mode = 'greyscale';
-            if (path.extname(file.name).toLowerCase() === '.svg') {
+            if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
                 mode = 'vector';
             }
             this.props.uploadImage(file, mode, () => {

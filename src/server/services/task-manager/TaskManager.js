@@ -158,12 +158,12 @@ class TaskManager extends EventEmitter {
                 log.info('Scheduling task * 20');
             }
 
-            log.debug(taskSelected);
+            // log.debug(taskSelected);
             try {
                 const res = await generateToolPath(taskSelected.modelInfo, (p) => {
                     this.emit('taskProgress', p);
                 });
-
+                // console.log('schedule>>>info obj', taskSelected);
                 taskSelected.filename = res.filename;
                 if (taskSelected.taskStatus !== 'deprecated') {
                     taskSelected.taskStatus = 'previewed';

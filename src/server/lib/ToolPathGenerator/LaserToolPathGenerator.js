@@ -7,7 +7,7 @@ import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
 import { dxfToSegments } from './DXFFill';
-import { parseDxf, dxfFlip, measureBoundary } from '../DXFParser/Parser';
+import { parseDxf, dxfFlip, dxfScale, dxfRotate, dxfTranslate, dxfSort, measureBoundary } from '../DXFParser/Parser';
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
 // }
@@ -41,7 +41,6 @@ class LaserToolPathGenerator extends EventEmitter {
         } else if (mode === 'greyscale') {
             workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
         } else if (mode === 'vector' && path.extname(originalName) === '.dxf') {
-            console.log('generateToolPathObj>>>>>>>', 'dxf333');
             workingGcode = await this.generateGcodeDxf(modelInfo, modelPath);
         } else if (mode === 'vector' || mode === 'trace') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
@@ -336,29 +335,38 @@ class LaserToolPathGenerator extends EventEmitter {
         // rotation: degree and counter-clockwise
         const rotationZ = transformation.rotationZ;
         const flipFlag = transformation.flip;
-        const { svgStr } = await parseDxf(modelPath);
-        console.log('svgStr boundary>>>>>', svgStr.boundary,);
-        dxfFlip(svgStr, 1);
-        measureBoundary(svgStr);
-        console.log('svgStr originWidth>>>>>', originWidth, originHeight, targetWidth, targetHeight, rotationZ, flipFlag);
+        const { dxfStr } = await parseDxf(modelPath);
+
+        dxfFlip(dxfStr, flipFlag);
+        dxfScale(dxfStr, {
+            x: targetWidth / originWidth,
+            y: targetHeight / originHeight
+        });
+        if (optimizePath) {
+            dxfSort(dxfStr);
+        }
+        dxfRotate(dxfStr, -rotationZ); // rotate: unit is radians and counter-clockwise
+        dxfTranslate(dxfStr, -dxfStr.boundary.minX, -dxfStr.boundary.minY);
+        measureBoundary(dxfStr);
+
+
         const normalizer = new Normalizer(
             'Center',
-            svgStr.boundary.minX,
-            svgStr.boundary.maxX,
-            svgStr.boundary.minY,
-            svgStr.boundary.maxY,
+            dxfStr.boundary.minX,
+            dxfStr.boundary.maxX,
+            dxfStr.boundary.minY,
+            dxfStr.boundary.maxY,
             {
                 x: 1,
                 y: 1
             }
         );
-        const segments = dxfToSegments(svgStr, {
-            width: svgStr.boundary.width,
-            height: svgStr.boundary.height,
+        const segments = dxfToSegments(dxfStr, {
+            width: dxfStr.boundary.width,
+            height: dxfStr.boundary.height,
             fillEnabled: fillEnabled,
             fillDensity: fillDensity
         });
-        console.log('segments dxf>>>>>>>>>>', normalizer);
 
         let firstTurnOn = true;
         function turnOnLaser() {
@@ -377,6 +385,7 @@ class LaserToolPathGenerator extends EventEmitter {
         content.push(`G1 F${workSpeed}`);
 
         let current = null;
+
         for (const segment of segments) {
             // G0 move to start
             if (!current || current && !(pointEqual(current, segment.start))) {
@@ -408,6 +417,7 @@ class LaserToolPathGenerator extends EventEmitter {
         // move to work zero
         content.push('G0 X0 Y0');
 
+
         return `${content.join('\n')}\n`;
     }
 
@@ -426,7 +436,7 @@ class LaserToolPathGenerator extends EventEmitter {
         const flipFlag = transformation.flip;
 
         const svgParser = new SVGParser();
-        console.log('svgStr originWidth>>>>>', originWidth, originHeight, targetWidth, targetHeight, rotationZ, flipFlag);
+
 
         const svg = await svgParser.parseFile(modelPath);
 
@@ -453,20 +463,14 @@ class LaserToolPathGenerator extends EventEmitter {
                 y: 1
             }
         );
-        fs.writeFile(modelPath.replace(/(\.svg)$/, 'a.json'), JSON.stringify(svg), (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                console.log('successful>>>>>>>>>>>>>');
-            }
-        });
+
+
         const segments = svgToSegments(svg, {
             width: svg.viewBox[2],
             height: svg.viewBox[3],
             fillEnabled: fillEnabled,
             fillDensity: fillDensity
         });
-        console.log('segments svg>>>>>>>>>>', normalizer);
 
         let firstTurnOn = true;
         function turnOnLaser() {
@@ -515,6 +519,7 @@ class LaserToolPathGenerator extends EventEmitter {
 
         // move to work zero
         content.push('G0 X0 Y0');
+
 
         return `${content.join('\n')}\n`;
     }

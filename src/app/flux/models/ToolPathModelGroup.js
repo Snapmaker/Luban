@@ -18,12 +18,7 @@ class ToolPathModelGroup {
 
     _getState(model) {
         const { modelID, config, gcodeConfig, printOrder } = model;
-        console.log('_getState<>>>>>>>', {
-            modelID: modelID,
-            config,
-            gcodeConfig,
-            printOrder
-        });
+
         return {
             modelID: modelID,
             config,
@@ -158,8 +153,10 @@ class ToolPathModelGroup {
             if (!toolPathObj3D) {
                 return null;
             }
+            console.log('toolPathObj3D', toolPathObj3D);
             if (toolPathModel.taskID === taskResult.taskID) {
                 this.object.add(toolPathModel.toolPathObj3D);
+
                 return this._getState(toolPathModel);
             }
         }
