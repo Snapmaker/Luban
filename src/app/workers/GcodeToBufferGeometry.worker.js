@@ -7,19 +7,18 @@ onmessage = (e) => {
         return;
     }
     const { func, gcodeFilename } = e.data;
-    const uploadName = gcodeFilename.uploadName;
     if (!['3DP', 'LASER', 'CNC'].includes(func.toUpperCase())) {
         postMessage({ status: 'err', value: `Unsupported func: ${func}` });
         return;
     }
-    if (isEmpty(uploadName)) {
+    if (isEmpty(gcodeFilename)) {
         postMessage({ status: 'err', value: 'Gcode filename is empty' });
         return;
     }
 
     gcodeToBufferGeometry(
         func.toUpperCase(),
-        uploadName,
+        gcodeFilename,
         (progress) => {
             postMessage({ status: 'progress', value: progress });
         },

@@ -10,6 +10,7 @@ import { actions as cncLaserSharedActions } from '../flux/cncLaserShared';
 import { actions as laserActions } from '../flux/laser';
 import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
+import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
 import api from '../api';
 import i18n from '../lib/i18n';
@@ -38,6 +39,7 @@ class App extends PureComponent {
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         initModelsPreviewChecker: PropTypes.func.isRequired,
+        workspaceInit: PropTypes.func.isRequired,
         laserInit: PropTypes.func.isRequired,
         cncInit: PropTypes.func.isRequired,
         printingInit: PropTypes.func.isRequired,
@@ -116,6 +118,7 @@ class App extends PureComponent {
 
         this.props.functionsInit();
         this.props.initModelsPreviewChecker();
+        this.props.workspaceInit();
         this.props.laserInit();
         this.props.cncInit();
         this.props.printingInit();
@@ -220,6 +223,7 @@ const mapDispatchToProps = (dispatch) => {
         machineInit: () => dispatch(machineActions.init()),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
+        workspaceInit: () => dispatch(workspaceActions.init()),
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),

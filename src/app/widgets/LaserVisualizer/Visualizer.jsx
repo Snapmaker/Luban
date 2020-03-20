@@ -4,9 +4,6 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 
-import { EPSILON } from '../../constants';
-import { controller } from '../../lib/controller';
-import { toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
 import Space from '../../components/Space';
@@ -15,7 +12,7 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions } from '../../flux/cncLaserShared';
+import { actions, CNC_LASER_STAGE } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
@@ -30,6 +27,9 @@ function humanReadableTime(t) {
 
 class Visualizer extends Component {
     static propTypes = {
+        stage: PropTypes.number.isRequired,
+        progress: PropTypes.number.isRequired,
+
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
@@ -62,10 +62,6 @@ class Visualizer extends Component {
     printableArea = null;
 
     canvas = React.createRef();
-
-    state = {
-        progress: 0
-    };
 
     actions = {
         // canvas footer
@@ -102,27 +98,9 @@ class Visualizer extends Component {
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
-            this.setState({
-                progress: 0
-            });
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
-        }
-    };
-
-    controllerEvents = {
-        'task:completed': () => {
-            this.setState({
-                progress: 1.0
-            });
-        },
-        'task:progress': (progress) => {
-            if (Math.abs(progress - this.state.progress) > 0.05) {
-                this.setState({
-                    progress: progress
-                });
-            }
         }
     };
 
@@ -138,16 +116,6 @@ class Visualizer extends Component {
     // };
 
     componentDidMount() {
-        // this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
-        // this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
-        // this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
-        this.addControllerEvents();
-
-        // this.visualizerRef.current.addEventListener('mouseup', (e) => {
-        //     const event = simulateMouseEvent(e, 'contextmenu');
-        //     this.visualizerRef.current.dispatchEvent(event);
-        // }, false);
-
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
 
@@ -217,63 +185,44 @@ class Visualizer extends Component {
         }
     }
 
-    componentWillUnmount() {
-        // this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
-        // this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
-        // this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
-        this.removeControllerEvents();
+    getNotice() {
+        const { stage, progress } = this.props;
+        switch (stage) {
+            case CNC_LASER_STAGE.EMPTY:
+                return '';
+            case CNC_LASER_STAGE.GENERATING_TOOLPATH:
+                return i18n._('Generating tool path... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS:
+                return i18n._('Generated tool path successfully.');
+            case CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED:
+                return i18n._('Failed to generate tool path.');
+            case CNC_LASER_STAGE.PREVIEWING:
+                return i18n._('Previewing tool path...');
+            case CNC_LASER_STAGE.PREVIEW_SUCCESS:
+                return i18n._('Previewed tool path successfully');
+            case CNC_LASER_STAGE.PREVIEW_FAILED:
+                return i18n._('Failed to preview tool path.');
+            case CNC_LASER_STAGE.GENERATING_GCODE:
+                return i18n._('Generating G-code... {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS:
+                return i18n._('Generated G-code successfully.');
+            case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
+                return i18n._('Failed to generate G-code.');
+            default:
+                return '';
+        }
     }
 
     showContextMenu = (event) => {
         this.contextMenuRef.current.show(event);
     };
 
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
     render() {
-        // const actions = this.actions;
-        // const isModelSelected = !!this.props.model;
         const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
 
-        // const { model, modelGroup } = this.props;
-
-        /*
-        let estimatedTime = 0;
-        if (hasModel) {
-            if (model && model.toolPath) {
-                estimatedTime = model.toolPath.estimatedTime;
-                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
-                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
-                }
-            } else {
-                for (const model2 of modelGroup.children) {
-                    if (model2.toolPath) {
-                        let t = model2.toolPath.estimatedTime;
-                        if (model2.modelInfo.gcodeConfig.multiPassEnabled) {
-                            t *= model2.modelInfo.gcodeConfig.multiPasses;
-                        }
-                        estimatedTime += t;
-                    }
-                }
-            }
-        }
-        */
-
-        // const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const notice = this.getNotice();
 
         return (
             <div
@@ -316,21 +265,12 @@ class Visualizer extends Component {
                     </div>
                 )}
 
-                {isModelSelected && (
-                    <div className={styles['visualizer-notice']}>
-                        {(this.state.progress < 1 - EPSILON) && (
-                            <p>{i18n._('Generating tool path... {{progress}}%', { progress: toFixed(this.state.progress, 2) * 100.0 })}</p>
-                        )}
-                        {(this.state.progress > 1 - EPSILON) && (
-                            <p>{i18n._('Generated tool path successfully.')}</p>
-                        )}
-                    </div>
-                )}
-                {isModelSelected && (
-                    <div className={styles['visualizer-progress']}>
-                        <ProgressBar progress={this.state.progress * 100.0} />
-                    </div>
-                )}
+                <div className={styles['visualizer-notice']}>
+                    <p>{notice}</p>
+                </div>
+                <div className={styles['visualizer-progress']}>
+                    <ProgressBar progress={this.props.progress * 100.0} />
+                </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="laser"
@@ -451,7 +391,7 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.laser;
+    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
     return {
         size: machine.size,
         hasModel,
@@ -460,7 +400,9 @@ const mapStateToProps = (state) => {
         toolPathModelGroup,
         // model,
         backgroundGroup: background.group,
-        renderingTimestamp
+        renderingTimestamp,
+        stage,
+        progress
     };
 };
 

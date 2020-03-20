@@ -7,7 +7,6 @@ import _ from 'lodash';
 import jQuery from 'jquery';
 import path from 'path';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
-// import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import styles from './index.styl';
@@ -30,12 +29,11 @@ class WifiTransport extends PureComponent {
         connectionType: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
 
-        clearGcode: PropTypes.func.isRequired,
-        addGcode: PropTypes.func.isRequired,
         renameGcodeFile: PropTypes.func.isRequired,
         removeGcodeFile: PropTypes.func.isRequired,
 
-        uploadGcodeFile: PropTypes.func.isRequired
+        renderGcodeFile: PropTypes.func.isRequired,
+        uploadGcodeFileToList: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -52,9 +50,9 @@ class WifiTransport extends PureComponent {
     actions = {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
-            this.props.uploadGcodeFile(file);
+            this.props.uploadGcodeFileToList(file);
         },
-        onRemoveFile: async (gcodeFile) => {
+        onRemoveFile: (gcodeFile) => {
             this.props.removeGcodeFile(gcodeFile);
         },
         onClickToUpload: () => {
@@ -100,15 +98,10 @@ class WifiTransport extends PureComponent {
             if (!find) {
                 return;
             }
-            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
-            jQuery.get(gcodePath, (result) => {
-                this.props.clearGcode();
-                this.props.addGcode(find.name, result);
-            });
+            this.props.renderGcodeFile(find);
         },
-        onRenameDefinitionStart: (selectFileName, uploadName, index, event) => {
-            const basename = selectFileName.replace(/(.gcode|.cnc|.nc)$/, '');
-            this.props.renameGcodeFile(uploadName, basename, true);
+        onRenameDefinitionStart: (uploadName, index, event) => {
+            this.props.renameGcodeFile(uploadName, null, true);
             event.stopPropagation();
             setTimeout(() => {
                 this.changeNameInput[index].current.focus();
@@ -116,19 +109,19 @@ class WifiTransport extends PureComponent {
         },
         onRenameDefinitionEnd: (uploadName, index) => {
             const newName = this.changeNameInput[index].current.value;
-            this.props.renameGcodeFile(uploadName, newName, false, true);
+            this.props.renameGcodeFile(uploadName, newName, false);
         },
-        onKeyDown: (e) => {
-            let keynum;
-            if (window.event) {
-                keynum = e.keyCode;
-            } else if (e.which) {
-                keynum = e.which;
-            }
-            if (keynum === 13) {
-                e.target.blur();
-            }
-        },
+        // onKeyDown: (e) => {
+        //     let keynum;
+        //     if (window.event) {
+        //         keynum = e.keyCode;
+        //     } else if (e.which) {
+        //         keynum = e.which;
+        //     }
+        //     if (keynum === 13) {
+        //         e.target.blur();
+        //     }
+        // },
         onSelectFile: (selectFileName, name, event) => {
             if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
                 return;
@@ -207,7 +200,7 @@ class WifiTransport extends PureComponent {
                         } else {
                             size = `${(gcodeFile.size).toFixed(2)} B`;
                         }
-                        const lastModifiedDate = gcodeFile.lastModifiedDate;
+                        const lastModifiedDate = new Date(gcodeFile.lastModifiedDate);
                         const date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
                         return (
                             <div
@@ -221,11 +214,9 @@ class WifiTransport extends PureComponent {
                                     onClick={
                                         (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
                                     }
+                                    onKeyDown={() => {}}
                                     role="button"
-                                    onKeyDown={() => {
-                                    }}
                                     tabIndex={0}
-
                                 >
 
                                     <button
@@ -237,7 +228,7 @@ class WifiTransport extends PureComponent {
                                     />
                                     <div className={styles['gcode-file-img']}>
                                         <img
-                                            src={gcodeFile.img}
+                                            src={gcodeFile.thumbnail}
                                             alt=""
                                         />
                                     </div>
@@ -248,14 +239,12 @@ class WifiTransport extends PureComponent {
                                                 { [styles.haveOpacity]: isRenaming === false }
                                             )}
                                             role="button"
-                                            onKeyDown={() => {
-                                            }}
+                                            onKeyDown={() => {}}
                                             tabIndex={0}
-                                            onClick={(event) => actions.onRenameDefinitionStart(gcodeFile.name, uploadName, index, event)}
+                                            onClick={(event) => actions.onRenameDefinitionStart(uploadName, index, event)}
                                         >
                                             <div
                                                 className={styles['gcode-file-text-rename']}
-
                                             >
                                                 {name}
                                             </div>
@@ -270,7 +259,6 @@ class WifiTransport extends PureComponent {
                                                 defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
                                                 className={classNames('input-select')}
                                                 onBlur={() => actions.onRenameDefinitionEnd(uploadName, index)}
-                                                onKeyDown={(event) => actions.onKeyDown(event)}
                                                 ref={this.changeNameInput[index]}
                                             />
                                         </div>
@@ -344,11 +332,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        clearGcode: () => dispatch(workspaceActions.clearGcode()),
-        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        renameGcodeFile: (uploadName, newName, isRenaming, isChangingName) => dispatch(workspaceActions.renameGcodeFile(uploadName, newName, isRenaming, isChangingName)),
+        renameGcodeFile: (uploadName, newName, isRenaming) => dispatch(workspaceActions.renameGcodeFile(uploadName, newName, isRenaming)),
         uploadGcodeFile: (fileInfo) => dispatch(workspaceActions.uploadGcodeFile(fileInfo)),
-        removeGcodeFile: (fileInfo) => dispatch(workspaceActions.removeGcodeFile(fileInfo))
+        removeGcodeFile: (fileInfo) => dispatch(workspaceActions.removeGcodeFile(fileInfo)),
+        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file, false)),
+        uploadGcodeFileToList: (fileInfo) => dispatch(workspaceActions.uploadGcodeFileToList(fileInfo))
     };
 };
 

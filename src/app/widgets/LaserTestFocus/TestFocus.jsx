@@ -27,7 +27,7 @@ class TestFocus extends PureComponent {
             hideInstructions: PropTypes.func
         }),
 
-        addGcode: PropTypes.func.isRequired,
+        renderGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
 
@@ -52,7 +52,7 @@ class TestFocus extends PureComponent {
             const jogSpeed = 1500;
             const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
             this.props.clearGcode();
-            this.props.addGcode('Laser Fine Tune G-code.nc', gcode);
+            this.props.renderGcode('Laser_Fine_Tune_G-code.nc', gcode);
         },
         setLaserFocusZ: () => {
             const z = this.state.z;
@@ -284,7 +284,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
 }
 
 const mapDispatchToProps = (dispatch) => ({
-    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    renderGcode: (name, gcode) => dispatch(workspaceActions.renderGcode(name, gcode)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 

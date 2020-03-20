@@ -3,13 +3,11 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
-import jQuery from 'jquery';
 import includes from 'lodash/includes';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
-import api from '../../api';
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 // import * as widgetManager from './WidgetManager';
@@ -18,10 +16,8 @@ import PrimaryWidgets from './PrimaryWidgets';
 import SecondaryWidgets from './SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
 import {
-    DATA_PREFIX,
     WORKFLOW_STATE_IDLE,
     LASER_GCODE_SUFFIX,
     CNC_GCODE_SUFFIX,
@@ -46,7 +42,9 @@ class Workspace extends PureComponent {
         defaultWidgets: PropTypes.array.isRequired,
         primaryWidgets: PropTypes.array.isRequired,
         secondaryWidgets: PropTypes.array.isRequired,
-        updateTabContainer: PropTypes.func.isRequired
+        updateTabContainer: PropTypes.func.isRequired,
+
+        uploadGcodeFile: PropTypes.func.isRequired
     };
 
     state = {
@@ -86,30 +84,7 @@ class Workspace extends PureComponent {
 
     actions = {
         onDropAccepted: (file) => {
-            // upload then pubsub
-            const formData = new FormData();
-            formData.append('file', file);
-            const displayName = file.name;
-            const uploadName = pathWithRandomSuffix(file.name);
-            formData.append('displayName', displayName);
-            formData.append('uploadName', uploadName);
-            api.uploadFile(formData).then((res) => {
-                const response = res.body;
-                const gcodePath = `${DATA_PREFIX}/${response.uploadName}`;
-                this.props.addGcodeFile({
-                    name: file.name,
-                    uploadName: response.uploadName,
-                    size: file.size,
-                    lastModifiedDate: file.lastModifiedDate,
-                    img: ''
-                });
-                jQuery.get(gcodePath, (result) => {
-                    this.props.clearGcode();
-                    this.props.addGcode(file.name, result, 'line');
-                });
-            }).catch(() => {
-                // Ignore error
-            });
+            this.props.uploadGcodeFile(file);
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
@@ -388,9 +363,7 @@ const mapStateToProps = (state) => {
     };
 };
 const mapDispatchToProps = (dispatch) => ({
-    addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
-    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    uploadGcodeFile: (file) => dispatch(workspaceActions.uploadGcodeFile(file)),
     updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
 });
 

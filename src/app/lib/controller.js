@@ -62,8 +62,10 @@ class SerialPortClient {
         'slice:error': [],
 
         // Async tasks
-        'task:progress': [],
-        'task:completed': []
+        'taskProgress:generateToolPath': [],
+        'taskProgress:generateGcode': [],
+        'taskCompleted:generateToolPath': [],
+        'taskCompleted:generateGcode': []
     };
 
     dataSource = '';
@@ -229,8 +231,12 @@ class SerialPortClient {
         socketController.emit('slice', params);
     }
 
-    commitTask(task) {
-        socketController.emit('task:commit', task);
+    commitToolPathTask(task) {
+        socketController.emit('taskCommit:generateToolPath', task);
+    }
+
+    commitGcodeTask(task) {
+        socketController.emit('taskCommit:generateGcode', task);
     }
 
     // command(cmd, ...args) {

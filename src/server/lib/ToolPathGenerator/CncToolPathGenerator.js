@@ -319,8 +319,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
         const toolPath = this.generateToolPath(svg, modelInfo);
-        const fakeGcode = toolPath.toGcode();
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
+        const fakeGcodes = toolPath.toGcode();
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcodes, modelInfo);
         return toolPathObject;
     }
 }

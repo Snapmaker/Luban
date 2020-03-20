@@ -6,17 +6,19 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { actions as sharedActions } from '../cncLaserShared';
+import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const INITIAL_STATE = {
+    stage: CNC_LASER_STAGE.EMPTY,
+    progress: 0,
     modelGroup: new ModelGroup(),
     toolPathModelGroup: new ToolPathModelGroup(),
     isAllModelsPreviewed: false,
-    isGcodeGenerated: false,
-    gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+    isGcodeGenerating: false,
+    gcodeFile: null,
     // selected
     // model: null,
     selectedModelID: null,
@@ -68,8 +70,25 @@ const INITIAL_STATE = {
 export const actions = {
     init: () => (dispatch) => {
         const controllerEvents = {
-            'task:completed': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult('cnc', taskResult));
+            'taskCompleted:generateToolPath': (taskResult) => {
+                if (taskResult.headerType === 'cnc') {
+                    dispatch(sharedActions.onReceiveTaskResult('cnc', taskResult));
+                }
+            },
+            'taskCompleted:generateGcode': (taskResult) => {
+                if (taskResult.headerType === 'cnc') {
+                    dispatch(sharedActions.onReceiveGcodeTaskResult('cnc', taskResult));
+                }
+            },
+            'taskProgress:generateToolPath': (progress) => {
+                dispatch(sharedActions.updateState('cnc', {
+                    progress: progress
+                }));
+            },
+            'taskProgress:generateGcode': (progress) => {
+                dispatch(sharedActions.updateState('cnc', {
+                    progress: progress
+                }));
             }
         };
 
@@ -94,9 +113,7 @@ export default function reducer(state = INITIAL_STATE, action) {
             }
             case ACTION_RESET_CALCULATED_STATE: {
                 return Object.assign({}, state, {
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
+                    isAllModelsPreviewed: false
                 });
             }
             case ACTION_UPDATE_TRANSFORMATION: {

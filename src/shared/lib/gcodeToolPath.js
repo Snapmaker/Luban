@@ -106,15 +106,15 @@ class ToolPath {
             z: pos.z + this.g92offset.z,
             type: pos.type
         };
-    }
+    };
 
     offsetAddLine = (start, end) => {
         this.fn.addLine(this.modal, this.offsetG92(start), this.offsetG92(end));
-    }
+    };
 
     offsetAddArcCurve = (start, end, center) => {
         this.fn.addArcCurve(this.modal, this.offsetG92(start), this.offsetG92(end), this.offsetG92(center));
-    }
+    };
 
     commentHandlers = {
         ';TYPE': (params) => {
@@ -141,8 +141,16 @@ class ToolPath {
             if (!Number.isNaN(layerHeight)) {
                 this.modal.layerHeight = layerHeight;
             }
+        },
+
+        ';Header Start': () => {
+            this.fn.addHeader({ headerStart: true });
+        },
+
+        ';renderMethod': (params) => {
+            this.fn.addHeader({ renderMethod: params.trim() });
         }
-    }
+    };
 
     handlers = {
         // G0: Rapid Linear Move
@@ -690,7 +698,8 @@ class ToolPath {
             position,
             modal,
             addLine = noop,
-            addArcCurve = noop
+            addArcCurve = noop,
+            addHeader = noop
         } = { ...options };
         this.g92offset.x = 0;
         this.g92offset.y = 0;
@@ -712,7 +721,7 @@ class ToolPath {
         });
         this.setModal(nextModal);
 
-        this.fn = { addLine, addArcCurve };
+        this.fn = { addLine, addArcCurve, addHeader };
 
         const toolpath = new Interpreter({ handlers: this.handlers, commentHandlers: this.commentHandlers });
         toolpath.getPosition = () => ({ ...this.position });

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import {
     // Workflow
     WORKFLOW_STATE_RUNNING,
@@ -10,8 +11,7 @@ import {
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
-
+import { actions } from '../../flux/workspace';
 
 class WorkflowControl extends PureComponent {
     static propTypes = {
@@ -20,14 +20,14 @@ class WorkflowControl extends PureComponent {
         isConnected: PropTypes.bool,
         connectionType: PropTypes.string,
         state: PropTypes.object,
+        renderState: PropTypes.string.isRequired,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
             handleRun: PropTypes.func.isRequired,
             handlePause: PropTypes.func.isRequired,
-            handleStop: PropTypes.func.isRequired,
-            handleAddGcode: PropTypes.func.isRequired,
-            handleUploadGcodeFile: PropTypes.func.isRequired
-        })
+            handleStop: PropTypes.func.isRequired
+        }),
+        uploadGcodeFile: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -81,6 +81,10 @@ class WorkflowControl extends PureComponent {
                     isServerWaiting: false
                 });
             }, 1000);
+        },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            this.props.uploadGcodeFile(file);
         }
     }
 
@@ -89,47 +93,14 @@ class WorkflowControl extends PureComponent {
         this.fileInput.current.click();
     };
 
-    onChangeFile = (event) => {
-        const { actions } = this.props;
-        const file = event.target.files[0];
-        actions.handleUploadGcodeFile(file);
-
-        const reader = new FileReader();
-        reader.onloadend = (e) => {
-            const { result, error } = e.target;
-
-            if (error) {
-                log.error(error);
-                return;
-            }
-
-            log.debug('FileReader:', _.pick(file, [
-                'lastModified',
-                'lastModifiedDate',
-                'meta',
-                'name',
-                'size',
-                'type'
-            ]));
-
-            // actions.uploadFile(result, meta);
-            actions.handleAddGcode(file.name, result);
-        };
-
-        try {
-            reader.readAsText(file);
-        } catch (err) {
-            // Ignore error
-        }
-    };
 
     render() {
         const { state, connectionType, workflowStatus, isConnected } = this.props;
-        const { gcode, workflowState } = state;
+        const { workflowState } = state;
         const { isServerWaiting } = this.state;
         const isWifi = connectionType && connectionType === CONNECTION_TYPE_WIFI;
         const status = isWifi ? workflowStatus : workflowState;
-        const isRendered = gcode.renderState === 'rendered';
+        const isRendered = this.props.renderState === 'rendered';
         const isUploaded = isWifi ? true : this.props.uploadState === 'uploaded';
         const canUpload = _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
@@ -147,7 +118,7 @@ class WorkflowControl extends PureComponent {
                     accept=".gcode, .nc, .cnc"
                     style={{ display: 'none' }}
                     multiple={false}
-                    onChange={this.onChangeFile}
+                    onChange={this.actions.onChangeFile}
                 />
                 <div className="btn-toolbar">
                     <div className="btn-group btn-group-sm">
@@ -208,5 +179,16 @@ class WorkflowControl extends PureComponent {
         );
     }
 }
+const mapStateToProps = (state) => {
+    const workspace = state.workspace;
+    return {
+        renderState: workspace.renderState
+    };
+};
 
-export default WorkflowControl;
+
+const mapDispatchToProps = (dispatch) => ({
+    uploadGcodeFile: (file) => dispatch(actions.uploadGcodeFile(file))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(WorkflowControl);

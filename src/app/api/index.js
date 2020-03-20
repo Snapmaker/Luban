@@ -154,10 +154,10 @@ const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').q
 // G-code
 //
 const loadGCode = defaultAPIFactory((options) => {
-    const { port = '', dataSource = '', name = '', gcode = '' } = { ...options };
+    const { port = '', dataSource = '', uploadName = '' } = { ...options };
     return request
         .post('/api/gcode')
-        .send({ port, dataSource, name, gcode });
+        .send({ port, dataSource, uploadName });
 });
 
 const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({ port, dataSource }));

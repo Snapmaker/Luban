@@ -397,7 +397,6 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),

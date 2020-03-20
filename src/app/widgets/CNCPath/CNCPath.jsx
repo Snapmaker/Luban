@@ -48,7 +48,8 @@ class CNCPath extends PureComponent {
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired
+        onModelAfterTransform: PropTypes.func.isRequired,
+        setAutoPreview: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -123,6 +124,9 @@ class CNCPath extends PureComponent {
                         await this.actions.processTrace();
                     });
             } else {
+                if (uploadMode === 'greyscale') {
+                    this.props.setAutoPreview(false);
+                }
                 this.props.uploadImage(file, uploadMode, () => {
                     modal({
                         title: i18n._('Parse Image Error'),

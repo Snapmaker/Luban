@@ -3,13 +3,11 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Select from 'react-select';
-import { includes, map, find, get } from 'lodash';
-import pubsub from 'pubsub-js';
+import { includes, map } from 'lodash';
 
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 // import controller from '../../lib/controller';
-import api from '../../api';
 import Space from '../../components/Space';
 import { actions } from '../../flux/develop-tools';
 import { screenController } from '../../lib/controller';
@@ -149,29 +147,6 @@ class ScreenConnection extends PureComponent {
         }
         const port = this.state.port;
         log.debug(`Connected to ${port}.`);
-
-        // re-upload G-code
-        let name = '';
-        let gcode = '';
-        api.controllers.get()
-            .then((res) => {
-                let next;
-                const c = find(res.body, { port });
-                if (c) {
-                    next = api.fetchGCode({ port });
-                }
-                return next;
-            })
-            .then((res) => {
-                name = get(res, 'body.name', '');
-                gcode = get(res, 'body.data', '');
-                if (gcode) {
-                    pubsub.publish('gcode:render', { name, gcode });
-                }
-            })
-            .catch(() => {
-                // Empty block
-            });
     }
 
     onPortClosed(options) {

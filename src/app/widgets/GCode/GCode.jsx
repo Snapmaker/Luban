@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import moment from 'moment';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -50,6 +49,7 @@ class GCode extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
 
+        boundingBox: PropTypes.object,
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number,
             received: PropTypes.number,
@@ -86,8 +86,6 @@ class GCode extends PureComponent {
             }
         }
     };
-
-    pubsubTokens = [];
 
     constructor(props) {
         super(props);
@@ -131,19 +129,14 @@ class GCode extends PureComponent {
         };
     }
 
+
     componentDidMount() {
-        this.subscribe();
         this.addControllerEvents();
     }
 
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        const tokens = [
-            pubsub.subscribe('gcode:unload', () => {
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.boundingBox !== this.props.boundingBox) {
+            if (nextProps.boundingBox === null) {
                 this.setState({
                     bbox: {
                         min: {
@@ -163,8 +156,8 @@ class GCode extends PureComponent {
                         }
                     }
                 });
-            }),
-            pubsub.subscribe('gcode:bbox', (msg, bbox) => {
+            } else {
+                const bbox = nextProps.boundingBox;
                 const dX = bbox.max.x - bbox.min.x;
                 const dY = bbox.max.y - bbox.min.y;
                 const dZ = bbox.max.z - bbox.min.z;
@@ -188,16 +181,12 @@ class GCode extends PureComponent {
                         }
                     }
                 });
-            })
-        ];
-        this.pubsubTokens = this.pubsubTokens.concat(tokens);
+            }
+        }
     }
 
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
+    componentWillUnmount() {
+        this.removeControllerEvents();
     }
 
     addControllerEvents() {
@@ -302,10 +291,12 @@ class GCode extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
+    const { boundingBox } = state.workspace;
     const { gcodePrintingInfo } = state.machine;
 
     return {
-        gcodePrintingInfo
+        gcodePrintingInfo,
+        boundingBox
     };
 };
 

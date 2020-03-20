@@ -21,13 +21,11 @@ import {
     WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
-import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
-import { actions } from '../../flux/workspace';
 import { actions as machineActions } from '../../flux/machine';
+import { actions, WORKSPACE_STAGE } from '../../flux/workspace';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
-import GCodeRenderer from './GCodeRenderer';
 import { loadTexture } from './helpers';
 import Loading from './Loading';
 import Rendering from './Rendering';
@@ -37,6 +35,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
 import modalSmallHOC from '../../components/Modal/modal-small';
+import ProgressBar from '../../components/ProgressBar';
 
 
 class Visualizer extends Component {
@@ -47,15 +46,17 @@ class Visualizer extends Component {
         enclosureDoor: PropTypes.bool.isRequired,
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
+        gcodeFile: PropTypes.object,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
-        gcodeList: PropTypes.array.isRequired,
-        addGcode: PropTypes.func.isRequired,
-        uploadGcodeFile: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
-        loadGcode: PropTypes.func.isRequired,
+        renderState: PropTypes.string.isRequired,
+        renderingTimestamp: PropTypes.number.isRequired,
+        stage: PropTypes.number.isRequired,
+        progress: PropTypes.number.isRequired,
         unloadGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired,
+        setGcodePrintingIndex: PropTypes.func.isRequired,
 
         startServerGcode: PropTypes.func.isRequired,
         pauseServerGcode: PropTypes.func.isRequired,
@@ -65,16 +66,16 @@ class Visualizer extends Component {
         gcodePrintingInfo: PropTypes.shape({
             sent: PropTypes.number
         }),
-        workPosition: PropTypes.object
+        workPosition: PropTypes.object,
+
+        modelGroup: PropTypes.object
     };
 
     printableArea = null;
 
-    modelGroup = new THREE.Group();
+    visualizerGroup = new THREE.Group();
 
     canvas = React.createRef();
-
-    gcodeFilenameObject = null;
 
     targetPoint = null;
 
@@ -83,8 +84,6 @@ class Visualizer extends Component {
     toolheadRotationAnimation = null;
 
     pubsubTokens = [];
-
-    gcodeRenderer = null;
 
     pauseStatus = {
         headStatus: false,
@@ -99,8 +98,6 @@ class Visualizer extends Component {
     state = {
         coordinateVisible: true,
         toolheadVisible: true,
-        gcodeFilenameVisible: true,
-        port: controller.port,
         controller: {
             type: controller.type,
             state: controller.state,
@@ -114,7 +111,6 @@ class Visualizer extends Component {
             e: '0.000'
         },
         gcode: {
-            renderState: 'idle', // idle, rendering, rendered
             ready: false,
 
             // Updates by the "sender:status" event
@@ -128,15 +124,10 @@ class Visualizer extends Component {
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port } = options;
+        'serialport:open': () => {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-
-            this.setState({ port }, () => {
-                this.loadGcode();
-            });
+            this.props.setGcodePrintingIndex(0);
         },
         'serialport:close': (options) => {
             const { dataSource } = options;
@@ -146,10 +137,9 @@ class Visualizer extends Component {
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+            this.props.setGcodePrintingIndex(0);
 
             this.setState(() => ({
-                port: controller.port,
                 controller: {
                     type: controller.type,
                     state: controller.state
@@ -176,7 +166,7 @@ class Visualizer extends Component {
                     received
                 }
             });
-            this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
+            this.props.setGcodePrintingIndex(sent);
             this.renderScene();
         },
         'workflow:state': (options) => {
@@ -190,7 +180,7 @@ class Visualizer extends Component {
                     case WORKFLOW_STATE_IDLE:
                         this.stopToolheadRotationAnimation();
                         this.updateWorkPositionToZero();
-                        this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+                        this.props.setGcodePrintingIndex(0);
                         break;
                     case WORKFLOW_STATE_RUNNING:
                         this.startToolheadRotationAnimation();
@@ -412,20 +402,10 @@ class Visualizer extends Component {
         handleClose: () => {
             // dismiss gcode file name
             this.props.clearGcode();
-            this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_IDLE].includes(workflowState)) {
-                // this.destroyPreviousGcodeObject();
                 controller.command('gcode:unload');
-                pubsub.publish('gcode:unload'); // Unload the G-code
             }
-        },
-        handleAddGcode: (name, gcode, renderMethod = 'line') => {
-            this.props.clearGcode();
-            this.props.addGcode(name, gcode, renderMethod);
-        },
-        handleUploadGcodeFile: (file) => {
-            this.props.uploadGcodeFile(file);
         },
         // canvas
         switchCoordinateVisibility: () => {
@@ -448,12 +428,6 @@ class Visualizer extends Component {
             this.canvas.current.zoomOut();
         },
 
-        switchGCodeFilenameVisibility: () => {
-            const visible = !this.state.gcodeFilenameVisible;
-            this.setState({ gcodeFilenameVisible: visible });
-            this.gcodeFilenameObject && (this.gcodeFilenameObject.visible = visible);
-            this.renderScene();
-        },
         switchToolheadVisibility: () => {
             const visible = !this.state.toolheadVisible;
             this.toolhead.visible = visible;
@@ -469,16 +443,6 @@ class Visualizer extends Component {
             this.setState({
                 showEnclosureDoorWarn: false
             });
-        },
-        onOpen: () => {
-            this.stopToolheadRotationAnimation();
-            this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
-        },
-        onClose: () => {
-            this.stopToolheadRotationAnimation();
-            this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
         }
     };
 
@@ -494,6 +458,7 @@ class Visualizer extends Component {
         this.addControllerEvents();
         this.setupToolhead();
         this.setupTargetPoint();
+        this.visualizerGroup.add(this.props.modelGroup);
     }
 
     /**
@@ -504,14 +469,6 @@ class Visualizer extends Component {
      *  - Upload G-code to controller
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.gcodeList !== nextProps.gcodeList) {
-            // Re-render G-code objects
-            this.renderGcodeObjects(nextProps.gcodeList);
-
-            // Upload G-code to controller
-            this.loadGcode(nextProps.gcodeList);
-        }
-
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
@@ -520,16 +477,16 @@ class Visualizer extends Component {
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+            this.props.setGcodePrintingIndex(0);
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_UNKNOWN && nextProps.workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
+            this.props.setGcodePrintingIndex(0);
         }
         if (this.props.workflowStatus !== WORKFLOW_STATUS_RUNNING && nextProps.workflowStatus === WORKFLOW_STATUS_RUNNING) {
             for (let i = 0; i < nextProps.gcodePrintingInfo.sent; i++) {
-                this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(i);
+                this.props.setGcodePrintingIndex(i);
             }
             this.startToolheadRotationAnimation();
             this.renderScene();
@@ -539,8 +496,14 @@ class Visualizer extends Component {
         }
         if (nextProps.gcodePrintingInfo.sent > 0 && nextProps.gcodePrintingInfo.sent !== this.props.gcodePrintingInfo.sent) {
             this.updateWorkPosition(this.props.workPosition);
-            this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(nextProps.gcodePrintingInfo.sent);
+            this.props.setGcodePrintingIndex(nextProps.gcodePrintingInfo.sent);
             this.renderScene();
+        }
+        if (nextProps.renderingTimestamp !== this.props.renderingTimestamp) {
+            this.renderScene();
+        }
+        if (nextProps.renderState === 'rendered' && this.props.renderState !== 'rendered') {
+            this.autoFocus();
         }
     }
 
@@ -554,7 +517,7 @@ class Visualizer extends Component {
             color: colornames('indianred'),
             radius: 0.5
         });
-        this.modelGroup.add(this.targetPoint);
+        this.visualizerGroup.add(this.targetPoint);
     }
 
     setupToolhead() {
@@ -562,76 +525,11 @@ class Visualizer extends Component {
         const url = 'textures/brushed-steel-texture.jpg';
         loadTexture(url, (err, texture) => {
             this.toolhead = new ToolHead(color, texture);
-            this.modelGroup.add(this.toolhead);
+            this.visualizerGroup.add(this.toolhead);
 
             this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
                 .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);
         });
-    }
-
-    calculateBoundingBox(gcodeList) {
-        const box = new THREE.Box3();
-
-        for (const gcodeInfo of gcodeList) {
-            const gcodeObject = this.gcodeRenderer.group.getObjectByName(gcodeInfo.uniqueName);
-
-            // The model group's position and rotation is changed by MSRControl, we can not
-            // call box.expandByObject() directly.
-            const geometry = gcodeObject.geometry;
-            if (geometry !== undefined && geometry.isGeometry) {
-                const vertices = geometry.vertices;
-                for (let i = 0, l = vertices.length; i < l; i++) {
-                    box.expandByPoint(vertices[i]);
-                }
-            }
-        }
-
-        const bbox = { min: box.min, max: box.max };
-
-        // Set gcode bounding box
-        /*
-        controller.context = {
-            ...controller.context,
-            xmin: bbox.min.x,
-            xmax: bbox.max.x,
-            ymin: bbox.min.y,
-            ymax: bbox.max.y,
-            zmin: bbox.min.z,
-            zmax: bbox.max.z
-        };
-        */
-        const context = {
-            ...controller.context,
-            xmin: bbox.min.x,
-            xmax: bbox.max.x,
-            ymin: bbox.min.y,
-            ymax: bbox.max.y,
-            zmin: bbox.min.z,
-            zmax: bbox.max.z
-        };
-        controller.context = context;
-
-        pubsub.publish('gcode:bbox', bbox);
-
-        return bbox;
-    }
-
-    loadGcode(gcodeList) {
-        gcodeList = gcodeList || this.props.gcodeList;
-        if (gcodeList.length === 0) {
-            return;
-        }
-
-        // Upload G-code to controller if connected
-        const { port } = this.state;
-        if (!port) {
-            return;
-        }
-
-        const name = gcodeList[0].name;
-        const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-
-        this.props.loadGcode(port, name, gcode);
     }
 
     unloadGcode() {
@@ -642,22 +540,6 @@ class Visualizer extends Component {
         const tokens = [
             pubsub.subscribe('resize', () => {
                 this.canvas.current.resizeWindow();
-            }),
-            pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
-                this.setState(state => ({
-                    gcode: {
-                        ...state.gcode,
-                        name: name,
-                        content: gcode
-                    }
-                }), () => {
-                    this.renderGcodeObjects();
-                    this.loadGcode();
-                });
-            }),
-            pubsub.subscribe('gcode:unload', () => {
-                controller.command('gcode:unload');
-                this.props.clearGcode();
             })
         ];
         this.pubsubTokens = this.pubsubTokens.concat(tokens);
@@ -682,22 +564,6 @@ class Visualizer extends Component {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
-    }
-
-    updateGcodeFilename(name, x = 0, y = 0, z = 0) {
-        this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
-        const textSize = 5;
-        this.gcodeFilenameObject = new TextSprite({
-            x: x,
-            y: y,
-            z: z,
-            size: textSize,
-            text: `G-code: ${name}`,
-            color: colornames('gray 44'), // grid color
-            opacity: 0.5
-        });
-        this.gcodeFilenameObject.visible = this.state.gcodeFilenameVisible;
-        this.modelGroup.add(this.gcodeFilenameObject);
     }
 
     startToolheadRotationAnimation() {
@@ -732,80 +598,25 @@ class Visualizer extends Component {
         this.targetPoint && this.targetPoint.position.set(x, y, z);
     }
 
-    autoFocus(name = '') {
-        if (!name && this.props.gcodeList.length !== 0) {
-            name = this.props.gcodeList[0].uniqueName;
-        }
-        const gcodeObject = this.modelGroup.getObjectByName(name);
-        this.canvas.current.autoFocus(gcodeObject);
+    autoFocus() {
+        const child = this.props.modelGroup.children[0];
+        this.canvas.current.autoFocus(child);
     }
 
-    clearGcodeObjects() {
-        this.gcodeRenderer && this.modelGroup.remove(this.gcodeRenderer.group);
-
-        this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                renderState: 'idle'
-            }
-        }));
-    }
-
-    // Render G-code objects based on gcodeList, if not provided, use that in props.
-    renderGcodeObjects(gcodeList) {
-        gcodeList = gcodeList || this.props.gcodeList;
-
-        // Stop animation
-        this.stopToolheadRotationAnimation();
-        this.updateWorkPositionToZero();
-        // Remove G-code objects
-        this.clearGcodeObjects();
-
-        // Actually remove all objects
-        if (gcodeList.length === 0) {
-            this.setState(state => ({
-                gcode: {
-                    ...state.gcode,
-                    renderState: 'idle'
-                }
-            }));
-            return;
+    notice() {
+        const { stage, progress } = this.props;
+        switch (stage) {
+            case WORKSPACE_STAGE.EMPTY:
+                return '';
+            case WORKSPACE_STAGE.LOADING_GCODE:
+                return i18n._('Loading Gcode...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case WORKSPACE_STAGE.LOAD_GCODE_SUCCEED:
+                return i18n._('Loaded Gcode successfully.');
+            case WORKSPACE_STAGE.LOAD_GCODE_FAILED:
+                return i18n._('Failed to load Gcode.');
+            default:
+                return '';
         }
-
-        // Change state to 'rendering'
-        this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                renderState: 'rendering'
-            }
-        }));
-
-        // Change state back to 'rendered' after a while
-        setTimeout(() => {
-            this.gcodeRenderer = new GCodeRenderer();
-            this.modelGroup.add(this.gcodeRenderer.group);
-
-            for (const gcodeInfo of gcodeList) {
-                this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
-            }
-
-            // Change state to 'rendered'
-            this.setState(state => ({
-                gcode: {
-                    ...state.gcode,
-                    renderState: 'rendered'
-                }
-            }));
-
-            // Auto focus on first item
-            this.autoFocus(gcodeList[0].uniqueName);
-
-            // Update bounding box & filename
-            const bbox = this.calculateBoundingBox(gcodeList);
-            const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
-            const y = bbox.min.y - 5;
-            this.updateGcodeFilename(gcodeList[0].name, x, y);
-        }, 100);
     }
 
     renderScene() {
@@ -814,12 +625,25 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
+        const notice = this.notice();
+        const { gcodeFile } = this.props;
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+                <div className={styles['visualizer-notice']}>
+                    <p>{notice}</p>
+                </div>
+                <div className={styles['visualizer-progress']}>
+                    <ProgressBar progress={this.props.progress * 100} />
+                </div>
+                {gcodeFile !== null && (
+                    <div className={styles['visualizer-info']}>
+                        <p>{i18n._(gcodeFile.name)}</p>
+                    </div>
+                )}
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
-                    {state.gcode.renderState === 'rendering' && <Rendering />}
+                    {this.props.renderState === 'rendering' && <Rendering />}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
@@ -833,7 +657,7 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
-                        modelGroup={this.modelGroup}
+                        modelGroup={this.visualizerGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
@@ -887,17 +711,21 @@ const mapStateToProps = (state) => {
         connectionType: machine.connectionType,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList,
+        gcodeFile: workspace.gcodeFile,
         gcodePrintingInfo: machine.gcodePrintingInfo,
-        workPosition: machine.workPosition
+        workPosition: machine.workPosition,
+        modelGroup: workspace.modelGroup,
+        renderState: workspace.renderState,
+        renderingTimestamp: workspace.renderingTimestamp,
+        stage: workspace.stage,
+        progress: workspace.progress
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
-    uploadGcodeFile: (file) => dispatch(actions.uploadGcodeFile(file)),
     clearGcode: () => dispatch(actions.clearGcode()),
-    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode()),
+    setGcodePrintingIndex: (index) => dispatch(actions.setGcodePrintingIndex(index)),
 
     startServerGcode: (callback) => dispatch(machineActions.startServerGcode(callback)),
     pauseServerGcode: () => dispatch(machineActions.pauseServerGcode()),

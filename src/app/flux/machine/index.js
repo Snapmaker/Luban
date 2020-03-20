@@ -22,7 +22,7 @@ import { actions as widgetActions } from '../widget';
 import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
-import { actions as workspaceActions, getGcodeName, getGcodeType } from '../workspace';
+import { actions as workspaceActions } from '../workspace';
 import MachineSelectModal from '../../modals/modal-machine-select';
 
 
@@ -243,6 +243,7 @@ export const actions = {
                     isConnected: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTED
                 }));
+                dispatch(workspaceActions.loadGcode());
             },
             'serialport:close': (options) => {
                 const { port } = options;
@@ -285,6 +286,7 @@ export const actions = {
                         z: 0
                     }
                 }));
+                dispatch(workspaceActions.unloadGcode());
             },
             'workflow:state': (options) => {
                 const { workflowState } = options;
@@ -492,7 +494,8 @@ export const actions = {
                             } else if (headType === MACHINE_HEAD_TYPE.CNC.value) {
                                 suffix = 'cnc';
                             }
-                            dispatch(workspaceActions.addGcode(`print.${suffix}`, gcode));
+                            dispatch(workspaceActions.clearGcode());
+                            dispatch(workspaceActions.renderGcode(`print.${suffix}`, gcode));
                         });
                     }
                 } else {
@@ -609,8 +612,9 @@ export const actions = {
             return;
         }
         const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-        const filename = getGcodeName(gcodeList);
-        const type = getGcodeType(gcodeList);
+        // TODO gcodeFile
+        const filename = '11';
+        const type = '22';
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], filename);

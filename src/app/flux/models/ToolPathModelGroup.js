@@ -32,7 +32,7 @@ class ToolPathModelGroup {
             this.selectedToolPathModel = null;
             this.toolPathModels = this.toolPathModels.filter(d => d !== selected);
             this.object.remove(selected.toolPathObj3D);
-            selected.taskID = '';
+            selected.id = '';
             return this._emptyState;
         }
         return null;
@@ -72,38 +72,17 @@ class ToolPathModelGroup {
     }
 
     cancelSelectedPreview() {
-        this.selectedToolPathModel && (this.selectedToolPathModel.taskID = '');
+        this.selectedToolPathModel && (this.selectedToolPathModel.id = '');
     }
 
     getToolPathModelTaskInfo(modelID) {
         const toolPathModel = this.getToolPathModel(modelID);
-        const taskID = uuid.v4();
+        const id = uuid.v4();
         if (toolPathModel) {
-            toolPathModel.taskID = taskID;
+            toolPathModel.id = id;
             return toolPathModel.getTaskInfo();
         }
         return null;
-    }
-
-    getAllBoundingBox() {
-        let boundingBox = null;
-        for (const model of this.toolPathModels) {
-            if (!model.toolPath || !model.toolPath.boundingBox) {
-                continue;
-            }
-            const modelBoundingBox = model.toolPath.boundingBox;
-            if (boundingBox === null) {
-                boundingBox = modelBoundingBox;
-            } else {
-                boundingBox.max.x = boundingBox.max.x ? Math.max(boundingBox.max.x, modelBoundingBox.max.x) : modelBoundingBox.max.x;
-                boundingBox.max.y = boundingBox.max.y ? Math.max(boundingBox.max.y, modelBoundingBox.max.y) : modelBoundingBox.max.y;
-                boundingBox.max.z = boundingBox.max.z ? Math.max(boundingBox.max.z, modelBoundingBox.max.z) : modelBoundingBox.max.z;
-                boundingBox.min.x = boundingBox.min.x ? Math.min(boundingBox.min.x, modelBoundingBox.min.x) : modelBoundingBox.min.x;
-                boundingBox.min.y = boundingBox.min.y ? Math.min(boundingBox.min.y, modelBoundingBox.min.y) : modelBoundingBox.min.y;
-                boundingBox.min.z = boundingBox.min.z ? Math.min(boundingBox.min.z, modelBoundingBox.min.z) : modelBoundingBox.min.z;
-            }
-        }
-        return boundingBox;
     }
 
     updateSelectedPrintOrder(printOrder) {
@@ -140,19 +119,19 @@ class ToolPathModelGroup {
         toolPathModel && toolPathModel.toolPathObj3D && (toolPathModel.toolPathObj3D.visible = false);
     }
 
-    getToolPathModelByTaskID(taskID) {
-        return this.toolPathModels.find(d => d.taskID === taskID);
+    getToolPathModelByID(id) {
+        return this.toolPathModels.find(d => d.id === id);
     }
 
-    async receiveTaskResult(taskResult) {
-        const toolPathModel = this.toolPathModels.find(d => d.taskID === taskResult.taskID);
+    async receiveTaskResult(data, filename) {
+        const toolPathModel = this.toolPathModels.find(d => d.id === data.id);
         if (toolPathModel) {
             toolPathModel.toolPathObj3D && this.object.remove(toolPathModel.toolPathObj3D);
-            const toolPathObj3D = await toolPathModel.loadToolPath(taskResult.filename);
+            const toolPathObj3D = await toolPathModel.loadToolPath(filename);
             if (!toolPathObj3D) {
                 return null;
             }
-            if (toolPathModel.taskID === taskResult.taskID) {
+            if (toolPathModel.id === data.id) {
                 this.object.add(toolPathModel.toolPathObj3D);
                 return this._getState(toolPathModel);
             }
@@ -160,33 +139,33 @@ class ToolPathModelGroup {
         return null;
     }
 
-    generateGcode() {
-        const toolPathModels = this.toolPathModels.map(d => d).sort((d1, d2) => {
-            if (d1.printOrder > d2.printOrder) {
-                return 1;
-            } else if (d1.printOrder < d2.printOrder) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
-        return toolPathModels.map(model => {
-            return {
-                gcode: model.generateGcode(),
-                modelInfo: {
-                    modelID: model.modelID,
-                    estimatedTime: model.estimatedTime,
-                    config: model.config,
-                    gcodeConfig: model.gcodeConfig
-                }
-            };
-        });
-    }
+    // generateGcode() {
+    //     const toolPathModels = this.toolPathModels.map(d => d).sort((d1, d2) => {
+    //         if (d1.printOrder > d2.printOrder) {
+    //             return 1;
+    //         } else if (d1.printOrder < d2.printOrder) {
+    //             return -1;
+    //         } else {
+    //             return 1;
+    //         }
+    //     });
+    //     return toolPathModels.map(model => {
+    //         return {
+    //             gcode: model.generateGcode(),
+    //             modelInfo: {
+    //                 modelID: model.modelID,
+    //                 estimatedTime: model.estimatedTime,
+    //                 config: model.config,
+    //                 gcodeConfig: model.gcodeConfig
+    //             }
+    //         };
+    //     });
+    // }
 
     undoRedo(toolPathModels) {
         for (const toolPathModel of this.toolPathModels) {
             this.object.remove(toolPathModel.toolPathObj3D);
-            toolPathModel.taskID = '';
+            toolPathModel.id = '';
         }
         this.toolPathModels.splice(0);
         for (const toolPathModel of toolPathModels) {
