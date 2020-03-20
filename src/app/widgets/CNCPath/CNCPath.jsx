@@ -23,7 +23,7 @@ const getAccept = (uploadMode) => {
     if (['greyscale'].includes(uploadMode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
     } else if (['vector'].includes(uploadMode)) {
-        accept = '.svg';
+        accept = '.svg, .dxf';
     } else if (['trace'].includes(uploadMode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }

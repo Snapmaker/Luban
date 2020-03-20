@@ -83,7 +83,6 @@ export const actions = {
         api.uploadImage(formData)
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
-
                 dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
             })
             .catch((err) => {
@@ -117,17 +116,16 @@ export const actions = {
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup } = getState()[headerType];
 
-        // const extname = path.extname(uploadName).toLowerCase();
-        // let sourceType;
-        // if (extname === '.svg') {
-        //     sourceType = '.svg';
-        // } else if (extname === '.dxf') {
-        //     sourceType = '.dxf';
-        // } else {
-        //     sourceType = '.raster';
-        // }
-        const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        console.log('generateModel>>>', sourceType);
+        const extname = path.extname(uploadName).toLowerCase();
+        let sourceType;
+        if (extname === '.svg') {
+            sourceType = 'svg';
+        } else if (extname === '.dxf') {
+            sourceType = 'dxf';
+        } else {
+            sourceType = 'raster';
+        }
+        // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
 
         const { width, height } = sizeModelByMachineSize(size, sourceWidth, sourceHeight);
         // Generate geometry
@@ -138,6 +136,7 @@ export const actions = {
         if (!checkParams(headerType, sourceType, mode)) {
             return;
         }
+
 
         const modelDefaultConfigs = generateModelDefaultConfigs(headerType, sourceType, mode);
         let { config } = modelDefaultConfigs;
@@ -190,6 +189,7 @@ export const actions = {
             material,
             transformation
         });
+
         const toolPathModelState = toolPathModelGroup.generateToolPathModel({
             modelID: modelState.selectedModelID,
             config,

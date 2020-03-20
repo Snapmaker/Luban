@@ -6,8 +6,7 @@ import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGPar
 import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
-import { dxfToSegments } from './DXFFill';
-import { parseDxf, dxfFlip, dxfScale, dxfRotate, dxfTranslate, dxfSort, measureBoundary } from '../DXFParser/Parser';
+import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../DXFParser/Parser';
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
 // }
@@ -335,38 +334,79 @@ class LaserToolPathGenerator extends EventEmitter {
         // rotation: degree and counter-clockwise
         const rotationZ = transformation.rotationZ;
         const flipFlag = transformation.flip;
-        const { dxfStr } = await parseDxf(modelPath);
-
-        dxfFlip(dxfStr, flipFlag);
-        dxfScale(dxfStr, {
+        let { svg } = await parseDxf(modelPath);
+        svg = dxfToSvg(svg);
+        updateDxfBoundingBox(svg);
+        // flip(svg, 1);
+        flip(svg, flipFlag);
+        scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
         });
         if (optimizePath) {
-            dxfSort(dxfStr);
+            sortShapes(svg);
         }
-        dxfRotate(dxfStr, -rotationZ); // rotate: unit is radians and counter-clockwise
-        dxfTranslate(dxfStr, -dxfStr.boundary.minX, -dxfStr.boundary.minY);
-        measureBoundary(dxfStr);
+        rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
+        translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
+        // fs.writeFile(modelPath.replace(/(\.dxf)$/, 'laserdxf.json'), JSON.stringify(svg), (err) => {
+        //     if (err) {
+        //         reject(err);
+        //     } else {
+        //         console.log('successful>>>>>>>>>>>>>');
+        //     }
+        // });
 
         const normalizer = new Normalizer(
             'Center',
-            dxfStr.boundary.minX,
-            dxfStr.boundary.maxX,
-            dxfStr.boundary.minY,
-            dxfStr.boundary.maxY,
+            svg.viewBox[0],
+            svg.viewBox[0] + svg.viewBox[2],
+            svg.viewBox[1],
+            svg.viewBox[1] + svg.viewBox[3],
             {
                 x: 1,
                 y: 1
             }
         );
-        const segments = dxfToSegments(dxfStr, {
-            width: dxfStr.boundary.width,
-            height: dxfStr.boundary.height,
+
+
+        const segments = svgToSegments(svg, {
+            width: svg.viewBox[2],
+            height: svg.viewBox[3],
             fillEnabled: fillEnabled,
             fillDensity: fillDensity
         });
+
+        // dxfFlip(dxfStr, flipFlag);
+        // dxfScale(dxfStr, {
+        //     x: targetWidth / originWidth,
+        //     y: targetHeight / originHeight
+        // });
+        // if (optimizePath) {
+        //     dxfSort(dxfStr);
+        // }
+        // dxfRotate(dxfStr, -rotationZ); // rotate: unit is radians and counter-clockwise
+        // dxfTranslate(dxfStr, -dxfStr.boundary.minX, -dxfStr.boundary.minY);
+        // measureBoundary(dxfStr);
+        //
+        //
+        // const normalizer = new Normalizer(
+        //     'Center',
+        //     dxfStr.boundary.minX,
+        //     dxfStr.boundary.maxX,
+        //     dxfStr.boundary.minY,
+        //     dxfStr.boundary.maxY,
+        //     {
+        //         x: 1,
+        //         y: 1
+        //     }
+        // );
+        // const segments = dxfToSegments(dxfStr, {
+        //     width: dxfStr.boundary.width,
+        //     height: dxfStr.boundary.height,
+        //     fillEnabled: fillEnabled,
+        //     fillDensity: fillDensity
+        // });
 
         let firstTurnOn = true;
         function turnOnLaser() {
@@ -451,6 +491,7 @@ class LaserToolPathGenerator extends EventEmitter {
         }
         rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
+
 
         const normalizer = new Normalizer(
             'Center',

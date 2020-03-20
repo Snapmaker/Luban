@@ -153,7 +153,6 @@ class ToolPathModelGroup {
             if (!toolPathObj3D) {
                 return null;
             }
-            console.log('toolPathObj3D', toolPathObj3D);
             if (toolPathModel.taskID === taskResult.taskID) {
                 this.object.add(toolPathModel.toolPathObj3D);
 
