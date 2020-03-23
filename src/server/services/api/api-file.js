@@ -12,11 +12,13 @@ import parseGcodeHeader from '../../lib/parseGcodeHeader';
 const log = logger('api:file');
 
 export const set = (req, res) => {
-    const file = req.files.file;
-    const originalName = path.basename(file.name);
-    const uploadName = pathWithRandomSuffix(originalName);
+    const { uploadName } = req.body;
+    const filePath = req.files.file.path;
+    const displayName = req.files.file.originalFilename;
+    const originalName = path.basename(displayName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    mv(file.path, uploadPath, (err) => {
+
+    mv(filePath, uploadPath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {

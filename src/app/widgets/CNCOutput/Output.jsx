@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import path from 'path';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
@@ -48,6 +49,13 @@ class Output extends PureComponent {
             const thumbnail = this.thumbnail.current.getThumbnail();
             this.props.generateGcode(thumbnail);
         },
+        changeFilenameExt: (fileName) => {
+            if (path.extname(fileName) && ['.svg', '.png', '.jpg', '.jpeg', '.bmp'].includes(path.extname(fileName).toLowerCase())) {
+                const extname = path.extname(fileName);
+                fileName = `${fileName.slice(0, fileName.lastIndexOf(extname))}${CNC_GCODE_SUFFIX}`;
+            }
+            return fileName;
+        },
         onLoadGcode: () => {
             const { gcodeBeans } = this.props;
             if (gcodeBeans.length === 0) {
@@ -58,7 +66,8 @@ class Output extends PureComponent {
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                const fileName = pathWithRandomSuffix(`${gcodeBeans[i].modelInfo.originalName}.${CNC_GCODE_SUFFIX}`);
+                let fileName = (`${gcodeBeans[i].modelInfo.originalName}`);
+                fileName = this.actions.changeFilenameExt(fileName);
                 this.props.addGcode(fileName, gcode, renderMethod);
             }
 
@@ -80,10 +89,15 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = `${gcodeBeans[0].modelInfo.originalName}${CNC_GCODE_SUFFIX}`;
+            let fileName = `${gcodeBeans[0].modelInfo.originalName}`;
+            fileName = this.actions.changeFilenameExt(fileName);
             const file = new File([blob], fileName);
             const formData = new FormData();
             formData.append('file', file);
+            const displayName = file.name;
+            const uploadName = pathWithRandomSuffix(file.name);
+            formData.append('displayName', displayName);
+            formData.append('uploadName', uploadName);
             api.uploadFile(formData).then((res) => {
                 const response = res.body;
                 this.props.addGcodeFile({
@@ -110,7 +124,8 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.originalName}.${CNC_GCODE_SUFFIX}`);
+            let fileName = `${gcodeBeans[0].modelInfo.originalName}`;
+            fileName = this.actions.changeFilenameExt(fileName);
             FileSaver.saveAs(blob, fileName, true);
         },
         onToggleAutoPreview: (event) => {

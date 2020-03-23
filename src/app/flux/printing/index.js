@@ -4,7 +4,7 @@ import { isNil } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PROTOCOL_TEXT } from '../../constants';
-import { timestamp } from '../../../shared/lib/random-utils';
+import { timestamp, pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
@@ -12,6 +12,7 @@ import ModelGroup from '../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 import SerialClient from '../../lib/serialClient';
+
 
 const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
@@ -79,6 +80,7 @@ const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
 
     // G-code
+    gcodeFileName: {},
     gcodePath: '',
     printTime: 0,
     filamentLength: 0,
@@ -195,7 +197,7 @@ export const actions = {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
                 gcodeFileName,
-                gcodePath: `${DATA_PREFIX}/${args.gcodeFileName}`,
+                gcodePath: `${DATA_PREFIX}/${args.gcodeFileName.uploadName}`,
                 printTime,
                 filamentLength,
                 filamentWeight,
@@ -516,11 +518,17 @@ export const actions = {
 
         // Upload model to backend
         const { modelGroup } = getState().printing;
+
         const formData = new FormData();
         formData.append('file', file);
+        const displayName = file.name;
+        const uploadName = pathWithRandomSuffix(file.name);
+        formData.append('displayName', displayName);
+        formData.append('uploadName', uploadName);
         const res = await api.uploadFile(formData);
+
         // const { name, filename } = res.body;
-        const { originalName, uploadName } = res.body;
+        const { originalName } = res.body;
         // const modelPath = `${DATA_PREFIX}/${filename}`;
         // const modelName = name;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
@@ -782,13 +790,12 @@ export const actions = {
         return new Promise((resolve) => {
             const { modelGroup } = getState().printing;
 
-            // const modelPath = modelGroup.getModels()[0].modelPath;
-            // const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+
+            const originalName = modelGroup.getModels()[0].originalName;
             const uploadName = modelGroup.getModels()[0].uploadName;
-            const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+            const uploadPath = `${DATA_PREFIX}/${originalName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
             const stlFileName = `${basenameWithoutExt}.stl`;
-
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
             setTimeout(async () => {
                 // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
@@ -798,6 +805,9 @@ export const actions = {
 
                 const formData = new FormData();
                 formData.append('file', fileOfBlob);
+                const displayName = fileOfBlob.name;
+                formData.append('displayName', displayName);
+                formData.append('uploadName', uploadName);
                 const uploadResult = await api.uploadFile(formData);
 
                 resolve(uploadResult.body);

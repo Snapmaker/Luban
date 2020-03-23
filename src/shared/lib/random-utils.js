@@ -11,11 +11,7 @@ function timestamp() {
     }
     const d = new Date();
 
-    return d.getFullYear()
-        + pad(d.getMonth() + 1)
-        + pad(d.getDate())
-        + pad(d.getHours())
-        + pad(d.getMinutes())
+    return pad(d.getMinutes())
         + pad(d.getMilliseconds())
         + pad(Math.floor(Math.random() * 100));
 }

@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import childProcess from 'child_process';
 
-import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
 import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
 import DataStorage from '../DataStorage';
@@ -95,9 +94,11 @@ function slice(params, onProgress, onSucceed, onError) {
 
     const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
 
-    const gcodeFileName = pathWithRandomSuffix(`${path.parse(originalName).name}.gcode`);
-    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFileName}`;
-
+    const gcodeFileName = {
+        originalName,
+        uploadName: `${path.parse(uploadName).name}.gcode`
+    };
+    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFileName.uploadName}`;
     const process = callCuraEngine(uploadPath, configFilePath, gcodeFilePath);
 
     process.stderr.on('data', (data) => {
@@ -128,6 +129,7 @@ function slice(params, onProgress, onSucceed, onError) {
             sliceProgress = 1;
             onProgress(sliceProgress);
             processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail);
+
             onSucceed({
                 gcodeFileName: gcodeFileName,
                 printTime: printTime,

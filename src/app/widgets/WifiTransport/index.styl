@@ -13,13 +13,18 @@
     background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
 
 .gcode-file
+    &:focus
+        outline: none;
     display: block
+    position: relative
     margin-bottom: 6px
     border: 1px solid
     border-color: $grey-color2
     border-radius: $border-radius
     height: 50px
-    padding: 6px
+    padding: 3px 6px
+
+
 
     &.selected
         border-color: $blue-color
@@ -28,7 +33,17 @@
         -webkit-background-size: 24px
         background-size: 24px
         background-position: 292px 24px
-
+    &-remove
+        display: none
+        background-image: url("../../images/24x24/ic_wifi_remove_straight.jpg")
+        background-color: transparent
+        width: 24px
+        height: 24px
+        background-size: 24px
+        position: absolute;
+        right: 0;
+        top: 0px;
+        border: 0;
     &-img
         display: inline-block
         height: 100%
@@ -38,27 +53,50 @@
 
         img
             height:100%
-
+            width: 54px
+    &-input-name
+        opacity:0
+        position: absolute
+        &.haveOpacity
+            opacity: 1
+            z-index: 3
     &-text
         display: inline-block
+        position: relative
         height: 100%
         width: 60%
         white-space: nowrap
 
+        &-rename
+            display: inline-block
+            cursor: text!important
+            width:100%
         &-name
+            opacity:0
+            position: absolute
+            width: 180px
             font-size: 14px
+            z-index: 2
+            &.haveOpacity
+                opacity: 1
+                z-index: 3
         &-info
+            position: absolute
+            bottom:0
             font-size: 12px
             color: $grey-color
             vertical-align: bottom
-
             span
                 margin-right: 12px
 
-
+.gcode-file:hover .gcode-file-remove
+    display: block
+.gcode-file:hover .gcode-file-rename
+    opacity: 1
 .gcode-file-upload
     background-color: $grey-color3
     text-align: center
+    width: 100%
     vertical-align: middle
     line-height: 40px
     font-size: $font-size-large

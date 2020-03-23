@@ -17,6 +17,7 @@ class ModalSmallHOC extends PureComponent {
         text: PropTypes.string
     };
 
+
     static defaultProps = {
         ...Modal.defaultProps
     };
@@ -72,7 +73,7 @@ class ModalSmallHOC extends PureComponent {
                 }}
                 >
                     <div className={styles['modal-small-img']}>
-                        <img src={img} alt="......" />
+                        <img src={img} width="64" height="64" alt="......" />
                     </div>
                     <div className={styles['modal-small-body-text']}>
                         {i18n._(title)}
@@ -109,18 +110,21 @@ class ModalSmallHOC extends PureComponent {
         );
     }
 }
-
-export default (options) => new Promise((resolve) => {
+export default (options) => {
+    const ref = React.createRef();
     const container = document.createElement('div');
     document.body.appendChild(container);
 
     const props = {
         ...options,
-        onClose: () => {
-            resolve();
-        },
+        // onClose: () => {
+        //     resolve();
+        // },
         container: container
     };
+    ReactDOM.render(<ModalSmallHOC ref={ref} {...props} />, container);
 
-    ReactDOM.render(<ModalSmallHOC {...props} />, container);
-});
+    return {
+        ref: ref
+    };
+};
