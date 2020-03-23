@@ -1,5 +1,9 @@
 Snapmaker Luban
 ===============
+
+[![Build Status](https://travis-ci.org/Snapmaker/Luban.svg?branch=master)](https://travis-ci.org/Snapmaker/Luban)
+[![Build status](https://ci.appveyor.com/api/projects/status/2912jdsm88wcg19g?svg=true)](https://ci.appveyor.com/project/parachvte/luban)
+
 Snapmaker Luban is an easy-to-use 3-in-1 software tailor-made for Snapmaker machines.
 You can customize the printer settings and control the machine using the command panel in Luban anytime with ease.
 The software also provides G-code generation support for 3D models, laser engraving / cutting, and CNC milling.
