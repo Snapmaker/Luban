@@ -218,6 +218,11 @@ export const actions = {
 
     renderGcodeFile: (gcodeFile, needToList = true) => (dispatch, getState) => {
         const oldGcodeFile = getState().workspace.gcodeFile;
+
+        if (needToList) {
+            dispatch(actions.addGcodeFiles(gcodeFile));
+        }
+
         if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
             return;
         }
@@ -229,13 +234,11 @@ export const actions = {
             progress: 0
         }));
         dispatch(actions.loadGcode(gcodeFile));
-        if (needToList) {
-            dispatch(actions.addGcodeFiles(gcodeFile));
-        }
         gcodeRenderingWorker.postMessage({ func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName });
     },
 
     addGcodeFiles: (fileInfo) => (dispatch, getState) => {
+        console.trace(fileInfo);
         const { gcodeFiles } = getState().workspace;
         const files = [];
         fileInfo.isRenaming = false;

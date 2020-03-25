@@ -26,7 +26,7 @@ class Output extends PureComponent {
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
-        gcodeFile: PropTypes.object.isRequired,
+        gcodeFile: PropTypes.object,
         hasModel: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,

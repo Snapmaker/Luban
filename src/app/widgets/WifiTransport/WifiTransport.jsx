@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import _ from 'lodash';
-import jQuery from 'jquery';
 import path from 'path';
+import jQuery from 'jquery';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
@@ -108,20 +108,24 @@ class WifiTransport extends PureComponent {
             }, 0);
         },
         onRenameDefinitionEnd: (uploadName, index) => {
-            const newName = this.changeNameInput[index].current.value;
+            let newName = this.changeNameInput[index].current.value;
+            const m = uploadName.match(/(.gcode|.cnc|.nc)$/);
+            if (m) {
+                newName += m[0];
+            }
             this.props.renameGcodeFile(uploadName, newName, false);
         },
-        // onKeyDown: (e) => {
-        //     let keynum;
-        //     if (window.event) {
-        //         keynum = e.keyCode;
-        //     } else if (e.which) {
-        //         keynum = e.which;
-        //     }
-        //     if (keynum === 13) {
-        //         e.target.blur();
-        //     }
-        // },
+        onKeyDown: (e) => {
+            let keynum;
+            if (window.event) {
+                keynum = e.keyCode;
+            } else if (e.which) {
+                keynum = e.which;
+            }
+            if (keynum === 13) {
+                e.target.blur();
+            }
+        },
         onSelectFile: (selectFileName, name, event) => {
             if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
                 return;
@@ -259,6 +263,7 @@ class WifiTransport extends PureComponent {
                                                 defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
                                                 className={classNames('input-select')}
                                                 onBlur={() => actions.onRenameDefinitionEnd(uploadName, index)}
+                                                onKeyDown={(event) => actions.onKeyDown(event)}
                                                 ref={this.changeNameInput[index]}
                                             />
                                         </div>

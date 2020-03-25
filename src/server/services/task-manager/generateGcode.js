@@ -1,5 +1,6 @@
 import fs from 'fs';
 import _ from 'lodash';
+import path from 'path';
 import DataStorage from '../../DataStorage';
 import { GcodeGenerator } from '../../lib/GcodeGenerator';
 import logger from '../../lib/logger';
@@ -60,7 +61,7 @@ export const generateGcode = (modelInfos, onProgress) => {
     let boundingBox = null;
 
     const { uploadName } = modelInfos[0];
-    const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
+    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name) + suffix;
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
@@ -15,7 +16,7 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     // const { mode, source } = modelInfo;
     // const originFilename = source.filename;
     const { sourceType, mode, uploadName } = modelInfo;
-    const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
+    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name) + suffix;
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
