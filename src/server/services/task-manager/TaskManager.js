@@ -3,7 +3,6 @@ import logger from '../../lib/logger';
 import { generateToolPath } from './generateToolPath';
 import { generateGcode } from './generateGcode';
 
-
 const log = logger('service:TaskManager');
 
 const MAX_TRY_COUNT = 2;
@@ -79,10 +78,7 @@ class TaskManager extends EventEmitter {
             const res = await generateToolPath(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    this.emit('taskProgress:generateGcode', {
-                        progress: p,
-                        headType: taskSelected.headType
-                    });
+                    taskSelected.socket.emit('taskProgress:generateGcode', this.getTaskData(taskSelected));
                 }
             });
 
@@ -90,8 +86,7 @@ class TaskManager extends EventEmitter {
             if (taskSelected.taskStatus !== TASK_STATUS_DEPRECATED) {
                 taskSelected.taskStatus = TASK_STATUS_COMPLETED;
                 taskSelected.finishTime = new Date().getTime();
-
-                this.emit('taskCompleted:generateToolPath', taskSelected);
+                taskSelected.socket.emit('taskCompleted:generateToolPath', this.getTaskData(taskSelected));
             }
         } catch (e) {
             log.error(e);
@@ -102,7 +97,7 @@ class TaskManager extends EventEmitter {
                 taskSelected.taskStatus = TASK_STATUS_FAILED;
                 taskSelected.finishTime = new Date().getTime();
 
-                this.emit('taskCompleted:generateToolPath', taskSelected);
+                taskSelected.socket.emit('taskCompleted:generateToolPath', this.getTaskData(taskSelected));
             }
         }
     }
@@ -113,10 +108,7 @@ class TaskManager extends EventEmitter {
             const res = await generateGcode(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    this.emit('taskProgress:generateGcode', {
-                        progress: p,
-                        headType: taskSelected.headType
-                    });
+                    taskSelected.socket.emit('taskProgress:generateGcode', this.getTaskData(taskSelected));
                 }
             });
 
@@ -125,7 +117,7 @@ class TaskManager extends EventEmitter {
                 taskSelected.taskStatus = TASK_STATUS_COMPLETED;
                 taskSelected.finishTime = new Date().getTime();
 
-                this.emit('taskCompleted:generateGcode', taskSelected);
+                taskSelected.socket.emit('taskCompleted:generateGcode', this.getTaskData(taskSelected));
             }
         } catch (e) {
             log.error(e);
@@ -136,13 +128,14 @@ class TaskManager extends EventEmitter {
                 taskSelected.taskStatus = TASK_STATUS_FAILED;
                 taskSelected.finishTime = new Date().getTime();
 
-                this.emit('taskCompleted:generateGcode', taskSelected);
+                taskSelected.socket.emit('taskCompleted:generateGcode', this.getTaskData(taskSelected));
             }
         }
     }
 
-    addTask(data, taskId, headType, taskType) {
+    addTask(socket, data, taskId, headType, taskType) {
         const task = {};
+        this.socket = socket;
         task.taskId = taskId;
         task.taskType = taskType;
         task.headType = headType;
@@ -166,6 +159,13 @@ class TaskManager extends EventEmitter {
         });
         // TODO: Memory leak after long time use. It's too small? ignore?
         // every model only after one entry.
+    }
+
+    getTaskData(task) {
+        return {
+            ...task,
+            socket: null
+        };
     }
 }
 

@@ -94,7 +94,6 @@ class SocketServer extends EventEmitter {
 
             this.emit('disconnection', socket);
 
-            // Remove from socket pool
             this.sockets.splice(this.sockets.indexOf(socket), 1);
         });
     };
