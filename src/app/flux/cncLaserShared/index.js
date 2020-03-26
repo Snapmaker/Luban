@@ -366,7 +366,13 @@ export const actions = {
         }));
     },
 
-    // gcode
+    /**
+     * Generate G-code.
+     *
+     * @param from
+     * @param thumbnail G-code thumbnail should be included in G-code header.
+     * @returns {Function}
+     */
     generateGcode: (from, thumbnail) => (dispatch, getState) => {
         const modelInfos = [];
         const { modelGroup, toolPathModelGroup } = getState()[from];
@@ -406,7 +412,13 @@ export const actions = {
         }));
     },
 
-
+    /**
+     * Callback function trigger by event when G-code generated.
+     *
+     * @param from
+     * @param taskResult
+     * @returns {Function}
+     */
     onReceiveGcodeTaskResult: (from, taskResult) => async (dispatch) => {
         dispatch(actions.updateState(
             from, {

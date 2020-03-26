@@ -139,7 +139,7 @@ class TaskManager extends EventEmitter {
         const task = {};
         task.taskId = taskId;
         task.taskType = taskType;
-        task.headerType = headerType;
+        task.headerType = headerType; // TODO: rename to headType
         task.data = data;
         task.taskStatus = TASK_STATUS_IDLE; // idle, previewing, previewed, deprecated
         task.failedCount = 0;

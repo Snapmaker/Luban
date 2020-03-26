@@ -120,6 +120,13 @@ export const actions = {
         ));
     },
 
+    /**
+     * Upload file to backend.
+     * (and add to file transfer)
+     *
+     * @param file
+     * @returns {Function}
+     */
     uploadGcodeFileToList: (file) => (dispatch) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -140,12 +147,19 @@ export const actions = {
             });
     },
 
+    /**
+     * Upload file to backend.
+     * (and add to file transfer)
+     * (and render it)
+     *
+     * @param file
+     * @returns {Function}
+     */
     uploadGcodeFile: (file) => (dispatch) => {
         const formData = new FormData();
         formData.append('file', file);
         const uploadName = pathWithRandomSuffix(file.name);
         formData.append('uploadName', uploadName);
-
 
         api.uploadFile(formData)
             .then((res) => {
@@ -291,6 +305,12 @@ export const actions = {
         }));
     },
 
+    /**
+     * Tell controller to load G-code.
+     *
+     * @param gcodeFile An object that contains information of G-code file.
+     * @returns {Promise}
+     */
     loadGcode: (gcodeFile) => async (dispatch, getState) => {
         const { connectionStatus, port } = getState().machine;
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
