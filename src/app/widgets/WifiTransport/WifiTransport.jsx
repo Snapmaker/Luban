@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import path from 'path';
-import jQuery from 'jquery';
+import request from 'superagent';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
@@ -71,8 +71,9 @@ class WifiTransport extends PureComponent {
                 return;
             }
             const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
-            jQuery.get(gcodePath, (result) => {
-                const blob = new Blob([result], { type: 'text/plain' });
+            request.get(gcodePath).end((err1, res) => {
+                const gcode = res.text;
+                const blob = new Blob([gcode], { type: 'text/plain' });
                 const file = new File([blob], find.name);
                 this.props.server.uploadFile(find.name, file, (err, data, text) => {
                     isSendingFile.current.removeContainer();
@@ -100,14 +101,14 @@ class WifiTransport extends PureComponent {
             }
             this.props.renderGcodeFile(find);
         },
-        onRenameDefinitionStart: (uploadName, index, event) => {
+        onRenameStart: (uploadName, index, event) => {
             this.props.renameGcodeFile(uploadName, null, true);
             event.stopPropagation();
             setTimeout(() => {
                 this.changeNameInput[index].current.focus();
             }, 0);
         },
-        onRenameDefinitionEnd: (uploadName, index) => {
+        onRenameEnd: (uploadName, index) => {
             let newName = this.changeNameInput[index].current.value;
             const m = uploadName.match(/(.gcode|.cnc|.nc)$/);
             if (m) {
@@ -245,7 +246,7 @@ class WifiTransport extends PureComponent {
                                             role="button"
                                             onKeyDown={() => {}}
                                             tabIndex={0}
-                                            onClick={(event) => actions.onRenameDefinitionStart(uploadName, index, event)}
+                                            onClick={(event) => actions.onRenameStart(uploadName, index, event)}
                                         >
                                             <div
                                                 className={styles['gcode-file-text-rename']}
@@ -262,7 +263,7 @@ class WifiTransport extends PureComponent {
                                             <input
                                                 defaultValue={gcodeFile.name.replace(/(.gcode|.cnc|.nc)$/, '')}
                                                 className={classNames('input-select')}
-                                                onBlur={() => actions.onRenameDefinitionEnd(uploadName, index)}
+                                                onBlur={() => actions.onRenameEnd(uploadName, index)}
                                                 onKeyDown={(event) => actions.onKeyDown(event)}
                                                 ref={this.changeNameInput[index]}
                                             />

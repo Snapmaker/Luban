@@ -20,11 +20,11 @@ const stop = () => {
 };
 
 const addGenerateToolPathTask = (socket, task) => {
-    instance.addTask(task.data, task.taskId, task.headerType, TASK_TYPE_GENERATE_TOOLPATH);
+    instance.addTask(task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_TOOLPATH);
 };
 
 const addGenerateGcodeTask = (socket, task) => {
-    instance.addTask(task.data, task.taskId, task.headerType, TASK_TYPE_GENERATE_GCODE);
+    instance.addTask(task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_GCODE);
 };
 
 const onConnection = (socket) => {

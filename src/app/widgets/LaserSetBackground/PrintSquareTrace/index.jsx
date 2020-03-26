@@ -106,7 +106,7 @@ class PrintSquareTrace extends PureComponent {
 
             const gcodeStr = generateSquareGcode(size, sideLength, power);
             this.props.clearGcode();
-            this.props.renderGcode('Laser_Coordinating_G-code.nc', gcodeStr);
+            this.props.renderGcode('Laser_Coordinating.nc', gcodeStr);
 
             setTimeout(() => {
                 controller.command('gcode:start');

@@ -71,24 +71,28 @@ export const actions = {
     init: () => (dispatch) => {
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
-                if (taskResult.headerType === 'cnc') {
+                if (taskResult.headType === 'cnc') {
                     dispatch(sharedActions.onReceiveTaskResult('cnc', taskResult));
                 }
             },
             'taskCompleted:generateGcode': (taskResult) => {
-                if (taskResult.headerType === 'cnc') {
+                if (taskResult.headType === 'cnc') {
                     dispatch(sharedActions.onReceiveGcodeTaskResult('cnc', taskResult));
                 }
             },
-            'taskProgress:generateToolPath': (progress) => {
-                dispatch(sharedActions.updateState('cnc', {
-                    progress: progress
-                }));
+            'taskProgress:generateToolPath': (taskResult) => {
+                if (taskResult.headType === 'cnc') {
+                    dispatch(sharedActions.updateState('cnc', {
+                        progress: taskResult.progress
+                    }));
+                }
             },
-            'taskProgress:generateGcode': (progress) => {
-                dispatch(sharedActions.updateState('cnc', {
-                    progress: progress
-                }));
+            'taskProgress:generateGcode': (taskResult) => {
+                if (taskResult.headType === 'cnc') {
+                    dispatch(sharedActions.updateState('cnc', {
+                        progress: taskResult.progress
+                    }));
+                }
             }
         };
 

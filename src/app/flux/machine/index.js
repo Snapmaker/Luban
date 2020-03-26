@@ -1,5 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import _ from 'lodash';
+import request from 'superagent';
 import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
@@ -11,7 +12,7 @@ import {
     WORKFLOW_STATUS_RUNNING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_STATUS_CONNECTING,
-    CONNECTION_STATUS_CONNECTED, MACHINE_HEAD_TYPE, LASER_MOCK_PLATE_HEIGHT
+    CONNECTION_STATUS_CONNECTED, MACHINE_HEAD_TYPE, LASER_MOCK_PLATE_HEIGHT, DATA_PREFIX
 } from '../../constants';
 
 import { valueOf } from '../../lib/contants-utils';
@@ -605,61 +606,66 @@ export const actions = {
     },
 
     startServerGcode: (callback) => (dispatch, getState) => {
-        const { server, size, workflowStatus, isLaserPrintAutoMode, series, laserFocalLength, materialThickness } = getState().machine;
-        const { gcodeList } = getState().workspace;
+        const { server, size, workflowStatus, isLaserPrintAutoMode, series, headType, laserFocalLength, materialThickness } = getState().machine;
+        const { gcodeFile } = getState().workspace;
         const { background } = getState().laser;
-        if (workflowStatus !== WORKFLOW_STATUS_IDLE || !gcodeList || gcodeList.length === 0) {
+        if (workflowStatus !== WORKFLOW_STATUS_IDLE || gcodeFile === null) {
             return;
         }
-        const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-        // TODO gcodeFile
-        const filename = '11';
-        const type = '22';
 
-        const blob = new Blob([gcode], { type: 'text/plain' });
-        const file = new File([blob], filename);
-        const promises = [];
-        if (series !== MACHINE_SERIES.ORIGINAL.value && type === 'Laser') {
-            if (isLaserPrintAutoMode && laserFocalLength) {
-                const promise = new Promise((resolve) => {
-                    server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
-                        resolve();
-                    });
-                });
-                promises.push(promise);
+        const gcodeFilePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
+
+        request.get(gcodeFilePath).end((err, res) => {
+            if (err) {
+                return;
             }
+            const gcode = res.text;
 
-            // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-            if (background.enabled) {
-                const { workPosition, originOffset } = getState().machine;
-                let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
-                let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
-
-                // Fix bug for x or y out of range
-                x = Math.max(0, Math.min(x, size.x - 20));
-                y = Math.max(0, Math.min(y, size.y - 20));
-
-                const promise = new Promise((resolve) => {
-                    server.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`, () => {
-                        resolve();
+            const blob = new Blob([gcode], { type: 'text/plain' });
+            const file = new File([blob], gcodeFile.name);
+            const promises = [];
+            if (series !== MACHINE_SERIES.ORIGINAL.value && headType === MACHINE_HEAD_TYPE.LASER.value) {
+                if (isLaserPrintAutoMode && laserFocalLength) {
+                    const promise = new Promise((resolve) => {
+                        server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {
+                            resolve();
+                        });
                     });
-                });
-                promises.push(promise);
-            }
-        }
-        Promise.all(promises).then(() => {
-            server.uploadGcodeFile(filename, file, type, (msg) => {
-                if (msg) {
-                    return;
+                    promises.push(promise);
                 }
-                server.startGcode((err) => {
-                    if (err) {
-                        callback && callback(err);
+
+                // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+                if (background.enabled) {
+                    const { workPosition, originOffset } = getState().machine;
+                    let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
+                    let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
+
+                    // Fix bug for x or y out of range
+                    x = Math.max(0, Math.min(x, size.x - 20));
+                    y = Math.max(0, Math.min(y, size.y - 20));
+
+                    const promise = new Promise((resolve) => {
+                        server.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`, () => {
+                            resolve();
+                        });
+                    });
+                    promises.push(promise);
+                }
+            }
+            Promise.all(promises).then(() => {
+                server.uploadGcodeFile(gcodeFile.name, file, headType, (msg) => {
+                    if (msg) {
                         return;
                     }
-                    dispatch(actions.updateState({
-                        workflowStatus: WORKFLOW_STATUS_RUNNING
-                    }));
+                    server.startGcode((err2) => {
+                        if (err2) {
+                            callback && callback(err2);
+                            return;
+                        }
+                        dispatch(actions.updateState({
+                            workflowStatus: WORKFLOW_STATUS_RUNNING
+                        }));
+                    });
                 });
             });
         });

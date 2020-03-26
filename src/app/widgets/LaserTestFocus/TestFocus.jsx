@@ -52,7 +52,7 @@ class TestFocus extends PureComponent {
             const jogSpeed = 1500;
             const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
             this.props.clearGcode();
-            this.props.renderGcode('Laser_Fine_Tune_G-code.nc', gcode);
+            this.props.renderGcode('Laser_Fine_Tune.nc', gcode);
         },
         setLaserFocusZ: () => {
             const z = this.state.z;

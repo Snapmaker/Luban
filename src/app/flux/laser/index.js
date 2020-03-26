@@ -75,24 +75,28 @@ export const actions = {
     init: () => (dispatch) => {
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
-                if (taskResult.headerType === 'laser') {
+                if (taskResult.headType === 'laser') {
                     dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
                 }
             },
             'taskCompleted:generateGcode': (taskResult) => {
-                if (taskResult.headerType === 'laser') {
+                if (taskResult.headType === 'laser') {
                     dispatch(sharedActions.onReceiveGcodeTaskResult('laser', taskResult));
                 }
             },
-            'taskProgress:generateToolPath': (progress) => {
-                dispatch(sharedActions.updateState('laser', {
-                    progress: progress
-                }));
+            'taskProgress:generateToolPath': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.updateState('laser', {
+                        progress: taskResult.progress
+                    }));
+                }
             },
-            'taskProgress:generateGcode': (progress) => {
-                dispatch(sharedActions.updateState('laser', {
-                    progress: progress
-                }));
+            'taskProgress:generateGcode': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.updateState('laser', {
+                        progress: taskResult.progress
+                    }));
+                }
             }
         };
 

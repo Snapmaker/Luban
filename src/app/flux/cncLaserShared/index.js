@@ -404,8 +404,8 @@ export const actions = {
                 isGcodeGenerating: true
             }
         ));
-        modelInfos[0].thumbnail = thumbnail;
-        controller.commitGcodeTask({ taskId: uuid.v4(), headerType: from, data: orderModelInfos });
+        orderModelInfos[0].thumbnail = thumbnail;
+        controller.commitGcodeTask({ taskId: uuid.v4(), headType: from, data: orderModelInfos });
         dispatch(actions.updateState(from, {
             stage: CNC_LASER_STAGE.GENERATING_GCODE,
             progress: 0
@@ -744,7 +744,7 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headerType: from, data: taskInfo });
+                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: from, data: taskInfo });
                     dispatch(actions.updateState(from, {
                         stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: 0
@@ -765,7 +765,7 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headerType: from, data: taskInfo });
+                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: from, data: taskInfo });
                     dispatch(actions.updateState(from, {
                         stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: 0

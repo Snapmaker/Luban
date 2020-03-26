@@ -227,6 +227,13 @@ export class Server extends events.EventEmitter {
             return;
         }
         const api = `${this.host}/api/v1/prepare_print`;
+        if (type === MACHINE_HEAD_TYPE['3DP'].value) {
+            type = '3DP';
+        } else if (type === MACHINE_HEAD_TYPE.LASER.value) {
+            type = 'Laser';
+        } else if (type === MACHINE_HEAD_TYPE.CNC.value) {
+            type = 'CNC';
+        }
         request
             .post(api)
             .field('token', this.token)

@@ -79,7 +79,10 @@ class TaskManager extends EventEmitter {
             const res = await generateToolPath(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    this.emit('taskProgress:generateToolPath', p);
+                    this.emit('taskProgress:generateGcode', {
+                        progress: p,
+                        headType: taskSelected.headType
+                    });
                 }
             });
 
@@ -110,7 +113,10 @@ class TaskManager extends EventEmitter {
             const res = await generateGcode(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    this.emit('taskProgress:generateGcode', p);
+                    this.emit('taskProgress:generateGcode', {
+                        progress: p,
+                        headType: taskSelected.headType
+                    });
                 }
             });
 
@@ -135,11 +141,11 @@ class TaskManager extends EventEmitter {
         }
     }
 
-    addTask(data, taskId, headerType, taskType) {
+    addTask(data, taskId, headType, taskType) {
         const task = {};
         task.taskId = taskId;
         task.taskType = taskType;
-        task.headerType = headerType; // TODO: rename to headType
+        task.headType = headType;
         task.data = data;
         task.taskStatus = TASK_STATUS_IDLE; // idle, previewing, previewed, deprecated
         task.failedCount = 0;
