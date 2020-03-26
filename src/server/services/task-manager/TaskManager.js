@@ -78,7 +78,10 @@ class TaskManager extends EventEmitter {
             const res = await generateToolPath(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    taskSelected.socket.emit('taskProgress:generateGcode', this.getTaskData(taskSelected));
+                    taskSelected.socket.emit('taskProgress:generateGcode', {
+                        progress: p,
+                        headType: taskSelected.headType
+                    });
                 }
             });
 
@@ -108,7 +111,10 @@ class TaskManager extends EventEmitter {
             const res = await generateGcode(taskSelected.data, (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    taskSelected.socket.emit('taskProgress:generateGcode', this.getTaskData(taskSelected));
+                    taskSelected.socket.emit('taskProgress:generateGcode', {
+                        progress: p,
+                        headType: taskSelected.headType
+                    });
                 }
             });
 
@@ -135,7 +141,7 @@ class TaskManager extends EventEmitter {
 
     addTask(socket, data, taskId, headType, taskType) {
         const task = {};
-        this.socket = socket;
+        task.socket = socket;
         task.taskId = taskId;
         task.taskType = taskType;
         task.headType = headType;
@@ -157,8 +163,6 @@ class TaskManager extends EventEmitter {
             return t.taskStatus !== TASK_STATUS_DEPRECATED
                 && (t.finishTime === 0 || t.finishTime > now - 60 * 10);
         });
-        // TODO: Memory leak after long time use. It's too small? ignore?
-        // every model only after one entry.
     }
 
     getTaskData(task) {
