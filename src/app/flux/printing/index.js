@@ -3,35 +3,18 @@ import path from 'path';
 import { isNil } from 'lodash';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PROTOCOL_TEXT } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp, pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+
+
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
 import ModelGroup from '../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
-import SerialClient from '../../lib/serialClient';
+import { controller } from '../../lib/controller';
 
-
-const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
-
-// // return true if tran1 equals tran2 uploadModel
-// const customCompareTransformation = (tran1, tran2) => {
-//     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
-//     const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
-//     return (
-//         Math.abs(px1 - px2) < EPSILON
-//         && Math.abs(pz1 - pz2) < EPSILON
-//         && Math.abs(rx1 - rx2) < EPSILON
-//         && Math.abs(ry1 - ry2) < EPSILON
-//         && Math.abs(rz1 - rz2) < EPSILON
-//         && Math.abs(sx1 - sx2) < EPSILON
-//         && Math.abs(sy1 - sy2) < EPSILON
-//         && Math.abs(sz1 - sz2) < EPSILON
-//     );
-// };
-// return true if tran1 equals tran2 uploadModel
 // eslint-disable-next-line no-unused-vars
 const customCompareTransformation = (tran1, tran2) => {
     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
@@ -80,8 +63,7 @@ const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
 
     // G-code
-    gcodeFileName: {},
-    gcodePath: '',
+    gcodeFile: null,
     printTime: 0,
     filamentLength: 0,
     filamentWeight: 0,
@@ -194,17 +176,22 @@ export const actions = {
             }));
         });
         controller.on('slice:completed', (args) => {
-            const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
+            const { gcodeFilename, gcodeFileLength, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
-                gcodeFileName,
-                gcodePath: `${DATA_PREFIX}/${args.gcodeFileName.uploadName}`,
+                gcodeFile: {
+                    name: gcodeFilename,
+                    uploadName: gcodeFilename,
+                    size: gcodeFileLength,
+                    lastModifiedDate: new Date().getTime(),
+                    thumbnail: ''
+                },
                 printTime,
                 filamentLength,
                 filamentWeight,
                 stage: PRINTING_STAGE.SLICE_SUCCEED,
                 progress: 1
             }));
-            dispatch(actions.loadGcode(gcodeFileName));
+            dispatch(actions.loadGcode(gcodeFilename));
         });
         controller.on('slice:progress', (progress) => {
             const state = getState().printing;
@@ -521,9 +508,7 @@ export const actions = {
 
         const formData = new FormData();
         formData.append('file', file);
-        const displayName = file.name;
         const uploadName = pathWithRandomSuffix(file.name);
-        formData.append('displayName', displayName);
         formData.append('uploadName', uploadName);
         const res = await api.uploadFile(formData);
 

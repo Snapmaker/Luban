@@ -6,14 +6,23 @@ import isFunction from 'lodash/isFunction';
 
 // 17 digits
 function timestamp() {
-    function pad(n) {
+    function pad2(n) {
         return n < 10 ? `0${n}` : `${n}`;
+    }
+    function pad3(n) {
+        if (n < 10) {
+            return `00${n}`;
+        } else if (n < 100) {
+            return `0${n}`;
+        } else {
+            return `${n}`;
+        }
     }
     const d = new Date();
 
-    return pad(d.getMinutes())
-        + pad(d.getMilliseconds())
-        + pad(Math.floor(Math.random() * 100));
+    return pad2(d.getMinutes())
+        + pad3(d.getMilliseconds())
+        + pad3(Math.floor(Math.random() * 100));
 }
 
 /**
@@ -26,7 +35,7 @@ function pathWithRandomSuffix(pathString) {
         const pathInfo = path.parse(pathString);
 
         // remove previous added timestamp
-        const normalName = pathInfo.name.replace(/_[0-9]{17}$/, '');
+        const normalName = pathInfo.name.replace(/_[0-9]{8}$/, '');
 
         // use substring of length 30 to avoid save issue on Windows
         pathInfo.name = `${normalName.substr(0, 30)}_${timestamp()}`;
@@ -44,7 +53,7 @@ function pathWithRandomSuffix(pathString) {
         const ext = basename.substr(dot + 1);
 
         // remove previous added timestamp
-        const normalName = name.replace(/_[0-9]{17}$/, '');
+        const normalName = name.replace(/_[0-9]{8}$/, '');
 
         // use substring of length 30 to avoid save issue on Windows
         return `${normalName.substr(0, 30)}_${timestamp()}.${ext}`;

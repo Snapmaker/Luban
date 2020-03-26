@@ -51,7 +51,8 @@ export function serverStartDevelopment(cb) {
             'restart': "osascript -e 'display notification \"App restarted due to:\n'$FILENAME'\" with title \"nodemon\"'"
         },
         watch: [
-            'src/server/'
+            'src/server/',
+            'src/shared/'
         ],
         env: {
             'NODE_ENV': 'development'

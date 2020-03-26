@@ -9,8 +9,8 @@ class GcodeParser {
         this.estimatedTime = 0;
     }
 
-    parseGcodeToToolPathObj(fakeGcode, modelInfo) {
-        if (!fakeGcode || !modelInfo) {
+    parseGcodeToToolPathObj(fakeGcodes, modelInfo) {
+        if (!fakeGcodes || !modelInfo) {
             return null;
         }
         if (!['cnc', 'laser', '3dp'].includes(modelInfo.headerType)) {
@@ -21,7 +21,6 @@ class GcodeParser {
         const { positionX, positionY, positionZ } = transformation;
         const { jogSpeed, workSpeed, dwellTime } = gcodeConfig;
 
-        const lines = fakeGcode.split('\n');
         const startPoint = {
             X: undefined,
             Y: undefined,
@@ -39,8 +38,8 @@ class GcodeParser {
                 z: 0
             }
         };
-        for (let i = 0; i < lines.length; i++) {
-            this.parseLine(lines[i].trim());
+        for (let i = 0; i < fakeGcodes.length; i++) {
+            this.parseLine(fakeGcodes[i].trim());
             const lineObject = this.data[i];
             if (lineObject.G === 4) {
                 this.estimatedTime += dwellTime * 0.001;
@@ -65,6 +64,7 @@ class GcodeParser {
         boundingBox.min.x += positionX;
         boundingBox.max.y += positionY;
         boundingBox.min.y += positionY;
+
         return {
             headerType: headerType,
             mode: mode,

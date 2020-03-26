@@ -1,5 +1,6 @@
 import path from 'path';
 import * as THREE from 'three';
+import uuid from 'uuid';
 import api from '../../api';
 import { controller } from '../../lib/controller';
 import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkParams } from '../models/ModelInfoUtils';
@@ -12,6 +13,20 @@ import {
     ACTION_UPDATE_GCODE_CONFIG,
     ACTION_UPDATE_CONFIG
 } from '../actionType';
+
+
+export const CNC_LASER_STAGE = {
+    EMPTY: 0,
+    GENERATING_TOOLPATH: 1,
+    GENERATE_TOOLPATH_SUCCESS: 2,
+    GENERATE_TOOLPATH_FAILED: 3,
+    PREVIEWING: 4,
+    PREVIEW_SUCCESS: 5,
+    PREVIEW_FAILED: 6,
+    GENERATING_GCODE: 7,
+    GENERATE_GCODE_SUCCESS: 8,
+    GENERATE_GCODE_FAILED: 9
+};
 
 // from: cnc/laser
 export const actions = {
@@ -351,59 +366,85 @@ export const actions = {
         }));
     },
 
-    // gcode
+    /**
+     * Generate G-code.
+     *
+     * @param from
+     * @param thumbnail G-code thumbnail should be included in G-code header.
+     * @returns {Function}
+     */
     generateGcode: (from, thumbnail) => (dispatch, getState) => {
+        const modelInfos = [];
         const { modelGroup, toolPathModelGroup } = getState()[from];
-        // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
-        const gcodeBeans = toolPathModelGroup.generateGcode();
-        let estimatedTime = 0;
-        let fileTotalLines = 0;
-        for (const gcodeBean of gcodeBeans) {
-            const modelState = modelGroup.getModelState(gcodeBean.modelInfo.modelID);
-            gcodeBean.modelInfo.mode = modelState.mode;
-            gcodeBean.modelInfo.originalName = modelState.originalName;
-            gcodeBean.modelInfo.headerType = modelState.headerType;
-            estimatedTime += gcodeBean.modelInfo.estimatedTime;
-            fileTotalLines += gcodeBean.gcode.split('\n').length;
+        for (const model of modelGroup.getModels()) {
+            const modelTaskInfo = model.getTaskInfo();
+            const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
+            if (toolPathModelTaskInfo) {
+                const taskInfo = {
+                    ...modelTaskInfo,
+                    ...toolPathModelTaskInfo
+                };
+                modelInfos.push(taskInfo);
+            }
         }
-        dispatch(actions.updateState(from, {
-            isGcodeGenerated: true,
-            gcodeBeans
-        }));
-
-        const { headerType, gcodeConfig } = gcodeBeans[0].modelInfo;
-        const boundingBox = toolPathModelGroup.getAllBoundingBox();
-
-        const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
-
-        let headerStart = ';Header Start\n'
-        + `;header_type: ${headerType}\n`
-        + `;thumbnail: ${thumbnail}\n`
-        + ';file_total_lines: fileTotalLines\n'
-        + `;estimated_time(s): ${estimatedTime}\n`
-        + `;max_x(mm): ${boundingBox.max.x}\n`
-        + `;max_y(mm): ${boundingBox.max.y}\n`
-        + `;max_z(mm): ${boundingBox.max.z}\n`
-        + `;min_x(mm): ${boundingBox.min.x}\n`
-        + `;min_y(mm): ${boundingBox.min.y}\n`
-        + `;min_z(mm): ${boundingBox.min.z}\n`
-        + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
-        + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
-        + `;power(%): ${power}\n`
-        + ';Header End\n';
-        fileTotalLines += headerStart.split('\n').length;
-        headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
-
-        gcodeBeans[0].gcode = `${headerStart}\n${gcodeBeans[0].gcode}`;
-        gcodeBeans[0].img = thumbnail;
-
+        if (modelInfos.length === 0) {
+            return;
+        }
+        const orderModelInfos = modelInfos.map(d => d).sort((d1, d2) => {
+            if (d1.printOrder > d2.printOrder) {
+                return 1;
+            } else if (d1.printOrder < d2.printOrder) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
         dispatch(actions.updateState(
-            from,
-            {
-                isGcodeGenerated: true,
-                gcodeBeans
+            from, {
+                isGcodeGenerating: true
             }
         ));
+        orderModelInfos[0].thumbnail = thumbnail;
+        controller.commitGcodeTask({ taskId: uuid.v4(), headType: from, data: orderModelInfos });
+        dispatch(actions.updateState(from, {
+            stage: CNC_LASER_STAGE.GENERATING_GCODE,
+            progress: 0
+        }));
+    },
+
+    /**
+     * Callback function trigger by event when G-code generated.
+     *
+     * @param from
+     * @param taskResult
+     * @returns {Function}
+     */
+    onReceiveGcodeTaskResult: (from, taskResult) => async (dispatch) => {
+        dispatch(actions.updateState(
+            from, {
+                isGcodeGenerating: false
+            }
+        ));
+        if (taskResult.taskStatus === 'failed') {
+            dispatch(actions.updateState(from, {
+                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                progress: 1
+            }));
+            return;
+        }
+        const { gcodeFile } = taskResult;
+
+        dispatch(actions.updateState(from, {
+            gcodeFile: {
+                name: gcodeFile.name,
+                uploadName: gcodeFile.name,
+                size: gcodeFile.size,
+                lastModifiedDate: gcodeFile.lastModifiedDate,
+                thumbnail: gcodeFile.thumbnail
+            },
+            stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            progress: 1
+        }));
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {
@@ -703,7 +744,11 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitTask(taskInfo);
+                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: from, data: taskInfo });
+                    dispatch(actions.updateState(from, {
+                        stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+                        progress: 0
+                    }));
                 }
             }
         }
@@ -720,7 +765,11 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitTask(taskInfo);
+                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: from, data: taskInfo });
+                    dispatch(actions.updateState(from, {
+                        stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+                        progress: 0
+                    }));
                 }
             }
         }
@@ -730,16 +779,25 @@ export const actions = {
         // const state = getState()[from];
         const { toolPathModelGroup } = getState()[from];
 
-        if (taskResult.status === 'failed' && toolPathModelGroup.getToolPathModelByTaskID(taskResult.taskID)) {
+        const { data, filename } = taskResult;
+
+        if (taskResult.taskStatus === 'failed' && toolPathModelGroup.getToolPathModelByID(data.id)) {
             dispatch(actions.updateState(from, {
                 previewUpdated: +new Date(),
-                previewFailed: true
+                previewFailed: true,
+                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
+                progress: 1
             }));
             dispatch(actions.setAutoPreview(from, false));
             return;
         }
 
-        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(taskResult);
+        dispatch(actions.updateState({
+            stage: CNC_LASER_STAGE.PREVIEWING,
+            progress: 0
+        }));
+
+        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename);
 
         if (toolPathModelState) {
             dispatch(actions.showToolPathModelObj3D(from, toolPathModelState.modelID));
@@ -747,7 +805,9 @@ export const actions = {
 
         dispatch(actions.updateState(from, {
             previewUpdated: +new Date(),
-            previewFailed: false
+            previewFailed: false,
+            stage: CNC_LASER_STAGE.PREVIEW_SUCCESS,
+            progress: 1
         }));
         dispatch(actions.render(from));
     },

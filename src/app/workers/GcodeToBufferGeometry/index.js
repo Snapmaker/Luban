@@ -6,7 +6,7 @@ import {
     DATA_PREFIX
 } from '../../constants';
 
-const readFile = (path) => {
+export const readFile = (path) => {
     return new Promise((resolve, reject) => {
         new THREE.FileLoader().load(
             path,
@@ -49,7 +49,7 @@ const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError 
                 const { bufferGeometry, layerCount, bounds } = await gcodeToBufferGeometryPrint3d(
                     gcode,
                     (progress) => {
-                        onProgress(progress / 2 + 0.5);
+                        onProgress(progress / 4 * 3 + 0.25);
                     }
                 );
                 result = {

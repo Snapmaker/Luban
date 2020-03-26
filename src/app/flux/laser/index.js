@@ -10,15 +10,18 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { actions as sharedActions } from '../cncLaserShared';
+import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
 
 const INITIAL_STATE = {
+    stage: CNC_LASER_STAGE.EMPTY,
+    progress: 0,
+
     modelGroup: new ModelGroup(),
     toolPathModelGroup: new ToolPathModelGroup(),
 
     isAllModelsPreviewed: false,
-    isGcodeGenerated: false,
-    gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+    isGcodeGenerating: false,
+    gcodeFile: null,
     // model: null,
     selectedModelID: null,
     sourceType: '',
@@ -58,7 +61,7 @@ export const actions = {
     /*
     init: () => (dispatch) => {
         const controllerEvents = {
-            'task:completed': (taskResult) => {
+            'taskCompleted:generateToolPath': (taskResult) => {
                 dispatch(sharedActions.onReceiveTaskResult(taskResult));
             }
         };
@@ -71,8 +74,29 @@ export const actions = {
 
     init: () => (dispatch) => {
         const controllerEvents = {
-            'task:completed': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
+            'taskCompleted:generateToolPath': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
+                }
+            },
+            'taskCompleted:generateGcode': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.onReceiveGcodeTaskResult('laser', taskResult));
+                }
+            },
+            'taskProgress:generateToolPath': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.updateState('laser', {
+                        progress: taskResult.progress
+                    }));
+                }
+            },
+            'taskProgress:generateGcode': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(sharedActions.updateState('laser', {
+                        progress: taskResult.progress
+                    }));
+                }
             }
         };
 
@@ -131,9 +155,7 @@ export default function reducer(state = INITIAL_STATE, action) {
             }
             case ACTION_RESET_CALCULATED_STATE: {
                 return Object.assign({}, state, {
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
+                    isAllModelsPreviewed: false
                 });
             }
             case ACTION_UPDATE_TRANSFORMATION: {

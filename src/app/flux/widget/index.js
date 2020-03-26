@@ -19,6 +19,14 @@ export const actions = {
         };
     },
 
+    /**
+     * Update widget array of tab's container.
+     *
+     * @param tab One of workspace, 3dp, laser, cnc
+     * @param container One of default, primary, secondary
+     * @param value
+     * @returns {Function}
+     */
     updateTabContainer: (tab, container, value) => (dispatch, getState) => {
         const { widgetState } = getState().widget;
         const state = widgetState.updateTabContainer(tab, container, value);

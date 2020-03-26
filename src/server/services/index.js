@@ -40,7 +40,8 @@ function startServices(server) {
     socketServer.registerEvent('writeln', socketSerial.writeln);
 
     // task manager
-    socketServer.registerEvent('task:commit', TaskManager.addTask);
+    socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
+    socketServer.registerEvent('taskCommit:generateGcode', TaskManager.addGenerateGcodeTask);
 
     socketServer.start(server);
 

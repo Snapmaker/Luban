@@ -173,6 +173,26 @@ const parseLine = (() => {
 })();
 
 
+const parseArraySync = (array, options) => {
+    const { flatten = false, noParseLine = false } = { ...options };
+    const results = [];
+    const lines = array;
+
+    for (let i = 0; i < lines.length; ++i) {
+        const line = lines[i].trim();
+        if (line.length === 0) {
+            continue;
+        }
+        const result = parseLine(line, {
+            flatten,
+            noParseLine
+        });
+        results.push(result);
+    }
+
+    return results;
+};
+
 const parseStringSync = (str, options) => {
     const { flatten = false, noParseLine = false } = { ...options };
     const results = [];
@@ -366,5 +386,6 @@ export {
     parseFile,
     parseFileSync,
     parseString,
-    parseStringSync
+    parseStringSync,
+    parseArraySync
 };

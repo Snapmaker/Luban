@@ -418,22 +418,6 @@ class Axes extends PureComponent {
 
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe('gcode:unload', () => {
-                this.setState({
-                    bbox: {
-                        min: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        },
-                        max: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        }
-                    }
-                });
-            }),
             pubsub.subscribe('gcode:bbox', (msg, bbox) => {
                 this.setState({
                     bbox: {

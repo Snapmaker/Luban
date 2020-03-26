@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import includes from 'lodash/includes';
 import TextArea from 'react-textarea-autosize';
-import jQuery from 'jquery';
+import request from 'superagent';
 import FileSaver from 'file-saver';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -90,7 +90,8 @@ class GcodeFile extends PureComponent {
         exportGcodeWithHeader: () => {
             const { gcodeFile, gcodeHeader, uploadName } = this.state;
             const exportName = pathWithRandomSuffix(gcodeFile);
-            jQuery.get(`/data/Tmp/${uploadName}`, (data) => {
+            request.get(`/data/Tmp/${uploadName}`).end((err, res) => {
+                let data = res.text;
                 const startIndex = data.indexOf(';Header Start');
                 const endIndex = data.indexOf(';Header End');
                 if (startIndex !== -1 && endIndex !== -1) {

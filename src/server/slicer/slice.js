@@ -6,6 +6,7 @@ import logger from '../lib/logger';
 import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
 import DataStorage from '../DataStorage';
 import { DefinitionLoader } from './definition';
+import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
 
 
 const log = logger('print3d-slice');
@@ -72,7 +73,9 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `; ${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}\n`
         + '\n';
     const nextSplitIndex = readFileSync.indexOf('\n', splitIndex) + 1;
+    const dataLength = header.length + readFileSync.length - nextSplitIndex;
     fs.writeFileSync(gcodeFilePath, header + readFileSync.substring(nextSplitIndex));
+    return dataLength;
 }
 
 function slice(params, onProgress, onSucceed, onError) {
@@ -94,11 +97,9 @@ function slice(params, onProgress, onSucceed, onError) {
 
     const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
 
-    const gcodeFileName = {
-        originalName,
-        uploadName: `${path.parse(uploadName).name}.gcode`
-    };
-    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFileName.uploadName}`;
+    const gcodeFilename = pathWithRandomSuffix(`${path.parse(originalName).name}.gcode`);
+    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
+
     const process = callCuraEngine(uploadPath, configFilePath, gcodeFilePath);
 
     process.stderr.on('data', (data) => {
@@ -128,10 +129,11 @@ function slice(params, onProgress, onSucceed, onError) {
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);
-            processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail);
+            const gcodeFileLength = processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail);
 
             onSucceed({
-                gcodeFileName: gcodeFileName,
+                gcodeFilename: gcodeFilename,
+                gcodeFileLength: gcodeFileLength,
                 printTime: printTime,
                 filamentLength: filamentLength,
                 filamentWeight: filamentWeight,

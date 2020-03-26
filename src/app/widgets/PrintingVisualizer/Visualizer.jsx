@@ -203,7 +203,7 @@ class Visualizer extends PureComponent {
             case PRINTING_STAGE.SLICE_FAILED:
                 return i18n._('Failed to slice model.');
             case PRINTING_STAGE.PREVIEWING:
-                return i18n._('Previewing G-code...');
+                return i18n._('Previewing G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case PRINTING_STAGE.PREVIEW_SUCCEED:
                 return i18n._('Previewed G-code successfully.');
             case PRINTING_STAGE.PREVIEW_FAILED:

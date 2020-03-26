@@ -2,8 +2,8 @@ import React, { PureComponent } from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import path from 'path';
-import jQuery from 'jquery';
 import PropTypes from 'prop-types';
+import request from 'superagent';
 import FileSaver from 'file-saver';
 
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
@@ -13,6 +13,7 @@ import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing'
 import { actions as workspaceActions } from '../../flux/workspace';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
+import { DATA_PREFIX } from '../../constants';
 
 
 class Output extends PureComponent {
@@ -25,15 +26,12 @@ class Output extends PureComponent {
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
-        gcodePath: PropTypes.string.isRequired,
-        gcodeFileName: PropTypes.object.isRequired,
+        gcodeFile: PropTypes.object,
         hasModel: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
-        addGcode: PropTypes.func.isRequired,
-        addGcodeFile: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired
+        renderGcodeFile: PropTypes.func.isRequired
     };
 
     state = {
@@ -55,24 +53,14 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            const { originalName, uploadName } = this.props.gcodeFileName;
+            const { gcodeFile } = this.props;
+
+            gcodeFile.thumbnail = this.thumbnail.current.getDataURL();
+
+            this.props.renderGcodeFile(gcodeFile);
+
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            let filename = path.basename(originalName);
-            filename = this.actions.changeFilenameExt(filename);
-
-            jQuery.get(this.props.gcodePath, (result) => {
-                this.props.clearGcode();
-                this.props.addGcode(filename, result);
-
-                this.props.addGcodeFile({
-                    name: filename,
-                    uploadName: uploadName,
-                    size: result.length,
-                    lastModifiedDate: new Date(),
-                    img: this.thumbnail.current.getDataURL()
-                });
-            });
         },
         changeFilenameExt: (filename) => {
             if (path.extname(filename) && ['.stl', '.obj'].includes(path.extname(filename).toLowerCase())) {
@@ -89,10 +77,12 @@ class Output extends PureComponent {
                 });
                 return;
             }
-            const { originalName } = this.props.gcodeFileName;
-            let filename = path.basename(originalName);
-            filename = this.actions.changeFilenameExt(filename);
-            jQuery.get(this.props.gcodePath, (data) => {
+
+            const { gcodeFile } = this.props;
+            const filename = path.basename(gcodeFile.name);
+            const gcodeFilePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
+            request.get(gcodeFilePath).end((err, res) => {
+                const data = res.text;
                 const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
                 const savedFilename = filename;
                 FileSaver.saveAs(blob, savedFilename, true);
@@ -223,7 +213,7 @@ const mapStateToProps = (state) => {
     const {
         stage,
         modelGroup, hasModel, boundingBox, isAnyModelOverstepped,
-        isGcodeOverstepped, gcodeLine, gcodePath, gcodeFileName
+        isGcodeOverstepped, gcodeLine, gcodeFile
     } = printing;
 
     return {
@@ -235,17 +225,14 @@ const mapStateToProps = (state) => {
         isAnyModelOverstepped,
         isGcodeOverstepped,
         gcodeLine,
-        gcodePath,
-        gcodeFileName
+        gcodeFile
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         generateGcode: (thumbnail) => dispatch(printingActions.generateGcode(thumbnail)),
-        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode())
+        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file))
     };
 };
 

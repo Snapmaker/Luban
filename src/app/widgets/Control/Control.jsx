@@ -4,7 +4,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Creatable } from 'react-select';
-import pubsub from 'pubsub-js';
 
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
@@ -85,6 +84,7 @@ class Control extends PureComponent {
         executeGcode: PropTypes.func,
         executeGcodeAutoHome: PropTypes.func,
         isConnected: PropTypes.bool.isRequired,
+        boundingBox: PropTypes.object,
 
         axes: PropTypes.array.isRequired,
         speed: PropTypes.number.isRequired,
@@ -245,8 +245,6 @@ class Control extends PureComponent {
         }
     };
 
-    subscriptions = [];
-
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Control'));
@@ -308,7 +306,6 @@ class Control extends PureComponent {
     componentDidMount() {
         this.addControllerEvents();
         this.addShuttleControlEvents();
-        this.subscribe();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -337,6 +334,28 @@ class Control extends PureComponent {
                     ...nextProps.originOffset
                 }
             });
+        }
+        if (nextProps.boundingBox !== this.props.boundingBox) {
+            if (nextProps.boundingBox === null) {
+                this.setState({
+                    bbox: {
+                        min: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        },
+                        max: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        }
+                    }
+                });
+            } else {
+                this.setState({
+                    bbox: nextProps.boundingBox
+                });
+            }
         }
     }
 
@@ -375,7 +394,6 @@ class Control extends PureComponent {
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeShuttleControlEvents();
-        this.unsubscribe();
     }
 
     addControllerEvents() {
@@ -406,49 +424,6 @@ class Control extends PureComponent {
         });
     }
 
-    subscribe() {
-        this.subscriptions = [
-            pubsub.subscribe('gcode:unload', () => {
-                this.setState({
-                    bbox: {
-                        min: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        },
-                        max: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        }
-                    }
-                });
-            }),
-            pubsub.subscribe('gcode:bbox', (msg, bbox) => {
-                this.setState({
-                    bbox: {
-                        min: {
-                            x: bbox.min.x,
-                            y: bbox.min.y,
-                            z: bbox.min.z
-                        },
-                        max: {
-                            x: bbox.max.x,
-                            y: bbox.max.y,
-                            z: bbox.max.z
-                        }
-                    }
-                });
-            })
-        ];
-    }
-
-    unsubscribe() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
-    }
 
     canClick() {
         const { isConnected, workflowState, workflowStatus } = this.props;
@@ -536,6 +511,7 @@ const mapStateToProps = (state, ownProps) => {
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
     const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus } = machine;
+    const { boundingBox } = state.workspace;
 
     return {
         port,
@@ -550,7 +526,8 @@ const mapStateToProps = (state, ownProps) => {
         speed,
         keypad,
         selectedDistance,
-        customDistance
+        customDistance,
+        boundingBox
     };
 };
 

@@ -79,8 +79,6 @@ class Model {
             originalName: this.originalName,
             uploadName: this.uploadName,
             mode: this.mode,
-            geometry: this.meshObject.geometry,
-            material: this.meshObject.material,
             transformation: this.transformation
         };
     }

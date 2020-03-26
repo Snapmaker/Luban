@@ -1,13 +1,16 @@
+import fs from 'fs';
 import store from '../../store';
+
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
+import DataStorage from '../../DataStorage';
 
 
 export const set = (req, res) => {
-    const { port, dataSource = PROTOCOL_TEXT, name, gcode } = req.body;
+    const { port, dataSource = PROTOCOL_TEXT, uploadName } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -15,6 +18,9 @@ export const set = (req, res) => {
         });
         return;
     }
+    const gcodeFilepath = `${DataStorage.tmpDir}/${uploadName}`;
+    const gcode = fs.readFileSync(gcodeFilepath, 'utf8');
+
     if (!gcode) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'Empty G-code'
@@ -36,7 +42,7 @@ export const set = (req, res) => {
     }
 
     // Load G-code
-    controller.command(null, 'gcode:load', name, gcode, (err) => {
+    controller.command(null, 'gcode:load', uploadName, gcode, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: `Failed to load G-code: ${err}`

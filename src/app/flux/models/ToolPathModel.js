@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { generateToolPathObject3D } from '../generator';
 import { DATA_PREFIX } from '../../constants';
-import GcodeGenerator from '../../widgets/GcodeGenerator';
 
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',
@@ -16,9 +15,8 @@ class ToolPathModel {
 
         this.modelID = modelID;
 
-        this.taskID = null;
+        this.id = null;
 
-        this.movementMode = 'line';
         this.printOrder = 1;
         this.gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
@@ -29,7 +27,7 @@ class ToolPathModel {
             ...gcodeConfig
         };
 
-        this.toolPath = null;
+        this.toolPathFilename = null;
         this.toolPathObj3D = null;
     }
 
@@ -50,35 +48,32 @@ class ToolPathModel {
 
     getTaskInfo() {
         return {
-            taskID: this.taskID,
+            id: this.id,
             config: this.config,
             gcodeConfig: this.gcodeConfig,
             printOrder: this.printOrder,
-            movementMode: this.movementMode,
+            toolPathFilename: this.toolPathFilename,
             gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
         };
     }
 
-    generateToolPath3D() {
-        if (!this.toolPath) {
-            return;
-        }
-
-        this.toolPathObj3D = generateToolPathObject3D(this.toolPath);
+    generateToolPath3D(toolPath) {
+        this.toolPathObj3D = generateToolPathObject3D(toolPath);
     }
 
     loadToolPath(filename) {
+        this.toolPathFilename = filename;
         const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
         return new Promise((resolve) => {
             new THREE.FileLoader().load(
                 toolPathFilePath,
                 (data) => {
-                    this.toolPath = JSON.parse(data);
-                    this.generateToolPath3D();
+                    const toolPath = JSON.parse(data);
+                    this.generateToolPath3D(toolPath);
                     if (this.gcodeConfig.multiPassEnabled) {
-                        this.estimatedTime = this.toolPath.estimatedTime * this.gcodeConfig.multiPasses;
+                        this.estimatedTime = toolPath.estimatedTime * this.gcodeConfig.multiPasses;
                     } else {
-                        this.estimatedTime = this.toolPath.estimatedTime;
+                        this.estimatedTime = toolPath.estimatedTime;
                     }
                     return resolve(this.toolPathObj3D);
                 }
@@ -86,17 +81,16 @@ class ToolPathModel {
         });
     }
 
-    generateGcode() {
-        const gcodeGenerator = new GcodeGenerator();
-        const toolPath = this.toolPath;
-
-        return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
-    }
+    // generateGcode() {
+    //     const gcodeGenerator = new GcodeGenerator();
+    //     const toolPath = this.toolPath;
+    //
+    //     return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
+    // }
 
     clone() {
         const toolPathModel = new ToolPathModel(this);
         toolPathModel.printOrder = this.printOrder;
-        toolPathModel.movementMode = this.movementMode;
         toolPathModel.gcodeConfigPlaceholder = {
             ...this.gcodeConfigPlaceholder
         };

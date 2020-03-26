@@ -4,7 +4,8 @@ import {
     parseFile,
     parseFileSync,
     parseString,
-    parseStringSync
+    parseArraySync,
+    parseLine
 } from './gcodeParser';
 
 const noop = () => {};
@@ -173,7 +174,23 @@ class Interpreter {
     }
 
     loadFromStringSync(str, callback = noop) {
-        const list = parseStringSync(str);
+        const list = str.split('\n');
+        // const list = parseStringSync(str);
+        const flatten = false;
+        const noParseLine = false;
+        for (let i = 0; i < list.length; ++i) {
+            const result = parseLine(list[i], {
+                flatten,
+                noParseLine
+            });
+            interpret(this, result);
+            callback(list[i], i, list.length);
+        }
+        return list;
+    }
+
+    loadFromArraySync(array, callback = noop) {
+        const list = parseArraySync(array);
         for (let i = 0; i < list.length; ++i) {
             interpret(this, list[i]);
             callback(list[i], i, list.length);

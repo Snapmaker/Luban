@@ -1,18 +1,15 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import path from 'path';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
+import request from 'superagent';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { CNC_GCODE_SUFFIX } from '../../constants';
+import { DATA_PREFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
-import api from '../../api';
-
 
 class Output extends PureComponent {
     static propTypes = {
@@ -24,13 +21,11 @@ class Output extends PureComponent {
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
-        isGcodeGenerated: PropTypes.bool.isRequired,
+        isGcodeGenerating: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
-        gcodeBeans: PropTypes.array.isRequired,
+        gcodeFile: PropTypes.object,
         generateGcode: PropTypes.func.isRequired,
-        addGcode: PropTypes.func.isRequired,
-        addGcodeFile: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
+        renderGcodeFile: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired
     };
@@ -49,84 +44,30 @@ class Output extends PureComponent {
             const thumbnail = this.thumbnail.current.getThumbnail();
             this.props.generateGcode(thumbnail);
         },
-        changeFilenameExt: (fileName) => {
-            if (path.extname(fileName) && ['.svg', '.png', '.jpg', '.jpeg', '.bmp'].includes(path.extname(fileName).toLowerCase())) {
-                const extname = path.extname(fileName);
-                fileName = `${fileName.slice(0, fileName.lastIndexOf(extname))}${CNC_GCODE_SUFFIX}`;
-            }
-            return fileName;
-        },
         onLoadGcode: () => {
-            const { gcodeBeans } = this.props;
-            if (gcodeBeans.length === 0) {
+            const { gcodeFile } = this.props;
+            if (gcodeFile === null) {
                 return;
             }
 
-            this.props.clearGcode();
-            for (let i = 0; i < gcodeBeans.length; i++) {
-                const { gcode, modelInfo } = gcodeBeans[i];
-                const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                let fileName = (`${gcodeBeans[i].modelInfo.originalName}`);
-                fileName = this.actions.changeFilenameExt(fileName);
-                this.props.addGcode(fileName, gcode, renderMethod);
-            }
+            this.props.renderGcodeFile(gcodeFile);
 
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-
-            this.actions.onSaveGcode();
-        },
-        onSaveGcode: () => {
-            const { gcodeBeans } = this.props;
-            if (gcodeBeans.length === 0) {
-                return;
-            }
-
-            const gcodeArr = [];
-            for (let i = 0; i < gcodeBeans.length; i++) {
-                const { gcode } = gcodeBeans[i];
-                gcodeArr.push(gcode);
-            }
-            const gcodeStr = gcodeArr.join('\n');
-            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            let fileName = `${gcodeBeans[0].modelInfo.originalName}`;
-            fileName = this.actions.changeFilenameExt(fileName);
-            const file = new File([blob], fileName);
-            const formData = new FormData();
-            formData.append('file', file);
-            const displayName = file.name;
-            const uploadName = pathWithRandomSuffix(file.name);
-            formData.append('displayName', displayName);
-            formData.append('uploadName', uploadName);
-            api.uploadFile(formData).then((res) => {
-                const response = res.body;
-                this.props.addGcodeFile({
-                    name: fileName,
-                    uploadName: response.uploadName,
-                    size: file.size,
-                    lastModifiedDate: file.lastModifiedDate,
-                    img: gcodeBeans[0].img
-                });
-            }).catch(() => {
-                // Ignore error
-            });
         },
         onExport: () => {
-            const { gcodeBeans } = this.props;
-            if (gcodeBeans.length === 0) {
+            const { gcodeFile } = this.props;
+            if (gcodeFile === null) {
                 return;
             }
 
-            const gcodeArr = [];
-            for (let i = 0; i < gcodeBeans.length; i++) {
-                const { gcode } = gcodeBeans[i];
-                gcodeArr.push(gcode);
-            }
-            const gcodeStr = gcodeArr.join('\n');
-            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            let fileName = `${gcodeBeans[0].modelInfo.originalName}`;
-            fileName = this.actions.changeFilenameExt(fileName);
-            FileSaver.saveAs(blob, fileName, true);
+            const gcodePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
+
+            request.get(gcodePath).end((err, res) => {
+                const gcodeStr = res.text;
+                const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
+                FileSaver.saveAs(blob, gcodeFile.name, true);
+            });
         },
         onToggleAutoPreview: (event) => {
             this.props.setAutoPreview(event.target.checked);
@@ -149,7 +90,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
+        const { workflowState, isGcodeGenerating, manualPreview, autoPreviewEnabled, gcodeFile } = this.props;
 
         return (
             <div>
@@ -181,6 +122,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onGenerateGcode}
+                        disabled={isGcodeGenerating}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Generate G-code')}
@@ -189,7 +131,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onLoadGcode}
-                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Load G-code to Workspace')}
@@ -198,7 +140,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onExport}
-                        disabled={workflowState === 'running' || !isGcodeGenerated}
+                        disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Export G-code to file')}
@@ -217,13 +159,13 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.cnc;
+    const { isGcodeGenerating, gcodeFile, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.cnc;
     return {
         modelGroup,
         toolPathModelGroup,
-        isGcodeGenerated,
+        isGcodeGenerating,
         workflowState,
-        gcodeBeans,
+        gcodeFile,
         isAllModelsPreviewed,
         previewFailed,
         autoPreviewEnabled
@@ -233,9 +175,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('cnc', thumbnail)),
-        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        addGcodeFile: (fileInfo) => dispatch(workspaceActions.addGcodeFile(fileInfo)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode()),
+        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
         manualPreview: () => dispatch(sharedActions.manualPreview('cnc', true)),
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value))
     };

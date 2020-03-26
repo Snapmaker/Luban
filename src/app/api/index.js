@@ -150,17 +150,27 @@ const setState = defaultAPIFactory((options) => {
 
 const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key }));
 
-//
-// G-code
-//
+/**
+ * Load G-code
+ *
+ * options:
+ *  - port
+ *  - dataSource
+ *  - uploadName
+ *
+ * Tell controler (MarlinController) to load G-code.
+ */
 const loadGCode = defaultAPIFactory((options) => {
-    const { port = '', dataSource = '', name = '', gcode = '' } = { ...options };
+    const { port = '', dataSource = '', uploadName = '' } = { ...options };
     return request
         .post('/api/gcode')
-        .send({ port, dataSource, name, gcode });
+        .send({ port, dataSource, uploadName });
 });
 
-const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({ port, dataSource }));
+const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({
+    port,
+    dataSource
+}));
 
 //
 // Users
@@ -239,11 +249,17 @@ printingConfigs.getDefinition = defaultAPIFactory((definitionId, series) => requ
 printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${series}`));
 printingConfigs.getMaterialDefinitions = defaultAPIFactory(() => request.get('/api/printingMaterialDefinitions'));
 
-printingConfigs.createDefinition = defaultAPIFactory((definition, series) => request.post('/api/printingDefinition').send({ definition, series }));
+printingConfigs.createDefinition = defaultAPIFactory((definition, series) => request.post('/api/printingDefinition').send({
+    definition,
+    series
+}));
 
 printingConfigs.removeDefinition = defaultAPIFactory((definitionId, series) => request.delete(`/api/printingDefinition/${definitionId}`).send({ series }));
 
-printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition, series) => request.put(`/api/printingDefinition/${definitionId}`).send({ definition, series }));
+printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition, series) => request.put(`/api/printingDefinition/${definitionId}`).send({
+    definition,
+    series
+}));
 
 //
 // Macros
