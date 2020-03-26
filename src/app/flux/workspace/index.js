@@ -252,7 +252,6 @@ export const actions = {
     },
 
     addGcodeFiles: (fileInfo) => (dispatch, getState) => {
-        console.trace(fileInfo);
         const { gcodeFiles } = getState().workspace;
         const files = [];
         fileInfo.isRenaming = false;
