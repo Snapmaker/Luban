@@ -58,7 +58,7 @@ class WifiServerManager extends EventEmitter {
                 socket.emit('http:discover', this.devices);
             }
         });
-    }
+    };
 
 
     refreshDevices = () => {
@@ -99,13 +99,13 @@ class WifiServerManager extends EventEmitter {
         setTimeout(() => {
             this.refreshing = false;
         }, 3000);
-    }
+    };
 
     onConnection = (socket) => {
         this.sockets.push(socket);
-    }
+    };
 
-    onDisConnection = (socket) => {
+    onDisconnection = (socket) => {
         this.sockets = this.sockets.filter(e => e !== socket);
     }
 }

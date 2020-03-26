@@ -22,7 +22,7 @@ function startServices(server) {
     });
 
     socketServer.on('disconnection', (socket) => {
-        wifiServerManager.onDisConnection(socket);
+        wifiServerManager.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
     });
 
