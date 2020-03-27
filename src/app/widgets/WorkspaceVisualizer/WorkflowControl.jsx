@@ -86,7 +86,7 @@ class WorkflowControl extends PureComponent {
             const file = event.target.files[0];
             this.props.uploadGcodeFile(file);
         }
-    }
+    };
 
     onClickToUpload = () => {
         this.fileInput.current.value = null;
