@@ -2,7 +2,7 @@ import os from 'os';
 import EventEmitter from 'events';
 import zipWith from 'lodash/zipWith';
 import { createSocket } from 'dgram';
-import logger from '../logger';
+import logger from '../../lib/logger';
 
 const log = logger('lib:deviceManager');
 
@@ -12,10 +12,12 @@ const DISCOVER_SERVER_PORT = 20054;
 /**
  * A singleton to manage devices remotely.
  */
-class ServerManager extends EventEmitter {
+class WifiServerManager extends EventEmitter {
     client = createSocket('udp4');
 
     devices = [];
+
+    sockets = [];
 
     refreshing = false;
 
@@ -24,7 +26,7 @@ class ServerManager extends EventEmitter {
         this.init();
     }
 
-    init() {
+    init = () => {
         this.client.bind(() => {
             this.client.setBroadcast(true);
         });
@@ -51,11 +53,15 @@ class ServerManager extends EventEmitter {
             }
 
             this.devices.push(device);
-            this.emit('servers', this.devices);
-        });
-    }
 
-    refreshDevices() {
+            for (const socket of this.sockets) {
+                socket.emit('http:discover', this.devices);
+            }
+        });
+    };
+
+
+    refreshDevices = () => {
         // Clear devices and send broadcast only when not refreshing to avoid duplicated refresh
         if (this.refreshing) {
             return;
@@ -93,7 +99,17 @@ class ServerManager extends EventEmitter {
         setTimeout(() => {
             this.refreshing = false;
         }, 3000);
+    };
+
+    onConnection = (socket) => {
+        this.sockets.push(socket);
+    };
+
+    onDisconnection = (socket) => {
+        this.sockets = this.sockets.filter(e => e !== socket);
     }
 }
 
-export default ServerManager;
+const wifiServerManager = new WifiServerManager();
+
+export default wifiServerManager;

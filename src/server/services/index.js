@@ -1,9 +1,9 @@
-import SocketServer from '../lib/ServerManager/SocketServer';
+import SocketServer from '../lib/SocketManager';
 import TaskManager from './task-manager';
 
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
-import socketHttp from './socket/socket-http';
+import wifiServerManager from './socket/WifiServerManager';
 
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
@@ -18,11 +18,11 @@ function startServices(server) {
     const socketServer = new SocketServer();
 
     socketServer.on('connection', (socket) => {
-        TaskManager.onConnection(socket);
-        socketHttp.onConnection(socket);
+        wifiServerManager.onConnection(socket);
     });
 
     socketServer.on('disconnection', (socket) => {
+        wifiServerManager.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
     });
 
@@ -30,7 +30,7 @@ function startServices(server) {
     socketServer.registerEvent('slice', socketSlice.handleSlice);
 
     // communication: http
-    socketServer.registerEvent('http:discover', socketHttp.handleDiscover);
+    socketServer.registerEvent('http:discover', wifiServerManager.refreshDevices);
 
     // communication: serial port
     socketServer.registerEvent('serialport:list', socketSerial.serialportList);

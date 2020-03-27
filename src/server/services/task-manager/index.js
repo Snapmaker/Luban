@@ -20,31 +20,11 @@ const stop = () => {
 };
 
 const addGenerateToolPathTask = (socket, task) => {
-    instance.addTask(task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_TOOLPATH);
+    instance.addTask(socket, task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_TOOLPATH);
 };
 
 const addGenerateGcodeTask = (socket, task) => {
-    instance.addTask(task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_GCODE);
-};
-
-const onConnection = (socket) => {
-    instance.removeAllListeners('taskProgress:generateToolPath');
-    instance.removeAllListeners('taskProgress:generateGcode');
-    instance.removeAllListeners('taskCompleted:generateToolPath');
-    instance.removeAllListeners('taskCompleted:generateGcode');
-    instance.on('taskProgress:generateToolPath', (progress) => {
-        socket.emit('taskProgress:generateToolPath', progress);
-    });
-    instance.on('taskProgress:generateGcode', (progress) => {
-        socket.emit('taskProgress:generateGcode', progress);
-    });
-
-    instance.on('taskCompleted:generateToolPath', (task) => {
-        socket.emit('taskCompleted:generateToolPath', task);
-    });
-    instance.on('taskCompleted:generateGcode', (task) => {
-        socket.emit('taskCompleted:generateGcode', task);
-    });
+    instance.addTask(socket, task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_GCODE);
 };
 
 export default {
@@ -52,6 +32,5 @@ export default {
     start,
     stop,
     addGenerateToolPathTask,
-    addGenerateGcodeTask,
-    onConnection
+    addGenerateGcodeTask
 };

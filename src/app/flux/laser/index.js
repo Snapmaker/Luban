@@ -87,6 +87,7 @@ export const actions = {
             'taskProgress:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'laser') {
                     dispatch(sharedActions.updateState('laser', {
+                        stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: taskResult.progress
                     }));
                 }
@@ -94,6 +95,7 @@ export const actions = {
             'taskProgress:generateGcode': (taskResult) => {
                 if (taskResult.headType === 'laser') {
                     dispatch(sharedActions.updateState('laser', {
+                        stage: CNC_LASER_STAGE.GENERATING_GCODE,
                         progress: taskResult.progress
                     }));
                 }
