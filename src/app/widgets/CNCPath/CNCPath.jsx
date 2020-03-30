@@ -203,7 +203,6 @@ class CNCPath extends PureComponent {
                     </Modal>
                 )}
                 <div className={styles['laser-modes']}>
-                    <p><b>{i18n._('Select mode to upload:')}</b></p>
                     <div className={classNames(styles['laser-mode'])}>
                         <Anchor
                             className={styles['laser-mode__btn']}
