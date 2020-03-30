@@ -59,10 +59,10 @@ class VisualizerTopLeft extends PureComponent {
                     type="button"
                     className="sm-btn-small sm-btn-primary"
                     style={{ float: 'left' }}
-                    title={i18n._('Upload File')}
+                    title={i18n._('Open File')}
                     onClick={actions.onClickToUpload}
                 >
-                    {i18n._('Upload File')}
+                    {i18n._('Open File')}
                 </button>
                 <Anchor
                     componentClass="button"

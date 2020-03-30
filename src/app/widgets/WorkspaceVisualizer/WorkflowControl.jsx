@@ -11,7 +11,7 @@ import {
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
-import { actions } from '../../flux/workspace';
+
 
 class WorkflowControl extends PureComponent {
     static propTypes = {
@@ -26,14 +26,10 @@ class WorkflowControl extends PureComponent {
             handleRun: PropTypes.func.isRequired,
             handlePause: PropTypes.func.isRequired,
             handleStop: PropTypes.func.isRequired
-        }),
-        uploadGcodeFile: PropTypes.func.isRequired
+        })
     };
 
-    fileInput = React.createRef();
-
-
-    state ={
+    state = {
         isServerWaiting: false
     };
 
@@ -81,18 +77,8 @@ class WorkflowControl extends PureComponent {
                     isServerWaiting: false
                 });
             }, 1000);
-        },
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-            this.props.uploadGcodeFile(file);
         }
-    }
-
-    onClickToUpload = () => {
-        this.fileInput.current.value = null;
-        this.fileInput.current.click();
     };
-
 
     render() {
         const { state, connectionType, workflowStatus, isConnected } = this.props;
@@ -102,83 +88,60 @@ class WorkflowControl extends PureComponent {
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = this.props.renderState === 'rendered';
         const isUploaded = isWifi ? true : this.props.uploadState === 'uploaded';
-        const canUpload = _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
         const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
         const canPause = _.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
         const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
 
         return (
-            <div>
-                <input
-                    // The ref attribute adds a reference to the component to
-                    // this.refs when the component is mounted.
-                    ref={this.fileInput}
-                    type="file"
-                    accept=".gcode, .nc, .cnc"
-                    style={{ display: 'none' }}
-                    multiple={false}
-                    onChange={this.actions.onChangeFile}
-                />
-                <div className="btn-toolbar">
-                    <div className="btn-group btn-group-sm">
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-primary"
-                            title={i18n._('Upload G-code')}
-                            onClick={this.onClickToUpload}
-                            disabled={!canUpload}
-                        >
-                            {i18n._('Upload G-code')}
-                        </button>
-                    </div>
-                    <div className="btn-group btn-group-sm">
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            style={{ height: '30px' }}
-                            title={i18n._('Run')}
-                            onClick={this.actions.handleRun}
-                            disabled={isServerWaiting || !canPlay}
-                        >
-                            <i className="fa fa-play" />
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            style={{ height: '30px' }}
-                            title={i18n._('Pause')}
-                            onClick={this.actions.handlePause}
-                            disabled={isServerWaiting || !canPause}
-                        >
-                            <i className="fa fa-pause" />
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            style={{ height: '30px' }}
-                            title={i18n._('Stop')}
-                            onClick={this.actions.handleStop}
-                            disabled={isServerWaiting || !canStop}
-                        >
-                            <i className="fa fa-stop" />
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            style={{ height: '30px' }}
-                            title={i18n._('Close')}
-                            onClick={this.actions.handleClose}
-                            disabled={isServerWaiting || !canClose}
-                        >
-                            <i className="fa fa-close" />
-                        </button>
-                    </div>
+            <div className="btn-toolbar">
+                <div className="btn-group btn-group-sm">
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        style={{ height: '30px' }}
+                        title={i18n._('Run')}
+                        onClick={this.actions.handleRun}
+                        disabled={isServerWaiting || !canPlay}
+                    >
+                        <i className="fa fa-play" />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        style={{ height: '30px' }}
+                        title={i18n._('Pause')}
+                        onClick={this.actions.handlePause}
+                        disabled={isServerWaiting || !canPause}
+                    >
+                        <i className="fa fa-pause" />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        style={{ height: '30px' }}
+                        title={i18n._('Stop')}
+                        onClick={this.actions.handleStop}
+                        disabled={isServerWaiting || !canStop}
+                    >
+                        <i className="fa fa-stop" />
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        style={{ height: '30px' }}
+                        title={i18n._('Close')}
+                        onClick={this.actions.handleClose}
+                        disabled={isServerWaiting || !canClose}
+                    >
+                        <i className="fa fa-close" />
+                    </button>
                 </div>
             </div>
         );
     }
 }
+
 const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
@@ -187,8 +150,6 @@ const mapStateToProps = (state) => {
 };
 
 
-const mapDispatchToProps = (dispatch) => ({
-    uploadGcodeFile: (file) => dispatch(actions.uploadGcodeFile(file))
-});
+const mapDispatchToProps = () => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(WorkflowControl);

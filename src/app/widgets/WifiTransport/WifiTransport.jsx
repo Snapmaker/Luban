@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import noop from 'lodash/noop';
 
 import classNames from 'classnames';
 import { connect } from 'react-redux';
@@ -10,7 +11,14 @@ import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import styles from './index.styl';
-import { CONNECTION_TYPE_WIFI, DATA_PREFIX, IMAGE_WIFI_CONNECTED, IMAGE_WIFI_CONNECT_WAITING, IMAGE_WIFI_ERROR, MACHINE_HEAD_TYPE } from '../../constants';
+import {
+    CONNECTION_TYPE_WIFI,
+    DATA_PREFIX,
+    IMAGE_WIFI_CONNECTED,
+    IMAGE_WIFI_CONNECT_WAITING,
+    IMAGE_WIFI_ERROR,
+    MACHINE_HEAD_TYPE
+} from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
 import modalSmallHOC from '../../components/Modal/modal-small';
 
@@ -32,6 +40,7 @@ class WifiTransport extends PureComponent {
         renameGcodeFile: PropTypes.func.isRequired,
         removeGcodeFile: PropTypes.func.isRequired,
 
+        uploadGcodeFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         uploadGcodeFileToList: PropTypes.func.isRequired
     };
@@ -42,6 +51,7 @@ class WifiTransport extends PureComponent {
 
 
     state = {
+        loadToWorkspaceOnLoad: true,
         selectFileName: '',
         selectFileType: ''
     };
@@ -50,49 +60,26 @@ class WifiTransport extends PureComponent {
     actions = {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
-            this.props.uploadGcodeFileToList(file);
-        },
-        onRemoveFile: (gcodeFile) => {
-            this.props.removeGcodeFile(gcodeFile);
+
+            const { loadToWorkspaceOnLoad } = this.state;
+
+            if (loadToWorkspaceOnLoad) {
+                this.props.uploadGcodeFile(file);
+            } else {
+                this.props.uploadGcodeFileToList(file);
+            }
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
-        sendFile: () => {
-            const isSendingFile = modalSmallHOC({
-                title: i18n._('Sending File'),
-                text: i18n._('Please wait for the file transform.'),
-                img: IMAGE_WIFI_CONNECT_WAITING
-            }).ref;
-            const selectFileName = this.state.selectFileName;
-            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
-            if (!find) {
-                return;
-            }
-            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
-            request.get(gcodePath).end((err1, res) => {
-                const gcode = res.text;
-                const blob = new Blob([gcode], { type: 'text/plain' });
-                const file = new File([blob], find.name);
-                this.props.server.uploadFile(find.name, file, (err, data, text) => {
-                    isSendingFile.current.removeContainer();
-                    if (err) {
-                        modalSmallHOC({
-                            title: i18n._('Failed to Send File'),
-                            text: text,
-                            img: IMAGE_WIFI_ERROR
-                        });
-                    } else {
-                        (modalSmallHOC({
-                            title: i18n._('Send File Successfully'),
-                            text: i18n._('Please confirm and choose whether to start print this file on the touchscreen.'),
-                            img: IMAGE_WIFI_CONNECTED
-                        }));
-                    }
-                });
-            });
+
+        onChangeShouldPreview: () => {
+            this.setState(state => ({
+                loadToWorkspaceOnLoad: !state.loadToWorkspaceOnLoad
+            }));
         },
+
         loadGcodeToWorkspace: () => {
             const selectFileName = this.state.selectFileName;
             const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
@@ -101,6 +88,8 @@ class WifiTransport extends PureComponent {
             }
             this.props.renderGcodeFile(find);
         },
+
+        // File item operations
         onRenameStart: (uploadName, index, event) => {
             this.props.renameGcodeFile(uploadName, null, true);
             event.stopPropagation();
@@ -154,14 +143,52 @@ class WifiTransport extends PureComponent {
                     selectFileType: type
                 });
             }
-        }
+        },
+        onRemoveFile: (gcodeFile) => {
+            this.props.removeGcodeFile(gcodeFile);
+        },
 
+        // Wi-Fi transfer file to Snapmaker
+        sendFile: () => {
+            const isSendingFile = modalSmallHOC({
+                title: i18n._('Sending File'),
+                text: i18n._('Please wait for the file transfer.'),
+                img: IMAGE_WIFI_CONNECT_WAITING
+            }).ref;
+            const selectFileName = this.state.selectFileName;
+            const find = this.props.gcodeFiles.find(v => v.uploadName === selectFileName);
+            if (!find) {
+                return;
+            }
+            const gcodePath = `${DATA_PREFIX}/${find.uploadName}`;
+            request.get(gcodePath).end((err1, res) => {
+                const gcode = res.text;
+                const blob = new Blob([gcode], { type: 'text/plain' });
+                const file = new File([blob], find.name);
+                this.props.server.uploadFile(find.name, file, (err, data, text) => {
+                    isSendingFile.current.removeContainer();
+                    if (err) {
+                        modalSmallHOC({
+                            title: i18n._('Failed to Send File'),
+                            text: text,
+                            img: IMAGE_WIFI_ERROR
+                        });
+                    } else {
+                        (modalSmallHOC({
+                            title: i18n._('File Sent Successfully'),
+                            text: i18n._('Please confirm and choose whether to start to print this file on the touchscreen.'),
+                            img: IMAGE_WIFI_CONNECTED
+                        }));
+                    }
+                });
+            });
+        }
     };
 
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Send Files via Wi-Fi'));
+        this.props.setTitle(i18n._('G-code Files'));
     }
 
     componentDidMount() {
@@ -171,7 +198,8 @@ class WifiTransport extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.gcodeFiles.length > 0 && (nextProps.gcodeFiles.length !== this.props.gcodeFiles.length || nextProps.gcodeFiles[0].uploadName !== this.props.gcodeFiles[0].uploadName)) {
+        if (nextProps.gcodeFiles.length > 0
+            && (nextProps.gcodeFiles.length !== this.props.gcodeFiles.length || nextProps.gcodeFiles[0].uploadName !== this.props.gcodeFiles[0].uploadName)) {
             this.actions.onSelectFile(nextProps.gcodeFiles[0].uploadName);
         }
     }
@@ -184,13 +212,39 @@ class WifiTransport extends PureComponent {
 
     render() {
         const { gcodeFiles, isConnected, headType, connectionType } = this.props;
-        const { selectFileName, selectFileType } = this.state;
+        const { loadToWorkspaceOnLoad, selectFileName, selectFileType } = this.state;
         const isHeadType = selectFileType === headType;
         const actions = this.actions;
         const hasFile = gcodeFiles.length > 0;
+
         return (
             <div>
                 <div>
+                    <input
+                        ref={this.fileInput}
+                        type="file"
+                        accept=".gcode,.nc,.cnc"
+                        style={{ display: 'none' }}
+                        multiple={false}
+                        onChange={actions.onChangeFile}
+                    />
+                    <button
+                        type="button"
+                        className="sm-btn-small sm-btn-primary"
+                        onClick={actions.onClickToUpload}
+                        style={{ display: 'block', width: '100%' }}
+                    >
+                        {i18n._('Open G-code File')}
+                    </button>
+                    <div style={{ marginTop: '10px' }}>
+                        <input
+                            type="checkbox"
+                            defaultChecked={false}
+                            checked={loadToWorkspaceOnLoad}
+                            onChange={actions.onChangeShouldPreview}
+                        />
+                        <span style={{ paddingLeft: '4px' }}>{i18n._('Preview in workspace')}</span>
+                    </div>
                     {_.map(gcodeFiles, (gcodeFile, index) => {
                         const name = gcodeFile.name.length > 33
                             ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
@@ -219,7 +273,7 @@ class WifiTransport extends PureComponent {
                                     onClick={
                                         (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
                                     }
-                                    onKeyDown={() => {}}
+                                    onKeyDown={noop}
                                     role="button"
                                     tabIndex={0}
                                 >
@@ -244,7 +298,8 @@ class WifiTransport extends PureComponent {
                                                 { [styles.haveOpacity]: isRenaming === false }
                                             )}
                                             role="button"
-                                            onKeyDown={() => {}}
+                                            onKeyDown={() => {
+                                            }}
                                             tabIndex={0}
                                             onClick={(event) => actions.onRenameStart(uploadName, index, event)}
                                         >
@@ -277,45 +332,29 @@ class WifiTransport extends PureComponent {
                             </div>
                         );
                     })}
-                    <div>
-                        <input
-                            ref={this.fileInput}
-                            type="file"
-                            accept=".gcode,.nc,.cnc"
-                            style={{ display: 'none' }}
-                            multiple={false}
-                            onChange={actions.onChangeFile}
-                        />
-                        <button
-                            type="button"
-                            className={classNames(styles['gcode-file'], styles['gcode-file-upload'])}
-                            onClick={actions.onClickToUpload}
-                        >
-                            <i className={classNames(styles['icon-24'], styles['icon-plus'])} />
-                            {i18n._('Upload File')}
-                        </button>
-                    </div>
+                    <div
+                        className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
+                        style={{ marginTop: '10px' }}
+                    />
+                    <button
+                        type="button"
+                        className="sm-btn-small sm-btn-primary"
+                        disabled={!hasFile}
+                        onClick={actions.loadGcodeToWorkspace}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Load G-code to Workspace')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-small sm-btn-default"
+                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                        onClick={actions.sendFile}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Send to Snapmaker via Wi-Fi')}
+                    </button>
                 </div>
-                <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                <button
-                    type="button"
-                    className="sm-btn-small sm-btn-default"
-                    disabled={!hasFile}
-                    onClick={actions.loadGcodeToWorkspace}
-                    style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                >
-                    {i18n._('Load G-code to Workspace')}
-                </button>
-                <button
-                    type="button"
-                    className="sm-btn-small sm-btn-default"
-                    disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
-                    onClick={actions.sendFile}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Send via Wi-Fi')}
-                </button>
-
             </div>
 
         );

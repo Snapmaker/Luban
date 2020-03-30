@@ -100,7 +100,7 @@ export const LASER_PRINT_MODE_MANUAL = 'manual';
 
 export const MACHINE_SERIES = {
     ORIGINAL: {
-        value: 'original',
+        value: 'Original',
         label: 'Snapmaker Original',
         setting: {
             size: {
