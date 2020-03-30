@@ -152,7 +152,7 @@ class WifiTransport extends PureComponent {
         sendFile: () => {
             const isSendingFile = modalSmallHOC({
                 title: i18n._('Sending File'),
-                text: i18n._('Please wait for the file transform.'),
+                text: i18n._('Please wait for the file transfer.'),
                 img: IMAGE_WIFI_CONNECT_WAITING
             }).ref;
             const selectFileName = this.state.selectFileName;
@@ -175,8 +175,8 @@ class WifiTransport extends PureComponent {
                         });
                     } else {
                         (modalSmallHOC({
-                            title: i18n._('Send File Successfully'),
-                            text: i18n._('Please confirm and choose whether to start print this file on the touchscreen.'),
+                            title: i18n._('File Sent Successfully'),
+                            text: i18n._('Please confirm and choose whether to start to print this file on the touchscreen.'),
                             img: IMAGE_WIFI_CONNECTED
                         }));
                     }
@@ -243,32 +243,8 @@ class WifiTransport extends PureComponent {
                             checked={loadToWorkspaceOnLoad}
                             onChange={actions.onChangeShouldPreview}
                         />
-                        <span style={{ paddingLeft: '4px' }}>{i18n._('Load to workspace after added')}</span>
+                        <span style={{ paddingLeft: '4px' }}>{i18n._('Preview in workspace')}</span>
                     </div>
-                    <button
-                        type="button"
-                        className="sm-btn-small sm-btn-primary"
-                        disabled={!hasFile}
-                        onClick={actions.loadGcodeToWorkspace}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Load G-code to Workspace')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-small sm-btn-default"
-                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
-                        onClick={actions.sendFile}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Send to Snapmaker via Wi-Fi')}
-                    </button>
-                    {gcodeFiles.length > 0 && (
-                        <div
-                            className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
-                            style={{ marginTop: '10px' }}
-                        />
-                    )}
                     {_.map(gcodeFiles, (gcodeFile, index) => {
                         const name = gcodeFile.name.length > 33
                             ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
@@ -356,6 +332,28 @@ class WifiTransport extends PureComponent {
                             </div>
                         );
                     })}
+                    <div
+                        className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])}
+                        style={{ marginTop: '10px' }}
+                    />
+                    <button
+                        type="button"
+                        className="sm-btn-small sm-btn-primary"
+                        disabled={!hasFile}
+                        onClick={actions.loadGcodeToWorkspace}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Load G-code to Workspace')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-small sm-btn-default"
+                        disabled={!(hasFile && isConnected && isHeadType && connectionType === CONNECTION_TYPE_WIFI)}
+                        onClick={actions.sendFile}
+                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                    >
+                        {i18n._('Send to Snapmaker via Wi-Fi')}
+                    </button>
                 </div>
             </div>
 
