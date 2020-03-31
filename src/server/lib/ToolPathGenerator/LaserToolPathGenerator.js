@@ -1,6 +1,5 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
-import path from 'path';
 import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGParser';
 import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';

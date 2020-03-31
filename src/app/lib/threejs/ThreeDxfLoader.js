@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
-import DxfParser from 'dxf-parser';
+import DxfParser from '../../../server/lib/DXFParser';
 import DxfShader from './DxfShaderLine';
 /**
  * Returns the angle in radians of the vector (p1,p2). In other words, imagine
@@ -710,18 +710,7 @@ class ThreeDxfLoader {
             }
             this.normalizer(dxf, scale);
 
-            const dims = {
-                min: {
-                    x: false,
-                    y: false,
-                    z: false
-                },
-                max: {
-                    x: false,
-                    y: false,
-                    z: false
-                }
-            };
+
             const typeGeometries = {
                 CIRCLE: new THREE.Geometry(),
                 LINE: new THREE.Geometry(),
@@ -754,13 +743,6 @@ class ThreeDxfLoader {
                     obj = this.drawEntity(typeGeometries, entity, dxf);
                 }
                 if (obj) {
-                    const bbox = new THREE.Box3().setFromObject(obj);
-                    if (bbox.min.x && ((dims.min.x === false) || (dims.min.x > bbox.min.x))) dims.min.x = bbox.min.x;
-                    if (bbox.min.y && ((dims.min.y === false) || (dims.min.y > bbox.min.y))) dims.min.y = bbox.min.y;
-                    if (bbox.min.z && ((dims.min.z === false) || (dims.min.z > bbox.min.z))) dims.min.z = bbox.min.z;
-                    if (bbox.max.x && ((dims.max.x === false) || (dims.max.x < bbox.max.x))) dims.max.x = bbox.max.x;
-                    if (bbox.max.y && ((dims.max.y === false) || (dims.max.y < bbox.max.y))) dims.max.y = bbox.max.y;
-                    if (bbox.max.z && ((dims.max.z === false) || (dims.max.z < bbox.max.z))) dims.max.z = bbox.max.z;
                     group.add(obj);
                 }
                 obj = null;

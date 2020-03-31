@@ -1,7 +1,7 @@
-import DxfParser from 'dxf-parser';
 import fs from 'fs';
 import * as THREE from 'three';
 import { isUndefined } from 'lodash';
+import DxfParser from './index';
 
 function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
     let points;
@@ -379,13 +379,13 @@ export const parseDxf = async (originalPath) => {
     let dxfStr = await parser.parseSync(fileText);
     dxfStr = measureBoundary(dxfStr);
 
-    // fs.writeFile(originalPath.replace(/(\.dxf)$/, 'laserdxf.json'), JSON.stringify(dxfStr), (err) => {
-    //     if (err) {
-    //         console.log(err);
-    //     } else {
-    //         console.log('successful>>>>>>>>>>>>>');
-    //     }
-    // });
+    fs.writeFile(originalPath.replace(/(\.dxf)$/, 'laserdxf.json'), JSON.stringify(dxfStr), (err) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('successful>>>>>>>>>>>>>');
+        }
+    });
     return {
         svg: dxfStr,
         width: dxfStr.width,
