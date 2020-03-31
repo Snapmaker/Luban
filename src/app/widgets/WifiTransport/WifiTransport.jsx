@@ -239,7 +239,6 @@ class WifiTransport extends PureComponent {
                     <div style={{ marginTop: '10px' }}>
                         <input
                             type="checkbox"
-                            defaultChecked={false}
                             checked={loadToWorkspaceOnLoad}
                             onChange={actions.onChangeShouldPreview}
                         />

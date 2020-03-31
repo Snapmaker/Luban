@@ -58,10 +58,9 @@ const convertRasterToSvg = (options) => {
 };
 
 const convertTextToSvg = async (options) => {
-    const { text, font, outputFilename, size, lineHeight, alignment } = options;
+    const { text, font, name, size, lineHeight, alignment } = options;
 
-    // const outputFilename = pathWithRandomSuffix('text.svg');
-
+    const uploadName = pathWithRandomSuffix(name);
 
     const fontObj = await fontManager.getFont(font);
     const unitsPerEm = fontObj.unitsPerEm;
@@ -117,15 +116,15 @@ const convertTextToSvg = async (options) => {
         height: height
     });
     return new Promise((resolve, reject) => {
-        const targetPath = `${DataStorage.tmpDir}/${outputFilename}`;
+        const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
         fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);
                 reject(err);
             } else {
                 resolve({
-                    originalName: outputFilename,
-                    uploadName: outputFilename,
+                    originalName: name,
+                    uploadName: uploadName,
                     width: width,
                     height: height
                 });
