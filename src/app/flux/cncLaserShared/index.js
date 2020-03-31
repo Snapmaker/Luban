@@ -5,7 +5,6 @@ import api from '../../api';
 import { controller } from '../../lib/controller';
 import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkParams } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
-import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import {
     ACTION_UPDATE_STATE,
     ACTION_RESET_CALCULATED_STATE,
@@ -220,8 +219,7 @@ export const actions = {
         const { size } = getState().machine;
 
         api.convertTextToSvg({
-            ...DEFAULT_TEXT_CONFIG,
-            outputFilename: pathWithRandomSuffix(DEFAULT_TEXT_CONFIG.originalName)
+            ...DEFAULT_TEXT_CONFIG
         })
             .then((res) => {
                 // const { name, filename, width, height } = res.body;
@@ -497,6 +495,7 @@ export const actions = {
         api.convertTextToSvg(newConfig)
             .then((res) => {
                 const { originalName, uploadName, width, height } = res.body;
+
                 const source = { originalName, uploadName, sourceHeight: height, sourceWidth: width };
 
                 const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, newConfig.lineHeight, { width, height });

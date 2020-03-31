@@ -8,7 +8,7 @@ const DEFAULT_TEXT_CONFIG = {
     fillEnabled: DEFAULT_FILL_ENABLED,
     fillDensity: DEFAULT_FILL_DENSITY,
     text: 'Snapmaker',
-    originalName: 'text.svg',
+    name: 'text.svg',
     size: 24,
     font: 'Georgia',
     lineHeight: 1.5,
