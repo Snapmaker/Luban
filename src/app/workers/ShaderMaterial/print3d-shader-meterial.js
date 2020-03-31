@@ -46,14 +46,14 @@ export const PRINT3D_VERT_SHADER = [
     '}'
 ].join('');
 export const PRINT3D_FRAG_SHADER = [
-    'const float c_wall_inner_code = 1.0;',
-    'const float c_wall_outer_code = 2.0;',
-    'const float c_skin_code = 3.0;',
-    'const float c_skirt_code = 4.0;',
-    'const float c_support_code = 5.0;',
-    'const float c_fill_code = 6.0;',
-    'const float c_travel_code = 7.0;',
-    'const float c_unknown_code = 8.0;',
+    // 'const float c_wall_inner_code = 1.0;',
+    // 'const float c_wall_outer_code = 2.0;',
+    // 'const float c_skin_code = 3.0;',
+    // 'const float c_skirt_code = 4.0;',
+    // 'const float c_support_code = 5.0;',
+    // 'const float c_fill_code = 6.0;',
+    // 'const float c_travel_code = 7.0;',
+    // 'const float c_unknown_code = 8.0;',
 
     'uniform float u_visible_layer_count;',
 
@@ -75,35 +75,35 @@ export const PRINT3D_FRAG_SHADER = [
     '        discard;',
     '    }',
 
-    '    if(u_wall_inner_visible == 0 && v_type_code == c_wall_inner_code){',
+    '    if(u_wall_inner_visible == 0 && 0.5 < v_type_code && v_type_code < 1.5){',
     '        discard;',
     '    }',
 
-    '    if(u_wall_outer_visible == 0 && v_type_code == c_wall_outer_code){',
+    '    if(u_wall_outer_visible == 0 && 1.5 < v_type_code && v_type_code < 2.5){',
     '        discard;',
     '    }',
 
-    '    if(u_skin_visible == 0 && v_type_code == c_skin_code){',
+    '    if(u_skin_visible == 0 && 2.5 < v_type_code && v_type_code < 3.5){',
     '        discard;',
     '    }',
 
-    '    if(u_skirt_visible == 0 && v_type_code == c_skirt_code){',
+    '    if(u_skirt_visible == 0 && 3.5 < v_type_code && v_type_code < 4.5){',
     '        discard;',
     '    }',
 
-    '    if(u_support_visible == 0 && v_type_code == c_support_code){',
+    '    if(u_support_visible == 0 && 4.5 < v_type_code && v_type_code < 5.5){',
     '        discard;',
     '    }',
 
-    '    if(u_fill_visible == 0 && v_type_code == c_fill_code){',
+    '    if(u_fill_visible == 0 && 5.5 < v_type_code && v_type_code < 6.5){',
     '        discard;',
     '    }',
 
-    '    if(u_travel_visible == 0 && v_type_code == c_travel_code){',
+    '    if(u_travel_visible == 0 && 6.5 < v_type_code && v_type_code < 7.5){',
     '        discard;',
     '    }',
 
-    '    if(u_unknown_visible == 0 && v_type_code == c_unknown_code){',
+    '    if(u_unknown_visible == 0 && 7.5 < v_type_code && v_type_code < 8.5){',
     '        discard;',
     '    }',
 
