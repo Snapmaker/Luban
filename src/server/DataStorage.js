@@ -3,8 +3,11 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { app } from 'electron';
 import isElectron from 'is-electron';
+import semver from 'semver';
 import logger from './lib/logger';
 import { initFonts } from './lib/FontManager';
+import settings from './config/settings';
+
 
 const log = logger('server:DataStorage');
 
@@ -75,6 +78,7 @@ class DataStorage {
 
         await this.initFonts();
         await this.initUserCase();
+        await this.versionAdaptation();
     }
 
     static async initSlicer() {
@@ -150,6 +154,34 @@ class DataStorage {
                 if (fs.statSync(srcPath)
                     .isFile()) {
                     fs.copyFileSync(srcPath, dstPath);
+                }
+            }
+        }
+    }
+
+    static async copyFile(src, dst, isCover = true) {
+        if (!fs.existsSync(src) || !fs.statSync(src).isFile()) {
+            return;
+        }
+        if (!isCover && fs.existsSync(dst)) {
+            return;
+        }
+        fs.copyFileSync(src, dst);
+    }
+
+    static async versionAdaptation() {
+        if (semver.gte(settings.version, '3.3.0')) {
+            log.info(settings.version);
+            const files = fs.readdirSync(this.configDir);
+            for (const file of files) {
+                if (file.indexOf('quality') !== -1) {
+                    const src = path.join(this.configDir, file);
+                    const dstA150 = path.join(`${this.configDir}/A150`, file);
+                    const dstA250 = path.join(`${this.configDir}/A250`, file);
+                    const dstA350 = path.join(`${this.configDir}/A350`, file);
+                    await this.copyFile(src, dstA150, false);
+                    await this.copyFile(src, dstA250, false);
+                    await this.copyFile(src, dstA350, false);
                 }
             }
         }
