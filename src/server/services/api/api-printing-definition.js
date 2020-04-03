@@ -8,6 +8,23 @@ const isQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1;
 };
 
+export const getSourceDefinition = (req, res) => {
+    const { definitionId } = req.params;
+    const series = isQualityDefinition(definitionId) ? req.query.series : '';
+    if (!definitionId) {
+        res.status(ERR_BAD_REQUEST).send({
+            err: 'Parameter "definitionId" is required.'
+        });
+        return;
+    }
+
+    const filename = `${definitionId}.def.json`;
+    const configDir = `${DataStorage.configDir}/${series}/${filename}`;
+    const readFileSync = fs.readFileSync(configDir);
+    const parse = JSON.parse(readFileSync);
+    res.send({ filename: filename, definition: parse });
+};
+
 export const getDefinition = (req, res) => {
     const { definitionId } = req.params;
     const series = isQualityDefinition(definitionId) ? req.body.series : '';
@@ -95,4 +112,34 @@ export const updateDefinition = (req, res) => {
             res.send({ status: 'ok' });
         }
     });
+};
+
+export const uploadDefinition = (req, res) => {
+    const { definitionId, tmpPath, series } = req.body;
+    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${tmpPath}`, 'utf-8');
+    const obj = JSON.parse(readFileSync);
+
+    if (!obj.inherits) {
+        obj.inherits = 'fdmprinter';
+    }
+
+    if (!obj.metadata) {
+        obj.metadata = {};
+    }
+    obj.metadata.readonly = false;
+
+    const definitionLoader = new DefinitionLoader();
+    try {
+        definitionLoader.loadJSON(definitionId, obj);
+        const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionId}.def.json`);
+        fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
+            if (err) {
+                res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+            } else {
+                res.send({ status: 'ok', definition: definitionLoader.toObject() });
+            }
+        });
+    } catch (e) {
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });
+    }
 };

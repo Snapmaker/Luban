@@ -15,7 +15,6 @@ import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import styles from './styles.styl';
 
-
 const OFFICIAL_CONFIG_KEYS = [
     'layer_height',
     'top_thickness',
@@ -50,10 +49,14 @@ class Configurations extends PureComponent {
         duplicateQualityDefinition: PropTypes.func.isRequired,
         removeQualityDefinition: PropTypes.func.isRequired,
         updateQualityDefinitionName: PropTypes.func.isRequired,
+        onDownloadQualityDefinition: PropTypes.func.isRequired,
+        onUploadQualityDefinition: PropTypes.func.isRequired,
 
         updateDefaultAdvised: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired
     };
+
+    fileInput = React.createRef();
 
     state = {
         // control UI
@@ -156,6 +159,14 @@ class Configurations extends PureComponent {
     };
 
     actions = {
+        onClickToUpload: () => {
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
+        },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            this.props.onUploadQualityDefinition(file);
+        },
         showNotification: (msg) => {
             this.setState({
                 notificationMessage: msg
@@ -260,6 +271,10 @@ class Configurations extends PureComponent {
             // Select new definition after creation
             this.actions.onSelectCustomDefinition(newDefinition);
         },
+        onDownloadQualityDefinition: () => {
+            const definition = this.state.customQualityDefinition;
+            this.props.onDownloadQualityDefinition(definition.definitionId);
+        },
         onRemoveDefinition: async () => {
             const definition = this.state.customQualityDefinition;
             await confirm({
@@ -273,6 +288,9 @@ class Configurations extends PureComponent {
             if (this.props.qualityDefinitions.length) {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
+        },
+        downloadDefinition: () => {
+
         },
         onSetOfficoalTab: (isAdvised) => {
             if (isAdvised) {
@@ -350,7 +368,7 @@ class Configurations extends PureComponent {
                 }
             }
         } else if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+            const definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
             if (nextProps.isAdvised) {
                 this.actions.onSelectOfficialDefinition(definition);
             } else {
@@ -469,6 +487,14 @@ class Configurations extends PureComponent {
                 )}
                 {!isOfficialTab && (
                     <div style={{ marginBottom: '6px' }}>
+                        <input
+                            ref={this.fileInput}
+                            type="file"
+                            accept=".json"
+                            style={{ display: 'none' }}
+                            multiple={false}
+                            onChange={actions.onChangeFile}
+                        />
                         <div>
                             <span style={{
                                 width: '100px',
@@ -525,6 +551,14 @@ class Configurations extends PureComponent {
                                         onClick={actions.onRenameDefinitionStart}
                                     />
                                 )}
+                                <Anchor
+                                    className={classNames('fa', 'fa-upload', widgetStyles['fa-btn'])}
+                                    onClick={actions.onClickToUpload}
+                                />
+                                <Anchor
+                                    className={classNames('fa', 'fa-download', widgetStyles['fa-btn'])}
+                                    onClick={actions.onDownloadQualityDefinition}
+                                />
                                 <Anchor
                                     className={classNames('fa', 'fa-plus', widgetStyles['fa-btn'])}
                                     onClick={actions.onDuplicateDefinition}
@@ -719,6 +753,8 @@ const mapDispatchToProps = (dispatch) => {
         updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
         updateActiveDefinition: (definition) => dispatch(printingActions.updateActiveDefinition(definition)),
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
+        onDownloadQualityDefinition: (definitionId) => dispatch(printingActions.onDownloadQualityDefinition(definitionId)),
+        onUploadQualityDefinition: (file) => dispatch(printingActions.onUploadQualityDefinition(file)),
         removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))

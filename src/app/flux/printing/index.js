@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import path from 'path';
 import { isNil } from 'lodash';
+import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
@@ -387,6 +388,37 @@ export const actions = {
 
 
         return createdDefinition;
+    },
+
+    onUploadQualityDefinition: (file) => (dispatch, getState) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        api.uploadFile(formData)
+            .then(async (res) => {
+                const response = res.body;
+                const definitionId = `quality.${timestamp()}`;
+                const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
+                const { qualityDefinitions } = getState().printing;
+                let name = definition.name;
+                while (qualityDefinitions.find(e => e.name === name)) {
+                    name = `#${name}`;
+                }
+                definition.name = name;
+                await definitionManager.updateDefinition(definition);
+                dispatch(actions.updateState({
+                    qualityDefinitions: [...qualityDefinitions, definition],
+                    defaultQualityId: definitionId
+                }));
+            })
+            .catch(() => {
+                // Ignore error
+            });
+    },
+
+    onDownloadQualityDefinition: (definitionId) => async () => {
+        const result = await definitionManager.getSourceDefinition(definitionId);
+        const blob = new Blob([JSON.stringify(result.definition)], { type: 'text/plain;charset=utf-8' });
+        FileSaver.saveAs(blob, result.filename, true);
     },
 
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
