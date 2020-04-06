@@ -250,8 +250,7 @@
     "webappengine": "~1.2.0",
     "winston": "~3.0.0",
     "xml2js": "~0.4.19",
-    "xterm": "^4.0.0",
-    "xterm-addon-fit": "^0.3.0"
+    "xterm": "^4.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
