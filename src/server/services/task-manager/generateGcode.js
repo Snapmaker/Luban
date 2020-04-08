@@ -53,7 +53,7 @@ export const generateGcode = (modelInfos, onProgress) => {
         return Promise.reject(new Error(`Unsupported type: ${headerType}`));
     }
 
-    const suffix = '.nc';
+    const suffix = headerType === 'laser' ? '.nc' : '.cnc';
 
     let fileTotalLines = 0;
     let estimatedTime = 0;
