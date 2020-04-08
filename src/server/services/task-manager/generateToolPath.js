@@ -79,7 +79,6 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
 
             const generator = new CncToolPathGenerator();
             generator.on('progress', (p) => onProgress(p));
-
             toolPath = await generator.generateToolPathObj(svg, modelInfo);
         }
         return new Promise((resolve, reject) => {
