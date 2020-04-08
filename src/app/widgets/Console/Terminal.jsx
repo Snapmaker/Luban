@@ -91,18 +91,14 @@ class TerminalWrapper extends PureComponent {
         const el = this.terminalContainer.current;
 
         this.term.open(el);
-        this.fitAddon.fit();
         this.term.focus(false);
+        // this.fitAddon.fit();
 
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-        // bind this
-        window.addEventListener('resize', this.resize.bind(this), false);
-        // bugfix: resize when oepn/close serial port
-        this.resize();
     }
 
     componentWillUnmount() {
