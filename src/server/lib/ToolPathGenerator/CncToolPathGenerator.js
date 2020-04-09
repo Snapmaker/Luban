@@ -6,12 +6,9 @@
 import EventEmitter from 'events';
 import PolygonOffset from './PolygonOffset';
 import { flip, scale, rotate, translate } from '../SVGParser';
-// import { dxfFlip, dxfScale, dxfRotate, dxfTranslate, measureBoundary } from '../DXFParser/Parser';
-
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 import { svgToSegments } from './SVGFill';
-// import { dxfToSegments } from './DXFFill';
 import Normalizer from './Normalizer';
 
 function distance(p, q) {

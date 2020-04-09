@@ -59,11 +59,6 @@ class ToolPathModel {
 
     generateToolPath3D(toolPath) {
         this.toolPathObj3D = generateToolPathObject3D(toolPath);
-    // generateToolPath3D() {
-    //     if (!this.toolPath) {
-    //         return;
-    //     }
-    //     this.toolPathObj3D = generateToolPathObject3D(this.toolPath);
     }
 
     loadToolPath(filename) {

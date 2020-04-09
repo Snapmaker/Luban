@@ -90,13 +90,6 @@ class SVGParser {
                 boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
             }
         }
-        // console.log('parseObject>>>>', {
-        //     shapes: root.shapes,
-        //     boundingBox: boundingBox,
-        //     viewBox: root.attributes.viewBox,
-        //     width: root.attributes.width,
-        //     height: root.attributes.height
-        // });
         return {
             shapes: root.shapes,
             boundingBox: boundingBox,

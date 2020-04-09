@@ -443,7 +443,6 @@ class ModelGroup {
     showModelObj3D(modelID) {
         const model = this.getModel(modelID);
         model && model.modelObject3D && (model.modelObject3D.visible = true);
-        // model && (model.modelObject3D.visible = true);
     }
 
     hideModelObj3D(modelID) {
