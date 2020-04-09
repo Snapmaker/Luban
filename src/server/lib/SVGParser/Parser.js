@@ -90,7 +90,6 @@ class SVGParser {
                 boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
             }
         }
-
         return {
             shapes: root.shapes,
             boundingBox: boundingBox,

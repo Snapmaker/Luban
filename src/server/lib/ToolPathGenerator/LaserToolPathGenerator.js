@@ -4,7 +4,7 @@ import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGPar
 import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
-
+import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../DXFParser/Parser';
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
 // }
@@ -25,19 +25,20 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { mode, config } = modelInfo;
+        const { mode, config, sourceType } = modelInfo;
         const { movementMode } = config;
 
         let fakeGcodes = this.getGcodeHeader();
 
         fakeGcodes.push('G90');
         fakeGcodes.push('G21');
-
         let workingGcode = '';
         if (mode === 'bw' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
             workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
         } else if (mode === 'greyscale') {
             workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
+        } else if (mode === 'vector' && sourceType === 'dxf') {
+            workingGcode = await this.generateGcodeDxf(modelInfo, modelPath);
         } else if (mode === 'vector' || mode === 'trace') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
@@ -321,6 +322,108 @@ class LaserToolPathGenerator extends EventEmitter {
         return content;
     }
 
+    async generateGcodeDxf(modelInfo, modelPath) {
+        const { transformation, config, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
+        const { fillEnabled, fillDensity, optimizePath } = config;
+        const { fixedPowerEnabled, fixedPower } = gcodeConfig;
+        const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
+        const originWidth = modelInfo.sourceWidth;
+        const originHeight = modelInfo.sourceHeight;
+        const targetWidth = transformation.width;
+        const targetHeight = transformation.height;
+        // rotation: degree and counter-clockwise
+        const rotationZ = transformation.rotationZ;
+        const flipFlag = transformation.flip;
+        let { svg } = await parseDxf(modelPath);
+        svg = dxfToSvg(svg);
+        updateDxfBoundingBox(svg);
+        // flip(svg, 1);
+        flip(svg, flipFlag);
+        scale(svg, {
+            x: targetWidth / originWidth,
+            y: targetHeight / originHeight
+        });
+        if (optimizePath) {
+            sortShapes(svg);
+        }
+        rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
+        translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
+
+
+        const normalizer = new Normalizer(
+            'Center',
+            svg.viewBox[0],
+            svg.viewBox[0] + svg.viewBox[2],
+            svg.viewBox[1],
+            svg.viewBox[1] + svg.viewBox[3],
+            {
+                x: 1,
+                y: 1
+            }
+        );
+
+
+        const segments = svgToSegments(svg, {
+            width: svg.viewBox[2],
+            height: svg.viewBox[3],
+            fillEnabled: fillEnabled,
+            fillDensity: fillDensity
+        });
+
+
+        let firstTurnOn = true;
+        function turnOnLaser() {
+            if (firstTurnOn && fixedPowerEnabled) {
+                firstTurnOn = false;
+                const powerStrength = Math.floor(fixedPower * 255 / 100);
+                return `M3 P${fixedPower} S${powerStrength}`;
+            }
+            return 'M3';
+        }
+
+        // second pass generate gcode
+        let progress = 0;
+        const content = [];
+        content.push(`G0 F${jogSpeed}`);
+        content.push(`G1 F${workSpeed}`);
+
+        let current = null;
+
+        for (const segment of segments) {
+            // G0 move to start
+            if (!current || current && !(pointEqual(current, segment.start))) {
+                if (current) {
+                    content.push('M5');
+                }
+
+                // Move to start point
+                content.push(`G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}`);
+                content.push(turnOnLaser());
+            }
+
+            // G0 move to end
+            content.push(`G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}`);
+
+            current = segment.end;
+
+            progress += 1;
+        }
+        if (segments.length !== 0) {
+            progress /= segments.length;
+        }
+        this.emit('progress', progress);
+        // turn off
+        if (current) {
+            content.push('M5');
+        }
+
+        // move to work zero
+        content.push('G0 X0 Y0');
+
+        // return `${content.join('\n')}\n`;
+        return content;
+    }
+
     async generateGcodeVector(modelInfo, modelPath) {
         const { transformation, config, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
         const { fillEnabled, fillDensity, optimizePath } = config;
@@ -337,7 +440,9 @@ class LaserToolPathGenerator extends EventEmitter {
 
         const svgParser = new SVGParser();
 
+
         const svg = await svgParser.parseFile(modelPath);
+
         flip(svg, 1);
         flip(svg, flipFlag);
         scale(svg, {
@@ -350,6 +455,7 @@ class LaserToolPathGenerator extends EventEmitter {
         rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
+
         const normalizer = new Normalizer(
             'Center',
             svg.viewBox[0],
@@ -361,6 +467,7 @@ class LaserToolPathGenerator extends EventEmitter {
                 y: 1
             }
         );
+
 
         const segments = svgToSegments(svg, {
             width: svg.viewBox[2],
@@ -416,7 +523,6 @@ class LaserToolPathGenerator extends EventEmitter {
 
         // move to work zero
         content.push('G0 X0 Y0');
-
         return content;
     }
 }

@@ -23,7 +23,7 @@ const getAccept = (uploadMode) => {
     if (['greyscale'].includes(uploadMode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
     } else if (['vector'].includes(uploadMode)) {
-        accept = '.svg';
+        accept = '.svg, .dxf';
     } else if (['trace'].includes(uploadMode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
@@ -176,7 +176,7 @@ class CNCPath extends PureComponent {
         const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
-        const isSvgVector = (sourceType === 'svg' && mode === 'vector');
+        const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (sourceType === 'text' && mode === 'vector');
 
         return (
