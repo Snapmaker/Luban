@@ -4,11 +4,9 @@ import PerfectScrollbar from 'perfect-scrollbar';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { Terminal } from 'xterm';
-import * as fit from 'xterm/lib/addons/fit/fit';
+import { FitAddon } from 'xterm-addon-fit';
 import log from '../../lib/log';
 import styles from './index.styl';
-
-Terminal.applyAddon(fit);
 
 // .widget-header-absolute widget-content-absolute
 class TerminalWrapper extends PureComponent {
@@ -44,6 +42,8 @@ class TerminalWrapper extends PureComponent {
 
     term = null;
 
+    fitAddon = null;
+
     eventHandler = {
         onResize: () => {
             const { rows, cols } = this.term;
@@ -54,13 +54,15 @@ class TerminalWrapper extends PureComponent {
             }
         },
         onPaste: (data) => {
-            const { onData } = this.props;
-            const lines = String(data).replace(/(\r\n|\r|\n)/g, '\n').split('\n');
-            for (let i = 0; i < lines.length; ++i) {
-                const line = lines[i];
-                onData(line);
-                this.term.write(color.white(line));
-                this.term.prompt();
+            if (document.activeElement === this.input) {
+                const { onData } = this.props;
+                const lines = String(data).replace(/(\r\n|\r|\n)/g, '\n').split('\n');
+                for (let i = 0; i < lines.length; ++i) {
+                    const line = lines[i];
+                    onData(line);
+                    this.term.write(color.white(line));
+                    this.term.prompt();
+                }
             }
         },
         onFocus: () => {
@@ -77,31 +79,26 @@ class TerminalWrapper extends PureComponent {
             scrollback: 1000,
             tabStopWidth: 4
         });
+
+        this.fitAddon = new FitAddon();
+        this.term.loadAddon(this.fitAddon);
         this.term.prompt = () => {
             this.term.write('\r\n');
-            // this.term.write(color.white(this.prompt));
         };
-        this.term.on('resize', this.eventHandler.onResize);
-        // this.term.on('key', this.eventHandler.onKey);
-        this.term.on('paste', this.eventHandler.onPaste);
-
-        this.term.on('focus', this.eventHandler.onFocus);
+        this.term.onResize(this.eventHandler.onResize);
+        this.term.onData(this.eventHandler.onPaste);
 
         const el = this.terminalContainer.current;
 
         this.term.open(el);
-        this.term.fit();
         this.term.focus(false);
+        // this.fitAddon.fit();
 
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-        // bind this
-        window.addEventListener('resize', this.resize.bind(this), false);
-        // bugfix: resize when oepn/close serial port
-        this.resize();
     }
 
     componentWillUnmount() {
@@ -110,9 +107,7 @@ class TerminalWrapper extends PureComponent {
             this.verticalScrollbar = null;
         }
         if (this.term) {
-            this.term.off('resize', this.eventHandler.onResize);
-            // this.term.off('key', this.eventHandler.onKey);
-            this.term.off('paste', this.eventHandler.onPaste);
+            this.term.dispose();
             this.term = null;
         }
     }
@@ -175,7 +170,7 @@ class TerminalWrapper extends PureComponent {
             return;
         }
 
-        const geometry = fit.proposeGeometry(this.term);
+        const geometry = this.fitAddon.proposeDimensions(this.term);
         if (!geometry) {
             return;
         }
@@ -232,7 +227,6 @@ class TerminalWrapper extends PureComponent {
 
     writeln(data, isHistory = true) {
         if (this.term) {
-            this.term.eraseRight(0, this.term.buffer.y);
             this.term.write('\r');
             this.term.write(data);
             this.term.prompt();
