@@ -36,6 +36,7 @@ const INITIAL_STATE = {
 
     isCustom: false,
     size: MACHINE_SERIES.ORIGINAL.setting.size,
+    laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
 
     // Serial port
     port: controller.port || '',
@@ -121,7 +122,7 @@ export const actions = {
     init: () => (dispatch, getState) => {
         // Machine
 
-        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size } = machineStore.get('machine') || {};
+        const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
         const serverToken = machineStore.get('server.token') || '';
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
@@ -129,10 +130,10 @@ export const actions = {
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
-
         dispatch(actions.updateState({
             series: series,
             size: seriesInfo ? seriesInfo.setting.size : size,
+            laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
             serverToken: serverToken,
             port: machinePort,
             connectionType: connectionType,
@@ -339,6 +340,7 @@ export const actions = {
             dispatch(actions.updateState({ series }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
             seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
+            console.log('laserSize', seriesInfo.setting.laserSize);
             seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
             dispatch(printingActions.init());
