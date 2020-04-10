@@ -13,6 +13,8 @@ import RectTagParser from './RectTagParser';
 
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
+// TODO: General tolerance does not work well if original drawing is small,
+//  the tolerance should be calculated base on scale of image.
 const TOLERANCE = 0.08 / DEFAULT_MILLIMETER_PER_PIXEL;
 
 

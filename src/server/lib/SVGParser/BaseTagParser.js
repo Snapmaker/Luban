@@ -127,7 +127,7 @@ class BaseTagParser {
         let s = 0;
         const sa = ((rx * ry) ** 2 - (rx * y1p) ** 2 - (ry * x1p) ** 2);
         const sb = ((rx * y1p) ** 2 + (ry * x1p) ** 2);
-        if (sb > 0) {
+        if (sa > 0 && sb > 0) {
             s = Math.sqrt(sa / sb);
         }
         if (large === sweep) {
