@@ -36,6 +36,7 @@ class Macro extends PureComponent {
 
     actions = {
         executeGcode: (gcode) => {
+            gcode = gcode.trim();
             if (this.props.dataSource === PROTOCOL_SCREEN) {
                 this.props.developToolsExecuteGcode(gcode);
             } else {

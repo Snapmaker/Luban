@@ -44,7 +44,7 @@ const getSanitizedRecords = () => {
 
 export const fetch = (req, res) => {
     const records = getSanitizedRecords();
-    const { paging = true, page = 1, pageLength = 10 } = req.query;
+    const { paging = false, page = 1, pageLength = 10 } = req.query;
     const totalRecords = records.length;
     const [begin, end] = getPagingRange({ page, pageLength, totalRecords });
     const pagedRecords = paging ? records.slice(begin, end) : records;
