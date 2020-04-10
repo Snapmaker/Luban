@@ -118,7 +118,7 @@ class ToolPath {
 
     commentHandlers = {
         ';TYPE': (params) => {
-            const type = TYPE_CODES[params];
+            const type = TYPE_CODES[params.trim()];
             if (type && this.position.type !== type) {
                 this.position.type = type;
             }
