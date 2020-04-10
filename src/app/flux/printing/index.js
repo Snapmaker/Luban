@@ -416,7 +416,7 @@ export const actions = {
     },
 
     onDownloadQualityDefinition: (definitionId) => async () => {
-        const result = await definitionManager.getSourceDefinition(definitionId);
+        const result = await definitionManager.getRawDefinition(definitionId);
         const blob = new Blob([JSON.stringify(result.definition)], { type: 'text/plain;charset=utf-8' });
         FileSaver.saveAs(blob, result.filename, true);
     },

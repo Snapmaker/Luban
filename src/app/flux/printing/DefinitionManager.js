@@ -35,8 +35,11 @@ class DefinitionManager {
         this.qualityDefinitions = res.body.definitions;
     }
 
-    async getSourceDefinition(definitionId) {
-        const res = await api.printingConfigs.getSourceDefinition(definitionId, this.series);
+    /**
+     * Get raw definition file (for download).
+     */
+    async getRawDefinition(definitionId) {
+        const res = await api.printingConfigs.getRawDefinition(definitionId, this.series);
         return res.body;
     }
 

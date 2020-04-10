@@ -145,7 +145,7 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/printingQualityDefinitions/:series'), api.printingConfigs.getQualityDefinitions);
     app.get(urljoin(settings.route, 'api/printingMaterialDefinitions'), api.printingConfigs.getMaterialDefinitions);
     app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
-    app.get(urljoin(settings.route, 'api/printingSourceDefinition/:definitionId'), api.printingConfigs.getSourceDefinition);
+    app.get(urljoin(settings.route, 'api/printingRawDefinition/:definitionId'), api.printingConfigs.getRawDefinition);
     app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
     app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
     app.put(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.updateDefinition);

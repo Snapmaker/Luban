@@ -8,7 +8,10 @@ const isQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1;
 };
 
-export const getSourceDefinition = (req, res) => {
+/**
+ * Get raw definition which is unparsed and override.
+ */
+export const getRawDefinition = (req, res) => {
     const { definitionId } = req.params;
     const series = isQualityDefinition(definitionId) ? req.query.series : '';
     if (!definitionId) {
