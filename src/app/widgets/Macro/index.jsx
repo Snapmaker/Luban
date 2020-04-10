@@ -49,9 +49,8 @@ class MacroWidget extends PureComponent {
         },
         addMacro: async ({ name, content, repeat }) => {
             try {
-                let res;
-                res = await api.macros.create({ name, content, repeat });
-                res = await api.macros.fetch();
+                await api.macros.create({ name, content, repeat });
+                const res = await api.macros.fetch();
                 const { records: macros } = res.body;
                 this.setState({ macros: macros });
             } catch (err) {
