@@ -289,9 +289,6 @@ class Configurations extends PureComponent {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
         },
-        downloadDefinition: () => {
-
-        },
         onSetOfficoalTab: (isAdvised) => {
             if (isAdvised) {
                 this.setState({
@@ -360,7 +357,7 @@ class Configurations extends PureComponent {
                 this.actions.onSetOfficoalTab(false);
             }
             if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
-                const definition = this.props.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+                const definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
                 if (nextProps.isAdvised) {
                     this.actions.onSelectOfficialDefinition(definition);
                 } else {

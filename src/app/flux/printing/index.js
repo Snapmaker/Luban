@@ -404,7 +404,10 @@ export const actions = {
                     name = `#${name}`;
                 }
                 definition.name = name;
-                await definitionManager.updateDefinition(definition);
+                await definitionManager.updateDefinition({
+                    definitionId: definition.definitionId,
+                    name
+                });
                 dispatch(actions.updateState({
                     qualityDefinitions: [...qualityDefinitions, definition],
                     defaultQualityId: definitionId
