@@ -107,6 +107,11 @@ export const MACHINE_SERIES = {
                 x: 125,
                 y: 125,
                 z: 125
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 125
             }
         }
     },
