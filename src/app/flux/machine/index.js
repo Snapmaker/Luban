@@ -340,7 +340,6 @@ export const actions = {
             dispatch(actions.updateState({ series }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
             seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
-            console.log('laserSize', seriesInfo.setting.laserSize);
             seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
             dispatch(printingActions.init());
