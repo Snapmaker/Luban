@@ -40,6 +40,9 @@ export class DefinitionLoader {
     }
 
     loadJSON(definitionId, json) {
+        if (!this.definitionId) {
+            this.definitionId = definitionId;
+        }
         if (json.inherits) {
             this.loadDefinition(json.inherits);
             this.inherits = json.inherits;
@@ -133,6 +136,9 @@ export class DefinitionLoader {
     }
 
     updateSettings(settings) {
+        for (const key of Object.keys(settings)) {
+            this.ownKeys.add(key);
+        }
         this.settings = {
             ...this.settings,
             ...settings

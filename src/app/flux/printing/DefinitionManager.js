@@ -35,6 +35,19 @@ class DefinitionManager {
         this.qualityDefinitions = res.body.definitions;
     }
 
+    /**
+     * Get raw definition file (for download).
+     */
+    async getRawDefinition(definitionId) {
+        const res = await api.printingConfigs.getRawDefinition(definitionId, this.series);
+        return res.body;
+    }
+
+    async getDefinition(definitionId) {
+        const res = await api.printingConfigs.getDefinition(definitionId, this.series);
+        return res.body.definition;
+    }
+
     async createDefinition(definition) {
         const res = await api.printingConfigs.createDefinition(definition, this.series);
         return res.body.definition;
@@ -42,6 +55,17 @@ class DefinitionManager {
 
     async removeDefinition(definition) {
         await api.printingConfigs.removeDefinition(definition.definitionId, this.series);
+    }
+
+    async uploadDefinition(definitionId, tmpPath) {
+        const res = await api.printingConfigs.uploadDefinition(definitionId, tmpPath, this.series);
+        const { err, definition } = res.body;
+        if (err) {
+            console.error(err);
+            return null;
+        } else {
+            return definition;
+        }
     }
 
     // Update definition

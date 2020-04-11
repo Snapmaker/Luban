@@ -244,6 +244,7 @@ printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print
 
 printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
 
+printingConfigs.getRawDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingRawDefinition/${definitionId}`).query({ series }));
 printingConfigs.getDefinition = defaultAPIFactory((definitionId, series) => request.get(`/api/printingDefinition/${definitionId}`).send({ series }));
 
 printingConfigs.getQualityDefinitions = defaultAPIFactory((series) => request.get(`/api/printingQualityDefinitions/${series}`));
@@ -258,6 +259,11 @@ printingConfigs.removeDefinition = defaultAPIFactory((definitionId, series) => r
 
 printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition, series) => request.put(`/api/printingDefinition/${definitionId}`).send({
     definition,
+    series
+}));
+printingConfigs.uploadDefinition = defaultAPIFactory((definitionId, tmpPath, series) => request.post('/api/printingDefinition/upload').send({
+    definitionId,
+    tmpPath,
     series
 }));
 
