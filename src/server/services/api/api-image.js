@@ -5,7 +5,7 @@ import jimp from 'jimp';
 import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../lib/SVGParser';
-import { parseDxf } from '../../lib/DXFParser/Parser';
+import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
 import imageProcess from '../../lib/image-process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';

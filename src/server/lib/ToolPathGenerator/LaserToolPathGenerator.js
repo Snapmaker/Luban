@@ -4,7 +4,7 @@ import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGPar
 import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
-import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../DXFParser/Parser';
+import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
 // }
