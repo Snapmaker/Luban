@@ -305,7 +305,7 @@ class WebcamWidget extends PureComponent {
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
-                    className={cx(styles.widgetContent, {
+                    className={cx(styles['widget-content'], {
                         [styles.hidden]: minimized,
                         [styles.fullscreen]: isFullscreen
                     })}

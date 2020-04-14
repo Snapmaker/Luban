@@ -8,7 +8,7 @@ const Sortable = (props) => {
     const { children, className, style, ...rest } = props;
 
     return (
-        <div className={classNames(className, styles.widgetSortable)} style={style}>
+        <div className={classNames(className, styles['widget-sortable'])} style={style}>
             <Anchor {...rest}>
                 {children}
             </Anchor>

@@ -114,7 +114,7 @@ class Header extends PureComponent {
         const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
 
         return (
-            <Navbar bg="light" expand="lg" fixed="" className={styles['lu-navbar']}>
+            <Navbar bg="light" expand="lg" fixed="top" className={styles['lu-navbar']}>
                 <Navbar.Brand>
                     {newUpdateAvailable && (
                         <OverlayTrigger placement="right" defaultShow overlay={<UpdateTooltip />}>

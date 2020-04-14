@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Select from 'react-select';
+import { Button, InputGroup } from 'react-bootstrap';
 import { includes, map } from 'lodash';
 
 import log from '../../lib/log';
@@ -306,8 +307,14 @@ class SerialConnection extends PureComponent {
 
         return (
             <div>
-                <div className="form-group" style={{ marginTop: '10px' }}>
-                    <div className="input-group input-group-sm">
+                <InputGroup className="mb-3">
+                    <div
+                        style={{
+                            flex: '1 1 0%',
+                            width: '100%',
+                            marginRight: '5px'
+                        }}
+                    >
                         <Select
                             menuStyle={{
                                 maxHeight: '100px'
@@ -329,31 +336,29 @@ class SerialConnection extends PureComponent {
                             value={port}
                             valueRenderer={this.renderPortValue}
                         />
-                        <div className="input-group-btn">
-                            <button
-                                type="button"
-                                className="btn btn-default"
-                                name="btn-refresh"
-                                title={i18n._('Refresh')}
-                                onClick={this.actions.onRefreshPorts}
-                                disabled={!canRefresh}
-                            >
-                                <i
-                                    className={classNames(
-                                        'fa',
-                                        'fa-refresh',
-                                        { 'fa-spin': loadingPorts }
-                                    )}
-                                />
-                            </button>
-                        </div>
                     </div>
-                </div>
+                    <InputGroup.Append>
+                        <Button
+                            variant="outline-secondary"
+                            style={{ borderColor: '#c8c8c8' }}
+                            name="btn-refresh"
+                            title={i18n._('Refresh')}
+                            onClick={this.actions.onRefreshPorts}
+                            disabled={!canRefresh}
+                        >
+                            <i
+                                className={classNames(
+                                    'fa',
+                                    'fa-refresh',
+                                    { 'fa-spin': loadingPorts }
+                                )}
+                            />
+                        </Button>
+                    </InputGroup.Append>
+                </InputGroup>
+
                 {isConnected && (
-                    <div style={{
-                        marginBottom: '10px'
-                    }}
-                    >
+                    <div className="mb-3">
                         {headType === MACHINE_HEAD_TYPE['3DP'].value && <PrintingState headType={headType} />}
                         {headType === MACHINE_HEAD_TYPE.LASER.value && <LaserState headType={headType} />}
                         {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
@@ -392,6 +397,7 @@ class SerialConnection extends PureComponent {
         );
     }
 }
+
 const mapStateToProps = (state) => {
     const machine = state.machine;
 

@@ -6,7 +6,7 @@ import styles from './index.styl';
 const Content = ({ className, ...props }) => (
     <div
         {...props}
-        className={classNames(className, styles.widgetContent)}
+        className={classNames(className, styles['widget-content'])}
     />
 );
 

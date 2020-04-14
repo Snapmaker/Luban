@@ -17,19 +17,9 @@ class PrintingState extends PureComponent {
     render() {
         const { nozzleTemperature, nozzleTargetTemperature, heatedBedTemperature, heatedBedTargetTemperature } = this.props;
         return (
-            <div>
-                <div
-                    style={{
-                        width: '40%'
-                    }}
-                />
+            <div className="container-fluid px-0">
                 <div className="row">
-                    <div
-                        className="col-xs-6"
-                        style={{
-                            borderRight: '1px solid #c8c8c8'
-                        }}
-                    >
+                    <div className="col-sm-6">
                         <div className={styles['color-grey-color']}>{i18n._('Nozzle Temp')}</div>
                         <div>{nozzleTemperature}°C / {nozzleTargetTemperature}°C</div>
                     </div>

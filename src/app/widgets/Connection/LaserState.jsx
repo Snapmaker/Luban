@@ -14,16 +14,9 @@ class LaserState extends PureComponent {
     render() {
         const { laserFocalLength } = this.props;
         return (
-            <div>
-                <div
-                    style={{
-                        width: '40%'
-                    }}
-                />
+            <div className="container-fluid px-0">
                 <div className="row">
-                    <div
-                        className="col-xs-6"
-                    >
+                    <div className="col-sm-6">
                         <div className={styles['color-grey-color']}>{i18n._('Laser Focus')}</div>
                         <div>{laserFocalLength} mm</div>
                     </div>
