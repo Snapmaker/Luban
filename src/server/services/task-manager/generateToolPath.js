@@ -5,7 +5,7 @@ import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../lib/SVGParser';
-import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../lib/DXFParser/Parser';
+import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';

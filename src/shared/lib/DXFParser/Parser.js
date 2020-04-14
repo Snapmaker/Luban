@@ -1,7 +1,7 @@
 import fs from 'fs';
 import * as THREE from 'three';
 import { isUndefined } from 'lodash';
-import DxfParser from './index';
+import DxfParser from './DxfParser';
 
 function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
     let points;

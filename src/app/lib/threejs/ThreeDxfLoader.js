@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
-import DxfParser from '../../../server/lib/DXFParser';
+import DxfParser from '../../../shared/lib/DXFParser';
 import DxfShader from './DxfShaderLine';
 /**
  * Returns the angle in radians of the vector (p1,p2). In other words, imagine

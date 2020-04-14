@@ -1,4 +1,3 @@
-import log from 'loglevel';
 import DxfArrayScanner from './DxfArrayScanner';
 import AUTO_CAD_COLOR_INDEX from './AutoCadColorIndex';
 
@@ -19,13 +18,10 @@ import Spline from './entities/spline';
 import Text from './entities/text';
 // import Vertex from './entities/';
 
+// import logger from '../../../server/lib/logger';
 
-// log.setLevel('trace');
-// log.setLevel('debug');
-// log.setLevel('info');
-// log.setLevel('warn');
-log.setLevel('error');
-// log.setLevel('silent');
+// const log = logger('lib:DXFParser');
+
 
 function registerDefaultEntityHandlers(parser) {
     // Supported entities here (some entity code is still being refactored into this flow)
@@ -105,7 +101,7 @@ function debugCode(curr) {
 }
 
 function logUnhandledGroup(curr) {
-    log.debug(`unhandled group ${debugCode(curr)}`);
+    console.error(`unhandled group ${debugCode(curr)}`);
 }
 
 
@@ -162,7 +158,6 @@ DxfParser.prototype._parse = function (dxfString) {
             }
             curr = scanner.next();
         }
-        // console.log(util.inspect(header, { colors: true, depth: null }));
         curr = scanner.next(); // swallow up ENDSEC
         return header;
     };
@@ -196,7 +191,6 @@ DxfParser.prototype._parse = function (dxfString) {
         const viewPorts = []; // Multiple table entries may have the same name indicating a multiple viewport configuration
         let viewPort = {};
 
-        log.debug('ViewPort {');
         curr = scanner.next();
         while (!groupIs(0, END_OF_TABLE_VALUE)) {
             switch (curr.code) {
@@ -306,9 +300,7 @@ DxfParser.prototype._parse = function (dxfString) {
                 case 0:
                     // New ViewPort
                     if (curr.value === 'VPORT') {
-                        log.debug('}');
                         viewPorts.push(viewPort);
-                        log.debug('ViewPort {');
                         viewPort = {};
                         curr = scanner.next();
                     }
@@ -321,7 +313,6 @@ DxfParser.prototype._parse = function (dxfString) {
         }
         // Note: do not call scanner.next() here,
         //  parseTable() needs the current group
-        log.debug('}');
         viewPorts.push(viewPort);
 
         return viewPorts;
@@ -332,7 +323,6 @@ DxfParser.prototype._parse = function (dxfString) {
             ltype = {},
             length;
 
-        log.debug('LType {');
         curr = scanner.next();
         while (!groupIs(0, 'ENDTAB')) {
             switch (curr.code) {
@@ -359,11 +349,11 @@ DxfParser.prototype._parse = function (dxfString) {
                     curr = scanner.next();
                     break;
                 case 0:
-                    log.debug('}');
-                    if (length > 0 && length !== ltype.pattern.length) log.warn('lengths do not match on LTYPE pattern');
+                    if (length > 0 && length !== ltype.pattern.length) {
+                        console.warn('lengths do not match on LTYPE pattern');
+                    }
                     ltypes[ltypeName] = ltype;
                     ltype = {};
-                    log.debug('LType {');
                     curr = scanner.next();
                     break;
                 default:
@@ -371,7 +361,6 @@ DxfParser.prototype._parse = function (dxfString) {
             }
         }
 
-        log.debug('}');
         ltypes[ltypeName] = ltype;
         return ltypes;
     };
@@ -381,7 +370,6 @@ DxfParser.prototype._parse = function (dxfString) {
         let layerName,
             layer = {};
 
-        log.debug('Layer {');
         curr = scanner.next();
         while (!groupIs(0, 'ENDTAB')) {
             switch (curr.code) {
@@ -404,9 +392,7 @@ DxfParser.prototype._parse = function (dxfString) {
                 case 0:
                     // New Layer
                     if (curr.value === 'LAYER') {
-                        log.debug('}');
                         layers[layerName] = layer;
-                        log.debug('Layer {');
                         layer = {};
                         layerName = undefined;
                         curr = scanner.next();
@@ -420,7 +406,6 @@ DxfParser.prototype._parse = function (dxfString) {
         }
         // Note: do not call scanner.next() here,
         //  parseLayerTable() needs the current group
-        log.debug('}');
         layers[layerName] = layer;
 
         return layers;
@@ -495,7 +480,9 @@ DxfParser.prototype._parse = function (dxfString) {
             } else if (typeof (tableRecords) === 'object') {
                 actualCount = Object.keys(tableRecords).length;
             }
-            if (expectedCount !== actualCount) log.warn(`Parsed ${actualCount} ${tableDefinition.dxfSymbolName}'s but expected ${expectedCount}`);
+            if (expectedCount !== actualCount) {
+                console.warn(`Parsed ${actualCount} ${tableDefinition.dxfSymbolName}'s but expected ${expectedCount}`);
+            }
         }
         curr = scanner.next();
         return table;
@@ -519,11 +506,9 @@ DxfParser.prototype._parse = function (dxfString) {
 
                 const tableDefinition = tableDefinitions[curr.value];
                 if (tableDefinition) {
-                    log.debug(`${curr.value} Table {`);
                     tables[tableDefinitions[curr.value].tableName] = parseTable();
-                    log.debug('}');
                 } else {
-                    log.debug(`Unhandled Table ${curr.value}`);
+                    console.log(`Unhandled Table ${curr.value}`);
                 }
             } else {
                 // else ignored
@@ -563,12 +548,10 @@ DxfParser.prototype._parse = function (dxfString) {
                 let entity;
                 const handler = self._entityHandlers[curr.value];
                 if (handler !== null) {
-                    log.debug(`${curr.value} {`);
                     entity = handler.parseEntity(scanner, curr);
                     curr = scanner.lastReadGroup;
-                    log.debug('}');
                 } else {
-                    log.warn(`Unhandled entity ${curr.value}`);
+                    console.warn(`Unhandled entity ${curr.value}`);
                     curr = scanner.next();
                     continue;
                 }
@@ -674,11 +657,9 @@ DxfParser.prototype._parse = function (dxfString) {
             }
 
             if (groupIs(0, 'BLOCK')) {
-                log.debug('block {');
                 block = parseBlock();
-                log.debug('}');
                 ensureHandle(block);
-                if (!block.name) log.error(`block with handle "${block.handle}" is missing a name.`);
+                if (!block.name) console.error(`block with handle "${block.handle}" is missing a name.`);
                 else blocks[block.name] = block;
             } else {
                 logUnhandledGroup(curr);
@@ -701,25 +682,17 @@ DxfParser.prototype._parse = function (dxfString) {
                 }
 
                 if (curr.value === 'HEADER') {
-                    log.debug('> HEADER');
                     dxf.header = parseHeader();
-                    log.debug('<');
                 } else if (curr.value === 'BLOCKS') {
-                    log.debug('> BLOCKS');
                     dxf.blocks = parseBlocks();
-                    log.debug('<');
                 } else if (curr.value === 'ENTITIES') {
-                    log.debug('> ENTITIES');
                     dxf.entities = parseEntities(false);
-                    log.debug('<');
                 } else if (curr.value === 'TABLES') {
-                    log.debug('> TABLES');
                     dxf.tables = parseTables();
-                    log.debug('<');
                 } else if (curr.value === 'EOF') {
-                    log.debug('EOF');
+                    console.log('EOF');
                 } else {
-                    log.warn('Skipping section \'%s\'', curr.value);
+                    console.error('Skipping section \'%s\'', curr.value);
                 }
             } else {
                 curr = scanner.next();
