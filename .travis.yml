@@ -59,7 +59,7 @@ after_success:
             # Temporarily Bypass Gatekeeper
             sudo spctl --master-disable;
             sudo spctl --status;
-            travis_wait 30 npm run build:mac-x64;
+            travis_wait 60 npm run build:mac-x64;
             ls -al output output/*;
             cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg" "releases/${RELEASE}-mac-x64.dmg";
             ls -al releases/*;
