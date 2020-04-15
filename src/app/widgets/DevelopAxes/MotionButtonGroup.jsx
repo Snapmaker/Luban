@@ -27,7 +27,7 @@ run into the fixtures before you use this feature.')}
                 >
                     <button
                         type="button"
-                        className="sm-btn btn-sm btn-default"
+                        className="sm-btn btn-sm btn-outline-secondary"
                         onClick={actions.runBoundary}
                         disabled={!canClick}
                     >
@@ -44,7 +44,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className="sm-btn btn-sm btn-default"
+                            className="sm-btn btn-sm btn-outline-secondary"
                             onClick={() => {
                                 actions.move({ x: 0, y: 0, z: 0 });
                             }}
@@ -64,7 +64,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className="sm-btn btn-sm btn-default"
+                            className="sm-btn btn-sm btn-outline-secondary"
                             onClick={() => {
                                 props.executeGcode('G92 X0 Y0 Z0');
                             }}

@@ -478,7 +478,7 @@ class Axes extends PureComponent {
                     >
                         <button
                             type="button"
-                            className="btn btn-default"
+                            className="btn btn-outline-secondary"
                             onClick={actions.toggleKeypadJogging}
                             disabled={!canClick}
                         >
@@ -492,7 +492,7 @@ class Axes extends PureComponent {
                 <div className="sm-parameter-row">
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         disabled={!canClick}
                         onClick={() => this.actions.executeGcode('G28')}
                     >

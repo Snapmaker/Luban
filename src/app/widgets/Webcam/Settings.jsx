@@ -163,7 +163,7 @@ class Settings extends PureComponent {
                 <Modal.Footer>
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         onClick={this.handleCancel}
                     >
                         {i18n._('Cancel')}

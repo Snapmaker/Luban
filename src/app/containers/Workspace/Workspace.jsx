@@ -282,7 +282,7 @@ class Workspace extends PureComponent {
                             >
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className="btn btn-outline-secondary"
                                     onClick={this.togglePrimaryContainer}
                                 >
                                     {!hidePrimaryContainer && (
@@ -312,7 +312,7 @@ class Workspace extends PureComponent {
                             >
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className="btn btn-outline-secondary"
                                     onClick={this.toggleSecondaryContainer}
                                 >
                                     {!hideSecondaryContainer && (

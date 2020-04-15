@@ -98,7 +98,7 @@ class WorkflowControl extends PureComponent {
                 <div className="btn-group btn-group-sm">
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         style={{ height: '30px' }}
                         title={i18n._('Run')}
                         onClick={this.actions.handleRun}
@@ -108,7 +108,7 @@ class WorkflowControl extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         style={{ height: '30px' }}
                         title={i18n._('Pause')}
                         onClick={this.actions.handlePause}
@@ -118,7 +118,7 @@ class WorkflowControl extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         style={{ height: '30px' }}
                         title={i18n._('Stop')}
                         onClick={this.actions.handleStop}
@@ -128,7 +128,7 @@ class WorkflowControl extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         style={{ height: '30px' }}
                         title={i18n._('Close')}
                         onClick={this.actions.handleClose}

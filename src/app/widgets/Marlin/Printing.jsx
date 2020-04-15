@@ -150,7 +150,7 @@ class Printing extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Filament')}</span>
                         <button
                             type="button"
-                            className="btn btn-default"
+                            className="btn btn-outline-secondary"
                             style={{
                                 width: '82px',
                                 float: 'right'
@@ -161,7 +161,7 @@ class Printing extends PureComponent {
                         </button>
                         <button
                             type="button"
-                            className="btn btn-default"
+                            className="btn btn-outline-secondary"
                             style={{
                                 width: '82px',
                                 float: 'right',

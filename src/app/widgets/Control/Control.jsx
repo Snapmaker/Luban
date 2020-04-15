@@ -454,13 +454,13 @@ class Control extends PureComponent {
                     state={state}
                 />
 
-                <div style={{ marginBottom: '10px' }}>
+                <div className="mb-3">
                     <KeypadOverlay
                         show={state.canClick && state.keypadJogging}
                     >
                         <button
                             type="button"
-                            className="btn btn-default"
+                            className="btn btn-outline-secondary"
                             onClick={actions.toggleKeypadJogging}
                             disabled={!canClick}
                         >
@@ -471,10 +471,11 @@ class Control extends PureComponent {
                         </button>
                     </KeypadOverlay>
                 </div>
+
                 <div className="sm-parameter-row">
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         disabled={!canClick}
                         onClick={() => this.props.executeGcodeAutoHome()}
                     >
@@ -493,6 +494,7 @@ class Control extends PureComponent {
                         onChange={this.actions.onChangeJogSpeed}
                     />
                 </div>
+
                 <ControlPanel
                     state={state}
                     actions={actions}

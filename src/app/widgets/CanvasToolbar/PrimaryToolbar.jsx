@@ -19,7 +19,7 @@ class PrimaryToolbar extends Component {
                     <button
                         style={{ fontSize: '10px', padding: '3px' }}
                         type="button"
-                        className="btn btn-default pull-right"
+                        className="btn btn-outline-secondary pull-right"
                         onClick={switchCoordinateVisibility}
                         title={(!Detector.webgl)
                             ? i18n._('Enable 3D View')
