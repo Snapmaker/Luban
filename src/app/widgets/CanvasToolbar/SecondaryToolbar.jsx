@@ -18,7 +18,7 @@ class SecondaryToolbar extends Component {
         return (
             <div className="pull-right">
                 <div className="btn-toolbar">
-                    <div className="btn-group btn-group-sm">
+                    <div className="btn-group">
                         <RepeatButton
                             className={styles.btnIcon}
                             onClick={autoFocus}

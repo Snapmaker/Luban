@@ -323,7 +323,7 @@ class WifiConnection extends PureComponent {
                 )}
                 <div>
                     <div
-                        className="btn-group btn-group-sm"
+                        className="btn-group"
                         style={{
                             width: '50%'
                         }}

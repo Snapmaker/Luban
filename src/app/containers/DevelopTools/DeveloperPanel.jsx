@@ -469,7 +469,7 @@ class DeveloperPanel extends PureComponent {
                         </div>
                         <div>
                             <div
-                                className="btn-group btn-group-sm"
+                                className="btn-group"
                                 style={{ padding: '0 10px' }}
                             >
                                 <button
@@ -482,7 +482,7 @@ class DeveloperPanel extends PureComponent {
                                 </button>
                             </div>
                             <div
-                                className="btn-group btn-group-sm"
+                                className="btn-group"
                                 style={{ padding: '0 18px' }}
                             >
                                 <button
@@ -495,7 +495,7 @@ class DeveloperPanel extends PureComponent {
                                 </button>
                             </div>
                             {statusError && (
-                                <div sytle={{ color: 'red', fontSize: '15px' }}>
+                                <div style={{ color: 'red', fontSize: '15px' }}>
                                     err: the port is occupied
                                 </div>
                             )}

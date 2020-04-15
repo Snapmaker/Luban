@@ -41,7 +41,8 @@ const defaultState = {
     developerPanel: {
         primary: {
             widgets: [
-                'connectionPanel', 'axesPanel', 'macroPanel'
+                /*'connectionPanel',*/
+                'axesPanel', 'macroPanel'
             ]
         },
         default: {
@@ -218,6 +219,7 @@ function customizer(objValue, srcValue) {
     }
     return srcValue;
 }
+
 function merge(...args) {
     let data = args[0];
     for (let i = 1; i < args.length; i++) {

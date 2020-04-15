@@ -10,20 +10,20 @@ $visualizer-padding = 10px
     left: 0
     right: 0
 
-.visualizer-top-left
+.visualizer-top-left {
     position: absolute
     top: $visualizer-padding
     left: $visualizer-padding
     z-index: $z-index-float
 
-    .btn-top-left
+    .btn-top-left {
         display: inline-block
         position: relative
         float: left
         width: 60px
         height: 30px
         background-color: $background-color
-        margin-left: 10px
+        margin-left: .5rem
         padding: 0
         border: 1px solid $border-color
         border-radius: $border-radius
@@ -31,39 +31,70 @@ $visualizer-padding = 10px
         .btn-undo
         .btn-redo
         .btn-reset
-        .btn-remove
+        .btn-remove {
             width: 100%
             height: 100%
             background-repeat: no-repeat
             background-position: center
-        .btn-undo
+        }
+
+        .btn-undo {
             background-image: url("/images/14x14/undo-normal-14x14.png")
-        .btn-redo
+        }
+
+        .btn-redo {
             background-image: url("/images/14x14/redo-normal-14x14.png")
-        .btn-reset
+        }
+
+        .btn-reset {
             background-image: url("/images/14x14/reset-normal-14x14.png")
-        .btn-remove
+        }
+
+        .btn-remove {
             background-image: url("/images/14x14/delete-normal-14x14.png")
-        &:hover
+        }
+
+        &:hover {
             background-color: $btn-default-background-color-hover
-            .btn-undo
+
+            .btn-undo {
                 background-image: url("/images/14x14/undo-hover-14x14.png")
-            .btn-redo
+            }
+
+            .btn-redo {
                 background-image: url("/images/14x14/redo-hover-14x14.png")
-            .btn-reset
+            }
+
+            .btn-reset {
                 background-image: url("/images/14x14/reset-hover-14x14.png")
-            .btn-remove
+            }
+
+            .btn-remove {
                 background-image: url("/images/14x14/delete-hover-14x14.png")
-        &:disabled
+            }
+        }
+
+        &:disabled {
             opacity(.5)
-            .btn-undo
+
+            .btn-undo {
                 background-image: url("/images/14x14/undo-disabled-14x14.png")
-            .btn-redo
+            }
+
+            .btn-redo {
                 background-image: url("/images/14x14/redo-disabled-14x14.png")
-            .btn-reset
+            }
+
+            .btn-reset {
                 background-image: url("/images/14x14/reset-disabled-14x14.png")
-            .btn-remove
+            }
+
+            .btn-remove {
                 background-image: url("/images/14x14/delete-disabled-14x14.png")
+            }
+        }
+    }
+}
 
 .visualizer-model-transformation
     z-index: $z-index-float
@@ -93,8 +124,10 @@ $visualizer-padding = 10px
             border-top-left-radius: $border-radius
             border-top-right-radius: $border-radius
             background-image: url('/images/48x48/icon-move-normal-48x48.png')
+
         &.operation-scale
             background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+
         &.operation-rotate
             border-bottom-left-radius: $border-radius
             border-bottom-right-radius: $border-radius
@@ -103,19 +136,25 @@ $visualizer-padding = 10px
         &:hover,
         &.selected
             background-color: $blue-color
+
             &.operation-move
                 background-image: url('/images/48x48/icon-move-hover-48x48.png')
+
             &.operation-scale
                 background-image: url('/images/48x48/icon-scale-hover-48x48.png')
+
             &.operation-rotate
                 background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
 
         &:disabled
             background-color: $background-color
+
             &.operation-move
                 background-image: url('/images/48x48/icon-move-disabled-48x48.png')
+
             &.operation-scale
                 background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
+
             &.operation-rotate
                 background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
 
@@ -133,11 +172,13 @@ $visualizer-padding = 10px
             top: 0
             height: 93px
             transform: translate(0, 64px * .5 - 93px / 2)
+
         &.scale-panel
             top: 0
             transform: translate(0, 64px * 1.5 - 133px / 2)
             height: 133px
             width: 118px
+
         &.rotate-panel
             top: 0
             transform: translate(0, 64px * 2.5 - 133px / 2)
@@ -148,12 +189,16 @@ $visualizer-padding = 10px
             height: 27px
             width: 100%
             position: relative
+
         .axis-green
             color: #22ac38
+
         .axis-red
             color: #e93100
+
         .axis-blue
             color: #00b7ee
+
         .axis-label
             display: inline-block
             width: 30px
@@ -162,6 +207,7 @@ $visualizer-padding = 10px
             text-align: center
             font-size: 16px
             float: left
+
         .axis-slider
             margin-left: 8px
             display: inline-block
@@ -169,8 +215,10 @@ $visualizer-padding = 10px
 
         // move & rotate
         // axis-input-1 for move panel
+
         .axis-input-1
             display: inline-block
+
             > input
                 width: 80px
 
@@ -183,12 +231,17 @@ $visualizer-padding = 10px
             color: $grey-color
 
         // mm
+
         .axis-unit-1
             left: 75px
+
         // %
+
         .axis-unit-2
             left: 85px
+
         // °
+
         .axis-unit-3
             left: 90px
 
@@ -213,6 +266,7 @@ $visualizer-padding = 10px
 
         &:hover
             opacity(.5)
+
         &:active
             opacity(.3)
 
@@ -221,19 +275,23 @@ $visualizer-padding = 10px
         border-top-left-radius: $border-radius
         border-bottom-left-radius: $border-radius
         border-right: 0
+
     .turn-right
         margin-top: 28px
         border-top-right-radius: $border-radius
         border-bottom-right-radius: $border-radius
         border-left: 0
+
     .turn-up
         border-top-left-radius: $border-radius
         border-top-right-radius: $border-radius
         border-bottom: 0
+
     .turn-down
         border-bottom-left-radius: $border-radius
         border-bottom-right-radius: $border-radius
         border-top: 0
+
     .camera-reset
         background-repeat: no-repeat
         background-position: center
@@ -275,8 +333,10 @@ $visualizer-padding = 10px
         text-align: center
         background-color: $background-color
         margin-top: 15px
+
         &:hover
             opacity(.5)
+
         &:active
             opacity(.3)
 
@@ -298,11 +358,14 @@ $visualizer-padding = 10px
         .preview-title
             font-weight: bold
             margin-bottom: 10px
+
         .preview-type
             display: block
             height: 24px
+
             > input
                 margin-right: 4px
+
         .preview-brick
             display: inline-block
             width: 14px

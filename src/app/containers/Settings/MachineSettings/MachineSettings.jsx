@@ -278,10 +278,10 @@ class MachineSettings extends PureComponent {
                 </div>
                 <div className={styles['form-actions']}>
                     <div className="row">
-                        <div className="col-md-12">
+                        <div className="col-12">
                             <button
                                 type="button"
-                                className="btn btn-default"
+                                className="btn btn-outline-secondary"
                                 onClick={this.actions.onCancel}
                             >
                                 {i18n._('Cancel')}

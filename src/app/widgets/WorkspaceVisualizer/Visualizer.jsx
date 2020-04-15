@@ -629,7 +629,7 @@ class Visualizer extends Component {
         const { gcodeFile } = this.props;
 
         return (
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+            <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-notice']}>
                     <p>{notice}</p>
                 </div>
@@ -644,7 +644,7 @@ class Visualizer extends Component {
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {this.props.renderState === 'rendering' && <Rendering />}
-                    <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
+                    <div className="position-absolute m-3">
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}

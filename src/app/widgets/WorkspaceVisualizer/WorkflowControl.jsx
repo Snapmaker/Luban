@@ -11,6 +11,7 @@ import {
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
+import styles from './index.styl';
 
 
 class WorkflowControl extends PureComponent {
@@ -94,12 +95,11 @@ class WorkflowControl extends PureComponent {
         const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
 
         return (
-            <div className="btn-toolbar">
-                <div className="btn-group btn-group-sm">
+            <div className={styles['workflow-control']}>
+                <div className="btn-group" role="group">
                     <button
                         type="button"
                         className="btn btn-outline-secondary"
-                        style={{ height: '30px' }}
                         title={i18n._('Run')}
                         onClick={this.actions.handleRun}
                         disabled={isServerWaiting || !canPlay}
@@ -109,7 +109,6 @@ class WorkflowControl extends PureComponent {
                     <button
                         type="button"
                         className="btn btn-outline-secondary"
-                        style={{ height: '30px' }}
                         title={i18n._('Pause')}
                         onClick={this.actions.handlePause}
                         disabled={isServerWaiting || !canPause}
@@ -119,7 +118,6 @@ class WorkflowControl extends PureComponent {
                     <button
                         type="button"
                         className="btn btn-outline-secondary"
-                        style={{ height: '30px' }}
                         title={i18n._('Stop')}
                         onClick={this.actions.handleStop}
                         disabled={isServerWaiting || !canStop}
@@ -129,7 +127,6 @@ class WorkflowControl extends PureComponent {
                     <button
                         type="button"
                         className="btn btn-outline-secondary"
-                        style={{ height: '30px' }}
                         title={i18n._('Close')}
                         onClick={this.actions.handleClose}
                         disabled={isServerWaiting || !canClose}

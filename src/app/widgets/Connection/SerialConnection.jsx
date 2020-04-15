@@ -365,7 +365,7 @@ class SerialConnection extends PureComponent {
                     </div>
                 )}
 
-                <div className="btn-group btn-group-sm">
+                <div className="btn-group">
                     {!isConnected && (
                         <button
                             type="button"

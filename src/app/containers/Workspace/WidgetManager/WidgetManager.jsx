@@ -163,14 +163,14 @@ class WidgetManager extends PureComponent {
                 <Modal.Footer>
                     <button
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         onClick={actions.handleCancel}
                     >
                         {i18n._('Cancel')}
                     </button>
                     <button
                         type="button"
-                        className="btn btn-primary"
+                        className="btn btn-outline-primary"
                         onClick={actions.handleSave}
                     >
                         {i18n._('OK')}

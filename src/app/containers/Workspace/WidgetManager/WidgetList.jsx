@@ -14,7 +14,7 @@ const WidgetList = (props) => {
         <div className="container-fluid" style={style}>
             <div className="row">
                 {list.map((o) => (
-                    <div className="col-xs-6 col-md-4" key={o.id}>
+                    <div className="col-sm-6 col-md-4" key={o.id}>
                         <WidgetListItem
                             id={o.id}
                             caption={o.caption}

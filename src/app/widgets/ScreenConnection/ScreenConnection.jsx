@@ -308,7 +308,7 @@ class ScreenConnection extends PureComponent {
                         </div>
                     </div>
                 </div>
-                <div className="btn-group btn-group-sm">
+                <div className="btn-group">
                     {!isConnected && (
                         <button
                             type="button"
