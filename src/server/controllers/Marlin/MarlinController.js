@@ -567,9 +567,9 @@ class MarlinController {
             }
 
             // Marlin settings
+
             if (this.settings !== this.controller.settings) {
                 this.settings = this.controller.settings;
-                // this.emitAll('Marlin:settings', this.settings);
                 this.emitAll('Marlin:settings', { settings: this.settings });
             }
 

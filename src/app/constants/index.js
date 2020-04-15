@@ -199,5 +199,6 @@ export const IMAGE_WIFI_CONNECT_WAITING = '../../images/connection/ic_waiting-64
 export const IMAGE_WIFI_CONNECTED = '../../images/connection/ic_complete_64x64.png';
 export const IMAGE_WIFI_ERROR = '../../images/connection/ic_error_64x64.png';
 export const IMAGE_WIFI_WAITING = '../../images/connection/ic_Wi-FI_64x64.png';
+export const IMAGE_ENCLOSURE_WARNING = '../../images/ic_warning-64x64.png';
 
 export const LASER_MOCK_PLATE_HEIGHT = 6;

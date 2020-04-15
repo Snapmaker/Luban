@@ -21,7 +21,7 @@ import PrintingMaterialWidget from './PrintingMaterial';
 import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
 import WifiTransport from './WifiTransport';
-
+import EnclosureWidget from './Enclosure';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -37,6 +37,7 @@ const getWidgetByName = (name) => {
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
         'wifi-transport': WifiTransport,
+        'enclosure': EnclosureWidget,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,

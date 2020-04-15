@@ -19,11 +19,13 @@ import { actions as machineActions } from '../../flux/machine';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
 import CNCState from './CNCState';
+import EnclosureState from './EnclosureState';
 import MachineSelectModal from '../../modals/modal-machine-select';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
         isOpen: PropTypes.bool.isRequired,
+        enclosureOnline: PropTypes.bool.isRequired,
 
         port: PropTypes.string.isRequired,
         headType: PropTypes.string,
@@ -364,6 +366,11 @@ class SerialConnection extends PureComponent {
                         {headType === MACHINE_HEAD_TYPE.CNC.value && <CNCState headType={headType} />}
                     </div>
                 )}
+                {isConnected && this.props.enclosureOnline && (
+                    <div className="mb-3">
+                        <EnclosureState />
+                    </div>
+                )}
 
                 <div className="btn-group">
                     {!isConnected && (
@@ -401,11 +408,12 @@ class SerialConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, isOpen, isConnected, headType, connectionTimeout } = machine;
+    const { port, isOpen, enclosureOnline, isConnected, headType, connectionTimeout } = machine;
 
     return {
         port,
         isOpen,
+        enclosureOnline,
         headType,
         isConnected,
         connectionTimeout

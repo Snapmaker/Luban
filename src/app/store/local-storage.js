@@ -23,6 +23,7 @@ if (isElectron()) {
 const getUserConfig = (name) => {
     const cnc = {
         version: settings.version,
+        isUpgraded: true,
         state: {}
     };
 
@@ -38,6 +39,9 @@ const getUserConfig = (name) => {
             data = JSON.parse(localStorage.getItem(`Snapmaker-${name}`) || '{}');
         }
 
+        if (data.version.replace(/\./g, '') - cnc.version.replace(/\./g, '') < 0) {
+            cnc.isUpgraded = false;
+        }
         if (typeof data === 'object') {
             cnc.version = data.version || cnc.version; // fallback to current version
             cnc.state = data.state || cnc.state;
@@ -54,7 +58,16 @@ const getLocalStore = (name) => {
         return stores[name];
     } else {
         const localStore = getUserConfig(name) || { state: {} };
+
         const store = new ImmutableStore(localStore.state);
+        if (!localStore.isUpgraded) {
+            if (name === 'widget' && store.defaultState) {
+                localStorage.setItem(`Snapmaker-${name}`, '');
+            } else if (name === 'machine' && store.seriesStates) {
+                localStorage.setItem(`Snapmaker-${name}`, '');
+            }
+        }
+
 
         localStore.version && (store.version = localStore.version);
         store.on('change', (s) => {

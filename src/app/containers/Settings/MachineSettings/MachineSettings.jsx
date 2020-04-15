@@ -47,7 +47,7 @@ class MachineSettings extends PureComponent {
         size: PropTypes.object.isRequired,
         updateMachineSize: PropTypes.func.isRequired,
 
-        enclosure: PropTypes.bool.isRequired,
+        enclosureDoorDetection: PropTypes.bool.isRequired,
         connectionTimeout: PropTypes.number.isRequired,
         getEnclosureState: PropTypes.func.isRequired,
         setEnclosureState: PropTypes.func.isRequired,
@@ -61,7 +61,7 @@ class MachineSettings extends PureComponent {
             y: 0,
             z: 0
         },
-        enclosure: false,
+        enclosureDoorDetection: false,
         connectionTimeout: 3000
     };
 
@@ -107,7 +107,7 @@ class MachineSettings extends PureComponent {
         // Enclosure
         onChangeEnclosureState: (option) => {
             this.setState({
-                enclosure: option.value
+                enclosureDoorDetection: option.value
             });
         },
 
@@ -122,14 +122,14 @@ class MachineSettings extends PureComponent {
             this.setState({
                 series: this.props.series,
                 size: this.props.size,
-                enclosure: this.props.enclosure,
+                enclosureDoorDetection: this.props.enclosureDoorDetection,
                 connectionTimeout: this.props.connectionTimeout
             });
         },
         onSave: () => {
             this.props.updateMachineSeries(this.state.series);
             this.props.updateMachineSize(this.state.size);
-            this.props.setEnclosureState(this.state.enclosure);
+            this.props.setEnclosureState(this.state.enclosureDoorDetection);
             this.props.updateConnectionTimeout(this.state.connectionTimeout);
         }
     };
@@ -139,7 +139,7 @@ class MachineSettings extends PureComponent {
 
         this.state.series = props.series;
         this.state.size = props.size;
-        this.state.enclosure = props.enclosure;
+        this.state.enclosureDoorDetection = props.enclosureDoorDetection;
         this.state.connectionTimeout = props.connectionTimeout;
     }
 
@@ -156,8 +156,8 @@ class MachineSettings extends PureComponent {
             this.setState({ size: nextProps.size });
         }
 
-        if (!isEqual(nextProps.enclosure, this.state.enclosure)) {
-            this.setState({ enclosure: nextProps.enclosure });
+        if (!isEqual(nextProps.enclosureDoorDetection, this.state.enclosureDoorDetection)) {
+            this.setState({ enclosureDoorDetection: nextProps.enclosureDoorDetection });
         }
 
         if (!isEqual(nextProps.connectionTimeout, this.state.connectionTimeout)) {
@@ -179,10 +179,10 @@ class MachineSettings extends PureComponent {
 
         const stateChanged = (this.state.series !== this.props.series)
             || !isEqual(this.props.size, this.state.size)
-            || !isEqual(this.props.enclosure, this.state.enclosure)
+            || !isEqual(this.props.enclosureDoorDetection, this.state.enclosureDoorDetection)
             || !isEqual(this.props.connectionTimeout, this.state.connectionTimeout);
 
-        const { series, size, enclosure, connectionTimeout } = this.state;
+        const { series, size, enclosureDoorDetection, connectionTimeout } = this.state;
         const editable = (this.state.series === 'custom');
         const isConnected = this.props.isConnected;
 
@@ -244,7 +244,7 @@ class MachineSettings extends PureComponent {
                             searchable={false}
                             name={i18n._('Door detection')}
                             options={options}
-                            value={enclosure}
+                            value={enclosureDoorDetection}
                             onChange={this.actions.onChangeEnclosureState}
                         />
                     </div>
@@ -307,13 +307,13 @@ class MachineSettings extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { series, size, enclosure, isConnected, connectionTimeout } = machine;
+    const { series, size, enclosureDoorDetection, isConnected, connectionTimeout } = machine;
 
     return {
         series,
         isConnected,
         size,
-        enclosure,
+        enclosureDoorDetection,
         connectionTimeout
     };
 };

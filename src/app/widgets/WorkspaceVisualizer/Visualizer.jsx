@@ -7,7 +7,7 @@ import TWEEN from '@tweenjs/tween.js';
 import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
-import { Button } from '@trendmicro/react-buttons';
+// import { Button } from '@trendmicro/react-buttons';
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
 import { controller } from '../../lib/controller';
@@ -18,7 +18,7 @@ import {
     PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_ENCLOSURE_WARNING
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
@@ -32,7 +32,8 @@ import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import Modal from '../../components/Modal';
+import ModalSmall from '../../components/Modal/ModalSmall';
+
 import i18n from '../../lib/i18n';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ProgressBar from '../../components/ProgressBar';
@@ -42,8 +43,8 @@ class Visualizer extends Component {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
-        enclosure: PropTypes.bool.isRequired,
-        enclosureDoor: PropTypes.bool.isRequired,
+        isEnclosureDoorOpen: PropTypes.bool,
+        doorSwitchCount: PropTypes.number,
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
         gcodeFile: PropTypes.object,
@@ -237,11 +238,6 @@ class Visualizer extends Component {
             return (this.props.headType === MACHINE_HEAD_TYPE.LASER.value);
         },
         handleRun: () => {
-            const { enclosure, enclosureDoor } = this.props;
-            if (!this.actions.is3DP() && enclosure && !enclosureDoor) {
-                this.actions.openModal();
-                return;
-            }
             const { connectionType } = this.props;
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 const { workflowState } = this.state;
@@ -294,6 +290,13 @@ class Visualizer extends Component {
                                     text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
                                 });
+                            } else if (err.status === 203) {
+                                modalSmallHOC({
+                                    title: i18n._('Enclosure Door Open'),
+                                    text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
+                                    subtext: i18n._('Please wait one second after you close the door to proceed.'),
+                                    img: IMAGE_ENCLOSURE_WARNING
+                                });
                             } else {
                                 modalSmallHOC({
                                     title: i18n._(`Error ${err.status}`),
@@ -312,6 +315,13 @@ class Visualizer extends Component {
                                     title: i18n._('Filament Runout Recovery'),
                                     text: i18n._('Filament has run out. Please load the new filament to continue printing.'),
                                     img: IMAGE_WIFI_ERROR
+                                });
+                            } else if (err.status === 203) {
+                                modalSmallHOC({
+                                    title: i18n._('Enclosure Door Open'),
+                                    text: i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.'),
+                                    subtext: i18n._('Please wait one second after you close the door to proceed.'),
+                                    img: IMAGE_ENCLOSURE_WARNING
                                 });
                             } else {
                                 modalSmallHOC({
@@ -434,11 +444,6 @@ class Visualizer extends Component {
             this.setState({ toolheadVisible: visible });
             this.renderScene();
         },
-        openModal: () => {
-            this.setState({
-                showEnclosureDoorWarn: true
-            });
-        },
         closeModal: () => {
             this.setState({
                 showEnclosureDoorWarn: false
@@ -504,6 +509,15 @@ class Visualizer extends Component {
         }
         if (nextProps.renderState === 'rendered' && this.props.renderState !== 'rendered') {
             this.autoFocus();
+        }
+        if (nextProps.isEnclosureDoorOpen !== this.props.isEnclosureDoorOpen) {
+            this.setState({
+                showEnclosureDoorWarn: nextProps.isEnclosureDoorOpen
+            });
+        } else if (this.props.doorSwitchCount !== 0 && nextProps.doorSwitchCount !== this.props.doorSwitchCount) {
+            this.setState({
+                showEnclosureDoorWarn: true
+            });
         }
     }
 
@@ -623,11 +637,11 @@ class Visualizer extends Component {
         this.canvas.current.renderScene();
     }
 
+
     render() {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
-
         return (
             <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-notice']}>
@@ -669,29 +683,16 @@ class Visualizer extends Component {
                         autoFocus={this.actions.autoFocus}
                     />
                 </div>
-                {state.showEnclosureDoorWarn && (
-                    <Modal
-                        disableOverlay
-                        showCloseButton={false}
-                    >
-                        <Modal.Body>
-                            <div style={{ display: 'flex' }}>
-                                <i className="fa fa-exclamation-circle fa-4x text-danger" />
-                                <div style={{ marginLeft: 25 }}>
-                                    <h5>{i18n._('Enclosure door was opened')}</h5>
-                                    <p>{i18n._('The enclosure door needs to be closed before laser or CNC printing')}</p>
-                                </div>
-                            </div>
-                        </Modal.Body>
-                        <Modal.Footer>
-                            <Button
-                                btnStyle="primary"
-                                onClick={this.actions.closeModal}
-                            >
-                                {i18n._('Ok')}
-                            </Button>
-                        </Modal.Footer>
-                    </Modal>
+
+                {(state.showEnclosureDoorWarn) && (
+                    <ModalSmall
+                        title={i18n._('Enclosure Door Open')}
+                        onClose={this.actions.closeModal}
+                        text={i18n._('One or both of the enclosure panels is/are opened. Please close the panel(s) to continue printing.')}
+                        subtext={i18n._('Please wait one second after you close the door to proceed.')}
+                        img={IMAGE_ENCLOSURE_WARNING}
+                    />
+
                 )}
             </div>
         );
@@ -703,8 +704,8 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: machine.size,
-        enclosure: machine.enclosure,
-        enclosureDoor: machine.enclosureDoor,
+        doorSwitchCount: machine.doorSwitchCount,
+        isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         headType: machine.headType,
         workflowStatus: machine.workflowStatus,
         isConnected: machine.isConnected,

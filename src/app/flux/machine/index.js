@@ -63,10 +63,16 @@ const INITIAL_STATE = {
 
     // from workflowState: idle, running, paused
     workflowState: WORKFLOW_STATE_IDLE,
-
     isHomed: null,
-    enclosure: false,
-    enclosureDoor: false,
+
+    enclosureDoorDetection: false,
+    enclosureLight: 0,
+    enclosureFan: 0,
+    enclosureOnline: false,
+
+    isEnclosureDoorOpen: false,
+    doorSwitchCount: 0,
+
     laserFocalLength: null,
     laserPower: null,
     headStatus: null,
@@ -184,14 +190,14 @@ export const actions = {
                     isHomed: isHomed
                 }));
             },
-            // 'Marlin:settings': (settings) => {
             'Marlin:settings': (options) => {
-                const { enclosure = false, enclosureDoor = false } = options.settings;
+                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0 } = options.settings;
 
-                // enclosure is changed
                 dispatch(actions.updateState({
-                    enclosure: enclosure,
-                    enclosureDoor: enclosureDoor
+                    enclosureDoorDetection,
+                    enclosureOnline,
+                    enclosureFan,
+                    enclosureLight
                 }));
             },
             'http:discover': (objects) => {
@@ -524,8 +530,9 @@ export const actions = {
                     nozzleTemperature,
                     nozzleTargetTemperature,
                     heatedBedTemperature,
+                    doorSwitchCount,
+                    isEnclosureDoorOpen,
                     heatedBedTargetTemperature } = result.data;
-
                 dispatch(actions.updateState({
                     workflowStatus: status,
                     laserFocalLength: laserFocalLength,
@@ -534,6 +541,8 @@ export const actions = {
                     nozzleTemperature: nozzleTemperature,
                     nozzleTargetTemperature: nozzleTargetTemperature,
                     heatedBedTemperature: heatedBedTemperature,
+                    isEnclosureDoorOpen: isEnclosureDoorOpen,
+                    doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature
                 }));
                 if (workPosition.x !== x

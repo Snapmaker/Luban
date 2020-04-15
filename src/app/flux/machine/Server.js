@@ -47,6 +47,8 @@ export class Server extends events.EventEmitter {
             nozzleTargetTemperature: 0,
             heatedBedTemperature: 0,
             heatedBedTargetTemperature: 0,
+            isEnclosureDoorOpen: false,
+            doorSwitchCount: 0,
             workPosition: {
                 x: 0,
                 y: 0,
@@ -198,6 +200,7 @@ export class Server extends events.EventEmitter {
                     y: offsetY,
                     z: offsetZ
                 };
+
                 isNotNull(data.homed) && (this.state.isHomed = data.homed);
                 isNotNull(data.laserFocalLength) && (this.state.laserFocalLength = data.laserFocalLength);
                 isNotNull(data.laserPower) && (this.state.laserPower = data.laserPower);
@@ -206,6 +209,9 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.nozzleTargetTemperature) && (this.state.nozzleTargetTemperature = data.nozzleTargetTemperature);
                 isNotNull(data.heatedBedTemperature) && (this.state.heatedBedTemperature = data.heatedBedTemperature);
                 isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
+                isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
+                isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
+
 
                 this._updateGcodePrintingInfo(data);
 
@@ -447,6 +453,8 @@ export class Server extends events.EventEmitter {
             laserFocalLength: this.state.laserFocalLength,
             laserPower: this.state.laserPower,
             workSpeed: this.state.workSpeed,
+            isEnclosureDoorOpen: this.state.isEnclosureDoorOpen,
+            doorSwitchCount: this.state.doorSwitchCount,
             nozzleTemperature: this.state.nozzleTemperature,
             nozzleTargetTemperature: this.state.nozzleTargetTemperature,
             heatedBedTemperature: this.state.heatedBedTemperature,
@@ -537,12 +545,90 @@ export class Server extends events.EventEmitter {
             });
     };
 
+    getEnclosureStatus = (callback) => {
+        if (!this.token) {
+            callback && callback({
+                msg: 'this token is null'
+            });
+            return;
+        }
+        const api = `${this.host}/api/v1/enclosure?token=${this.token}`;
+        request
+            .get(api)
+            .end((err, res) => {
+                const { msg } = this._getResult(err, res);
+
+                if (callback) {
+                    callback(msg, JSON.parse(res.text));
+                }
+            });
+    };
+
+    setEnclosureLight = (value, callback) => {
+        const api = `${this.host}/api/v1/enclosure`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`led=${value}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    setEnclosureFan = (value, callback) => {
+        const api = `${this.host}/api/v1/enclosure`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`fan=${value}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    setDoorDetection = (enabled, callback) => {
+        const api = `${this.host}/api/v1/enclosure`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`isDoorEnabled=${enabled}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    isJSON = (str) => {
+        if (typeof str === 'string') {
+            try {
+                const obj = JSON.parse(str);
+                if (typeof obj === 'object' && obj) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    };
+
     _getResult = (err, res) => {
         if (err) {
-            if (res && res.text === 'code = 202') {
+            if (res && this.isJSON(res.text) && JSON.parse(res.text).code === 202) {
                 return {
                     msg: err.message,
                     code: 202,
+                    text: res && res.text,
+                    data: res && res.body
+                };
+            } else if (res && this.isJSON(res.text) && JSON.parse(res.text).code === 203) {
+                return {
+                    msg: err.message,
+                    code: 203,
                     text: res && res.text,
                     data: res && res.body
                 };
