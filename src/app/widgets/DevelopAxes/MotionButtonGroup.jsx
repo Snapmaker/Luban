@@ -37,7 +37,7 @@ run into the fixtures before you use this feature.')}
             </div>
             <div className={styles['row-space']} />
             <div className="row no-gutters">
-                <div className="col-xs-12">
+                <div className="col-12">
                     <TipTrigger
                         title={i18n._('Go To Work Origin')}
                         content={i18n._('Move the head to the last saved work origin.')}
@@ -57,7 +57,7 @@ run into the fixtures before you use this feature.')}
             </div>
             <div className={styles['row-space']} />
             <div className="row no-gutters">
-                <div className="col-xs-12">
+                <div className="col-12">
                     <TipTrigger
                         title={i18n._('Set Work Origin')}
                         content={i18n._('Set the current position of the head as the work origin.')}

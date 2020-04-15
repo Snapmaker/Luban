@@ -89,7 +89,7 @@ class GCode extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('G-code'));
+        this.props.setTitle(i18n._('G-code Inspect'));
     }
 
     getInitialState() {
@@ -128,7 +128,6 @@ class GCode extends PureComponent {
             varValue: {}
         };
     }
-
 
     componentDidMount() {
         this.addControllerEvents();
@@ -221,10 +220,10 @@ class GCode extends PureComponent {
         const remainingTime = formatRemainingTime(gcodePrintingInfo.remainingTime);
 
         return (
-            <div className={styles['gcode-stats']}>
-                <div className="row no-gutters" style={{ marginBottom: 10 }}>
-                    <div className="col-xs-12">
-                        <table className="table-bordered" data-table="dimension">
+            <div className={styles['gcode-inspect']}>
+                <div className="row no-gutters mb-3">
+                    <div className="col-12">
+                        <table className="table table-bordered" data-table="dimension">
                             <thead>
                                 <tr>
                                     <th className={styles.axis}>{i18n._('Axis')}</th>
@@ -256,32 +255,32 @@ class GCode extends PureComponent {
                         </table>
                     </div>
                 </div>
-                <div className="row no-gutters" style={{ marginBottom: 10 }}>
-                    <div className="col-xs-6">
+                <div className="row no-gutters mb-3">
+                    <div className="col-6">
                         <div>{i18n._('Sent')}</div>
                         <div>{total > 0 ? `${sent} / ${total}` : '–'}</div>
                     </div>
-                    <div className="col-xs-6">
+                    <div className="col-6">
                         <div>{i18n._('Received')}</div>
                         <div>{total > 0 ? `${received} / ${total}` : '–'}</div>
                     </div>
                 </div>
-                <div className="row no-gutters" style={{ marginBottom: 10 }}>
-                    <div className="col-xs-6">
+                <div className="row no-gutters mb-3">
+                    <div className="col-6">
                         <div>{i18n._('Start Time')}</div>
                         <div>{startTime}</div>
                     </div>
-                    <div className="col-xs-6">
+                    <div className="col-6">
                         <div>{i18n._('Elapsed Time')}</div>
                         <div>{elapsedTime}</div>
                     </div>
                 </div>
                 <div className="row no-gutters">
-                    <div className="col-xs-6">
+                    <div className="col-6">
                         <div>{i18n._('Finish Time')}</div>
                         <div>{finishTime}</div>
                     </div>
-                    <div className="col-xs-6">
+                    <div className="col-6">
                         <div>{i18n._('Remaining Time')}</div>
                         <div>{remainingTime}</div>
                     </div>
