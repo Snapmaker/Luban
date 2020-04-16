@@ -12,10 +12,7 @@
 .icon-tick
     background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
 
-.gcode-file
-    &:focus {
-        outline: 0
-    }
+.gcode-file {
     display: block
     position: relative
     margin-top: 6px
@@ -25,15 +22,25 @@
     height: 50px
     padding: 3px 6px
 
-    &.selected
-        border-color: $blue-color
-        background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
-        background-repeat: no-repeat
-        -webkit-background-size: 24px
-        background-size: 24px
-        background-position: 292px 24px
+    &:focus {
+        outline: 0
+    }
 
-    &-remove
+    &.selected {
+        border-color: $blue-color
+    }
+
+    .gcode-file-selected-icon {
+        width: 24px
+        height: 24px
+        position: absolute
+        right: 0
+        bottom: 0
+        background-image: url("../../images/24x24/ic_wifi_selected_straight.png")
+        background-size: 24px
+    }
+
+    &-remove {
         display: none
         background-image: url("../../images/24x24/ic_wifi_remove_straight.jpg")
         background-color: transparent
@@ -44,61 +51,75 @@
         right: 0;
         top: 0;
         border: 0;
+    }
 
-    &-img
+    &-img {
         display: inline-block
         height: 100%
         width: 54px
         vertical-align: top
         margin-right: 6px
 
-        img
+        img {
             height: 100%
             width: 54px
+        }
+    }
 
-    &-input-name
+    &-input-name {
         opacity: 0
         position: absolute
 
-        &.haveOpacity
+        &.haveOpacity {
             opacity: 1
             z-index: 3
+        }
+    }
 
-    &-text
+    &-text {
         display: inline-block
         position: relative
         height: 100%
         width: 60%
         white-space: nowrap
 
-        &-rename
+        &-rename {
             display: inline-block
             cursor: text
             width: 100%
+        }
 
-        &-name
+        &-name {
             opacity: 0
             position: absolute
             width: 180px
             font-size: 14px
             z-index: 2
 
-            &.haveOpacity
+            &.haveOpacity {
                 opacity: 1
                 z-index: 3
+            }
+        }
 
-        &-info
+        &-info {
             position: absolute
             bottom: 0
             font-size: 12px
             color: $grey-color
             vertical-align: bottom
 
-            span
+            span {
                 margin-right: 12px
+            }
+        }
+    }
+}
 
-.gcode-file:hover .gcode-file-remove
+.gcode-file:hover .gcode-file-remove {
     display: block
+}
 
-.gcode-file:hover .gcode-file-rename
+.gcode-file:hover .gcode-file-rename {
     opacity: 1
+}
