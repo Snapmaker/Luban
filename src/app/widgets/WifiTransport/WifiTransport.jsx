@@ -260,6 +260,7 @@ class WifiTransport extends PureComponent {
                         }
                         const lastModifiedDate = new Date(gcodeFile.lastModifiedDate);
                         const date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
+                        const selected = selectFileName === gcodeFile.uploadName;
                         return (
                             <div
                                 key={pathWithRandomSuffix(gcodeFile.uploadName)}
@@ -267,7 +268,7 @@ class WifiTransport extends PureComponent {
                                 <div
                                     className={classNames(
                                         styles['gcode-file'],
-                                        { [styles.selected]: selectFileName === gcodeFile.uploadName }
+                                        { [styles.selected]: selected }
                                     )}
                                     onClick={
                                         (event) => actions.onSelectFile(gcodeFile.uploadName, name, event)
@@ -276,7 +277,6 @@ class WifiTransport extends PureComponent {
                                     role="button"
                                     tabIndex={0}
                                 >
-
                                     <button
                                         type="button"
                                         className={styles['gcode-file-remove']}
@@ -284,6 +284,7 @@ class WifiTransport extends PureComponent {
                                             actions.onRemoveFile(gcodeFile);
                                         }}
                                     />
+                                    {selected && <div className={styles['gcode-file-selected-icon']} />}
                                     <div className={styles['gcode-file-img']}>
                                         <img
                                             src={gcodeFile.thumbnail}

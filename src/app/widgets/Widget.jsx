@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import ControlWidget from './Control/index';
 import DevelopAxesWidget from './DevelopAxes/index';
 import ConnectionWidget from './Connection';
-import ScreenConnectionWidget from './ScreenConnection';
+// import ScreenConnectionWidget from './ScreenConnection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import MacroWidget from './Macro';
@@ -28,7 +28,7 @@ const getWidgetByName = (name) => {
         'control': ControlWidget,
         'axesPanel': DevelopAxesWidget,
         'connection': ConnectionWidget,
-        'connectionPanel': ScreenConnectionWidget,
+        // 'connectionPanel': ScreenConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
         'macro': MacroWidget,

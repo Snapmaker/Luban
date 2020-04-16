@@ -18,7 +18,8 @@ mkdir -p "$DEST_DIR"
 npm run pkgsync
 cp -af src/package.json "$DEST_DIR"
 pushd src
-babel -d "../$DEST_DIR" *.js electron-app/**/*.js
+cross-env NODE_ENV=production babel "*.js" --config-file ../babel.config.js -d "../$DEST_DIR"
+cross-env NODE_ENV=production babel "electron-app/**/*.js" --config-file ../babel.config.js -d "../$DEST_DIR/electron-app"
 popd
 
 #

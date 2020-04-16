@@ -45,7 +45,7 @@ const JogDistance = (props) => {
     };
 
     return (
-        <div className={styles.jogDistanceControl}>
+        <div className={styles['jog-distance-control']}>
             <div className="input-group input-group-sm">
                 <div className="input-group-btn">
                     <button
@@ -105,14 +105,14 @@ const JogDistance = (props) => {
                 />
                 <div className="input-group-btn">
                     <RepeatButton
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         onClick={actions.increaseCustomDistance}
                         title={i18n._('Increase custom distance by one unit')}
                     >
                         <i className="fa fa-plus" />
                     </RepeatButton>
                     <RepeatButton
-                        className="btn btn-default"
+                        className="btn btn-outline-secondary"
                         onClick={actions.decreaseCustomDistance}
                         title={i18n._('Decrease custom distance by one unit')}
                     >

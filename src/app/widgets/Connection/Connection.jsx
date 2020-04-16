@@ -1,18 +1,23 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-
 import { connect } from 'react-redux';
 import { Button } from '@trendmicro/react-buttons';
-import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI, EXPERIMENTAL_WIFI_CONTROL, MACHINE_SERIES, PROTOCOL_TEXT } from '../../constants';
+
+import {
+    CONNECTION_TYPE_SERIAL,
+    CONNECTION_TYPE_WIFI,
+    EXPERIMENTAL_WIFI_CONTROL,
+    MACHINE_SERIES,
+    PROTOCOL_TEXT
+} from '../../constants';
 import i18n from '../../lib/i18n';
-// import controller from '../../lib/controller';
 import Notifications from '../../components/Notifications';
+import Modal from '../../components/Modal';
 
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 import { actions as machineActions } from '../../flux/machine';
-import Modal from '../../components/Modal';
 
 
 class Connection extends PureComponent {
@@ -99,7 +104,7 @@ class Connection extends PureComponent {
                 )}
 
                 {EXPERIMENTAL_WIFI_CONTROL && (
-                    <div className="sm-tabs">
+                    <div className="sm-tabs" style={{ marginBottom: '1rem' }}>
                         <button
                             type="button"
                             style={{ width: '50%' }}
@@ -124,15 +129,10 @@ class Connection extends PureComponent {
                     <p>{i18n._('Serial Port')}</p>
                 )}
                 {connectionType === CONNECTION_TYPE_SERIAL && (
-                    <SerialConnection
-                        dataSource={this.props.dataSource}
-                        style={{ marginTop: '10px' }}
-                    />
+                    <SerialConnection dataSource={this.props.dataSource} />
                 )}
                 {connectionType === CONNECTION_TYPE_WIFI && (
-                    <WifiConnection
-                        style={{ marginTop: '10px' }}
-                    />
+                    <WifiConnection />
                 )}
                 {isConnected && showHomeReminder && !isOriginal && isHomed !== null && !isHomed && (
                     <Modal disableOverlay size="sm" showCloseButton={false}>
@@ -160,6 +160,7 @@ class Connection extends PureComponent {
         );
     }
 }
+
 const mapStateToProps = (state, ownPros) => {
     const { widgets } = state.widget;
     const dataSource = widgets[ownPros.widgetId].dataSource;

@@ -243,14 +243,18 @@ class TerminalWrapper extends PureComponent {
         const inputHeight = `${this.state.inputHeight}px`;
         return (
             <div
-                className={isDefault ? styles.terminalContentAbsolute : styles.terminalContent}
+                className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
             >
-                <div
-                    ref={this.terminalContainer}
-                />
+                <div ref={this.terminalContainer} />
                 <input
                     ref={this.input}
-                    style={{ width: '100%', height: inputHeight, backgroundColor: '#000000', color: '#FFFFFF', border: 'none' }}
+                    style={{
+                        width: '100%',
+                        height: inputHeight,
+                        backgroundColor: '#000000',
+                        color: '#FFFFFF',
+                        border: 'none'
+                    }}
                     type="text"
                     placeholder="Send Command"
                     value={terminalHistory.get(0) === undefined ? inputValue : terminalHistory.get(0)}

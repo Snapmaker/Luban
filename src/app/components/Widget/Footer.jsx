@@ -6,7 +6,7 @@ import styles from './index.styl';
 const Footer = ({ className, ...props }) => (
     <div
         {...props}
-        className={classNames(className, styles.widgetFooter)}
+        className={classNames(className, styles['widget-footer'])}
     />
 );
 

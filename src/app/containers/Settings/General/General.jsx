@@ -116,7 +116,7 @@ class General extends PureComponent {
                             <div className="col-md-12">
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className="btn btn-outline-secondary"
                                     onClick={this.handlers.cancel}
                                 >
                                     {i18n._('Cancel')}

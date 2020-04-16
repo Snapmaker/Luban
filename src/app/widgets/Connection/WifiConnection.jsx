@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
+import { Button, InputGroup } from 'react-bootstrap';
 import { map, includes } from 'lodash';
 
 import i18n from '../../lib/i18n';
@@ -243,8 +244,14 @@ class WifiConnection extends PureComponent {
         const { server, showConnectionMessage, connectionMessage } = this.state;
         return (
             <div>
-                <div className="form-group" style={{ marginTop: '10px' }}>
-                    <div className="input-group input-group-sm">
+                <InputGroup className="mb-3">
+                    <div
+                        style={{
+                            flex: '1 1 0%',
+                            width: '100%',
+                            marginRight: '5px'
+                        }}
+                    >
                         <Select
                             menuStyle={{
                                 maxHeight: '100px'
@@ -265,31 +272,28 @@ class WifiConnection extends PureComponent {
                             value={server}
                             valueRenderer={this.renderServerValue}
                         />
-                        <div className="input-group-btn">
-                            <button
-                                type="button"
-                                className="btn btn-default"
-                                name="btn-refresh"
-                                title={i18n._('Refresh')}
-                                disabled={isOpen}
-                                onClick={this.actions.onRefreshServers}
-                            >
-                                <i
-                                    className={classNames(
-                                        'fa',
-                                        'fa-refresh',
-                                        { 'fa-spin': discovering }
-                                    )}
-                                />
-                            </button>
-                        </div>
                     </div>
-                </div>
+                    <InputGroup.Append>
+                        <Button
+                            variant="outline-secondary"
+                            style={{ borderColor: '#c8c8c8' }}
+                            name="btn-refresh"
+                            title={i18n._('Refresh')}
+                            disabled={isOpen}
+                            onClick={this.actions.onRefreshServers}
+                        >
+                            <i
+                                className={classNames(
+                                    'fa',
+                                    'fa-refresh',
+                                    { 'fa-spin': discovering }
+                                )}
+                            />
+                        </Button>
+                    </InputGroup.Append>
+                </InputGroup>
                 {isConnected && (
-                    <div style={{
-                        marginBottom: '10px'
-                    }}
-                    >
+                    <div style={{ marginBottom: '10px' }}>
                         <div
                             className={styles['connection-state']}
                         >
@@ -297,10 +301,14 @@ class WifiConnection extends PureComponent {
                                 {server.name}
                             </span>
                             <span className={styles['connection-state-icon']}>
-                                {workflowStatus === WORKFLOW_STATUS_UNKNOWN && <i className="sm-icon-14 sm-icon-idle" />}
-                                {workflowStatus === WORKFLOW_STATUS_IDLE && <i className="sm-icon-14 sm-icon-idle" />}
-                                {workflowStatus === WORKFLOW_STATUS_PAUSED && <i className="sm-icon-14 sm-icon-paused" />}
-                                {workflowStatus === WORKFLOW_STATUS_RUNNING && <i className="sm-icon-14 sm-icon-running" />}
+                                {workflowStatus === WORKFLOW_STATUS_UNKNOWN
+                                && <i className="sm-icon-14 sm-icon-idle" />}
+                                {workflowStatus === WORKFLOW_STATUS_IDLE
+                                && <i className="sm-icon-14 sm-icon-idle" />}
+                                {workflowStatus === WORKFLOW_STATUS_PAUSED
+                                && <i className="sm-icon-14 sm-icon-paused" />}
+                                {workflowStatus === WORKFLOW_STATUS_RUNNING
+                                && <i className="sm-icon-14 sm-icon-running" />}
                             </span>
                         </div>
                         <div
@@ -315,7 +323,7 @@ class WifiConnection extends PureComponent {
                 )}
                 <div>
                     <div
-                        className="btn-group btn-group-sm"
+                        className="btn-group"
                         style={{
                             width: '50%'
                         }}
@@ -355,7 +363,8 @@ class WifiConnection extends PureComponent {
                         onCancel={connectionMessage.onCancel}
                         onConfirm={connectionMessage.onConfirm}
                     />
-                )}
+                )
+                }
             </div>
         );
     }

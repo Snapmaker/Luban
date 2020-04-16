@@ -54,7 +54,7 @@ class ModalSmall extends PureComponent {
                     <Modal.Footer>
                         <button
                             type="button"
-                            className="btn btn-default"
+                            className="btn btn-outline-secondary"
                             style={{
                                 float: 'left'
                             }}

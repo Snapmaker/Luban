@@ -13,6 +13,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 // const HtmlWebpackPluginAddons = require('html-webpack-plugin-addons');
 const nib = require('nib');
 const stylusLoader = require('stylus-loader');
+
+const babelConfig = require('./babel.config');
 const languages = require('./webpack.config.app-i18n').languages;
 const pkg = require('./package.json');
 
@@ -105,8 +107,9 @@ module.exports = {
             },
             {
                 test: /\.jsx?$/,
+                exclude: /(node_modules|bower_components)/,
                 loader: 'babel-loader',
-                exclude: /(node_modules|bower_components)/
+                options: babelConfig
             },
             {
                 test: /\.styl$/,

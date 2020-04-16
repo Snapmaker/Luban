@@ -306,7 +306,7 @@ class GcodeFile extends PureComponent {
                     {i18n._('Upload')}
                 </button>
                 <button
-                    className="btn btn-default"
+                    className="btn btn-outline-secondary"
                     type="button"
                     disabled={!canRun}
                     onClick={this.actions.run}
@@ -314,7 +314,7 @@ class GcodeFile extends PureComponent {
                     <i className="fa fa-play" />
                 </button>
                 <button
-                    className="btn btn-default"
+                    className="btn btn-outline-secondary"
                     type="button"
                     disabled={!canPause}
                     onClick={this.actions.pause}
@@ -322,7 +322,7 @@ class GcodeFile extends PureComponent {
                     <i className="fa fa-pause" />
                 </button>
                 <button
-                    className="btn btn-default"
+                    className="btn btn-outline-secondary"
                     type="button"
                     disabled={!canStop}
                     onClick={this.actions.stop}
@@ -330,7 +330,7 @@ class GcodeFile extends PureComponent {
                     <i className="fa fa-stop" />
                 </button>
                 {/* <button
-                    className="btn btn-default"
+                    className="btn btn-outline-secondary"
                     type="button"
                     disabled={!canClose}
                     onClick={this.actions.close}

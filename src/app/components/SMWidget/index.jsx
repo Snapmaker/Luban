@@ -142,7 +142,7 @@ function createDefaultWidget(WrappedWidget) {
                             {this.state.title}
                         </Widget.Title>
                         <Widget.Controls className="sortable-filter">
-                            { state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
+                            {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
                                 if (typeof v === 'object') {
                                     const { disabled = false, title = '', onClick, className = 'fa' } = v;
                                     return (
@@ -178,13 +178,7 @@ function createDefaultWidget(WrappedWidget) {
                             })}
                         </Widget.Controls>
                     </Widget.Header>
-                    <Widget.Content
-                        style={{
-                            position: 'relative',
-                            padding: '18px 12px',
-                            display: state.minimized ? 'none' : 'block'
-                        }}
-                    >
+                    <Widget.Content style={{ display: state.minimized ? 'none' : 'block' }}>
                         <WrappedWidget
                             widgetId={widgetId}
                             minimized={minimized}

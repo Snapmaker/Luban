@@ -291,7 +291,7 @@ class ScreenConnection extends PureComponent {
                         <div className="input-group-btn">
                             <button
                                 type="button"
-                                className="btn btn-default"
+                                className="btn btn-outline-secondary"
                                 name="btn-refresh"
                                 title={i18n._('Refresh')}
                                 onClick={this.actions.onRefreshPorts}
@@ -308,7 +308,7 @@ class ScreenConnection extends PureComponent {
                         </div>
                     </div>
                 </div>
-                <div className="btn-group btn-group-sm">
+                <div className="btn-group">
                     {!isConnected && (
                         <button
                             type="button"

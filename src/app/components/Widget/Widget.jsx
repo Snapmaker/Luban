@@ -28,8 +28,8 @@ class Widget extends PureComponent {
                 className={classNames(
                     className,
                     styles.widget,
-                    { [styles.widgetBorderless]: borderless },
-                    { [styles.widgetFullscreen]: fullscreen }
+                    { [styles['widget-borderless']]: borderless },
+                    { [styles['widget-fullscreen']]: fullscreen }
                 )}
             />
         );

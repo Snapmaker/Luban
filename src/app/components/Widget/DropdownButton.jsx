@@ -29,7 +29,7 @@ const DropdownButton = (props) => {
         >
             <Dropdown.Toggle
                 {...toggleProps}
-                className={styles.widgetButton}
+                className={styles['widget-button']}
                 componentClass="a"
             >
                 {toggle}

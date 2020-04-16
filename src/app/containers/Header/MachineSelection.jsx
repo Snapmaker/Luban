@@ -15,7 +15,7 @@ class MachineSelection extends Component {
         updateMachineState: PropTypes.func.isRequired
     };
 
-    actions= {
+    actions = {
         onClick: () => {
             const { series, headType, connectionStatus } = this.props;
             MachineSelectModal({
@@ -36,15 +36,8 @@ class MachineSelection extends Component {
         const { canReselectMachine, connectionStatus } = this.props;
         const disabled = connectionStatus === CONNECTION_STATUS_CONNECTED && !canReselectMachine;
         return (
-            <div style={{
-                height: '100%',
-                position: 'absolute'
-            }}
-            >
-                <span style={{
-                    borderLeft: '1px solid #777'
-                }}
-                />
+            <div>
+                <span style={{ borderLeft: '1px solid #777' }} />
                 <button
                     style={{
                         backgroundColor: '#f8f8f8',

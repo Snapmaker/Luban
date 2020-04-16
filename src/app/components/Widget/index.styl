@@ -1,20 +1,33 @@
-.widget
-    background-color: #FFF
-    margin-bottom: 10px
+$widget-background-color = #fafafa;
+
+.widget {
+    background-color: #FFF;
+    margin-bottom: 10px;
 
     // default
+
     .widget-header
-    .widget-footer
-        position: relative
-        border: 1px solid #ccc
-        background-color: #fafafa
-        color: #222
-    .widget-header-fixed
+    .widget-footer {
+        position: relative;
+        border: 1px solid #ccc;
+        background-color: $widget-background-color;
+        color: #222;
+    }
+
+    .widget-header-fixed {
         cursor: default
+    }
+
     .widget-content,
-    .widget-footer
-        border: 1px solid #ccc
-        border-top: none
+    .widget-footer {
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+
+    .widget-content {
+        position: relative;
+        padding: 15px 10px;
+    }
 
     &.widget-borderless {
         .widget-header,
@@ -22,10 +35,16 @@
         .widget-footer {
             border: 0;
         }
+
         .widget-header + .widget-content,
         .widget-header + .widget-footer,
         .widget-content + .widget-footer {
             border-top: 1px solid #ccc;
+        }
+
+        .widget-content {
+            position: absolute;
+            padding: 15px 10px;
         }
     }
 
@@ -41,6 +60,7 @@
         .widget-sortable {
             display: none;
         }
+
         .widget-content {
             position: absolute;
             top: 0;
@@ -48,6 +68,7 @@
             bottom: 0;
             left: 0;
         }
+
         .widget-header + .widget-content {
             position: absolute;
             top: 34px; // .widget-header height
@@ -57,12 +78,14 @@
         }
     }
 
+
     .widget-sortable,
     .widget-toolbar,
     .widget-controls {
         a {
             color: #838383;
         }
+
         a:hover {
             color: #505050;
         }
@@ -119,6 +142,7 @@
             padding: 0;
             margin: 0;
         }
+
         i {
             font-size: 14px;
         }
@@ -159,6 +183,7 @@
             &.disabled:hover {
                 background-color: inherit;
             }
+
             &:hover {
                 background-color: rgba(0, 0, 0, .05);
             }
@@ -167,6 +192,7 @@
                 color: #fff;
                 background-color: #404040;
             }
+
             &.inverted:hover {
                 background-color: #222;
             }
@@ -176,3 +202,4 @@
             }
         }
     }
+}

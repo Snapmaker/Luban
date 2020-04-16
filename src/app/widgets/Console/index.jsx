@@ -97,6 +97,7 @@ class ConsoleWidget extends PureComponent {
                 <Widget.Content
                     style={{
                         position: isDefault ? 'absolute' : 'relative',
+                        padding: 0,
                         top: 0,
                         left: 0,
                         right: 0,

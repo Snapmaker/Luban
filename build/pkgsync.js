@@ -15,7 +15,7 @@ var files = [
     'src/server/**/*.{js,jsx}'
 ];
 var deps = [
-    'babel-runtime', // 'babel-runtime' is required for electron app
+    '@babel/runtime', // 'babel-runtime' is required for electron app
     'debug' // 'debug' is required for electron app
 ].concat(findImports(files, { flatten: true })).sort();
 

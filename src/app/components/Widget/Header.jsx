@@ -8,8 +8,8 @@ const Header = ({ fixed, className, ...props }) => (
         {...props}
         className={classNames(
             className,
-            styles.widgetHeader,
-            { [styles.widgetHeaderFixed]: fixed }
+            styles['widget-header'],
+            { [styles['widget-header-fixed']]: fixed }
         )}
     />
 );

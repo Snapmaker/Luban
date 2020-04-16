@@ -3,7 +3,7 @@ import { machineStore } from '../store/local-storage';
 
 let authenticated = false;
 
-module.exports = {
+export default {
     signin: ({ token }) => new Promise((resolve) => {
         api.signin({ token })
             .then((res) => {

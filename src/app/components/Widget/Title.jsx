@@ -6,7 +6,7 @@ import styles from './index.styl';
 const Title = ({ className, ...props }) => (
     <div
         {...props}
-        className={classNames(className, styles.widgetTitle)}
+        className={classNames(className, styles['widget-title'])}
     />
 );
 

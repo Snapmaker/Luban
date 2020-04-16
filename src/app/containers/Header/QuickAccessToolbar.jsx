@@ -2,11 +2,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
+import { Nav } from 'react-bootstrap';
 import { controller } from '../../lib/controller';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../lib/i18n';
-import styles from './styles.styl';
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
@@ -54,7 +54,7 @@ class QuickAccessToolbar extends PureComponent {
         const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
 
         return (
-            <div>
+            <React.Fragment>
                 {this.state.halted && (
                     <Modal
                         disableOverlay
@@ -79,58 +79,44 @@ class QuickAccessToolbar extends PureComponent {
                         </Modal.Footer>
                     </Modal>
                 )}
-                <div className={styles.quickAccessToolbar}>
-                    <ul className="nav navbar-nav">
-                        {location.pathname === '/workspace' && (
-                            <li className="btn-group btn-group-sm" role="group">
-                                <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={this.command.stop}
-                                    title={i18n._('Reset')}
-                                    disabled={this.state.halted}
-                                >
-                                    <i className="fa fa-undo" />
-                                    <span className="space" />
-                                    {i18n._('STOP')}
-                                </button>
-                            </li>
-                        )}
-                        {newUpdateAvailable && (
-                            <li>
-                                <a
-                                    href="https://snapmaker.com/download"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ textDecoration: 'underline' }}
-                                >
-                                    {i18n._('New Update Available')}
-                                </a>
-                            </li>
-                        )}
-                        <li>
-                            <a href="https://snapmaker.com/document" target="_blank" rel="noopener noreferrer">
-                                {i18n._('User Manual & FAQ')}
-                            </a>
-                        </li>
-                        <li>
-                            <a href="http://forum.snapmaker.com/c/software-and-firmware/snapmakerjs-for-laser-engraving" target="_blank" rel="noopener noreferrer">
-                                {i18n._('Forum')}
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://www.myminifactory.com" target="_blank" rel="noopener noreferrer">
-                                <img
-                                    width="20"
-                                    height="20"
-                                    src="/images/myminifactory-logo-64x64.png"
-                                    alt="Go to MyMiniFactory to find printable objects."
-                                />
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                {location.pathname === '/workspace' && (
+                    <Nav.Item>
+                        <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={this.command.stop}
+                            title={i18n._('Reset')}
+                            disabled={this.state.halted}
+                        >
+                            <i className="fa fa-undo" />
+                            <span className="space" />
+                            {i18n._('STOP')}
+                        </button>
+                    </Nav.Item>
+                )}
+                {newUpdateAvailable && (
+                    <Nav.Item>
+                        <Nav.Link
+                            href="https://snapmaker.com/download"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline' }}
+                        >
+                            {i18n._('New Update Available')}
+                        </Nav.Link>
+                    </Nav.Item>
+                )}
+                <Nav.Item>
+                    <Nav.Link href="https://snapmaker.com/document" target="_blank" rel="noopener noreferrer">
+                        {i18n._('User Manual & FAQ')}
+                    </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link href="https://forum.snapmaker.com/c/snapmaker-luban" target="_blank" rel="noopener noreferrer">
+                        {i18n._('Forum')}
+                    </Nav.Link>
+                </Nav.Item>
+            </React.Fragment>
         );
     }
 }

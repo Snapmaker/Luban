@@ -1,15 +1,12 @@
-.widget-content {
-    position: relative;
-    padding: 10px;
-
-    &.hidden {
-        display: none;
-    }
-}
-
-.gcode-stats {
+.gcode-inspect {
     table[data-table="dimension"] {
         width: 100%;
+
+        thead > tr > th,
+        tbody > tr > td {
+            padding: .25rem
+            text-align: right
+        }
 
         thead > tr > th.axis,
         tbody > tr > td.axis {

@@ -118,7 +118,7 @@ export class DefinitionLoader {
             inherits: this.inherits,
             settings: this.settings,
             metadata: this.metadata,
-            ownKeys: this.ownKeys
+            ownKeys: Array.from(this.ownKeys)
         };
     }
 
@@ -126,7 +126,7 @@ export class DefinitionLoader {
         this.definitionId = object.definitionId;
         this.name = object.name;
         this.inherits = object.inherits;
-        this.ownKeys = object.ownKeys;
+        this.ownKeys = new Set(object.ownKeys);
         this.settings = object.settings;
         this.metadata = object.metadata;
     }
