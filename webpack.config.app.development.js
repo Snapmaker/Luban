@@ -13,6 +13,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const HtmlWebpackPluginAddons = require('html-webpack-plugin-addons');
 const nib = require('nib');
 const stylusLoader = require('stylus-loader');
+
+const babelConfig = require('./babel.config');
 const languages = require('./webpack.config.app-i18n').languages;
 
 
@@ -102,9 +104,7 @@ module.exports = {
                 test: /\.jsx?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
-                options: {
-                    cacheDirectory: true
-                }
+                options: babelConfig
             },
             {
                 test: /\.styl$/,

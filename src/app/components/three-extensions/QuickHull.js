@@ -1215,9 +1215,9 @@ import * as THREE from 'three';
 
 	// export
 
-	THREE.QuickHull = QuickHull;
+	// QuickHull = QuickHull;
 
 
 } )();
 
-export default THREE.QuickHull;
+export default QuickHull;

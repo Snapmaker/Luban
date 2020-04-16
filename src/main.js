@@ -1,5 +1,6 @@
 /* eslint import/no-unresolved: 0 */
-import 'babel-polyfill';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import { app, Menu, BrowserWindow } from 'electron';
 import { configureWindow } from './electron-app/window';
 import getMenuTemplate from './electron-app/Menu';

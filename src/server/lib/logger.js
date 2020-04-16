@@ -42,7 +42,7 @@ const levels = [
     'silly' // 5
 ];
 
-module.exports = (namespace = '') => {
+export default (namespace = '') => {
     namespace = String(namespace);
 
     return levels.reduce((acc, level) => {
@@ -57,14 +57,3 @@ module.exports = (namespace = '') => {
         return acc;
     }, {});
 };
-
-module.exports.logger = logger;
-
-levels.forEach(level => {
-    module.exports[level] = (...args) => {
-        if ((settings.verbosity >= VERBOSITY_MAX) && (level !== 'silly')) {
-            args = args.concat(getStackTrace()[2]);
-        }
-        return logger[level](util.format(...args));
-    };
-});

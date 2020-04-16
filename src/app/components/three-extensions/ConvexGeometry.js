@@ -4,7 +4,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import * as THREE from 'three';
+import { Geometry, BufferGeometry, Float32BufferAttribute } from 'three';
 import QuickHull from './QuickHull';
 
 ( function () {
@@ -13,21 +13,21 @@ import QuickHull from './QuickHull';
 
 	function ConvexGeometry( points ) {
 
-		THREE.Geometry.call( this );
+		Geometry.call( this );
 
 		this.fromBufferGeometry( new ConvexBufferGeometry( points ) );
 		this.mergeVertices();
 
 	}
 
-	ConvexGeometry.prototype = Object.create( THREE.Geometry.prototype );
+	ConvexGeometry.prototype = Object.create( Geometry.prototype );
 	ConvexGeometry.prototype.constructor = ConvexGeometry;
 
 	// ConvexBufferGeometry
 
 	function ConvexBufferGeometry( points ) {
 
-		THREE.BufferGeometry.call( this );
+		BufferGeometry.call( this );
 
 		// buffers
 
@@ -70,19 +70,19 @@ import QuickHull from './QuickHull';
 
 		// build geometry
 
-		this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-		this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+		this.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+		this.addAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
 
 	}
 
-	ConvexBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+	ConvexBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
 	ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
 
 	// export
 
-	THREE.ConvexGeometry = ConvexGeometry;
-	THREE.ConvexBufferGeometry = ConvexBufferGeometry;
+	// ConvexGeometry = ConvexGeometry;
+	// ConvexBufferGeometry = ConvexBufferGeometry;
 
 } )();
 
-export default THREE.ConvexGeometry;
+export default ConvexGeometry;

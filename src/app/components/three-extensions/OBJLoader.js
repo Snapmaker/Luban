@@ -5,7 +5,7 @@ import * as THREE from "three";
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.OBJLoader = ( function () {
+const OBJLoader = ( function () {
 
     // o object_name | g group_name
     var object_pattern = /^[og]\s*(.+)?/;
@@ -795,4 +795,4 @@ THREE.OBJLoader = ( function () {
 
 } )();
 
-export default THREE.OBJLoader;
+export default OBJLoader;
