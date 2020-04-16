@@ -5,7 +5,10 @@ require('es5-shim/es5-shim');
 require('es5-shim/es5-sham');
 
 // Babel polyfill
-require('babel-polyfill');
+// https://babeljs.io/docs/en/babel-polyfill
+// require('babel-polyfill');
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 
 // console (IE9)
 require('./console');
