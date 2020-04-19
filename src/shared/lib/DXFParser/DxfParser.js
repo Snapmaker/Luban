@@ -18,9 +18,9 @@ import Spline from './entities/spline';
 import Text from './entities/text';
 // import Vertex from './entities/';
 
-// import logger from '../../../server/lib/logger';
+import logger from '../../../server/lib/logger';
 
-// const log = logger('lib:DXFParser');
+const log = logger('lib:DXFParser');
 
 
 function registerDefaultEntityHandlers(parser) {
@@ -49,26 +49,25 @@ export default function DxfParser() {
     registerDefaultEntityHandlers(this);
 }
 
-DxfParser.prototype.parse = function (source, done) {
-    console.log(source, done);
-    throw new Error('read() not implemented. Use readSync()');
+DxfParser.prototype.parse = function parseparse(source, done) {
+    throw new Error('read() not implemented. Use readSync()', source, done);
 };
 
-DxfParser.prototype.registerEntityHandler = function (HandlerType) {
+DxfParser.prototype.registerEntityHandler = function registerEntityHandlerregisterEntityHandler(HandlerType) {
     const instance = new HandlerType();
     this._entityHandlers[HandlerType.ForEntityName] = instance;
 };
 
-DxfParser.prototype.parseSync = function (source) {
+DxfParser.prototype.parseSync = function parseSync(source) {
     if (typeof (source) === 'string') {
         return this._parse(source);
     } else {
-        console.error(`Cannot read dxf source of type \`${typeof (source)}`);
+        log.error(`Cannot read dxf source of type \`${typeof (source)}`);
         return null;
     }
 };
 
-DxfParser.prototype.parseStream = function (stream, done) {
+DxfParser.prototype.parseStream = function parseStream(stream, done) {
     let dxfString = '';
     const self = this;
     function onData(chunk) {
@@ -101,7 +100,7 @@ function debugCode(curr) {
 }
 
 function logUnhandledGroup(curr) {
-    console.error(`unhandled group ${debugCode(curr)}`);
+    log.error(`unhandled group ${debugCode(curr)}`);
 }
 
 
@@ -112,7 +111,7 @@ function logUnhandledGroup(curr) {
 function getAcadColor(index) {
     return AUTO_CAD_COLOR_INDEX[index];
 }
-DxfParser.prototype._parse = function (dxfString) {
+DxfParser.prototype._parse = function _parse(dxfString) {
     let curr, lastHandle = 0;
     const dxf = {};
     const dxfLinesArray = dxfString.split(/\r\n|\r|\n/g);
@@ -123,11 +122,11 @@ DxfParser.prototype._parse = function (dxfString) {
     const self = this;
 
 
-    const groupIs = function (code, value) {
+    function groupIs(code, value) {
         return curr.code === code && curr.value === value;
-    };
+    }
 
-    const parseHeader = function () {
+    function parseHeader() {
         // interesting variables:
         //  $ACADVER, $VIEWDIR, $VIEWSIZE, $VIEWCTR, $TDCREATE, $TDUPDATE
         // http://www.autodesk.com/techpubs/autocad/acadr14/dxf/header_section_al_u05_c.htm
@@ -160,10 +159,10 @@ DxfParser.prototype._parse = function (dxfString) {
         }
         curr = scanner.next(); // swallow up ENDSEC
         return header;
-    };
+    }
 
 
-    const parsePoint = function () {
+    function parsePoint() {
         const point = {};
         let code = curr.code;
 
@@ -186,8 +185,8 @@ DxfParser.prototype._parse = function (dxfString) {
         point.z = curr.value;
 
         return point;
-    };
-    const parseViewPortRecords = function () {
+    }
+    function parseViewPortRecords() {
         const viewPorts = []; // Multiple table entries may have the same name indicating a multiple viewport configuration
         let viewPort = {};
 
@@ -316,8 +315,8 @@ DxfParser.prototype._parse = function (dxfString) {
         viewPorts.push(viewPort);
 
         return viewPorts;
-    };
-    const parseLineTypes = function () {
+    }
+    function parseLineTypes() {
         const ltypes = {};
         let ltypeName,
             ltype = {},
@@ -350,7 +349,7 @@ DxfParser.prototype._parse = function (dxfString) {
                     break;
                 case 0:
                     if (length > 0 && length !== ltype.pattern.length) {
-                        console.warn('lengths do not match on LTYPE pattern');
+                        log.warn('lengths do not match on LTYPE pattern');
                     }
                     ltypes[ltypeName] = ltype;
                     ltype = {};
@@ -363,9 +362,9 @@ DxfParser.prototype._parse = function (dxfString) {
 
         ltypes[ltypeName] = ltype;
         return ltypes;
-    };
+    }
 
-    const parseLayers = function () {
+    function parseLayers() {
         const layers = {};
         let layerName,
             layer = {};
@@ -409,7 +408,7 @@ DxfParser.prototype._parse = function (dxfString) {
         layers[layerName] = layer;
 
         return layers;
-    };
+    }
     const tableDefinitions = {
         VPORT: {
             tableRecordsProperty: 'viewPorts',
@@ -430,7 +429,7 @@ DxfParser.prototype._parse = function (dxfString) {
             parseTableRecords: parseLayers
         }
     };
-    const parseTable = function () {
+    function parseTable() {
         const tableDefinition = tableDefinitions[curr.value];
         const table = {};
         let expectedCount = 0,
@@ -481,12 +480,12 @@ DxfParser.prototype._parse = function (dxfString) {
                 actualCount = Object.keys(tableRecords).length;
             }
             if (expectedCount !== actualCount) {
-                console.warn(`Parsed ${actualCount} ${tableDefinition.dxfSymbolName}'s but expected ${expectedCount}`);
+                log.warn(`Parsed ${actualCount} ${tableDefinition.dxfSymbolName}'s but expected ${expectedCount}`);
             }
         }
         curr = scanner.next();
         return table;
-    };
+    }
 
     // /**
     //  * parseTables
@@ -495,7 +494,7 @@ DxfParser.prototype._parse = function (dxfString) {
     //  **/
 
 
-    const parseTables = function () {
+    function parseTables() {
         const tables = {};
         curr = scanner.next();
         while (curr.value !== 'EOF') {
@@ -508,7 +507,7 @@ DxfParser.prototype._parse = function (dxfString) {
                 if (tableDefinition) {
                     tables[tableDefinitions[curr.value].tableName] = parseTable();
                 } else {
-                    console.log(`Unhandled Table ${curr.value}`);
+                    log.warn(`Unhandled Table ${curr.value}`);
                 }
             } else {
                 // else ignored
@@ -518,20 +517,20 @@ DxfParser.prototype._parse = function (dxfString) {
 
         curr = scanner.next();
         return tables;
-    };
+    }
 
 
-    const ensureHandle = function (entity) {
+    function ensureHandle(entity) {
         if (!entity) throw new TypeError('entity cannot be undefined or null');
 
         if (!entity.handle) entity.handle = lastHandle++;
-    };
+    }
     // /**
     //  * Is called after the parser first reads the 0:ENTITIES group. The scanner
     //  * should be on the start of the first entity already.
     //  * @return {Array} the resulting entities
     //  */
-    const parseEntities = function (forBlock) {
+    function parseEntities(forBlock) {
         const entities = [];
 
         const endingOnValue = forBlock ? 'ENDBLK' : 'ENDSEC';
@@ -551,7 +550,7 @@ DxfParser.prototype._parse = function (dxfString) {
                     entity = handler.parseEntity(scanner, curr);
                     curr = scanner.lastReadGroup;
                 } else {
-                    console.warn(`Unhandled entity ${curr.value}`);
+                    log.warn(`Unhandled entity ${curr.value}`);
                     curr = scanner.next();
                     continue;
                 }
@@ -564,8 +563,8 @@ DxfParser.prototype._parse = function (dxfString) {
         }
         if (endingOnValue === 'ENDSEC') curr = scanner.next(); // swallow up ENDSEC, but not ENDBLK
         return entities;
-    };
-    const parseBlock = function () {
+    }
+    function parseBlock() {
         const block = {};
         curr = scanner.next();
 
@@ -601,13 +600,13 @@ DxfParser.prototype._parse = function (dxfString) {
                     break;
                 case 70:
                     if (curr.value !== 0) {
-                        // if(curr.value & BLOCK_ANONYMOUS_FLAG) console.log('  Anonymous block');
-                        // if(curr.value & BLOCK_NON_CONSTANT_FLAG) console.log('  Non-constant attributes');
-                        // if(curr.value & BLOCK_XREF_FLAG) console.log('  Is xref');
-                        // if(curr.value & BLOCK_XREF_OVERLAY_FLAG) console.log('  Is xref overlay');
-                        // if(curr.value & BLOCK_EXTERNALLY_DEPENDENT_FLAG) console.log('  Is externally dependent');
-                        // if(curr.value & BLOCK_RESOLVED_OR_DEPENDENT_FLAG) console.log('  Is resolved xref or dependent of an xref');
-                        // if(curr.value & BLOCK_REFERENCED_XREF) console.log('  This definition is a referenced xref');
+                        // if(curr.value & BLOCK_ANONYMOUS_FLAG) log.log('  Anonymous block');
+                        // if(curr.value & BLOCK_NON_CONSTANT_FLAG) log.log('  Non-constant attributes');
+                        // if(curr.value & BLOCK_XREF_FLAG) log.log('  Is xref');
+                        // if(curr.value & BLOCK_XREF_OVERLAY_FLAG) log.log('  Is xref overlay');
+                        // if(curr.value & BLOCK_EXTERNALLY_DEPENDENT_FLAG) log.log('  Is externally dependent');
+                        // if(curr.value & BLOCK_RESOLVED_OR_DEPENDENT_FLAG) log.log('  Is resolved xref or dependent of an xref');
+                        // if(curr.value & BLOCK_REFERENCED_XREF) log.log('  This definition is a referenced xref');
                         block.type = curr.value;
                     }
                     curr = scanner.next();
@@ -635,7 +634,7 @@ DxfParser.prototype._parse = function (dxfString) {
             }
         }
         return block;
-    };
+    }
     // /**
     //  * Parses a 2D or 3D point, returning it as an object with x, y, and
     //  * (sometimes) z property if it is 3D. It is assumed the current group
@@ -645,7 +644,7 @@ DxfParser.prototype._parse = function (dxfString) {
     //  */
 
 
-    const parseBlocks = function () {
+    function parseBlocks() {
         const blocks = {};
         let block;
 
@@ -659,7 +658,7 @@ DxfParser.prototype._parse = function (dxfString) {
             if (groupIs(0, 'BLOCK')) {
                 block = parseBlock();
                 ensureHandle(block);
-                if (!block.name) console.error(`block with handle "${block.handle}" is missing a name.`);
+                if (!block.name) log.error(`block with handle "${block.handle}" is missing a name.`);
                 else blocks[block.name] = block;
             } else {
                 logUnhandledGroup(curr);
@@ -667,8 +666,8 @@ DxfParser.prototype._parse = function (dxfString) {
             }
         }
         return blocks;
-    };
-    const parseAll = function () {
+    }
+    function parseAll() {
         curr = scanner.next();
         while (!scanner.isEOF()) {
             if (curr.code === 0 && curr.value === 'SECTION') {
@@ -676,7 +675,7 @@ DxfParser.prototype._parse = function (dxfString) {
 
                 // Be sure we are reading a section code
                 if (curr.code !== 2) {
-                    console.error('Unexpected code %s after 0:SECTION', debugCode(curr));
+                    log.error('Unexpected code %s after 0:SECTION', debugCode(curr));
                     curr = scanner.next();
                     continue;
                 }
@@ -690,16 +689,16 @@ DxfParser.prototype._parse = function (dxfString) {
                 } else if (curr.value === 'TABLES') {
                     dxf.tables = parseTables();
                 } else if (curr.value === 'EOF') {
-                    console.log('EOF');
+                    log.warn('EOF');
                 } else {
-                    console.error('Skipping section \'%s\'', curr.value);
+                    log.error('Skipping section \'%s\'', curr.value);
                 }
             } else {
                 curr = scanner.next();
             }
             // If is a new section
         }
-    };
+    }
     parseAll();
     return dxf;
 };

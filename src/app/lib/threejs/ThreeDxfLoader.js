@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
+import log from '../log';
 import DxfParser from '../../../shared/lib/DXFParser';
 import DxfShader from './DxfShaderLine';
 /**
@@ -26,7 +27,7 @@ function polar(point, distance, angle) {
     return result;
 }
 
-THREE.BulgeGeometry = function (startPoint, endPoint, bulge, segments) {
+THREE.BulgeGeometry = function BulgeGeometry(startPoint, endPoint, bulge, segments) {
     let vertex, i;
     THREE.Geometry.call(this);
     const p0 = startPoint ? new THREE.Vector2(startPoint.x, startPoint.y) : new THREE.Vector2(0, 0);
@@ -125,7 +126,7 @@ class ThreeDxfLoader {
     }
 
     drawText(entity, data) {
-        if (!this.font) return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
+        if (!this.font) return log.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
 
         const geometry = new THREE.TextGeometry(entity.text, { font: this.font, height: 0, size: entity.textHeight || 12 });
 
@@ -293,7 +294,7 @@ class ThreeDxfLoader {
         // If the text ends up being wider than the box, it's supposed
         // to be multiline. Doing that in threeJS is overkill.
         if (textWidth > entity.width) {
-            console.log("Can't render this multipline MTEXT entity, sorry.", entity);
+            log.warn("Can't render this multipline MTEXT entity, sorry.", entity);
             return undefined;
         }
 
@@ -380,8 +381,10 @@ class ThreeDxfLoader {
                 if (entity.controlPoints.length === 4) {
                     let p0, p1;
                     for (let t = 0; t < 1; t += 0.1) {
-                        p0 = (1 - t) ** 3 * entity.controlPoints[0].x + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].x + 3 * t ** 2 * (1 - t) * entity.controlPoints[2].x + t ** 3 * entity.controlPoints[3].x;
-                        p1 = (1 - t) ** 3 * entity.controlPoints[0].y + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].y + 3 * t ** 2 * (1 - t) * entity.controlPoints[2].y + t ** 3 * entity.controlPoints[3].y;
+                        p0 = (1 - t) ** 3 * entity.controlPoints[0].x + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].x
+                        + 3 * t ** 2 * (1 - t) * entity.controlPoints[2].x + t ** 3 * entity.controlPoints[3].x;
+                        p1 = (1 - t) ** 3 * entity.controlPoints[0].y + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].y
+                        + 3 * t ** 2 * (1 - t) * entity.controlPoints[2].y + t ** 3 * entity.controlPoints[3].y;
                         interpolatedPoints.push({ x: p0, y: p1, z: 0 });
                     }
                 } else {
@@ -492,7 +495,7 @@ class ThreeDxfLoader {
         } else if (entity.type === 'INSERT') {
             return mesh;
         } else {
-            console.log(`Unsupported Entity Type: ${entity.type}`);
+            log.warn(`Unsupported Entity Type: ${entity.type}`);
         }
 
 
@@ -730,14 +733,13 @@ class ThreeDxfLoader {
                     if (entity.block) {
                         const block = dxf.blocks[entity.block];
                         if (!block) {
-                            console.error(`Missing referenced block "${entity.block}"`);
                             continue;
                         }
                         for (let j = 0; j < block.entities.length; j++) {
                             obj = this.drawEntity(typeGeometries, block.entities[j], dxf);
                         }
                     } else {
-                        console.log('WARNING: No block for DIMENSION entity');
+                        log.warn('WARNING: No block for DIMENSION entity');
                     }
                 } else {
                     obj = this.drawEntity(typeGeometries, entity, dxf);

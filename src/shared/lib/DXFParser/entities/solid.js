@@ -5,7 +5,7 @@ export default function EntityParser() {}
 
 EntityParser.ForEntityName = 'SOLID';
 
-EntityParser.prototype.parseEntity = function (scanner, currentGroup) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, currentGroup) {
     const entity = { type: currentGroup.value };
     entity.points = [];
     currentGroup = scanner.next();

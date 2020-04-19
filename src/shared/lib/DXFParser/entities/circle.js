@@ -5,7 +5,7 @@ export default function EntityParser() {}
 
 EntityParser.ForEntityName = 'CIRCLE';
 
-EntityParser.prototype.parseEntity = function (scanner, curr) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, curr) {
     let endAngle;
     const entity = { type: curr.value };
     curr = scanner.next();

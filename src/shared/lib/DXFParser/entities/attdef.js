@@ -5,7 +5,7 @@ export default function EntityParser() {}
 
 EntityParser.ForEntityName = 'ATTDEF';
 
-EntityParser.prototype.parseEntity = function (scanner, curr) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, curr) {
     const entity = {
         type: curr.value,
         scale: 1,
