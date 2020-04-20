@@ -44,6 +44,9 @@ export const STAGE_PREVIEWING = 2;
 export const STAGE_PREVIEWED = 3;
 export const STAGE_GENERATED = 4;
 
+export const PAGE_EDITOR = 'editor';
+export const PAGE_PROCESS = 'process';
+
 // Stages for 3d print
 export const STAGES_3DP = {
     noModel: 10,

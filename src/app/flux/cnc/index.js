@@ -8,25 +8,34 @@ import {
 } from '../actionType';
 import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
+import { PAGE_EDITOR } from '../../constants';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const INITIAL_STATE = {
+
+    page: PAGE_EDITOR,
+
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
+
     modelGroup: new ModelGroup(),
     toolPathModelGroup: new ToolPathModelGroup(),
+
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
     gcodeFile: null,
-    // selected
+
     // model: null,
     selectedModelID: null,
     sourceType: '',
-    // selectedModelIDs: [],
     mode: '', // bw, greyscale, vector
+    showOrigin: null,
+
     printOrder: 1,
     transformation: {},
+    transformationUpdateTime: new Date().getTime(),
+
     gcodeConfig: {},
     config: {},
 
@@ -35,17 +44,6 @@ const INITIAL_STATE = {
         toolDiameter: 3.175, // tool diameter (in mm)
         toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
     },
-
-    // selected model transformation
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
 
     // snapshot state
     undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
@@ -59,7 +57,6 @@ const INITIAL_STATE = {
 
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
-    previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true,
 
@@ -109,8 +106,8 @@ export const actions = {
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
-    const { from, type } = action;
-    if (from === 'cnc') {
+    const { headType, type } = action;
+    if (headType === 'cnc') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
@@ -122,7 +119,8 @@ export default function reducer(state = INITIAL_STATE, action) {
             }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {
-                    transformation: { ...state.transformation, ...action.transformation }
+                    transformation: { ...state.transformation, ...action.transformation },
+                    transformationUpdateTime: new Date().getTime()
                 });
             }
             case ACTION_UPDATE_GCODE_CONFIG: {

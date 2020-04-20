@@ -33,13 +33,13 @@ const motionColor = {
 
 class ToolPathRenderer {
     render(toolPath) {
-        const { headerType, mode, movementMode, data } = toolPath;
+        const { headType, mode, movementMode, data } = toolPath;
 
         // now only support cnc&laser
-        if (!['cnc', 'laser'].includes(headerType)) {
+        if (!['cnc', 'laser'].includes(headType)) {
             return null;
         }
-        if (headerType === 'laser') {
+        if (headType === 'laser') {
             if (mode === 'greyscale' && movementMode === 'greyscale-dot') {
                 return this.parseToPoints(data);
             } else {

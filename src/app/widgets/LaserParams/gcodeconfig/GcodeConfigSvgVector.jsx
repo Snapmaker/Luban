@@ -4,20 +4,20 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 
-import i18n from '../../lib/i18n';
-import Anchor from '../../components/Anchor';
-import { NumberInput as Input } from '../../components/Input';
-import TipTrigger from '../../components/TipTrigger';
-import OptionalDropdown from '../../components/OptionalDropdown';
-import { actions } from '../../flux/cncLaserShared';
+import i18n from '../../../lib/i18n';
+import Anchor from '../../../components/Anchor';
+import { NumberInput as Input } from '../../../components/Input';
+import TipTrigger from '../../../components/TipTrigger';
+import OptionalDropdown from '../../../components/OptionalDropdown';
+import { actions } from '../../../flux/cncLaserShared';
 
-
-class ConfigSvgVector extends PureComponent {
+class GcodeConfigSvgVector extends PureComponent {
     static propTypes = {
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool.isRequired,
         fillDensity: PropTypes.number.isRequired,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -29,13 +29,13 @@ class ConfigSvgVector extends PureComponent {
             this.setState(state => ({ expanded: !state.expanded }));
         },
         onToggleFill: () => {
-            this.props.updateSelectedModelConfig({ fillEnabled: !this.props.fillEnabled });
+            this.props.updateSelectedModelGcodeConfig({ fillEnabled: !this.props.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateSelectedModelConfig({ fillDensity });
+            this.props.updateSelectedModelGcodeConfig({ fillDensity });
         },
         onToggleOptimizePath: (event) => {
-            this.props.updateSelectedModelConfig({ optimizePath: event.target.checked });
+            this.props.updateSelectedModelGcodeConfig({ optimizePath: event.target.checked });
         }
     };
 
@@ -109,8 +109,8 @@ class ConfigSvgVector extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
-    const { optimizePath, fillEnabled, fillDensity } = config;
+    const { gcodeConfig } = state.laser;
+    const { optimizePath, fillEnabled, fillDensity } = gcodeConfig;
     return {
         optimizePath,
         fillEnabled,
@@ -120,8 +120,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig('laser', params))
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigSvgVector);
+export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfigSvgVector);

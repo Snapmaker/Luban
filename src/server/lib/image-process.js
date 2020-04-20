@@ -61,11 +61,12 @@ const algorithms = {
     ]
 };
 
-async function processGreyscale(modelInfo) {
+async function processLaserGreyscale(modelInfo) {
     const { uploadName } = modelInfo;
     const { width, height, rotationZ, flip } = modelInfo.transformation;
 
-    const { invertGreyscale, contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
+    const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
 
@@ -89,16 +90,16 @@ async function processGreyscale(modelInfo) {
         .quality(100)
         .contrast((contrast - 50.0) / 50)
         .greyscale()
+        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI)
-        .flip((flip & 2) > 0, (flip & 1) > 0)
         .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
             const data = img.bitmap.data;
 
             if (data[idx + 3] === 0) {
                 data[idx] = 255;
             } else {
-                if (invertGreyscale) {
+                if (invert) {
                     data[idx] = 255 - data[idx];
                     if (data[idx] < 255 - whiteClip) {
                         data[idx] = 0;
@@ -146,12 +147,43 @@ async function processGreyscale(modelInfo) {
     });
 }
 
+async function processCNCGreyscale(modelInfo) {
+    const { uploadName } = modelInfo;
+    const { width, height, rotationZ, flip } = modelInfo.transformation;
+
+    const { invert } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
+
+    const outputFilename = pathWithRandomSuffix(uploadName);
+
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    if (invert) {
+        img.invert();
+    }
+
+    img
+        .greyscale()
+        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .resize(width * density, height * density)
+        .rotate(-rotationZ * 180 / Math.PI)
+        .background(0xffffffff);
+
+    return new Promise(resolve => {
+        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+            resolve({
+                filename: outputFilename
+            });
+        });
+    });
+}
+
 function processBW(modelInfo) {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ, flip } = modelInfo.transformation;
 
-    const { invertGreyscale, bwThreshold, density } = modelInfo.config;
+    const { invert, bwThreshold } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
     return Jimp
@@ -170,7 +202,7 @@ function processBW(modelInfo) {
                         }
                     } else {
                         const value = img.bitmap.data[idx];
-                        if (invertGreyscale) {
+                        if (invert) {
                             if (value <= bwThreshold) {
                                 for (let k = 0; k < 3; ++k) {
                                     img.bitmap.data[idx + k] = 255;
@@ -203,22 +235,26 @@ function processBW(modelInfo) {
 }
 
 function processVector(modelInfo) {
-    // options: { filename, vectorThreshold, isInvert, turdSize }
-    const { vectorThreshold, isInvert, turdSize } = modelInfo.config;
+    // options: { filename, vectorThreshold, invert, turdSize }
+    const { vectorThreshold, invert, turdSize } = modelInfo.config;
     const options = {
         uploadName: modelInfo.uploadName,
         vectorThreshold: vectorThreshold,
-        isInvert: isInvert,
+        invert: invert,
         turdSize: turdSize
     };
     return convertRasterToSvg(options);
 }
 
 function process(modelInfo) {
-    const { sourceType, mode } = modelInfo;
+    const { headType, sourceType, mode } = modelInfo;
     if (sourceType === 'raster') {
         if (mode === 'greyscale') {
-            return processGreyscale(modelInfo);
+            if (headType === 'laser') {
+                return processLaserGreyscale(modelInfo);
+            } else {
+                return processCNCGreyscale(modelInfo);
+            }
         } else if (mode === 'bw') {
             return processBW(modelInfo);
         } else if (mode === 'vector') {

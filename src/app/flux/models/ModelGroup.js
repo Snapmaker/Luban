@@ -19,7 +19,6 @@ class ModelGroup {
         this.estimatedTime = 0;
 
         this.candidatePoints = null;
-        this.onSelectedModelTransformChanged = null;
 
         this._bbox = null;
 
@@ -36,17 +35,17 @@ class ModelGroup {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
 
-    _getState(model) {
-        const { headerType, sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
+    getState(model) {
+        const { modelID, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
         return {
-            headerType: headerType,
-            sourceType: sourceType,
-            originalName: originalName,
-            mode: mode,
+            modelID,
+            sourceType,
+            mode,
+            showOrigin,
+            transformation,
+            config,
+            boundingBox,
             selectedModelID: modelID,
-            modelID: modelID,
-            transformation: { ...transformation },
-            boundingBox, // only used in 3dp
             estimatedTime: this.estimatedTime,
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
@@ -74,6 +73,10 @@ class ModelGroup {
 
     getModel(modelID) {
         return this.models.find(d => d.modelID === modelID);
+    }
+
+    changeShowOrigin() {
+        return this.selectedModel && this.selectedModel.changeShowOrigin();
     }
 
     removeSelectedModel() {
@@ -140,7 +143,6 @@ class ModelGroup {
                 } else {
                     const left = [];
                     const right = [];
-                    const newArray = [];
                     const pivot = origArray.pop();
                     const length = origArray.length;
                     for (let i = 0; i < length; i++) {
@@ -150,7 +152,7 @@ class ModelGroup {
                             right.push(origArray[i]);
                         }
                     }
-                    return newArray.concat(quickSort(left), pivot, quickSort(right));
+                    return [].concat(quickSort(left), pivot, quickSort(right));
                 }
             };
 
@@ -216,7 +218,6 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        this.onSelectedModelTransformChanged && this.onSelectedModelTransformChanged();
     }
 
     setConvexGeometry(uploadName, convexGeometry) {
@@ -277,14 +278,6 @@ class ModelGroup {
         return models;
     }
 
-    getModelState(modelID) {
-        const model = this.getModel(modelID);
-        if (model) {
-            return this._getState(model);
-        }
-        return null;
-    }
-
     selectModel(modelMeshObject) {
         if (modelMeshObject) {
             const model = this.models.find(d => d.meshObject === modelMeshObject);
@@ -293,7 +286,7 @@ class ModelGroup {
                 this.estimatedTime = model.estimatedTime;
             }
             model.computeBoundingBox();
-            return this._getState(model);
+            return this.getState(model);
         }
         return null;
     }
@@ -322,7 +315,7 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        return this.selectedModel ? this._getState(this.selectedModel) : this._emptyState;
+        return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
     }
 
     multiplySelectedModel(count) {
@@ -357,26 +350,25 @@ class ModelGroup {
     }
 
     getSelectedModelState() {
-        return this._getState(this.selectedModel);
+        return this.getState(this.selectedModel);
     }
 
     getSelectedModel() {
         return this.selectedModel;
     }
 
-    getSelectedModelTaskInfo() {
-        if (this.selectedModel) {
-            return this.selectedModel.getTaskInfo();
-        }
-        return null;
+    async updateSelectedMode(mode, config) {
+        await this.selectedModel.processMode(mode, config);
+        return this.getState(this.selectedModel);
     }
 
-    generateModel(modelInfo) {
+    async generateModel(modelInfo) {
         const model = new Model(modelInfo);
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
+        await model.processMode(modelInfo.mode, modelInfo.config);
         this.addModel(model);
-        return this._getState(model);
+        return this.getState(model);
     }
 
     updateSelectedSource(source) {
@@ -394,7 +386,7 @@ class ModelGroup {
 
         selected.layFlat();
         selected.computeBoundingBox();
-        return this._getState(selected);
+        return this.getState(selected);
     }
 
     onModelTransform() {
@@ -415,7 +407,7 @@ class ModelGroup {
     updateSelectedModelTransformation(transformation) {
         if (this.selectedModel) {
             this.selectedModel.updateTransformation(transformation);
-            return this._getState(this.selectedModel);
+            return this.getState(this.selectedModel);
         }
         return null;
     }
@@ -431,23 +423,18 @@ class ModelGroup {
             selected.stickToPlate();
         }
         selected.computeBoundingBox();
-        return this._getState(selected);
+        return this.getState(selected);
+    }
+
+    async updateSelectedConfig(config) {
+        await this.selectedModel.updateConfig(config);
     }
 
     showAllModelsObj3D() {
-        for (const model of this.models) {
-            model && model.modelObject3D && (model.modelObject3D.visible = true);
+        this.object.visible = true;
+        for (const model of this.getModels()) {
+            model.updateVisible(true);
         }
-    }
-
-    showModelObj3D(modelID) {
-        const model = this.getModel(modelID);
-        model && model.modelObject3D && (model.modelObject3D.visible = true);
-    }
-
-    hideModelObj3D(modelID) {
-        const model = this.getModel(modelID);
-        model && model.modelObject3D && (model.modelObject3D.visible = false);
     }
 
     _computeAvailableXZ(model) {
@@ -519,7 +506,7 @@ class ModelGroup {
         const boundingBox = { max: { x: null, y: null, z: null }, min: { x: null, y: null, z: null } };
         for (const model of this.models) {
             let modelBoundingBox;
-            if (model.headerType === '3dp') {
+            if (model.headType === '3dp') {
                 modelBoundingBox = model.boundingBox;
             } else {
                 modelBoundingBox = {

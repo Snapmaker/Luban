@@ -1,4 +1,3 @@
-import isEmpty from 'lodash/isEmpty';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -14,13 +13,14 @@ import { ABSENT_VALUE } from '../../constants';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
+        selectedModelID: PropTypes.string,
         printOrder: PropTypes.number.isRequired,
         gcodeConfig: PropTypes.shape({
             // jogSpeed: PropTypes.number.isRequired,
             jogSpeed: PropTypes.number,
-            workSpeed: PropTypes.number.isRequired,
-            plungeSpeed: PropTypes.number.isRequired,
-            dwellTime: PropTypes.number.isRequired,
+            workSpeed: PropTypes.number,
+            plungeSpeed: PropTypes.number,
+            dwellTime: PropTypes.number,
             multiPassEnabled: PropTypes.bool,
             multiPassDepth: PropTypes.number,
             multiPasses: PropTypes.number,
@@ -81,15 +81,12 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        if (isEmpty(this.props.gcodeConfig)) {
-            return null;
-        }
-        const { printOrder } = this.props;
+        const { printOrder, selectedModelID } = this.props;
         const actions = this.actions;
         const {
-            jogSpeed, workSpeed, dwellTime, plungeSpeed,
-            fixedPowerEnabled = null, fixedPower,
-            multiPassEnabled = null, multiPasses, multiPassDepth
+            jogSpeed = 0, workSpeed = 0, dwellTime = 0, plungeSpeed = 0,
+            fixedPowerEnabled = false, fixedPower = 0,
+            multiPassEnabled = false, multiPasses = 0, multiPassDepth = 0
         } = this.props.gcodeConfig;
 
         return (
@@ -116,6 +113,7 @@ class GcodeParameters extends PureComponent {
                                 <Input
                                     className="sm-parameter-row__slider-input"
                                     value={printOrder}
+                                    disabled={!selectedModelID}
                                     min={1}
                                     max={10}
                                     onChange={actions.onChangePrintOrder}
@@ -123,6 +121,7 @@ class GcodeParameters extends PureComponent {
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={printOrder}
+                                    disabled={!selectedModelID}
                                     min={1}
                                     max={10}
                                     onChange={actions.onChangePrintOrder}
@@ -139,6 +138,7 @@ class GcodeParameters extends PureComponent {
                                     <Input
                                         className="sm-parameter-row__input"
                                         value={jogSpeed}
+                                        disabled={!selectedModelID}
                                         min={1}
                                         max={6000}
                                         step={1}
@@ -158,6 +158,7 @@ class GcodeParameters extends PureComponent {
                                     <Input
                                         className="sm-parameter-row__input"
                                         value={workSpeed}
+                                        disabled={!selectedModelID}
                                         min={1}
                                         step={1}
                                         max={6000}
@@ -177,6 +178,7 @@ class GcodeParameters extends PureComponent {
                                     <Input
                                         className="sm-parameter-row__input"
                                         value={dwellTime}
+                                        disabled={!selectedModelID}
                                         min={0.1}
                                         max={1000}
                                         step={0.1}
@@ -196,6 +198,7 @@ class GcodeParameters extends PureComponent {
                                     <Input
                                         className="sm-parameter-row__input"
                                         value={plungeSpeed}
+                                        disabled={!selectedModelID}
                                         min={0.1}
                                         max={1000}
                                         step={0.1}
@@ -210,6 +213,7 @@ class GcodeParameters extends PureComponent {
                                 style={{ marginTop: '10px', marginBottom: '10px' }}
                                 title={i18n._('Multi-pass')}
                                 titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
+                                disabled={!selectedModelID}
                                 onClick={actions.onToggleMultiPassEnabled}
                                 hidden={!multiPassEnabled}
                             >
@@ -224,6 +228,7 @@ class GcodeParameters extends PureComponent {
                                             className="sm-parameter-row__input"
                                             min={2}
                                             max={50}
+                                            disabled={!selectedModelID}
                                             value={multiPasses}
                                             onChange={actions.onChangeMultiPasses}
                                         />
@@ -241,6 +246,7 @@ class GcodeParameters extends PureComponent {
                                             min={0}
                                             max={10}
                                             value={multiPassDepth}
+                                            disabled={!selectedModelID}
                                             onChange={actions.onChangeMultiDepth}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
@@ -253,6 +259,7 @@ class GcodeParameters extends PureComponent {
                                 style={{ marginTop: '10px' }}
                                 title={i18n._('Fixed Power')}
                                 titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                                disabled={!selectedModelID}
                                 onClick={actions.onToggleFixedPowerEnabled}
                                 hidden={!fixedPowerEnabled}
                             >
@@ -267,6 +274,7 @@ class GcodeParameters extends PureComponent {
                                             min={1}
                                             max={100}
                                             value={fixedPower}
+                                            disabled={!selectedModelID}
                                             onChange={actions.onChangeFixedPower}
                                         />
                                         <Slider
@@ -275,6 +283,7 @@ class GcodeParameters extends PureComponent {
                                             min={0}
                                             max={100}
                                             step={0.5}
+                                            disabled={!selectedModelID}
                                             onChange={actions.onChangeFixedPower}
                                         />
                                     </div>

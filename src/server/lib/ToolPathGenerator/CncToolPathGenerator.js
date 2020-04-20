@@ -122,14 +122,14 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
     // Static method to generate `ToolPath` from SVG
     generateToolPath(svg, modelInfo) {
-        const { config, gcodeConfigPlaceholder } = modelInfo;
+        const { gcodeConfig, gcodeConfigPlaceholder } = modelInfo;
         const {
             pathType = 'path',
             toolDiameter, toolAngle,
             targetDepth, stepDown, safetyHeight, stopHeight,
             enableTab = false, tabWidth, tabHeight, tabSpace,
             fillEnabled, fillDensity
-        } = config;
+        } = gcodeConfig;
         const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
 
         // Process path according to path type

@@ -25,8 +25,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { mode, config, sourceType } = modelInfo;
-        const { movementMode } = config;
+        const { mode, gcodeConfig, sourceType } = modelInfo;
+        const { movementMode } = gcodeConfig;
 
         let fakeGcodes = this.getGcodeHeader();
 
@@ -70,8 +70,8 @@ class LaserToolPathGenerator extends EventEmitter {
         const height = img.bitmap.height;
 
         const normalizer = new Normalizer('Center', 0, width, 0, height, {
-            x: 1 / config.density,
-            y: 1 / config.density
+            x: 1 / gcodeConfig.density,
+            y: 1 / gcodeConfig.density
         });
 
         let progress = 0;
@@ -169,8 +169,8 @@ class LaserToolPathGenerator extends EventEmitter {
         const height = img.bitmap.height;
 
         const normalizer = new Normalizer('Center', 0, width, 0, height, {
-            x: 1 / config.density,
-            y: 1 / config.density
+            x: 1 / gcodeConfig.density,
+            y: 1 / gcodeConfig.density
         });
 
         let progress = 0;
@@ -178,7 +178,7 @@ class LaserToolPathGenerator extends EventEmitter {
         content.push(`G0 F${jogSpeed}`);
         content.push(`G1 F${workSpeed}`);
 
-        if (!config.direction || config.direction === 'Horizontal') {
+        if (!gcodeConfig.direction || gcodeConfig.direction === 'Horizontal') {
             const direction = {
                 x: 1,
                 y: 0
@@ -210,7 +210,7 @@ class LaserToolPathGenerator extends EventEmitter {
                     this.emit('progress', progress);
                 }
             }
-        } else if (config.direction === 'Vertical') {
+        } else if (gcodeConfig.direction === 'Vertical') {
             const direction = {
                 x: 0,
                 y: 1
@@ -242,7 +242,7 @@ class LaserToolPathGenerator extends EventEmitter {
                     this.emit('progress', progress);
                 }
             }
-        } else if (config.direction === 'Diagonal') {
+        } else if (gcodeConfig.direction === 'Diagonal') {
             const direction = {
                 x: 1,
                 y: -1
@@ -279,7 +279,7 @@ class LaserToolPathGenerator extends EventEmitter {
                     this.emit('progress', progress);
                 }
             }
-        } else if (config.direction === 'Diagonal2') {
+        } else if (gcodeConfig.direction === 'Diagonal2') {
             const direction = {
                 x: 1,
                 y: 1
@@ -323,8 +323,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateGcodeDxf(modelInfo, modelPath) {
-        const { transformation, config, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
-        const { fillEnabled, fillDensity, optimizePath } = config;
+        const { transformation, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
+        const { fillEnabled, fillDensity, optimizePath } = gcodeConfig;
         const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const originWidth = modelInfo.sourceWidth;
@@ -425,8 +425,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateGcodeVector(modelInfo, modelPath) {
-        const { transformation, config, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
-        const { fillEnabled, fillDensity, optimizePath } = config;
+        const { transformation, gcodeConfigPlaceholder, gcodeConfig } = modelInfo;
+        const { fillEnabled, fillDensity, optimizePath } = gcodeConfig;
         const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const originWidth = modelInfo.sourceWidth;

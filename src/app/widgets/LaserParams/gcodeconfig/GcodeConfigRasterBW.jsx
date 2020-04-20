@@ -1,24 +1,21 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import Slider from 'rc-slider';
 
-import i18n from '../../lib/i18n';
-import Anchor from '../../components/Anchor';
-import TipTrigger from '../../components/TipTrigger';
-import { NumberInput } from '../../components/Input';
-import { actions } from '../../flux/cncLaserShared';
+import classNames from 'classnames';
+import i18n from '../../../lib/i18n';
+import TipTrigger from '../../../components/TipTrigger';
+import { NumberInput } from '../../../components/Input';
+import { actions } from '../../../flux/cncLaserShared';
+import Anchor from '../../../components/Anchor';
 
 
-class ConfigRasterBW extends PureComponent {
+class GcodeConfigRasterBW extends PureComponent {
     static propTypes = {
-        invertGreyscale: PropTypes.bool,
-        bwThreshold: PropTypes.number,
         density: PropTypes.number,
         direction: PropTypes.string,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -29,22 +26,16 @@ class ConfigRasterBW extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        onInverseBW: () => {
-            this.props.updateSelectedModelConfig({ invertGreyscale: !this.props.invertGreyscale });
-        },
-        onChangeBWThreshold: (bwThreshold) => {
-            this.props.updateSelectedModelConfig({ bwThreshold });
-        },
         onChangeDirection: (option) => {
-            this.props.updateSelectedModelConfig({ direction: option.value });
+            this.props.updateSelectedModelGcodeConfig({ direction: option.value });
         },
         onChangeDensity: (density) => {
-            this.props.updateSelectedModelConfig({ density });
+            this.props.updateSelectedModelGcodeConfig({ density });
         }
     };
 
     render() {
-        const { invertGreyscale, bwThreshold, density, direction } = this.props;
+        const { density, direction } = this.props;
 
         return (
             <div>
@@ -61,38 +52,6 @@ class ConfigRasterBW extends PureComponent {
                 </Anchor>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
-                            <input
-                                type="checkbox"
-                                className="sm-parameter-row__checkbox"
-                                value={invertGreyscale}
-                                onClick={this.actions.onInverseBW}
-                            />
-                        </div>
-                        <TipTrigger
-                            title={i18n._('B&W')}
-                            content={i18n._('Set the proportion of the black color based on the original color of the image.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('B&W')}</span>
-                                <NumberInput
-                                    className="sm-parameter-row__slider-input"
-                                    value={bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
-                                />
-                                <Slider
-                                    className="sm-parameter-row__slider"
-                                    value={bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
-                                />
-
-                            </div>
-                        </TipTrigger>
                         <TipTrigger
                             title={i18n._('Line Direction')}
                             content={i18n._('Select the direction of the engraving path.')}
@@ -151,11 +110,9 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
-    const { invertGreyscale, bwThreshold, density, direction } = config;
+    const { gcodeConfig } = state.laser;
+    const { density, direction } = gcodeConfig;
     return {
-        invertGreyscale,
-        bwThreshold,
         density,
         direction
     };
@@ -163,8 +120,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config))
+        updateSelectedModelGcodeConfig: (gcodeConfig) => dispatch(actions.updateSelectedModelGcodeConfig('laser', gcodeConfig))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterBW);
+export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfigRasterBW);

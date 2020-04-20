@@ -138,17 +138,7 @@ export const laserCaseImage = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    let imageOptions;
-    if (options.image) {
-        imageOptions = {
-            ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
-        };
-    } else {
-        imageOptions = options;
-    }
-
-    imageProcess(imageOptions)
+    imageProcess(options)
         .then((result) => {
             res.send(result);
         })

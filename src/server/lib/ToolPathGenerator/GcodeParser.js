@@ -13,11 +13,11 @@ class GcodeParser {
         if (!fakeGcodes || !modelInfo) {
             return null;
         }
-        if (!['cnc', 'laser', '3dp'].includes(modelInfo.headerType)) {
+        if (!['cnc', 'laser', '3dp'].includes(modelInfo.headType)) {
             return null;
         }
 
-        const { headerType, mode, transformation, config, gcodeConfig } = modelInfo;
+        const { headType, mode, transformation, gcodeConfig } = modelInfo;
         const { positionX, positionY, positionZ } = transformation;
         const { jogSpeed, workSpeed, dwellTime } = gcodeConfig;
 
@@ -66,9 +66,9 @@ class GcodeParser {
         boundingBox.min.y += positionY;
 
         return {
-            headerType: headerType,
+            headType: headType,
             mode: mode,
-            movementMode: (headerType === 'laser' && mode === 'greyscale') ? config.movementMode : '',
+            movementMode: (headType === 'laser' && mode === 'greyscale') ? gcodeConfig.movementMode : '',
             data: this.data,
             estimatedTime: this.estimatedTime * 1.4,
             positionX: positionX,

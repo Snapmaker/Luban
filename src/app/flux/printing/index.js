@@ -554,7 +554,7 @@ export const actions = {
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
         const { size } = getState().machine;
-        const headerType = '3dp';
+        const headType = '3dp';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
@@ -565,7 +565,7 @@ export const actions = {
         // Tell worker to generate geometry for model
         const worker = new LoadModelWorker();
         worker.postMessage({ uploadPath });
-        worker.onmessage = (e) => {
+        worker.onmessage = async (e) => {
             const data = e.data;
 
             const { type } = data;
@@ -582,9 +582,9 @@ export const actions = {
                     // Create model
                     // modelGroup.generateModel(modelInfo);
 
-                    const modelState = modelGroup.generateModel({
+                    const modelState = await modelGroup.generateModel({
                         limitSize: size,
-                        headerType,
+                        headType,
                         sourceType,
                         originalName,
                         uploadName,
@@ -661,7 +661,7 @@ export const actions = {
         const { originalName, uploadName } = res.body;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
-        const headerType = '3dp';
+        const headType = '3dp';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
@@ -672,7 +672,7 @@ export const actions = {
         // Tell worker to generate geometry for model
         const worker = new LoadModelWorker();
         worker.postMessage({ uploadPath });
-        worker.onmessage = (e) => {
+        worker.onmessage = async (e) => {
             const data = e.data;
 
             const { type } = data;
@@ -689,9 +689,9 @@ export const actions = {
                     // Create model
                     // modelGroup.generateModel(modelInfo);
 
-                    const modelState = modelGroup.generateModel({
+                    const modelState = await modelGroup.generateModel({
                         limitSize: size,
-                        headerType,
+                        headType,
                         sourceType,
                         originalName,
                         uploadName,

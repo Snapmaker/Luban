@@ -14,6 +14,7 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
+        selectedModelID: PropTypes.string,
         sourceType: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             rotationZ: PropTypes.number,
@@ -22,7 +23,8 @@ class Transformation extends PureComponent {
             positionX: PropTypes.number,
             positionY: PropTypes.number,
             flip: PropTypes.number
-        }).isRequired,
+        }),
+
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         // redux
@@ -66,9 +68,9 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { size } = this.props;
-        const { rotationZ, width, height, positionX, positionY, flip } = this.props.transformation;
-        const canResize = this.props.sourceType !== 'text';
+        const { size, selectedModelID, sourceType } = this.props;
+        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0 } = this.props.transformation;
+        const canResize = sourceType !== 'text';
 
         const actions = this.actions;
 
@@ -95,7 +97,7 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
                                 <Input
                                     style={{ width: '90px' }}
-                                    disabled={canResize === false}
+                                    disabled={!selectedModelID || canResize === false}
                                     value={toFixed(width, 1)}
                                     min={1}
                                     max={size.x}
@@ -112,7 +114,7 @@ class Transformation extends PureComponent {
                                 </span>
                                 <Input
                                     style={{ width: '90px' }}
-                                    disabled={canResize === false}
+                                    disabled={!selectedModelID || canResize === false}
                                     value={toFixed(height, 1)}
                                     min={1}
                                     max={size.y}
@@ -131,6 +133,7 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
+                                    disabled={!selectedModelID}
                                     value={toFixed(rotationZ * 180 / Math.PI, 1)}
                                     min={-180}
                                     max={180}
@@ -141,6 +144,7 @@ class Transformation extends PureComponent {
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
+                                    disabled={!selectedModelID}
                                     value={rotationZ * 180 / Math.PI}
                                     min={-180}
                                     max={180}
@@ -157,6 +161,7 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Move X (mm)')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
+                                    disabled={!selectedModelID}
                                     value={toFixed(positionX, 1)}
                                     min={-size.x}
                                     max={size.x}
@@ -167,6 +172,7 @@ class Transformation extends PureComponent {
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
+                                    disabled={!selectedModelID}
                                     value={positionX}
                                     min={-size.x}
                                     max={size.x}
@@ -183,6 +189,7 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Move Y (mm)')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
+                                    disabled={!selectedModelID}
                                     value={toFixed(positionY, 1)}
                                     min={-size.y}
                                     max={size.y}
@@ -193,6 +200,7 @@ class Transformation extends PureComponent {
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
+                                    disabled={!selectedModelID}
                                     value={positionY}
                                     min={-size.y}
                                     max={size.y}
@@ -209,6 +217,7 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Flip Model')}</span>
                                 <Select
                                     className="sm-parameter-row__select"
+                                    disabled={!selectedModelID}
                                     clearable={false}
                                     options={[{
                                         value: 0,
@@ -247,11 +256,4 @@ const mapStateToProps = (state) => {
     };
 };
 
-// const mapDispatchToProps = (dispatch) => ({
-//     // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
-//     // onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
-// });
-
-
 export default connect(mapStateToProps)(Transformation);
-// export default connect(mapStateToProps, mapDispatchToProps)(Transformation);

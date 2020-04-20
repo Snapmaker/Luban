@@ -5,21 +5,24 @@ import { connect } from 'react-redux';
 import request from 'superagent';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
-import { DATA_PREFIX } from '../../constants';
+import { DATA_PREFIX, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
+import { actions as widgetActions } from '../../flux/widget';
 
 class Output extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
+        page: PropTypes.string.isRequired,
         modelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
+        autoPreview: PropTypes.bool,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerating: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
@@ -27,7 +30,9 @@ class Output extends PureComponent {
         generateGcode: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired
+        setAutoPreview: PropTypes.func.isRequired,
+        updateWidgetState: PropTypes.func.isRequired,
+        togglePage: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -69,14 +74,28 @@ class Output extends PureComponent {
                 FileSaver.saveAs(blob, gcodeFile.name, true);
             });
         },
-        onToggleAutoPreview: (event) => {
-            this.props.setAutoPreview(event.target.checked);
+        onToggleAutoPreview: (value) => {
+            this.props.setAutoPreview(value);
+            this.props.updateWidgetState({
+                autoPreview: value
+            });
+        },
+        onProcess: () => {
+            if (this.props.page === PAGE_EDITOR) {
+                this.props.togglePage(PAGE_PROCESS);
+            } else {
+                this.props.manualPreview();
+            }
         }
     };
 
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Output'));
+    }
+
+    componentDidMount() {
+        this.props.setAutoPreview(this.props.autoPreview === true);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -90,7 +109,8 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isGcodeGenerating, manualPreview, autoPreviewEnabled, gcodeFile } = this.props;
+        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile } = this.props;
+        const isProcess = page === PAGE_PROCESS;
 
         return (
             <div>
@@ -98,11 +118,11 @@ class Output extends PureComponent {
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-default"
-                        disabled={autoPreviewEnabled}
-                        onClick={manualPreview}
+                        disabled={isProcess && autoPreviewEnabled}
+                        onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {i18n._('Preview')}
+                        {isProcess ? i18n._('Preview') : i18n._('Process')}
                     </button>
                     <TipTrigger
                         title={i18n._('Auto Preview')}
@@ -113,8 +133,9 @@ class Output extends PureComponent {
                             <input
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
+                                disabled={!isProcess}
                                 checked={autoPreviewEnabled}
-                                onChange={actions.onToggleAutoPreview}
+                                onChange={(event) => { actions.onToggleAutoPreview(event.target.checked); }}
                             />
                         </div>
                     </TipTrigger>
@@ -122,7 +143,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onGenerateGcode}
-                        disabled={isGcodeGenerating}
+                        disabled={!isAllModelsPreviewed || isGcodeGenerating}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Generate G-code')}
@@ -157,10 +178,13 @@ class Output extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
-    const { isGcodeGenerating, gcodeFile, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.cnc;
+    const { widgets } = state.widget;
+    const { widgetId } = ownProps;
+    const { page, isGcodeGenerating, gcodeFile, isAllModelsPreviewed, previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup } = state.cnc;
     return {
+        page,
         modelGroup,
         toolPathModelGroup,
         isGcodeGenerating,
@@ -168,16 +192,19 @@ const mapStateToProps = (state) => {
         gcodeFile,
         isAllModelsPreviewed,
         previewFailed,
-        autoPreviewEnabled
+        autoPreviewEnabled,
+        autoPreview: widgets[widgetId].autoPreview
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = (dispatch, ownProps) => {
     return {
+        togglePage: (page) => dispatch(sharedActions.togglePage('cnc', page)),
         generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('cnc', thumbnail)),
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
         manualPreview: () => dispatch(sharedActions.manualPreview('cnc', true)),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value))
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', state))
     };
 };
 
