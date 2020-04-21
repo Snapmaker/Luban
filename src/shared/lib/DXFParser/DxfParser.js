@@ -100,7 +100,7 @@ function debugCode(curr) {
 }
 
 function logUnhandledGroup(curr) {
-    log.error(`unhandled group ${debugCode(curr)}`);
+    log.warn(`unhandled group ${debugCode(curr)}`);
 }
 
 
@@ -691,7 +691,7 @@ DxfParser.prototype._parse = function _parse(dxfString) {
                 } else if (curr.value === 'EOF') {
                     log.warn('EOF');
                 } else {
-                    log.error('Skipping section \'%s\'', curr.value);
+                    log.warn('Skipping section \'%s\'', curr.value);
                 }
             } else {
                 curr = scanner.next();

@@ -108,7 +108,8 @@ class SerialConnection extends EventEmitter {
             }
             this.writeFilter = writeFilter;
         }
-        const settings = Object.assign({}, ...options, defaultSettings);
+        // src/app/components/three-extensions/ConvexGeometry.jshttps://github.com/vuejs/vue-cli/issues/1303
+        const settings = Object.assign({}, { ...options }, defaultSettings);
         Object.defineProperties(this, {
             settings: {
                 enumerable: true,

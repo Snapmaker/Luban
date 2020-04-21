@@ -10,11 +10,11 @@
 
 import * as THREE from 'three';
 
-THREE.STLExporter = function () {};
+function STLExporter() {};
 
-THREE.STLExporter.prototype = {
+STLExporter.prototype = {
 
-	constructor: THREE.STLExporter,
+	constructor: STLExporter,
 
 	parse: ( function () {
 
@@ -88,4 +88,4 @@ THREE.STLExporter.prototype = {
 
 };
 
-export default THREE.STLExporter;
+export default STLExporter;

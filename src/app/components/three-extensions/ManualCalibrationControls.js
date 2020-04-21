@@ -16,7 +16,7 @@ import ThreeUtils from './ThreeUtils';
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
  */
-THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions) {
+function ManualCalibrationControls(camera, domElement, scale, remapBox2, cornerPositions) {
     THREE.Object3D.call(this);
 
     this.position.z = 1;
@@ -285,10 +285,10 @@ THREE.ManualCalibrationControls = function ManualCalibrationControls(camera, dom
     this.updateRectangleSize = updateRectangleSize;
     this.getCornerPositions = getCornerPositions;
     this.resetCornerPositions = resetCornerPositions;
-};
+}
 
-THREE.ManualCalibrationControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
-    constructor: THREE.ManualCalibrationControls
+ManualCalibrationControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
+    constructor: ManualCalibrationControls
 });
 
-export default THREE.ManualCalibrationControls;
+export default ManualCalibrationControls;

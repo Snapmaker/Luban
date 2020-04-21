@@ -257,7 +257,11 @@ class ExtractSquareTrace extends PureComponent {
                                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
                                 this.extractingPreview[task.index].current.onChangeImage(
-                                    DefaultBgiName, this.state.xSize[task.index] * this.multiple, this.state.ySize[task.index] * this.multiple, task.index, this.multiple
+                                    DefaultBgiName,
+                                    this.state.xSize[task.index] * this.multiple,
+                                    this.state.ySize[task.index] * this.multiple,
+                                    task.index,
+                                    this.multiple
                                 );
 
                                 const { fileName } = JSON.parse(res.text);
@@ -273,7 +277,11 @@ class ExtractSquareTrace extends PureComponent {
                                     const { filename } = JSON.parse(stitchImg.text);
                                     if (this.extractingPreview[task.index].current) {
                                         this.extractingPreview[task.index].current.onChangeImage(
-                                            filename, this.state.xSize[task.index] * this.multiple, this.state.ySize[task.index] * this.multiple, task.index, this.multiple
+                                            filename,
+                                            this.state.xSize[task.index] * this.multiple,
+                                            this.state.ySize[task.index] * this.multiple,
+                                            task.index,
+                                            this.multiple
                                         );
                                     }
                                     task.status = 2;

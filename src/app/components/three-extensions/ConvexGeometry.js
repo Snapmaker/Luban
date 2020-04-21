@@ -7,7 +7,6 @@
 import { Geometry, BufferGeometry, Float32BufferAttribute } from 'three';
 import QuickHull from './QuickHull';
 
-( function () {
 
 	// ConvexGeometry
 
@@ -36,11 +35,11 @@ import QuickHull from './QuickHull';
 
 		// execute QuickHull
 
-		if ( THREE.QuickHull === undefined ) {
-
-			console.error( 'THREE.ConvexBufferGeometry: ConvexBufferGeometry relies on THREE.QuickHull' );
-
-		}
+		// if ( THREE.QuickHull === undefined ) {
+		//
+		// 	console.error( 'THREE.ConvexBufferGeometry: ConvexBufferGeometry relies on THREE.QuickHull' );
+		//
+		// }
 
 		// var quickHull = new THREE.QuickHull().setFromPoints( points );
         var quickHull = new QuickHull().setFromPoints( points );
@@ -83,6 +82,5 @@ import QuickHull from './QuickHull';
 	// ConvexGeometry = ConvexGeometry;
 	// ConvexBufferGeometry = ConvexBufferGeometry;
 
-} )();
 
 export default ConvexGeometry;

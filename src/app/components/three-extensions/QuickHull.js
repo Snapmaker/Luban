@@ -9,7 +9,6 @@
 
 import * as THREE from 'three';
 
-( function () {
 
 	var Visible = 0;
 	var Deleted = 1;
@@ -1218,6 +1217,5 @@ import * as THREE from 'three';
 	// QuickHull = QuickHull;
 
 
-} )();
 
 export default QuickHull;

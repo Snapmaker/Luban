@@ -12,11 +12,11 @@ import * as THREE from "three";
  * 2. Switch y and z (line 87) to handle left-hand and right-hand coordinate problem
  */
 
-THREE.STLBinaryExporter = function () {};
+function STLBinaryExporter() {};
 
-THREE.STLBinaryExporter.prototype = {
+STLBinaryExporter.prototype = {
 
-	constructor: THREE.STLBinaryExporter,
+	constructor: STLBinaryExporter,
 
 	parse: ( function () {
 
@@ -108,4 +108,4 @@ THREE.STLBinaryExporter.prototype = {
 
 };
 
-export default THREE.STLBinaryExporter;
+export default STLBinaryExporter;

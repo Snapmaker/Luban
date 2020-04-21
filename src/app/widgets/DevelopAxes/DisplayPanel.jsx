@@ -1,7 +1,7 @@
 import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { DropdownButton, MenuItem } from 'react-bootstrap';
+import { DropdownButton, Dropdown } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
 import {
     METRIC_UNITS
@@ -72,20 +72,20 @@ class DisplayPanel extends PureComponent {
                                         pullRight
                                         disabled={!canClick}
                                     >
-                                        <MenuItem
+                                        <Dropdown.item
                                             eventKey="G0 X0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On X Axis (G0 X0)')}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </Dropdown.item>
+                                        <Dropdown.item
                                             eventKey="G92 X0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary X Axis (G92 X0)')}
-                                        </MenuItem>
+                                        </Dropdown.item>
                                     </DropdownButton>
                                 </td>
                             </tr>
@@ -116,20 +116,20 @@ class DisplayPanel extends PureComponent {
                                         pullRight
                                         disabled={!canClick}
                                     >
-                                        <MenuItem
+                                        <Dropdown.item
                                             eventKey="G0 Y0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On Y Axis (G0 Y0)')}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </Dropdown.item>
+                                        <Dropdown.item
                                             eventKey="G92 Y0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary Y Axis (G92 Y0)')}
-                                        </MenuItem>
+                                        </Dropdown.item>
                                     </DropdownButton>
                                 </td>
                             </tr>
@@ -161,20 +161,20 @@ class DisplayPanel extends PureComponent {
                                         pullRight
                                         disabled={!canClick}
                                     >
-                                        <MenuItem
+                                        <Dropdown.item
                                             eventKey="G0 Z0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On Z Axis (G0 Z0)')}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </Dropdown.item>
+                                        <Dropdown.item
                                             eventKey="G92 Z0"
                                             onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary Z Axis (G92 Z0)')}
-                                        </MenuItem>
+                                        </Dropdown.item>
                                     </DropdownButton>
                                 </td>
                             </tr>

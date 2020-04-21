@@ -27,7 +27,7 @@ function polar(point, distance, angle) {
     return result;
 }
 
-THREE.BulgeGeometry = function BulgeGeometry(startPoint, endPoint, bulge, segments) {
+function BulgeGeometry(startPoint, endPoint, bulge, segments) {
     let vertex, i;
     THREE.Geometry.call(this);
     const p0 = startPoint ? new THREE.Vector2(startPoint.x, startPoint.y) : new THREE.Vector2(0, 0);
@@ -53,9 +53,9 @@ THREE.BulgeGeometry = function BulgeGeometry(startPoint, endPoint, bulge, segmen
 
         this.vertices.push(new THREE.Vector3(vertex.x, vertex.y, 0));
     }
-};
+}
 
-THREE.BulgeGeometry.prototype = Object.create(THREE.Geometry.prototype);
+BulgeGeometry.prototype = Object.create(THREE.Geometry.prototype);
 
 /**
  * Calculates points for a curve between two points
@@ -440,7 +440,7 @@ class ThreeDxfLoader {
                 startPoint = entity.vertices[i];
                 endPoint = i + 1 < entity.vertices.length ? entity.vertices[i + 1] : geometry.vertices[0];
 
-                bulgeGeometry = new THREE.BulgeGeometry(startPoint, endPoint, bulge);
+                bulgeGeometry = new BulgeGeometry(startPoint, endPoint, bulge);
                 interpolatedPoints.push(...bulgeGeometry.vertices);
             } else {
                 vertex = entity.vertices[i];
