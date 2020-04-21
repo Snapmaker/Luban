@@ -1,3 +1,4 @@
+import log from 'loglevel';
 import DxfArrayScanner from './DxfArrayScanner';
 import AUTO_CAD_COLOR_INDEX from './AutoCadColorIndex';
 
@@ -17,10 +18,6 @@ import Solid from './entities/solid';
 import Spline from './entities/spline';
 import Text from './entities/text';
 // import Vertex from './entities/';
-
-import logger from '../../../server/lib/logger';
-
-const log = logger('lib:DXFParser');
 
 
 function registerDefaultEntityHandlers(parser) {
