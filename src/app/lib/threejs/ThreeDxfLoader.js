@@ -473,6 +473,8 @@ class ThreeDxfLoader {
         let geometry;
         if (entity.type === 'LINE' || entity.type === 'LWPOLYLINE' || entity.type === 'POLYLINE') {
             geometry = typeGeometries.LINE;
+        } else if (entity.type === 'ARC') {
+            geometry = typeGeometries.CIRCLE;
         } else {
             geometry = typeGeometries[entity.type];
         }

@@ -1,4 +1,4 @@
-import log from 'loglevel';
+import logger from 'universal-logger';
 import DxfArrayScanner from './DxfArrayScanner';
 import AUTO_CAD_COLOR_INDEX from './AutoCadColorIndex';
 
@@ -17,6 +17,8 @@ import Polyline from './entities/polyline';
 import Solid from './entities/solid';
 import Spline from './entities/spline';
 import Text from './entities/text';
+
+const log = logger();
 // import Vertex from './entities/';
 
 
@@ -503,8 +505,6 @@ DxfParser.prototype._parse = function _parse(dxfString) {
                 const tableDefinition = tableDefinitions[curr.value];
                 if (tableDefinition) {
                     tables[tableDefinitions[curr.value].tableName] = parseTable();
-                } else {
-                    log.warn(`Unhandled Table ${curr.value}`);
                 }
             } else {
                 // else ignored
