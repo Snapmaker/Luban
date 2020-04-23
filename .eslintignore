@@ -1,3 +1,5 @@
-# /node_modules and /bower_components ignored by default
+# /node_modules ignored by default
+
 dist/
+output/
 src/node_modules
