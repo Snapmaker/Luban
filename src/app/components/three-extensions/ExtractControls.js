@@ -15,7 +15,7 @@ import ThreeUtils from './ThreeUtils';
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
  */
-THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, cornerPositions) {
+function ExtractControls(camera, domElement, remapBox2, cornerPositions) {
     THREE.Object3D.call(this);
 
     this.position.z = 0.1;
@@ -262,10 +262,10 @@ THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, 
     this.updateSize = updateSize;
     this.getCornerPositions = getCornerPositions;
     this.resetCornerPositions = resetCornerPositions;
-};
+}
 
-THREE.ExtractControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
-    constructor: THREE.ExtractControls
+ExtractControls.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
+    constructor: ExtractControls
 });
 
-export default THREE.ExtractControls;
+export default ExtractControls;

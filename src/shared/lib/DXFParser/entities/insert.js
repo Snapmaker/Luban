@@ -5,7 +5,7 @@ export default function EntityParser() {}
 
 EntityParser.ForEntityName = 'INSERT';
 
-EntityParser.prototype.parseEntity = function (scanner, curr) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, curr) {
     const entity = { type: curr.value };
     curr = scanner.next();
     while (curr !== 'EOF') {

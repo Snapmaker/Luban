@@ -60,7 +60,7 @@ export default function EntityParser() {}
 
 EntityParser.ForEntityName = 'LWPOLYLINE';
 
-EntityParser.prototype.parseEntity = function (scanner, curr) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, curr) {
     const entity = { type: curr.value, vertices: [] };
     let numberOfVertices = 0;
     curr = scanner.next();

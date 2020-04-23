@@ -108,7 +108,7 @@ class SerialConnection extends EventEmitter {
             }
             this.writeFilter = writeFilter;
         }
-        const settings = Object.assign({}, ...options, defaultSettings);
+        const settings = Object.assign({}, { ...options }, defaultSettings);
         Object.defineProperties(this, {
             settings: {
                 enumerable: true,

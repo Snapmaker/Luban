@@ -12,7 +12,8 @@ var pkgApp = require('../src/package.json');
 
 var files = [
     'src/*.js',
-    'src/server/**/*.{js,jsx}'
+    'src/server/**/*.{js,jsx}',
+    'src/shared/**/*.{js,jsx}'
 ];
 var deps = [
     '@babel/runtime', // 'babel-runtime' is required for electron app

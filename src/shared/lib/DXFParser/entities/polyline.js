@@ -35,7 +35,7 @@ function parsePolylineVertices(scanner, curr) {
     return vertices;
 }
 
-EntityParser.prototype.parseEntity = function (scanner, curr) {
+EntityParser.prototype.parseEntity = function parseEntity(scanner, curr) {
     const entity = { type: curr.value, vertices: [] };
     curr = scanner.next();
     while (curr !== 'EOF') {

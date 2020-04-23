@@ -44,7 +44,6 @@ function parseGroupValue(code, value) {
     if (code >= 1010 && code <= 1059) return parseFloat(value);
     if (code >= 1060 && code <= 1071) return parseInt(value, 10);
 
-    console.log('WARNING: Group code does not have a defined type: %j', { code: code, value: value });
     return value;
 }
 /**
@@ -52,7 +51,7 @@ function parseGroupValue(code, value) {
  * in the array. The first is the code, the second is the value.
  * @returns {{code: Number}|*}
  */
-DxfArrayScanner.prototype.next = function () {
+DxfArrayScanner.prototype.next = function next() {
     const group = {
         code: parseInt(this._data[this._pointer], 10)
     };
@@ -75,7 +74,7 @@ DxfArrayScanner.prototype.next = function () {
     return group;
 };
 
-DxfArrayScanner.prototype.peek = function () {
+DxfArrayScanner.prototype.peek = function peek() {
     if (!this.hasNext()) {
         if (!this._eof) throw new Error(`Unexpected end of input: EOF group not read before end of file. Ended on code ${this._data[this._pointer]}`);
         else throw new Error('Cannot call \'next\' after EOF group has been read');
@@ -91,7 +90,7 @@ DxfArrayScanner.prototype.peek = function () {
 };
 
 
-DxfArrayScanner.prototype.rewind = function (numberOfGroups) {
+DxfArrayScanner.prototype.rewind = function rewind(numberOfGroups) {
     numberOfGroups = numberOfGroups || 1;
     this._pointer = this._pointer - numberOfGroups * 2;
 };
@@ -100,7 +99,7 @@ DxfArrayScanner.prototype.rewind = function (numberOfGroups) {
  * Returns true if there is another code/value pair (2 elements in the array).
  * @returns {boolean}
  */
-DxfArrayScanner.prototype.hasNext = function () {
+DxfArrayScanner.prototype.hasNext = function hasNext() {
     // Check if we have read EOF group code
     if (this._eof) {
         return false;
@@ -117,7 +116,7 @@ DxfArrayScanner.prototype.hasNext = function () {
  * Returns true if the scanner is at the end of the array
  * @returns {boolean}
  */
-DxfArrayScanner.prototype.isEOF = function () {
+DxfArrayScanner.prototype.isEOF = function isEOF() {
     return this._eof;
 };
 
