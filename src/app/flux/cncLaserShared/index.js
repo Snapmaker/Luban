@@ -251,7 +251,6 @@ export const actions = {
     },
 
     insertDefaultTextVector: (headType, caseConfigs, caseTransformation) => (dispatch, getState) => {
-        console.log('insertDefaultTextVector');
         const { size } = getState().machine;
 
         api.convertTextToSvg({
@@ -326,7 +325,6 @@ export const actions = {
                 dispatch(actions.updateState(headType, {
                     hasModel: true
                 }));
-                console.log('insertDefaultTextVector done');
                 dispatch(actions.recordSnapshot(headType));
                 dispatch(actions.render(headType));
             });
@@ -841,6 +839,16 @@ export const actions = {
             }));
             dispatch(actions.render(headType));
         }
+    },
+
+    multiplySelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        const modelState = modelGroup.multiplySelectedModel(1);
+        toolPathModelGroup.multiplySelectedModel(modelState.modelID);
+
+        dispatch(actions.recordSnapshot(headType));
+        dispatch(actions.manualPreview(headType));
+        dispatch(actions.render(headType));
     },
 
     undo: (headType) => (dispatch, getState) => {

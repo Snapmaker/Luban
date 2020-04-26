@@ -152,6 +152,13 @@ class ToolPathModelGroup {
         return null;
     }
 
+    multiplySelectedModel(modelID) {
+        const clone = this.selectedToolPathModel.clone();
+        clone.modelID = modelID;
+        clone.updateNeedPreview(true);
+        this.toolPathModels.push(clone);
+    }
+
     undoRedo(toolPathModels) {
         for (const toolPathModel of this.toolPathModels) {
             this.object.remove(toolPathModel.toolPathObj3D);

@@ -54,6 +54,7 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
+        multiplySelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired
     };
@@ -104,6 +105,9 @@ class Visualizer extends Component {
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
+        },
+        multiplySelectedModel: () => {
+            this.props.multiplySelectedModel();
         }
     };
 
@@ -289,6 +293,12 @@ class Visualizer extends Component {
                         [
                             {
                                 type: 'item',
+                                label: i18n._('Duplicate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.multiplySelectedModel
+                            },
+                            {
+                                type: 'item',
                                 label: i18n._('Bring to Front'),
                                 disabled: !isModelSelected,
                                 onClick: this.actions.bringToFront
@@ -430,6 +440,7 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
+        multiplySelectedModel: () => dispatch(actions.multiplySelectedModel('laser')),
         onModelTransform: () => dispatch(actions.onModelTransform('laser')),
         onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser'))
     };

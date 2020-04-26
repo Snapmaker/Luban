@@ -1,6 +1,7 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Vector3, Group } from 'three';
 // import { EPSILON } from '../../constants';
+import uuid from 'uuid';
 import Model from './Model';
 
 const EVENTS = {
@@ -321,30 +322,38 @@ class ModelGroup {
     multiplySelectedModel(count) {
         const selected = this.getSelectedModel();
         if (selected && count > 0) {
+            let modelID;
             for (let i = 0; i < count; i++) {
-                const model = this.getSelectedModel().clone();
-                model.stickToPlate();
-                model.meshObject.position.x = 0;
-                model.meshObject.position.z = 0;
-                const xz = this._computeAvailableXZ(model);
-                model.meshObject.position.x = xz.x;
-                model.meshObject.position.z = xz.z;
+                const model = selected.clone();
+                if (selected.sourceType === '3d') {
+                    model.stickToPlate();
+                    model.meshObject.position.x = 0;
+                    model.meshObject.position.z = 0;
+                    const xz = this._computeAvailableXZ(model);
+                    model.meshObject.position.x = xz.x;
+                    model.meshObject.position.z = xz.z;
+                } else {
+                    model.meshObject.addEventListener('update', this.onModelUpdate);
+                    model.modelID = uuid.v4();
+                    modelID = model.modelID;
+                    model.computeBoundingBox();
+                    model.updateTransformation({
+                        positionX: 0,
+                        positionY: 0,
+                        positionZ: 0
+                    });
+                }
+
                 // this.add(model);
                 this.models.push(model);
                 this.object.add(model.meshObject);
             }
 
             return {
+                modelID: modelID,
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped()
             };
-            // const state = {
-            //     canUndo: this._canUndo(),
-            //     canRedo: this._canRedo(),
-            //     hasModel: this._hasModel(),
-            //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
-            // };
-            // this.updateState(state);
         }
         return null;
     }

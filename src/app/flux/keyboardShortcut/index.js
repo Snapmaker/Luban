@@ -29,6 +29,8 @@ export const actions = {
                 if (from === '3dp') {
                     const { displayedType } = getState().printing;
                     displayedType === 'model' && (dispatch(printingActions.multiplySelectedModel(1)));
+                } else {
+                    dispatch(cncLaserSharedActions.multiplySelectedModel(from));
                 }
             },
             'JOG': (event, { direction }) => {
