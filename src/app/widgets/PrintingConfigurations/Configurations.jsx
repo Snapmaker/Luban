@@ -631,19 +631,42 @@ class Configurations extends PureComponent {
                                                         .map(c => c.trim());
                                                     let result = false;
                                                     for (const condition of orConditions) {
-                                                        const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
-                                                        const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
-                                                        if (enabledKey) {
+                                                        if (qualityDefinition.settings[condition]) {
+                                                            const value = qualityDefinition.settings[condition].default_value;
+                                                            if (value) {
+                                                                result = true;
+                                                            }
+                                                        }
+                                                        if (condition.match('(.*) > ([0-9]+)')) {
+                                                            const m = condition.match('(.*) > ([0-9]+)');
+                                                            const enabledKey = m[1];
+                                                            const enabledValue = parseInt(m[2], 10);
                                                             if (qualityDefinition.settings[enabledKey]) {
                                                                 const value = qualityDefinition.settings[enabledKey].default_value;
-                                                                if (value === enabledValue) {
+                                                                if (value > enabledValue) {
                                                                     result = true;
                                                                 }
                                                             }
-                                                        } else {
-                                                            if (qualityDefinition.settings[condition]) {
-                                                                const value = qualityDefinition.settings[condition].default_value;
-                                                                if (value) {
+                                                        }
+                                                        if (condition.match('(.*) < ([0-9]+)')) {
+                                                            const m = condition.match('(.*) > ([0-9]+)');
+                                                            const enabledKey = m[1];
+                                                            const enabledValue = parseInt(m[2], 10);
+                                                            if (qualityDefinition.settings[enabledKey]) {
+                                                                const value = qualityDefinition.settings[enabledKey].default_value;
+                                                                if (value < enabledValue) {
+                                                                    result = true;
+                                                                }
+                                                            }
+                                                        }
+                                                        if (condition.match("resolveOrValue\\('(.[^)|']*)'")) {
+                                                            const m1 = condition.match("resolveOrValue\\('(.[^)|']*)'");
+                                                            const m2 = condition.match("== ?'(.[^)|']*)'");
+                                                            const enabledKey = m1[1];
+                                                            const enabledValue = m2[1];
+                                                            if (qualityDefinition.settings[enabledKey]) {
+                                                                const value = qualityDefinition.settings[enabledKey].default_value;
+                                                                if (value === enabledValue) {
                                                                     result = true;
                                                                 }
                                                             }
