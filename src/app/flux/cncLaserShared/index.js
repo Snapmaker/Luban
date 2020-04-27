@@ -736,12 +736,12 @@ export const actions = {
         toolPathModelGroup.hideAllToolPathModelsObj3D();
     },
 
-    changeModelVisualizer: (headType, modelID, isPreview) => (dispatch, getState) => {
+    changeModelVisualizer: (headType, modelID, isProcess) => (dispatch, getState) => {
         const { page, modelGroup, toolPathModelGroup } = getState()[headType];
         if (page === PAGE_PROCESS) {
             const model = modelGroup.getModel(modelID);
             const toolPathModel = toolPathModelGroup.getToolPathModel(modelID);
-            if (isPreview) {
+            if (isProcess) {
                 model.updateVisible(false);
                 toolPathModel.updateVisible(true);
             } else {
@@ -751,12 +751,12 @@ export const actions = {
         }
     },
 
-    manualPreview: (headType, isPreview) => (dispatch, getState) => {
+    manualPreview: (headType, isProcess) => (dispatch, getState) => {
         const { page, modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
         if (page === PAGE_EDITOR) {
             return;
         }
-        if (isPreview || autoPreviewEnabled) {
+        if (isProcess || autoPreviewEnabled) {
             for (const model of modelGroup.getModels()) {
                 const modelTaskInfo = model.getTaskInfo();
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
@@ -775,12 +775,12 @@ export const actions = {
         }
     },
 
-    previewModel: (headType, isPreview) => (dispatch, getState) => {
+    previewModel: (headType, isProcess) => (dispatch, getState) => {
         const { page, modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
         if (page === PAGE_EDITOR) {
             return;
         }
-        if (isPreview || autoPreviewEnabled) {
+        if (isProcess || autoPreviewEnabled) {
             const modelState = modelGroup.getSelectedModel().getTaskInfo();
             if (modelState) {
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelState.modelID);
@@ -841,10 +841,10 @@ export const actions = {
         }
     },
 
-    multiplySelectedModel: (headType) => (dispatch, getState) => {
+    duplicateSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        const modelState = modelGroup.multiplySelectedModel(1);
-        toolPathModelGroup.multiplySelectedModel(modelState.modelID);
+        const modelState = modelGroup.duplicateSelectedModel();
+        toolPathModelGroup.duplicateSelectedModel(modelState.modelID);
 
         dispatch(actions.recordSnapshot(headType));
         dispatch(actions.manualPreview(headType));

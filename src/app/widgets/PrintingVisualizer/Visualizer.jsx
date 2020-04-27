@@ -41,7 +41,7 @@ class Visualizer extends PureComponent {
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
-        multiplySelectedModel: PropTypes.func.isRequired,
+        duplicateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -98,7 +98,7 @@ class Visualizer extends PureComponent {
             this.props.removeSelectedModel();
         },
         duplicateSelectedModel: () => {
-            this.props.multiplySelectedModel(1);
+            this.props.duplicateSelectedModel();
         },
         resetSelectedModelTransformation: () => {
             this.props.updateSelectedModelTransformation({
@@ -370,7 +370,7 @@ const mapDispatchToProps = (dispatch) => ({
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
-    multiplySelectedModel: (count) => dispatch(printingActions.multiplySelectedModel(count)),
+    duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel())
 });
 

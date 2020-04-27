@@ -319,35 +319,33 @@ class ModelGroup {
         return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
     }
 
-    multiplySelectedModel(count) {
+    duplicateSelectedModel() {
         const selected = this.getSelectedModel();
-        if (selected && count > 0) {
+        if (selected) {
             let modelID;
-            for (let i = 0; i < count; i++) {
-                const model = selected.clone();
-                if (selected.sourceType === '3d') {
-                    model.stickToPlate();
-                    model.meshObject.position.x = 0;
-                    model.meshObject.position.z = 0;
-                    const xz = this._computeAvailableXZ(model);
-                    model.meshObject.position.x = xz.x;
-                    model.meshObject.position.z = xz.z;
-                } else {
-                    model.meshObject.addEventListener('update', this.onModelUpdate);
-                    model.modelID = uuid.v4();
-                    modelID = model.modelID;
-                    model.computeBoundingBox();
-                    model.updateTransformation({
-                        positionX: 0,
-                        positionY: 0,
-                        positionZ: 0
-                    });
-                }
-
-                // this.add(model);
-                this.models.push(model);
-                this.object.add(model.meshObject);
+            const model = selected.clone();
+            if (selected.sourceType === '3d') {
+                model.stickToPlate();
+                model.meshObject.position.x = 0;
+                model.meshObject.position.z = 0;
+                const xz = this._computeAvailableXZ(model);
+                model.meshObject.position.x = xz.x;
+                model.meshObject.position.z = xz.z;
+            } else {
+                model.meshObject.addEventListener('update', this.onModelUpdate);
+                model.modelID = uuid.v4();
+                modelID = model.modelID;
+                model.computeBoundingBox();
+                model.updateTransformation({
+                    positionX: 0,
+                    positionY: 0,
+                    positionZ: 0
+                });
             }
+
+            // this.add(model);
+            this.models.push(model);
+            this.object.add(model.meshObject);
 
             return {
                 modelID: modelID,

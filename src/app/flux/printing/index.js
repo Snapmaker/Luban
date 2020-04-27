@@ -1007,9 +1007,9 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    multiplySelectedModel: (count) => (dispatch, getState) => {
+    duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.multiplySelectedModel(count);
+        const modelState = modelGroup.duplicateSelectedModel();
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());

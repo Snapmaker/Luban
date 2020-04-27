@@ -54,6 +54,7 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
+        duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired
     };
@@ -104,6 +105,9 @@ class Visualizer extends Component {
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
+        },
+        duplicateSelectedModel: () => {
+            this.props.duplicateSelectedModel();
         }
     };
 
@@ -328,6 +332,12 @@ class Visualizer extends Component {
                         [
                             {
                                 type: 'item',
+                                label: i18n._('Duplicate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.duplicateSelectedModel
+                            },
+                            {
+                                type: 'item',
                                 label: i18n._('Bring to Front'),
                                 disabled: !isModelSelected,
                                 onClick: this.actions.bringToFront
@@ -464,6 +474,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
+        duplicateSelectedModel: () => dispatch(actions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
         onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
         onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('cnc'))

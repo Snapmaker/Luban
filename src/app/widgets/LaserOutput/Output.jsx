@@ -112,7 +112,7 @@ class Output extends PureComponent {
         const actions = this.actions;
         const { workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile } = this.props;
         const isEditor = this.props.page === PAGE_EDITOR;
-        const isPreview = this.props.page === PAGE_PROCESS;
+        const isProcess = this.props.page === PAGE_PROCESS;
 
         return (
             <div>
@@ -120,11 +120,11 @@ class Output extends PureComponent {
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-default"
-                        disabled={isPreview && autoPreviewEnabled}
+                        disabled={isProcess && autoPreviewEnabled}
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {isPreview ? i18n._('Preview') : i18n._('Process')}
+                        {isProcess ? i18n._('Preview') : i18n._('Process')}
                     </button>
                     <TipTrigger
                         title={i18n._('Auto Preview')}

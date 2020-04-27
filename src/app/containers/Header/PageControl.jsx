@@ -28,7 +28,7 @@ class PageControl extends Component {
             return null;
         }
         const isEditor = page === PAGE_EDITOR;
-        const isPreview = page === PAGE_PROCESS;
+        const isProcess = page === PAGE_PROCESS;
 
         return (
             <div className={classNames(styles['editor-and-preview'])}>
@@ -43,7 +43,7 @@ class PageControl extends Component {
                     </button>
                     <button
                         type="button"
-                        className={classNames('btn', { [styles.selected]: isPreview })}
+                        className={classNames('btn', { [styles.selected]: isProcess })}
                         onClick={() => {
                             this.props.togglePage(from, PAGE_PROCESS);
                         }}

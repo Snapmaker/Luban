@@ -152,7 +152,7 @@ class ToolPathModelGroup {
         return null;
     }
 
-    multiplySelectedModel(modelID) {
+    duplicateSelectedModel(modelID) {
         const clone = this.selectedToolPathModel.clone();
         clone.modelID = modelID;
         clone.updateNeedPreview(true);

@@ -189,7 +189,7 @@ class LaserParameters extends PureComponent {
         const { width, height } = this.state.modalSetting;
 
         const isEditor = this.props.page === PAGE_EDITOR;
-        const isPreview = this.props.page === PAGE_PROCESS;
+        const isProcess = this.props.page === PAGE_PROCESS;
         const isBW = (sourceType === 'raster' && mode === 'bw');
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
@@ -251,26 +251,26 @@ class LaserParameters extends PureComponent {
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
                             )}
-                            {isPreview && isBW && (
+                            {isProcess && isBW && (
                                 <GcodeConfigRasterBW />
                             )}
-                            {isPreview && isGreyscale && (
+                            {isProcess && isGreyscale && (
                                 <GcodeConfigGreyscale />
                             )}
-                            {isPreview && isRasterVector && (
+                            {isProcess && isRasterVector && (
                                 <GcodeConfigRasterVector />
                             )}
-                            {isPreview && isSvgVector && (
+                            {isProcess && isSvgVector && (
                                 <GcodeConfigSvgVector />
                             )}
-                            {isPreview && isTextVector && (
+                            {isProcess && isTextVector && (
                                 <GcodeConfigSvgVector />
                             )}
                         </div>
                     </div>
 
                 )}
-                {isPreview && (
+                {isProcess && (
                     <GcodeParameters
                         selectedModelID={selectedModelID}
                         printOrder={printOrder}
