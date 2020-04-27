@@ -7,7 +7,7 @@ import styles from './styles.styl';
 
 // TODO: to be improved
 const OptionalDropdown = (props) => {
-    const { hidden, title, titleTip, onClick, children, ...rest } = props;
+    const { hidden, title, titleTip, onClick, disabled = false, children, ...rest } = props;
 
     return (
         <div>
@@ -16,6 +16,7 @@ const OptionalDropdown = (props) => {
                     <div className={styles['expandable-title']}>
                         <Anchor
                             onClick={onClick}
+                            disabled={disabled}
                         >
                             <i className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])} />
                             <span>{title}</span>
@@ -45,6 +46,7 @@ OptionalDropdown.propTypes = {
     titleTip: PropTypes.string,
     children: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
+    disabled: PropTypes.bool,
     hidden: PropTypes.bool.isRequired
 };
 

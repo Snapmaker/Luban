@@ -48,12 +48,12 @@ export const generateGcode = (modelInfos, onProgress) => {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
-    const { headerType } = modelInfos[0];
-    if (!_.includes(['laser', 'cnc'], headerType)) {
-        return Promise.reject(new Error(`Unsupported type: ${headerType}`));
+    const { headType } = modelInfos[0];
+    if (!_.includes(['laser', 'cnc'], headType)) {
+        return Promise.reject(new Error(`Unsupported type: ${headType}`));
     }
 
-    const suffix = headerType === 'laser' ? '.nc' : '.cnc';
+    const suffix = headType === 'laser' ? '.nc' : '.cnc';
 
     let fileTotalLines = 0;
     let estimatedTime = 0;
@@ -69,20 +69,20 @@ export const generateGcode = (modelInfos, onProgress) => {
 
     for (let i = 0; i < modelInfos.length; i++) {
         const modelInfo = modelInfos[i];
-        const { toolPathFilename, gcodeConfig, config, mode } = modelInfo;
+        const { toolPathFilename, gcodeConfig, mode } = modelInfo;
         const toolPathFilePath = `${DataStorage.tmpDir}/${toolPathFilename}`;
         const data = fs.readFileSync(toolPathFilePath, 'utf8');
         const toolPathObj = JSON.parse(data);
 
         const gcodeGenerator = new GcodeGenerator();
         let gcodeLines;
-        if (headerType === 'laser') {
+        if (headType === 'laser') {
             gcodeLines = gcodeGenerator.parseAsLaser(toolPathObj, gcodeConfig);
         } else {
             gcodeLines = gcodeGenerator.parseAsCNC(toolPathObj, gcodeConfig);
         }
 
-        const renderMethod = mode === 'greyscale' && config.movementMode === 'greyscale-dot' ? 'point' : 'line';
+        const renderMethod = mode === 'greyscale' && gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
 
         if (i > 0) {
             const header = '\n'
@@ -114,13 +114,13 @@ export const generateGcode = (modelInfos, onProgress) => {
         onProgress((i + 1) / modelInfos.length);
     }
 
-    const { gcodeConfig, thumbnail, config, mode } = modelInfos[0];
-    const renderMethod = mode === 'greyscale' && config.movementMode === 'greyscale-dot' ? 'point' : 'line';
+    const { gcodeConfig, thumbnail, mode } = modelInfos[0];
+    const renderMethod = mode === 'greyscale' && gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
 
     const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 
     let headerStart = ';Header Start\n'
-        + `;header_type: ${headerType}\n`
+        + `;header_type: ${headType}\n`
         + `;thumbnail: ${thumbnail}\n`
         + `;renderMethod: ${renderMethod}\n`
         + ';file_total_lines: fileTotalLines\n'

@@ -15,13 +15,13 @@ export const generate = async (req, res) => {
     const modelInfo = req.body;
     const suffix = '.json';
     // const { type, mode, source } = modelInfo;
-    const { headerType, sourceType, uploadName, mode } = modelInfo;
+    const { headType, sourceType, uploadName, mode } = modelInfo;
 
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
-    if (headerType === 'laser') {
+    if (headType === 'laser') {
         // no need to process model
         if ((sourceType === 'svg' && mode === 'vector')
             || (sourceType === 'text' && mode === 'vector')) {
@@ -50,7 +50,7 @@ export const generate = async (req, res) => {
                 msg: 'Internal server error'
             });
         }
-    } else if (headerType === 'cnc') {
+    } else if (headType === 'cnc') {
         const inputFilePath = `${DataStorage.tmpDir}/${uploadName}`;
         if (sourceType === 'svg' && mode === 'vector') {
             const svgParser = new SVGParser();
@@ -78,7 +78,7 @@ export const generate = async (req, res) => {
         }
     } else {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Unsupported type: ${headerType}`
+            msg: `Unsupported type: ${headType}`
         });
     }
 };

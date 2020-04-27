@@ -1,16 +1,13 @@
-export const checkIsAllModelsPreviewed = (modelGroup) => {
+export const checkIsAllModelsPreviewed = (modelGroup, toolPathModelGroup) => {
     if (modelGroup.getModels().length === 0) {
         return false;
     }
 
-    const models = modelGroup.getModels();
-    for (let i = 0; i < models.length; i++) {
-        if (['idle', 'previewing'].includes(models[i].stage)) {
-            return false;
-        }
+    if (modelGroup.getModels().length === toolPathModelGroup.previewToolPathModels()) {
+        return true;
     }
 
-    return true;
+    return false;
 };
 
 /**

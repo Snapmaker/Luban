@@ -203,7 +203,7 @@ const Relief = (props) => {
                     <tr>
                         <td />
                         <td>
-                            <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
+                            <input type="checkbox" defaultChecked={state.invert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                         </td>
                     </tr>
                 </tbody>

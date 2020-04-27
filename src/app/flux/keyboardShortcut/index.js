@@ -28,7 +28,9 @@ export const actions = {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
                     const { displayedType } = getState().printing;
-                    displayedType === 'model' && (dispatch(printingActions.multiplySelectedModel(1)));
+                    displayedType === 'model' && (dispatch(printingActions.duplicateSelectedModel()));
+                } else {
+                    dispatch(cncLaserSharedActions.duplicateSelectedModel(from));
                 }
             },
             'JOG': (event, { direction }) => {

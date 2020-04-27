@@ -5,25 +5,23 @@ import ToolPathModel from './ToolPathModel';
 class ToolPathModelGroup {
     constructor() {
         this.object = new Group();
+        this.object.visible = false;
 
         this.toolPathModels = [];
         this.selectedToolPathModel = null;
 
         this._emptyState = {
             printOrder: 0,
-            gcodeConfig: {},
-            config: {}
+            gcodeConfig: {}
         };
     }
 
-    _getState(model) {
-        const { modelID, config, gcodeConfig, printOrder } = model;
-
+    getState(toolPathModel) {
+        const { modelID, printOrder, gcodeConfig } = toolPathModel;
         return {
-            modelID: modelID,
-            config,
-            gcodeConfig,
-            printOrder
+            modelID,
+            printOrder,
+            gcodeConfig
         };
     }
 
@@ -39,20 +37,21 @@ class ToolPathModelGroup {
         return null;
     }
 
-    getSelectedToolPathModelState() {
-        return this._getState(this.selectedToolPathModel);
-    }
-
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);
-        return this._getState(this.selectedToolPathModel);
+        return this.getState(this.selectedToolPathModel);
+    }
+
+    updateSelectedMode(mode, gcodeConfig) {
+        this.selectedToolPathModel.updateMode(mode, gcodeConfig);
+        return this.getState(this.selectedToolPathModel);
     }
 
     generateToolPathModel(modelInfo) {
         const toolPathModel = new ToolPathModel(modelInfo);
         this.addToolPathModel(toolPathModel);
         this.selectedToolPathModel = toolPathModel;
-        return this._getState(toolPathModel);
+        return this.getState(toolPathModel);
     }
 
     addToolPathModel(toolPathModel) {
@@ -61,6 +60,10 @@ class ToolPathModelGroup {
 
             this.selectedModel = toolPathModel;
         }
+    }
+
+    previewToolPathModels() {
+        return this.getToolPathModels().filter(v => v.toolPathFilename).length;
     }
 
     unselectAllModels() {
@@ -72,8 +75,12 @@ class ToolPathModelGroup {
         return this.toolPathModels.find(d => d.modelID === modelID);
     }
 
-    cancelSelectedPreview() {
-        this.selectedToolPathModel && (this.selectedToolPathModel.id = '');
+    getToolPathModels() {
+        const toolPathModels = [];
+        for (const toolPathModel of this.toolPathModels) {
+            toolPathModels.push(toolPathModel);
+        }
+        return toolPathModels;
     }
 
     getToolPathModelTaskInfo(modelID) {
@@ -91,33 +98,36 @@ class ToolPathModelGroup {
     }
 
     updateSelectedGcodeConfig(gcodeConfig) {
-        this.selectedToolPathModel && (this.selectedToolPathModel.updateGcodeConfig(gcodeConfig));
+        this.selectedToolPathModel.updateGcodeConfig(gcodeConfig);
     }
 
-    updateSelectedConfig(config) {
-        this.selectedToolPathModel && (this.selectedToolPathModel.updateConfig(config));
+    updateSelectedNeedPreview(param) {
+        this.selectedToolPathModel && this.selectedToolPathModel.updateNeedPreview(param);
     }
 
-    updateAllModelConfig(config) {
-        for (const toolPathModel of this.toolPathModels) {
-            toolPathModel.updateConfig(config);
+    updateAllNeedPreview(param) {
+        for (const toolPathModel of this.getToolPathModels()) {
+            toolPathModel.updateNeedPreview(param);
         }
     }
 
-    hideAllModelsObj3D() {
+    // updateSelectedConfig(config) {
+    //     this.selectedToolPathModel && (this.selectedToolPathModel.updateConfig(config));
+    //     this.selectedToolPathModel && (this.selectedToolPathModel.updateNeedPreview(true));
+    // }
+
+    updateAllModelGcodeConfig(config) {
         for (const toolPathModel of this.toolPathModels) {
-            toolPathModel && toolPathModel.toolPathObj3D && (toolPathModel.toolPathObj3D.visible = false);
+            toolPathModel.updateGcodeConfig(config);
         }
     }
 
-    showToolPathObj3D(modelID) {
-        const toolPathModel = this.getToolPathModel(modelID);
-        toolPathModel && toolPathModel.toolPathObj3D && (toolPathModel.toolPathObj3D.visible = true);
+    showAllToolPathModelsObj3D() {
+        this.object.visible = true;
     }
 
-    hideToolPathObj3D(modelID) {
-        const toolPathModel = this.getToolPathModel(modelID);
-        toolPathModel && toolPathModel.toolPathObj3D && (toolPathModel.toolPathObj3D.visible = false);
+    hideAllToolPathModelsObj3D() {
+        this.object.visible = false;
     }
 
     getToolPathModelByID(id) {
@@ -133,41 +143,26 @@ class ToolPathModelGroup {
                 return null;
             }
             if (toolPathModel.id === data.id) {
+                toolPathModel.updateNeedPreview(false);
                 this.object.add(toolPathModel.toolPathObj3D);
 
-                return this._getState(toolPathModel);
+                return this.getState(toolPathModel);
             }
         }
         return null;
     }
 
-    // generateGcode() {
-    //     const toolPathModels = this.toolPathModels.map(d => d).sort((d1, d2) => {
-    //         if (d1.printOrder > d2.printOrder) {
-    //             return 1;
-    //         } else if (d1.printOrder < d2.printOrder) {
-    //             return -1;
-    //         } else {
-    //             return 1;
-    //         }
-    //     });
-    //     return toolPathModels.map(model => {
-    //         return {
-    //             gcode: model.generateGcode(),
-    //             modelInfo: {
-    //                 modelID: model.modelID,
-    //                 estimatedTime: model.estimatedTime,
-    //                 config: model.config,
-    //                 gcodeConfig: model.gcodeConfig
-    //             }
-    //         };
-    //     });
-    // }
+    duplicateSelectedModel(modelID) {
+        const clone = this.selectedToolPathModel.clone();
+        clone.modelID = modelID;
+        clone.updateNeedPreview(true);
+        this.toolPathModels.push(clone);
+    }
 
     undoRedo(toolPathModels) {
         for (const toolPathModel of this.toolPathModels) {
             this.object.remove(toolPathModel.toolPathObj3D);
-            toolPathModel.id = '';
+            toolPathModel.updateNeedPreview(true);
         }
         this.toolPathModels.splice(0);
         for (const toolPathModel of toolPathModels) {

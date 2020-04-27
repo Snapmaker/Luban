@@ -28,7 +28,7 @@ class VectorParameters extends PureComponent {
         fillDensity: PropTypes.number.isRequired,
 
         // action
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
@@ -41,7 +41,7 @@ class VectorParameters extends PureComponent {
         },
         // config
         onChangePathType: (options) => {
-            this.props.updateSelectedModelConfig({
+            this.props.updateSelectedModelGcodeConfig({
                 pathType: options.value,
                 fillEnabled: (options.value === 'pocket')
             });
@@ -50,40 +50,40 @@ class VectorParameters extends PureComponent {
             if (targetDepth > this.props.size.z) {
                 return;
             }
-            this.props.updateSelectedModelConfig({ targetDepth: targetDepth });
+            this.props.updateSelectedModelGcodeConfig({ targetDepth: targetDepth });
             if (targetDepth < this.props.stepDown) {
-                this.props.updateSelectedModelConfig({ stepDown: targetDepth });
+                this.props.updateSelectedModelGcodeConfig({ stepDown: targetDepth });
             }
             if (-targetDepth > this.props.tabHeight) {
-                this.props.updateSelectedModelConfig({ stepDown: -targetDepth });
+                this.props.updateSelectedModelGcodeConfig({ stepDown: -targetDepth });
             }
         },
         onChangeStepDown: (stepDown) => {
-            this.props.updateSelectedModelConfig({ stepDown: stepDown });
+            this.props.updateSelectedModelGcodeConfig({ stepDown: stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
-            this.props.updateSelectedModelConfig({ safetyHeight: safetyHeight });
+            this.props.updateSelectedModelGcodeConfig({ safetyHeight: safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
-            this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
+            this.props.updateSelectedModelGcodeConfig({ stopHeight: stopHeight });
         },
         // Fill
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateSelectedModelConfig({ fillDensity });
+            this.props.updateSelectedModelGcodeConfig({ fillDensity });
         },
         // Tab
         onToggleEnableTab: () => {
             const enableTab = !this.props.enableTab;
-            this.props.updateSelectedModelConfig({ enableTab: enableTab });
+            this.props.updateSelectedModelGcodeConfig({ enableTab: enableTab });
         },
         onTabWidth: (tabWidth) => {
-            this.props.updateSelectedModelConfig({ tabWidth: tabWidth });
+            this.props.updateSelectedModelGcodeConfig({ tabWidth: tabWidth });
         },
         onTabHeight: (tabHeight) => {
-            this.props.updateSelectedModelConfig({ tabHeight: tabHeight });
+            this.props.updateSelectedModelGcodeConfig({ tabHeight: tabHeight });
         },
         onTabSpace: (tabSpace) => {
-            this.props.updateSelectedModelConfig({ tabSpace: tabSpace });
+            this.props.updateSelectedModelGcodeConfig({ tabSpace: tabSpace });
         }
     };
 
@@ -313,12 +313,12 @@ class VectorParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { config } = state.cnc;
+    const { gcodeConfig } = state.cnc;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         fillEnabled, fillDensity,
         enableTab, tabWidth, tabHeight, tabSpace
-    } = config;
+    } = gcodeConfig;
 
     return {
         size: machine.size,
@@ -340,7 +340,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig('cnc', params))
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('cnc', params))
     };
 };
 

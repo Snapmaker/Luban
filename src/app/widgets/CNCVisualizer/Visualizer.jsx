@@ -14,7 +14,10 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions, CNC_LASER_STAGE } from '../../flux/cncLaserShared';
-import styles from '../styles.styl';
+import styles from './styles.styl';
+import VisualizerTopLeft from './VisualizerTopLeft';
+import { PAGE_EDITOR } from '../../constants';
+import VisualizerTool from './VisualizerTool';
 
 
 function humanReadableTime(t) {
@@ -26,6 +29,7 @@ function humanReadableTime(t) {
 
 class Visualizer extends Component {
     static propTypes = {
+        page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
 
@@ -50,6 +54,7 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
+        duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired
     };
@@ -100,6 +105,9 @@ class Visualizer extends Component {
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
+        },
+        duplicateSelectedModel: () => {
+            this.props.duplicateSelectedModel();
         }
     };
 
@@ -200,6 +208,8 @@ class Visualizer extends Component {
                 return i18n._('Previewing tool path...');
             case CNC_LASER_STAGE.PREVIEW_SUCCESS:
                 return i18n._('Previewed tool path successfully');
+            case CNC_LASER_STAGE.RE_PREVIEW:
+                return i18n._('Please preview again');
             case CNC_LASER_STAGE.PREVIEW_FAILED:
                 return i18n._('Failed to preview tool path.');
             case CNC_LASER_STAGE.GENERATING_GCODE:
@@ -263,6 +273,7 @@ class Visualizer extends Component {
 
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
+        const isEditor = this.props.page === PAGE_EDITOR;
 
 
         return (
@@ -270,6 +281,16 @@ class Visualizer extends Component {
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
+                {isEditor && (
+                    <div className={styles['visualizer-top-left']}>
+                        <VisualizerTopLeft />
+                    </div>
+                )}
+                {isEditor && (
+                    <div>
+                        <VisualizerTool />
+                    </div>
+                )}
                 <div className={styles['canvas-content']}>
                     <Canvas
                         ref={this.canvas}
@@ -309,6 +330,12 @@ class Visualizer extends Component {
                     id="cnc"
                     menuItems={
                         [
+                            {
+                                type: 'item',
+                                label: i18n._('Duplicate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.duplicateSelectedModel
+                            },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
@@ -421,8 +448,9 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
+    const { page, selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
     return {
+        page,
         size: machine.size,
         // model,
         modelGroup,
@@ -446,6 +474,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
+        duplicateSelectedModel: () => dispatch(actions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
         onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
         onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('cnc'))

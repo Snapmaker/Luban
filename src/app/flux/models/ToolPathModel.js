@@ -10,33 +10,62 @@ const GCODE_CONFIG_PLACEHOLDER = {
 };
 
 class ToolPathModel {
+    modeConfigs = {}
+
     constructor(toolPathModelInfo) {
-        const { modelID, config, gcodeConfig } = toolPathModelInfo;
+        const { mode, modelID, gcodeConfig, modeConfigs } = toolPathModelInfo;
 
         this.modelID = modelID;
+        this.mode = mode;
 
         this.id = null;
 
         this.printOrder = 1;
         this.gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
-        this.config = {
-            ...config
-        };
         this.gcodeConfig = {
             ...gcodeConfig
         };
+        this.modeConfigs = {
+            ...modeConfigs
+        };
 
+        this.needPreview = true;
         this.toolPathFilename = null;
         this.toolPathObj3D = null;
     }
 
+    updateVisible(param) {
+        this.toolPathObj3D && (this.toolPathObj3D.visible = param);
+    }
 
-    updateConfig(config) {
-        this.config = {
-            ...this.config,
-            ...config
+    updateNeedPreview(param) {
+        this.needPreview = param;
+        if (param) {
+            this.id = '';
+        }
+    }
+
+    updateMode(mode, gcodeConfig) {
+        if (mode === this.mode) {
+            return;
+        }
+        this.updateNeedPreview(true);
+        this.modeConfigs[this.mode] = {
+            gcodeConfig: {
+                ...this.gcodeConfig
+            }
         };
+        if (this.modeConfigs[mode]) {
+            this.gcodeConfig = {
+                ...this.modeConfigs[mode].gcodeConfig
+            };
+        } else {
+            this.gcodeConfig = {
+                ...gcodeConfig
+            };
+        }
+        this.mode = mode;
     }
 
     updateGcodeConfig(gcodeConfig) {
@@ -44,14 +73,15 @@ class ToolPathModel {
             ...this.gcodeConfig,
             ...gcodeConfig
         };
+        this.updateNeedPreview(true);
     }
 
     getTaskInfo() {
         return {
             id: this.id,
-            config: this.config,
-            gcodeConfig: this.gcodeConfig,
             printOrder: this.printOrder,
+            needPreview: this.needPreview,
+            gcodeConfig: this.gcodeConfig,
             toolPathFilename: this.toolPathFilename,
             gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
         };
@@ -80,13 +110,6 @@ class ToolPathModel {
             );
         });
     }
-
-    // generateGcode() {
-    //     const gcodeGenerator = new GcodeGenerator();
-    //     const toolPath = this.toolPath;
-    //
-    //     return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
-    // }
 
     clone() {
         const toolPathModel = new ToolPathModel(this);

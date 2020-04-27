@@ -16,6 +16,8 @@ import { actions, CNC_LASER_STAGE } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
+import { PAGE_EDITOR } from '../../constants';
+import VisualizerTool from './VisualizerTool';
 
 
 function humanReadableTime(t) {
@@ -27,6 +29,7 @@ function humanReadableTime(t) {
 
 class Visualizer extends Component {
     static propTypes = {
+        page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
 
@@ -51,6 +54,7 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
+        duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired
     };
@@ -101,6 +105,9 @@ class Visualizer extends Component {
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
+        },
+        duplicateSelectedModel: () => {
+            this.props.duplicateSelectedModel();
         }
     };
 
@@ -223,15 +230,23 @@ class Visualizer extends Component {
 
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
+        const isEditor = this.props.page === PAGE_EDITOR;
 
         return (
             <div
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
-                <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft />
-                </div>
+                {isEditor && (
+                    <div className={styles['visualizer-top-left']}>
+                        <VisualizerTopLeft />
+                    </div>
+                )}
+                {isEditor && (
+                    <div>
+                        <VisualizerTool />
+                    </div>
+                )}
                 <div className={styles['visualizer-top-right']}>
                     <VisualizerTopRight />
                 </div>
@@ -276,6 +291,12 @@ class Visualizer extends Component {
                     id="laser"
                     menuItems={
                         [
+                            {
+                                type: 'item',
+                                label: i18n._('Duplicate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.duplicateSelectedModel
+                            },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
@@ -390,9 +411,9 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
+    const { page, selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
     return {
+        page,
         size: machine.size,
         hasModel,
         selectedModelID,
@@ -419,6 +440,7 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
+        duplicateSelectedModel: () => dispatch(actions.duplicateSelectedModel('laser')),
         onModelTransform: () => dispatch(actions.onModelTransform('laser')),
         onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser'))
     };

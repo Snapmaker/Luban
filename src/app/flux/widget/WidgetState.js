@@ -41,7 +41,7 @@ const defaultState = {
     developerPanel: {
         primary: {
             widgets: [
-                /*'connectionPanel',*/
+                /* 'connectionPanel',*/
                 'axesPanel', 'macroPanel'
             ]
         },
@@ -182,6 +182,12 @@ const defaultState = {
         console: {
             minimized: false,
             fullscreen: false
+        },
+        'laser-output': {
+            autoPreview: true
+        },
+        'cnc-output': {
+            autoPreview: true
         }
     }
 };

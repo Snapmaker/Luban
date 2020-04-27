@@ -1,22 +1,20 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
-import { EXPERIMENTAL_IMAGE_TRACING_CNC } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import i18n from '../../lib/i18n';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import TextParameters from '../CncLaserShared/TextParameters';
-import ReliefParameters from './ReliefParameters';
 import VectorParameters from './VectorParameters';
-import Anchor from '../../components/Anchor';
 import Modal from '../../components/Modal';
 import modal from '../../lib/modal';
 import api from '../../api';
-import styles from './styles.styl';
+import ImageProcessMode from './ImageProcessMode';
+import ReliefGcodeParameters from './gcodeconfig/ReliefGcodeParameters';
 
 const getAccept = (uploadMode) => {
     let accept = '';
@@ -34,10 +32,13 @@ class CNCPath extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
 
+        page: PropTypes.string.isRequired,
+
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
+        showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
@@ -49,7 +50,9 @@ class CNCPath extends PureComponent {
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired
+        setAutoPreview: PropTypes.func.isRequired,
+        changeSelectedModelShowOrigin: PropTypes.func.isRequired,
+        changeSelectedModelMode: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -167,17 +170,22 @@ class CNCPath extends PureComponent {
         const actions = this.actions;
         const { accept } = this.state;
         const {
+            page,
             selectedModelID, sourceType, mode,
+            showOrigin,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
-            onModelAfterTransform
+            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode
         } = this.props;
         const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (sourceType === 'text' && mode === 'vector');
+        const isEditor = page === PAGE_EDITOR;
+        const isProcess = page === PAGE_PROCESS;
+        const isProcessMode = isEditor && sourceType === 'raster';
 
         return (
             <React.Fragment>
@@ -202,84 +210,55 @@ class CNCPath extends PureComponent {
                         </Modal.Body>
                     </Modal>
                 )}
-                <div className={styles['laser-modes']}>
-                    <div className={classNames(styles['laser-mode'])}>
-                        <Anchor
-                            className={styles['laser-mode__btn']}
-                            onClick={() => actions.onClickToUpload('greyscale')}
-                        >
-                            <i className={styles['laser-mode__icon-greyscale']} />
-                        </Anchor>
-                        <span className={styles['laser-mode__text']}>{i18n._('RELIEF')}</span>
-                    </div>
-                    <div className={classNames(styles['laser-mode'])}>
-                        <Anchor
-                            className={styles['laser-mode__btn']}
-                            onClick={() => actions.onClickToUpload('vector')}
-                        >
-                            <i className={styles['laser-mode__icon-vector']} />
-                        </Anchor>
-                        <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
-                    </div>
-                    <div className={classNames(styles['laser-mode'])} style={{ marginRight: '0' }}>
-                        <Anchor
-                            className={classNames(styles['laser-mode__btn'])}
-                            onClick={() => actions.onClickInsertText()}
-                        >
-                            <i className={styles['laser-mode__icon-text']} />
-                        </Anchor>
-                        <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
-                    </div>
-                    {EXPERIMENTAL_IMAGE_TRACING_CNC && (
-                        <div className={classNames(styles['laser-mode'])}>
-                            <Anchor
-                                className={styles['laser-mode__btn']}
-                                onClick={() => {
-                                    actions.onClickToUpload('trace');
-                                }}
-                            >
-                                <i className={styles['laser-mode__icon-vector']} />
-                            </Anchor>
-                            <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
-                        </div>
-                    )}
-                </div>
+                {isEditor && (
+                    <Transformation
+                        selectedModelID={selectedModelID}
+                        transformation={transformation}
+                        sourceType={sourceType}
+                        updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        onModelAfterTransform={onModelAfterTransform}
+                    />
+                )}
                 {selectedModelID && (
                     <div className="sm-parameter-container">
-                        <div className={styles.separator} />
-                        <div style={{ marginTop: '15px' }} />
-                        <Transformation
-                            transformation={transformation}
-                            sourceType={sourceType}
-                            updateSelectedModelTransformation={updateSelectedModelTransformation}
-                            onModelAfterTransform={onModelAfterTransform}
-                        />
-                        {isRasterGreyscale && (
-                            <ReliefParameters />
+                        {isProcessMode && (
+                            <ImageProcessMode
+                                sourceType={sourceType}
+                                mode={mode}
+                                showOrigin={showOrigin}
+                                changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
+                                changeSelectedModelMode={changeSelectedModelMode}
+                            />
                         )}
-                        {isTextVector && (
+                        {isEditor && isTextVector && (
                             <TextParameters
                                 config={config}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
                         )}
-                        {(isSvgVector || isTextVector) && (
+                        {isProcess && (isSvgVector || isTextVector) && (
                             <VectorParameters />
                         )}
-                        <GcodeParameters
-                            printOrder={printOrder}
-                            gcodeConfig={gcodeConfig}
-                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                            paramsDescs={
-                                {
-                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
-                                }
-                            }
-                        />
+                        {isProcess && isRasterGreyscale && (
+                            <ReliefGcodeParameters />
+                        )}
                     </div>
+                )}
+                {isProcess && (
+                    <GcodeParameters
+                        selectedModelID={selectedModelID}
+                        printOrder={printOrder}
+                        gcodeConfig={gcodeConfig}
+                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                        updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        paramsDescs={
+                            {
+                                jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                            }
+                        }
+                    />
                 )}
             </React.Fragment>
         );
@@ -287,12 +266,10 @@ class CNCPath extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    // const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
-    // const sourceType = model ? model.modelInfo.source.type : '';
-    // const mode = model ? model.modelInfo.mode : '';
-    const { selectedModelID, sourceType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
+    const { page, selectedModelID, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.cnc;
 
     return {
+        page,
         printOrder,
         transformation,
         gcodeConfig,
@@ -300,6 +277,7 @@ const mapStateToProps = (state) => {
         selectedModelID,
         sourceType,
         mode,
+        showOrigin,
         config
     };
 };
@@ -313,7 +291,9 @@ const mapDispatchToProps = (dispatch) => {
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
         insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('cnc')),
         updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('cnc', config)),
-        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('cnc'))
+        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('cnc')),
+        changeSelectedModelShowOrigin: () => dispatch(sharedActions.changeSelectedModelShowOrigin('cnc')),
+        changeSelectedModelMode: (sourceType, mode) => dispatch(sharedActions.changeSelectedModelMode('cnc', sourceType, mode))
     };
 };
 

@@ -121,12 +121,12 @@ export const generateToolPath = (modelInfo, onProgress) => {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
-    const { headerType } = modelInfo;
-    if (headerType === 'laser') {
+    const { headType } = modelInfo;
+    if (headType === 'laser') {
         return generateLaserToolPath(modelInfo, onProgress);
-    } else if (headerType === 'cnc') {
+    } else if (headType === 'cnc') {
         return generateCncToolPath(modelInfo, onProgress);
     } else {
-        return Promise.reject(new Error(`Unsupported type: ${headerType}`));
+        return Promise.reject(new Error(`Unsupported type: ${headType}`));
     }
 };

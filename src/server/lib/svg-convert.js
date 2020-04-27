@@ -21,14 +21,14 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 
 
 const convertRasterToSvg = (options) => {
-    const { uploadName, vectorThreshold, isInvert, turdSize } = options;
+    const { uploadName, vectorThreshold, invert, turdSize } = options;
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
     const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     const params = {
         threshold: vectorThreshold,
         color: 'black',
         background: 'transparent',
-        blackOnWhite: !isInvert,
+        blackOnWhite: !invert,
         turdSize: turdSize
     };
 

@@ -46,12 +46,12 @@ export const CaseConfig150 = [
                 // bwThreshold: 168,
                 // contrast: 50,
                 // density: 4,
-                // invertGreyscale: false,
+                // invert: false,
                 // movementMode: 'greyscale-line',
                 // whiteClip: 100
 
                 // // bw: {
-                // invertGreyscale: 1,
+                // invert: 1,
                 // bwThreshold: 1,
                 // direction: 1,
                 // density: 1,
@@ -59,7 +59,7 @@ export const CaseConfig150 = [
                 // // RasterVector: {
                 // vectorThreshold: 1,
                 // turdSize: 1,
-                // isInvert: 1,
+                // invert: 1,
                 // fillEnabled: true, // bool
                 // fillDensity: 10, // 0~20
                 // isOptimizePath: false // bool
@@ -115,71 +115,17 @@ export const CaseConfig150 = [
         caseConfigs: {
             tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
-                // //greyscale: {
-                // algorithm: 'FloydSteinburg',
-                // brightness: 50,
-                // bwThreshold: 168,
-                // contrast: 50,
-                // density: 4,
-                // invertGreyscale: false,
-                // movementMode: 'greyscale-line',
-                // whiteClip: 100
-
-                // // bw: {
-                // invertGreyscale: 1,
-                // bwThreshold: 1,
-                // direction: 1,
-                // density: 1,
-
-                // // RasterVector: {
-                // vectorThreshold: 1,
-                // turdSize: 1,
-                // isInvert: 1,
-                // fillEnabled: true, // bool
-                // fillDensity: 10, // 0~20
-                // isOptimizePath: false // bool
-
-                // // cnc text: {
-                // pathType: 'outline', // "outline"、 "pocket"
-                // safetyHeight: 0.2,
-                // stepDown: 0.2,
-                // stopHeight: 10,
-                // tabHeight: -0.5,
-                // tabSpace: 24,
-                // tabWidth: 2,
-                // enableTab: false,
-                // targetDepth: 2,
-                //
-                // //
-                // toolAngle: 120,
-                // toolDiameter: 3.175,
-                //
-                // text: 'jt tj ss',
-                // size: 30,
-                // font: 'Georgia',
-                // lineHeight: 1.5,
-                // alignment: 'left',
-                // fillEnabled: true, // bool
-                // fillDensity: 10, // 0~20
-                // anchor: 'Center',
-                // isOptimizePath: false // bool
-                // // optimizePath: false
-
+            },
+            gcodeConfig: {
+                toolDiameter: 3.175,
+                toolAngle: 180,
                 targetDepth: 3.2,
                 stepDown: 0.4,
                 safetyHeight: 5,
-                stopHeight: 10
-
-            },
-            gcodeConfig: {
+                stopHeight: 10,
                 jogSpeed: 3000,
                 plungeSpeed: 300,
                 workSpeed: 300
-                // multiPassEnabled: true,
-                // multiPassDepth: 2, // 2+
-                // multiPasses: 2, // 0+
-                // fixedPowerEnabled: true, // bool
-                // fixedPower: 90 // 0~100
             }
         },
         caseTransformation: {

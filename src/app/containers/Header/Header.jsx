@@ -12,6 +12,7 @@ import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import MachineSelection from './MachineSelection';
 import styles from './styles.styl';
+import PageControl from './PageControl';
 
 const Logo = memo(() => (
     <Anchor
@@ -125,6 +126,7 @@ class Header extends PureComponent {
                 </Navbar.Brand>
                 <Navbar.Toggle aria-controls="lu-header" />
                 <Navbar.Collapse id="lu-header" className={styles['lu-nav']}>
+                    <PageControl {...this.props} />
                     <Nav className="mr-auto">
                         <MachineSelection />
                     </Nav>

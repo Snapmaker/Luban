@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { DATA_PREFIX } from '../../constants';
+import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
 import { controller } from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
@@ -13,6 +13,9 @@ import {
 import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
 
 const INITIAL_STATE = {
+
+    page: PAGE_EDITOR,
+
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
 
@@ -22,12 +25,17 @@ const INITIAL_STATE = {
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
     gcodeFile: null,
+
     // model: null,
     selectedModelID: null,
     sourceType: '',
-    mode: '', // bw, greyscale, vector
+    mode: '',
+    showOrigin: null,
+
     printOrder: 1,
     transformation: {},
+    transformationUpdateTime: new Date().getTime(),
+
     gcodeConfig: {},
     config: {},
 
@@ -47,7 +55,6 @@ const INITIAL_STATE = {
         group: new THREE.Group()
     },
 
-    previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true,
 
@@ -58,20 +65,6 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    /*
-    init: () => (dispatch) => {
-        const controllerEvents = {
-            'taskCompleted:generateToolPath': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult(taskResult));
-            }
-        };
-
-        Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
-        });
-    },
-    */
-
     init: () => (dispatch) => {
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
@@ -149,8 +142,8 @@ export const actions = {
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
-    const { from, type } = action;
-    if (from === 'laser') {
+    const { headType, type } = action;
+    if (headType === 'laser') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
@@ -162,7 +155,8 @@ export default function reducer(state = INITIAL_STATE, action) {
             }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {
-                    transformation: { ...state.transformation, ...action.transformation }
+                    transformation: { ...state.transformation, ...action.transformation },
+                    transformationUpdateTime: +new Date()
                 });
             }
             case ACTION_UPDATE_GCODE_CONFIG: {

@@ -11,7 +11,7 @@ import {
     CNC_TOOL_SNAP_BALL_END_MILL,
     CNC_TOOL_SNAP_BALL_END_MILL_CONFIG,
     CNC_TOOL_CUSTOM,
-    CNC_TOOL_CUSTOM_CONFIG
+    CNC_TOOL_CUSTOM_CONFIG, PAGE_PROCESS
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
@@ -25,6 +25,9 @@ import styles from './styles.styl';
 class ToolParameters extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
+        // eslint-disable-next-line react/no-unused-prop-types
+        setDisplay: PropTypes.func.isRequired,
+        page: PropTypes.string.isRequired,
 
         toolSnap: PropTypes.string.isRequired,
         toolParams: PropTypes.object.isRequired,
@@ -63,12 +66,14 @@ class ToolParameters extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Carving Tool'));
+        this.props.setDisplay(props.page === PAGE_PROCESS);
     }
 
     componentWillReceiveProps(nextProps) {
         if (this.props.toolSnap !== nextProps.toolSnap) {
             this.actions.onChangeTool(nextProps.toolSnap);
         }
+        this.props.setDisplay(nextProps.page === PAGE_PROCESS);
     }
 
     render() {
@@ -187,6 +192,7 @@ class ToolParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
+        page: state.cnc.page,
         toolParams: state.cnc.toolParams,
         toolSnap: state.cnc.toolSnap
     };
@@ -196,7 +202,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changeToolParams: (params) => {
             dispatch(cncActions.changeToolParams(params));
-            dispatch(sharedActions.updateAllModelConfig('cnc', params));
+            dispatch(sharedActions.updateAllModelGcodeConfig('cnc', params));
         },
         updateToolSnap: (toolSnap) => {
             dispatch(sharedActions.updateState('cnc', { toolSnap: toolSnap }));

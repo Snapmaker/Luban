@@ -8,9 +8,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         super();
         // const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
         const { config, transformation, gcodeConfig } = modelInfo;
-        const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfig;
+        const { jogSpeed, workSpeed, plungeSpeed, toolAngle, targetDepth,
+            stepDown, safetyHeight, stopHeight, density } = gcodeConfig;
         // todo: toolDiameter, toolAngle
-        const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
+        const { invert } = config;
 
         this.modelInfo = modelInfo;
         this.jogSpeed = jogSpeed;
@@ -29,7 +30,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.targetHeight = Math.round(transformation.height * this.density);
         this.rotationZ = transformation.rotationZ;
         this.flip = transformation.flip;
-        this.isInvert = isInvert;
+        this.invert = invert;
 
         this.modelPath = modelPath;
         this.toolSlope = Math.tan(toolAngle / 2 * Math.PI / 180);
@@ -42,7 +43,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         return Jimp
             .read(this.modelPath)
             .then(img => {
-                if (this.isInvert) {
+                if (this.invert) {
                     img.invert();
                 }
 
@@ -202,7 +203,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let currentZ = 0;
         let progress = 0;
         let cutDownTimes = 0;
-        const { headerType, mode, transformation, config } = this.modelInfo;
+        const { headType, mode, transformation, gcodeConfig } = this.modelInfo;
         const { positionX, positionY, positionZ } = transformation;
         const normalizer = new Normalizer(
             'Center',
@@ -337,9 +338,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         boundingBox.min.y += positionY;
 
         return {
-            headerType: headerType,
+            headType: headType,
             mode: mode,
-            movementMode: (headerType === 'laser' && mode === 'greyscale') ? config.movementMode : '',
+            movementMode: (headType === 'laser' && mode === 'greyscale') ? gcodeConfig.movementMode : '',
             data: this.toolPath,
             estimatedTime: this.estimatedTime * 3,
             positionX: positionX,
