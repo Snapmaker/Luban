@@ -86,6 +86,10 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
     });
 
     process.on('close', (code) => {
+        if (!filamentLength) {
+            filamentLength = 0.1;
+            filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
+        }
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);
