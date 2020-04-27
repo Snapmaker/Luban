@@ -252,6 +252,7 @@
     "webappengine": "~1.2.0",
     "winston": "~3.0.0",
     "xml2js": "~0.4.19",
+    "electron-store": "^5.1.1",
     "xterm": "^4.0.0",
     "xterm-addon-fit": "^0.3.0"
   },

@@ -11,14 +11,20 @@ import pkg from './package.json';
 
 let windowInstance = null;
 let lastURL = null;
+let window = null;
+const Store = require('electron-store');
+
+const config = new Store();
 const options = {
     width: 1280,
     height: 768,
     title: `${pkg.name} ${pkg.version}`
 };
 
+
 function openBrowserWindow(url) {
-    const window = new BrowserWindow({
+    Object.assign(options, config.get('winBounds'));
+    window = new BrowserWindow({
         ...options,
         show: false
     });
@@ -131,6 +137,18 @@ const main = () => {
     // and in this case the window-all-closed event would not be emitted.
     app.on('window-all-closed', () => {
         DataStorage.clear();
+        config.set('winBounds', window.getBounds());
+        app.quit();
+    });
+
+    // https://www.electronjs.org/docs/api/app
+    // If the user pressed Cmd + Q,or the developer called app.quit(),
+    // Electron will first try to close all the windows and then
+    // emit the will-quit event, and in this case the window-all-closed
+    // event would not be emitted.
+    app.on('will-quit', () => {
+        DataStorage.clear();
+        config.set('winBounds', window.getBounds());
         app.quit();
     });
 };
