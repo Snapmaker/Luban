@@ -1,7 +1,7 @@
-/* eslint import/no-unresolved: 0 */
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import { app, Menu, BrowserWindow } from 'electron';
+import Store from 'electron-store';
 import { configureWindow } from './electron-app/window';
 import getMenuTemplate from './electron-app/Menu';
 import launchServer from './server-cli';
@@ -9,25 +9,29 @@ import DataStorage from './DataStorage';
 import pkg from './package.json';
 
 
+const config = new Store();
+
 let windowInstance = null;
 let lastURL = null;
-let window = null;
-const Store = require('electron-store');
 
-const config = new Store();
-const options = {
-    width: 1280,
-    height: 768,
-    title: `${pkg.name} ${pkg.version}`
-};
+function getBrowserWindowOptions() {
+    const defaultOptions = {
+        width: 1280,
+        height: 768,
+        show: false,
+        title: `${pkg.name} ${pkg.version}`
+    };
+
+    // { x, y, width, height }
+    const windowBounds = config.get('winBounds');
+
+    return Object.assign({}, defaultOptions, windowBounds);
+}
 
 
 function openBrowserWindow(url) {
-    Object.assign(options, config.get('winBounds'));
-    window = new BrowserWindow({
-        ...options,
-        show: false
-    });
+    const options = getBrowserWindowOptions();
+    const window = new BrowserWindow(options);
 
     configureWindow(window);
 
@@ -111,13 +115,15 @@ const main = () => {
         return;
     }
     */
-
     // Allow max 4G memory usage
     if (process.arch === 'x64') {
         app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
     }
 
     app.commandLine.appendSwitch('ignore-gpu-blacklist');
+
+    // https://github.com/electron/electron/blob/master/docs/api/app.md#event-ready
+    // Emitted once, when Electron has finished initializing.
     app.on('ready', onReady);
 
     // https://github.com/electron/electron/blob/master/docs/api/app.md#event-activate-os-x
@@ -125,7 +131,7 @@ const main = () => {
     // when the user clicks on the application's dock icon.
     app.on('activate', () => {
         if (!windowInstance) {
-            openBrowserWindow(lastURL);
+            windowInstance = openBrowserWindow(lastURL);
         }
     });
 
@@ -136,20 +142,13 @@ const main = () => {
     // will first try to close all the windows and then emit the will-quit event,
     // and in this case the window-all-closed event would not be emitted.
     app.on('window-all-closed', () => {
-        DataStorage.clear();
-        config.set('winBounds', window.getBounds());
+        windowInstance = null;
         app.quit();
     });
 
-    // https://www.electronjs.org/docs/api/app
-    // If the user pressed Cmd + Q,or the developer called app.quit(),
-    // Electron will first try to close all the windows and then
-    // emit the will-quit event, and in this case the window-all-closed
-    // event would not be emitted.
     app.on('will-quit', () => {
         DataStorage.clear();
-        config.set('winBounds', window.getBounds());
-        app.quit();
+        config.set('winBounds', windowInstance.getBounds());
     });
 };
 
