@@ -24,6 +24,8 @@ class Macro extends PureComponent {
         updateModal: PropTypes.func.isRequired,
         openModal: PropTypes.func.isRequired,
         dataSource: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
+        setDisplay: PropTypes.func.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -79,6 +81,24 @@ class Macro extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        const { isConnected } = this.props;
+        if (isConnected) {
+            this.props.setDisplay(true);
+        } else {
+            this.props.setDisplay(false);
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const { isConnected } = nextProps;
+        if (isConnected && !this.props.isConnected) {
+            this.props.setDisplay(true);
+        }
+        if (!isConnected) {
+            this.props.setDisplay(false);
+        }
+    }
 
     render() {
         const { macros } = this.props;
@@ -141,11 +161,12 @@ class Macro extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { port, server, workflowState, workflowStatus } = state.machine;
+    const { port, server, workflowState, workflowStatus, isConnected } = state.machine;
     const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
         port,
+        isConnected,
         server,
         workflowState,
         workflowStatus,
