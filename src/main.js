@@ -142,13 +142,13 @@ const main = () => {
     // will first try to close all the windows and then emit the will-quit event,
     // and in this case the window-all-closed event would not be emitted.
     app.on('window-all-closed', () => {
-        windowInstance = null;
         app.quit();
     });
 
     app.on('will-quit', () => {
         DataStorage.clear();
         config.set('winBounds', windowInstance.getBounds());
+        windowInstance = null;
     });
 };
 
