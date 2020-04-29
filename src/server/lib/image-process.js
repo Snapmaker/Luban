@@ -121,6 +121,8 @@ async function processLaserGreyscale(modelInfo) {
             const origin = img.bitmap.data[index];
 
             img.bitmap.data[index] = bit(origin);
+            img.bitmap.data[index + 1] = img.bitmap.data[index];
+            img.bitmap.data[index + 2] = img.bitmap.data[index];
             const err = origin - img.bitmap.data[index];
 
             for (let i = 0; i < matrixWidth; i++) {
