@@ -9,7 +9,7 @@
     "parachvte <ryan@snapmaker.com>",
     "walker <walker@snapmaker.com>"
   ],
-  "main": "./dist/Snapmakerjs/server-cli.js",
+  "main": "./dist/T3D/server-cli.js",
   "bin": {
     "luban": "bin/cli"
   },

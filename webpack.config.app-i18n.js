@@ -1,5 +1,6 @@
 module.exports = {
     languages: [
+        'tr', // Türkçe
         'en', // English (default)
         'cs', // Czech
         'de', // German

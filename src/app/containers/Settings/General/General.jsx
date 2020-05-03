@@ -99,6 +99,7 @@ class General extends PureComponent {
                                 value={lang}
                                 onChange={this.handlers.changeLanguage}
                             >
+                                <option value="tr">Türkçe</option>
                                 <option value="de">Deutsch</option>
                                 <option value="en">English (US)</option>
                                 <option value="es">Español</option>
