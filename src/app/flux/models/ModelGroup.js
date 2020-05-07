@@ -325,6 +325,8 @@ class ModelGroup {
             let modelID;
             const model = selected.clone();
             if (selected.sourceType === '3d') {
+                const selectedConvexGeometry = selected.convexGeometry.clone();
+                model.convexGeometry = selectedConvexGeometry;
                 model.stickToPlate();
                 model.meshObject.position.x = 0;
                 model.meshObject.position.z = 0;
