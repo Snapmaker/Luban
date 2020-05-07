@@ -1,221 +1,5 @@
 import _ from 'lodash';
 
-import { PROTOCOL_TEXT, PROTOCOL_SCREEN, MACHINE_SERIES } from '../../constants';
-
-const defaultState = {
-    machine: {
-        series: MACHINE_SERIES.ORIGINAL.value
-    },
-    workspace: {
-        default: {
-            widgets: ['visualizer']
-        },
-        primary: {
-            show: true,
-            widgets: [
-                'connection', 'console', 'marlin', 'laser-test-focus'
-            ]
-        },
-        secondary: {
-            show: true,
-            widgets: [
-                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
-            ]
-        }
-    },
-    '3dp': {
-        default: {
-            widgets: ['3dp-material', '3dp-configurations', '3dp-output']
-        }
-    },
-    laser: {
-        default: {
-            widgets: ['laser-set-background', 'laser-params', 'laser-output']
-        }
-    },
-    cnc: {
-        default: {
-            widgets: ['cnc-tool', 'cnc-path', 'cnc-output']
-        }
-    },
-    developerPanel: {
-        primary: {
-            widgets: [
-                /* 'connectionPanel',*/
-                'axesPanel', 'macroPanel'
-            ]
-        },
-        default: {
-            widgets: []
-        }
-    },
-    widgets: {
-        control: {
-            minimized: false,
-            headInfoExpanded: true,
-            axes: ['x', 'y', 'z'],
-            jog: {
-                keypad: false,
-                selectedDistance: '1',
-                customDistance: 10
-            },
-            shuttle: {
-                feedrateMin: 500,
-                feedrateMax: 2000,
-                hertz: 10,
-                overshoot: 1
-            },
-            dataSource: PROTOCOL_TEXT
-        },
-        axesPanel: {
-            minimized: false,
-            axes: ['x', 'y', 'z'],
-            jog: {
-                keypad: false,
-                selectedDistance: '1',
-                customDistance: 10
-            },
-            shuttle: {
-                feedrateMin: 500,
-                feedrateMax: 2000,
-                hertz: 10,
-                overshoot: 1
-            },
-            dataSource: PROTOCOL_SCREEN
-        },
-        connection: {
-            minimized: false,
-            controller: {
-                type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
-            },
-            port: '',
-            baudrate: 115200,
-            autoReconnect: false,
-            dataSource: PROTOCOL_TEXT
-        },
-        connectionPanel: {
-            minimized: false,
-            controller: {
-                type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
-            },
-            port: '',
-            baudrate: 115200,
-            autoReconnect: false,
-            dataSource: PROTOCOL_SCREEN
-        },
-        gcode: {
-            minimized: false,
-            needRemove: true
-        },
-        macro: {
-            minimized: false,
-            dataSource: PROTOCOL_TEXT
-        },
-        macroPanel: {
-            minimized: false,
-            dataSource: PROTOCOL_SCREEN
-        },
-        marlin: {
-            minimized: false,
-            statusSection: {
-                expanded: true
-            },
-            machineModalSection: {
-                expanded: false
-            },
-            heaterControlSection: {
-                expanded: true
-            },
-            powerSection: {
-                expanded: true
-            },
-            overridesSection: {
-                expanded: true
-            }
-        },
-        spindle: {
-            minimized: false,
-            speed: 1000
-        },
-        visualizer: {
-            minimized: false,
-
-            // 3D View
-            disabled: false,
-            projection: 'orthographic', // 'perspective' or 'orthographic'
-            cameraMode: 'pan', // 'pan' or 'rotate'
-            gcode: {
-                displayName: true
-            },
-            objects: {
-                coordinateSystem: {
-                    visible: true
-                },
-                toolhead: {
-                    visible: true
-                }
-            }
-        },
-        webcam: {
-            disabled: true,
-            minimized: false,
-
-            // local - Use a built-in camera or a connected webcam
-            // mjpeg - M-JPEG stream over HTTP
-            mediaSource: 'local',
-
-            // The device id
-            deviceId: '',
-
-            // The URL field is required for the M-JPEG stream
-            url: '',
-
-            geometry: {
-                scale: 1.0,
-                rotation: 0, // 0: 0, 1: 90, 2: 180, 3: 270
-                flipHorizontally: false,
-                flipVertically: false
-            },
-            crosshair: false,
-            muted: false
-        },
-        console: {
-            minimized: false,
-            fullscreen: false
-        },
-        'laser-output': {
-            autoPreview: true
-        },
-        'cnc-output': {
-            autoPreview: true
-        }
-    }
-};
-const seriesStates = {
-    original: {},
-    A150: {
-        laser: {
-            default: {
-                widgets: ['laser-params', 'laser-output']
-            }
-        }
-    },
-    A250: {
-        laser: {
-            default: {
-                widgets: ['laser-params', 'laser-output']
-            }
-        }
-    },
-    A350: {
-        laser: {
-            default: {
-                widgets: ['laser-params', 'laser-output']
-            }
-        }
-    }
-};
-
 function customizer(objValue, srcValue) {
     if (_.isArray(srcValue)) {
         return srcValue;
@@ -234,6 +18,7 @@ function merge(...args) {
     return data;
 }
 
+
 class WidgetState {
     constructor(store) {
         this.localStore = store;
@@ -241,10 +26,6 @@ class WidgetState {
         const state = store.state;
         this.widgetState = merge(
             {},
-            {
-                defaultState,
-                seriesStates
-            },
             {
                 defaultState: state.defaultState,
                 seriesStates: state.seriesStates
@@ -351,9 +132,9 @@ class WidgetState {
         return this.set(path, series);
     }
 
-    getDefaultState() {
-        return merge({}, defaultState, seriesStates[this.series]);
-    }
+    // getDefaultState() {
+    //     return merge({}, defaultState, seriesStates[this.series]);
+    // }
 
     getState() {
         return merge({}, this.widgetState.defaultState, this.widgetState.seriesStates[this.series]);

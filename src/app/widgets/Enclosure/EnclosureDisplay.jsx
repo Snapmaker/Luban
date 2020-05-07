@@ -21,7 +21,7 @@ class EnclosureDisplay extends PureComponent {
         if (!nextProps.isConnected) {
             this.props.setDisplay(false);
         }
-        if (nextProps.enclosureOnline !== this.props.enclosureOnline
+        if (nextProps.enclosureOnline !== this.props.enclosureOnline && nextProps.isConnected
          && nextProps.enclosureOnline && this.props.connectionType === 'serial') {
             controller.writeln('M1010', { source: 'query' });
             this.props.setDisplay(true);

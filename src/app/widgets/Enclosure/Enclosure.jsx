@@ -108,7 +108,20 @@ class Enclosure extends PureComponent {
     }
 
     componentDidMount() {
-        this.props.executeGcode('M1010');
+        if (this.props.isConnected && this.props.connectionType === 'wifi') {
+            this.props.server.getEnclosureStatus((errMsg, res) => {
+                if (errMsg) {
+                    log.warn(errMsg);
+                } else {
+                    const { isDoorEnabled, led, fan } = res;
+                    this.setState({
+                        isDoorEnabled,
+                        led,
+                        fan
+                    });
+                }
+            });
+        }
     }
 
 

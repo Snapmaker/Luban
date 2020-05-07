@@ -56,7 +56,6 @@ const onReady = async () => {
         const data = await launchServer();
 
         const { address, port, routes } = { ...data };
-
         // Menu
         const template = getMenuTemplate({ address, port, routes });
         const menu = Menu.buildFromTemplate(template);
