@@ -812,7 +812,6 @@ export const actions = {
 
 
             const originalName = modelGroup.getModels()[0].originalName;
-            const uploadName = modelGroup.getModels()[0].uploadName;
             const uploadPath = `${DATA_PREFIX}/${originalName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
             const stlFileName = `${basenameWithoutExt}.stl`;
@@ -825,9 +824,7 @@ export const actions = {
 
                 const formData = new FormData();
                 formData.append('file', fileOfBlob);
-                const displayName = fileOfBlob.name;
-                formData.append('displayName', displayName);
-                formData.append('uploadName', uploadName);
+                formData.append('uploadName', stlFileName);
                 const uploadResult = await api.uploadFile(formData);
 
                 resolve(uploadResult.body);
