@@ -9,6 +9,7 @@ import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
 import { MACHINE_SERIES } from '../../../constants';
+import { actions } from '../../../flux/laser';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
@@ -20,6 +21,7 @@ class ExtractSquareTrace extends PureComponent {
         size: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
         canTakePhoto: PropTypes.bool.isRequired,
         lastFileNames: PropTypes.array,
         xSize: PropTypes.array.isRequired,
@@ -27,7 +29,8 @@ class ExtractSquareTrace extends PureComponent {
         updateEachPicSize: PropTypes.func.isRequired,
         changeLastFileNames: PropTypes.func.isRequired,
         changeCanTakePhoto: PropTypes.func.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired
+        setBackgroundImage: PropTypes.func.isRequired,
+        executeGcodeG54: PropTypes.func.isRequired
     };
 
     extractingPreview = [];
@@ -185,7 +188,7 @@ class ExtractSquareTrace extends PureComponent {
                 for (let i = 0; i < position.length; i++) {
                     if (this.close) {
                         this.props.changeCanTakePhoto(true);
-                        this.props.server.executeGcode('G54');
+                        this.props.executeGcodeG54(this.props.series, this.props.headType);
                         reject();
                         return;
                     }
@@ -373,7 +376,7 @@ class ExtractSquareTrace extends PureComponent {
                     outputFilename: res.body.filename,
                     isStitched: true
                 });
-                this.props.server.executeGcode('G54');
+                this.props.executeGcodeG54(this.props.series, this.props.headType);
             });
         },
         setBackgroundImage: () => {
@@ -521,9 +524,17 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
         series: machine.series,
+        headType: machine.headType,
         size: machine.size,
         server: machine.server,
         laserSize: machine.laserSize
     };
 };
-export default connect(mapStateToProps)(ExtractSquareTrace);
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        executeGcodeG54: (series, headType) => dispatch(actions.executeGcodeG54(series, headType))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ExtractSquareTrace);

@@ -32,7 +32,7 @@ class SerialConnection extends PureComponent {
         connectionTimeout: PropTypes.number,
         isConnected: PropTypes.bool,
         updatePort: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired,
+        executeGcodeG54: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
 
@@ -171,9 +171,7 @@ class SerialConnection extends PureComponent {
                 headType: machineHeadType,
                 canReselectMachine: false
             });
-            if (machineSeries.value !== MACHINE_SERIES.ORIGINAL.value) {
-                this.props.executeGcode('G54');
-            }
+            this.props.executeGcodeG54(machineSeries, machineHeadType);
         } else {
             MachineSelectModal({
                 series: machineSeries,
@@ -185,9 +183,7 @@ class SerialConnection extends PureComponent {
                         headType: headTypeT,
                         canReselectMachine: true
                     });
-                    if (seriesT !== MACHINE_SERIES.ORIGINAL.value) {
-                        this.props.executeGcode('G54');
-                    }
+                    this.props.executeGcodeG54(seriesT, headTypeT);
                 }
 
             });
@@ -422,7 +418,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
+        executeGcodeG54: (series, headType) => dispatch(machineActions.executeGcodeG54(series, headType)),
         updatePort: (port) => dispatch(machineActions.updatePort(port))
     };
 };
