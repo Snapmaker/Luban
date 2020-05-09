@@ -27,6 +27,7 @@ class Macro extends PureComponent {
 
         // redux
         port: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
         workflowState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
@@ -67,8 +68,12 @@ class Macro extends PureComponent {
                 });
         },
         canClick: () => {
-            const { port, server, workflowState, workflowStatus } = this.props;
+            const { port, server, workflowState, workflowStatus, isConnected } = this.props;
+            // when start, server is not empty now, _.isEmpty(server) is true
             if (!port && _.isEmpty(server)) {
+                return false;
+            }
+            if (!isConnected) {
                 return false;
             }
 
@@ -141,11 +146,12 @@ class Macro extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { port, server, workflowState, workflowStatus } = state.machine;
+    const { port, server, workflowState, workflowStatus, isConnected } = state.machine;
     const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
         port,
+        isConnected,
         server,
         workflowState,
         workflowStatus,
