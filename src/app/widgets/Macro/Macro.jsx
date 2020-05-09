@@ -2,7 +2,6 @@ import ensureArray from 'ensure-array';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import _ from 'lodash';
 import api from '../../api';
 import { Button } from '../../components/Buttons';
 import Space from '../../components/Space';
@@ -26,8 +25,7 @@ class Macro extends PureComponent {
         dataSource: PropTypes.string.isRequired,
 
         // redux
-        port: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
@@ -67,8 +65,8 @@ class Macro extends PureComponent {
                 });
         },
         canClick: () => {
-            const { port, server, workflowState, workflowStatus } = this.props;
-            if (!port && _.isEmpty(server)) {
+            const { workflowState, workflowStatus, isConnected } = this.props;
+            if (!isConnected) {
                 return false;
             }
 
@@ -141,12 +139,11 @@ class Macro extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { port, server, workflowState, workflowStatus } = state.machine;
+    const { workflowState, workflowStatus, isConnected } = state.machine;
     const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
-        port,
-        server,
+        isConnected,
         workflowState,
         workflowStatus,
         dataSource
