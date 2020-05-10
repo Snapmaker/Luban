@@ -9,7 +9,7 @@
     "parachvte <ryan@snapmaker.com>",
     "walker <walker@snapmaker.com>"
   ],
-  "main": "./dist/T3D/server-cli.js",
+  "main": "./dist/T3D-Suite/server-cli.js",
   "bin": {
     "luban": "bin/cli"
   },
@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:whimsycwd/Snapmakerjs.git"
+    "url": "git@github.com:tufantas/T3D-Suite.git"
   },
   "license": "AGPL-3.0-or-later",
   "engines": {

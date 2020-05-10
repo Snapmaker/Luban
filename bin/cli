@@ -5,7 +5,7 @@ var cli;
 if (process.env.NODE_ENV === 'development') {
     cli = require('../output/server-cli').default;
 } else {
-    cli = require('../dist/Snapmakerjs/server-cli').default;
+    cli = require('../dist/T3D-Suite/server-cli').default;
 }
 
 cli().catch(err => {

@@ -18,7 +18,7 @@ if [[ ( $# == "--help") ||  $# == "-h" ]]; then
     exit 0
 fi
 
-pushd "$__dirname/../dist/Snapmakerjs"
+pushd "$__dirname/../dist/T3D-Suite"
 echo "Cleaning up \"`pwd`/node_modules\""
 rm -rf node_modules
 echo "Installing packages..."
