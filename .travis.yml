@@ -47,7 +47,7 @@ script:
 after_success:
     - npm run coveralls
     - mkdir -p releases
-    - PRODUCT_NAME='Snapmaker Luban'
+    - PRODUCT_NAME='T3D Suite'
     - PACKAGE_NAME=`node -e "console.log(require('./src/package.json').name)"`
     - PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
     - RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}

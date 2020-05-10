@@ -1,0 +1,15 @@
+{
+	"Absolute (G90)": "Mutlak (G90)",
+	"Inches (G20)": "İnç (G20)",
+	"Inverse Time (G93)": "Ters Zaman (G93)",
+	"Linear Move (G1)": "Doğrusal Hareket (G1)",
+	"Millimeters (G21)": "Milimetre (G21)",
+	"Power Off (M5)": "Güç Kapatma (M5)",
+	"Power On (M3)": "Güç Açık (M3)",
+	"Rapid Move (G0)": "Hızlı Hareket (G0)",
+	"Relative (G91)": "Bağıl (G91)",
+	"Spindle Off (M5)": "İş Mili Kapalı (M5)",
+	"Spindle On, CCW (M4)": "İş Mili Açık, CCW (M4)",
+	"Spindle On, CW (M3)": "İş Mili Açık, CW (M3)",
+	"Units/Min (G94)": "Birimler / Min (G94)"
+}

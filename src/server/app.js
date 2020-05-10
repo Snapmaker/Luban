@@ -263,7 +263,7 @@ const createApplication = () => {
         return {
             webroot: webroot,
             lang: lng,
-            title: `Snapmaker Luban ${settings.version}`,
+            title: `T3D Suite ${settings.version}`,
             loading: t('loading')
         };
     }));

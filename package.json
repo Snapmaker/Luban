@@ -62,7 +62,7 @@
     "appId": "com.snapmaker.luban",
     "asar": false,
     "asarUnpack": [],
-    "productName": "Snapmaker Luban",
+    "productName": "T3D Suite",
     "directories": {
       "buildResources": "build",
       "output": "output",

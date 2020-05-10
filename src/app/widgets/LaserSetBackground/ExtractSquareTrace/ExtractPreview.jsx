@@ -136,7 +136,7 @@ class ExtractPreview extends Component {
         // add logo
         const minSideLength = Math.min(size.x, size.y);
         const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
-        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
+        const texture = new THREE.TextureLoader().load('./images/t3d-logo-512x107.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,

@@ -32,6 +32,7 @@ const settings = {
         defaultNS: 'resource',
 
         whitelist: [
+            'tr', // Türkçe
             'en', // English (default)
             'de', // German
             'es', // Spanish

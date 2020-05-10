@@ -111,11 +111,11 @@ class MachineSelectModal extends PureComponent {
                 <Modal.Header>
                     <Modal.Title>
                         <div className={styles['device-not-recognized']}>{i18n._('Device Not Recognized')}</div>
-                        <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, Snapmaker Luban doesn\'t recognize your connected device.')}</div>
+                        <div className={styles['device-not-recognized-detail']}>{i18n._('Oops, T3D Suite doesn\'t recognize your connected device.')}</div>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles['which-model']}>{i18n._('Which model is connected to Snapmaker Luban?')}
+                    <div className={styles['which-model']}>{i18n._('Which model is connected to T3D Suite?')}
                     </div>
                     <div className={styles['select-tools']}>
                         { machineSeriesOptions.map(v => {
@@ -139,7 +139,7 @@ class MachineSelectModal extends PureComponent {
                     {this.props.hasHead !== false && (
                         <div>
                             <div className={classNames(styles.separator, styles['separator-underline'])} />
-                            <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your Snapmaker Luban?')}</div>
+                            <div className={styles['which-toolhead']}>{i18n._('Which toolhead is attached to your T3D Suite?')}</div>
                             <div className={styles['select-tools']}>
                                 { machineHeadTypeOptions.map(v => {
                                     return (

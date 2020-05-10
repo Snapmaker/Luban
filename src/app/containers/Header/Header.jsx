@@ -22,9 +22,9 @@ const Logo = memo(() => (
         style={{ position: 'relative' }}
     >
         <img
-            src="images/snapmaker-logo.png"
+            src="images/t3d-logo.png"
             role="presentation"
-            alt="snapmaker logo"
+            alt="t3dizayn logo"
             style={{ margin: '-5px auto auto 3px' }}
         />
     </Anchor>
