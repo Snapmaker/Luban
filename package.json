@@ -2,7 +2,7 @@
   "name": "t3dizayn-suite",
   "version": "3.5.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
-  "homepage": "https://github.com/whimsycwd/Snapmakerjs",
+  "homepage": "https://github.com/tufantas/T3D-Suite",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "contributors": [
     "David Chen <whimsycwd@snapmaker.com>",
@@ -103,7 +103,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/electron/snapmaker-luban.ico"
+      "icon": "build/electron/t3d-logo.ico"
     },
     "nsis": {
       "oneClick": false,

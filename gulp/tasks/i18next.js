@@ -18,7 +18,7 @@ const serverConfig = {
     dest: './',
     options: {
         sort: true,
-        lngs: ['en'],
+        lngs: ['tr'],
         defaultValue: '__L10N__', // to indicate that a default value has not been defined for the key
         ns: [
             'config',
@@ -57,6 +57,7 @@ const appConfig = {
         trans: {},
 
         lngs: [
+            'tr', // Türkçe
             'en', // English (default)
             'cs', // Czech
             'de', // German
@@ -72,7 +73,7 @@ const appConfig = {
             'zh-tw' // Traditional Chinese
         ],
         defaultValue: (lng, ns, key) => {
-            if (lng === 'en') {
+            if (lng === 'tr') {
                 return key; // Use key as value for base language
             }
             return ''; // Return empty string for other languages
