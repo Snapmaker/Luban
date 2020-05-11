@@ -86,6 +86,7 @@ class ThreeDxfLoader {
     drawCircle(geometry, entity, data) {
         const color = new THREE.Color(this.getColor(entity, data));
         const interpolatedPoints = new THREE.CircleGeometry(entity.radius, 32, entity.startAngle, entity.angleLength);
+        const defaultColor = new THREE.Color(0xffffff);
 
         interpolatedPoints.vertices.map((item) => {
             item.x += entity.center.x;
@@ -94,7 +95,22 @@ class ThreeDxfLoader {
             return item;
         });
         interpolatedPoints.vertices.shift();
-        interpolatedPoints.vertices.push(interpolatedPoints.vertices[0]);
+        //interpolatedPoints.vertices.push(interpolatedPoints.vertices[0]);
+        let previewPositon = { x: 0, y: 0 };
+        if (geometry.vertices.length > 0) {
+            previewPositon = geometry.vertices[geometry.vertices.length - 1];
+        }
+        console.log(interpolatedPoints);
+        if ((previewPositon.x).toFixed(2) !== (interpolatedPoints.vertices[0].x).toFixed(2)
+            || (previewPositon.y).toFixed(2) !== (interpolatedPoints.vertices[0].y).toFixed(2)) {
+            //geometry.colors[geometry.colors.length - 1] = defaultColor;
+            geometry.vertices.push(previewPositon);
+            geometry.colors.push(defaultColor);
+            geometry.vertices.push(interpolatedPoints.vertices[0]);
+            geometry.colors.push(defaultColor);
+        }
+
+
         geometry.vertices.push(...interpolatedPoints.vertices);
         geometry.colors.push(...new Array(interpolatedPoints.vertices.length).fill(color));
     }
