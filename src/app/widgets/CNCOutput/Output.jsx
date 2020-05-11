@@ -124,48 +124,52 @@ class Output extends PureComponent {
                     >
                         {isProcess ? i18n._('Preview') : i18n._('Process')}
                     </button>
-                    <TipTrigger
-                        title={i18n._('Auto Preview')}
-                        content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
-                    >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
-                            <input
-                                type="checkbox"
-                                className="sm-parameter-row__checkbox"
-                                disabled={!isProcess}
-                                checked={autoPreviewEnabled}
-                                onChange={(event) => { actions.onToggleAutoPreview(event.target.checked); }}
-                            />
+                    {isProcess && (
+                        <div>
+                            <TipTrigger
+                                title={i18n._('Auto Preview')}
+                                content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
+                                    <input
+                                        type="checkbox"
+                                        className="sm-parameter-row__checkbox"
+                                        disabled={!isProcess}
+                                        checked={autoPreviewEnabled}
+                                        onChange={(event) => { actions.onToggleAutoPreview(event.target.checked); }}
+                                    />
+                                </div>
+                            </TipTrigger>
+                            <button
+                                type="button"
+                                className="sm-btn-large sm-btn-default"
+                                onClick={actions.onGenerateGcode}
+                                disabled={!isAllModelsPreviewed || isGcodeGenerating}
+                                style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                            >
+                                {i18n._('Generate G-code')}
+                            </button>
+                            <button
+                                type="button"
+                                className="sm-btn-large sm-btn-default"
+                                onClick={actions.onLoadGcode}
+                                disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                            >
+                                {i18n._('Load G-code to Workspace')}
+                            </button>
+                            <button
+                                type="button"
+                                className="sm-btn-large sm-btn-default"
+                                onClick={actions.onExport}
+                                disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                            >
+                                {i18n._('Export G-code to file')}
+                            </button>
                         </div>
-                    </TipTrigger>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
-                        onClick={actions.onGenerateGcode}
-                        disabled={!isAllModelsPreviewed || isGcodeGenerating}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Generate G-code')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
-                        onClick={actions.onLoadGcode}
-                        disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Load G-code to Workspace')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
-                        onClick={actions.onExport}
-                        disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Export G-code to file')}
-                    </button>
+                    )}
                 </div>
                 <Thumbnail
                     ref={this.thumbnail}
