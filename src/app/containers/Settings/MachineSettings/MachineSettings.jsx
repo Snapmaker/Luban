@@ -12,7 +12,7 @@ import { MACHINE_SERIES } from '../../../constants';
 
 
 const customOption = {
-    value: 'custom',
+    value: 'Custom',
     label: 'Custom',
     setting: {
         size: {

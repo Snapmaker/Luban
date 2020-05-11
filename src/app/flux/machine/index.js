@@ -136,6 +136,11 @@ export const actions = {
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
+        if (seriesInfo === MACHINE_SERIES.CUSTOM) {
+            seriesInfo.setting.size = size;
+            seriesInfo.setting.laserSize = seriesInfo.setting.size;
+        }
+
         dispatch(actions.updateState({
             series: series,
             size: seriesInfo ? seriesInfo.setting.size : size,
@@ -345,6 +350,10 @@ export const actions = {
         if (oldSeries !== series) {
             dispatch(actions.updateState({ series }));
             const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+            if (seriesInfo === MACHINE_SERIES.CUSTOM) {
+                seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
+                seriesInfo.setting.laserSize = seriesInfo.setting.size;
+            }
             seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
             seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
@@ -360,14 +369,18 @@ export const actions = {
         dispatch(actions.updateState({ serverToken: token }));
         machineStore.set('server.token', token);
     },
-    updateMachineSize: (size) => (dispatch) => {
+    updateMachineSize: (size) => (dispatch, getState) => {
+        const { series } = getState().machine;
+
         size.x = Math.min(size.x, 1000);
         size.y = Math.min(size.y, 1000);
         size.z = Math.min(size.z, 1000);
 
-        machineStore.set('machine.size', size);
+        if (series === MACHINE_SERIES.CUSTOM.value) {
+            machineStore.set('machine.size', size);
+        }
 
-        dispatch(actions.updateState({ size }));
+        dispatch(actions.updateState({ size: { ...size } }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
