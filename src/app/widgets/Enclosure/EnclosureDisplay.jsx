@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import log from '../../lib/log';
 import Enclosure from './Enclosure';
 // import { actions as machineActions } from '../../flux/machine';
-import { controller } from '../../lib/controller';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 
 class EnclosureDisplay extends PureComponent {
     static propTypes = {
@@ -22,12 +22,11 @@ class EnclosureDisplay extends PureComponent {
             this.props.setDisplay(false);
         }
         if (nextProps.enclosureOnline !== this.props.enclosureOnline && nextProps.isConnected
-         && nextProps.enclosureOnline && this.props.connectionType === 'serial') {
-            controller.writeln('M1010', { source: 'query' });
+         && nextProps.enclosureOnline && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
             this.props.setDisplay(true);
         }
 
-        if (nextProps.isConnected && this.props.connectionType === 'wifi') {
+        if (nextProps.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
             this.props.server.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);

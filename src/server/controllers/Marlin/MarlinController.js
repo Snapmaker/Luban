@@ -788,7 +788,8 @@ class MarlinController {
             setTimeout(() => this.writeln('M1005'));
             setTimeout(() => this.writeln('M1006'), 100);
             setTimeout(() => this.writeln('M1007'), 150);
-            setTimeout(() => this.writeln('M105'), 200);
+            setTimeout(() => this.writeln('M1010'), 200);
+            setTimeout(() => this.writeln('M105'), 250);
 
             this.handler = setInterval(() => {
                 // Set ready flag to true when receiving a start message
@@ -801,7 +802,8 @@ class MarlinController {
                 setTimeout(() => this.writeln('M1005'));
                 setTimeout(() => this.writeln('M1006'), 100);
                 setTimeout(() => this.writeln('M1007'), 150);
-                setTimeout(() => this.writeln('M105'), 200);
+                setTimeout(() => this.writeln('M1010'), 200);
+                setTimeout(() => this.writeln('M105'), 250);
 
                 setTimeout(() => {
                     if (this.handler && !this.ready) {
