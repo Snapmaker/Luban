@@ -3,10 +3,12 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
 import { Nav } from 'react-bootstrap';
+import { connect } from 'react-redux';
 import { controller } from '../../lib/controller';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../lib/i18n';
+import { actions as machineActions } from '../../flux/machine';
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
@@ -16,7 +18,8 @@ const reloadPage = (forcedReload = true) => {
 class QuickAccessToolbar extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        state: PropTypes.object
+        state: PropTypes.object,
+        stopServerGcode: PropTypes.func.isRequired
     };
 
     state = {
@@ -44,6 +47,7 @@ class QuickAccessToolbar extends PureComponent {
         },
         stop: () => {
             controller.command('reset');
+            this.props.stopServerGcode();
             this.setState({ halted: true });
         }
     };
@@ -121,4 +125,11 @@ class QuickAccessToolbar extends PureComponent {
     }
 }
 
-export default withRouter(QuickAccessToolbar);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        stopServerGcode: () => dispatch(machineActions.stopServerGcode())
+    };
+};
+
+
+export default connect(null, mapDispatchToProps)(withRouter(QuickAccessToolbar));
