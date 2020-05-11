@@ -28,6 +28,6 @@ popd
 
 echo "Rebuild native modules using electron ${electron_version}"
 
-npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/Snapmakerjs --which-module=serialport
+npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/T3D-Suite --which-module=serialport
 
 cross-env USE_HARD_LINKS=false npm run electron-builder -- "$@"

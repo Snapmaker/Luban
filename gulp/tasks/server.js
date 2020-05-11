@@ -72,7 +72,7 @@ export function serverCopyProduction() {
     ];
 
     return gulp.src(files, { base: 'src/server' })
-        .pipe(gulp.dest('dist/Snapmakerjs/server'));
+        .pipe(gulp.dest('dist/T3D-Suite/server'));
 }
 
 //

@@ -2,7 +2,7 @@ import path from 'path';
 import pkg from '../../package.json';
 
 // RCFile
-const RCFILE = '.snapmaker-luban.json';
+const RCFILE = '.t3dizayn-suite.json';
 
 // Secret
 const secret = pkg.version;

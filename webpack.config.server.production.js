@@ -39,7 +39,7 @@ module.exports = {
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'dist/Snapmakerjs/server'),
+        path: path.resolve(__dirname, 'dist/T3D-Suite/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },

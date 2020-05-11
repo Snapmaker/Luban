@@ -1,5 +1,5 @@
 {
-  "name": "snapmaker-luban",
+  "name": "t3dizayn-suite",
   "version": "3.5.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
@@ -46,7 +46,7 @@
     "build:win-ia32": "bash -c 'build/electron-builder.sh --win --ia32'",
     "build:win-x64": "bash -c 'build/electron-builder.sh --win --x64'",
     "clean": "bash -c 'rm -rf ./dist ./output'",
-    "start-electron": "electron ./dist/Snapmakerjs/main",
+    "start-electron": "electron ./dist/T3D-Suite/main",
     "start-dev": "gulp serverStartDevelopment",
     "start-prod": "cross-env NODE_ENV=production ./bin/cli",
     "dev": "npm run build-dev && npm run start-dev",
@@ -66,7 +66,7 @@
     "directories": {
       "buildResources": "build",
       "output": "output",
-      "app": "dist/Snapmakerjs"
+      "app": "dist/T3D-Suite"
     },
     "mac": {
       "category": "public.app-category.productivity",
