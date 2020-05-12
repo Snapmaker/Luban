@@ -47,7 +47,6 @@ class SecondaryWidgets extends PureComponent {
 
     render() {
         const { className = '', defaultWidgets } = this.props;
-
         const widgets = this.props.secondaryWidgets
             .map(widgetId => (
                 <div

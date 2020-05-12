@@ -191,17 +191,65 @@ class MarlinReplyParserEnclosure {
     }
 }
 
-class MarlinReplyParserEnclosureDoor {
+class MarlinReplyParserEnclosureOnline {
     static parse(line) {
-        const r = line.match(/^Door: (Open|Closed)$/);
+        const r = line.match(/^Enclosure online: (On|Off)$/);
         if (!r) {
             return null;
         }
 
         return {
-            type: MarlinReplyParserEnclosure,
+            type: MarlinReplyParserEnclosureOnline,
             payload: {
-                enclosure: r[1] === 'Open'
+                enclosureOnline: r[1] === 'On'
+            }
+        };
+    }
+}
+
+class MarlinReplyParserEnclosureDoor {
+    static parse(line) {
+        const r = line.match(/^Enclosure door: (Open|Closed)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosureDoor,
+            payload: {
+                enclosureDoor: r[1] === 'Open'
+            }
+        };
+    }
+}
+class MarlinReplyParserEnclosureLightPower {
+    static parse(line) {
+        const r = line.match(/^Enclosure light power: (0|100)$/);
+
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosureLightPower,
+            payload: {
+                enclosureLight: Number(r[1])
+            }
+        };
+    }
+}
+
+class MarlinReplyParserEnclosureFanPower {
+    static parse(line) {
+        const r = line.match(/^Enclosure fan power: (0|100)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosureFanPower,
+            payload: {
+                enclosureFan: Number(r[1])
             }
         };
     }
@@ -474,7 +522,10 @@ class MarlinLineParser {
             MarlinReplyParserToolHead,
             // M1010
             MarlinReplyParserEnclosure,
+            MarlinReplyParserEnclosureOnline,
             MarlinReplyParserEnclosureDoor,
+            MarlinReplyParserEnclosureFanPower,
+            MarlinReplyParserEnclosureLightPower,
 
             // start
             MarlinLineParserResultStart,
@@ -583,7 +634,10 @@ class Marlin extends events.EventEmitter {
     settings = {
         // whether enclosure is turned on
         enclosure: false,
-        enclosureDoor: false
+        enclosureDoor: false,
+        enclosureOnline: false,
+        enclosureLight: 0,
+        enclosureFan: 0
     };
 
     parser = new MarlinLineParser();
@@ -648,9 +702,24 @@ class Marlin extends events.EventEmitter {
                 this.setState({ headStatus: payload.headStatus });
             }
             this.emit('headStatus', payload);
+        } else if (type === MarlinReplyParserEnclosureLightPower) {
+            if (this.settings.enclosureLight !== payload.enclosureLight) {
+                this.set({ enclosureLight: payload.enclosureLight });
+            }
+            this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserEnclosureFanPower) {
+            if (this.settings.enclosureFan !== payload.enclosureFan) {
+                this.set({ enclosureFan: payload.enclosureFan });
+            }
+            this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserEnclosure) {
             if (this.settings.enclosure !== payload.enclosure) {
                 this.set({ enclosure: payload.enclosure });
+            }
+            this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserEnclosureOnline) {
+            if (this.settings.enclosureOnline !== payload.enclosureOnline) {
+                this.set({ enclosureOnline: payload.enclosureOnline });
             }
             this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserEnclosureDoor) {

@@ -19,7 +19,7 @@ const defaultState = {
         secondary: {
             show: true,
             widgets: [
-                'wifi-transport', 'control', 'macro', 'gcode'
+                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
             ]
         }
     },

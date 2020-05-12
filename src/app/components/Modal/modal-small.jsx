@@ -14,6 +14,7 @@ class ModalSmallHOC extends PureComponent {
         showCloseButton: PropTypes.bool,
         img: PropTypes.string,
         title: PropTypes.string.isRequired,
+        subtext: PropTypes.string,
         text: PropTypes.string
     };
 
@@ -55,6 +56,7 @@ class ModalSmallHOC extends PureComponent {
         const { show } = this.state;
         const img = this.props.img || '../../images/ic_warning-64x64.png';
         const text = this.props.text;
+        const subtext = this.props.subtext;
         const title = this.props.title;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
@@ -81,6 +83,11 @@ class ModalSmallHOC extends PureComponent {
                     {text && (
                         <div className={styles['modal-small-body-hit']}>
                             {i18n._(text)}
+                        </div>
+                    )}
+                    {subtext && (
+                        <div className={styles['modal-small-body-hit']}>
+                            {i18n._(subtext)}
                         </div>
                     )}
 

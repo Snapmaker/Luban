@@ -11,7 +11,8 @@ class ModalSmall extends PureComponent {
         showCloseButton: PropTypes.bool,
         img: PropTypes.string,
         title: PropTypes.string.isRequired,
-        text: PropTypes.string
+        text: PropTypes.string,
+        subtext: PropTypes.string
     };
 
     static defaultProps = {
@@ -22,6 +23,7 @@ class ModalSmall extends PureComponent {
         const { onClose, onCancel, onConfirm, showCloseButton = true, ...props } = this.props;
         const img = this.props.img || '../../images/ic_warning-64x64.png';
         const text = this.props.text;
+        const subtext = this.props.subtext;
         const title = this.props.title;
 
         return (
@@ -48,6 +50,12 @@ class ModalSmall extends PureComponent {
                             {i18n._(text)}
                         </div>
                     )}
+                    {subtext && (
+                        <div className={styles['modal-small-body-hit']}>
+                            {i18n._(subtext)}
+                        </div>
+                    )}
+
 
                 </Modal.Body>
                 {onCancel && onConfirm && (
