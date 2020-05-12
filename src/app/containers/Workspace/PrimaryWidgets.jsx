@@ -42,7 +42,7 @@ class PrimaryWidgets extends PureComponent {
     };
 
     onChangeWidgetOrder = (widgets) => {
-        this.props.updateTabContainer('primary', { widgets: widgets });
+        this.props.updateTabContainer('left', { widgets: widgets });
     };
 
     render() {

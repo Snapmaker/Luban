@@ -176,7 +176,7 @@ class Workspace extends PureComponent {
 
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.props;
-        this.props.updateTabContainer('primary', { show: !showPrimaryContainer });
+        this.props.updateTabContainer('left', { show: !showPrimaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -184,7 +184,7 @@ class Workspace extends PureComponent {
 
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.props;
-        this.props.updateTabContainer('secondary', { show: !showSecondaryContainer });
+        this.props.updateTabContainer('right', { show: !showSecondaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -349,10 +349,10 @@ class Workspace extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const showPrimaryContainer = widget.workspace.primary.show;
-    const primaryWidgets = widget.workspace.primary.widgets;
-    const showSecondaryContainer = widget.workspace.secondary.show;
-    const secondaryWidgets = widget.workspace.secondary.widgets;
+    const showPrimaryContainer = widget.workspace.left.show;
+    const primaryWidgets = widget.workspace.left.widgets;
+    const showSecondaryContainer = widget.workspace.right.show;
+    const secondaryWidgets = widget.workspace.right.widgets;
     const defaultWidgets = widget.workspace.default.widgets;
     return {
         showPrimaryContainer,

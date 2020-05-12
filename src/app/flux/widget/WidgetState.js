@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import { PROTOCOL_TEXT, PROTOCOL_SCREEN, MACHINE_SERIES } from '../../constants';
 
-const defaultState = {
+const DEFAULT_STATE = {
     machine: {
         series: MACHINE_SERIES.ORIGINAL.value
     },
@@ -10,13 +10,13 @@ const defaultState = {
         default: {
             widgets: ['visualizer']
         },
-        primary: {
+        left: {
             show: true,
             widgets: [
                 'connection', 'console', 'marlin', 'laser-test-focus'
             ]
         },
-        secondary: {
+        right: {
             show: true,
             widgets: [
                 'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
@@ -105,7 +105,7 @@ const defaultState = {
         },
         gcode: {
             minimized: false,
-            needRemove: true
+            needRemove: false
         },
         macro: {
             minimized: false,
@@ -191,7 +191,7 @@ const defaultState = {
         }
     }
 };
-const seriesStates = {
+const SERIES_STATES = {
     original: {},
     A150: {
         laser: {
@@ -234,6 +234,20 @@ function merge(...args) {
     return data;
 }
 
+function hasSome(arr1, arr2) {
+    for (const arr of arr1) {
+        if (!_.includes(arr2, arr)) {
+            return false;
+        }
+    }
+    for (const arr of arr2) {
+        if (!_.includes(arr1, arr)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 class WidgetState {
     constructor(store) {
         this.localStore = store;
@@ -242,16 +256,51 @@ class WidgetState {
         this.widgetState = merge(
             {},
             {
-                defaultState,
-                seriesStates
+                defaultState: DEFAULT_STATE,
+                seriesStates: SERIES_STATES
             },
             {
                 defaultState: state.defaultState,
                 seriesStates: state.seriesStates
             }
         );
+        this.versionCompatibility(this.widgetState);
         this.localStore.setState(this.widgetState);
         this.series = this.widgetState.defaultState.machine.series;
+    }
+
+    versionCompatibility(widgetState) {
+        const workspace = widgetState.defaultState.workspace;
+        const workspaceAllWidgets = [].concat(workspace.default.widgets)
+            .concat(workspace.left.widgets)
+            .concat(workspace.right.widgets);
+        const defaultAllWidgets = [].concat(DEFAULT_STATE.workspace.default.widgets)
+            .concat(DEFAULT_STATE.workspace.left.widgets)
+            .concat(DEFAULT_STATE.workspace.right.widgets);
+        if (!hasSome(workspaceAllWidgets, defaultAllWidgets)) {
+            workspace.default.widgets = DEFAULT_STATE.workspace.default.widgets;
+            workspace.left.widgets = DEFAULT_STATE.workspace.left.widgets;
+            workspace.right.widgets = DEFAULT_STATE.workspace.right.widgets;
+        }
+        if (!hasSome(widgetState.defaultState['3dp'].default.widgets, DEFAULT_STATE['3dp'].default.widgets)) {
+            widgetState.defaultState['3dp'].default.widgets = DEFAULT_STATE['3dp'].default.widgets;
+        }
+        if (!hasSome(widgetState.defaultState.laser.default.widgets, DEFAULT_STATE.laser.default.widgets)) {
+            widgetState.defaultState.laser.default.widgets = DEFAULT_STATE.laser.default.widgets;
+        }
+        if (!hasSome(widgetState.defaultState.cnc.default.widgets, DEFAULT_STATE.cnc.default.widgets)) {
+            widgetState.defaultState.cnc.default.widgets = DEFAULT_STATE.cnc.default.widgets;
+        }
+        widgetState.seriesStates.original = {};
+        if (!hasSome(widgetState.seriesStates.A150.laser.default.widgets, SERIES_STATES.A150.laser.default.widgets)) {
+            widgetState.seriesStates.A150.laser.default.widgets = SERIES_STATES.A150.laser.default.widgets;
+        }
+        if (!hasSome(widgetState.seriesStates.A250.laser.default.widgets, SERIES_STATES.A250.laser.default.widgets)) {
+            widgetState.seriesStates.A250.laser.default.widgets = SERIES_STATES.A250.laser.default.widgets;
+        }
+        if (!hasSome(widgetState.seriesStates.A350.laser.default.widgets, SERIES_STATES.A350.laser.default.widgets)) {
+            widgetState.seriesStates.A350.laser.default.widgets = SERIES_STATES.A350.laser.default.widgets;
+        }
     }
 
     updateTabContainer(tab, container, value) {
@@ -352,7 +401,7 @@ class WidgetState {
     }
 
     getDefaultState() {
-        return merge({}, defaultState, seriesStates[this.series]);
+        return merge({}, DEFAULT_STATE, SERIES_STATES[this.series]);
     }
 
     getState() {
