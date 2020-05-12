@@ -95,15 +95,12 @@ class ThreeDxfLoader {
             return item;
         });
         interpolatedPoints.vertices.shift();
-        //interpolatedPoints.vertices.push(interpolatedPoints.vertices[0]);
         let previewPositon = { x: 0, y: 0 };
         if (geometry.vertices.length > 0) {
             previewPositon = geometry.vertices[geometry.vertices.length - 1];
         }
-        console.log(interpolatedPoints);
         if ((previewPositon.x).toFixed(2) !== (interpolatedPoints.vertices[0].x).toFixed(2)
             || (previewPositon.y).toFixed(2) !== (interpolatedPoints.vertices[0].y).toFixed(2)) {
-            //geometry.colors[geometry.colors.length - 1] = defaultColor;
             geometry.vertices.push(previewPositon);
             geometry.colors.push(defaultColor);
             geometry.vertices.push(interpolatedPoints.vertices[0]);
