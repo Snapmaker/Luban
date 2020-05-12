@@ -711,7 +711,7 @@ export const actions = {
 
     stopServerGcode: () => (dispatch, getState) => {
         const { server, workflowStatus } = getState().machine;
-        if (workflowStatus === WORKFLOW_STATUS_IDLE) {
+        if (workflowStatus === WORKFLOW_STATUS_IDLE || workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
             return;
         }
         server.stopGcode((msg) => {
