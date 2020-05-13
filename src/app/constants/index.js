@@ -169,6 +169,23 @@ export const MACHINE_SERIES = {
             }
         },
         alias: ['SM2-L', 'Snapmaker 2.0 A350']
+    },
+    CUSTOM: {
+        value: 'Custom',
+        label: 'Custom',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            },
+            laserSize: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        },
+        alias: ['Custom']
     }
 };
 
