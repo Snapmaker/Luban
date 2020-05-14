@@ -183,8 +183,8 @@ class WidgetManager extends PureComponent {
 const mapStateToProps = (state) => {
     const widget = state.widget;
     const defaultWidgets = widget.workspace.default.widgets;
-    const primaryWidgets = widget.workspace.primary.widgets;
-    const secondaryWidgets = widget.workspace.secondary.widgets;
+    const primaryWidgets = widget.workspace.left.widgets;
+    const secondaryWidgets = widget.workspace.right.widgets;
     return {
         defaultWidgets,
         primaryWidgets,
