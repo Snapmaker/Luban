@@ -84,6 +84,11 @@ class DefinitionManager {
 
             definition.settings.infill_line_distance.default_value = infillLineDistance;
             settings.infill_line_distance = { default_value: infillLineDistance };
+
+            if (settings.infill_sparse_density.default_value === 100) {
+                settings.top_layers = { default_value: 0 };
+                settings.bottom_layers = { default_value: 999999 };
+            }
         }
 
         if (settings.layer_height) {
@@ -93,6 +98,7 @@ class DefinitionManager {
             const wallThickness = definition.settings.wall_thickness.default_value;
             const wallOutLineWidth = definition.settings.wall_line_width_0.default_value;
             const wallInnerLineWidth = definition.settings.wall_line_width_x.default_value;
+            const infillSparseDensity = definition.settings.infill_sparse_density.default_value;
 
             const wallLineCount = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidth) / wallInnerLineWidth) + 1) : 0;
             definition.settings.wall_line_count.default_value = wallLineCount;
@@ -100,13 +106,13 @@ class DefinitionManager {
 
             // "0 if infill_sparse_density == 100 else math.ceil(round(top_thickness / resolveOrValue('layer_height'), 4))"
             const topThickness = definition.settings.top_thickness.default_value;
-            const topLayers = Math.ceil(topThickness / layerHeight);
+            const topLayers = infillSparseDensity === 100 ? 0 : Math.ceil(Math.round(topThickness / layerHeight));
             definition.settings.top_layers.default_value = topLayers;
             settings.top_layers = { default_value: topLayers };
 
             // "999999 if infill_sparse_density == 100 else math.ceil(round(bottom_thickness / resolveOrValue('layer_height'), 4))"
             const bottomThickness = definition.settings.bottom_thickness.default_value;
-            const bottomLayers = Math.ceil(bottomThickness / layerHeight);
+            const bottomLayers = infillSparseDensity === 100 ? 999999 : Math.ceil(Math.round(bottomThickness / layerHeight));
             definition.settings.bottom_layers.default_value = bottomLayers;
             settings.bottom_layers = { default_value: bottomLayers };
         }
