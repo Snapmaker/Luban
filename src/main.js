@@ -18,7 +18,7 @@ function getBrowserWindowOptions() {
     const defaultOptions = {
         width: 1280,
         height: 768,
-        show: false,
+        show: true,
         title: `${pkg.name} ${pkg.version}`
     };
 
