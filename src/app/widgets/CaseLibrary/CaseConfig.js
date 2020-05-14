@@ -169,7 +169,7 @@ export const CaseConfig250 = [
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
         pathConfig: {
             name: 'Laser_test_A250.svg',
-            casePath: './A150'
+            casePath: './A250'
         },
         caseConfigs: {
             config: {
