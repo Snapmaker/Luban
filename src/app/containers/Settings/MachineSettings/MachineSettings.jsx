@@ -183,7 +183,7 @@ class MachineSettings extends PureComponent {
             || !isEqual(this.props.connectionTimeout, this.state.connectionTimeout);
 
         const { series, size, enclosureDoorDetection, connectionTimeout } = this.state;
-        const editable = (this.state.series === 'custom');
+        const editable = (this.state.series === 'Custom');
         const isConnected = this.props.isConnected;
 
         return (

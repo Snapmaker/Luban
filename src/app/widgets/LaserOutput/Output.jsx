@@ -22,6 +22,7 @@ class Output extends PureComponent {
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
+        hasModel: PropTypes.bool,
         toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
@@ -92,7 +93,7 @@ class Output extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Output'));
+        this.props.setTitle(i18n._('Actions'));
     }
 
     componentDidMount() {
@@ -110,7 +111,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile } = this.props;
+        const { workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel } = this.props;
         const isEditor = this.props.page === PAGE_EDITOR;
         const isProcess = this.props.page === PAGE_PROCESS;
 
@@ -147,7 +148,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onGenerateGcode}
-                                disabled={!isAllModelsPreviewed || isGcodeGenerating}
+                                disabled={!hasModel || !isAllModelsPreviewed || isGcodeGenerating}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Generate G-code')}
@@ -156,7 +157,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onLoadGcode}
-                                disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={!hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Load G-code to Workspace')}
@@ -165,7 +166,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onExport}
-                                disabled={workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={!hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Export G-code to file')}
@@ -189,11 +190,12 @@ const mapStateToProps = (state, ownProps) => {
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
     const { page, isGcodeGenerating, isAllModelsPreviewed,
-        previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup, gcodeFile } = state.laser;
+        previewFailed, autoPreviewEnabled, modelGroup, hasModel, toolPathModelGroup, gcodeFile } = state.laser;
 
     return {
         page,
         modelGroup,
+        hasModel,
         toolPathModelGroup,
         isGcodeGenerating,
         workflowState,

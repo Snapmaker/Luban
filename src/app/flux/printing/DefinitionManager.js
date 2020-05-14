@@ -235,7 +235,6 @@ class DefinitionManager {
         // It is ok even if targetZ is bigger than 125 because firmware has set limitation
         const y = definition.settings.machine_depth.default_value;
         const z = definition.settings.machine_height.default_value;
-        const speedTravel = definition.settings.speed_travel.default_value;
 
         const gcode = [
             ';End GCode begin',
@@ -244,7 +243,7 @@ class DefinitionManager {
             'G90 ;absolute positioning',
             'G92 E0',
             'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure',
-            `G1 Z${z} E-1 F${speedTravel} ;move Z up a bit and retract filament even more`,
+            `G1 Z${z} E-1 F3000 ;move Z up a bit and retract filament even more`,
             `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
             `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
             'M84 ;steppers off',
