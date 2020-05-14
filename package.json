@@ -103,7 +103,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/electron/t3d-logo.ico"
+      "icon": "build/electron/t3d-logo.png"
     },
     "nsis": {
       "oneClick": false,

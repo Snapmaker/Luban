@@ -98,6 +98,7 @@ export default {
     },
     // Supported languages
     supportedLngs: [
+        'tr', // Türkçe
         'en', // English (default)
         'cs', // Czech
         'de', // German
@@ -134,6 +135,7 @@ export default {
         defaultNS: 'resource',
 
         whitelist: [
+            'tr', // Türkçe
             'en', // English (default)
             'cs', // Czech
             'de', // German
