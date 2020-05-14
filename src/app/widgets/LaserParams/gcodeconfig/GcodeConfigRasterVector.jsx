@@ -8,7 +8,7 @@ import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import OptionalDropdown from '../../../components/OptionalDropdown';
-import { actions } from '../../../flux/cncLaserShared';
+import { actions } from '../../../flux/editor';
 import Anchor from '../../../components/Anchor';
 
 class GcodeConfigRasterVector extends PureComponent {

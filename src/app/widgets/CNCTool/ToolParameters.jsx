@@ -19,7 +19,7 @@ import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { actions as cncActions } from '../../flux/cnc';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {
@@ -202,10 +202,10 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changeToolParams: (params) => {
             dispatch(cncActions.changeToolParams(params));
-            dispatch(sharedActions.updateAllModelGcodeConfig('cnc', params));
+            dispatch(editorActions.updateAllModelGcodeConfig('cnc', params));
         },
         updateToolSnap: (toolSnap) => {
-            dispatch(sharedActions.updateState('cnc', { toolSnap: toolSnap }));
+            dispatch(editorActions.updateState('cnc', { toolSnap: toolSnap }));
         }
     };
 };

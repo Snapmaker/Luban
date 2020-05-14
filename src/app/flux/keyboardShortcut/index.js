@@ -1,6 +1,6 @@
 import combokeys from '../../lib/combokeys';
-import { actions as cncLaserSharedActions } from '../cncLaserShared';
 import { actions as printingActions } from '../printing';
+import { actions as editorActions } from '../editor';
 import {
     ACTION_UPDATE_STATE
 } from '../actionType';
@@ -18,7 +18,7 @@ export const actions = {
             'DELETE': () => {
                 const from = window.location.hash.split('/')[1];
                 if (['laser', 'cnc'].includes(from)) {
-                    dispatch(cncLaserSharedActions.removeSelectedModel(from));
+                    dispatch(editorActions.removeSelectedModel(from));
                 } else if (from === '3dp') {
                     const { displayedType } = getState().printing;
                     displayedType === 'model' && (dispatch(printingActions.removeSelectedModel()));
@@ -30,7 +30,7 @@ export const actions = {
                     const { displayedType } = getState().printing;
                     displayedType === 'model' && (dispatch(printingActions.duplicateSelectedModel()));
                 } else {
-                    dispatch(cncLaserSharedActions.duplicateSelectedModel(from));
+                    dispatch(editorActions.duplicateSelectedModel(from));
                 }
             },
             'JOG': (event, { direction }) => {

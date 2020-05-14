@@ -6,9 +6,10 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
+import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
 import { PAGE_EDITOR } from '../../constants';
+import SvgModelGroup from '../models/SvgModelGroup';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
@@ -21,6 +22,7 @@ const INITIAL_STATE = {
 
     modelGroup: new ModelGroup(),
     toolPathModelGroup: new ToolPathModelGroup(),
+    svgModelGroup: new SvgModelGroup(),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
@@ -66,27 +68,29 @@ const INITIAL_STATE = {
 
 export const actions = {
     init: () => (dispatch) => {
+        dispatch(editorActions.init('cnc'));
+
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
-                    dispatch(sharedActions.onReceiveTaskResult('cnc', taskResult));
+                    dispatch(editorActions.onReceiveTaskResult('cnc', taskResult));
                 }
             },
             'taskCompleted:generateGcode': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
-                    dispatch(sharedActions.onReceiveGcodeTaskResult('cnc', taskResult));
+                    dispatch(editorActions.onReceiveGcodeTaskResult('cnc', taskResult));
                 }
             },
             'taskProgress:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
-                    dispatch(sharedActions.updateState('cnc', {
+                    dispatch(editorActions.updateState('cnc', {
                         progress: taskResult.progress
                     }));
                 }
             },
             'taskProgress:generateGcode': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
-                    dispatch(sharedActions.updateState('cnc', {
+                    dispatch(editorActions.updateState('cnc', {
                         progress: taskResult.progress
                     }));
                 }
@@ -97,6 +101,7 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
+
     changeToolParams: (toolParams) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,

@@ -5,7 +5,7 @@ import { withRouter } from 'react-router-dom';
 import classNames from 'classnames';
 import styles from './styles.styl';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
-import { actions as cncLaserActions } from '../../flux/cncLaserShared';
+import { actions as cncLaserActions } from '../../flux/editor';
 import i18n from '../../lib/i18n';
 
 

@@ -8,9 +8,9 @@ import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
-import { actions as cncLaserActions } from '../../flux/cncLaserShared';
 import { actions as widgetActions } from '../../flux/widget';
 import styles from './styles.styl';
+import { actions as editorActions } from '../../flux/editor';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
@@ -121,7 +121,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(cncLaserActions.uploadImage('cnc', file, mode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
         updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('cnc', 'default', widgets))
     };
 };

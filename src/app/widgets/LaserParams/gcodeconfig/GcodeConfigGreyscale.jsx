@@ -7,7 +7,7 @@ import Anchor from '../../../components/Anchor';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
-import { actions } from '../../../flux/cncLaserShared';
+import { actions } from '../../../flux/editor';
 import { ABSENT_VALUE } from '../../../constants';
 
 class GcodeConfigGreyscale extends PureComponent {

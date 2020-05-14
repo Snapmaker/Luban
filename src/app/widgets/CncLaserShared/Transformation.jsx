@@ -26,6 +26,7 @@ class Transformation extends PureComponent {
         }),
 
         updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelFlip: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         // redux
         size: PropTypes.shape({
@@ -60,7 +61,7 @@ class Transformation extends PureComponent {
             this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (option) => {
-            this.props.updateSelectedModelTransformation({ flip: option.value });
+            this.props.updateSelectedModelFlip({ flip: option.value });
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
@@ -209,38 +210,40 @@ class Transformation extends PureComponent {
                                 />
                             </div>
                         </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Flip Model')}
-                            content={i18n._('Flip the selected Model vertically, horizontally or in both directions.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Flip Model')}</span>
-                                <Select
-                                    className="sm-parameter-row__select"
-                                    disabled={!selectedModelID}
-                                    clearable={false}
-                                    options={[{
-                                        value: 0,
-                                        label: i18n._('None')
-                                    }, {
-                                        value: 1,
-                                        label: i18n._('Vertical')
-                                    }, {
-                                        value: 2,
-                                        label: i18n._('Horizontal')
-                                    }, {
-                                        value: 3,
-                                        label: i18n._('Both')
-                                    }]}
-                                    value={flip}
-                                    seachable={false}
-                                    onChange={(option) => {
-                                        actions.onChangeFlip(option);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
+                        {sourceType === 'raster' && (
+                            <TipTrigger
+                                title={i18n._('Flip Model')}
+                                content={i18n._('Flip the selected Model vertically, horizontally or in both directions.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Flip Model')}</span>
+                                    <Select
+                                        className="sm-parameter-row__select"
+                                        disabled={!selectedModelID}
+                                        clearable={false}
+                                        options={[{
+                                            value: 0,
+                                            label: i18n._('None')
+                                        }, {
+                                            value: 1,
+                                            label: i18n._('Vertical')
+                                        }, {
+                                            value: 2,
+                                            label: i18n._('Horizontal')
+                                        }, {
+                                            value: 3,
+                                            label: i18n._('Both')
+                                        }]}
+                                        value={flip}
+                                        seachable={false}
+                                        onChange={(option) => {
+                                            actions.onChangeFlip(option);
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                </div>
+                            </TipTrigger>
+                        )}
                     </React.Fragment>
                 )}
             </React.Fragment>

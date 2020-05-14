@@ -2,9 +2,7 @@ import React, { PureComponent } from 'react';
 import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
-import { actions as sharedActions, actions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 import i18n from '../../lib/i18n';
 import { PAGE_EDITOR } from '../../constants';
 import api from '../../api';
@@ -75,6 +73,7 @@ class VisualizerTopLeft extends PureComponent {
 
     render() {
         // const actions = this.actions;
+        // eslint-disable-next-line no-unused-vars
         const { canUndo, canRedo } = this.props;
 
         return (
@@ -96,22 +95,6 @@ class VisualizerTopLeft extends PureComponent {
                 >
                     {i18n._('Open File')}
                 </button>
-                <Anchor
-                    componentClass="button"
-                    className={styles['btn-top-left']}
-                    onClick={this.actions.undo}
-                    disabled={!canUndo}
-                >
-                    <div className={styles['btn-undo']} />
-                </Anchor>
-                <Anchor
-                    componentClass="button"
-                    className={styles['btn-top-left']}
-                    onClick={this.actions.redo}
-                    disabled={!canRedo}
-                >
-                    <div className={styles['btn-redo']} />
-                </Anchor>
             </React.Fragment>
         );
     }
@@ -127,11 +110,11 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    undo: () => dispatch(actions.undo('laser')),
-    redo: () => dispatch(actions.redo('laser')),
-    setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value)),
-    uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('laser', file, mode, onFailure)),
-    togglePage: (page) => dispatch(sharedActions.togglePage('laser', page))
+    undo: () => dispatch(editorActions.undo('laser')),
+    redo: () => dispatch(editorActions.redo('laser')),
+    setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
+    uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+    togglePage: (page) => dispatch(editorActions.togglePage('laser', page))
 });
 
 

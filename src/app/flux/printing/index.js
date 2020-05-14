@@ -590,7 +590,9 @@ export const actions = {
                         uploadName,
                         mode: mode,
                         sourceWidth: width,
+                        width,
                         sourceHeight: height,
+                        height,
                         geometry: bufferGeometry,
                         material: material,
                         transformation: {}
@@ -927,7 +929,7 @@ export const actions = {
 
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.unselectAllModels();
+        modelGroup.selectModel(null);
         dispatch(actions.updateState(
             {
                 // model,

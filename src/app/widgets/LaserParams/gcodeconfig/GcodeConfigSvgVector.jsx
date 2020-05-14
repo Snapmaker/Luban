@@ -9,7 +9,7 @@ import Anchor from '../../../components/Anchor';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
 import OptionalDropdown from '../../../components/OptionalDropdown';
-import { actions } from '../../../flux/cncLaserShared';
+import { actions } from '../../../flux/editor';
 
 class GcodeConfigSvgVector extends PureComponent {
     static propTypes = {

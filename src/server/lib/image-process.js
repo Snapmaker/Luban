@@ -1,7 +1,11 @@
 import Jimp from 'jimp';
+import fs from 'fs';
+import path from 'path';
 import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from './svg-convert';
 import DataStorage from '../DataStorage';
+import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../shared/lib/DXFParser/Parser';
+import { svgInverse, svgToString } from './SVGParser/SvgToString';
 
 
 function bit(x) {
@@ -63,7 +67,7 @@ const algorithms = {
 
 async function processLaserGreyscale(modelInfo) {
     const { uploadName } = modelInfo;
-    const { width, height, rotationZ, flip } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
     const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -151,7 +155,7 @@ async function processLaserGreyscale(modelInfo) {
 
 async function processCNCGreyscale(modelInfo) {
     const { uploadName } = modelInfo;
-    const { width, height, rotationZ, flip } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
     const { invert } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -182,7 +186,7 @@ async function processCNCGreyscale(modelInfo) {
 function processBW(modelInfo) {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
-    const { width, height, rotationZ, flip } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
     const { invert, bwThreshold } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -248,6 +252,27 @@ function processVector(modelInfo) {
     return convertRasterToSvg(options);
 }
 
+function processDxf(modelInfo) {
+    return new Promise(async (resolve) => {
+        const { uploadName } = modelInfo;
+
+        let outputFilename = pathWithRandomSuffix(uploadName);
+        outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
+
+        const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
+        const svg = dxfToSvg(result.svg);
+        updateDxfBoundingBox(svg);
+        svgInverse(svg, 2);
+
+        fs.writeFile(`${DataStorage.tmpDir}/${outputFilename}`, svgToString(svg), 'utf8', () => {
+            resolve({
+                filename: outputFilename
+            });
+        });
+    });
+}
+
+
 function process(modelInfo) {
     const { headType, sourceType, mode } = modelInfo;
     if (sourceType === 'raster') {
@@ -262,10 +287,16 @@ function process(modelInfo) {
         } else if (mode === 'vector') {
             return processVector(modelInfo);
         } else {
-            return Promise.reject(new Error(`Unsupported process mode: ${mode}`));
+            return Promise.resolve({
+                filename: ''
+            });
         }
+    } else if (sourceType === 'dxf') {
+        return processDxf(modelInfo);
     } else {
-        return Promise.reject(new Error(`Unsupported source type: ${sourceType}`));
+        return Promise.resolve({
+            filename: ''
+        });
     }
 }
 

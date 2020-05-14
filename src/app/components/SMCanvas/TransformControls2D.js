@@ -7,6 +7,7 @@ import {
     Line, Mesh
 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
+import { isZero } from '../../lib/utils';
 
 
 const EVENTS = {
@@ -394,6 +395,7 @@ class TransformControls2D extends Object3D {
                 this.scalePivotPoint.set(-size.x / 2 * xDirection, -size.y / 2 * yDirection, 0).applyMatrix4(this.object.matrixWorld);
                 this.scaleCenterPoint.set(0, 0, 0).applyMatrix4(this.object.matrixWorld);
                 this.scaleMovingPoint.set(size.x / 2 * xDirection, size.y / 2 * yDirection, 0).applyMatrix4(this.object.matrixWorld);
+
                 break;
             }
             default:
@@ -433,16 +435,37 @@ class TransformControls2D extends Object3D {
                 break;
             }
             case 'scale': {
-                const direction2 = new Vector3().subVectors(this.scaleMovingPoint, this.scaleCenterPoint).normalize();
-                const movement = new Vector3().copy(direction2).multiplyScalar(new Vector3().copy(direction2).dot(offset));
+                // const direction2 = new Vector3().subVectors(this.scaleMovingPoint, this.scaleCenterPoint).normalize();
+                // const movement = new Vector3().copy(direction2).multiplyScalar(new Vector3().copy(direction2).dot(offset));
 
-                const movingPoint = new Vector3().copy(this.scaleMovingPoint).add(movement);
+                // const movingPoint = new Vector3().copy(this.scaleMovingPoint).add(movement);
 
-                const l1 = new Vector3().subVectors(this.scaleMovingPoint, this.scalePivotPoint).length();
-                const l2 = new Vector3().subVectors(movingPoint, this.scalePivotPoint).length();
+                // eslint-disable-next-line no-unused-vars
+                // const l1 = new Vector3().subVectors(this.scaleMovingPoint, this.scalePivotPoint).length();
+                // eslint-disable-next-line no-unused-vars
+                // const l2 = new Vector3().subVectors(movingPoint, this.scalePivotPoint).length();
+                // eslint-disable-next-line no-unused-vars
 
-                this.object.scale.copy(this.scaleStart).multiplyScalar(l2 / l1);
-                this.object.position.copy(this.positionStart).add(movement.multiplyScalar(0.5));
+                const diagonal = new Vector3().copy(this.scaleMovingPoint).sub(this.scalePivotPoint);
+                const nDiagonal = new Vector3().copy(offset).add(diagonal);
+
+                const quaternion = new Quaternion().copy(this.object.quaternion);
+                const quaternionInverse = new Quaternion().copy(quaternion).inverse();
+
+                const rDiagonal = new Vector3().copy(diagonal).applyQuaternion(quaternionInverse);
+                const rNDiagonal = new Vector3().copy(nDiagonal).applyQuaternion(quaternionInverse);
+
+                const scale = new Vector3(Math.abs(isZero(rDiagonal.x) ? 1 : rNDiagonal.x / rDiagonal.x),
+                    Math.abs(isZero(rDiagonal.y) ? 1 : rNDiagonal.y / rDiagonal.y), 1);
+
+                // const movement = new Vector3().subVectors(nDiagonal.multiplyScalar(0.5), diagonal.multiplyScalar(0.5));
+                const movement = new Vector3().subVectors(rNDiagonal.multiplyScalar(0.5), rDiagonal.multiplyScalar(0.5));
+                movement.x = isZero(rDiagonal.x) ? 0 : movement.x;
+                movement.y = isZero(rDiagonal.y) ? 0 : movement.y;
+
+                this.object.scale.copy(this.scaleStart).multiplyVectors(this.scaleStart, scale);
+                this.object.position.copy(this.positionStart).add(movement.applyQuaternion(quaternion));
+
                 break;
             }
             default:

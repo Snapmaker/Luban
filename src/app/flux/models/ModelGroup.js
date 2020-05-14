@@ -1,7 +1,6 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Vector3, Group } from 'three';
 // import { EPSILON } from '../../constants';
-import uuid from 'uuid';
 import Model from './Model';
 
 const EVENTS = {
@@ -57,9 +56,6 @@ class ModelGroup {
         if (model) {
             this.selectedModel = model;
             this.selectedModel.computeBoundingBox();
-            model.meshObject.position.x = 0;
-            model.meshObject.position.y = 0;
-            model.meshObject.position.z = 0;
             if (model.sourceType === '3d') {
                 model.stickToPlate();
                 const xz = this._computeAvailableXZ(model);
@@ -279,23 +275,26 @@ class ModelGroup {
         return models;
     }
 
-    selectModel(modelMeshObject) {
-        if (modelMeshObject) {
-            const model = this.models.find(d => d.meshObject === modelMeshObject);
+    selectModel(modelID) {
+        const model = this.models.find(d => d.modelID === modelID);
+        if (model) {
             this.selectedModel = model;
             if (model.estimatedTime) {
                 this.estimatedTime = model.estimatedTime;
             }
             model.computeBoundingBox();
             return this.getState(model);
+        } else {
+            this.selectedModel = null;
+            return this._emptyState;
         }
-        return null;
     }
 
-    unselectAllModels() {
-        this.selectedModel = null;
-        return this._emptyState;
-    }
+    // unselectAllModels() {
+    //     console.log('unselectAllModels');
+    //     this.selectedModel = null;
+    //     return this._emptyState;
+    // }
 
     arrangeAllModels() {
         const models = this.getModels();
@@ -319,10 +318,9 @@ class ModelGroup {
         return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
     }
 
-    duplicateSelectedModel() {
+    duplicateSelectedModel(modelID) {
         const selected = this.getSelectedModel();
         if (selected) {
-            let modelID;
             const model = selected.clone();
             if (selected.sourceType === '3d') {
                 const selectedConvexGeometry = selected.convexGeometry.clone();
@@ -335,8 +333,7 @@ class ModelGroup {
                 model.meshObject.position.z = xz.z;
             } else {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.modelID = uuid.v4();
-                modelID = model.modelID;
+                model.modelID = modelID;
                 model.computeBoundingBox();
                 model.updateTransformation({
                     positionX: 0,
@@ -366,16 +363,17 @@ class ModelGroup {
         return this.selectedModel;
     }
 
-    async updateSelectedMode(mode, config) {
-        await this.selectedModel.processMode(mode, config);
+    updateSelectedMode(mode, config, processImageName) {
+        this.selectedModel.processMode(mode, config, processImageName);
         return this.getState(this.selectedModel);
     }
 
-    async generateModel(modelInfo) {
+    generateModel(modelInfo) {
         const model = new Model(modelInfo);
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
-        await model.processMode(modelInfo.mode, modelInfo.config);
+        // model.generateProcessObject3D();
+        model.processMode(modelInfo.mode, modelInfo.config);
         this.addModel(model);
         return this.getState(model);
     }
@@ -435,8 +433,8 @@ class ModelGroup {
         return this.getState(selected);
     }
 
-    async updateSelectedConfig(config) {
-        await this.selectedModel.updateConfig(config);
+    updateSelectedConfig(config, processImageName) {
+        this.selectedModel.updateConfig(config, processImageName);
     }
 
     showAllModelsObj3D() {

@@ -1,0 +1,182 @@
+@import "../styles.styl"
+
+//
+// keep layout style the same as laser container
+// we will refactor them together later. 20190820
+//
+.laser-table {
+    display: table;
+    width: 100%;
+    height: 'calc(100vh - %s)' % (50px);
+}
+.laser-table-row {
+    display: table-row;
+}
+
+.view-space {
+  position: fixed;
+  left: $sidebar-width
+  right: 360px;
+  top: 50px;
+  bottom: 32px;
+  border-right: 1px solid #ccc;
+  display: table-cell;
+}
+
+.control-bar
+    display: table-cell
+    width: 360px
+    min-width: 360px
+    max-width: 360px
+    right: 0
+    padding: 10px 6px
+    background-color: #f6f7f8
+
+//
+// SVG Editor styles
+//
+$padding = 10px
+
+.svg-content
+    background-color: #fafafa
+    position: relative
+    width: 100%
+    height: 100%
+
+.svg-control-bar
+    //position: relative
+    margin-bottom: 20px
+
+.palette-item
+    height: 20px
+    width: 20px
+    float: left
+
+
+.visualizer-center
+    position: absolute
+    left: $visualizer-padding
+    top: 50%
+
+    .center-tool,
+    .center-ext
+        z-index: $z-index-float
+        position: absolute
+        transform: translate(0, -50%)
+        border: 1px solid $grey-color2
+
+        .btn-center-ext,
+        .btn-center
+            display: block
+            position: relative
+            width: 56px
+            height: 56px
+            padding: 0
+            border: none
+            background-color: $background-color
+
+            &.selected
+                //background-color: #cbe3f9
+                background-color: #e6f2fd
+
+            &:hover
+                background-color: #e6f2fd
+
+
+            > i
+                display: block
+                height: 100%
+                width: 100%
+                background-size: 100%
+
+            .btn-select
+                background: url("../../images/224x224/toolbar_select_unchecked_224*224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-rectangle
+                background: url("../../images/224x224/toolbar_rectangle _unchecked_224*224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-round
+                background: url("../../images/224x224/toolbar_round _unchecked_224*224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-text
+                background: url("../../images/224x224/toolbar_text _unchecked_224*224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext
+                background: url("../../images/224x224/toolbar_add _unchecked_224*224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-heart
+                background: url("../../images/svg-ext/small/heart.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-pentagon
+                background: url("../../images/svg-ext/small/pentagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-pentagram
+                background: url("../../images/svg-ext/small/pentagram.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-trapezoid
+                background: url("../../images/svg-ext/small/trapezoid.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-right_triangle
+                background: url("../../images/svg-ext/small/right_triangle.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-diamond
+                background: url("../../images/svg-ext/small/diamond.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-hexagon
+                background: url("../../images/svg-ext/small/hexagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-heart
+                background: url("../../images/svg-ext/big/heart.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-pentagon
+                background: url("../../images/svg-ext/big/pentagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-pentagram
+                background: url("../../images/svg-ext/big/pentagram.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-trapezoid
+                background: url("../../images/svg-ext/big/trapezoid.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-right_triangle
+                background: url("../../images/svg-ext/big/right_triangle.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-diamond
+                background: url("../../images/svg-ext/big/diamond.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-hexagon
+                background: url("../../images/svg-ext/big/hexagon.png") no-repeat 0 0
+                background-size: 100%
+
+
+
+        .btn-center-ext
+            width: 72px
+            height: 72px
+            padding: 8px
+
+    .center-ext
+        display: flex
+        flex-wrap: wrap
+        width: 218px
+        background-color: $background-color
+        left: 66px
+        top: 112px
+
