@@ -264,11 +264,18 @@ class WidgetState {
                 seriesStates: state.seriesStates
             }
         );
+
+        // compatibility version
         this.versionCompatibility(this.widgetState);
+
         this.localStore.setState(this.widgetState);
         this.series = this.widgetState.defaultState.machine.series;
     }
 
+    /**
+     * Compatibility local state when software upgrades and downgrades
+     * @param widgetState
+     */
     versionCompatibility(widgetState) {
         const workspace = widgetState.defaultState.workspace;
         const workspaceAllWidgets = [].concat(workspace.default.widgets)
