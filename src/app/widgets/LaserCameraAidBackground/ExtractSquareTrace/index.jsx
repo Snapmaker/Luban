@@ -9,7 +9,7 @@ import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import ManualCalibration from '../ManualCalibration';
 import { MACHINE_SERIES } from '../../../constants';
-import { actions } from '../../../flux/laser';
+import { actions } from '../../../flux/machine';
 
 const PANEL_EXTRACT_TRACE = 1;
 const PANEL_MANUAL_CALIBRATION = 2;
