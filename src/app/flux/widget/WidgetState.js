@@ -234,14 +234,17 @@ function merge(...args) {
     return data;
 }
 
-function hasSome(arr1, arr2) {
-    for (const arr of arr1) {
-        if (!_.includes(arr2, arr)) {
+/**
+ * Check elements in two arrays the same.
+ */
+function arrayEqual(arr1, arr2) {
+    for (const elem of arr1) {
+        if (!_.includes(arr2, elem)) {
             return false;
         }
     }
-    for (const arr of arr2) {
-        if (!_.includes(arr1, arr)) {
+    for (const elem of arr2) {
+        if (!_.includes(arr1, elem)) {
             return false;
         }
     }
@@ -273,10 +276,12 @@ class WidgetState {
     }
 
     /**
-     * Compatibility local state when software upgrades and downgrades
+     * Check compatibilities between local states when software upgrades and downgrades.
+     *
      * @param widgetState
      */
     versionCompatibility(widgetState) {
+        // Check workspace
         const workspace = widgetState.defaultState.workspace;
         const workspaceAllWidgets = [].concat(workspace.default.widgets)
             .concat(workspace.left.widgets)
@@ -284,28 +289,34 @@ class WidgetState {
         const defaultAllWidgets = [].concat(DEFAULT_STATE.workspace.default.widgets)
             .concat(DEFAULT_STATE.workspace.left.widgets)
             .concat(DEFAULT_STATE.workspace.right.widgets);
-        if (!hasSome(workspaceAllWidgets, defaultAllWidgets)) {
+        if (!arrayEqual(workspaceAllWidgets, defaultAllWidgets)) {
             workspace.default.widgets = DEFAULT_STATE.workspace.default.widgets;
             workspace.left.widgets = DEFAULT_STATE.workspace.left.widgets;
             workspace.right.widgets = DEFAULT_STATE.workspace.right.widgets;
         }
-        if (!hasSome(widgetState.defaultState['3dp'].default.widgets, DEFAULT_STATE['3dp'].default.widgets)) {
+
+        // Check 3D printing tab
+        if (!arrayEqual(widgetState.defaultState['3dp'].default.widgets, DEFAULT_STATE['3dp'].default.widgets)) {
             widgetState.defaultState['3dp'].default.widgets = DEFAULT_STATE['3dp'].default.widgets;
         }
-        if (!hasSome(widgetState.defaultState.laser.default.widgets, DEFAULT_STATE.laser.default.widgets)) {
+        // Check Laser tab
+        if (!arrayEqual(widgetState.defaultState.laser.default.widgets, DEFAULT_STATE.laser.default.widgets)) {
             widgetState.defaultState.laser.default.widgets = DEFAULT_STATE.laser.default.widgets;
         }
-        if (!hasSome(widgetState.defaultState.cnc.default.widgets, DEFAULT_STATE.cnc.default.widgets)) {
+        // Check CNC tab
+        if (!arrayEqual(widgetState.defaultState.cnc.default.widgets, DEFAULT_STATE.cnc.default.widgets)) {
             widgetState.defaultState.cnc.default.widgets = DEFAULT_STATE.cnc.default.widgets;
         }
+
+        // Check series widgets
         widgetState.seriesStates.original = {};
-        if (!hasSome(widgetState.seriesStates.A150.laser.default.widgets, SERIES_STATES.A150.laser.default.widgets)) {
+        if (!arrayEqual(widgetState.seriesStates.A150.laser.default.widgets, SERIES_STATES.A150.laser.default.widgets)) {
             widgetState.seriesStates.A150.laser.default.widgets = SERIES_STATES.A150.laser.default.widgets;
         }
-        if (!hasSome(widgetState.seriesStates.A250.laser.default.widgets, SERIES_STATES.A250.laser.default.widgets)) {
+        if (!arrayEqual(widgetState.seriesStates.A250.laser.default.widgets, SERIES_STATES.A250.laser.default.widgets)) {
             widgetState.seriesStates.A250.laser.default.widgets = SERIES_STATES.A250.laser.default.widgets;
         }
-        if (!hasSome(widgetState.seriesStates.A350.laser.default.widgets, SERIES_STATES.A350.laser.default.widgets)) {
+        if (!arrayEqual(widgetState.seriesStates.A350.laser.default.widgets, SERIES_STATES.A350.laser.default.widgets)) {
             widgetState.seriesStates.A350.laser.default.widgets = SERIES_STATES.A350.laser.default.widgets;
         }
     }
