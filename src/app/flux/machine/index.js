@@ -396,8 +396,17 @@ export const actions = {
 
         dispatch(actions.updateState({ laserSize }));
     },
+
     resetHomeState: () => (dispatch) => {
         dispatch(actions.updateState({ isHomed: null }));
+    },
+
+    executeGcodeG54: (series, headType) => (dispatch) => {
+        if (series !== MACHINE_SERIES.ORIGINAL.value
+            && (headType === MACHINE_HEAD_TYPE.LASER.value
+                || headType === MACHINE_HEAD_TYPE.CNC.value)) {
+            dispatch(actions.executeGcode('G54'));
+        }
     },
 
     executeGcode: (gcode, context) => (dispatch, getState) => {
@@ -422,12 +431,10 @@ export const actions = {
     },
 
     executeGcodeAutoHome: () => (dispatch, getState) => {
-        const { series } = getState().machine;
+        const { series, headType } = getState().machine;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
-        if (series !== MACHINE_SERIES.ORIGINAL.value) {
-            dispatch(actions.executeGcode('G54'));
-        }
+        dispatch(actions.executeGcodeG54(series, headType));
     },
 
     // Enclosure
@@ -502,7 +509,7 @@ export const actions = {
                         headType: headType,
                         canReselectMachine: false
                     }));
-                    dispatch(actions.executeGcode('G54'));
+                    dispatch(actions.executeGcodeG54(series, headType));
                     if (_.includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
                         server.getGcodeFile((msg, gcode) => {
                             if (msg) {
@@ -530,7 +537,7 @@ export const actions = {
                                 headType: headTypeT,
                                 canReselectMachine: true
                             }));
-                            dispatch(actions.executeGcode('G54'));
+                            dispatch(actions.executeGcodeG54(seriesT, headTypeT));
                         }
                     });
                 }
