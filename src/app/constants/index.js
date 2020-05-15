@@ -55,6 +55,8 @@ export const STAGES_3DP = {
 };
 
 const publicPath = global.PUBLIC_PATH || '';
+export const DATA_PATH = `${publicPath}/data`;
+
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';

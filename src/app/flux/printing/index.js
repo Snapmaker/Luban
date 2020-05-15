@@ -539,97 +539,16 @@ export const actions = {
      * @returns {Function}
      * @private
      */
-    __loadModel: (originalName, uploadName) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const { size } = getState().machine;
-
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-
+    __loadModel: (originalName, uploadName) => (dispatch) => {
         const headType = '3dp';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
 
-        // Tell worker to generate geometry for model
-        const worker = new LoadModelWorker();
-        worker.postMessage({ uploadPath });
-        worker.onmessage = async (e) => {
-            const data = e.data;
-
-            const { type } = data;
-            switch (type) {
-                case 'LOAD_MODEL_POSITIONS': {
-                    const { positions } = data;
-
-                    const bufferGeometry = new THREE.BufferGeometry();
-                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
-
-                    bufferGeometry.addAttribute('position', modelPositionAttribute);
-                    bufferGeometry.computeVertexNormals();
-                    // Create model
-                    // modelGroup.generateModel(modelInfo);
-
-                    const modelState = await modelGroup.generateModel({
-                        limitSize: size,
-                        headType,
-                        sourceType,
-                        originalName,
-                        uploadName,
-                        mode: mode,
-                        sourceWidth: width,
-                        width,
-                        sourceHeight: height,
-                        height,
-                        geometry: bufferGeometry,
-                        material: material,
-                        transformation: {}
-                    });
-
-                    dispatch(actions.updateState(modelState));
-                    dispatch(actions.displayModel());
-                    dispatch(actions.destroyGcodeLine());
-                    dispatch(actions.recordSnapshot());
-                    dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
-                        progress: 1
-                    }));
-                    break;
-                }
-                case 'LOAD_MODEL_CONVEX': {
-                    worker.terminate();
-                    const { positions } = data;
-
-                    const convexGeometry = new THREE.BufferGeometry();
-                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
-                    convexGeometry.addAttribute('position', positionAttribute);
-
-                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
-                    modelGroup.setConvexGeometry(uploadName, convexGeometry);
-
-                    break;
-                }
-                case 'LOAD_MODEL_PROGRESS': {
-                    const state = getState().printing;
-                    const progress = 0.25 + data.progress * 0.5;
-                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                        dispatch(actions.updateState({ progress }));
-                    }
-                    break;
-                }
-                case 'LOAD_MODEL_FAILED': {
-                    worker.terminate();
-                    dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
-                        progress: 0
-                    }));
-                    break;
-                }
-                default:
-                    break;
-            }
-        };
+        dispatch(actions.updateState({ progress: 0.25 }));
+        dispatch(actions.generateModel(headType, originalName, uploadName, width, height,
+            mode, sourceType, null, null, {}));
     },
 
     // Upload model
@@ -660,7 +579,7 @@ export const actions = {
     //     name: '3DP_test_A150.stl',
     //     casePath: './A150/'
     // }
-    uploadCaseModel: (file) => async (dispatch, getState) => {
+    uploadCaseModel: (file) => async (dispatch) => {
         // Notice user that model is being loading
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.LOADING_MODEL,
@@ -670,7 +589,7 @@ export const actions = {
         const res = await api.uploadCaseFile(file);
         const { originalName, uploadName } = res.body;
 
-        actions.__loadModel(originalName, uploadName)(dispatch, getState);
+        actions.__loadModel(originalName, uploadName)(dispatch);
     },
 
     setTransformMode: (value) => (dispatch) => {
@@ -1023,6 +942,93 @@ export const actions = {
             progress: 0
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
+    },
+
+    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight,
+        mode, sourceType, config, gcodeConfig, transformation) => async (dispatch, getState) => {
+        const { size } = getState().machine;
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        const { modelGroup } = getState().printing;
+        // const sourceType = '3d';
+
+        const worker = new LoadModelWorker();
+        worker.postMessage({ uploadPath });
+        worker.onmessage = async (e) => {
+            const data = e.data;
+
+            const { type } = data;
+            switch (type) {
+                case 'LOAD_MODEL_POSITIONS': {
+                    const { positions } = data;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+
+                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.computeVertexNormals();
+                    // Create model
+                    // modelGroup.generateModel(modelInfo);
+
+                    const modelState = await modelGroup.generateModel({
+                        limitSize: size,
+                        headType,
+                        sourceType,
+                        originalName,
+                        uploadName,
+                        mode: mode,
+                        sourceWidth,
+                        width: sourceWidth,
+                        sourceHeight,
+                        height: sourceHeight,
+                        geometry: bufferGeometry,
+                        material: material,
+                        transformation
+                    });
+
+                    dispatch(actions.updateState(modelState));
+                    dispatch(actions.displayModel());
+                    dispatch(actions.destroyGcodeLine());
+                    dispatch(actions.recordSnapshot());
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
+                        progress: 1
+                    }));
+                    break;
+                }
+                case 'LOAD_MODEL_CONVEX': {
+                    worker.terminate();
+                    const { positions } = data;
+
+                    const convexGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                    convexGeometry.addAttribute('position', positionAttribute);
+
+                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
+                    modelGroup.setConvexGeometry(uploadName, convexGeometry);
+
+                    break;
+                }
+                case 'LOAD_MODEL_PROGRESS': {
+                    const state = getState().printing;
+                    const progress = 0.25 + data.progress * 0.5;
+                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                        dispatch(actions.updateState({ progress }));
+                    }
+                    break;
+                }
+                case 'LOAD_MODEL_FAILED': {
+                    worker.terminate();
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        progress: 0
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
     }
 };
 

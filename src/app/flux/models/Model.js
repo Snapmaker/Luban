@@ -638,6 +638,27 @@ class Model {
         matrix4.makeRotationFromQuaternion(q);
         return matrix4;
     }
+
+    getSerializableConfig() {
+        const { modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
+            transformation, processImageName } = this;
+        return {
+            modelID,
+            limitSize,
+            headType,
+            sourceType,
+            sourceHeight,
+            sourceWidth,
+            originalName,
+            uploadName,
+            config,
+            mode,
+            geometry,
+            material,
+            transformation,
+            processImageName
+        };
+    }
 }
 
 export default Model;

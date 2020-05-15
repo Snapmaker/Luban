@@ -289,7 +289,7 @@ class Configurations extends PureComponent {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
         },
-        onSetOfficoalTab: (isAdvised) => {
+        onSetOfficialTab: (isAdvised) => {
             if (isAdvised) {
                 this.setState({
                     isOfficialTab: true
@@ -352,9 +352,9 @@ class Configurations extends PureComponent {
 
         if (nextProps.isAdvised !== this.props.isAdvised) {
             if (nextProps.isAdvised) {
-                this.actions.onSetOfficoalTab(true);
+                this.actions.onSetOfficialTab(true);
             } else {
-                this.actions.onSetOfficoalTab(false);
+                this.actions.onSetOfficialTab(false);
             }
             if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
                 const definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
@@ -399,7 +399,7 @@ class Configurations extends PureComponent {
                         style={{ width: '50%' }}
                         className={classNames('sm-tab', { 'sm-selected': isOfficialTab })}
                         onClick={() => {
-                            this.actions.onSetOfficoalTab(true);
+                            this.actions.onSetOfficialTab(true);
                         }}
                     >
                         {i18n._('Recommended')}
@@ -409,7 +409,7 @@ class Configurations extends PureComponent {
                         style={{ width: '50%' }}
                         className={classNames('sm-tab', { 'sm-selected': !isOfficialTab })}
                         onClick={() => {
-                            this.actions.onSetOfficoalTab(false);
+                            this.actions.onSetOfficialTab(false);
                         }}
                     >
                         {i18n._('Customize')}

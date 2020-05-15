@@ -3,7 +3,7 @@ import mv from 'mv';
 import fs from 'fs';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
-import DataStorage from '../../DataStorage';
+import DataStorage, { rmDir } from '../../DataStorage';
 import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import parseGcodeHeader from '../../lib/parseGcodeHeader';
@@ -112,4 +112,81 @@ export const uploadUpdateFile = (req, res) => {
             log.error(`Failed to upload file ${uploadPath}`);
         }
     });
+};
+
+/**
+ * remove editor saved environment files
+ */
+export const removeEnv = async (req, res) => {
+    const { headType } = req.body;
+    const envDir = `${DataStorage.envDir}/${headType}`;
+    rmDir(envDir, false);
+    res.send(true);
+    res.end();
+};
+
+/**
+ * save editor enviroment as files, and copy related resource files
+ */
+export const saveEnv = async (req, res) => {
+    const { content } = req.body;
+    const config = JSON.parse(content);
+    const envDir = `${DataStorage.envDir}/${config.headType}`;
+    const result = await new Promise((resolve, reject) => {
+        const targetPath = `${envDir}/config.json`;
+        fs.writeFile(targetPath, content, (err) => {
+            if (err) {
+                log.error(err);
+                reject(err);
+            } else {
+                resolve({
+                    targetPath
+                });
+            }
+        });
+    });
+    config.models.forEach((model) => {
+        const { originalName, uploadName } = model;
+        fs.existsSync(`${DataStorage.tmpDir}/${originalName}`)
+         && fs.copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
+
+        fs.copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
+    });
+
+    res.send(result);
+    res.end();
+};
+
+/**
+ * get environment data from saved file
+ */
+export const getEnv = async (req, res) => {
+    const { headType } = req.body;
+    const envDir = `${DataStorage.envDir}/${headType}`;
+    const targetPath = `${envDir}/config.json`;
+    const exists = fs.existsSync(targetPath);
+    if (exists) {
+        const content = fs.readFileSync(targetPath).toString();
+        res.send({ result: 1, content });
+    } else {
+        res.send({ result: 0 });
+    }
+    res.end();
+};
+/**
+ * recover environment saved resource files to tmp dir.
+ */
+export const recoverEnv = async (req, res) => {
+    const { content } = req.body;
+    const config = JSON.parse(content);
+    const envDir = `${DataStorage.envDir}/${config.headType}`;
+    config.models.forEach((model) => {
+        const { originalName, uploadName } = model;
+        fs.existsSync(`${envDir}/${originalName}`)
+         && fs.copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
+
+        fs.copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
+    });
+    res.send({ result: 1 });
+    res.end();
 };

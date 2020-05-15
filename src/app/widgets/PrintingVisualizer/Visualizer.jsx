@@ -254,11 +254,8 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-notice']}>
-                    <p>{notice}</p>
-                </div>
                 <div className={styles['visualizer-progress']}>
-                    <ProgressBar progress={progress * 100} />
+                    <ProgressBar tips={notice} progress={progress * 100} />
                 </div>
 
                 <div className={styles['canvas-content']} style={{ top: 0 }}>

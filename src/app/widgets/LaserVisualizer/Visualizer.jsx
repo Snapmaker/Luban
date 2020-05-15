@@ -311,11 +311,8 @@ class Visualizer extends Component {
                     </div>
                 )}
 
-                <div className={styles['visualizer-notice']}>
-                    <p>{notice}</p>
-                </div>
                 <div className={styles['visualizer-progress']}>
-                    <ProgressBar progress={this.props.progress * 100.0} />
+                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}

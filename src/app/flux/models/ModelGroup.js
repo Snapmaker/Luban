@@ -59,7 +59,11 @@ class ModelGroup {
         if (model) {
             this.selectedModel = model;
             this.selectedModel.computeBoundingBox();
-            if (model.sourceType === '3d') {
+            // if (model.sourceType === '3d') {
+            // model.meshObject.position.x = 0;
+            // model.meshObject.position.y = 0;
+            // model.meshObject.position.z = 0;
+            if (model.sourceType === '3d' && model.transformation.positionX === 0 && model.transformation.positionZ === 0) {
                 model.stickToPlate();
                 const point = this._computeAvailableXY(model);
                 model.meshObject.position.x = point.x;
@@ -221,8 +225,13 @@ class ModelGroup {
     }
 
     setConvexGeometry(uploadName, convexGeometry) {
-        const model = this.models.find(m => m.uploadName === uploadName);
-        model && model.setConvexGeometry(convexGeometry);
+        const models = this.models.filter(m => m.uploadName === uploadName);
+        if (models.length) {
+            for (let idx = 0; idx < models.length; idx++) {
+                const model = models[idx];
+                model.setConvexGeometry(convexGeometry);
+            }
+        }
     }
 
     updateBoundingBox(bbox) {
@@ -293,11 +302,10 @@ class ModelGroup {
         }
     }
 
-    // unselectAllModels() {
-    //     console.log('unselectAllModels');
-    //     this.selectedModel = null;
-    //     return this._emptyState;
-    // }
+    unselectAllModels() {
+        this.selectedModel = null;
+        return this._emptyState;
+    }
 
     arrangeAllModels() {
         const models = this.getModels();
@@ -334,6 +342,12 @@ class ModelGroup {
                 const point = this._computeAvailableXY(model);
                 model.meshObject.position.x = point.x;
                 model.meshObject.position.y = point.y;
+
+                model.updateTransformation({
+                    positionX: point.x,
+                    positionZ: point.z
+                });
+
                 model.modelID = modelID || uuid.v4();
             } else {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
@@ -349,8 +363,6 @@ class ModelGroup {
             // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
-
-            console.log(this.models);
 
             return {
                 modelID: modelID,

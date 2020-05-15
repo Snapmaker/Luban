@@ -12,6 +12,7 @@ import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
+
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -25,7 +26,8 @@ import Cnc from './Cnc';
 import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
-
+import recoverEnvironmentModal from '../modals/modal-recover-environment';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../constants';
 
 class App extends PureComponent {
     static propTypes = {
@@ -42,7 +44,11 @@ class App extends PureComponent {
         laserInit: PropTypes.func.isRequired,
         cncInit: PropTypes.func.isRequired,
         printingInit: PropTypes.func.isRequired,
-        textInit: PropTypes.func.isRequired
+        textInit: PropTypes.func.isRequired,
+        initRecoverService: PropTypes.func.isRequired,
+        editorState: PropTypes.object.isRequired,
+        onRecovery: PropTypes.func.isRequired,
+        quitRecovery: PropTypes.func.isRequired
     };
 
     state = {
@@ -122,6 +128,23 @@ class App extends PureComponent {
         this.props.cncInit();
         this.props.printingInit();
         this.props.textInit();
+        this.props.initRecoverService();
+    }
+
+    componentWillReceiveProps(nextProps) {
+        let headType = null;
+
+        if (nextProps.location.pathname !== this.props.location.pathname) {
+            if (nextProps.location.pathname.indexOf(HEAD_CNC) > 0) headType = HEAD_CNC;
+            if (nextProps.location.pathname.indexOf(HEAD_LASER) > 0) headType = HEAD_LASER;
+            if (nextProps.location.pathname.indexOf(HEAD_3DP) > 0) headType = HEAD_3DP;
+            if (!headType) return;
+
+            const { findLastEnviroment, recovered } = nextProps.editorState[headType];
+            if (findLastEnviroment && !recovered) {
+                recoverEnvironmentModal({ onRecovery: () => this.props.onRecovery(headType), quitRecovery: () => this.props.quitRecovery(headType) });
+            }
+        }
     }
 
     logPageView() {
@@ -208,8 +231,10 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+    const editorState = state.editor;
     return {
-        machineInfo
+        machineInfo,
+        editorState
     };
 };
 
@@ -223,6 +248,7 @@ const mapDispatchToProps = (dispatch) => {
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),
         textInit: () => dispatch(textActions.init()),
+        initRecoverService: () => dispatch(editorActions.initRecoverService()),
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
@@ -230,7 +256,9 @@ const mapDispatchToProps = (dispatch) => {
         initModelsPreviewChecker: () => {
             dispatch(editorActions.initModelsPreviewChecker('laser'));
             dispatch(editorActions.initModelsPreviewChecker('cnc'));
-        }
+        },
+        onRecovery: (headType) => dispatch(editorActions.onRecovery(headType)),
+        quitRecovery: (headType) => dispatch(editorActions.quitRecovery(headType))
     };
 };
 
