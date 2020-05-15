@@ -68,6 +68,7 @@ const appConfig = {
             'ko', // Korean
             'pt-br', // Portuguese (Brazil)
             'ru', // Russian
+            'uk', // Ukrainian
             'zh-cn', // Simplified Chinese
             'zh-tw' // Traditional Chinese
         ],

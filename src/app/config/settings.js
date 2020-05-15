@@ -40,6 +40,7 @@ const settings = {
             'ja', // Japanese
             'ko', // Korean
             'ru', // Russian
+            'uk', // Ukrainian
             'zh-cn' // Simplified Chinese
         ],
 

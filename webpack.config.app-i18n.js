@@ -1,3 +1,4 @@
+// Languages
 module.exports = {
     languages: [
         'en', // English (default)
@@ -11,6 +12,7 @@ module.exports = {
         'ko', // Korean
         'pt-br', // Portuguese (Brazil)
         'ru', // Russian
+        'uk', // Ukrainian
         'zh-cn', // Simplified Chinese
         'zh-tw' // Traditional Chinese
     ]
