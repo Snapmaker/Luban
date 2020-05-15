@@ -1,0 +1,15 @@
+{
+    "Rapid Move (G0)": "",
+    "Linear Move (G1)": "",
+    "Inches (G20)": "",
+    "Millimeters (G21)": "",
+    "Absolute (G90)": "",
+    "Relative (G91)": "",
+    "Inverse Time (G93)": "",
+    "Units/Min (G94)": "",
+    "Spindle On, CW (M3)": "",
+    "Spindle On, CCW (M4)": "",
+    "Spindle Off (M5)": "",
+    "Power On (M3)": "",
+    "Power Off (M5)": ""
+}

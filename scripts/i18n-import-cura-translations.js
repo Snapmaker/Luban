@@ -39,6 +39,7 @@ const languageMappings = {
     'ko': 'ko_KR',
     'it': 'it_IT',
     'ru': 'ru_RU',
+    'uk': null,
     'zh-cn': 'zh_CN'
 };
 
@@ -48,6 +49,10 @@ Object.keys(languageMappings).forEach((lang) => {
     const translates = JSON.parse(fs.readFileSync(langFile).toString());
 
     const curaLang = languageMappings[lang];
+    if (!curaLang) {
+        return;
+    }
+
     const curaLangDir = `${curaI18nDir}/${curaLang}`;
     const printerConfigFile = `${curaLangDir}/fdmprinter.def.json.po`;
     const po = PO.parse(fs.readFileSync(printerConfigFile).toString());
