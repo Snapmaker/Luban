@@ -62,8 +62,8 @@ class Visualizer extends PureComponent {
         zoomOut: () => {
             this.canvas.current.zoomOut();
         },
-        autoFocus: () => {
-            this.canvas.current.autoFocus();
+        autoFocus: (model) => {
+            this.canvas.current.autoFocus(model);
         },
         toLeft: () => {
             this.canvas.current.toLeft();
@@ -147,7 +147,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp } = nextProps;
+        const { size, transformMode, selectedModelID, renderingTimestamp, stage } = nextProps;
 
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
@@ -168,14 +168,20 @@ class Visualizer extends PureComponent {
 
         if (!isEqual(size, this.props.size)) {
             this.printableArea.updateSize(size);
-            const { modelGroup, gcodeLineGroup } = this.props;
+            const { gcodeLineGroup } = this.props;
 
-            modelGroup.updateBoundingBox(new Box3(
+            this.props.modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
                 new Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
             ));
 
             gcodeLineGroup.position.set(-size.x / 2, 0, size.y / 2);
+        }
+
+        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED && selectedModelID) {
+            const selectedModel = this.props.getSelectedModel();
+            this.actions.autoFocus(selectedModel);
+            console.log('add here', selectedModel);
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
