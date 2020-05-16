@@ -80,9 +80,9 @@ artifacts:
 deploy:
   - provider: GitHub
     auth_token:
-      secure: 4lZ6pJxMl/2aEnBqcoHKsX86geFzHr+YC8BgqvbYiMBIs/KGjFTRI+oWKN8i3u9U
+      secure: 0557ef26fbff40cdd0d3b60f3590cb105f446f7c
     draft: false
     prerelease: false
     on:
-      appveyor_repo_tag: false  # deploy on tag push only
+      appveyor_repo_tag: true  # deploy on tag push only
       nodejs_version: "10"
