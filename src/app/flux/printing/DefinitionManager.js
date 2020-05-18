@@ -16,7 +16,7 @@ class DefinitionManager {
         this.series = series;
         let res;
 
-        if (this.series === MACHINE_SERIES.ORIGINAL.value) {
+        if (this.series === MACHINE_SERIES.QMAKER2.value) {
             res = await api.printingConfigs.getDefinition('snapmaker');
             this.snapmakerDefinition = res.body.definition;
         } else {

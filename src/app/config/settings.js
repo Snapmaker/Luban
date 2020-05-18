@@ -51,7 +51,7 @@ const settings = {
         // 'all' --> ['en-US', 'en', 'dev']
         // 'currentOnly' --> 'en-US'
         // 'languageOnly' --> 'en'
-        load: 'currentOnly',
+        load: 'tr', //currentOnly orijinal değer
 
         // char to separate keys
         keySeparator: '.',

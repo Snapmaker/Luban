@@ -4,7 +4,7 @@ import { PROTOCOL_TEXT, PROTOCOL_SCREEN, MACHINE_SERIES } from '../../constants'
 
 const defaultState = {
     machine: {
-        series: MACHINE_SERIES.ORIGINAL.value
+        series: MACHINE_SERIES.QMAKER2.value
     },
     workspace: {
         default: {
@@ -192,7 +192,7 @@ const defaultState = {
     }
 };
 const seriesStates = {
-    original: {},
+    qmaker2: {},
     A150: {
         laser: {
             default: {

@@ -30,13 +30,13 @@ import MachineSelectModal from '../../modals/modal-machine-select';
 const INITIAL_STATE = {
 
     // Machine Info
-    series: MACHINE_SERIES.ORIGINAL.value,
+    series: MACHINE_SERIES.QMAKER2.value,
     headType: null,
     canReselectMachine: false,
 
     isCustom: false,
-    size: MACHINE_SERIES.ORIGINAL.setting.size,
-    laserSize: MACHINE_SERIES.ORIGINAL.setting.laserSize,
+    size: MACHINE_SERIES.QMAKER2.setting.size,
+    laserSize: MACHINE_SERIES.QMAKER2.setting.laserSize,
 
     // Serial port
     port: controller.port || '',
@@ -406,7 +406,7 @@ export const actions = {
         const { series } = getState().machine;
         dispatch(actions.executeGcode('G53'));
         dispatch(actions.executeGcode('G28'));
-        if (series !== MACHINE_SERIES.ORIGINAL.value) {
+        if (series !== MACHINE_SERIES.QMAKER2.value) {
             dispatch(actions.executeGcode('G54'));
         }
     },
@@ -625,7 +625,7 @@ export const actions = {
             const blob = new Blob([gcode], { type: 'text/plain' });
             const file = new File([blob], gcodeFile.name);
             const promises = [];
-            if (series !== MACHINE_SERIES.ORIGINAL.value && headType === MACHINE_HEAD_TYPE.LASER.value) {
+            if (series !== MACHINE_SERIES.QMAKER2.value && headType === MACHINE_HEAD_TYPE.LASER.value) {
                 if (isLaserPrintAutoMode && laserFocalLength) {
                     const promise = new Promise((resolve) => {
                         server.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`, () => {

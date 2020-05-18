@@ -183,7 +183,7 @@ class SerialConnection extends PureComponent {
                         headType: headTypeT,
                         canReselectMachine: true
                     });
-                    if (seriesT !== MACHINE_SERIES.ORIGINAL.value) {
+                    if (seriesT !== MACHINE_SERIES.QMAKER2.value) {
                         this.props.executeGcode('G54');
                     }
                 }

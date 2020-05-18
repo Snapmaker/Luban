@@ -102,19 +102,19 @@ export const LASER_PRINT_MODE_AUTO = 'auto';
 export const LASER_PRINT_MODE_MANUAL = 'manual';
 
 export const MACHINE_SERIES = {
-    ORIGINAL: {
-        value: 'Original',
-        label: 'Snapmaker Original',
+    QMAKER2: {
+        value: 'Q-Maker 2',
+        label: 'Q-Maker 2',
         setting: {
             size: {
-                x: 125,
-                y: 125,
-                z: 125
+                x: 200,
+                y: 200,
+                z: 200
             },
             laserSize: {
-                x: 125,
-                y: 125,
-                z: 125
+                x: 200,
+                y: 200,
+                z: 200
             }
         }
     },

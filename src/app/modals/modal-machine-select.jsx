@@ -25,7 +25,7 @@ class MachineSelectModal extends PureComponent {
     };
 
     state = {
-        series: this.props.series || MACHINE_SERIES.ORIGINAL.value,
+        series: this.props.series || MACHINE_SERIES.QMAKER2.value,
         headType: this.props.headType || MACHINE_HEAD_TYPE['3DP'].value
     };
 
@@ -67,8 +67,8 @@ class MachineSelectModal extends PureComponent {
 
         const machineSeriesOptions = [
             {
-                value: MACHINE_SERIES.ORIGINAL.value,
-                label: MACHINE_SERIES.ORIGINAL.label,
+                value: MACHINE_SERIES.QMAKER2.value,
+                label: MACHINE_SERIES.QMAKER2.label,
                 img: 'images/machine/size-1.0-original.jpg'
             },
             {

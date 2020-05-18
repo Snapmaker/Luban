@@ -24,10 +24,7 @@ const customOption = {
 };
 const machineSeriesOptions = [
     {
-        ...MACHINE_SERIES.ORIGINAL
-    },
-    {
-        ...MACHINE_SERIES.A150
+        ...MACHINE_SERIES.QMAKER2
     },
     {
         ...MACHINE_SERIES.A250

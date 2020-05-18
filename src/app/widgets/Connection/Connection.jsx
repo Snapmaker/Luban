@@ -93,7 +93,7 @@ class Connection extends PureComponent {
     render() {
         const { connectionType, isConnected, series, isHomed } = this.props;
         const { alertMessage, showHomeReminder } = this.state;
-        const isOriginal = series === MACHINE_SERIES.ORIGINAL.value;
+        const isOriginal = series === MACHINE_SERIES.QMAKER2.value;
 
         return (
             <div>
