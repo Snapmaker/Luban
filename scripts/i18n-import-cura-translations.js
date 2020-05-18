@@ -31,6 +31,7 @@ logger.info(`Use Cura i18n folder: ${curaI18nDir}`);
 
 
 const languageMappings = {
+    'tr': 'tr_TR',
     'de': 'de_DE',
     // 'en': 'en_US',
     'es': 'es_ES',
