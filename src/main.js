@@ -70,6 +70,7 @@ const onReady = async () => {
         windowInstance = openBrowserWindow(url);
 
         lastURL = url;
+        windowInstance.maximize();
     } catch (err) {
         console.error('Error: ', err);
     }
