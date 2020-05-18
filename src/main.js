@@ -21,6 +21,7 @@ function getBrowserWindowOptions() {
         show: false,
         title: `${pkg.name} ${pkg.version}`
     };
+    win.restore()
 
     // { x, y, width, height }
     const windowBounds = config.get('winBounds');
