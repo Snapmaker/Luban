@@ -19,9 +19,12 @@ function getBrowserWindowOptions() {
         width: 1280,
         height: 768,
         show: false,
+        // set the title bar style
+        titleBarStyle: 'hiddenInset',
+        // set the background color to black
+        backgroundColor: "#111",
         title: `${pkg.name} ${pkg.version}`
     };
-    win.restore()
 
     // { x, y, width, height }
     const windowBounds = config.get('winBounds');
