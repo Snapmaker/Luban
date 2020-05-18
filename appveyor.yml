@@ -16,7 +16,7 @@ environment:
   - nodejs_version: "10"
   global:
     GITHUB_TOKEN:
-      secure: 4lZ6pJxMl/2aEnBqcoHKsX86geFzHr+YC8BgqvbYiMBIs/KGjFTRI+oWKN8i3u9U
+      secure: 0557ef26fbff40cdd0d3b60f3590cb105f446f7c
 
 matrix:
   fast_finish: true
