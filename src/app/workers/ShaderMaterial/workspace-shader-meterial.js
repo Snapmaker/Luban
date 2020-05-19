@@ -16,6 +16,7 @@ export const WORKSPACE_VERT_SHADER = [
     '    v_index = a_index;',
     '    v_index_color = a_index_color;',
     '    v_color = a_color;',
+    '    gl_PointSize = 1.0;',
     '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
     '}'
 ].join('');
