@@ -33,6 +33,10 @@ function openBrowserWindow(url) {
     const options = getBrowserWindowOptions();
     const window = new BrowserWindow(options);
 
+    window.on('close', () => {
+        config.set('winBounds', windowInstance.getBounds());
+    });
+
     configureWindow(window);
 
     // Ignore proxy settings
@@ -146,7 +150,6 @@ const main = () => {
 
     app.on('will-quit', () => {
         DataStorage.clear();
-        config.set('winBounds', windowInstance.getBounds());
         windowInstance = null;
     });
 };
