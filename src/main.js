@@ -28,14 +28,9 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowBounds);
 }
 
-
-function openBrowserWindow(url) {
-    const options = getBrowserWindowOptions();
+const combinedOptions = getBrowserWindowOptions();
+function openBrowserWindow(url, options) {
     const window = new BrowserWindow(options);
-
-    window.on('close', () => {
-        config.set('winBounds', windowInstance.getBounds());
-    });
 
     configureWindow(window);
 
@@ -66,7 +61,11 @@ const onReady = async () => {
         Menu.setApplicationMenu(menu);
 
         const url = `http://${address}:${port}`;
-        windowInstance = openBrowserWindow(url);
+
+        windowInstance = openBrowserWindow(url, combinedOptions);
+        windowInstance.on('close', () => {
+            config.set('winBounds', windowInstance.getBounds());
+        });
 
         lastURL = url;
     } catch (err) {
@@ -134,7 +133,7 @@ const main = () => {
     // when the user clicks on the application's dock icon.
     app.on('activate', () => {
         if (!windowInstance) {
-            windowInstance = openBrowserWindow(lastURL);
+            windowInstance = openBrowserWindow(lastURL, combinedOptions);
         }
     });
 
