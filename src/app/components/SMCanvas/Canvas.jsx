@@ -12,7 +12,7 @@ import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import Controls, { EVENTS } from './Controls';
-import Model from '../../flux/models/Model';
+// import Model from '../../flux/models/Model';
 // import MSRControls from '../three-extensions/MSRControls';
 // import TransformControls from '../three-extensions/TransformControls';
 // import TransformControls2D from '../three-extensions/TransformControls2D';
@@ -268,37 +268,30 @@ class Canvas extends Component {
     }
 
     autoFocus(model) {
-        if (!(model instanceof Model)) {
-            model = undefined;
-        }
-        this.camera.position.copy(this.props.cameraInitialPosition);
-        const target = new Vector3(this.props.cameraInitialPosition.x, this.props.cameraInitialPosition.y, 0);
+        this.camera.position.copy(this.cameraInitialPosition);
+
+        const target = model ? model.position.clone() : new Vector3(0, this.cameraInitialPosition.y, 0);
         this.controls.setTarget(target);
-        let rate = 1;
-        if (model) {
-            const { boundingBox: { min, max } } = model;
-            const width = Math.sqrt((min.x - max.x) ** 2 + (min.y - max.y, 2) ** 2);
-            rate = Math.max(0.9, width / 100);
-        }
 
-
-        const object = { nonce: 0 };
-        const to = { nonce: Math.abs(1 - rate) / (1 - this.controls.scaleRate) };
-
-        let lastNonce = 0;
+        const object = {
+            positionX: this.camera.position.x,
+            positionY: this.camera.position.y,
+            positionZ: this.camera.position.z
+        };
+        const to = {
+            positionX: this.props.cameraInitialPosition.x,
+            positionY: this.props.cameraInitialPosition.y,
+            positionZ: this.props.cameraInitialPosition.z
+        };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
+            .easing(TWEEN.Easing.Quadratic.Out)
             .onUpdate(() => {
-                if (object.nonce - lastNonce > 1) {
-                    lastNonce = object.nonce;
-                    if (rate > 1) {
-                        this.controls.dollyOut();
-                    } else {
-                        this.controls.dollyIn();
-                    }
+                this.camera.position.x = object.positionX;
+                this.camera.position.y = object.positionY;
+                this.camera.position.z = object.positionZ;
 
-                    this.controls.updateCamera();
-                }
+                // this.camera.lookAt(this.controls.target);
             });
         this.startTween(tween);
     }

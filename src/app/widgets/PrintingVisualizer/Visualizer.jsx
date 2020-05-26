@@ -62,8 +62,8 @@ class Visualizer extends PureComponent {
         zoomOut: () => {
             this.canvas.current.zoomOut();
         },
-        autoFocus: (model) => {
-            this.canvas.current.autoFocus(model);
+        autoFocus: () => {
+            this.canvas.current.autoFocus();
         },
         toLeft: () => {
             this.canvas.current.toLeft();
@@ -147,7 +147,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp, stage } = nextProps;
+        const { size, transformMode, selectedModelID, renderingTimestamp } = nextProps;
 
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
@@ -177,11 +177,6 @@ class Visualizer extends PureComponent {
 
             gcodeLineGroup.position.set(-size.x / 2, 0, size.y / 2);
             this.canvas.current.setCamera(new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2), new Vector3(0, size.z / 2, 0));
-        }
-
-        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED && selectedModelID) {
-            const selectedModel = this.props.getSelectedModel();
-            this.actions.autoFocus(selectedModel);
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
