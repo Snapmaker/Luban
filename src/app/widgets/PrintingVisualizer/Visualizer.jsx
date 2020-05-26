@@ -176,12 +176,12 @@ class Visualizer extends PureComponent {
             ));
 
             gcodeLineGroup.position.set(-size.x / 2, 0, size.y / 2);
+            this.canvas.current.setCamera(new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2), new Vector3(0, size.z / 2, 0));
         }
 
         if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED && selectedModelID) {
             const selectedModel = this.props.getSelectedModel();
             this.actions.autoFocus(selectedModel);
-            console.log('add here', selectedModel);
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
@@ -350,7 +350,7 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, selectedModelID, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, selectedModelID, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, boundingBox } = printing;
 
     return {
         stage,
@@ -362,7 +362,8 @@ const mapStateToProps = (state) => {
         transformMode,
         progress,
         displayedType,
-        renderingTimestamp
+        renderingTimestamp,
+        boundingBox
     };
 };
 

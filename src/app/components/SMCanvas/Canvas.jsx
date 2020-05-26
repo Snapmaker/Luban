@@ -215,6 +215,12 @@ class Canvas extends Component {
         this.renderScene();
     };
 
+    setCamera = (position, target) => {
+        this.camera.position.copy(position);
+        this.controls.setTarget(target);
+        this.renderScene();
+    }
+
     resizeWindow = () => {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
@@ -422,7 +428,6 @@ class Canvas extends Component {
     }
 
     renderScene() {
-        console.log(this.cameraInitialPosition, this.props.cameraInitialPosition, this.camera.position, '------', this.camera.uuid);
         this.renderer.render(this.scene, this.camera);
 
         TWEEN.update();

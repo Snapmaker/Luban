@@ -82,9 +82,9 @@ class GcodeToBufferGeometryWorkspace {
                                     z: v2.z
                                 },
                                 min: {
-                                    x: v2.x,
-                                    y: v2.y,
-                                    z: v2.z
+                                    x: v1.x,
+                                    y: v1.y,
+                                    z: v1.z
                                 }
                             };
                         } else {
