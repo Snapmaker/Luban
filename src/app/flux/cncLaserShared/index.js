@@ -195,8 +195,8 @@ export const actions = {
         }
         if (configs && configs.config) {
             Object.entries(configs.config).forEach(([key, value]) => {
-                if (config[key] !== null && config[key] !== undefined) {
-                    config[key] = value;
+                if (gcodeConfig[key] !== null && gcodeConfig[key] !== undefined) {
+                    gcodeConfig[key] = value;
                 }
             });
         }
