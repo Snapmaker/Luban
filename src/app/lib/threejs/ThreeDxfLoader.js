@@ -1,10 +1,11 @@
-import * as THREE from 'three';
+import THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
 import log from '../log';
 import DxfParser from '../../../shared/lib/DXFParser';
 import DxfShader from './DxfShaderLine';
-import EPSILON from '../../constants';
+import { EPSILON } from '../../constants';
+
 /**
  * Returns the angle in radians of the vector (p1,p2). In other words, imagine
  * putting the base of the vector at coordinates (0,0) and finding the angle
@@ -21,6 +22,7 @@ function angle2(p1, p2) {
     if (v2.y < 0) return -Math.acos(v2.x);
     return Math.acos(v2.x);
 }
+
 function polar(point, distance, angle) {
     const result = {};
     result.x = point.x + distance * Math.cos(angle);
@@ -100,13 +102,14 @@ class ThreeDxfLoader {
             return item;
         });
         interpolatedPoints.vertices.shift();
-        let previewPositon = { x: 0, y: 0, z: 0 };
+
+        let previousPosition = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
-            previewPositon = geometry.vertices[geometry.vertices.length - 1];
+            previousPosition = geometry.vertices[geometry.vertices.length - 1];
         }
-        if (!isEqual(previewPositon.x, interpolatedPoints.vertices[0].x)
-            || !isEqual(previewPositon.y, interpolatedPoints.vertices[0].y)) {
-            geometry.vertices.push(previewPositon);
+        if (!isEqual(previousPosition.x, interpolatedPoints.vertices[0].x)
+            || !isEqual(previousPosition.y, interpolatedPoints.vertices[0].y)) {
+            geometry.vertices.push(previousPosition);
             geometry.colors.push(defaultColor);
             geometry.vertices.push(interpolatedPoints.vertices[0]);
             geometry.colors.push(defaultColor);
@@ -272,12 +275,12 @@ class ThreeDxfLoader {
             rotation
         );
         const interpolatedPoints = curve.getPoints(20);
-        let previewPositon = { x: 0, y: 0, z: 0 };
+        let previousPosition = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
-            previewPositon = geometry.vertices[geometry.vertices.length - 1];
+            previousPosition = geometry.vertices[geometry.vertices.length - 1];
         }
-        if (!isEqual(previewPositon.x, interpolatedPoints[0].x)
-            || !isEqual(previewPositon.y, interpolatedPoints[0].y)) {
+        if (!isEqual(previousPosition.x, interpolatedPoints[0].x)
+            || !isEqual(previousPosition.y, interpolatedPoints[0].y)) {
             geometry.vertices.push(interpolatedPoints[0]);
             geometry.colors.push(defaultColor);
         }
