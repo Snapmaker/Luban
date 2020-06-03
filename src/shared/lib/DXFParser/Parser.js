@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { isUndefined } from 'lodash';
 import DxfParser from './DxfParser';
 
-const cricleAngle = 360 * Math.PI / 180;
+const circleAngle = 2 * Math.PI;
 
 function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
     let points;
@@ -181,7 +181,7 @@ export const dxfToSvg = (dxf) => {
                     pathsObj.points.push([item.x + entities.center.x, item.y + entities.center.y]);
                 });
             } else {
-                const geometry2 = new THREE.CircleGeometry(radius, 32, startAngle, cricleAngle + angleLength);
+                const geometry2 = new THREE.CircleGeometry(radius, 32, startAngle, circleAngle + angleLength);
                 geometry2.vertices.shift();
                 geometry2.vertices.forEach((item) => {
                     pathsObj.points.push([item.x + entities.center.x, item.y + entities.center.y]);
