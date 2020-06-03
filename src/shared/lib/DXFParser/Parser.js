@@ -170,21 +170,21 @@ export const dxfToSvg = (dxf) => {
             pathsObj.points.push([entities.position.x, entities.position.y]);
             shape.paths.push(pathsObj);
         } else if (entities.type === 'ARC') {
-            const { radius, startAngle, endAngle } = entities;
-            const centerX = entities.center.x;
-            const centerY = entities.center.y;
-            for (let i = startAngle; i < endAngle; i += 2 * Math.PI / 180) {
-                const x1 = centerX + radius * Math.cos(i);
-                const y1 = centerY + radius * Math.sin(i);
-                pathsObj.points.push([x1, y1]);
-            }
-            // const geometry = new THREE.CircleGeometry(entities.radius, 32, entities.startAngle, entities.angleLength);
-            // geometry.vertices.shift();
-            // geometry.vertices.push(geometry.vertices[0]);
-            // geometry.vertices.forEach((item) => {
-            //     pathsObj.points.push([item.x, item.y]);
-            // });
+            const { radius, startAngle, endAngle, angleLength } = entities;
 
+            if (startAngle <= endAngle) {
+                const geometry = new THREE.CircleGeometry(radius, 32, startAngle, angleLength);
+                geometry.vertices.shift();
+                geometry.vertices.forEach((item) => {
+                    pathsObj.points.push([item.x + entities.center.x, item.y + entities.center.y]);
+                });
+            } else {
+                const geometry2 = new THREE.CircleGeometry(radius, 32, startAngle, Math.PI * 2 + angleLength);
+                geometry2.vertices.shift();
+                geometry2.vertices.forEach((item) => {
+                    pathsObj.points.push([item.x + entities.center.x, item.y + entities.center.y]);
+                });
+            }
 
             pathsObj.closed = false;
             shape.paths.push(pathsObj);

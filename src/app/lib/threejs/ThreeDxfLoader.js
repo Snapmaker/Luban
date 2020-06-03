@@ -1,9 +1,11 @@
-import * as THREE from 'three';
+import THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
 import log from '../log';
 import DxfParser from '../../../shared/lib/DXFParser';
 import DxfShader from './DxfShaderLine';
+import { EPSILON } from '../../constants';
+
 /**
  * Returns the angle in radians of the vector (p1,p2). In other words, imagine
  * putting the base of the vector at coordinates (0,0) and finding the angle
@@ -20,11 +22,16 @@ function angle2(p1, p2) {
     if (v2.y < 0) return -Math.acos(v2.x);
     return Math.acos(v2.x);
 }
+
 function polar(point, distance, angle) {
     const result = {};
     result.x = point.x + distance * Math.cos(angle);
     result.y = point.y + distance * Math.sin(angle);
     return result;
+}
+
+function isEqual(a, b) {
+    return Math.abs(a - b) < EPSILON;
 }
 
 function BulgeGeometry(startPoint, endPoint, bulge, segments) {
@@ -86,6 +93,7 @@ class ThreeDxfLoader {
     drawCircle(geometry, entity, data) {
         const color = new THREE.Color(this.getColor(entity, data));
         const interpolatedPoints = new THREE.CircleGeometry(entity.radius, 32, entity.startAngle, entity.angleLength);
+        const defaultColor = new THREE.Color(0xffffff);
 
         interpolatedPoints.vertices.map((item) => {
             item.x += entity.center.x;
@@ -94,7 +102,20 @@ class ThreeDxfLoader {
             return item;
         });
         interpolatedPoints.vertices.shift();
-        interpolatedPoints.vertices.push(interpolatedPoints.vertices[0]);
+
+        let previousPosition = { x: 0, y: 0, z: 0 };
+        if (geometry.vertices.length > 0) {
+            previousPosition = geometry.vertices[geometry.vertices.length - 1];
+        }
+        if (!isEqual(previousPosition.x, interpolatedPoints.vertices[0].x)
+            || !isEqual(previousPosition.y, interpolatedPoints.vertices[0].y)) {
+            geometry.vertices.push(previousPosition);
+            geometry.colors.push(defaultColor);
+            geometry.vertices.push(interpolatedPoints.vertices[0]);
+            geometry.colors.push(defaultColor);
+        }
+
+
         geometry.vertices.push(...interpolatedPoints.vertices);
         geometry.colors.push(...new Array(interpolatedPoints.vertices.length).fill(color));
     }
@@ -254,12 +275,12 @@ class ThreeDxfLoader {
             rotation
         );
         const interpolatedPoints = curve.getPoints(20);
-        let previewPositon = { x: 0, y: 0 };
+        let previousPosition = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
-            previewPositon = geometry.vertices[geometry.vertices.length - 1];
+            previousPosition = geometry.vertices[geometry.vertices.length - 1];
         }
-        if ((previewPositon.x).toFixed(2) !== (interpolatedPoints[0].x).toFixed(2)
-            || (previewPositon.y).toFixed(2) !== (interpolatedPoints[0].y).toFixed(2)) {
+        if (!isEqual(previousPosition.x, interpolatedPoints[0].x)
+            || !isEqual(previousPosition.y, interpolatedPoints[0].y)) {
             geometry.vertices.push(interpolatedPoints[0]);
             geometry.colors.push(defaultColor);
         }
@@ -410,9 +431,9 @@ class ThreeDxfLoader {
         } else {
             previewPositon = interpolatedPoints[0];
         }
-        if ((previewPositon.x).toFixed(2) !== (interpolatedPoints[0].x).toFixed(2)
-            || (previewPositon.y).toFixed(2) !== (interpolatedPoints[0].y).toFixed(2)) {
-            splineGeo.vertices.push(splineGeo.vertices[splineGeo.vertices.length - 1]);
+        if (!isEqual(previewPositon.x, interpolatedPoints[0].x)
+            || !isEqual(previewPositon.y, interpolatedPoints[0].y)) {
+            splineGeo.vertices.push(previewPositon);
             splineGeo.colors.push(defaultColor);
             splineGeo.vertices.push(interpolatedPoints[0]);
             splineGeo.colors.push(defaultColor);
@@ -447,12 +468,12 @@ class ThreeDxfLoader {
                 interpolatedPoints.push(new THREE.Vector3(vertex.x, vertex.y, 0));
             }
         }
-        let previewPositon = { x: 0, y: 0 };
+        let previewPositon = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
             previewPositon = geometry.vertices[geometry.vertices.length - 1];
         }
-        if ((previewPositon.x).toFixed(2) !== (interpolatedPoints[0].x).toFixed(2)
-            || (previewPositon.y).toFixed(2) !== (interpolatedPoints[0].y).toFixed(2)) {
+        if (!isEqual(previewPositon.x, interpolatedPoints[0].x)
+            || !isEqual(previewPositon.y, interpolatedPoints[0].y)) {
             geometry.vertices.push(interpolatedPoints[0]);
             geometry.colors.push(defaultColor);
         }
@@ -581,15 +602,14 @@ class ThreeDxfLoader {
                 position.x = this.translateAndScale(position.x, centerX, scale);
                 position.y = this.translateAndScale(position.y, centerY, scale);
             } else if (entities.type === 'CIRCLE' || entities.type === 'ARC') {
-                let { radius } = entities;
                 const { center } = entities;
-                center.x = this.translateAndScale(center.x, centerX, 1);
-                center.y = this.translateAndScale(center.y, centerY, 1);
-                radius = this.translateAndScale(radius, 0, scale);
+                center.x = this.translateAndScale(center.x, centerX, scale);
+                center.y = this.translateAndScale(center.y, centerY, scale);
+                entities.radius = this.translateAndScale(entities.radius, 0, scale);
             } else if (entities.type === 'ELLIPSE') {
                 const { center, majorAxisEndPoint } = entities;
-                center.x = this.translateAndScale(center.x, centerX, 1);
-                center.y = this.translateAndScale(center.y, centerY, 1);
+                center.x = this.translateAndScale(center.x, centerX, scale);
+                center.y = this.translateAndScale(center.y, centerY, scale);
                 majorAxisEndPoint.x = this.translateAndScale(majorAxisEndPoint.x, 0, scale);
                 majorAxisEndPoint.y = this.translateAndScale(majorAxisEndPoint.y, 0, scale);
             }
@@ -761,7 +781,6 @@ class ThreeDxfLoader {
                     } else {
                         const positions = [];
                         const colors = [];
-
                         for (const v of item.vertices) {
                             positions.push(v.x);
                             positions.push(v.y);
