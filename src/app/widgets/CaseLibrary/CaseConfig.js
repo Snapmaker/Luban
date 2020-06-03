@@ -4,10 +4,10 @@ export const CaseConfigOriginal = [
     {
         tag: '3dp', // 3dp、laser、cnc
         title: '3D Printing Spiral Vase',
-        imgSrc: '../../images/user-case/A150/3D-Ori.jpg',
+        imgSrc: '../../images/user-case/Origin/3D-Origin.jpg',
         pathConfig: {
-            name: '3DP_test_Ori.stl',
-            casePath: './Ori/'
+            name: '3DP_test_Origin.stl',
+            casePath: './Origin/'
         },
         material: {
             definitionId: 'Caselibrary.Vase.Ori.material', // pla,stl
@@ -34,10 +34,10 @@ export const CaseConfigOriginal = [
         tag: 'laser',
         title: 'Laser Cutting Gift Box',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../images/user-case/A150/Laser-Ori.jpg',
+        imgSrc: '../../images/user-case/Origin/Laser-Origin.jpg',
         pathConfig: {
-            name: 'Laser_test_Ori.jpg',
-            casePath: './Ori/'
+            name: 'Laser_test_Origin.jpg',
+            casePath: './Origin/'
         },
         caseConfigs: {
             config: {
@@ -111,10 +111,10 @@ export const CaseConfigOriginal = [
         tag: 'cnc',
         title: 'CNC Cutting Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
-        imgSrc: '../../images/user-case/A150/CNC-Ori.jpg',
+        imgSrc: '../../images/user-case/Origin/CNC-Origin.jpg',
         pathConfig: {
-            name: 'CNC_test_Ori.svg',
-            casePath: './Ori/'
+            name: 'CNC_test_Origin.svg',
+            casePath: './Origin/'
         },
         caseConfigs: {
             tool: CNC_TOOL_SNAP_V_BIT,

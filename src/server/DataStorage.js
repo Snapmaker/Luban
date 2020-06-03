@@ -179,7 +179,7 @@ class DataStorage {
                     const dstA150 = path.join(`${this.configDir}/A150`, file);
                     const dstA250 = path.join(`${this.configDir}/A250`, file);
                     const dstA350 = path.join(`${this.configDir}/A350`, file);
-                    const dstOri = path.join(`${this.configDir}/Ori`, file);
+                    const dstOri = path.join(`${this.configDir}/Origin`, file);
                     await this.copyFile(src, dstA150, false);
                     await this.copyFile(src, dstA250, false);
                     await this.copyFile(src, dstA350, false);
