@@ -1,4 +1,4 @@
-import THREE from 'three';
+import * as THREE from 'three';
 import request from 'superagent';
 import { isUndefined } from 'lodash';
 import log from '../log';
