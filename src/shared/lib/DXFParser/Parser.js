@@ -131,7 +131,7 @@ export const dxfToSvg = (dxf) => {
         const pathsObj = {};
         pathsObj.points = [];
 
-        if (entities.type === 'LINE' || entities.type === 'LWPOLYLINE') {
+        if (entities.type === 'LINE') {
             pathsObj.points = [];
             pathsObj.closed = false;
             entities.vertices.forEach((item) => {
@@ -139,13 +139,13 @@ export const dxfToSvg = (dxf) => {
             });
             pathsObj.closed = false;
             shape.paths.push(pathsObj);
-        } else if (entities.type === 'POLYLINE') {
+        } else if (entities.type === 'POLYLINE' || entities.type === 'LWPOLYLINE') {
             pathsObj.points = [];
             pathsObj.closed = false;
             entities.vertices.forEach((item) => {
                 pathsObj.points.push([item.x, item.y]);
             });
-            if (entities.vertices.length > 2) {
+            if (entities.vertices.length > 2 && entities.shape === true) {
                 pathsObj.points.push([entities.vertices[0].x, entities.vertices[0].y]);
             }
             pathsObj.closed = false;
