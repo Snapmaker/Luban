@@ -125,7 +125,6 @@ class Controls extends EventEmitter {
         this.domElement.addEventListener('mousedown', this.onMouseDown, false);
         this.domElement.addEventListener('mousemove', this.onMouseHover, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
-        this.domElement.addEventListener('click', this.onClick, false);
 
         document.addEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
@@ -191,7 +190,6 @@ class Controls extends EventEmitter {
     onMouseDown = (event) => {
         // Prevent the browser from scrolling.
         event.preventDefault();
-        this.moved = false;
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
@@ -206,6 +204,20 @@ class Controls extends EventEmitter {
                     }
                 }
 
+                // Check if we select a new object
+                if (this.selectableObjects) {
+                    const coord = this.getMouseCoord(event);
+                    this.ray.setFromCamera(coord, this.camera);
+
+                    const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
+                    if (intersect && intersect.object !== this.selectedObject) {
+                        this.selectedObject = intersect.object;
+                        this.transformControl.attach(this.selectedObject);
+                        this.emit(EVENTS.SELECT_OBJECT, this.selectedObject);
+                        this.emit(EVENTS.UPDATE);
+                        break;
+                    }
+                }
 
                 if (event.ctrlKey || event.metaKey || event.shiftKey) {
                     this.state = STATE.PAN;
@@ -252,7 +264,6 @@ class Controls extends EventEmitter {
 
     onDocumentMouseMove = (event) => {
         event.preventDefault();
-        this.moved = true;
 
         switch (this.state) {
             case STATE.ROTATE:
@@ -303,25 +314,6 @@ class Controls extends EventEmitter {
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
-
-    onClick = (event) => {
-        if (this.moved === false && this.selectableObjects) {
-            // Check if we select a new object
-
-            const coord = this.getMouseCoord(event);
-            this.ray.setFromCamera(coord, this.camera);
-
-            const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
-
-            if (intersect && intersect.object !== this.selectedObject) {
-                this.selectedObject = intersect.object;
-                this.transformControl.attach(this.selectedObject);
-                this.emit(EVENTS.SELECT_OBJECT, this.selectedObject);
-                this.emit(EVENTS.UPDATE);
-            }
-        }
-        this.moved = false;
-    }
 
     onMouseWheel = (event) => {
         if (this.state !== STATE.NONE) {
