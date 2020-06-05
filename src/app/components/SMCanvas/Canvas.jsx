@@ -12,10 +12,6 @@ import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import Controls, { EVENTS } from './Controls';
-// import Model from '../../flux/models/Model';
-// import MSRControls from '../three-extensions/MSRControls';
-// import TransformControls from '../three-extensions/TransformControls';
-// import TransformControls2D from '../three-extensions/TransformControls2D';
 
 
 const ANIMATION_DURATION = 500;
@@ -72,7 +68,6 @@ class Canvas extends Component {
         this.transformMode = 'translate'; // transformControls mode: translate/scale/rotate
 
         // controls
-        this.msrControls = null; // pan/scale/rotate print area
         this.transformControls = null; // pan/scale/rotate selected model
 
         // threejs
@@ -105,7 +100,6 @@ class Canvas extends Component {
             this.controls.dispose();
         }
 
-        this.msrControls && this.msrControls.dispose();
         this.transformControls && this.transformControls.dispose();
     }
 
@@ -172,18 +166,6 @@ class Canvas extends Component {
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform();
         });
-
-        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
-        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
-        // triggered first, when "mouse down on canvas"
-        /*
-        this.msrControls.addEventListener(
-            'move',
-            () => {
-                this.updateTransformControl2D();
-            }
-        );
-        */
     }
 
     setTransformMode(mode) {
@@ -219,7 +201,7 @@ class Canvas extends Component {
         this.camera.position.copy(position);
         this.controls.setTarget(target);
         this.renderScene();
-    }
+    };
 
     resizeWindow = () => {
         const width = this.getVisibleWidth();
