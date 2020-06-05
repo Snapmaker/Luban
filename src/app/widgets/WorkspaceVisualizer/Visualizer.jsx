@@ -48,6 +48,7 @@ class Visualizer extends Component {
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
         gcodeFile: PropTypes.object,
+        boundingBox: PropTypes.object,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
@@ -477,6 +478,7 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
 
         if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
@@ -507,8 +509,14 @@ class Visualizer extends Component {
         if (nextProps.renderingTimestamp !== this.props.renderingTimestamp) {
             this.renderScene();
         }
-        if (nextProps.renderState === 'rendered' && this.props.renderState !== 'rendered') {
-            this.autoFocus();
+        if (nextProps.stage !== this.props.stage && nextProps.stage === WORKSPACE_STAGE.LOAD_GCODE_SUCCEED) {
+            const { min, max } = nextProps.boundingBox;
+            const target = new THREE.Vector3();
+
+            target.copy(min).add(max).divideScalar(2);
+            const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
+            const position = new THREE.Vector3(target.x, target.y, width * 2);
+            this.canvas.current.setCamera(position, target);
         }
         if (nextProps.isEnclosureDoorOpen !== this.props.isEnclosureDoorOpen) {
             this.setState({
@@ -673,7 +681,7 @@ class Visualizer extends Component {
                         size={this.props.size}
                         modelGroup={this.visualizerGroup}
                         printableArea={this.printableArea}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -717,6 +725,7 @@ const mapStateToProps = (state) => {
         workPosition: machine.workPosition,
         modelGroup: workspace.modelGroup,
         renderState: workspace.renderState,
+        boundingBox: workspace.boundingBox,
         renderingTimestamp: workspace.renderingTimestamp,
         stage: workspace.stage,
         progress: workspace.progress

@@ -12,6 +12,7 @@ import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import Controls, { EVENTS } from './Controls';
+// import Model from '../../flux/models/Model';
 // import MSRControls from '../three-extensions/MSRControls';
 // import TransformControls from '../three-extensions/TransformControls';
 // import TransformControls2D from '../three-extensions/TransformControls2D';
@@ -141,7 +142,7 @@ class Canvas extends Component {
     }
 
     setupControls() {
-        this.initialTarget.set(0, this.cameraInitialPosition.y, 0);
+        this.initialTarget.set(this.cameraInitialPosition.x, this.cameraInitialPosition.y, 0);
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
@@ -213,6 +214,12 @@ class Canvas extends Component {
 
         this.renderScene();
     };
+
+    setCamera = (position, target) => {
+        this.camera.position.copy(position);
+        this.controls.setTarget(target);
+        this.renderScene();
+    }
 
     resizeWindow = () => {
         const width = this.getVisibleWidth();

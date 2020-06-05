@@ -143,6 +143,7 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
 
         /*
@@ -258,7 +259,7 @@ class Visualizer extends Component {
                         modelGroup={this.props.modelGroup.object}
                         toolPathModelGroup={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
                         onSelectModel={this.actions.onSelectModel}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
