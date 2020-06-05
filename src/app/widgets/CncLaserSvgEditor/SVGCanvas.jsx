@@ -161,6 +161,9 @@ class SVGCanvas extends PureComponent {
             xmlns: NS.SVG
         });
 
+        jQuery(this.svgBackground).css('overflow', 'visible');
+
+
         const rect = document.createElementNS(NS.SVG, 'rect');
         setAttributes(rect, {
             width: '100%',
@@ -229,6 +232,11 @@ class SVGCanvas extends PureComponent {
         this.mode = mode;
         if (extShape) {
             this.extShape = extShape;
+        }
+        if (this.mode === 'select') {
+            jQuery(this.svgContainer).css('cursor', 'auto');
+        } else {
+            jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
         this.trigger(SVG_EVENT_MODE, mode);
     }
@@ -879,13 +887,16 @@ class SVGCanvas extends PureComponent {
         if (event.deltaY < 0) {
             this.setState({
                 scale: this.state.scale / SCALE_RATE
+            }, () => {
+                this.updateCanvas();
             });
         } else {
             this.setState({
                 scale: this.state.scale * SCALE_RATE
+            }, () => {
+                this.updateCanvas();
             });
         }
-        this.onResize();
     };
 
     onContextmenu = (event) => {
@@ -943,6 +954,30 @@ class SVGCanvas extends PureComponent {
             y: spline.y
         };
     }
+
+    autoFocus = () => {
+        this.setState({
+            scale: DEFAULT_SCALE
+        }, () => {
+            this.updateCanvas();
+        });
+    };
+
+    zoomIn = () => {
+        this.setState({
+            scale: this.state.scale * 4 / 3
+        }, () => {
+            this.updateCanvas();
+        });
+    };
+
+    zoomOut = () => {
+        this.setState({
+            scale: this.state.scale * 3 / 4
+        }, () => {
+            this.updateCanvas();
+        });
+    };
 
     updateCanvas = (size) => {
         const $container = jQuery(this.node.current);

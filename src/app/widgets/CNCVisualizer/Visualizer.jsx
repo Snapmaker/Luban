@@ -67,18 +67,32 @@ class Visualizer extends Component {
 
     printableArea = null;
 
+    svgCanvas = React.createRef();
+
     canvas = React.createRef();
 
     actions = {
         // canvas footer
         zoomIn: () => {
-            this.canvas.current.zoomIn();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.zoomIn();
+            } else {
+                this.canvas.current.zoomIn();
+            }
         },
         zoomOut: () => {
-            this.canvas.current.zoomOut();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.zoomOut();
+            } else {
+                this.canvas.current.zoomOut();
+            }
         },
         autoFocus: () => {
-            this.canvas.current.autoFocus();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.autoFocus();
+            } else {
+                this.canvas.current.autoFocus();
+            }
         },
         onSelectModel: (model) => {
             this.props.selectModel(model);
@@ -295,6 +309,8 @@ class Visualizer extends Component {
                 }}
                 >
                     <CncLaserSvgEditor
+                        ref={this.svgCanvas}
+                        size={this.props.size}
                         svgModelGroup={this.props.svgModelGroup}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}

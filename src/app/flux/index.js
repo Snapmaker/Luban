@@ -8,7 +8,6 @@ import workspace from './workspace';
 import keyboardShortcut from './keyboardShortcut';
 import widget from './widget';
 import developTools from './develop-tools';
-import svgeditor from './svgeditor';
 // import models from './models';
 import text from './text';
 
@@ -23,6 +22,5 @@ export default combineReducers({
     text,
     widget,
     developTools,
-    svgeditor,
     editor
 });

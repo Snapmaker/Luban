@@ -1,23 +1,17 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import map from 'lodash/map';
 
 import styles from './index.styl';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
 import { SVG_EVENT_ADD, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
-import { actions as editorActions } from '../../flux/editor';
-
 
 class SVGEditor extends PureComponent {
     static propTypes = {
-        svgModelGroup: PropTypes.object,
         size: PropTypes.object.isRequired,
+        svgModelGroup: PropTypes.object,
         showContextMenu: PropTypes.func,
-        uploadImage: PropTypes.func.isRequired,
-        importTime: PropTypes.number.isRequired,
-        import: PropTypes.object.isRequired,
 
         insertDefaultTextVector: PropTypes.func.isRequired
     };
@@ -43,7 +37,6 @@ class SVGEditor extends PureComponent {
         super(props);
 
         this.setMode = this.setMode.bind(this);
-        this.export = this.export.bind(this);
         this.palette = map(this.colors, (color) => (
             <button
                 className={styles['palette-item']}
@@ -91,9 +84,9 @@ class SVGEditor extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.importTime !== this.props.importTime) {
-            this.canvas.current.loadSVGString(nextProps.import.content);
-        }
+        // if (nextProps.importTime !== this.props.importTime) {
+        //     this.canvas.current.loadSVGString(nextProps.import.content);
+        // }
         if (nextProps.size !== this.props.size) {
             this.props.svgModelGroup.size = nextProps.size;
         }
@@ -104,72 +97,16 @@ class SVGEditor extends PureComponent {
         this.canvas.current.setMode(mode, extShape);
     }
 
-    // updateSelectedInfo(elem) {
-    //     // xy_panel, selected_x, selected_y
-    //     this.setState({
-    //         showInfoXY: false,
-    //         showInfoRect: false,
-    //         showInfoCircle: false,
-    //         showInfoEllipse: false
-    //     });
-    //
-    //     // x & y
-    //     if (['line', 'circle', 'ellipse'].includes(elem.tagName)) {
-    //         // hide
-    //         // this.setState({ showInfoXY: false });
-    //     } else {
-    //         this.setState({
-    //             showInfoXY: true,
-    //             x: Number(elem.getAttribute('x')),
-    //             y: Number(elem.getAttribute('y'))
-    //         });
-    //     }
-    //
-    //     switch (elem.tagName) {
-    //         case 'rect':
-    //             this.setState({
-    //                 showInfoRect: true,
-    //                 width: Number(elem.getAttribute('width')),
-    //                 height: Number(elem.getAttribute('height'))
-    //                 // rx?
-    //             });
-    //             break;
-    //         case 'circle': {
-    //             this.setState({
-    //                 showInfoCircle: true,
-    //                 cx: Number(elem.getAttribute('cx')),
-    //                 cy: Number(elem.getAttribute('cy')),
-    //                 r: Number(elem.getAttribute('r'))
-    //             });
-    //             break;
-    //         }
-    //         case 'ellipse': {
-    //             this.setState({
-    //                 showInfoEllipse: true,
-    //                 cx: Number(elem.getAttribute('cx')),
-    //                 cy: Number(elem.getAttribute('cy')),
-    //                 rx: Number(elem.getAttribute('rx')),
-    //                 ry: Number(elem.getAttribute('ry'))
-    //             });
-    //             break;
-    //         }
-    //         default:
-    //             break;
-    //     }
-    // }
+    zoomIn() {
+        this.canvas.current.zoomIn();
+    }
 
-    export() {
-        // L3596
-        const output = this.canvas.current.svgToString();
+    zoomOut() {
+        this.canvas.current.zoomOut();
+    }
 
-        const blob = new Blob([output], { type: 'image/svg+xml' });
-        const file = new File([blob], 'drawing.svg');
-        this.props.uploadImage(file, 'vector', () => {
-            // onError
-        });
-
-        document.location.href = '/#/laser';
-        window.scrollTo(0, 0);
+    autoFocus() {
+        this.canvas.current.autoFocus();
     }
 
     render() {
@@ -194,19 +131,4 @@ class SVGEditor extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const svgState = state.svgeditor;
-    return {
-        importTime: svgState.import.time,
-        import: svgState.import,
-        size: state.machine.size
-    };
-};
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(SVGEditor);
+export default SVGEditor;

@@ -62,7 +62,27 @@ class PrintableArea {
                     opacity: 0.16
                 }
             });
+            const label = createSVGElement({
+                element: 'text',
+                attr: {
+                    x: x - 4,
+                    y: i * 10 + y + 1.2,
+                    id: uuid.v4(),
+                    'font-size': 4,
+                    'font-family': 'serif',
+                    fill: 'green',
+                    'text-anchor': 'middle',
+                    'xml:space': 'preserve',
+                    'stroke-width': 1 / this.scale,
+                    'fill-opacity': 0.5,
+                    'stroke-opacity': 0
+                }
+            });
+            if (i !== 0) {
+                label.innerHTML = -i * 10;
+            }
             this.printableAreaGroup.append(line);
+            this.printableAreaGroup.append(label);
         }
         const xi = Math.floor(x / 10);
         for (let i = -xi; i <= xi; i++) {
@@ -81,7 +101,27 @@ class PrintableArea {
                     opacity: 0.16
                 }
             });
+            const label = createSVGElement({
+                element: 'text',
+                attr: {
+                    x: i * 10 + x,
+                    y: y + 5,
+                    id: uuid.v4(),
+                    'font-size': 4,
+                    'font-family': 'serif',
+                    fill: 'red',
+                    'text-anchor': 'middle',
+                    'xml:space': 'preserve',
+                    'stroke-width': 1 / this.scale,
+                    'fill-opacity': 0.5,
+                    'stroke-opacity': 0
+                }
+            });
+            if (i !== 0) {
+                label.innerHTML = i * 10;
+            }
             this.printableAreaGroup.append(line);
+            this.printableAreaGroup.append(label);
         }
     }
 
@@ -104,12 +144,47 @@ class PrintableArea {
         this.printableAreaGroup.append(line);
     }
 
+    _axisLabel() {
+        const label = createSVGElement({
+            element: 'text',
+            attr: {
+                x: 30,
+                y: 30,
+                id: uuid.v4(),
+                'font-size': 24,
+                'font-family': 'serif',
+                fill: '#ff7f00',
+                'text-anchor': 'middle',
+                'xml:space': 'preserve',
+                'stroke-width': 0,
+                'fill-opacity': 1,
+                'stroke-opacity': 0
+            }
+        });
+        label.innerHTML = 123;
+        this.printableAreaGroup.append(label);
+    }
+
     _setCoordinateAxes() {
         const { x, y } = this.size;
         this._setAxes(0, y, x, y, 'red', true);
         this._setAxes(x, 0, x, y, 'green', false);
         this._setAxes(2 * x, y, x, y, 'red', false);
         this._setAxes(x, 2 * y, x, y, 'green', true);
+
+        const origin = createSVGElement({
+            element: 'circle',
+            attr: {
+                cx: x,
+                cy: y,
+                r: 0.5,
+                fill: 'indianred',
+                stroke: 'indianred',
+                'stroke-width': 1 / this.scale,
+                opacity: 1
+            }
+        });
+        this.printableAreaGroup.append(origin);
     }
 }
 
