@@ -82,6 +82,9 @@ class Controls extends EventEmitter {
 
     ray = new THREE.Raycaster();
 
+    // Track if mouse moved during "mousedown" to "mouseup".
+    mouseMoved = false;
+
     constructor(sourceType, camera, group, domElement) {
         super();
 
@@ -191,7 +194,7 @@ class Controls extends EventEmitter {
     onMouseDown = (event) => {
         // Prevent the browser from scrolling.
         event.preventDefault();
-        this.moved = false;
+        this.mouseMoved = false;
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
@@ -205,7 +208,6 @@ class Controls extends EventEmitter {
                         break;
                     }
                 }
-
 
                 if (event.ctrlKey || event.metaKey || event.shiftKey) {
                     this.state = STATE.PAN;
@@ -252,7 +254,7 @@ class Controls extends EventEmitter {
 
     onDocumentMouseMove = (event) => {
         event.preventDefault();
-        this.moved = true;
+        this.mouseMoved = true;
 
         switch (this.state) {
             case STATE.ROTATE:
@@ -304,10 +306,14 @@ class Controls extends EventEmitter {
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
+    /**
+     * Trigger by mouse event "mousedown" + "mouseup", Check if a new object is selected.
+     *
+     * @param event
+     */
     onClick = (event) => {
-        if (this.moved === false && this.selectableObjects) {
+        if (this.mouseMoved === false && this.selectableObjects) {
             // Check if we select a new object
-
             const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
 
@@ -320,8 +326,8 @@ class Controls extends EventEmitter {
                 this.emit(EVENTS.UPDATE);
             }
         }
-        this.moved = false;
-    }
+        this.mouseMoved = false;
+    };
 
     onMouseWheel = (event) => {
         if (this.state !== STATE.NONE) {
