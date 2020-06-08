@@ -83,7 +83,7 @@ class Controls extends EventEmitter {
     ray = new THREE.Raycaster();
 
     // Track if mouse moved during "mousedown" to "mouseup".
-    mouseDownPosition = false;
+    mouseDownPosition = null;
 
     constructor(sourceType, camera, group, domElement) {
         super();
@@ -328,7 +328,7 @@ class Controls extends EventEmitter {
                 this.emit(EVENTS.UPDATE);
             }
         }
-        this.mouseDownPosition = false;
+        this.mouseDownPosition = null;
     };
 
     onMouseWheel = (event) => {
