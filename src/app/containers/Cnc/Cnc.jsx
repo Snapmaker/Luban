@@ -9,8 +9,8 @@ import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
 import { actions as widgetActions } from '../../flux/widget';
-import styles from './styles.styl';
 import { actions as editorActions } from '../../flux/editor';
+import styles from './styles.styl';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 

@@ -436,7 +436,6 @@ class Model {
             return;
         }
         this.computeBoundingBox();
-        console.log(this.boundingBox);
         this.meshObject.position.y = this.meshObject.position.y - this.boundingBox.min.y;
         this.onTransform();
     }
