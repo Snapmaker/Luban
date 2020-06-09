@@ -6,8 +6,8 @@ import ReactGA from 'react-ga';
 import { actions as machineActions } from '../flux/machine';
 import { actions as developToolsActions } from '../flux/develop-tools';
 import { actions as keyboardShortcutActions } from '../flux/keyboardShortcut';
-import { actions as cncLaserSharedActions } from '../flux/cncLaserShared';
 import { actions as laserActions } from '../flux/laser';
+import { actions as editorActions } from '../flux/editor';
 import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
@@ -224,12 +224,12 @@ const mapDispatchToProps = (dispatch) => {
         printingInit: () => dispatch(printingActions.init()),
         textInit: () => dispatch(textActions.init()),
         functionsInit: () => {
-            dispatch(cncLaserSharedActions.initSelectedModelListener('laser'));
-            dispatch(cncLaserSharedActions.initSelectedModelListener('cnc'));
+            dispatch(editorActions.initSelectedModelListener('laser'));
+            dispatch(editorActions.initSelectedModelListener('cnc'));
         },
         initModelsPreviewChecker: () => {
-            dispatch(cncLaserSharedActions.initModelsPreviewChecker('laser'));
-            dispatch(cncLaserSharedActions.initModelsPreviewChecker('cnc'));
+            dispatch(editorActions.initModelsPreviewChecker('laser'));
+            dispatch(editorActions.initModelsPreviewChecker('cnc'));
         }
     };
 };

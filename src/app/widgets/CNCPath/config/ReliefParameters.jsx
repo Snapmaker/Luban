@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
 import i18n from '../../../lib/i18n';
-import { actions } from '../../../flux/cncLaserShared';
+import { actions as editorActions } from '../../../flux/editor';
 
 
 class ReliefParameters extends PureComponent {
@@ -56,7 +56,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig('cnc', params))
+        updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params))
     };
 };
 

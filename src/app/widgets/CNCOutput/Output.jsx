@@ -4,7 +4,7 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import request from 'superagent';
 import { actions as workspaceActions } from '../../flux/workspace';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 import { DATA_PREFIX, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -205,11 +205,11 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        togglePage: (page) => dispatch(sharedActions.togglePage('cnc', page)),
-        generateGcode: (thumbnail) => dispatch(sharedActions.generateGcode('cnc', thumbnail)),
+        togglePage: (page) => dispatch(editorActions.togglePage('cnc', page)),
+        generateGcode: (thumbnail) => dispatch(editorActions.generateGcode('cnc', thumbnail)),
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
-        manualPreview: () => dispatch(sharedActions.manualPreview('cnc', true)),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
+        manualPreview: () => dispatch(editorActions.manualPreview('cnc', true)),
+        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),
         updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', state))
     };
 };

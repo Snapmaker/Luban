@@ -255,10 +255,10 @@ export const CaseConfig150 = [
             casePath: './A150/'
         },
         caseConfigs: {
-            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
             },
             gcodeConfig: {
+                toolSnap: CNC_TOOL_SNAP_FLAT_END_MILL,
                 toolDiameter: 3.175,
                 toolAngle: 180,
                 targetDepth: 3.2,
@@ -315,7 +315,6 @@ export const CaseConfig250 = [
         },
         caseConfigs: {
             config: {
-
             },
             gcodeConfig: {
                 jogSpeed: 3000,
@@ -345,14 +344,16 @@ export const CaseConfig250 = [
             casePath: './A250/'
         },
         caseConfigs: {
-            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
+            },
+            gcodeConfig: {
+                toolSnap: CNC_TOOL_SNAP_FLAT_END_MILL,
+                toolDiameter: 3.175,
+                toolAngle: 180,
                 targetDepth: 3.2,
                 stepDown: 0.4,
                 safetyHeight: 5,
-                stopHeight: 10
-            },
-            gcodeConfig: {
+                stopHeight: 10,
                 jogSpeed: 3000,
                 plungeSpeed: 400,
                 workSpeed: 400
@@ -396,7 +397,6 @@ export const CaseConfig350 = [
             casePath: './A350'
         },
         caseConfigs: {
-            tool: CNC_TOOL_SNAP_FLAT_END_MILL,
             config: {
 
             },
@@ -411,6 +411,10 @@ export const CaseConfig350 = [
             }
         },
         caseTransformation: {
+            positionX: 0,
+            positionY: 0,
+            rotationZ: 0, // 90 / 180 * Math.PI
+            flip: 0
         }
     },
     {
@@ -424,12 +428,16 @@ export const CaseConfig350 = [
         },
         caseConfigs: {
             config: {
+
+            },
+            gcodeConfig: {
+                toolSnap: CNC_TOOL_SNAP_FLAT_END_MILL,
+                toolDiameter: 3.175,
+                toolAngle: 180,
                 targetDepth: 3.2,
                 stepDown: 0.4,
                 safetyHeight: 5,
-                stopHeight: 10
-            },
-            gcodeConfig: {
+                stopHeight: 10,
                 jogSpeed: 3000,
                 plungeSpeed: 400,
                 workSpeed: 400

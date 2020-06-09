@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 
 
 class VisualizerTool extends PureComponent {
@@ -42,7 +42,7 @@ class VisualizerTool extends PureComponent {
 // };
 
 const mapDispatchToProps = (dispatch) => ({
-    insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('cnc'))
+    insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('cnc'))
 });
 
 

@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import i18n from '../../lib/i18n';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
@@ -15,6 +14,7 @@ import modal from '../../lib/modal';
 import api from '../../api';
 import ImageProcessMode from './ImageProcessMode';
 import ReliefGcodeParameters from './gcodeconfig/ReliefGcodeParameters';
+import { actions as editorActions } from '../../flux/editor';
 
 const getAccept = (uploadMode) => {
     let accept = '';
@@ -45,6 +45,7 @@ class CNCPath extends PureComponent {
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
@@ -176,7 +177,7 @@ class CNCPath extends PureComponent {
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
-            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode
+            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip
         } = this.props;
         const { width, height } = this.state.modalSetting;
 
@@ -216,6 +217,7 @@ class CNCPath extends PureComponent {
                         transformation={transformation}
                         sourceType={sourceType}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        updateSelectedModelFlip={updateSelectedModelFlip}
                         onModelAfterTransform={onModelAfterTransform}
                     />
                 )}
@@ -284,16 +286,17 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('cnc', file, mode, onFailure)),
-        updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('cnc', params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('cnc', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('cnc', printOrder)),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
-        insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('cnc')),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('cnc', config)),
-        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('cnc')),
-        changeSelectedModelShowOrigin: () => dispatch(sharedActions.changeSelectedModelShowOrigin('cnc')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(sharedActions.changeSelectedModelMode('cnc', sourceType, mode))
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
+        updateSelectedModelTransformation: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('cnc', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('cnc', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
+        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),
+        insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('cnc')),
+        updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('cnc', config)),
+        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc')),
+        changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
+        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode))
     };
 };
 

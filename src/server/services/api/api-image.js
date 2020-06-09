@@ -45,10 +45,10 @@ export const set = (req, res) => {
 
                 next();
             } else if (path.extname(uploadName) === '.dxf') {
-                const { width, height, svg } = await parseDxf(uploadPath);
+                const result = await parseDxf(uploadPath);
+                const { width, height } = result;
 
                 res.send({
-                    svg,
                     originalName: originalName,
                     uploadName: uploadName,
                     width,

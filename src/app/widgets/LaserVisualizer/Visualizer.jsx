@@ -12,12 +12,13 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions, CNC_LASER_STAGE } from '../../flux/cncLaserShared';
+import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import { PAGE_EDITOR } from '../../constants';
-import VisualizerTool from './VisualizerTool';
+// eslint-disable-next-line no-unused-vars
+import CncLaserSvgEditor from '../CncLaserSvgEditor';
 
 
 function humanReadableTime(t) {
@@ -33,12 +34,13 @@ class Visualizer extends Component {
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
 
-        hasModel: PropTypes.bool.isRequired,
+        // hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        svgModelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
@@ -48,6 +50,7 @@ class Visualizer extends Component {
         bringSelectedModelToFront: PropTypes.func.isRequired,
         sendSelectedModelToBack: PropTypes.func.isRequired,
         arrangeAllModels2D: PropTypes.func.isRequired,
+        insertDefaultTextVector: PropTypes.func.isRequired,
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
@@ -65,18 +68,32 @@ class Visualizer extends Component {
 
     printableArea = null;
 
+    svgCanvas = React.createRef();
+
     canvas = React.createRef();
 
     actions = {
         // canvas footer
         zoomIn: () => {
-            this.canvas.current.zoomIn();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.zoomIn();
+            } else {
+                this.canvas.current.zoomIn();
+            }
         },
         zoomOut: () => {
-            this.canvas.current.zoomOut();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.zoomOut();
+            } else {
+                this.canvas.current.zoomOut();
+            }
         },
         autoFocus: () => {
-            this.canvas.current.autoFocus();
+            if (this.props.page === PAGE_EDITOR) {
+                this.svgCanvas.current.autoFocus();
+            } else {
+                this.canvas.current.autoFocus();
+            }
         },
         onSelectModel: (model) => {
             this.props.selectModel(model);
@@ -227,7 +244,7 @@ class Visualizer extends Component {
 
     render() {
         const isModelSelected = !!this.props.selectedModelID;
-        const hasModel = this.props.hasModel;
+        // const hasModel = this.props.hasModel;
 
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
@@ -243,15 +260,27 @@ class Visualizer extends Component {
                         <VisualizerTopLeft />
                     </div>
                 )}
-                {isEditor && (
-                    <div>
-                        <VisualizerTool />
-                    </div>
-                )}
                 <div className={styles['visualizer-top-right']}>
                     <VisualizerTopRight />
                 </div>
-                <div className={styles['canvas-content']}>
+                <div style={{
+                    visibility: isEditor ? 'visible' : 'hidden'
+                }}
+                >
+                    <CncLaserSvgEditor
+                        ref={this.svgCanvas}
+                        size={this.props.size}
+                        svgModelGroup={this.props.svgModelGroup}
+                        insertDefaultTextVector={this.props.insertDefaultTextVector}
+                        showContextMenu={this.showContextMenu}
+                    />
+                </div>
+                <div
+                    className={styles['canvas-content']}
+                    style={{
+                        visibility: !isEditor ? 'visible' : 'hidden'
+                    }}
+                >
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
@@ -298,18 +327,18 @@ class Visualizer extends Component {
                                 disabled: !isModelSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
-                            {
-                                type: 'item',
-                                label: i18n._('Bring to Front'),
-                                disabled: !isModelSelected,
-                                onClick: this.actions.bringToFront
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Send to Back'),
-                                disabled: !isModelSelected,
-                                onClick: this.actions.sendToBack
-                            },
+                            // {
+                            //     type: 'item',
+                            //     label: i18n._('Bring to Front'),
+                            //     disabled: !isModelSelected,
+                            //     onClick: this.actions.bringToFront
+                            // },
+                            // {
+                            //     type: 'item',
+                            //     label: i18n._('Send to Back'),
+                            //     disabled: !isModelSelected,
+                            //     onClick: this.actions.sendToBack
+                            // },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
@@ -392,13 +421,13 @@ class Visualizer extends Component {
                                 label: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: this.actions.deleteSelectedModel
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Arrange All Models'),
-                                disabled: !hasModel,
-                                onClick: this.actions.arrangeAllModels
                             }
+                            // {
+                            //     type: 'item',
+                            //     label: i18n._('Arrange All Models'),
+                            //     disabled: !hasModel,
+                            //     onClick: this.actions.arrangeAllModels
+                            // }
                         ]
                     }
                 />
@@ -412,12 +441,13 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
+    const { page, selectedModelID, modelGroup, svgModelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
     return {
         page,
         size: machine.size,
         hasModel,
         selectedModelID,
+        svgModelGroup,
         modelGroup,
         toolPathModelGroup,
         // model,
@@ -430,20 +460,20 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('laser', type)),
-        getSelectedModel: () => dispatch(actions.getSelectedModel('laser')),
-        bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('laser')),
-        sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('laser')),
-        arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('laser')),
-        // updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
-        onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
-        onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
-        selectModel: (model) => dispatch(actions.selectModel('laser', model)),
-        unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
-        removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
-        duplicateSelectedModel: () => dispatch(actions.duplicateSelectedModel('laser')),
-        onModelTransform: () => dispatch(actions.onModelTransform('laser')),
-        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser'))
+        getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('laser', type)),
+        getSelectedModel: () => dispatch(editorActions.getSelectedModel('laser')),
+        bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('laser')),
+        sendSelectedModelToBack: () => dispatch(editorActions.sendSelectedModelToBack('laser')),
+        arrangeAllModels2D: () => dispatch(editorActions.arrangeAllModels2D('laser')),
+        insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
+        onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
+        onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
+        selectModel: (model) => dispatch(editorActions.selectModel('laser', model)),
+        unselectAllModels: () => dispatch(editorActions.unselectAllModels('laser')),
+        removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
+        duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
+        onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
+        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
     };
 };
 

@@ -10,7 +10,8 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { actions as sharedActions, CNC_LASER_STAGE } from '../cncLaserShared';
+import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
+import SvgModelGroup from '../models/SvgModelGroup';
 
 const INITIAL_STATE = {
 
@@ -21,6 +22,7 @@ const INITIAL_STATE = {
 
     modelGroup: new ModelGroup(),
     toolPathModelGroup: new ToolPathModelGroup(),
+    svgModelGroup: new SvgModelGroup(),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
@@ -66,20 +68,22 @@ const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
     init: () => (dispatch) => {
+        dispatch(editorActions.init('laser'));
+
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'laser') {
-                    dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
+                    dispatch(editorActions.onReceiveTaskResult('laser', taskResult));
                 }
             },
             'taskCompleted:generateGcode': (taskResult) => {
                 if (taskResult.headType === 'laser') {
-                    dispatch(sharedActions.onReceiveGcodeTaskResult('laser', taskResult));
+                    dispatch(editorActions.onReceiveGcodeTaskResult('laser', taskResult));
                 }
             },
             'taskProgress:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'laser') {
-                    dispatch(sharedActions.updateState('laser', {
+                    dispatch(editorActions.updateState('laser', {
                         stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: taskResult.progress
                     }));
@@ -87,7 +91,7 @@ export const actions = {
             },
             'taskProgress:generateGcode': (taskResult) => {
                 if (taskResult.headType === 'laser') {
-                    dispatch(sharedActions.updateState('laser', {
+                    dispatch(editorActions.updateState('laser', {
                         stage: CNC_LASER_STAGE.GENERATING_GCODE,
                         progress: taskResult.progress
                     }));
@@ -110,7 +114,7 @@ export const actions = {
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath, () => {
-            dispatch(sharedActions.render('laser'));
+            dispatch(editorActions.render('laser'));
         });
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -129,7 +133,7 @@ export const actions = {
         group.remove(...group.children);
         group.add(mesh);
         dispatch(actions.setBackgroundEnabled(true));
-        dispatch(sharedActions.render('laser'));
+        dispatch(editorActions.render('laser'));
     },
 
     removeBackgroundImage: () => (dispatch, getState) => {
@@ -137,7 +141,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         dispatch(actions.setBackgroundEnabled(false));
-        dispatch(sharedActions.render('laser'));
+        dispatch(editorActions.render('laser'));
     }
 };
 

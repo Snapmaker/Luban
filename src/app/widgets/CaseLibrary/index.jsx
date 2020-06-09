@@ -10,7 +10,7 @@ import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { CaseConfigOriginal, CaseConfig150, CaseConfig250, CaseConfig350 } from './CaseConfig';
 import { actions as printingActions } from '../../flux/printing';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
@@ -222,14 +222,12 @@ const mapStateToProps = (state) => {
 
 
 const mapDispatchToProps = (dispatch) => ({
-    insertDefaultLaserTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('laser', caseConfigs, caseTransformation)),
-    insertDefaultCncTextVector: (caseConfigs, caseTransformation) => dispatch(sharedActions.insertDefaultTextVector('cnc', caseConfigs, caseTransformation)),
+    insertDefaultLaserTextVector: (caseConfigs, caseTransformation) => dispatch(editorActions.insertDefaultTextVector('laser', caseConfigs, caseTransformation)),
+    insertDefaultCncTextVector: (caseConfigs, caseTransformation) => dispatch(editorActions.insertDefaultTextVector('cnc', caseConfigs, caseTransformation)),
     // uploadFont: (file) => dispatch(textActions.uploadFont(file)),
-    updateLaserState: (params) => dispatch(sharedActions.updateState('laser', params)),
-    uploadLaserCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('laser', file, mode, caseConfigs, caseTransformation, onFailure)),
-    uploadCncCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(sharedActions.uploadCaseImage('cnc', file, mode, caseConfigs, caseTransformation, onFailure)),
-
-
+    updateLaserState: (params) => dispatch(editorActions.updateState('laser', params)),
+    uploadLaserCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(editorActions.uploadCaseImage('laser', file, mode, caseConfigs, caseTransformation, onFailure)),
+    uploadCncCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(editorActions.uploadCaseImage('cnc', file, mode, caseConfigs, caseTransformation, onFailure)),
     updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
     updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
     updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),

@@ -8,7 +8,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
-import { actions as cncLaserActions } from '../../flux/cncLaserShared';
+import { actions as editorActions } from '../../flux/editor';
 import { actions as widgetActions } from '../../flux/widget';
 import styles from './styles.styl';
 
@@ -124,7 +124,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(cncLaserActions.uploadImage('laser', file, mode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
         updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('laser', 'default', widgets))
     };
 };

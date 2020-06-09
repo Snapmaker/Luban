@@ -125,7 +125,6 @@ export const dxfToSvg = (dxf) => {
             continue;
         }
 
-
         const shape = {};
         shape.paths = [];
         const pathsObj = {};
@@ -219,9 +218,9 @@ export const dxfToSvg = (dxf) => {
         } else if (entities.type === 'INSERT') {
             continue;
         }
-        shape.fill = null;
+        shape.fill = 'none';
         shape.stroke = '#000000';
-        shape.strokeWidth = 0.001;
+        shape.strokeWidth = 0.72;
         shape.visibility = true;
         shapes.push(shape);
     }

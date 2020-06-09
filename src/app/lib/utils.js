@@ -1,3 +1,5 @@
+import { EPSILON } from '../constants';
+
 const getTimestamp = () => {
     function pad(n) {
         return n < 10 ? `0${n}` : `${n}`;
@@ -25,7 +27,12 @@ const simulateMouseEvent = (e, type) => {
     return event;
 };
 
+const isZero = (x) => {
+    return Math.abs(x) < EPSILON;
+};
+
 export {
+    isZero,
     getTimestamp,
     simulateMouseEvent
 };

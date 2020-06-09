@@ -3,10 +3,8 @@ import * as THREE from 'three';
 import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
 
 import { DATA_PREFIX } from '../../constants';
-import { sizeModelByMachineSize } from './ModelInfoUtils';
 
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
-import api from '../../api';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -39,22 +37,29 @@ class Model {
     modeConfigs = {}
 
     constructor(modelInfo) {
-        const { limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
+        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
             transformation, processImageName } = modelInfo;
+
         this.limitSize = limitSize;
+
+        const geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
+        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(geometry, material);
 
-        this.modelID = uuid.v4();
+        this.modelID = modelID;
 
         this.headType = headType;
         this.sourceType = sourceType; // 3d, raster, svg, text
         this.sourceHeight = sourceHeight;
+        this.height = height;
         this.sourceWidth = sourceWidth;
+        this.width = width;
         this.originalName = originalName;
         this.uploadName = uploadName;
         this.config = config;
         this.mode = mode;
+
         this.processImageName = processImageName;
 
         this.transformation = {
@@ -62,7 +67,6 @@ class Model {
             ...transformation
         };
         if (!this.transformation.width && !this.transformation.height) {
-            const { width, height } = sizeModelByMachineSize(limitSize, sourceWidth, sourceHeight);
             this.transformation.width = width;
             this.transformation.height = height;
         }
@@ -129,10 +133,8 @@ class Model {
                 this.meshObject.remove(this.modelObject3D);
                 this.modelObject3D = null;
             }
-            const { width, height } = sizeModelByMachineSize(this.limitSize, this.sourceWidth, this.sourceHeight);
-            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-
 
             this.meshObject.add(this.modelObject3D);
             this.modelObject3D.visible = this.showOrigin;
@@ -142,6 +144,9 @@ class Model {
     }
 
     generateProcessObject3D() {
+        if (this.sourceType !== 'raster') {
+            return;
+        }
         if (!this.processImageName) {
             return;
         }
@@ -162,8 +167,7 @@ class Model {
                 this.meshObject.remove(this.processObject3D);
                 this.processObject3D = null;
             }
-            const { width, height } = sizeModelByMachineSize(this.limitSize, this.sourceWidth, this.sourceHeight);
-            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
             this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
 
@@ -178,7 +182,10 @@ class Model {
         this.showOrigin = !this.showOrigin;
         this.modelObject3D.visible = this.showOrigin;
         this.processObject3D.visible = !this.showOrigin;
-        return this.showOrigin;
+        return {
+            showOrigin: this.showOrigin,
+            showImageName: this.showOrigin ? this.uploadName : this.processImageName
+        };
     }
 
     updateVisible(param) {
@@ -191,12 +198,17 @@ class Model {
         }
     }
 
-    async processMode(mode, config) {
+    getModeConfig(mode) {
         if (this.sourceType !== 'raster') {
-            return;
+            return null;
         }
-        const { width, height } = sizeModelByMachineSize(this.limitSize, this.sourceWidth, this.sourceHeight);
+        return this.modeConfigs[mode];
+    }
 
+    processMode(mode, config, processImageName) {
+        if (processImageName) {
+            this.processImageName = processImageName;
+        }
         if (this.mode !== mode) {
             this.modeConfigs[this.mode] = {
                 config: {
@@ -215,25 +227,25 @@ class Model {
             this.mode = mode;
         }
 
-
-        const res = await api.processImage({
-            headType: this.headType,
-            uploadName: this.uploadName,
-            config: {
-                ...this.config,
-                density: 4
-            },
-            sourceType: this.sourceType,
-            mode: mode,
-            transformation: {
-                width: width,
-                height: height,
-                rotationZ: 0
-            }
-        });
-
-        this.processImageName = res.body.filename;
         this.generateProcessObject3D();
+
+        // const res = await api.processImage({
+        //     headType: this.headType,
+        //     uploadName: this.uploadName,
+        //     config: {
+        //         ...this.config,
+        //         density: 4
+        //     },
+        //     sourceType: this.sourceType,
+        //     mode: mode,
+        //     transformation: {
+        //         width: this.width,
+        //         height: this.height,
+        //         rotationZ: 0
+        //     }
+        // });
+        //
+        // this.processImageName = res.body.filename;
     }
 
     onTransform() {
@@ -261,7 +273,7 @@ class Model {
 
     updateTransformation(transformation) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
-        let { width, height } = transformation;
+        const { width, height } = transformation;
 
         if (positionX !== undefined) {
             this.meshObject.position.x = positionX;
@@ -338,16 +350,16 @@ class Model {
                 }
             }
         }
-        if (width || height) {
+        if (width) {
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-            width = width || height * this.sourceWidth / this.sourceHeight;
-            height = height || width * this.sourceHeight / this.sourceWidth;
 
-            const scaleX_ = width / geometrySize.x;
-            const scaleY_ = height / geometrySize.y;
-
-            this.meshObject.scale.set(scaleX_, scaleY_, 1);
+            this.meshObject.scale.x = width / geometrySize.x;
             this.transformation.width = width;
+        }
+        if (height) {
+            const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
+
+            this.meshObject.scale.y = height / geometrySize.y;
             this.transformation.height = height;
         }
         return this.transformation;
@@ -370,19 +382,12 @@ class Model {
         this.generateProcessObject3D();
     }
 
-    async updateConfig(config) {
+    updateConfig(config, processImageName) {
         this.config = {
             ...this.config,
             ...config
         };
-        await this.processMode(this.mode, this.config);
-    }
-
-    updateGcodeConfig(gcodeConfig) {
-        this.gcodeConfig = {
-            ...this.gcodeConfig,
-            ...gcodeConfig
-        };
+        this.processMode(this.mode, this.config, processImageName);
     }
 
     computeBoundingBox() {

@@ -6,7 +6,7 @@ import Slider from 'rc-slider';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
-import { actions } from '../../../flux/cncLaserShared';
+import { actions as editorActions } from '../../../flux/editor';
 
 class ConfigRasterVector extends PureComponent {
     static propTypes = {
@@ -116,7 +116,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config))
+        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config))
     };
 };
 

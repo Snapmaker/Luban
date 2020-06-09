@@ -39,7 +39,12 @@ class ToolPathModelGroup {
 
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);
-        return this.getState(this.selectedToolPathModel);
+        if (this.selectedToolPathModel) {
+            return this.getState(this.selectedToolPathModel);
+        } else {
+            this.selectedToolPathModel = null;
+            return this._emptyState;
+        }
     }
 
     updateSelectedMode(mode, gcodeConfig) {
@@ -66,10 +71,10 @@ class ToolPathModelGroup {
         return this.getToolPathModels().filter(v => v.toolPathFilename).length;
     }
 
-    unselectAllModels() {
-        this.selectedToolPathModel = null;
-        return this._emptyState;
-    }
+    // unselectAllModels() {
+    //     this.selectedToolPathModel = null;
+    //     return this._emptyState;
+    // }
 
     getToolPathModel(modelID) {
         return this.toolPathModels.find(d => d.modelID === modelID);

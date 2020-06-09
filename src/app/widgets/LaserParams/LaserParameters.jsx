@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
 import Modal from '../../components/Modal';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import TextParameters from '../CncLaserShared/TextParameters';
@@ -19,6 +18,7 @@ import GcodeConfigSvgVector from './gcodeconfig/GcodeConfigSvgVector';
 import GcodeConfigRasterBW from './gcodeconfig/GcodeConfigRasterBW';
 import GcodeConfigGreyscale from './gcodeconfig/GcodeConfigGreyscale';
 import GcodeConfigRasterVector from './gcodeconfig/GcodeConfigRasterVector';
+import { actions as editorActions } from '../../flux/editor';
 
 
 const getAccept = (mode) => {
@@ -49,6 +49,7 @@ class LaserParameters extends PureComponent {
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
@@ -183,7 +184,7 @@ class LaserParameters extends PureComponent {
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
-            onModelAfterTransform
+            onModelAfterTransform, updateSelectedModelFlip
         } = this.props;
         const actions = this.actions;
         const { width, height } = this.state.modalSetting;
@@ -231,6 +232,7 @@ class LaserParameters extends PureComponent {
                         transformation={transformation}
                         onModelAfterTransform={onModelAfterTransform}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        updateSelectedModelFlip={updateSelectedModelFlip}
                     />
                 )}
                 {selectedModelID && (
@@ -309,17 +311,18 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        togglePage: (page) => dispatch(sharedActions.togglePage('laser', page)),
-        uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('laser', file, mode, onFailure)),
-        insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('laser')),
-        updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
-        changeSelectedModelShowOrigin: () => dispatch(sharedActions.changeSelectedModelShowOrigin('laser')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(sharedActions.changeSelectedModelMode('laser', sourceType, mode)),
-        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('laser')),
-        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
+        togglePage: (page) => dispatch(editorActions.togglePage('laser', page)),
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
+        updateSelectedModelTransformation: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('laser', config)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
+        changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
+        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
+        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser')),
+        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value))
     };
 };
 

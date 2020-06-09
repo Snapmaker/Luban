@@ -3,7 +3,7 @@ import machine from './machine';
 import printing from './printing';
 import laser from './laser';
 import cnc from './cnc';
-import cncLaserShared from './cncLaserShared';
+import editor from './editor';
 import workspace from './workspace';
 import keyboardShortcut from './keyboardShortcut';
 import widget from './widget';
@@ -17,10 +17,10 @@ export default combineReducers({
     printing,
     laser,
     cnc,
-    cncLaserShared,
     keyboardShortcut,
     // models,
     text,
     widget,
-    developTools
+    developTools,
+    editor
 });
