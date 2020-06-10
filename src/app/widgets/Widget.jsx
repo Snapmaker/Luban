@@ -22,6 +22,7 @@ import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
 import WifiTransport from './WifiTransport';
 import EnclosureWidget from './Enclosure';
+import LevelingWidget from './Leveling/index';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -47,7 +48,8 @@ const getWidgetByName = (name) => {
         'laser-test-focus': LaserTestFocusWidget,
         'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,
-        'cnc-output': CNCOutputWidget
+        'cnc-output': CNCOutputWidget,
+        'leveling': LevelingWidget
     }[name];
     if (!Widget) {
         throw new Error(`Unknown Widget ${name}`);

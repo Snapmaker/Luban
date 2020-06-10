@@ -35,6 +35,9 @@ module.exports = {
     entry: {
         index: [
             './index.js'
+        ],
+        worker: [
+            './worker.js'
         ]
     },
     output: {

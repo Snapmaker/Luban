@@ -19,7 +19,7 @@ const DEFAULT_STATE = {
         right: {
             show: true,
             widgets: [
-                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
+                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode', 'leveling'
             ]
         }
     },
@@ -188,6 +188,11 @@ const DEFAULT_STATE = {
         },
         'cnc-output': {
             autoPreview: true
+        },
+        leveling: {
+            testCount: 2,
+            areaBorder: { x0: 0, x1: 0, y0: 0, y1: 0 },
+            testPoints: [null, null, null, null]
         }
     }
 };
