@@ -33,4 +33,14 @@ function configureWindow(window) {
     });
 }
 
-export { configureWindow };
+let mainWindow = null;
+
+function getMainWindow() {
+    return mainWindow;
+}
+
+function setMainWindow(window) {
+    mainWindow = window;
+}
+
+export { configureWindow, getMainWindow, setMainWindow };

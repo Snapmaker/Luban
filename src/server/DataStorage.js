@@ -212,6 +212,7 @@ class DataStorage {
                 }
             }
         }
+        log.info('Migration done.');
     }
 }
 

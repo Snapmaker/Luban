@@ -1,7 +1,18 @@
-import { app, shell } from 'electron';
+import { URL } from 'url';
+import { app, shell, globalShortcut, Menu } from 'electron';
+import { getMainWindow } from './window';
 
 
-export default function getMenuTemplate(options) {
+function onClickPreferences(menuItem, browserWindow) {
+    const window = browserWindow || getMainWindow();
+
+    const url = window.webContents.getURL();
+    const urlInstance = new URL(url);
+
+    window.webContents.loadURL(`${urlInstance.origin}/#/settings`);
+}
+
+function getMenuTemplate(options) {
     const { address, port } = { ...options };
 
     const template = [
@@ -11,8 +22,6 @@ export default function getMenuTemplate(options) {
                 { role: 'reload' },
                 { role: 'forcereload' },
                 { type: 'separator' },
-                { role: 'togglefullscreen' },
-                { type: 'separator' },
                 {
                     label: 'View In Browser',
                     click: () => {
@@ -20,7 +29,9 @@ export default function getMenuTemplate(options) {
                         shell.openExternal(url);
                     }
                 },
-                { role: 'toggledevtools' }
+                { role: 'toggledevtools' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
             ]
         },
         {
@@ -38,6 +49,12 @@ export default function getMenuTemplate(options) {
             label: app.getName(),
             submenu: [
                 { role: 'about' },
+                { type: 'separator' },
+                {
+                    label: 'Preferences...',
+                    accelerator: 'CommandOrControl+,',
+                    click: onClickPreferences
+                },
                 { type: 'separator' },
                 { role: 'services', submenu: [] },
                 { type: 'separator' },
@@ -57,4 +74,13 @@ export default function getMenuTemplate(options) {
     }
 
     return template;
+}
+
+export default function registerMenu(options) {
+    const template = getMenuTemplate(options);
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+
+    // Bind Menu defined shortcuts
+    globalShortcut.register('CommandOrControl+,', onClickPreferences);
 }
