@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 
+import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as widgetActions } from '../../flux/widget';
 
@@ -13,83 +14,130 @@ import styles from './index.styl';
 
 class Leveling extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired,
-        testCount: PropTypes.number.isRequired,
-        areaBorder: PropTypes.object.isRequired,
-        testPoints: PropTypes.array.isRequired,
-
-        updateWidgetState: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+        workPosition: PropTypes.object.isRequired,
+        boundingBox: PropTypes.object,
+        gcodeFile: PropTypes.object,
+        // widgetId: PropTypes.string.isRequired,
+        // updateWidgetState: PropTypes.func.isRequired,
+        renderGcodeFile: PropTypes.func.isRequired
     }
 
     state = {
-        step: 'init'
+        step: 0,
+        levelingProgress: null,
+        targetFile: null,
+        gridNum: 3,
+        areaBorder: { TopLeft: { x: 0, y: 0 }, BottomRight: { x: 0, y: 0 } },
+        testPoints: []
     }
 
     actions = {
-        updateWidgetState: (key, value) => {
-            this.props.updateWidgetState(this.props.widgetId, key, value);
+
+        copyWorkPositionTo: (k1, k2) => {
+            // const workPosition = this.props.workPosition;
+            const workPosition = { x: Math.floor(Math.random() * 100), y: Math.floor(Math.random() * 100), z: Math.floor(Math.random() * 100) };
+            let obj = this.state[k1];
+            obj = { ...obj, [k2]: { ...workPosition } };
+            this.setState({ [k1]: obj });
+        },
+        copyBoundingBoxToArea: () => {
+            const { min, max } = this.props.boundingBox;
+            console.log(min, max);
+            this.setState({ areaBorder: { TopLeft: min, BottomRight: max } });
         },
         startTesting: () => {
-            this.setState({ step: 'testing' });
-            const { x0, y0, x1, y1 } = this.props.areaBorder;
-            const testCount = this.props.testCount;
+            this.setState({ step: 1 });
+            const { TopLeft, BottomRight } = this.state.areaBorder;
+            const gridNum = this.state.gridNum;
             const testPoints = [];
-            for (let x = 0; x < testCount; x++) {
-                for (let y = 0; y < testCount; y++) {
+            for (let x = 0; x < gridNum; x++) {
+                for (let y = 0; y < gridNum; y++) {
                     testPoints.push({
-                        x: (Math.min(x0, x1) + Math.abs(x0 - x1) / (testCount - 1) * x).toFixed(3),
-                        y: (Math.min(y0, y1) + Math.abs(y0 - y1) / (testCount - 1) * y).toFixed(3),
+                        x: (Math.min(TopLeft.x, BottomRight.x) + Math.abs(TopLeft.x - BottomRight.x) / (gridNum - 1) * x).toFixed(3),
+                        y: (Math.min(TopLeft.y, BottomRight.y) + Math.abs(TopLeft.y - BottomRight.y) / (gridNum - 1) * y).toFixed(3),
                         z: undefined
                     });
                 }
             }
-            console.log(testPoints);
-            this.actions.updateWidgetState('', { testPoints });
+
+            this.setState({ testPoints });
         },
-        setTestPointZ: (idx, z) => {
-            let { testPoints } = this.props;
-            testPoints[idx].z = z;
+        gotoPoint: (idx) => {
+            const point = this.state.testPoints[idx];
+            const cmd = `G0 X${point.x} Y${point.y}  F1000`;
+            controller.command('gcode', 'G90');
+            controller.command('gcode', cmd);
+        },
+        setTestPointZ: (idx) => {
+            let { testPoints } = this.state;
+            testPoints[idx].z = Math.random() * 10 - 2;
+            // testPoints[idx].z = this.props.workPosition.z;
             testPoints = [...testPoints];
-            this.actions.updateWidgetState('', { testPoints });
+            this.setState({ testPoints });
+            const tested = this.state.testPoints.reduce((prev, current) => prev && current.z, true);
+            if (tested) {
+                this.setState({ step: 2 });
+            }
         },
         levelingGcode: () => {
-            controller.commitWorkerTask({ taskName: 'LevelingGcode', gcodefile: 'abc.gcode', points: [{ a: 1 }] });
+            const { TopLeft, BottomRight } = this.state.areaBorder;
+
+            const zValues = this.state.testPoints.reduce((prev, current) => [...prev, current.z], []);
+            const rect = { startx: TopLeft.x, starty: TopLeft.y, endx: BottomRight.x, endy: BottomRight.y };
+            const gridNum = this.state.gridNum;
+            const uploadName = this.props.gcodeFile.uploadName;
+
+            // const sourceFile = 'testfile.cnc';
+            const helper = controller.taskHelper();
+            helper.startTask({
+                task: { taskName: 'LevelingGcode', rect, zValues, gridNum, uploadName },
+                onProgress: ({ tips, progress }) => {
+                    this.setState({ levelingProgress: `${tips} ${progress}%` });
+                },
+                onComplete: (targetFile) => {
+                    console.log(targetFile);
+                    this.setState({ targetFile, step: 5, levelingProgress: null });
+                }
+            });
+        },
+        loadNewGcode: () => {
+            console.log(this.state.targetFile);
+            this.props.renderGcodeFile(this.state.targetFile);
+            this.setState({ step: 10 });
         }
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (this.state.step === 'testing') {
-            const tested = nextProps.testPoints.reduce((prev, current) => prev && current.z, true);
-            if (tested) {
-                this.setState({ step: 'tested' });
-            }
-        }
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Leveling Before Run'));
     }
+
 
     render() {
         let key = 0;
-        const { testCount, areaBorder, testPoints } = this.props;
-
+        const { gridNum, areaBorder, testPoints } = this.state;
+        console.log(this.props.workPosition);
 
         return (
             <React.Fragment>
                 <div className="sm-tabs" style={{ marginTop: '6px', marginBottom: '12px' }}>
-                    <button
+                    {/* <button
                         type="button"
                         style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': testCount === 2 })}
+                        className={classNames('sm-tab', { 'sm-selected': gridNum === 2 })}
                         onClick={() => {
-                            this.actions.updateWidgetState('', { testCount: 2 });
+                            this.setState({ gridNum: 2 });
                         }}
                     >
                         {i18n._('2 * 2')}
-                    </button>
+                    </button> */}
                     <button
                         type="button"
                         style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': testCount === 3 })}
+                        className={classNames('sm-tab', { 'sm-selected': gridNum === 3 })}
                         onClick={() => {
-                            this.actions.updateWidgetState('', { testCount: 3 });
+                            this.setState({ gridNum: 3 });
                         }}
                     >
                         {i18n._('3 * 3')}
@@ -99,41 +147,60 @@ class Leveling extends PureComponent {
                     <thead>
                         <tr>
                             <th className={styles.axis}>{i18n._('Axis')}</th>
-                            <th>{i18n._('Min')}</th>
-                            <th>{i18n._('Max')}</th>
-
+                            <th>{i18n._('X')}</th>
+                            <th>{i18n._('Y')}</th>
+                            <th>{i18n._('action')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td className={styles.axis}>X</td>
-                            <td>{areaBorder.x0}
-
-                            </td>
-                            <td>{areaBorder.x1} </td>
-
-                        </tr>
-                        <tr>
-                            <td className={styles.axis}>Y</td>
-                            <td>{areaBorder.y0} </td>
-                            <td>{areaBorder.y1} </td>
-                        </tr>
-                        <tr>
+                            <td className={styles.axis}>{i18n._('Top Left')}</td>
+                            <td>{areaBorder.TopLeft.x} </td>
+                            <td>{areaBorder.TopLeft.y} </td>
                             <td>
                                 <button
                                     className="sm-btn-small sm-btn-primary"
                                     type="button"
                                     onClick={() => {
-                                        this.actions.updateWidgetState('', { areaBorder: { x0: 20, x1: 130, y0: 20, y1: 130 } });
+                                        this.actions.copyWorkPositionTo('areaBorder', 'TopLeft');
                                     }}
-                                >shuffle
+                                >CopyWorkPosition
                                 </button>
                             </td>
                         </tr>
+                        <tr>
+                            <td className={styles.axis}>{i18n._('Bottom Right')}</td>
+                            <td>{areaBorder.BottomRight.x} </td>
+                            <td>{areaBorder.BottomRight.y} </td>
+                            <td>
+                                <button
+                                    className="sm-btn-small sm-btn-primary"
+                                    type="button"
+                                    onClick={() => {
+                                        this.actions.copyWorkPositionTo('areaBorder', 'BottomRight');
+                                    }}
+                                >CopyWorkPosition
+                                </button>
+                            </td>
+                        </tr>
+                        {(this.props.boundingBox && (
+                            <tr>
+                                <td>
+                                    <button
+                                        className="sm-btn-small sm-btn-primary"
+                                        type="button"
+                                        onClick={() => {
+                                            this.actions.copyBoundingBoxToArea();
+                                        }}
+                                    > Copy From Gcode
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
 
-                {(this.state.step === 'init') && (
+                {(this.state.step === 0) && (
                     <button
                         className="sm-btn-small sm-btn-primary"
                         type="button"
@@ -144,14 +211,15 @@ class Leveling extends PureComponent {
                     </button>
                 )}
 
-                {(this.state.step === 'testing') && (
+                {(this.state.step > 0) && (
                     <table className="table table-bordered" data-table="dimension">
                         <thead>
                             <tr>
                                 <th className={styles.axis}>{i18n._('Axis')}</th>
-                                <th>{i18n._('Min')}</th>
-                                <th>{i18n._('Max')}</th>
-                                <th>{i18n._('Dimension')}</th>
+                                <th>{i18n._('X')}</th>
+                                <th>{i18n._('Y')}</th>
+                                <th>{i18n._('Z')}</th>
+                                <th>{i18n._('action')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -161,15 +229,26 @@ class Leveling extends PureComponent {
                                         <td className={styles.axis}>{idx + 1}</td>
                                         <td>{point.x} </td>
                                         <td>{point.y} </td>
-                                        <td>{point.z}
+                                        <td>{point.z}</td>
+                                        <td>
+
                                             <button
                                                 className="sm-btn-small sm-btn-primary"
                                                 type="button"
                                                 onClick={() => {
-                                                    this.actions.setTestPointZ(idx, (Math.random() * 5).toFixed(3));
+                                                    this.actions.gotoPoint(idx);
+                                                }}
+                                            > goto
+                                            </button>
+                                            <button
+                                                className="sm-btn-small sm-btn-primary"
+                                                type="button"
+                                                onClick={() => {
+                                                    this.actions.setTestPointZ(idx);
                                                 }}
                                             > fill
                                             </button>
+
                                         </td>
                                     </tr>
                                 );
@@ -180,7 +259,7 @@ class Leveling extends PureComponent {
                     </table>
                 )}
 
-                {(this.state.step === 'tested') && (
+                {(this.state.step === 2) && (
                     <button
                         className="sm-btn-small sm-btn-primary"
                         type="button"
@@ -190,23 +269,44 @@ class Leveling extends PureComponent {
                     > startLevelingGcode
                     </button>
                 )}
-                <div>{this.props.widgetId}</div>
+                <div>{this.state.levelingProgress}</div>
+                {(this.state.step === 5) && (
+                    <button
+                        className="sm-btn-small sm-btn-primary"
+                        type="button"
+                        onClick={() => {
+                            this.actions.loadNewGcode();
+                        }}
+                    > load new Gcode
+                    </button>
+                )}
+                {(true && this.state.step === 10) && (
+                    <button
+                        className="sm-btn-small sm-btn-warning"
+                        type="button"
+                        onClick={() => {
+                            this.setState({ step: 0 });
+                        }}
+                    > reset
+                    </button>
+                )}
+
             </React.Fragment>
 
         );
     }
 }
 
-const mapStateToProps = (state, ownProps) => {
-    const { widgets } = state.widget;
-    const { widgetId } = ownProps;
-    const { testCount, areaBorder, testPoints } = widgets[widgetId];
-    console.log('---', widgets[widgetId]);
-    return { testCount, areaBorder, testPoints };
+const mapStateToProps = (state) => {
+    const { workPosition } = state.machine;
+    const { boundingBox, gcodeFile } = state.workspace;
+    console.log(boundingBox, gcodeFile);
+    return { boundingBox, workPosition, gcodeFile };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        renderGcodeFile: (fileInfo) => dispatch(workspaceActions.renderGcodeFile(fileInfo)),
         executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode)),
         executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
         updateWidgetState: (widgetId, key, value) => dispatch(widgetActions.updateWidgetState(widgetId, key, value))

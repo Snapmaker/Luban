@@ -3,7 +3,7 @@ import TaskManager from './task-manager';
 
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
-import socketWorker from './socket/socket-worker';
+import socketWorker from './socket/socket-task';
 
 import wifiServerManager from './socket/WifiServerManager';
 
@@ -45,7 +45,7 @@ function startServices(server) {
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
     socketServer.registerEvent('taskCommit:generateGcode', TaskManager.addGenerateGcodeTask);
 
-    socketServer.registerEvent('worker:create', socketWorker.create);
+    socketServer.registerEvent('task:create', socketWorker.create);
 
     socketServer.start(server);
 

@@ -55,7 +55,7 @@ class DataStorage {
 
     static userCaseDir;
 
-    static async init() {
+    static async init(clearCache = true) {
         if (isElectron()) {
             this.userDataDir = app.getPath('userData');
         } else {
@@ -71,14 +71,18 @@ class DataStorage {
 
         mkdirp.sync(this.tmpDir);
         mkdirp.sync(this.sessionDir);
-        rmDir(this.tmpDir, false);
-        rmDir(this.sessionDir, false);
+        clearCache && this.clearCacheDirs();
 
         this.initSlicer();
 
         await this.initFonts();
         await this.initUserCase();
         await this.versionAdaptation();
+    }
+
+    static clearCacheDirs() {
+        rmDir(this.tmpDir, false);
+        rmDir(this.sessionDir, false);
     }
 
     static async initSlicer() {

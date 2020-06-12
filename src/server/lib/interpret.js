@@ -56,4 +56,12 @@ const interpret = (() => {
     };
 })();
 
+export const promiseInterpret = (line) => {
+    return new Promise((reslove) => {
+        interpret(line, (cmd, param) => {
+            reslove({ cmd, ...param });
+        });
+    });
+};
+
 export default interpret;

@@ -1,13 +1,14 @@
 import { WorkerController } from '../../lib/worker';
 
 const create = (socket, params) => {
-    const { taskName, ...data } = params;
+    console.log('received task', params);
+    const { taskName, taskId, ...data } = params;
     const worker = new WorkerController();
 
     worker.startTask(taskName, data);
 
-    worker.on('progress', (message) => {
-        socket.emit('worker.progress', message);
+    worker.on('message', (message) => {
+        socket.emit(taskName, { ...message, taskId });
     });
 };
 

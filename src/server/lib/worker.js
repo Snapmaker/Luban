@@ -1,19 +1,13 @@
 import EventEmmiter from 'events';
+import { KEY_MSG_TYPE, MessageTypes } from '../../shared/constants/task';
 
 const { Worker, isMainThread, parentPort } = require('worker_threads');
 
 
-const KEY_MSG_TYPE = '__KEY_MSG_TYPE__';
-
-export const MessageTypes = {
-    StartTask: '__START_TASK__',
-    Message: '__MESSAGE__',
-    Complete: '__COMPLETE__',
-    Fail: '__FAIL__'
-};
-
 export class WorkerController extends EventEmmiter {
     worker = null;
+
+    taskName = null;
 
     constructor() {
         if (!isMainThread) process.exit();
@@ -21,16 +15,17 @@ export class WorkerController extends EventEmmiter {
         this.worker = new Worker('./worker.js');
         this.worker.on('message', this.onMessage.bind(this));
         this.worker.on('exit', (code) => {
-            if (code !== 0) this.emit('fail', '处理线程意外终止');
+            if (code !== 0) this.emit('message', { result: 'fail', tips: '处理线程意外终止' });
         });
     }
 
     startTask(taskName, data) {
+        this.taskName = taskName;
         this.worker.postMessage({ taskName, data, [KEY_MSG_TYPE]: MessageTypes.StartTask });
     }
 
     onMessage(message) {
-        console.log('controller received', message);
+        this.emit('message', message);
     }
 }
 
@@ -42,10 +37,8 @@ export class WorkerEntity extends EventEmmiter {
     }
 
     onMessage(message) {
-        console.log('worker received:', message);
         const { [KEY_MSG_TYPE]: msgType, ...data } = message;
 
-        console.log(msgType, data);
         this.emit(msgType, data);
     }
 

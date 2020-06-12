@@ -1,9 +1,43 @@
 import noop from 'lodash/noop';
+import uuid from 'uuid';
 import isEmpty from 'lodash/isEmpty';
 import { MARLIN, PROTOCOL_SCREEN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
 import socketController from './socket-controller';
 import log from './log';
 import { machineStore } from '../store/local-storage';
+import { KEY_MSG_TYPE, MessageTypes } from '../../shared/constants/task';
+
+class TaskHelper {
+    socket = null;
+
+    constructor(socket) {
+        this.socket = socket;
+    }
+
+    startTask({ task, onProgress = noop, onComplete = noop, onFail = noop }) {
+        const taskId = uuid.v4();
+        task.taskId = taskId;
+        this.socket.emit('task:create', task);
+        const cb = (message) => {
+            if (message.taskId !== taskId) return;
+
+            const msgType = message[KEY_MSG_TYPE];
+            if (msgType === MessageTypes.Progress) {
+                onProgress(message);
+            }
+            if (msgType === MessageTypes.Complete) {
+                this.socket.off(task.taskName, cb);
+                onComplete(message);
+            }
+            if (msgType === MessageTypes.Fail) {
+                this.socket.off(task.taskName, cb);
+                onFail(message);
+            }
+        };
+        this.socket.on(task.taskName, cb);
+    }
+}
+
 
 class SerialPortClient {
     callbacks = {
@@ -92,6 +126,8 @@ class SerialPortClient {
     settings = {};
 
     workflowState = WORKFLOW_STATE_IDLE;
+
+    _taskHelper = null;
 
     static map = new Map();
 
@@ -270,7 +306,15 @@ class SerialPortClient {
             context
         });
     }
+
+    taskHelper() {
+        if (!this._taskHelper) {
+            this._taskHelper = new TaskHelper(socketController.socket);
+        }
+        return this._taskHelper;
+    }
 }
+
 
 export const controller = SerialPortClient.getController(PROTOCOL_TEXT);
 export const screenController = SerialPortClient.getController(PROTOCOL_SCREEN);
