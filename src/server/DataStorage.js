@@ -74,7 +74,7 @@ class DataStorage {
         rmDir(this.tmpDir, false);
         rmDir(this.sessionDir, false);
 
-        this.initSlicer();
+        await this.initSlicer();
 
         await this.initFonts();
         await this.initUserCase();
@@ -151,8 +151,7 @@ class DataStorage {
             for (const file of files) {
                 const srcPath = path.join(src, file);
                 const dstPath = path.join(dst, file);
-                if (fs.statSync(srcPath)
-                    .isFile()) {
+                if (fs.statSync(srcPath).isFile()) {
                     fs.copyFileSync(srcPath, dstPath);
                 }
             }
@@ -170,20 +169,46 @@ class DataStorage {
     }
 
     static async versionAdaptation() {
+        // Copy custom quality configuration files to separate folders for varies machine types
         if (semver.gte(settings.version, '3.3.0')) {
-            log.info(settings.version);
+            log.info(`Migration from version (<3.3.0) -> ${settings.version}, migrate 3DP configuration files.`);
+
+            const isOfficialQualityConfigFile = (file) => {
+                if (file.indexOf('quality') === -1) return false;
+                return file.indexOf('quality.fast_print') !== -1 || file.indexOf('quality.normal_quality') !== -1 || file.indexOf('quality.high_quality') !== -1;
+            };
+
+            const isCustomQualityConfigFile = (file) => {
+                if (file.indexOf('quality') === -1) return false;
+                return file.indexOf('quality.fast_print') === -1 && file.indexOf('quality.normal_quality') === -1 && file.indexOf('quality.high_quality') === -1;
+            };
+
             const files = fs.readdirSync(this.configDir);
             for (const file of files) {
-                if (file.indexOf('quality') !== -1) {
-                    const src = path.join(this.configDir, file);
+                const src = path.join(this.configDir, file);
+                if (!fs.statSync(src).isFile()) continue;
+
+                // Remove official quality configuration file directly
+                if (isOfficialQualityConfigFile(file)) {
+                    fs.unlinkSync(src);
+                }
+
+                // Copy custom quality configuration files to separate folders for varies machine types
+                if (isCustomQualityConfigFile(file)) {
                     const dstA150 = path.join(`${this.configDir}/A150`, file);
                     const dstA250 = path.join(`${this.configDir}/A250`, file);
                     const dstA350 = path.join(`${this.configDir}/A350`, file);
-                    const dstOri = path.join(`${this.configDir}/Origin`, file);
-                    await this.copyFile(src, dstA150, false);
-                    await this.copyFile(src, dstA250, false);
-                    await this.copyFile(src, dstA350, false);
-                    await this.copyFile(src, dstOri, false);
+
+                    try {
+                        await this.copyFile(src, dstA150, false);
+                        await this.copyFile(src, dstA250, false);
+                        await this.copyFile(src, dstA350, false);
+                    } catch (e) {
+                        log.warn(`Migration script failed: ${e.toString()}`);
+                    } finally {
+                        // Regardless copy success or not, remove the configuration file
+                        fs.unlinkSync(src);
+                    }
                 }
             }
         }

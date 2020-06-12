@@ -6,27 +6,10 @@ export default function getMenuTemplate(options) {
 
     const template = [
         {
-            label: 'Edit',
-            submenu: [
-                { role: 'undo' },
-                { role: 'redo' },
-                { type: 'separator' },
-                { role: 'cut' },
-                { role: 'copy' },
-                { role: 'paste' },
-                { role: 'pasteandmatchstyle' },
-                { role: 'selectall' }
-            ]
-        },
-        {
             label: 'View',
             submenu: [
                 { role: 'reload' },
                 { role: 'forcereload' },
-                { type: 'separator' },
-                { role: 'resetzoom' },
-                { role: 'zoomin' },
-                { role: 'zoomout' },
                 { type: 'separator' },
                 { role: 'togglefullscreen' },
                 { type: 'separator' },
@@ -71,11 +54,6 @@ export default function getMenuTemplate(options) {
                 }
             ]
         });
-
-        // View
-        const viewMenu = template[3];
-        viewMenu.submenu.push({ type: 'separator' });
-        viewMenu.submenu.push({ role: 'front' });
     }
 
     return template;
