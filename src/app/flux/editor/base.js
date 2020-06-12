@@ -33,8 +33,15 @@ export const computeTransformationSizeForTextVector = (text, fontSize, lineHeigh
     // const newWidth = newHeight * whRatio;
     // Assume that limitSize.x === limitSize.y
     const estimatedHeight = fontSize / 72 * 25.4;
-    const height = estimatedHeight + estimatedHeight * lineHeight * (numberOfLines - 1);
-    const width = height / size.height * size.width;
+    let height = estimatedHeight + estimatedHeight * lineHeight * (numberOfLines - 1);
+    let width = height / size.height * size.width;
+
+    if (width === 0) {
+        width = 0.01;
+    }
+    if (height === 0) {
+        height = 0.01;
+    }
 
     return {
         width,

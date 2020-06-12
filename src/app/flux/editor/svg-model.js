@@ -22,6 +22,6 @@ export const svgModelActions = {
 
     selectModel: (headType, modelID) => (dispatch, getState) => {
         const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.selectModel(modelID);
+        svgModelGroup && svgModelGroup.selectElementById(modelID);
     }
 };

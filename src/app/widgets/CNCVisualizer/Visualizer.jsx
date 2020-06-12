@@ -366,18 +366,18 @@ class Visualizer extends Component {
                                 disabled: !isModelSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
-                            // {
-                            //     type: 'item',
-                            //     label: i18n._('Bring to Front'),
-                            //     disabled: !isModelSelected,
-                            //     onClick: this.actions.bringToFront
-                            // },
-                            // {
-                            //     type: 'item',
-                            //     label: i18n._('Send to Back'),
-                            //     disabled: !isModelSelected,
-                            //     onClick: this.actions.sendToBack
-                            // },
+                            {
+                                type: 'item',
+                                label: i18n._('Bring to Front'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.bringToFront
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Send to Back'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.sendToBack
+                            },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),

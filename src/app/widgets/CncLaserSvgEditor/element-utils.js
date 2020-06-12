@@ -1,5 +1,6 @@
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
+import { DEFAULT_FILL_COLOR } from '../../constants/svg-constatns';
 
 function toXml(str) {
     // &apos; is ok in XML, but not HTML
@@ -68,7 +69,8 @@ function createSVGElement(data) {
 
     // set attribute
     setAttributes(element, {
-        fill: '#00B7E9',
+        // fill: '#00B7E9',
+        fill: DEFAULT_FILL_COLOR,
         stroke: '#000000'
     });
     setAttributes(element, data.attr);
