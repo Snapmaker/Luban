@@ -1,18 +1,15 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, Menu, BrowserWindow } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import Store from 'electron-store';
-import { configureWindow } from './electron-app/window';
-import getMenuTemplate from './electron-app/Menu';
+import { configureWindow, setMainWindow } from './electron-app/window';
+import registerMenu from './electron-app/Menu';
 import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 
 
 const config = new Store();
-
-let windowInstance = null;
-let lastURL = null;
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -29,6 +26,7 @@ function getBrowserWindowOptions() {
 }
 
 const combinedOptions = getBrowserWindowOptions();
+
 function openBrowserWindow(url, options) {
     const window = new BrowserWindow(options);
 
@@ -47,27 +45,22 @@ function openBrowserWindow(url, options) {
 
 const onReady = async () => {
     try {
-        // TODO: parse command arguments
-        // TODO: create server
-        // TODO: start services
         DataStorage.init();
 
         const data = await launchServer();
 
         const { address, port, routes } = { ...data };
+
         // Menu
-        const template = getMenuTemplate({ address, port, routes });
-        const menu = Menu.buildFromTemplate(template);
-        Menu.setApplicationMenu(menu);
+        registerMenu({ address, port, routes });
 
         const url = `http://${address}:${port}`;
-
-        windowInstance = openBrowserWindow(url, combinedOptions);
-        windowInstance.on('close', () => {
-            config.set('winBounds', windowInstance.getBounds());
+        const window = openBrowserWindow(url, combinedOptions);
+        window.on('close', () => {
+            config.set('winBounds', window.getBounds());
         });
 
-        lastURL = url;
+        setMainWindow(window);
     } catch (err) {
         console.error('Error: ', err);
     }
@@ -131,11 +124,12 @@ const main = () => {
     // https://github.com/electron/electron/blob/master/docs/api/app.md#event-activate-os-x
     // Emitted when the application is activated, which usually happens
     // when the user clicks on the application's dock icon.
-    app.on('activate', () => {
-        if (!windowInstance) {
-            windowInstance = openBrowserWindow(lastURL, combinedOptions);
-        }
-    });
+    // app.on('activate', () => {
+    //     if (!getMainWindow()) {
+    //         const window = openBrowserWindow(lastURL, combinedOptions);
+    //         setMainWindow(window);
+    //     }
+    // });
 
     // https://github.com/electron/electron/blob/master/docs/api/app.md#event-window-all-closed
     // Emitted when all windows have been closed.
@@ -149,7 +143,7 @@ const main = () => {
 
     app.on('will-quit', () => {
         DataStorage.clear();
-        windowInstance = null;
+        setMainWindow(null);
     });
 };
 
