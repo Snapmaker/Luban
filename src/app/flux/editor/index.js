@@ -345,7 +345,8 @@ export const actions = {
             transformation: {
                 width: selectedModel.transformation.width,
                 height: selectedModel.transformation.height,
-                rotationZ: 0
+                rotationZ: 0,
+                flip: selectedModel.transformation.flip
             },
             config: {
                 ...selectedModel.config,
@@ -827,12 +828,14 @@ export const actions = {
     },
 
     bringSelectedModelToFront: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, svgModelGroup } = getState()[headType];
+        svgModelGroup.bringElementToFront();
         modelGroup.bringSelectedModelToFront();
     },
 
     sendSelectedModelToBack: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, svgModelGroup } = getState()[headType];
+        svgModelGroup.sendElementToBack();
         modelGroup.sendSelectedModelToBack();
     },
 

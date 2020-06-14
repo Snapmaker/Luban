@@ -5,8 +5,9 @@ import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
 import logger from './logger';
-import SVGParser from './SVGParser';
+import SVGParser, { flip } from './SVGParser';
 import DataStorage from '../DataStorage';
+import { svgToString } from './SVGParser/SvgToString';
 
 const log = logger('svg-convert');
 
@@ -42,9 +43,10 @@ const convertRasterToSvg = (options) => {
             const svgParser = new SVGParser();
 
             const result = await svgParser.parse(svgStr);
+            flip(result, options.flip);
             const { width, height } = result;
 
-            fs.writeFile(targetPath, svgStr, () => {
+            fs.writeFile(targetPath, svgToString(result), () => {
                 resolve({
                     // filename: outputFilename,
                     originalName: outputFilename,

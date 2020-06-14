@@ -269,6 +269,7 @@ class BaseTagParser {
         // Shape definition
         return {
             fill: this.attributes.fill,
+            'fill-rule': this.attributes['fill-rule'],
             stroke: this.attributes.stroke,
             strokeWidth: this.attributes.strokeWidth,
             visibility: this.attributes.visibility,

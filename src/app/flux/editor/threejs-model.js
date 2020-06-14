@@ -15,7 +15,7 @@ export const threejsModelActions = {
 
     selectModel: (headType, modelID) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        const selectedModelState = modelGroup.selectModel(modelID);
+        const selectedModelState = modelGroup.selectModelById(modelID);
         const toolPathModelState = toolPathModelGroup.selectToolPathModel(modelID);
 
         const state = {

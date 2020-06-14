@@ -243,11 +243,13 @@ function processBW(modelInfo) {
 function processVector(modelInfo) {
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
+    const { flip = 0 } = modelInfo.transformation;
     const options = {
         uploadName: modelInfo.uploadName,
         vectorThreshold: vectorThreshold,
         invert: invert,
-        turdSize: turdSize
+        turdSize: turdSize,
+        flip: flip
     };
     return convertRasterToSvg(options);
 }

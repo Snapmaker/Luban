@@ -25,7 +25,7 @@ import {
     SVG_EVENT_ADD,
     SVG_EVENT_MODE,
     SVG_EVENT_MOVE,
-    SVG_EVENT_SELECT
+    SVG_EVENT_SELECT, DEFAULT_FILL_COLOR
 } from '../../constants/svg-constatns';
 import { library } from './lib/ext-shapes';
 
@@ -98,7 +98,8 @@ class SVGCanvas extends PureComponent {
     extShape = null;
 
     currentProperties = {
-        fill: '#00B7E9',
+        // fill: '#00B7E9',
+        fill: DEFAULT_FILL_COLOR,
         stroke: '#000000',
         strokeWidth: 1 / this.state.scale,
         opacity: 1
@@ -286,7 +287,7 @@ class SVGCanvas extends PureComponent {
         const mouseTarget = this.getMouseTarget(event);
 
         if (rightClick) {
-            this.mode = 'select';
+            this.setMode('select');
         }
 
         if (mouseTarget === this.svgContentGroup.selectorParentGroup) {
@@ -774,10 +775,10 @@ class SVGCanvas extends PureComponent {
         let keep = false;
         switch (this.mode) {
             case 'resize':
-                this.mode = 'select';
-                // fallthrough
+                this.setMode('select');
+            // fallthrough
             case 'rotate':
-                this.mode = 'select';
+                this.setMode('select');
                 // fallthrough
             case 'select': {
                 if (this.svgContentGroup.selectedElements.length === 1) {

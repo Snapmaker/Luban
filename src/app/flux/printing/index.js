@@ -907,8 +907,8 @@ export const actions = {
 
     selectModel: (modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.selectModel(modelMeshObject);
-        const modelState = modelGroup.getSelectedModelState();
+        const find = modelGroup.getModels().find(v => v.meshObject === modelMeshObject);
+        const modelState = modelGroup.selectModelById(find.modelID);
         dispatch(actions.updateState(modelState));
     },
 
@@ -929,7 +929,7 @@ export const actions = {
 
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.selectModel(null);
+        modelGroup.selectModelById(null);
         dispatch(actions.updateState(
             {
                 // model,

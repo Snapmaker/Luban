@@ -70,27 +70,6 @@ class SVGContentGroup {
             out.push(svgs.join(''));
         }
 
-
-        // out.push('<svg');
-        // out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NS.SVG}"`);
-        // if (this.svgContent.hasChildNodes()) {
-        //     out.push('>');
-        //
-        //     for (let i = 0; i < this.svgContent.childNodes.length; i++) {
-        //         const child = this.svgContent.childNodes.item(i);
-        //
-        //         const childOutput = toString(child, 1);
-        //         if (childOutput) {
-        //             out.push('\n');
-        //             out.push(childOutput);
-        //         }
-        //     }
-        //
-        //     out.push('\n');
-        //     out.push('</svg>');
-        // } else {
-        //     out.push('/>');
-        // }
         return out;
     }
 
@@ -187,9 +166,6 @@ class SVGContentGroup {
         transformList.replaceItem(transformRotate, index);
 
         recalculateDimensions(this.svgContent, elem);
-
-        const releaseSelector = this.requestSelector(elem);
-        releaseSelector.resize();
     }
 
     updateElementScale(elem, scale) {
@@ -207,8 +183,6 @@ class SVGContentGroup {
         transformList.appendItem(transformBack);
 
         recalculateDimensions(this.svgContent, elem);
-        const releaseSelector = this.requestSelector(elem);
-        releaseSelector.resize();
     }
 
     updateElementTranslate(elem, translate) {
@@ -217,8 +191,6 @@ class SVGContentGroup {
         transform.setTranslate(translate.translateX, translate.translateY);
         transformList.insertItemBefore(transform, 0);
         recalculateDimensions(this.svgContent, elem);
-        const releaseSelector = this.requestSelector(elem);
-        releaseSelector.resize();
     }
 
     selectOnly(elem) {

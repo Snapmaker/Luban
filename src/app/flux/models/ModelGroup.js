@@ -1,6 +1,7 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Vector3, Group } from 'three';
 // import { EPSILON } from '../../constants';
+import uuid from 'uuid';
 import Model from './Model';
 
 const EVENTS = {
@@ -21,15 +22,17 @@ class ModelGroup {
         this.candidatePoints = null;
 
         this._bbox = null;
+    }
 
-        this._emptyState = {
+    _getEmptyState = () => {
+        return {
             mode: '',
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
             transformation: {}
         };
-    }
+    };
 
     onModelUpdate = () => {
         this.object.dispatchEvent(EVENTS.UPDATE);
@@ -85,7 +88,7 @@ class ModelGroup {
             this.models = this.models.filter(model => model !== selected);
             this.object.remove(selected.meshObject);
 
-            return this._emptyState;
+            return this._getEmptyState();
         }
         return null;
     }
@@ -234,9 +237,9 @@ class ModelGroup {
                 this.object.remove(model.meshObject);
             }
             this.models.splice(0);
-            return this._emptyState;
+            return this._getEmptyState();
         }
-        return this._emptyState;
+        return this._getEmptyState();
     }
 
     totalEstimatedTime() {
@@ -264,7 +267,7 @@ class ModelGroup {
             this.object.add(newModel.meshObject);
         }
         this.selectedModel = null;
-        return this._emptyState;
+        return this._getEmptyState();
     }
 
     getModels() {
@@ -275,7 +278,7 @@ class ModelGroup {
         return models;
     }
 
-    selectModel(modelID) {
+    selectModelById(modelID) {
         const model = this.models.find(d => d.modelID === modelID);
         if (model) {
             this.selectedModel = model;
@@ -286,7 +289,7 @@ class ModelGroup {
             return this.getState(model);
         } else {
             this.selectedModel = null;
-            return this._emptyState;
+            return this._getEmptyState();
         }
     }
 
@@ -315,7 +318,7 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
+        return this.selectedModel ? this.getState(this.selectedModel) : this._getEmptyState();
     }
 
     duplicateSelectedModel(modelID) {
@@ -331,9 +334,10 @@ class ModelGroup {
                 const xz = this._computeAvailableXZ(model);
                 model.meshObject.position.x = xz.x;
                 model.meshObject.position.z = xz.z;
+                model.modelID = modelID || uuid.v4();
             } else {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.modelID = modelID;
+                model.modelID = modelID || uuid.v4();
                 model.computeBoundingBox();
                 model.updateTransformation({
                     positionX: 0,
@@ -345,6 +349,8 @@ class ModelGroup {
             // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
+
+            console.log(this.models);
 
             return {
                 modelID: modelID,

@@ -166,9 +166,10 @@ class SvgModelGroup {
             positionX: 0,
             positionY: 0
         }, clone);
+        this.svgContentGroup.selectOnly(selected);
     }
 
-    selectModel(modelID) {
+    selectElementById(modelID) {
         const elem = this.svgContentGroup.findSVGElement(modelID);
         this.svgContentGroup.selectOnly(elem);
     }
@@ -179,6 +180,56 @@ class SvgModelGroup {
             return;
         }
         this.svgContentGroup.deleteElement(selected);
+    }
+
+    bringElementToFront() {
+        const selected = this.svgContentGroup.getSelected();
+        if (!selected) {
+            return;
+        }
+        const childNodes = this.svgContentGroup.getChildNodes();
+        let index;
+        for (let i = 0; i < childNodes.length; i++) {
+            const child = childNodes[i];
+            if (child === selected) {
+                index = i;
+                break;
+            }
+        }
+        if (childNodes[index] && childNodes[index + 1]) {
+            const item = childNodes[index];
+            const item1 = childNodes[index + 1];
+            const clone = item.cloneNode();
+            const clone1 = item1.cloneNode();
+            this.svgContentGroup.group.replaceChild(clone1, item);
+            this.svgContentGroup.group.replaceChild(clone, item1);
+            this.svgContentGroup.selectOnly(clone);
+        }
+    }
+
+    sendElementToBack() {
+        const selected = this.svgContentGroup.getSelected();
+        if (!selected) {
+            return;
+        }
+        const childNodes = this.svgContentGroup.getChildNodes();
+        let index;
+        for (let i = 0; i < childNodes.length; i++) {
+            const child = childNodes[i];
+            if (child === selected) {
+                index = i;
+                break;
+            }
+        }
+        if (childNodes[index] && childNodes[index - 1]) {
+            const item = childNodes[index];
+            const item1 = childNodes[index - 1];
+            const clone = item.cloneNode();
+            const clone1 = item1.cloneNode();
+            this.svgContentGroup.group.replaceChild(clone1, item);
+            this.svgContentGroup.group.replaceChild(clone, item1);
+            this.svgContentGroup.selectOnly(clone);
+        }
     }
 
     updateTransformation(transformation, elem) {
@@ -211,6 +262,7 @@ class SvgModelGroup {
                 angle: nbbox.angle
             });
         }
+        this.svgContentGroup.selectOnly(elem);
     }
 }
 
