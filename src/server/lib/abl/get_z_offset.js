@@ -128,9 +128,4 @@ function bilinear_z_offset( raw, GRID_MAX_POINTS, rect, z_values_virt ) {
 }
 
   export default bilinear_z_offset
-  
-  
 
- 
-
-// console.log()

@@ -275,10 +275,6 @@ class SerialPortClient {
         socketController.emit('taskCommit:generateGcode', task);
     }
 
-    commitWorkerTask(task) {
-        socketController.emit('worker:create', task);
-    }
-
     // command(cmd, ...args) {
     command(cmd, ...args) {
         // const { port } = this;
@@ -314,7 +310,6 @@ class SerialPortClient {
         return this._taskHelper;
     }
 }
-
 
 export const controller = SerialPortClient.getController(PROTOCOL_TEXT);
 export const screenController = SerialPortClient.getController(PROTOCOL_SCREEN);

@@ -38,12 +38,10 @@ export class WorkerEntity extends EventEmmiter {
 
     onMessage(message) {
         const { [KEY_MSG_TYPE]: msgType, ...data } = message;
-
         this.emit(msgType, data);
     }
 
     postMessage(msgType, message) {
-        console.log('----', msgType, message);
         parentPort.postMessage({ ...message, [KEY_MSG_TYPE]: msgType });
     }
 }

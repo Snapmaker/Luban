@@ -39,12 +39,6 @@ for(var x =0;x<VIRTUAL_GRID_MAX_NUM();x++) {
     z_values_virt[x][y] = 0
 }
     
-
-
-
-
-
-
 function bed_level_virt_coord(x, y) {
     
     let ep = 0, ip = 1;
@@ -130,8 +124,7 @@ function bed_level_virt_interpolate() {
     }
 }
 
- export default 
-     function leveling (points,POINT_NUM){
+ export default function leveling (points,POINT_NUM){
         for(var x =0;x<POINT_NUM;x++){
             for(var y =0;y<POINT_NUM;y++)
                 z_values[x][y] = points[x*3 + y]
@@ -144,15 +137,5 @@ function bed_level_virt_interpolate() {
         
         bed_level_virt_interpolate();
         return z_values_virt;
-        // let VIRT_POINT_NUM = (POINT_NUM - 1) * 2 + POINT_NUM;
-        // let result = []
-        // for(var x=0;x < VIRT_POINT_NUM;x++ ){
-            
-        //     for(var y=0;y<VIRT_POINT_NUM;y++){
-        //         result[VIRT_POINT_NUM * x + y] = z_values_virt[x][y]
-        //     }
-        // }
-        
-        // return result
     }
 
