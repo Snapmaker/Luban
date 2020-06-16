@@ -35,15 +35,14 @@ class Leveling extends PureComponent {
     actions = {
 
         copyWorkPositionTo: (k1, k2) => {
-            // const workPosition = this.props.workPosition;
-            const workPosition = { x: Math.floor(Math.random() * 100), y: Math.floor(Math.random() * 100), z: Math.floor(Math.random() * 100) };
+            const workPosition = this.props.workPosition;
+            // const workPosition = { x: Math.floor(Math.random() * 100), y: Math.floor(Math.random() * 100), z: Math.floor(Math.random() * 100) };
             let obj = this.state[k1];
             obj = { ...obj, [k2]: { ...workPosition } };
             this.setState({ [k1]: obj });
         },
         copyBoundingBoxToArea: () => {
             const { min, max } = this.props.boundingBox;
-            console.log(min, max);
             this.setState({ areaBorder: { TopLeft: min, BottomRight: max } });
         },
         startTesting: () => {
@@ -65,14 +64,14 @@ class Leveling extends PureComponent {
         },
         gotoPoint: (idx) => {
             const point = this.state.testPoints[idx];
-            const cmd = `G0 X${point.x} Y${point.y}  F1000`;
             controller.command('gcode', 'G90');
-            controller.command('gcode', cmd);
+            controller.command('gcode', `G0 Z${10 + parseInt(this.props.workPosition.z, 10)}  F1000`);
+            controller.command('gcode', `G0 X${point.x} Y${point.y}  F1000`);
         },
         setTestPointZ: (idx) => {
             let { testPoints } = this.state;
-            testPoints[idx].z = Math.random() * 10 - 2;
-            // testPoints[idx].z = this.props.workPosition.z;
+            testPoints[idx].z = this.props.workPosition.z;
+            // testPoints[idx].z = Math.random() * 10 - 2;
             testPoints = [...testPoints];
             this.setState({ testPoints });
             const tested = this.state.testPoints.reduce((prev, current) => prev && current.z, true);
@@ -88,7 +87,7 @@ class Leveling extends PureComponent {
             const gridNum = this.state.gridNum;
             const uploadName = this.props.gcodeFile.uploadName;
 
-            // const sourceFile = 'testfile.cnc';
+
             const helper = controller.taskHelper();
             helper.startTask({
                 task: { taskName: 'LevelingGcode', rect, zValues, gridNum, uploadName },
@@ -96,13 +95,11 @@ class Leveling extends PureComponent {
                     this.setState({ levelingProgress: `${tips} ${progress}%` });
                 },
                 onComplete: (targetFile) => {
-                    console.log(targetFile);
                     this.setState({ targetFile, step: 5, levelingProgress: null });
                 }
             });
         },
         loadNewGcode: () => {
-            console.log(this.state.targetFile);
             this.props.renderGcodeFile(this.state.targetFile);
             this.setState({ step: 10 });
         }
@@ -117,21 +114,9 @@ class Leveling extends PureComponent {
     render() {
         let key = 0;
         const { gridNum, areaBorder, testPoints } = this.state;
-        console.log(this.props.workPosition);
-
         return (
             <React.Fragment>
                 <div className="sm-tabs" style={{ marginTop: '6px', marginBottom: '12px' }}>
-                    {/* <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': gridNum === 2 })}
-                        onClick={() => {
-                            this.setState({ gridNum: 2 });
-                        }}
-                    >
-                        {i18n._('2 * 2')}
-                    </button> */}
                     <button
                         type="button"
                         style={{ width: '50%' }}
@@ -185,7 +170,7 @@ class Leveling extends PureComponent {
                         </tr>
                         {(this.props.boundingBox && (
                             <tr>
-                                <td>
+                                <td colSpan="4">
                                     <button
                                         className="sm-btn-small sm-btn-primary"
                                         type="button"
@@ -300,7 +285,6 @@ class Leveling extends PureComponent {
 const mapStateToProps = (state) => {
     const { workPosition } = state.machine;
     const { boundingBox, gcodeFile } = state.workspace;
-    console.log(boundingBox, gcodeFile);
     return { boundingBox, workPosition, gcodeFile };
 };
 

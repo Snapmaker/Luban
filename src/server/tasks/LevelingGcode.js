@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { up } from 'cli-color/move';
 import getOffsetCreator from '../lib/abl';
 import { promiseInterpret } from '../lib/interpret';
 import DataStorage from '../DataStorage';
@@ -22,7 +21,7 @@ export default class LevelingGcode {
 
         const target = fs.createWriteStream(targetFile, { encoding: 'utf8' });
         const getOffset = getOffsetCreator(zValues, gridNum, rect);
-        let lastX = 0, lastY = 0;
+        let lastX = 0, lastY = 0, lastZ = 0;
         let readSize = 0;
         let lastProgress = 0;
 
@@ -42,9 +41,13 @@ export default class LevelingGcode {
                 const y = gcodeObj.Y || lastY;
                 const z = gcodeObj.Z;
                 if (z === undefined) {
-                    convertedStr = gcodeStr;
+                    convertedStr = `${gcodeStr} Z${(lastZ + getOffset([x, y, z])).toFixed(3)} `;
                 } else {
+                    if (z % 1 === 0) {
+                        gcodeStr = gcodeStr.replace(`Z${z}.000`, `Z${z}`);
+                    }
                     convertedStr = gcodeStr.replace(`Z${z}`, `Z${(z + getOffset([x, y, z])).toFixed(3)}`);
+                    lastZ = z;
                 }
                 lastX = x;
                 lastY = y;
@@ -54,8 +57,6 @@ export default class LevelingGcode {
 
 
             target.write(`${convertedStr}\n`);
-
-            // console.log(convertedStr);
         });
         source.on('close', () => {
             const { size, mtimeMs } = fs.statSync(targetFile);
