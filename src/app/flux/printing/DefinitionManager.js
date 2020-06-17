@@ -19,6 +19,9 @@ class DefinitionManager {
         if (this.series === MACHINE_SERIES.ORIGINAL.value) {
             res = await api.printingConfigs.getDefinition('snapmaker');
             this.snapmakerDefinition = res.body.definition;
+        } else if (this.series === MACHINE_SERIES.CUSTOM.value) {
+            res = await api.printingConfigs.getDefinition('snapmaker');
+            this.snapmakerDefinition = res.body.definition;
         } else {
             res = await api.printingConfigs.getDefinition('snapmaker2');
             this.snapmakerDefinition = res.body.definition;
@@ -161,17 +164,18 @@ class DefinitionManager {
             ownKeys: []
         };
 
-        Object.keys(activeDefinition.settings).forEach(key => {
-            const setting = activeDefinition.settings[key];
+        Object.keys(activeDefinition.settings)
+            .forEach(key => {
+                const setting = activeDefinition.settings[key];
 
-            if (setting.from !== 'fdmprinter') {
-                definition.settings[key] = {
-                    label: setting.label,
-                    default_value: setting.default_value
-                };
-                definition.ownKeys.push(key);
-            }
-        });
+                if (setting.from !== 'fdmprinter') {
+                    definition.settings[key] = {
+                        label: setting.label,
+                        default_value: setting.default_value
+                    };
+                    definition.ownKeys.push(key);
+                }
+            });
 
         definition.ownKeys.push('machine_start_gcode');
         definition.ownKeys.push('machine_end_gcode');

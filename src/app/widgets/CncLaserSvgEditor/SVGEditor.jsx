@@ -88,7 +88,7 @@ class SVGEditor extends PureComponent {
         //     this.canvas.current.loadSVGString(nextProps.import.content);
         // }
         if (nextProps.size !== this.props.size) {
-            this.props.svgModelGroup.size = nextProps.size;
+            this.props.svgModelGroup.updateSize(nextProps.size);
         }
     }
 

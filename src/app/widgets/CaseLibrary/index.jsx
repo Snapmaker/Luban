@@ -151,6 +151,8 @@ class CaseLibrary extends PureComponent {
         let CaseConfig;
         if (this.props.series === MACHINE_SERIES.ORIGINAL.value) {
             CaseConfig = CaseConfigOriginal;
+        } else if (this.props.series === MACHINE_SERIES.CUSTOM.value) {
+            CaseConfig = CaseConfigOriginal;
         } else if (this.props.series === MACHINE_SERIES.A150.value) {
             CaseConfig = CaseConfig150;
         } else if (this.props.series === MACHINE_SERIES.A250.value) {

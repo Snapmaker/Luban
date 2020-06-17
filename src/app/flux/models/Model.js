@@ -11,7 +11,11 @@ const EVENTS = {
 };
 
 // const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
-const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+const materialNormal = new THREE.MeshPhongMaterial({
+    color: 0xa0a0a0,
+    specular: 0xb0b0b0,
+    shininess: 30
+});
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
     shininess: 30,
@@ -34,16 +38,21 @@ const DEFAULT_TRANSFORMATION = {
 
 // class Model extends THREE.Mesh {
 class Model {
-    modeConfigs = {}
+    modeConfigs = {};
 
     constructor(modelInfo) {
-        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
-            transformation, processImageName } = modelInfo;
+        const {
+            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
+            transformation, processImageName
+        } = modelInfo;
 
         this.limitSize = limitSize;
 
         const geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+        const material = modelInfo.material || new THREE.MeshBasicMaterial({
+            color: 0xe0e0e0,
+            visible: false
+        });
 
         this.meshObject = new THREE.Mesh(geometry, material);
 
@@ -368,10 +377,12 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, width, height } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
+        this.width = width || this.width;
+        this.height = height || this.height;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
 

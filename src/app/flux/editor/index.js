@@ -19,7 +19,8 @@ const getCount = (() => {
 
 const getSourceType = (fileName) => {
     let sourceType;
-    const extname = path.extname(fileName).toLowerCase();
+    const extname = path.extname(fileName)
+        .toLowerCase();
     if (extname === '.svg') {
         sourceType = 'svg';
     } else if (extname === '.dxf') {
@@ -144,7 +145,10 @@ export const actions = {
         let { width, height } = sizeModelByMachineSize(size, sourceWidth, sourceHeight);
         if (sourceType === 'text') {
             const textSize = computeTransformationSizeForTextVector(
-                DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, { width: sourceWidth, height: sourceHeight }
+                DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, {
+                    width: sourceWidth,
+                    height: sourceHeight
+                }
             );
             width = textSize.width;
             height = textSize.height;
@@ -160,12 +164,17 @@ export const actions = {
 
         const defaultConfig = modelDefaultConfigs.config;
         const defaultGcodeConfig = headType === 'cnc'
-            ? { ...modelDefaultConfigs.gcodeConfig,
+            ? {
+                ...modelDefaultConfigs.gcodeConfig,
                 toolDiameter: toolParams.toolDiameter,
-                toolAngle: toolParams.toolAngle }
+                toolAngle: toolParams.toolAngle
+            }
             : modelDefaultConfigs.gcodeConfig;
         const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
-            ? { width: 40, height: 40 * height / width } : {
+            ? {
+                width: 40,
+                height: 40 * height / width
+            } : {
                 width: width,
                 height: height
             };
@@ -200,21 +209,23 @@ export const actions = {
             gcodeConfig
         };
 
-        api.processImage(options).then((res) => {
-            options.processImageName = res.body.filename;
+        api.processImage(options)
+            .then((res) => {
+                options.processImageName = res.body.filename;
 
-            dispatch(svgModelActions.generateSvgModel(headType, options));
-            dispatch(threejsModelActions.generateThreejsModel(headType, options));
+                dispatch(svgModelActions.generateSvgModel(headType, options));
+                dispatch(threejsModelActions.generateThreejsModel(headType, options));
 
-            dispatch(baseActions.resetCalculatedState(headType));
-            dispatch(baseActions.updateState(headType, {
-                hasModel: true
-            }));
+                dispatch(baseActions.resetCalculatedState(headType));
+                dispatch(baseActions.updateState(headType, {
+                    hasModel: true
+                }));
 
-            dispatch(baseActions.render(headType));
-        }).catch((err) => {
-            console.error(err);
-        });
+                dispatch(baseActions.render(headType));
+            })
+            .catch((err) => {
+                console.error(err);
+            });
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
@@ -233,7 +244,8 @@ export const actions = {
 
     selectModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
-        const find = modelGroup.getModels().find(v => v.meshObject === model);
+        const find = modelGroup.getModels()
+            .find(v => v.meshObject === model);
         dispatch(svgModelActions.selectModel(headType, find.modelID));
         dispatch(threejsModelActions.selectModel(headType, find.modelID));
     },
@@ -268,30 +280,35 @@ export const actions = {
         };
 
 
-        api.processImage(options).then((res) => {
-            const processImageName = res.body.filename;
-            if (!processImageName) {
-                return;
-            }
+        api.processImage(options)
+            .then((res) => {
+                const processImageName = res.body.filename;
+                if (!processImageName) {
+                    return;
+                }
 
-            svgModelGroup.updateElementImage(processImageName);
+                svgModelGroup.updateElementImage(processImageName);
 
-            const modelState = modelGroup.updateSelectedMode(mode, config, processImageName);
+                const modelState = modelGroup.updateSelectedMode(mode, config, processImageName);
 
-            let { gcodeConfig } = modelDefaultConfigs;
-            if (headType === 'cnc') {
-                const { toolDiameter, toolAngle } = getState().cnc.toolParams;
-                gcodeConfig = { ...gcodeConfig, toolDiameter, toolAngle };
-            }
-            const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
+                let { gcodeConfig } = modelDefaultConfigs;
+                if (headType === 'cnc') {
+                    const { toolDiameter, toolAngle } = getState().cnc.toolParams;
+                    gcodeConfig = {
+                        ...gcodeConfig,
+                        toolDiameter,
+                        toolAngle
+                    };
+                }
+                const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
 
-            dispatch(baseActions.updateState(headType, {
-                ...modelState,
-                ...toolPathModelState
-            }));
-            // dispatch(baseActions.recordSnapshot(headType));
-            dispatch(baseActions.render(headType));
-        });
+                dispatch(baseActions.updateState(headType, {
+                    ...modelState,
+                    ...toolPathModelState
+                }));
+                // dispatch(baseActions.recordSnapshot(headType));
+                dispatch(baseActions.render(headType));
+            });
     },
 
     changeSelectedModelShowOrigin: (headType) => (dispatch, getState) => {
@@ -323,14 +340,15 @@ export const actions = {
             config: selectedModel.config
         };
 
-        api.processImage(options).then((res) => {
-            const processImageName = res.body.filename;
-            if (!processImageName) {
-                return;
-            }
-            svgModelGroup.updateElementImage(processImageName);
-            dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
-        });
+        api.processImage(options)
+            .then((res) => {
+                const processImageName = res.body.filename;
+                if (!processImageName) {
+                    return;
+                }
+                svgModelGroup.updateElementImage(processImageName);
+                dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+            });
     },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
@@ -354,18 +372,19 @@ export const actions = {
             }
         };
 
-        api.processImage(options).then((res) => {
-            const processImageName = res.body.filename;
-            if (!processImageName) {
-                return;
-            }
-            svgModelGroup.updateElementImage(processImageName);
-            modelGroup.updateSelectedConfig(config, processImageName);
-            toolPathModelGroup.updateSelectedNeedPreview(true);
-            dispatch(baseActions.updateConfig(headType, config));
-            // dispatch(baseActions.recordSnapshot(headType));
-            dispatch(baseActions.resetCalculatedState(headType));
-        });
+        api.processImage(options)
+            .then((res) => {
+                const processImageName = res.body.filename;
+                if (!processImageName) {
+                    return;
+                }
+                svgModelGroup.updateElementImage(processImageName);
+                modelGroup.updateSelectedConfig(config, processImageName);
+                toolPathModelGroup.updateSelectedNeedPreview(true);
+                dispatch(baseActions.updateConfig(headType, config));
+                // dispatch(baseActions.recordSnapshot(headType));
+                dispatch(baseActions.resetCalculatedState(headType));
+            });
     },
 
     updateSelectedModelTransformation: (headType, transformation) => (dispatch) => {
@@ -517,14 +536,29 @@ export const actions = {
             .then(async (res) => {
                 const { originalName, uploadName, width, height } = res.body;
 
-                const source = { originalName, uploadName, sourceHeight: height, sourceWidth: width };
+                const selectedModel = modelGroup.getSelectedModel();
 
-                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, newConfig.lineHeight, { width, height });
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, newConfig.lineHeight, {
+                    width,
+                    height
+                });
+                const source = {
+                    originalName,
+                    uploadName,
+                    sourceHeight: height,
+                    width: textSize.width,
+                    sourceWidth: width,
+                    height: textSize.height
+                };
+                const transformation = {
+                    width: selectedModel.transformation.width / selectedModel.width * textSize.width,
+                    height: selectedModel.transformation.height / selectedModel.height * textSize.height
+                };
 
                 svgModelGroup.updateElementImage(uploadName);
-                svgModelGroup.updateTransformation({ ...textSize });
+                svgModelGroup.updateTransformation(transformation);
                 modelGroup.updateSelectedSource(source);
-                modelGroup.updateSelectedModelTransformation({ ...textSize });
+                modelGroup.updateSelectedModelTransformation(transformation);
                 modelGroup.updateSelectedConfig(newConfig);
                 toolPathModelGroup.updateSelectedNeedPreview(true);
 
@@ -545,7 +579,8 @@ export const actions = {
             return;
         }
         if (isProcess || autoPreviewEnabled) {
-            const modelState = modelGroup.getSelectedModel().getTaskInfo();
+            const modelState = modelGroup.getSelectedModel()
+                .getTaskInfo();
             if (modelState) {
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelState.modelID);
                 if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview) {
@@ -553,7 +588,11 @@ export const actions = {
                         ...modelState,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: headType, data: taskInfo });
+                    controller.commitToolPathTask({
+                        taskId: taskInfo.modelID,
+                        headType: headType,
+                        data: taskInfo
+                    });
                     dispatch(baseActions.updateState(headType, {
                         stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: 0
@@ -577,7 +616,11 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    controller.commitToolPathTask({ taskId: taskInfo.modelID, headType: headType, data: taskInfo });
+                    controller.commitToolPathTask({
+                        taskId: taskInfo.modelID,
+                        headType: headType,
+                        data: taskInfo
+                    });
                     dispatch(baseActions.updateState(headType, {
                         stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
                         progress: 0
@@ -805,22 +848,27 @@ export const actions = {
         if (modelInfos.length === 0) {
             return;
         }
-        const orderModelInfos = modelInfos.map(d => d).sort((d1, d2) => {
-            if (d1.printOrder > d2.printOrder) {
-                return 1;
-            } else if (d1.printOrder < d2.printOrder) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
+        const orderModelInfos = modelInfos.map(d => d)
+            .sort((d1, d2) => {
+                if (d1.printOrder > d2.printOrder) {
+                    return 1;
+                } else if (d1.printOrder < d2.printOrder) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
         dispatch(baseActions.updateState(
             headType, {
                 isGcodeGenerating: true
             }
         ));
         orderModelInfos[0].thumbnail = thumbnail;
-        controller.commitGcodeTask({ taskId: uuid.v4(), headType: headType, data: orderModelInfos });
+        controller.commitGcodeTask({
+            taskId: uuid.v4(),
+            headType: headType,
+            data: orderModelInfos
+        });
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.GENERATING_GCODE,
             progress: 0

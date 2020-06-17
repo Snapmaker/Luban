@@ -58,6 +58,23 @@ class SvgModelGroup {
         this.size = size;
     }
 
+    updateSize(size) {
+        const data = [];
+        for (const node of this.svgContentGroup.getChildNodes()) {
+            const transform = coordGmSvgToModel(this.size, node);
+            data.push([node, transform]);
+        }
+        this.size = {
+            ...size
+        };
+        for (const datum of data) {
+            this.updateTransformation({
+                positionX: datum[1].positionX,
+                positionY: datum[1].positionY
+            }, datum[0]);
+        }
+    }
+
     emit(key, ...args) {
         switch (key) {
             case SVG_EVENT_ADD:
