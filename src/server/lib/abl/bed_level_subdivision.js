@@ -20,7 +20,7 @@ const ABL_TEMP_POINTS_Y = (GRID_MAX_POINTS_Y + 2);
 const ABL_GRID_POINTS_VIRT_X = (GRID_MAX_POINTS_X - 1) * (BILINEAR_SUBDIVISIONS) + 1;
 const ABL_GRID_POINTS_VIRT_Y = (GRID_MAX_POINTS_Y - 1) * (BILINEAR_SUBDIVISIONS) + 1;
 
-const VIRTUAL_GRID_MAX_NUM = () => ((GRID_MAX_NUM - 1) * BILINEAR_SUBDIVISIONS + 1)
+const VIRTUAL_GRID_MAX_NUM = (NUM = GRID_MAX_NUM) => ((NUM - 1) * BILINEAR_SUBDIVISIONS + 1)
 
 
 const bilinear_grid_spacing = [0,0]
@@ -33,11 +33,11 @@ for(var x =0;x<GRID_MAX_NUM;x++){
 }
 
 let z_values_virt = new Array();
-for(var x =0;x<VIRTUAL_GRID_MAX_NUM();x++) {
-    z_values_virt[x] = new Array()
-    for(var y =0;y<VIRTUAL_GRID_MAX_NUM();y++)
-    z_values_virt[x][y] = 0
-}
+// for(var x =0;x<VIRTUAL_GRID_MAX_NUM();x++) {
+//     z_values_virt[x] = new Array()
+//     for(var y =0;y<VIRTUAL_GRID_MAX_NUM();y++)
+//     z_values_virt[x][y] = 0
+// }
     
 function bed_level_virt_coord(x, y) {
     
@@ -80,12 +80,14 @@ function bed_level_virt_coord(x, y) {
 }
 
 function bed_level_virt_cmr(p, i, t) {
-    return (
+
+    let ret = (
         p[i - 1] * -t * sq(1 - t)
       + p[i] * (2 - 5 * sq(t) + 3 * t * sq(t))
       + p[i + 1] * t * (1 + 4 * t - 3 * sq(t))
       - p[i + 2] * sq(t) * (1 - t)
     ) * 0.5;
+    return ret;
 }
 
 
@@ -102,7 +104,7 @@ function bed_level_virt_2cmr(x, y, tx, ty) {
 
 
 
-function bed_level_virt_interpolate() {
+function bed_level_virt_interpolate() { 
     bilinear_grid_spacing_virt[X_AXIS] = bilinear_grid_spacing[X_AXIS] / (BILINEAR_SUBDIVISIONS);
     bilinear_grid_spacing_virt[Y_AXIS] = bilinear_grid_spacing[Y_AXIS] / (BILINEAR_SUBDIVISIONS);
     bilinear_grid_factor_virt[X_AXIS] = RECIPROCAL(bilinear_grid_spacing_virt[X_AXIS]);
@@ -127,14 +129,14 @@ function bed_level_virt_interpolate() {
  export default function leveling (points,POINT_NUM){
         for(var x =0;x<POINT_NUM;x++){
             for(var y =0;y<POINT_NUM;y++)
-                z_values[x][y] = points[x*3 + y]
+                z_values[x][y] = points[x*POINT_NUM + y]
         }
-        for(var x =0;x<VIRTUAL_GRID_MAX_NUM();x++) {
+        for(var x =0;x<VIRTUAL_GRID_MAX_NUM(POINT_NUM + 1);x++) {
             z_values_virt[x] = new Array()
-            for(var y =0;y<VIRTUAL_GRID_MAX_NUM();y++)
+            for(var y =0;y<VIRTUAL_GRID_MAX_NUM(POINT_NUM+1);y++)
                 z_values_virt[x][y] = 0
         }
-        
+
         bed_level_virt_interpolate();
         return z_values_virt;
     }
