@@ -80,9 +80,7 @@ OBJExporter.prototype = {
                         vertex.applyMatrix4( mesh.matrix );
 
 						// transform the vertex to export format
-                        // output += 'v ' + vertex.x + ' ' + vertex.y + ' ' + vertex.z + '\n';
-                        // modified by Walker
-						output += 'v ' + vertex.x + ' ' + (-vertex.z) + ' ' + vertex.y + '\n';
+                        output += 'v ' + vertex.x + ' ' + vertex.y + ' ' + vertex.z + '\n';
 
 					}
 

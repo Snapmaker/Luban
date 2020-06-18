@@ -111,8 +111,8 @@ class GcodeToBufferGeometryPrint3d {
                 }
 
                 positions.push(v2.x);
+                positions.push(v2.y);
                 positions.push(v2.z);
-                positions.push(-v2.y);
 
                 colors.push(rgb[0]);
                 colors.push(rgb[1]);

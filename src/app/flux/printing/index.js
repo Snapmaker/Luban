@@ -17,6 +17,7 @@ import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
 
 // eslint-disable-next-line no-unused-vars
+/*
 const customCompareTransformation = (tran1, tran2) => {
     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
     const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
@@ -31,6 +32,7 @@ const customCompareTransformation = (tran1, tran2) => {
         && Math.abs(sz1 - sz2) < EPSILON
     );
 };
+*/
 
 export const PRINTING_STAGE = {
     EMPTY: 0,
@@ -162,12 +164,12 @@ export const actions = {
 
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
-            new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
-            new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
+            new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON, size.y / 2 + EPSILON, size.z + EPSILON)
         ));
 
-        // G-code line group
-        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
+        // Re-position model group
+        gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
 
         // generate gcode event
         controller.on('slice:started', () => {
@@ -529,38 +531,25 @@ export const actions = {
         return null;
     },
 
-    // Upload model
-    // @param file
-    uploadModel: (file) => async (dispatch, getState) => {
-        // Notice user that model is being loading
-        dispatch(actions.updateState({
-            stage: PRINTING_STAGE.LOADING_MODEL,
-            progress: 0
-        }));
-
-        // Upload model to backend
+    /**
+     * Load and parse 3D model and create corresponding Model object.
+     *
+     * @param originalName original upload name
+     * @param uploadName upload name (actual file name)
+     * @returns {Function}
+     * @private
+     */
+    __loadModel: (originalName, uploadName) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
+        const { size } = getState().machine;
 
-        const formData = new FormData();
-        formData.append('file', file);
-        const uploadName = pathWithRandomSuffix(file.name);
-        formData.append('uploadName', uploadName);
-        const res = await api.uploadFile(formData);
-
-        // const { name, filename } = res.body;
-        const { originalName } = res.body;
-        // const modelPath = `${DATA_PREFIX}/${filename}`;
-        // const modelName = name;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
-        const { size } = getState().machine;
         const headType = '3dp';
         const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
-
-        dispatch(actions.updateState({ progress: 0.25 }));
 
         // Tell worker to generate geometry for model
         const worker = new LoadModelWorker();
@@ -642,6 +631,29 @@ export const actions = {
             }
         };
     },
+
+    // Upload model
+    // @param file
+    uploadModel: (file) => async (dispatch, getState) => {
+        // Notice user that model is being loading
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.LOADING_MODEL,
+            progress: 0
+        }));
+
+
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadName = pathWithRandomSuffix(file.name);
+        formData.append('uploadName', uploadName);
+        const res = await api.uploadFile(formData);
+
+        const { originalName } = res.body;
+
+        dispatch(actions.updateState({ progress: 0.25 }));
+
+        actions.__loadModel(originalName, uploadName)(dispatch, getState);
+    },
     // Upload model
     // @param file: JSON describe the file
     // pathConfig: {
@@ -655,99 +667,10 @@ export const actions = {
             progress: 0
         }));
 
-        // Upload model to backend
-        const { modelGroup } = getState().printing;
-        const { size } = getState().machine;
-
         const res = await api.uploadCaseFile(file);
         const { originalName, uploadName } = res.body;
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
-        const headType = '3dp';
-        const sourceType = '3d';
-        const mode = '3d';
-        const width = 0;
-        const height = 0;
-
-        dispatch(actions.updateState({ progress: 0.25 }));
-
-        // Tell worker to generate geometry for model
-        const worker = new LoadModelWorker();
-        worker.postMessage({ uploadPath });
-        worker.onmessage = async (e) => {
-            const data = e.data;
-
-            const { type } = data;
-            switch (type) {
-                case 'LOAD_MODEL_POSITIONS': {
-                    const { positions } = data;
-
-                    const bufferGeometry = new THREE.BufferGeometry();
-                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
-
-                    bufferGeometry.addAttribute('position', modelPositionAttribute);
-                    bufferGeometry.computeVertexNormals();
-                    // Create model
-                    // modelGroup.generateModel(modelInfo);
-
-                    const modelState = await modelGroup.generateModel({
-                        limitSize: size,
-                        headType,
-                        sourceType,
-                        originalName,
-                        uploadName,
-                        mode: mode,
-                        sourceWidth: width,
-                        sourceHeight: height,
-                        geometry: bufferGeometry,
-                        material: material,
-                        transformation: {}
-                    });
-
-                    dispatch(actions.updateState(modelState));
-                    dispatch(actions.displayModel());
-                    dispatch(actions.destroyGcodeLine());
-                    dispatch(actions.recordSnapshot());
-                    dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
-                        progress: 1
-                    }));
-                    break;
-                }
-                case 'LOAD_MODEL_CONVEX': {
-                    worker.terminate();
-                    const { positions } = data;
-
-                    const convexGeometry = new THREE.BufferGeometry();
-                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
-                    convexGeometry.addAttribute('position', positionAttribute);
-
-                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
-                    modelGroup.setConvexGeometry(uploadName, convexGeometry);
-
-                    break;
-                }
-                case 'LOAD_MODEL_PROGRESS': {
-                    const state = getState().printing;
-                    const progress = 0.25 + data.progress * 0.5;
-                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                        dispatch(actions.updateState({ progress }));
-                    }
-                    break;
-                }
-                case 'LOAD_MODEL_FAILED': {
-                    worker.terminate();
-                    dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
-                        progress: 0
-                    }));
-                    break;
-                }
-                default:
-                    break;
-            }
-        };
+        actions.__loadModel(originalName, uploadName)(dispatch, getState);
     },
 
     setTransformMode: (value) => (dispatch) => {
@@ -812,7 +735,6 @@ export const actions = {
         return new Promise((resolve) => {
             const { modelGroup } = getState().printing;
 
-
             const originalName = modelGroup.getModels()[0].originalName;
             const uploadPath = `${DATA_PREFIX}/${originalName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
@@ -820,7 +742,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
             setTimeout(async () => {
                 // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
-                const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
+                const stl = new ModelExporter().parse(modelGroup.object, 'stl', false);
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);
 

@@ -61,9 +61,9 @@ class ModelGroup {
             this.selectedModel.computeBoundingBox();
             if (model.sourceType === '3d') {
                 model.stickToPlate();
-                const xz = this._computeAvailableXZ(model);
-                model.meshObject.position.x = xz.x;
-                model.meshObject.position.z = xz.z;
+                const point = this._computeAvailableXY(model);
+                model.meshObject.position.x = point.x;
+                model.meshObject.position.y = point.y;
             }
 
             this.models.push(model);
@@ -310,10 +310,10 @@ class ModelGroup {
         for (const model of models) {
             model.stickToPlate();
             model.meshObject.position.x = 0;
-            model.meshObject.position.z = 0;
-            const xz = this._computeAvailableXZ(model);
-            model.meshObject.position.x = xz.x;
-            model.meshObject.position.z = xz.z;
+            model.meshObject.position.y = 0;
+            const point = this._computeAvailableXY(model);
+            model.meshObject.position.x = point.x;
+            model.meshObject.position.y = point.y;
             // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
@@ -330,10 +330,10 @@ class ModelGroup {
                 model.convexGeometry = selectedConvexGeometry;
                 model.stickToPlate();
                 model.meshObject.position.x = 0;
-                model.meshObject.position.z = 0;
-                const xz = this._computeAvailableXZ(model);
-                model.meshObject.position.x = xz.x;
-                model.meshObject.position.z = xz.z;
+                model.meshObject.position.y = 0;
+                const point = this._computeAvailableXY(model);
+                model.meshObject.position.x = point.x;
+                model.meshObject.position.y = point.y;
                 model.modelID = modelID || uuid.v4();
             } else {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
@@ -450,10 +450,11 @@ class ModelGroup {
         }
     }
 
-    _computeAvailableXZ(model) {
+    _computeAvailableXY(model) {
         if (this.getModels().length === 0) {
-            return { x: 0, z: 0 };
+            return { x: 0, y: 0 };
         }
+
         model.computeBoundingBox();
         const modelBox3 = model.boundingBox;
         const box3Arr = [];
@@ -462,27 +463,30 @@ class ModelGroup {
             box3Arr.push(m.boundingBox);
         }
 
+        // FIXME: Someone refactor this positioning grid generation code pls. by parachute
         const length = 65;
         const step = 5; // min distance of models &
-        const y = 1;
+        const z = 1;
         for (let stepCount = 1; stepCount < length / step; stepCount++) {
             // check the 4 positions on x&z axis first
             const positionsOnAxis = [
-                new Vector3(0, y, stepCount * step),
-                new Vector3(0, y, -stepCount * step),
-                new Vector3(stepCount * step, y, 0),
-                new Vector3(-stepCount * step, y, 0)
+                new Vector3(0, stepCount * step, z),
+                new Vector3(0, -stepCount * step, z),
+                new Vector3(stepCount * step, 0, z),
+                new Vector3(-stepCount * step, 0, z)
             ];
             // clock direction
-            const p1 = new Vector3(stepCount * step, y, stepCount * step);
-            const p2 = new Vector3(stepCount * step, y, -stepCount * step);
-            const p3 = new Vector3(-stepCount * step, y, -stepCount * step);
-            const p4 = new Vector3(-stepCount * step, y, stepCount * step);
+            const p1 = new Vector3(stepCount * step, stepCount * step, z);
+            const p2 = new Vector3(stepCount * step, -stepCount * step, z);
+            const p3 = new Vector3(-stepCount * step, -stepCount * step, z);
+            const p4 = new Vector3(-stepCount * step, stepCount * step, z);
             const positionsOnSquare = this._getCheckPositions(p1, p2, p3, p4, step);
             const checkPositions = [].concat(positionsOnAxis);
+
             // no duplicates
+            // TODO: what is this?
             for (const item of positionsOnSquare) {
-                if (!(item.x === 0 || item.z === 0)) {
+                if (!(item.x === 0 || item.y === 0)) {
                     checkPositions.push(item);
                 }
             }
@@ -500,19 +504,19 @@ class ModelGroup {
 
             for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
-                modelBox3Clone.translate(new Vector3(position.x, 0, position.z));
+                modelBox3Clone.translate(new Vector3(position.x, position.y, 0));
                 if (modelBox3Clone.min.x < this._bbox.min.x
                     || modelBox3Clone.max.x > this._bbox.max.x
-                    || modelBox3Clone.min.z < this._bbox.min.z
-                    || modelBox3Clone.max.z > this._bbox.max.z) {
+                    || modelBox3Clone.min.y < this._bbox.min.y
+                    || modelBox3Clone.max.y > this._bbox.max.y) {
                     continue;
                 }
                 if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
-                    return { x: position.x, z: position.z };
+                    return { x: position.x, y: position.y };
                 }
             }
         }
-        return { x: 0, z: 0 };
+        return { x: 0, y: 0 };
     }
 
     getAllBoundingBox() {
@@ -570,18 +574,18 @@ class ModelGroup {
     _getPositionBetween(p1, p2, step) {
         const positions = [];
         if (p1.x !== p2.x) {
-            const z = p1.z;
+            const y = p1.y;
             const minX = Math.min(p1.x, p2.x) + step;
             const maxX = Math.max(p1.x, p2.x);
             for (let x = minX; x < maxX; x += step) {
-                positions.push(new Vector3(x, 1, z));
+                positions.push(new Vector3(x, y, 1));
             }
-        } else if (p1.z !== p2.z) {
+        } else if (p1.y !== p2.y) {
             const x = p1.x;
-            const minZ = Math.min(p1.z, p2.z) + step;
-            const maxZ = Math.max(p1.z, p2.z);
-            for (let z = minZ; z < maxZ; z += step) {
-                positions.push(new Vector3(x, 1, z));
+            const minY = Math.min(p1.y, p2.y) + step;
+            const maxY = Math.max(p1.y, p2.y);
+            for (let y = minY; y < maxY; y += step) {
+                positions.push(new Vector3(x, y, 1));
             }
         }
         return positions;

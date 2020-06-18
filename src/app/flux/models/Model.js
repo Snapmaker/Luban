@@ -436,7 +436,7 @@ class Model {
             return;
         }
         this.computeBoundingBox();
-        this.meshObject.position.y = this.meshObject.position.y - this.boundingBox.min.y;
+        this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
     }
 
@@ -493,7 +493,7 @@ class Model {
         }
         const epsilon = 1e-6;
         const positionX = this.meshObject.position.x;
-        const positionZ = this.meshObject.position.z;
+        const positionY = this.meshObject.position.y;
 
         if (!this.convexGeometry) {
             return;
@@ -510,55 +510,55 @@ class Model {
         const vertices = convexGeometryClone.vertices;
 
         // find out the following params:
-        let minY = Number.MAX_VALUE;
-        let minYVertexIndex = -1;
+        let minZ = Number.MAX_VALUE;
+        let minZVertexIndex = -1;
         let minAngleVertexIndex = -1; // The angle between the vector(minY-vertex -> min-angle-vertex) and the x-z plane is minimal
         let minAngleFace = null;
 
-        // find minY and minYVertexIndex
+        // find minZ and minZVertexIndex
         for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i].y < minY) {
-                minY = vertices[i].y;
-                minYVertexIndex = i;
+            if (vertices[i].z < minZ) {
+                minZ = vertices[i].z;
+                minZVertexIndex = i;
             }
         }
 
-        // get minY vertices count
-        let minYVerticesCount = 0;
+        // get minZ vertices count
+        let minZVerticesCount = 0;
         for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i].y - minY < epsilon) {
-                ++minYVerticesCount;
+            if (vertices[i].z - minZ < epsilon) {
+                ++minZVerticesCount;
             }
         }
 
-        if (minYVerticesCount >= 3) {
+        if (minZVerticesCount >= 3) {
             // already lay flat
             return;
         }
 
         // find minAngleVertexIndex
-        if (minYVerticesCount === 2) {
+        if (minZVerticesCount === 2) {
             for (let i = 0; i < vertices.length; i++) {
-                if (vertices[i].y - minY < epsilon && i !== minYVertexIndex) {
+                if (vertices[i].z - minZ < epsilon && i !== minZVertexIndex) {
                     minAngleVertexIndex = i;
                 }
             }
-        } else if (minYVerticesCount === 1) {
+        } else if (minZVerticesCount === 1) {
             let sinValue = Number.MAX_VALUE; // sin value of the angle between directionVector3 and x-z plane
             for (let i = 1; i < vertices.length; i++) {
-                if (i !== minYVertexIndex) {
-                    const directionVector3 = new THREE.Vector3().subVectors(vertices[i], vertices[minYVertexIndex]);
+                if (i !== minZVertexIndex) {
+                    const directionVector3 = new THREE.Vector3().subVectors(vertices[i], vertices[minZVertexIndex]);
                     const length = directionVector3.length();
                     // min sinValue corresponds minAngleVertexIndex
-                    if (directionVector3.y / length < sinValue) {
-                        sinValue = directionVector3.y / length;
+                    if (directionVector3.z / length < sinValue) {
+                        sinValue = directionVector3.z / length;
                         minAngleVertexIndex = i;
                     }
                 }
             }
             // transform model to make min-angle-vertex y equal to minY
-            const vb1 = new THREE.Vector3().subVectors(vertices[minAngleVertexIndex], vertices[minYVertexIndex]);
-            const va1 = new THREE.Vector3(vb1.x, 0, vb1.z);
+            const vb1 = new THREE.Vector3().subVectors(vertices[minAngleVertexIndex], vertices[minZVertexIndex]);
+            const va1 = new THREE.Vector3(vb1.x, vb1.y, 0);
             const matrix1 = this._getRotateMatrix(va1, vb1);
             this.meshObject.applyMatrix(matrix1);
             this.stickToPlate();
@@ -574,7 +574,7 @@ class Model {
         const candidateFaces = [];
         for (let i = 0; i < faces.length; i++) {
             const face = faces[i];
-            if ([face.a, face.b, face.c].includes(minYVertexIndex)
+            if ([face.a, face.b, face.c].includes(minZVertexIndex)
                 && [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
                 candidateFaces.push(face);
             }
@@ -586,8 +586,8 @@ class Model {
         for (let i = 0; i < candidateFaces.length; i++) {
             // faceNormal points model outer surface
             const faceNormal = candidateFaces[i].normal;
-            if (faceNormal.y < 0) {
-                const cos = -faceNormal.y / faceNormal.length();
+            if (faceNormal.z < 0) {
+                const cos = -faceNormal.z / faceNormal.length();
                 if (cos > cosValue) {
                     cosValue = cos;
                     minAngleFace = candidateFaces[i];
@@ -595,13 +595,13 @@ class Model {
             }
         }
 
-        const xzPlaneNormal = new THREE.Vector3(0, -1, 0);
+        const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
         const vb2 = minAngleFace.normal;
-        const matrix2 = this._getRotateMatrix(xzPlaneNormal, vb2);
+        const matrix2 = this._getRotateMatrix(xyPlaneNormal, vb2);
         this.meshObject.applyMatrix(matrix2);
         this.stickToPlate();
         this.meshObject.position.x = positionX;
-        this.meshObject.position.z = positionZ;
+        this.meshObject.position.y = positionY;
 
         this.onTransform();
     }

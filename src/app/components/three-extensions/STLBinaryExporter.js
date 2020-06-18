@@ -84,13 +84,9 @@ STLBinaryExporter.prototype = {
 
 						vector.copy( vertices[ indices[ j ] ] ).applyMatrix4( object.matrix );
 
-						// output.setFloat32( offset, vector.x, true ); offset += 4; // vertices
-						// output.setFloat32( offset, vector.y, true ); offset += 4;
-						// output.setFloat32( offset, vector.z, true ); offset += 4;
-
-                        output.setFloat32( offset, vector.x, true ); offset += 4; // vertices
-                        output.setFloat32( offset, -vector.z, true ); offset += 4;
-                        output.setFloat32( offset, vector.y, true ); offset += 4;
+						output.setFloat32( offset, vector.x, true ); offset += 4; // vertices
+						output.setFloat32( offset, vector.y, true ); offset += 4;
+						output.setFloat32( offset, vector.z, true ); offset += 4;
 
 					}
 

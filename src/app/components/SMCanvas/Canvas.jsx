@@ -29,6 +29,8 @@ class Canvas extends Component {
         toolPathModelGroup: PropTypes.object,
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
+        cameraInitialTarget: PropTypes.object.isRequired,
+        cameraUp: PropTypes.object,
         // callback
         onSelectModel: PropTypes.func,
         onUnselectAllModels: PropTypes.func,
@@ -118,6 +120,11 @@ class Canvas extends Component {
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
 
+        // We need to change the default up vector if we use camera to respect XY plane
+        if (this.props.cameraUp) {
+            this.camera.up = this.props.cameraUp;
+        }
+
         this.renderer = new WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
@@ -136,7 +143,7 @@ class Canvas extends Component {
     }
 
     setupControls() {
-        this.initialTarget.set(this.cameraInitialPosition.x, this.cameraInitialPosition.y, 0);
+        this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
@@ -252,7 +259,7 @@ class Canvas extends Component {
     autoFocus(model) {
         this.camera.position.copy(this.cameraInitialPosition);
 
-        const target = model ? model.position.clone() : new Vector3(0, this.cameraInitialPosition.y, 0);
+        const target = model ? model.position.clone() : this.initialTarget;
         this.controls.setTarget(target);
 
         const object = {
@@ -279,9 +286,10 @@ class Canvas extends Component {
     }
 
     toLeft() {
-        this.camera.rotation.x = 0;
+        this.camera.rotation.x = Math.PI / 2;
         this.camera.rotation.z = 0;
 
+        // BTH, I don't know why Y rotation is applied before X rotation, so here we can't change rotation.z
         const object = {
             rotationY: this.camera.rotation.y
         };
@@ -296,14 +304,14 @@ class Canvas extends Component {
                 this.camera.rotation.y = rotation;
 
                 this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
-                this.camera.position.y = this.controls.target.y;
-                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+                this.camera.position.y = this.controls.target.y - Math.cos(rotation) * dist;
+                this.camera.position.z = this.controls.target.z;
             });
         this.startTween(tween);
     }
 
     toRight() {
-        this.camera.rotation.x = 0;
+        this.camera.rotation.x = Math.PI / 2;
         this.camera.rotation.z = 0;
 
         const object = {
@@ -320,8 +328,8 @@ class Canvas extends Component {
                 this.camera.rotation.y = rotation;
 
                 this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
-                this.camera.position.y = this.controls.target.y;
-                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+                this.camera.position.y = this.controls.target.y - Math.cos(rotation) * dist;
+                this.camera.position.z = this.controls.target.z;
             });
         this.startTween(tween);
     }

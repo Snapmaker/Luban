@@ -62,8 +62,7 @@ STLExporter.prototype = {
 
 								vector.copy( vertices[ indices[ j ] ] ).applyMatrix4( matrixLocal );
 
-                                // output += '\t\t\tvertex ' + vector.x + ' ' + vector.y + ' ' + vector.z + '\n';
-								output += '\t\t\tvertex ' + vector.x + ' ' + (-vector.z) + ' ' + vector.y + '\n';
+                                output += '\t\t\tvertex ' + vector.x + ' ' + vector.y + ' ' + vector.z + '\n';
 
 							}
 

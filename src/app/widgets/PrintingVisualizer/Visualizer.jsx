@@ -91,7 +91,7 @@ class Visualizer extends PureComponent {
         },
         // context menu
         centerSelectedModel: () => {
-            this.props.updateSelectedModelTransformation({ positionX: 0, positionZ: 0 });
+            this.props.updateSelectedModelTransformation({ positionX: 0, positionY: 0 });
             this.props.onModelAfterTransform();
         },
         deleteSelectedModel: () => {
@@ -171,12 +171,13 @@ class Visualizer extends PureComponent {
             const { modelGroup, gcodeLineGroup } = this.props;
 
             modelGroup.updateBoundingBox(new Box3(
-                new Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
-                new Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
+                new Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
+                new Vector3(size.x / 2 + EPSILON, size.y / 2 + EPSILON, size.z + EPSILON)
             ));
 
-            gcodeLineGroup.position.set(-size.x / 2, 0, size.y / 2);
-            this.canvas.current.setCamera(new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2), new Vector3(0, size.z / 2, 0));
+            // Re-position model group
+            gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+            this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
@@ -266,7 +267,9 @@ class Visualizer extends PureComponent {
                         size={size}
                         modelGroup={modelGroup.object}
                         printableArea={this.printableArea}
-                        cameraInitialPosition={new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2)}
+                        cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}
+                        cameraInitialTarget={new Vector3(0, 0, size.z / 2)}
+                        cameraUp={new Vector3(0, 0, 1)}
                         gcodeLineGroup={gcodeLineGroup}
                         onSelectModel={this.actions.onSelectModel}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
