@@ -728,5 +728,7 @@
     "Please wait one second after you close the door to proceed.": "Please wait one second after you close the door to proceed.",
     "Loading Gcode...{{progress}}%": "Loading Gcode...{{progress}}%",
     "Loaded Gcode successfully.": "Loaded Gcode successfully.",
-    "Failed to load Gcode.": "Failed to load Gcode."
+    "Failed to load Gcode.": "Failed to load Gcode.",
+    "Connect Manually": "Connect Manually",
+    "IP": "IP"
 }

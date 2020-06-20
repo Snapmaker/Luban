@@ -28,6 +28,8 @@ import styles from './index.styl';
 import PrintingState from './PrintingState';
 import LaserState from './LaserState';
 import ModalSmall from '../../components/Modal/ModalSmall';
+import ModalSmallInput from '../../components/Modal/ModalSmallInput';
+import { Server } from '../../flux/machine/Server';
 
 class WifiConnection extends PureComponent {
     static propTypes = {
@@ -54,6 +56,16 @@ class WifiConnection extends PureComponent {
             text: '',
             title: '',
             img: IMAGE_WIFI_WAITING,
+            showCloseButton: false,
+            onCancel: null,
+            onConfirm: null
+        },
+        showManualWiFi: false,
+        manualWiFi: {
+            text: '',
+            title: '',
+            label: '',
+            img: IMAGE_WIFI_CONNECTED,
             showCloseButton: false,
             onCancel: null,
             onConfirm: null
@@ -169,9 +181,33 @@ class WifiConnection extends PureComponent {
                 }
             });
         },
+        showManualWiFi: () => {
+            this.setState({
+                showManualWiFi: true,
+                manualWiFi: {
+                    text: null,
+                    title: i18n._('Connect Manually'),
+                    label: i18n._('IP') ? `${i18n._('IP')}:` : '',
+                    img: IMAGE_WIFI_WAITING,
+                    showCloseButton: true,
+                    onCancel: this.actions.onCloseManualWiFi,
+                    onConfirm: (text) => {
+                        this.actions.onCloseManualWiFi();
+                        const server = new Server('Manual', text);
+                        this.props.setServer(server);
+                        this.props.openServer();
+                    }
+                }
+            });
+        },
         onCloseWifiConnectionMessage: () => {
             this.actions.hideWifiConnectionMessage();
             this.props.closeServer();
+        },
+        onCloseManualWiFi: () => {
+            this.setState({
+                showManualWiFi: false
+            });
         }
     };
 
@@ -241,7 +277,7 @@ class WifiConnection extends PureComponent {
 
     render() {
         const { headType, servers, workflowStatus, discovering, isConnected, isOpen } = this.props;
-        const { server, showConnectionMessage, connectionMessage } = this.state;
+        const { server, showConnectionMessage, connectionMessage, showManualWiFi, manualWiFi } = this.state;
         return (
             <div>
                 <InputGroup className="mb-3">
@@ -287,6 +323,23 @@ class WifiConnection extends PureComponent {
                                     'fa',
                                     'fa-refresh',
                                     { 'fa-spin': discovering }
+                                )}
+                            />
+                        </Button>
+                    </InputGroup.Append>
+                    <InputGroup.Append>
+                        <Button
+                            variant="outline-secondary"
+                            style={{ borderColor: '#c8c8c8' }}
+                            name="btn-add"
+                            title={i18n._('Add')}
+                            disabled={isOpen}
+                            onClick={this.actions.showManualWiFi}
+                        >
+                            <i
+                                className={classNames(
+                                    'fa',
+                                    'fa-plus'
                                 )}
                             />
                         </Button>
@@ -362,6 +415,19 @@ class WifiConnection extends PureComponent {
                         onClose={this.actions.onCloseWifiConnectionMessage}
                         onCancel={connectionMessage.onCancel}
                         onConfirm={connectionMessage.onConfirm}
+                    />
+                )
+                }
+                {showManualWiFi && (
+                    <ModalSmallInput
+                        showCloseButton={manualWiFi.showCloseButton}
+                        img={manualWiFi.img}
+                        text={manualWiFi.text}
+                        title={manualWiFi.title}
+                        label={manualWiFi.label}
+                        onClose={this.actions.onCloseManualWiFi}
+                        onCancel={manualWiFi.onCancel}
+                        onConfirm={manualWiFi.onConfirm}
                     />
                 )
                 }
