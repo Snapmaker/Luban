@@ -682,6 +682,7 @@ class Visualizer extends Component {
                         modelGroup={this.visualizerGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
+                        cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>

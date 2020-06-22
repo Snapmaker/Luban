@@ -1,10 +1,21 @@
 import {
-    Vector3, Quaternion, Matrix4,
-    Object3D, Raycaster,
-    Mesh, Line,
-    BufferGeometry, BoxBufferGeometry, PlaneBufferGeometry, CylinderBufferGeometry, OctahedronBufferGeometry, TorusBufferGeometry,
-    MeshBasicMaterial, LineBasicMaterial,
-    Float32BufferAttribute, DoubleSide
+    DoubleSide,
+    Float32BufferAttribute,
+    Vector3,
+    Quaternion,
+    Matrix4,
+    Object3D,
+    Raycaster,
+    Mesh,
+    Line,
+    BufferGeometry,
+    BoxBufferGeometry,
+    PlaneBufferGeometry,
+    CylinderBufferGeometry,
+    OctahedronBufferGeometry,
+    TorusBufferGeometry,
+    MeshBasicMaterial,
+    LineBasicMaterial
 } from 'three';
 import { ArcBufferGeometry } from './ArcGeometry';
 
@@ -193,12 +204,12 @@ class TransformControls extends Object3D {
         const defaults = this.defaults;
 
         this.translatePeripheral = this.createPeripheral([
-            ['X', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
             ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
-            ['Y', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 1, 0]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, 0, Math.PI / 2]],
-            ['Z', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 0, -1], [-Math.PI / 2, 0, 0]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, Math.PI / 2, 0]]
+            ['X', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
+            ['Y', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
+            ['Z', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
         ]);
         this.translatePeripheral.visible = false;
         this.add(this.translatePeripheral);
@@ -206,7 +217,7 @@ class TransformControls extends Object3D {
         this.translatePicker = this.createPeripheral([
             ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
-            ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, -0.6], [-Math.PI / 2, 0, 0]]
+            ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
         ]);
         this.translatePicker.visiable = false;
         this.add(this.translatePicker);
@@ -216,13 +227,13 @@ class TransformControls extends Object3D {
         const defaults = this.defaults;
 
         this.rotatePeripheral = this.createPeripheral([
-            ['X', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_RED.clone())],
-            ['X', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_RED.clone()), [0, 0, 0.99], null, [1, 3, 1]],
-            ['Y', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, 0, Math.PI / 2]],
-            ['Y', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 0.99], [0, 0, Math.PI / 2], [1, 3, 1]],
-            ['Z', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, Math.PI / 2, 0]],
-            ['Z', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_GREEN.clone()), [0.99, 0, 0], null, [1, 3, 1]],
-            ['XYZE', new Line(new ArcBufferGeometry(1, 64, Math.PI * 2), defaults.LINE_MATERIAL_GRAY.clone()), null, [0, Math.PI / 2, 0]]
+            ['X', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_RED.clone()), null, [Math.PI, Math.PI / 2, 0]],
+            ['X', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_RED.clone()), [0, -0.99, 0], [Math.PI / 2, 0, 0], [1, 3, 1]],
+            ['Y', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_GREEN.clone()), null, [Math.PI / 2, 0, 0]],
+            ['Y', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_GREEN.clone()), [0, 0, 0.99], [0, 0, Math.PI / 2], [1, 3, 1]],
+            ['Z', new Line(new ArcBufferGeometry(1, 64, Math.PI), defaults.LINE_MATERIAL_BLUE.clone()), null, [Math.PI, 0, 0]],
+            ['Z', new Mesh(new OctahedronBufferGeometry(0.04, 0), defaults.MESH_MATERIAL_BLUE.clone()), [0, -0.99, 0], [0, 0, Math.PI / 2], [1, 3, 1]],
+            ['XYZE', new Line(new ArcBufferGeometry(1, 64, Math.PI * 2), defaults.LINE_MATERIAL_GRAY.clone()), null, [0, 0, 0]]
         ]);
         this.add(this.rotatePeripheral);
 
@@ -241,17 +252,17 @@ class TransformControls extends Object3D {
         this.scalePeripheral = this.createPeripheral([
             ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_RED.clone())],
             ['X', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, 0, Math.PI / 2]],
-            ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 1, 0]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, Math.PI / 2, 0]],
-            ['Z', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 0, -1], [-Math.PI / 2, 0, 0]]
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
+            ['Y', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
+            ['Z', new Mesh(defaults.BOX.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
         ]);
         this.add(this.scalePeripheral);
 
         this.scalePicker = this.createPeripheral([
             ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
-            ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, -0.6], [-Math.PI / 2, 0, 0]]
+            ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
         ]);
         this.scalePicker.visiable = false;
         this.add(this.scalePicker);
@@ -357,19 +368,19 @@ class TransformControls extends Object3D {
             // Highlight peripherals internals based on axis selected
             for (const handle of handles) {
                 if (this.mode === 'rotate') {
-                    const alignVector = new Vector3().copy(cameraPosition);
+                    const alignVector = new Vector3().copy(cameraPosition).sub(objectPosition);
 
                     if (handle.label === 'X') {
-                        const quaternion = new Quaternion().setFromAxisAngle(unitX, Math.atan2(-alignVector.y, alignVector.z));
+                        const quaternion = new Quaternion().setFromAxisAngle(unitX, Math.atan2(-alignVector.z, -alignVector.y));
                         handle.quaternion.copy(quaternion);
                     } else if (handle.label === 'Y') {
                         const quaternion = new Quaternion().setFromAxisAngle(unitY, Math.atan2(alignVector.x, alignVector.z));
                         handle.quaternion.copy(quaternion);
                     } else if (handle.label === 'Z') {
-                        const quaternion = new Quaternion().setFromAxisAngle(unitZ, Math.atan2(alignVector.y, alignVector.x));
+                        const quaternion = new Quaternion().setFromAxisAngle(unitZ, Math.atan2(alignVector.x, -alignVector.y));
                         handle.quaternion.copy(quaternion);
                     } else if (handle.label === 'XYZE') {
-                        const rotationMatrix = new Matrix4().lookAt(cameraPosition, zero, unitY);
+                        const rotationMatrix = new Matrix4().lookAt(cameraPosition, objectPosition, unitZ);
                         handle.quaternion.setFromRotationMatrix(rotationMatrix);
                     }
                 }

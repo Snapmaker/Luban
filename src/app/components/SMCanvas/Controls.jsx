@@ -397,9 +397,19 @@ class Controls extends EventEmitter {
     updateCamera() {
         this.offset.copy(this.camera.position).sub(this.target);
 
+        const spherialOffset = new THREE.Vector3();
+
         // rotate & scale
         if (this.sphericalDelta.theta !== 0 || this.sphericalDelta.phi !== 0 || this.scale !== 1) {
-            this.spherical.setFromVector3(this.offset);
+            // Spherical is based on XZ plane, instead of implement a new spherical on XY plane
+            // we use a Vector3 to swap Y and Z as a little calculation trick.
+            if (this.camera.up.z === 1) {
+                spherialOffset.set(this.offset.x, this.offset.z, -this.offset.y);
+            } else {
+                spherialOffset.copy(this.offset);
+            }
+            this.spherical.setFromVector3(spherialOffset);
+
             this.spherical.theta += this.sphericalDelta.theta;
             this.spherical.phi += this.sphericalDelta.phi;
             this.spherical.makeSafe();
@@ -407,7 +417,13 @@ class Controls extends EventEmitter {
             this.spherical.radius *= this.scale;
             this.spherical.radius = Math.max(this.spherical.radius, 0.05);
 
-            this.offset.setFromSpherical(this.spherical);
+            spherialOffset.setFromSpherical(this.spherical);
+
+            if (this.camera.up.z === 1) {
+                this.offset.set(spherialOffset.x, -spherialOffset.z, spherialOffset.y);
+            } else {
+                this.offset.copy(spherialOffset);
+            }
 
             this.sphericalDelta.set(0, 0, 0);
             this.scale = 1;

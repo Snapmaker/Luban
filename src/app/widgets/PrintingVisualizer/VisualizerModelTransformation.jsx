@@ -20,7 +20,7 @@ class VisualizerModelTransformation extends PureComponent {
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
-            positionZ: PropTypes.number,
+            positionY: PropTypes.number,
             rotationX: PropTypes.number,
             rotationY: PropTypes.number,
             rotationZ: PropTypes.number,
@@ -43,9 +43,9 @@ class VisualizerModelTransformation extends PureComponent {
                     value = Math.min(Math.max(value, -size.x / 2), size.x / 2);
                     transformation.positionX = value;
                     break;
-                case 'moveZ':
-                    value = Math.min(Math.max(value, -size.z / 2), size.z / 2);
-                    transformation.positionZ = value;
+                case 'moveY':
+                    value = Math.min(Math.max(value, -size.y / 2), size.y / 2);
+                    transformation.positionY = value;
                     break;
                 case 'scaleX':
                     transformation.scaleX = value;
@@ -81,10 +81,10 @@ class VisualizerModelTransformation extends PureComponent {
     render() {
         const actions = this.actions;
         const { size, selectedModelID, hasModel, transformMode } = this.props;
-        const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = this.props.transformation;
+        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = this.props.transformation;
         const disabled = !(selectedModelID && hasModel);
         const moveX = Number(toFixed(positionX, 1));
-        const moveZ = Number(toFixed(positionZ, 1));
+        const moveY = Number(toFixed(positionY, 1));
         const scaleXPercent = Number(toFixed((scaleX * 100), 1));
         const scaleYPercent = Number(toFixed((scaleY * 100), 1));
         const scaleZPercent = Number(toFixed((scaleZ * 100), 1));
@@ -182,9 +182,9 @@ class VisualizerModelTransformation extends PureComponent {
                                 <Input
                                     min={-size.y / 2}
                                     max={size.y / 2}
-                                    value={moveZ}
+                                    value={moveY}
                                     onChange={(value) => {
-                                        actions.onModelTransform('moveZ', value);
+                                        actions.onModelTransform('moveY', value);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -199,12 +199,12 @@ class VisualizerModelTransformation extends PureComponent {
                                     trackStyle={{
                                         backgroundColor: '#e9e9e9'
                                     }}
-                                    value={moveZ}
+                                    value={moveY}
                                     min={-size.y / 2}
                                     max={size.y / 2}
                                     step={0.1}
                                     onChange={(value) => {
-                                        actions.onModelTransform('moveZ', value);
+                                        actions.onModelTransform('moveY', value);
                                     }}
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
@@ -231,13 +231,13 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={styles['axis-unit-2']}>%</span>
                         </div>
                         <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Y</span>
+                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
                                     min={0}
-                                    value={scaleZPercent}
+                                    value={scaleYPercent}
                                     onChange={(value) => {
-                                        actions.onModelTransform('scaleZ', value / 100);
+                                        actions.onModelTransform('scaleY', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -245,13 +245,13 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={styles['axis-unit-2']}>%</span>
                         </div>
                         <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Z</span>
+                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
                                     min={0}
-                                    value={scaleYPercent}
+                                    value={scaleZPercent}
                                     onChange={(value) => {
-                                        actions.onModelTransform('scaleY', value / 100);
+                                        actions.onModelTransform('scaleZ', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -304,9 +304,9 @@ class VisualizerModelTransformation extends PureComponent {
                                 <Input
                                     min={-180}
                                     max={180}
-                                    value={rotateZ}
+                                    value={rotateY}
                                     onChange={(degree) => {
-                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
+                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -321,12 +321,12 @@ class VisualizerModelTransformation extends PureComponent {
                                     trackStyle={{
                                         backgroundColor: '#e9e9e9'
                                     }}
-                                    value={rotateZ}
+                                    value={rotateY}
                                     min={-180}
                                     max={180}
                                     step={0.1}
                                     onChange={(degree) => {
-                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
+                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
                                     }}
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
@@ -340,9 +340,9 @@ class VisualizerModelTransformation extends PureComponent {
                                 <Input
                                     min={-180}
                                     max={180}
-                                    value={rotateY}
+                                    value={rotateZ}
                                     onChange={(degree) => {
-                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
+                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -357,12 +357,12 @@ class VisualizerModelTransformation extends PureComponent {
                                     trackStyle={{
                                         backgroundColor: '#e9e9e9'
                                     }}
-                                    value={rotateY}
+                                    value={rotateZ}
                                     min={-180}
                                     max={180}
                                     step={0.1}
                                     onChange={(degree) => {
-                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
+                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
                                     }}
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();

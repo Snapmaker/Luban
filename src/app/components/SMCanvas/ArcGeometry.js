@@ -22,7 +22,7 @@ class ArcBufferGeometry extends THREE.BufferGeometry {
 
         const count = segments * thetaLength / (Math.PI * 2);
         for (let i = 0; i <= count; i++) {
-            vertices.push(0, Math.cos(i / segments * Math.PI * 2) * radius, Math.sin(i / segments * Math.PI * 2) * radius);
+            vertices.push(Math.cos(i / segments * Math.PI * 2) * radius, Math.sin(i / segments * Math.PI * 2) * radius, 0);
         }
 
         this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { MeshBasicMaterial, Object3D, Group, CylinderBufferGeometry, Mesh } from 'three';
 import each from 'lodash/each';
 import colornames from 'colornames';
 
@@ -11,7 +11,8 @@ import CoordinateAxes from './CoordinateAxes';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 
-class PrintablePlate extends THREE.Object3D {
+
+class PrintablePlate extends Object3D {
     constructor(size) {
         super();
         this.isPrintPlane = true;
@@ -35,7 +36,7 @@ class PrintablePlate extends THREE.Object3D {
         const axisXLength = Math.ceil(this.size.x / gridSpacing) * gridSpacing;
         const axisYLength = Math.ceil(this.size.y / gridSpacing) * gridSpacing;
 
-        const group = new THREE.Group();
+        const group = new Group();
 
         { // Coordinate Grid
             const gridLine = new GridLine(
@@ -60,17 +61,17 @@ class PrintablePlate extends THREE.Object3D {
             coordinateAxes.name = 'CoordinateAxes';
             group.add(coordinateAxes);
 
-            const arrowX = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0, 1, 4),
-                new THREE.MeshBasicMaterial({ color: RED })
+            const arrowX = new Mesh(
+                new CylinderBufferGeometry(0, 1, 4),
+                new MeshBasicMaterial({ color: RED })
             );
             arrowX.position.set(axisXLength + 2, 0, 0);
             arrowX.rotation.set(0, 0, -Math.PI / 2);
             group.add(arrowX);
 
-            const arrowY = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0, 1, 4),
-                new THREE.MeshBasicMaterial({ color: GREEN })
+            const arrowY = new Mesh(
+                new CylinderBufferGeometry(0, 1, 4),
+                new MeshBasicMaterial({ color: GREEN })
             );
             arrowY.position.set(0, axisYLength + 2, 0);
             group.add(arrowY);
