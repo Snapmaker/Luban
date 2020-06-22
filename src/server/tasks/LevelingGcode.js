@@ -29,7 +29,7 @@ export default class LevelingGcode {
             readSize += gcodeStr.length;
             const progress = Math.floor(readSize / sourceSize * 100);
             if (progress > lastProgress + 4) {
-                onProgress({ progress, tips: '处理文件中' });
+                onProgress({ progress, tips: 'Gcode Transfering ' });
                 lastProgress = progress;
             }
 
