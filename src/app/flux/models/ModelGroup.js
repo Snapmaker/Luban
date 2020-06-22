@@ -55,6 +55,30 @@ class ModelGroup {
         };
     }
 
+    createNewModelName(model) {
+        let baseName = '';
+        if (model.sourceType === '3d') {
+            baseName = '3DModel';
+        } else {
+            if (model.sourceType === 'text') {
+                baseName = 'text';
+            } else if (model.mode !== 'vector') {
+                baseName = 'picture';
+            } else {
+                baseName = 'shape';
+            }
+        }
+        let count = 1;
+        let name = '';
+        while (1) {
+            name = `${baseName} ${count.toString()}`;
+            if (!this.getModelByModelName(name)) {
+                return name;
+            }
+            count++;
+        }
+    }
+
     addModel(model) {
         if (model) {
             this.selectedModel = model;
@@ -64,8 +88,10 @@ class ModelGroup {
                 const xz = this._computeAvailableXZ(model);
                 model.meshObject.position.x = xz.x;
                 model.meshObject.position.z = xz.z;
+                this._setModelTransactionByXZ(model, xz.x, xz.z);
             }
 
+            model.updateModelName(this.createNewModelName(model));
             this.models.push(model);
             this.object.add(model.meshObject);
         }
@@ -73,6 +99,10 @@ class ModelGroup {
 
     getModel(modelID) {
         return this.models.find(d => d.modelID === modelID);
+    }
+
+    getModelByModelName(modelName) {
+        return this.models.find(d => d.modelName === modelName);
     }
 
     changeShowOrigin() {
@@ -314,11 +344,11 @@ class ModelGroup {
             const xz = this._computeAvailableXZ(model);
             model.meshObject.position.x = xz.x;
             model.meshObject.position.z = xz.z;
-            // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        return this.selectedModel ? this.getState(this.selectedModel) : this._getEmptyState();
+        this._checkAnyModelOverstepped();
+        return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
     }
 
     duplicateSelectedModel(modelID) {
@@ -345,12 +375,11 @@ class ModelGroup {
                     positionZ: 0
                 });
             }
+            model.updateModelName(this.createNewModelName(model));
 
             // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
-
-            console.log(this.models);
 
             return {
                 modelID: modelID,
@@ -361,8 +390,16 @@ class ModelGroup {
         return null;
     }
 
-    getSelectedModelState() {
-        return this.getState(this.selectedModel);
+    hideSelectedModel() {
+        const model = this.getSelectedModel();
+        model.hideFlag = true;
+        model.meshObject.visible = false;
+    }
+
+    showSelectedModel() {
+        const model = this.getSelectedModel();
+        model.hideFlag = false;
+        model.meshObject.visible = true;
     }
 
     getSelectedModel() {
@@ -450,6 +487,13 @@ class ModelGroup {
         }
     }
 
+    _setModelTransactionByXZ(model, x, z) {
+        const newTransaction = model.transformation;
+        newTransaction.positionX = x;
+        newTransaction.positionZ = z;
+        model.updateTransformation(newTransaction);
+    }
+
     _computeAvailableXZ(model) {
         if (this.getModels().length === 0) {
             return { x: 0, z: 0 };
@@ -462,7 +506,7 @@ class ModelGroup {
             box3Arr.push(m.boundingBox);
         }
 
-        const length = 65;
+        const length = Math.max(this._bbox.max.x - this._bbox.min.x, this._bbox.max.z - this._bbox.min.z);
         const step = 5; // min distance of models &
         const y = 1;
         for (let stepCount = 1; stepCount < length / step; stepCount++) {
@@ -512,6 +556,16 @@ class ModelGroup {
                 }
             }
         }
+        // if there is not suitable position to sit on the flat
+        // set the model to the right out of the flat
+        for (let stepCount = length / 2; stepCount < length * 3; stepCount += step) {
+            const modelBox3Clone = modelBox3.clone();
+            modelBox3Clone.translate(new Vector3(stepCount, 0, 0));
+            if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
+                return { x: stepCount, z: 0 };
+            }
+        }
+        // too far from flat, get a result in the center
         return { x: 0, z: 0 };
     }
 

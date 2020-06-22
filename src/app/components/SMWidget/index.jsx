@@ -76,6 +76,7 @@ function createDefaultWidget(WrappedWidget) {
     return connect(mapStateToProps, mapDispatchToProps)(class extends PureComponent {
         static propTypes = {
             widgetId: PropTypes.string.isRequired,
+            headType: PropTypes.string.isRequired,
             onRemove: PropTypes.func,
             onToggle: PropTypes.func,
 
@@ -124,7 +125,7 @@ function createDefaultWidget(WrappedWidget) {
         };
 
         render() {
-            const { widgetId, minimized, fullscreen, needRemove, onToggle } = this.props;
+            const { widgetId, headType, minimized, fullscreen, needRemove, onToggle } = this.props;
             const state = {
                 title: this.state.title,
                 minimized: minimized,
@@ -181,6 +182,7 @@ function createDefaultWidget(WrappedWidget) {
                     <Widget.Content style={{ display: state.minimized ? 'none' : 'block' }}>
                         <WrappedWidget
                             widgetId={widgetId}
+                            headType={headType}
                             minimized={minimized}
                             onToggle={onToggle}
                             setTitle={actions.setTitle}

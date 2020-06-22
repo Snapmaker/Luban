@@ -10,12 +10,10 @@ import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import { actions as widgetActions } from '../../flux/widget';
-// import { TextInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+// import { TextInput as Input } from '../../components/Input';
 
-// import Widget from "../Widget";
-
-class ObjectList extends PureComponent {
+class ObjectListBox extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
         selectModelByID: PropTypes.func.isRequired,
@@ -23,13 +21,16 @@ class ObjectList extends PureComponent {
         hideSelectedModel: PropTypes.func.isRequired,
         showSelectedModel: PropTypes.func.isRequired,
 
-        selectedModel: PropTypes.object.isRequired,
+        headType: PropTypes.string.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        modelGroupSelectedModel: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired
     };
 
     thumbnail = React.createRef();
+
+    contextMenuRef = React.createRef();
 
     actions = {
         onClickModelNameBox: (model) => {
@@ -44,6 +45,7 @@ class ObjectList extends PureComponent {
             } else {
                 this.props.showSelectedModel(model);
             }
+            this.props.selectModelByID(model.modelID);
         }
     };
 
@@ -64,27 +66,41 @@ class ObjectList extends PureComponent {
         }
     }
 
+    showContextMenu = (event) => {
+        console.log('----2----', event);
+        this.contextMenuRef.current.show(event);
+    };
+
+
     render() {
         // const actions = this.actions;
-        const { modelGroup, selectedModel } = this.props;
-        // const { selectedBoxModelID } = this.state;
+        const { modelGroup, modelGroupSelectedModel, headType, toolPathModelGroup } = this.props;
+        const selectedModel = modelGroupSelectedModel;
+        // const isModelSelected = !!this.props.selectedModel;
+        console.log(headType); // ----1----
+        console.log(toolPathModelGroup.selectedToolPathModel);
         return (
             <div>
-                <div>
-                    <div className={classNames(styles.objectListBox)}>
-                        {modelGroup.models.map(model => {
-                            const taskInfo = model.getTaskInfo();
-                            const modelName = taskInfo.modelName;
-                            const modelIcon = () => {
-                                if (taskInfo.sourceType === 'text') { return styles.iconText; }
-                                if (taskInfo.mode !== 'vector') { return styles.iconPic; }
-                                return styles.iconShape;
-                            };
-                            // const mode = taskInfo.mode;
-                            return (
-                                <TipTrigger
-                                    title={i18n._('Object List')}
-                                    content={i18n._('Object')}
+                <div
+                    className={classNames(
+                        styles.objectListBox
+                    )}
+                >
+                    {modelGroup.models.map(model => {
+                        const taskInfo = model.getTaskInfo();
+                        const modelName = taskInfo.modelName;
+                        const modelIcon = () => {
+                            if (taskInfo.sourceType === 'text') { return styles.iconText; }
+                            if (taskInfo.mode !== 'vector') { return styles.iconPic; }
+                            return styles.iconShape;
+                        };
+                        return (
+                            <TipTrigger
+                                title={i18n._('object list')}
+                                content={model.modelName}
+                            >
+                                <div
+                                    onContextMenu={this.showContextMenu}
                                 >
                                     <div
                                         className={classNames(
@@ -92,13 +108,13 @@ class ObjectList extends PureComponent {
                                             selectedModel && selectedModel.modelID === model.modelID ? styles.selected : null,
                                         )}
                                     >
-                                        <tspan
+                                        <span
                                             className={classNames(
                                                 styles.icon,
                                                 modelIcon()
                                             )}
                                         />
-                                        <tspan
+                                        <text
                                             className={classNames(
                                                 styles.name,
                                                 styles.bt
@@ -106,8 +122,8 @@ class ObjectList extends PureComponent {
                                             onClick={() => this.actions.onClickModelNameBox(model)}
                                         >
                                             {modelName}
-                                        </tspan>
-                                        <tspan
+                                        </text>
+                                        <button
                                             type="button"
                                             className={classNames(
                                                 styles.icon,
@@ -117,11 +133,10 @@ class ObjectList extends PureComponent {
                                             onClick={() => this.actions.onClickModelHideBox(model)}
                                         />
                                     </div>
-
-                                </TipTrigger>
-                            );
-                        })}
-                    </div>
+                                </div>
+                            </TipTrigger>
+                        );
+                    })}
                 </div>
                 <Thumbnail
                     ref={this.thumbnail}
@@ -136,15 +151,19 @@ class ObjectList extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
-    const { page, previewFailed, modelGroup, toolPathModelGroup } = state[ownProps.headType];
+    const { page, previewFailed, modelGroup, toolPathModelGroup, svgModelGroup } = state[ownProps.headType];
+    const { headType } = ownProps;
     return {
+        headType,
         page,
         modelGroup,
         toolPathModelGroup,
+        svgModelGroup,
         workflowState,
         previewFailed,
-        selectedModel: modelGroup.getSelectedModel() && modelGroup.getSelectedModel(),
-        hideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag
+        modelGroupSelectedModel: modelGroup.getSelectedModel() && modelGroup.getSelectedModel(),
+        modelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
+        modelGroupLength: modelGroup.models.length
     };
 };
 
@@ -158,4 +177,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ObjectList);
+export default connect(mapStateToProps, mapDispatchToProps)(ObjectListBox);

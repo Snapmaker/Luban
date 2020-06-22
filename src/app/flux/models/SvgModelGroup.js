@@ -254,6 +254,9 @@ class SvgModelGroup {
         if (!elem) {
             return;
         }
+        if (elem.hideFlag && elem.hideFlag) {
+            return;
+        }
         const bbox = coordGmSvgToModel(this.size, elem);
         const nbbox = coordGmModelToSvg(this.size, {
             ...bbox,
@@ -280,6 +283,21 @@ class SvgModelGroup {
             });
         }
         this.svgContentGroup.selectOnly(elem);
+    }
+
+    hideSelectedElement() {
+        const selectedElement = this.svgContentGroup.getSelected();
+        selectedElement.hideFlag = true;
+        selectedElement.setAttribute('display', 'none');
+        // selectedElement.showGrips(false);
+    }
+
+    showSelectedElement() {
+        const selectedElement = this.svgContentGroup.getSelected();
+        selectedElement.hideFlag = false;
+        selectedElement.setAttribute('display', 'inherit');
+        // selectedElement.showGrips(true);
+        // this.updateTransformation(transformation, selectedElement);
     }
 }
 

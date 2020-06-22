@@ -1,4 +1,4 @@
 import { createDefaultWidget } from '../../components/SMWidget';
-import Output from './Output';
+import CncLaserObjectList from './ObjectListBox';
 
-export default createDefaultWidget(Output);
+export default createDefaultWidget(CncLaserObjectList);
