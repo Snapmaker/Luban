@@ -36,6 +36,7 @@ class CNCPath extends PureComponent {
 
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
+        selectedModelHideFlag: PropTypes.bool,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
@@ -172,13 +173,15 @@ class CNCPath extends PureComponent {
         const { accept } = this.state;
         const {
             page,
-            selectedModelID, sourceType, mode,
+            selectedModelID, selectedModelHideFlag, sourceType, mode,
             showOrigin,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
             onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip
         } = this.props;
+        const selectedNotHide = selectedModelID && !selectedModelHideFlag;
+
         const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
@@ -214,6 +217,8 @@ class CNCPath extends PureComponent {
                 {isEditor && (
                     <Transformation
                         selectedModelID={selectedModelID}
+                        selectedModelHideFlag={selectedModelHideFlag}
+                        headType="cnc"
                         transformation={transformation}
                         sourceType={sourceType}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
@@ -227,6 +232,7 @@ class CNCPath extends PureComponent {
                             <ImageProcessMode
                                 sourceType={sourceType}
                                 mode={mode}
+                                disabled={!selectedNotHide}
                                 showOrigin={showOrigin}
                                 changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
                                 changeSelectedModelMode={changeSelectedModelMode}
@@ -234,21 +240,27 @@ class CNCPath extends PureComponent {
                         )}
                         {isEditor && isTextVector && (
                             <TextParameters
+                                disabled={selectedModelHideFlag}
                                 config={config}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
                         )}
                         {isProcess && (isSvgVector || isTextVector) && (
-                            <VectorParameters />
+                            <VectorParameters
+                                disabled={selectedModelHideFlag}
+                            />
                         )}
                         {isProcess && isRasterGreyscale && (
-                            <ReliefGcodeParameters />
+                            <ReliefGcodeParameters
+                                disabled={selectedModelHideFlag}
+                            />
                         )}
                     </div>
                 )}
                 {isProcess && (
                     <GcodeParameters
                         selectedModelID={selectedModelID}
+                        selectedModelHideFlag={selectedModelHideFlag}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
                         updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
@@ -268,7 +280,7 @@ class CNCPath extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { page, selectedModelID, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.cnc;
+    const { page, selectedModelID, modelGroup, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.cnc;
 
     return {
         page,
@@ -277,6 +289,8 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         // model,
         selectedModelID,
+        selectedModelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
+        modelGroup,
         sourceType,
         mode,
         showOrigin,

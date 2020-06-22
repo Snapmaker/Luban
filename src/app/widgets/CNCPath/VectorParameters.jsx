@@ -15,6 +15,7 @@ import { actions } from '../../flux/editor';
 
 class VectorParameters extends PureComponent {
     static propTypes = {
+        disabled: PropTypes.bool,
         size: PropTypes.object.isRequired,
         pathType: PropTypes.string,
         targetDepth: PropTypes.number,
@@ -88,12 +89,13 @@ class VectorParameters extends PureComponent {
     };
 
     render() {
-        const { size } = this.props;
+        const { size, disabled } = this.props;
         const {
             pathType, targetDepth, stepDown, safetyHeight, stopHeight,
             fillDensity,
             enableTab, tabWidth, tabHeight, tabSpace
         } = this.props;
+        console.log(disabled);
 
         return (
             <div>
@@ -126,6 +128,7 @@ class VectorParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Carve Path')}</span>
                                 <Select
+                                    disabled={disabled}
                                     className="sm-parameter-row__select"
                                     backspaceRemoves={false}
                                     clearable={false}
@@ -159,6 +162,7 @@ class VectorParameters extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={fillDensity}
                                         min={1}
@@ -166,6 +170,7 @@ class VectorParameters extends PureComponent {
                                         onChange={this.actions.onChangeFillDensity}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         value={fillDensity}
                                         min={1}
@@ -182,6 +187,7 @@ class VectorParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={targetDepth}
                                     min={0.01}
@@ -199,6 +205,7 @@ class VectorParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={stepDown}
                                     min={0.01}
@@ -216,6 +223,7 @@ class VectorParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={safetyHeight}
                                     min={0.1}
@@ -233,6 +241,7 @@ class VectorParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={stopHeight}
                                     min={0.1}
@@ -263,7 +272,7 @@ class VectorParameters extends PureComponent {
                                             max={0}
                                             step={0.5}
                                             onChange={this.actions.onTabHeight}
-                                            disabled={!enableTab}
+                                            disabled={disabled & !enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
                                     </div>
@@ -280,7 +289,7 @@ class VectorParameters extends PureComponent {
                                             min={1}
                                             step={1}
                                             onChange={this.actions.onTabSpace}
-                                            disabled={!enableTab}
+                                            disabled={disabled & !enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
                                     </div>
@@ -297,7 +306,7 @@ class VectorParameters extends PureComponent {
                                             min={1}
                                             step={1}
                                             onChange={this.actions.onTabWidth}
-                                            disabled={!enableTab}
+                                            disabled={disabled & !enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
                                     </div>

@@ -30,6 +30,8 @@ class ToolPathModel {
             ...modeConfigs
         };
 
+        this.hideFlag = false;
+
         this.needPreview = true;
         this.toolPathFilename = null;
         this.toolPathObj3D = null;
@@ -83,7 +85,8 @@ class ToolPathModel {
             needPreview: this.needPreview,
             gcodeConfig: this.gcodeConfig,
             toolPathFilename: this.toolPathFilename,
-            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
+            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder,
+            hideFlag: this.hideFlag
         };
     }
 

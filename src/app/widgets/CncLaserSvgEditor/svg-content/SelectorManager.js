@@ -115,7 +115,7 @@ class Selector {
             nh = (maxy - miny);
         }
 
-        const dstr = `M${nx},${ny} 
+        const dstr = `M${nx},${ny}
             L${nx + nw},${ny}
             L${nx + nw},${ny + nh}
             L${nx},${ny + nh} z`;

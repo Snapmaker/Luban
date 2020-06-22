@@ -275,10 +275,13 @@ export const actions = {
 
     selectModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
-        const find = modelGroup.getModels()
-            .find(v => v.meshObject === model);
-        dispatch(svgModelActions.selectModel(headType, find.modelID));
-        dispatch(threejsModelActions.selectModel(headType, find.modelID));
+        const find = modelGroup.getModels().find(v => v.meshObject === model);
+        dispatch(actions.selectModelByID(headType, find.modelID));
+    },
+
+    selectModelByID: (headType, modelID) => (dispatch) => {
+        dispatch(svgModelActions.selectModel(headType, modelID));
+        dispatch(threejsModelActions.selectModel(headType, modelID));
     },
 
     unselectAllModels: (headType) => (dispatch) => {
@@ -614,7 +617,7 @@ export const actions = {
                 .getTaskInfo();
             if (modelState) {
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelState.modelID);
-                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview) {
+                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
                     const taskInfo = {
                         ...modelState,
                         ...toolPathModelTaskInfo
@@ -642,7 +645,7 @@ export const actions = {
             for (const model of modelGroup.getModels()) {
                 const modelTaskInfo = model.getTaskInfo();
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
-                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview) {
+                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
                     const taskInfo = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
@@ -866,6 +869,7 @@ export const actions = {
         const modelInfos = [];
         const { modelGroup, toolPathModelGroup } = getState()[headType];
         for (const model of modelGroup.getModels()) {
+            if (model.hideFlag) continue;
             const modelTaskInfo = model.getTaskInfo();
             const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
             if (toolPathModelTaskInfo) {
@@ -1064,8 +1068,24 @@ export const actions = {
     },
     quitRecovery: (headType) => async (dispatch) => {
         dispatch(actions.clearSavedEnvironment(headType));
-    }
+    },
 
+    hideSelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        modelGroup.hideSelectedModel();
+        toolPathModelGroup.hideSelectedModel();
+        svgModelGroup.hideSelectedElement();
+        dispatch(baseActions.render(headType));
+    },
+
+    showSelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        modelGroup.showSelectedModel();
+        toolPathModelGroup.showSelectedModel();
+        svgModelGroup.showSelectedElement();
+        svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
+        dispatch(baseActions.render(headType));
+    }
 };
 
 

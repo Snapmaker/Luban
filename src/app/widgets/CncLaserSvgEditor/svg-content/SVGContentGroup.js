@@ -144,7 +144,9 @@ class SVGContentGroup {
         if (this.selectedElements.length === 1) {
             const elem = this.selectedElements[0];
             const selector = this.requestSelector(elem);
-            selector.showGrips(true);
+            if (!elem.hideFlag) {
+                selector.showGrips(true);
+            }
         }
     }
 

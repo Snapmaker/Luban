@@ -11,6 +11,7 @@ class ImageProcessMode extends PureComponent {
         sourceType: PropTypes.string.isRequired,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
+        disabled: PropTypes.bool,
 
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired
@@ -31,7 +32,7 @@ class ImageProcessMode extends PureComponent {
     };
 
     render() {
-        const { sourceType, mode, showOrigin } = this.props;
+        const { sourceType, mode, showOrigin, disabled } = this.props;
         const actions = this.actions;
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
 
@@ -50,11 +51,14 @@ class ImageProcessMode extends PureComponent {
                 </Anchor>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <div style={{
-                            margin: '15px 0px'
-                        }}
+                        <div
+                            style={{
+                                margin: '15px 0px'
+                            }}
                         >
-                            <div className={styles['laser-modes']}>
+                            <div
+                                className={styles['laser-modes']}
+                            >
                                 <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
                                     <Anchor
                                         className={styles['laser-mode__btn']}
@@ -69,6 +73,7 @@ class ImageProcessMode extends PureComponent {
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label-lg">{i18n._('Show Original Image')}</span>
                             <input
+                                disabled={disabled}
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 checked={showOrigin}
@@ -76,7 +81,7 @@ class ImageProcessMode extends PureComponent {
                             />
                         </div>
                         {isRasterGreyscale && (
-                            <ReliefParameters />
+                            <ReliefParameters disabled={disabled} />
                         )}
                     </React.Fragment>
                 )}

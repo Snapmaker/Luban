@@ -11,11 +11,7 @@ const EVENTS = {
 };
 
 // const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
-const materialNormal = new THREE.MeshPhongMaterial({
-    color: 0xa0a0a0,
-    specular: 0xb0b0b0,
-    shininess: 30
-});
+const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
     shininess: 30,
@@ -38,25 +34,21 @@ const DEFAULT_TRANSFORMATION = {
 
 // class Model extends THREE.Mesh {
 class Model {
-    modeConfigs = {};
+    modeConfigs = {}
 
     constructor(modelInfo) {
-        const {
-            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
-            transformation, processImageName
-        } = modelInfo;
+        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
+            transformation, processImageName } = modelInfo;
 
         this.limitSize = limitSize;
 
         const geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({
-            color: 0xe0e0e0,
-            visible: false
-        });
+        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = modelID;
+        this.modelName = '';
 
         this.headType = headType;
         this.sourceType = sourceType; // 3d, raster, svg, text
@@ -68,6 +60,8 @@ class Model {
         this.uploadName = uploadName;
         this.config = config;
         this.mode = mode;
+
+        this.hideFlag = false; // hided in canvas
 
         this.processImageName = processImageName;
 
@@ -91,12 +85,19 @@ class Model {
         this.showOrigin = this.sourceType !== 'raster';
     }
 
+    updateModelName(newName) {
+        this.modelName = newName;
+    }
+
     getTaskInfo() {
         return {
             modelID: this.modelID,
+            modelName: this.modelName,
             headType: this.headType,
             sourceType: this.sourceType,
             mode: this.mode,
+
+            hideFlag: this.hideFlag,
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
@@ -377,12 +378,10 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, width, height } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
-        this.width = width || this.width;
-        this.height = height || this.height;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
 

@@ -11,6 +11,7 @@ import { actions } from '../../../flux/editor';
 
 class ReliefGcodeParameters extends PureComponent {
     static propTypes = {
+        disabled: PropTypes.bool,
         size: PropTypes.object.isRequired,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
@@ -49,9 +50,8 @@ class ReliefGcodeParameters extends PureComponent {
     };
 
     render() {
-        const { size } = this.props;
+        const { size, disabled } = this.props;
         const { targetDepth, stepDown, safetyHeight, stopHeight, density } = this.props;
-
         return (
             <div>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
@@ -72,9 +72,12 @@ class ReliefGcodeParameters extends PureComponent {
                                 title={i18n._('Target Depth')}
                                 content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
                             >
-                                <div className="sm-parameter-row">
+                                <div
+                                    className="sm-parameter-row"
+                                >
                                     <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={targetDepth}
                                         min={0.01}
@@ -93,6 +96,7 @@ class ReliefGcodeParameters extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={stepDown}
                                         min={0.01}
@@ -111,6 +115,7 @@ class ReliefGcodeParameters extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={safetyHeight}
                                         min={0.1}
@@ -129,6 +134,7 @@ class ReliefGcodeParameters extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={stopHeight}
                                         min={0.1}
@@ -147,6 +153,7 @@ class ReliefGcodeParameters extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Density')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={density}
                                         min={1}

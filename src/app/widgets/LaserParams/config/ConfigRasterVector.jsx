@@ -13,6 +13,7 @@ class ConfigRasterVector extends PureComponent {
         vectorThreshold: PropTypes.number,
         invert: PropTypes.bool,
         turdSize: PropTypes.number,
+        disabled: PropTypes.bool,
 
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
@@ -37,7 +38,7 @@ class ConfigRasterVector extends PureComponent {
     };
 
     render() {
-        const { vectorThreshold, invert, turdSize } = this.props;
+        const { vectorThreshold, invert, turdSize, disabled } = this.props;
 
         return (
             <div>
@@ -51,6 +52,7 @@ class ConfigRasterVector extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
                                     <input
+                                        disabled={disabled}
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={invert}
@@ -65,6 +67,7 @@ class ConfigRasterVector extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('B&W')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={vectorThreshold}
                                         min={0}
@@ -72,6 +75,7 @@ class ConfigRasterVector extends PureComponent {
                                         onChange={this.actions.changeVectorThreshold}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         defaultValue={vectorThreshold}
                                         min={0}
@@ -88,6 +92,7 @@ class ConfigRasterVector extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Impurity Size')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={turdSize}
                                         min={0}

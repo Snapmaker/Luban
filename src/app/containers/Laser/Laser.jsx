@@ -101,7 +101,7 @@ class Laser extends Component {
                                     {widgets.map(widget => {
                                         return (
                                             <div data-widget-id={widget} key={widget}>
-                                                <Widget widgetId={widget} />
+                                                <Widget widgetId={widget} headType="laser" />
                                             </div>
                                         );
                                     })}

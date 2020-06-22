@@ -155,6 +155,7 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log('nextProps', nextProps.selectedModelID);
         const { renderingTimestamp } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
@@ -199,8 +200,21 @@ class Visualizer extends Component {
                 // this.canvas.current.controls.attach(model);
                 // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
-                if (meshObject) {
+                if (meshObject && !selectedModel.hideFlag) {
                     this.canvas.current.controls.attach(meshObject);
+                } else {
+                    this.canvas.current.controls.detach();
+                }
+            }
+        } else {
+            const selectedModel = this.props.getSelectedModel();
+            if (!selectedModel) {
+                this.canvas.current.controls.detach();
+            } else {
+                if (selectedModel.hideFlag) {
+                    this.canvas.current.controls.detach();
+                } else {
+                    this.canvas.current.controls.attach(selectedModel.meshObject);
                 }
             }
         }

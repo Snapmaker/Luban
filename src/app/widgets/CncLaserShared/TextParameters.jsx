@@ -14,6 +14,7 @@ import { actions as textActions } from '../../flux/text';
 class TextParameters extends PureComponent {
     static propTypes = {
         fontOptions: PropTypes.array,
+        disabled: PropTypes.bool,
         config: PropTypes.shape({
             text: PropTypes.string,
             size: PropTypes.number,
@@ -64,7 +65,7 @@ class TextParameters extends PureComponent {
     };
 
     render() {
-        const { config, fontOptions } = this.props;
+        const { config, fontOptions, disabled } = this.props;
         const { text, size, font, lineHeight, alignment } = config;
         const actions = this.actions;
 
@@ -92,6 +93,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row" style={{ height: '68px' }}>
                                 <span className="sm-parameter-row__label">{i18n._('Text')}</span>
                                 <textarea
+                                    disabled={disabled}
                                     style={{ width: '202px', float: 'right', resize: 'none' }}
                                     className="form-control"
                                     rows="3"
@@ -107,6 +109,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font')}</span>
                                 <input
+                                    disabled={disabled}
                                     ref={this.fileInput}
                                     type="file"
                                     accept=".woff, .ttf, .otf"
@@ -115,6 +118,7 @@ Start a new line manually according to your needs.')}
                                     onChange={actions.onChangeFile}
                                 />
                                 <button
+                                    disabled={disabled}
                                     type="button"
                                     style={{
                                         display: 'inline-block',
@@ -131,6 +135,7 @@ Start a new line manually according to your needs.')}
                                     <i className="fa fa-upload" />
                                 </button>
                                 <Select
+                                    disabled={disabled}
                                     className="sm-parameter-row__select"
                                     backspaceRemoves={false}
                                     clearable={false}
@@ -149,6 +154,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font Size')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={size}
                                     onChange={actions.onChangeSize}
@@ -163,6 +169,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Line Height')}</span>
                                 <Input
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={lineHeight}
                                     onChange={actions.onChangeLineHeight}
@@ -177,6 +184,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
                                 <Select
+                                    disabled={disabled}
                                     className="sm-parameter-row__select"
                                     backspaceRemoves={false}
                                     clearable={false}
