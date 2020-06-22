@@ -74,7 +74,6 @@ class Transformation extends PureComponent {
         const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0 } = this.props.transformation;
         const canResize = sourceType !== 'text';
         const selectedNotHide = selectedModelID && !selectedModelHideFlag;
-
         const actions = this.actions;
 
         return (
