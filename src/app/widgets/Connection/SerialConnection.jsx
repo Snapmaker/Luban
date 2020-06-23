@@ -378,7 +378,7 @@ class SerialConnection extends PureComponent {
                         >
                             <i className="fa fa-toggle-off" />
                             <span className="space" />
-                            {i18n._('Open')}
+                            {i18n._('Connect')}
                         </button>
                     )}
                     {isConnected && (
@@ -389,7 +389,7 @@ class SerialConnection extends PureComponent {
                         >
                             <i className="fa fa-toggle-on" />
                             <Space width={4} />
-                            {i18n._('Close')}
+                            {i18n._('Disconnect')}
                         </button>
                     )}
                     {err && (
