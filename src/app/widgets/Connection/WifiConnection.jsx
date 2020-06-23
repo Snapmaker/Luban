@@ -50,7 +50,7 @@ class WifiConnection extends PureComponent {
     };
 
     state = {
-        server: {},
+        server: ABSENT_OBJECT,
         showConnectionMessage: false,
         connectionMessage: {
             text: '',
@@ -181,6 +181,13 @@ class WifiConnection extends PureComponent {
                 }
             });
         },
+        onCloseWifiConnectionMessage: () => {
+            this.actions.hideWifiConnectionMessage();
+            this.props.closeServer();
+        },
+        /**
+         * Show manual Wi-Fi modal
+         */
         showManualWiFi: () => {
             this.setState({
                 showManualWiFi: true,
@@ -200,10 +207,9 @@ class WifiConnection extends PureComponent {
                 }
             });
         },
-        onCloseWifiConnectionMessage: () => {
-            this.actions.hideWifiConnectionMessage();
-            this.props.closeServer();
-        },
+        /**
+         * Hide manual Wi-Fi modal
+         */
         onCloseManualWiFi: () => {
             this.setState({
                 showManualWiFi: false
@@ -212,6 +218,7 @@ class WifiConnection extends PureComponent {
     };
 
     componentDidMount() {
+        // Discover servers when mounted
         setTimeout(() => this.props.discoverServers());
 
         // Auto set server when first launch
@@ -239,6 +246,13 @@ class WifiConnection extends PureComponent {
         }
     }
 
+    /**
+     * Find server object in `servers` that matches `this.props.server`, and set it
+     * as `this.state.server`. If no matches found, set the first object as server.
+     * `this.state.server` is used to be displayed in in dropdown menu.
+     *
+     * @param servers list of server objects
+     */
     autoSetServer(servers) {
         const { server } = this.props;
 
@@ -260,17 +274,27 @@ class WifiConnection extends PureComponent {
     }
 
     renderServerOptions = (server) => {
+        const display = `${server.name} (${server.address})`;
         return (
-            <div style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                <i>{server.name} ({server.address})</i>
+            <div title={display} style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <i>{display}</i>
             </div>
         );
     };
 
+    /**
+     *
+     * @param server
+     * @returns {*}
+     */
     renderServerValue = (server) => {
+        let display = '';
+        if (server !== ABSENT_OBJECT) {
+            display = `${server.name} (${server.address})`;
+        }
         return (
-            <div style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                <i>{server.name} ({server.address})</i>
+            <div title={display} style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <i>{display}</i>
             </div>
         );
     };
@@ -390,7 +414,7 @@ class WifiConnection extends PureComponent {
                             >
                                 <i className="fa fa-toggle-off" />
                                 <span className="space" />
-                                {i18n._('Open')}
+                                {i18n._('Connect')}
                             </button>
                         )}
                         {isConnected && (
@@ -401,7 +425,7 @@ class WifiConnection extends PureComponent {
                             >
                                 <i className="fa fa-toggle-on" />
                                 <Space width={4} />
-                                {i18n._('Close')}
+                                {i18n._('Disconnect')}
                             </button>
                         )}
                     </div>
