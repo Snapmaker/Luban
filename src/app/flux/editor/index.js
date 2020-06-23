@@ -1,13 +1,33 @@
+
 import path from 'path';
 import uuid from 'uuid';
-import api from '../../api';
+
+
 import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, sizeModelByMachineSize } from '../models/ModelInfoUtils';
 import { threejsModelActions } from './threejs-model';
 import { svgModelActions } from './svg-model';
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
 import { SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../../constants';
 import { controller } from '../../lib/controller';
+
+
+import api from '../../api';
+import { actions as printingActions } from '../printing';
+
+
+const INITIAL_STATE = {
+    [HEAD_3DP]: {
+        findLastEnviroment: false
+    },
+    [HEAD_CNC]: {
+        findLastEnviroment: false
+    },
+    [HEAD_LASER]: {
+        findLastEnviroment: false
+    }
+};
+const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
 
 const getCount = (() => {
     let count = 0;
@@ -101,7 +121,17 @@ export const actions = {
             dispatch(threejsModelActions.selectModel(headType, modelID));
         });
     },
+    initRecoverService: () => (dispatch) => {
+        const startService = (envHeadType) => {
+            dispatch(actions.getLastEnviroment(envHeadType));
+            const action = actions.autoSaveEnviroment(envHeadType);
+            setInterval(() => dispatch(action), 5000);
+        };
 
+        startService(HEAD_LASER);
+        startService(HEAD_CNC);
+        startService(HEAD_3DP);
+    },
     uploadImage: (headType, file, mode, onError) => (dispatch) => {
         const formData = new FormData();
         formData.append('image', file);
@@ -208,6 +238,7 @@ export const actions = {
             config,
             gcodeConfig
         };
+
 
         api.processImage(options)
             .then((res) => {
@@ -967,9 +998,84 @@ export const actions = {
             canUndo: undoSnapshots.length > 1,
             canRedo: redoSnapshots.length > 0
         }));
+    },
+    updateState: (headType, state) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            headType,
+            state
+        };
+    },
+
+    autoSaveEnviroment: (headType) => {
+        let lastString = false;
+
+        return async (dispatch, getState) => {
+            let fluxMod = headType;
+            if (headType === HEAD_3DP) fluxMod = 'printing';
+            const state = getState()[fluxMod];
+
+            const models = state.modelGroup.getModels();
+            if (!models.length) return;
+
+            const { defaultMaterialId, defaultQualityId } = state;
+            const envObj = { headType, defaultMaterialId, defaultQualityId, models: [] };
+            for (let key = 0; key < models.length; key++) {
+                const model = models[key];
+                envObj.models.push(model.getSerializableConfig());
+            }
+            const content = JSON.stringify(envObj);
+
+            if (content !== lastString) {
+                await api.saveEnv({ content });
+                lastString = content;
+            }
+        };
+    },
+
+    getLastEnviroment: (headType) => async (dispatch) => {
+        const { body: { content } } = await api.getEnv({ headType });
+        content && dispatch(actions.updateState(headType, { findLastEnviroment: true, content }));
+    },
+    clearSavedEnvironment: (headType) => async (dispatch) => {
+        await api.removeEnv({ headType });
+        dispatch(actions.updateState(headType, { findLastEnviroment: false, envText: undefined }));
+    },
+    onRecovery: (envHeadType) => async (dispatch, getState) => {
+        const { content } = getState().editor[envHeadType];
+        await api.recoverEnv({ content });
+        const envObj = JSON.parse(content);
+        let modActions = null;
+        if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
+            modActions = actions;
+        }
+        if (envHeadType === HEAD_3DP) {
+            modActions = printingActions;
+        }
+        const { models, ...restState } = envObj;
+        for (let k = 0; k < models.length; k++) {
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = models[k];
+            dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
+                sourceType, config, gcodeConfig, transformation));
+        }
+        dispatch(modActions.updateState(restState));
+
+        dispatch(actions.clearSavedEnvironment(envHeadType));
+    },
+    quitRecovery: (headType) => async (dispatch) => {
+        dispatch(actions.clearSavedEnvironment(headType));
     }
+
 };
 
-export default function reducer() {
-    return {};
+
+export default function reducer(state = INITIAL_STATE, action) {
+    const { type, headType } = action;
+    if (!headType || type !== ACTION_UPDATE_STATE) return state;
+    const editorState = Object.assign({}, state[headType], action.state);
+
+    if (type === ACTION_UPDATE_STATE) {
+        return Object.assign({}, state, { [headType]: editorState });
+    }
+    return state;
 }

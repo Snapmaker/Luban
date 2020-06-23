@@ -12,7 +12,7 @@ import settings from './config/settings';
 const log = logger('server:DataStorage');
 
 
-const rmDir = (dirPath, removeSelf) => {
+export const rmDir = (dirPath, removeSelf) => {
     log.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
         removeSelf = true;
@@ -55,6 +55,8 @@ class DataStorage {
 
     static userCaseDir;
 
+    static envDir;
+
     static async init() {
         if (isElectron()) {
             this.userDataDir = app.getPath('userData');
@@ -68,6 +70,12 @@ class DataStorage {
         this.configDir = `${this.userDataDir}/Config`;
         this.fontDir = `${this.userDataDir}/Fonts`;
         this.userCaseDir = `${this.userDataDir}/UserCase`;
+        this.envDir = `${this.userDataDir}/env`;
+
+        mkdirp.sync(this.envDir);
+        mkdirp.sync(`${this.envDir}/3dp`);
+        mkdirp.sync(`${this.envDir}/laser`);
+        mkdirp.sync(`${this.envDir}/cnc`);
 
         mkdirp.sync(this.tmpDir);
         mkdirp.sync(this.sessionDir);

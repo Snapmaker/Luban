@@ -1,3 +1,4 @@
+
 # Node.js
 node_modules
 npm-debug.log*
@@ -8,6 +9,9 @@ npm-debug.log*
 /dist
 /output
 /releases
+
+# local files
+/local/
 
 # Development Env (Jetbrains, Vim, macOS)
 .idea/

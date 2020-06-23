@@ -59,6 +59,10 @@ const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').sen
 const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/uploadCaseFile').send(formData));
 const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
+const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').send(data));
+const getEnv = defaultAPIFactory((data) => request.post('/api/file/getEnv').send(data));
+const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
+const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv').send(data));
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 const uploadLaserCaseImage = defaultAPIFactory((formdata) => request.post('/api/image/laserCaseImage').send(formdata));
@@ -293,6 +297,10 @@ export default {
     uploadCaseFile,
     uploadGcodeFile,
     uploadUpdateFile,
+    saveEnv,
+    getEnv,
+    recoverEnv,
+    removeEnv,
     uploadImage,
     uploadLaserCaseImage,
     stockRemapProcess,

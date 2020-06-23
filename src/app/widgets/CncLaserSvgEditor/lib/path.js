@@ -1,4 +1,3 @@
-import * as pathSeg from 'pathseg'; // eslint-disable-line no-unused-vars
 
 function shortFloat(val) {
     const digits = 5;
