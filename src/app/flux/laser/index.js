@@ -112,6 +112,20 @@ export const actions = {
     },
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
+        const state = getState().laser;
+        const { svgModelGroup } = state;
+
+        svgModelGroup.addImageBackgroundToSVG({
+            modelID: 'image-background',
+            uploadName: filename,
+            transformation: {
+                width: width,
+                height: height,
+                positionX: dx + width / 2,
+                positionY: dy + height / 2
+            }
+        });
+
         const imgPath = `${DATA_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath, () => {
             dispatch(editorActions.render('laser'));
@@ -126,9 +140,8 @@ export const actions = {
         const mesh = new THREE.Mesh(geometry, material);
         const x = dx + width / 2;
         const y = dy + height / 2;
-        mesh.position.set(x, y, -0.001);
 
-        const state = getState().laser;
+        mesh.position.set(x, y, -0.001);
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);
@@ -138,6 +151,8 @@ export const actions = {
 
     removeBackgroundImage: () => (dispatch, getState) => {
         const state = getState().laser;
+        const { svgModelGroup } = state;
+        svgModelGroup.clearImageBackground();
         const { group } = state.background;
         group.remove(...group.children);
         dispatch(actions.setBackgroundEnabled(false));

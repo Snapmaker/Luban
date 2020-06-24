@@ -15,9 +15,13 @@ class SVGContentGroup {
         this.svgContent = svgContent;
         this.scale = scale;
 
+        this.backgroundGroup = document.createElementNS(NS.SVG, 'g');
+        this.backgroundGroup.setAttribute('id', 'svg-data-background');
+
         this.group = document.createElementNS(NS.SVG, 'g');
         this.group.setAttribute('id', 'svg-data');
 
+        this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
         this.selectorManager = new SelectorManager({
             getRoot: () => this.svgContent,
@@ -95,6 +99,18 @@ class SVGContentGroup {
             const selector = this.selectorManager.requestSelector(elem);
             selector.resize();
         }
+    }
+
+    addSVGBackgroundElement(data) {
+        if (data.attr && data.attr.id) {
+            const existingElement = this.backgroundGroup.querySelector(`#${data.attr.id}`);
+            if (existingElement) {
+                existingElement.remove();
+            }
+        }
+        const element = createSVGElement(data);
+        this.backgroundGroup.append(element);
+        return element;
     }
 
     addSVGElement(data) {
