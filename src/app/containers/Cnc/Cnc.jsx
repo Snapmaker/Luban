@@ -36,8 +36,8 @@ class Cnc extends Component {
             }
             this.props.uploadImage(file, mode, () => {
                 modal({
-                    title: i18n._('Parse Image Error'),
-                    body: i18n._('Failed to parse image file {{}}', { filename: file.name })
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{}}.', { filename: file.name })
                 });
             });
         },

@@ -3,7 +3,7 @@ import { CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_V_BIT } from '../../constant
 export const CaseConfigOriginal = [
     {
         tag: '3dp', // 3dp、laser、cnc
-        title: '3D Printing Spiral Vase',
+        title: '3D Printed Fabric',
         imgSrc: '../../images/user-case/Origin/3D-Origin.jpg',
         pathConfig: {
             name: '3DP_test_Origin.stl',
@@ -32,7 +32,7 @@ export const CaseConfigOriginal = [
     },
     {
         tag: 'laser',
-        title: 'Laser Cutting Gift Box',
+        title: 'Laser Engraved Feather',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/Origin/Laser-Origin.jpg',
         pathConfig: {
@@ -109,7 +109,7 @@ export const CaseConfigOriginal = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Keychain',
+        title: 'CNC Cut Sign',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/Origin/CNC-Origin.jpg',
         pathConfig: {
@@ -145,7 +145,7 @@ export const CaseConfigOriginal = [
 export const CaseConfig150 = [
     {
         tag: '3dp', // 3dp、laser、cnc
-        title: '3D Printing Spiral Vase',
+        title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A150/3D-A150.png',
         pathConfig: {
             name: '3DP_test_A150.stl',
@@ -173,7 +173,7 @@ export const CaseConfig150 = [
     },
     {
         tag: 'laser',
-        title: 'Laser Cutting Gift Box',
+        title: 'Laser Cut Gift Box',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/Laser-A150.png',
         pathConfig: {
@@ -247,7 +247,7 @@ export const CaseConfig150 = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Keychain',
+        title: 'CNC Cut Keychain',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A150/CNC-A150.png',
         pathConfig: {
@@ -283,7 +283,7 @@ export const CaseConfig150 = [
 export const CaseConfig250 = [
     {
         tag: '3dp', // 3dp、laser、cnc
-        title: '3D Printing Spiral Vase',
+        title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
             name: '3DP_test_A250.stl',
@@ -305,7 +305,7 @@ export const CaseConfig250 = [
     },
     {
         tag: 'laser',
-        title: 'Laser Cutting Gift Box',
+        title: 'Laser Cut Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
@@ -336,7 +336,7 @@ export const CaseConfig250 = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Smartphone Holder',
+        title: 'CNC Cut Smartphone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {
@@ -367,7 +367,7 @@ export const CaseConfig250 = [
 export const CaseConfig350 = [
     {
         tag: '3dp', // 3dp、laser、cnc
-        title: '3D Printing Spiral Vase',
+        title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
             name: '3DP_test_A350.stl',
@@ -388,7 +388,7 @@ export const CaseConfig350 = [
     },
     {
         tag: 'laser',
-        title: 'Laser Cutting Gift Box',
+        title: 'Laser Cut Gift Box',
         // sourceType: 'svg', // raster/svg/text
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/Laser-A250&A350.png',
@@ -419,7 +419,7 @@ export const CaseConfig350 = [
     },
     {
         tag: 'cnc',
-        title: 'CNC Cutting Smartphone Holder',
+        title: 'CNC Cut Smartphone Holder',
         mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
         imgSrc: '../../images/user-case/A250/CNC-A250&A350.png',
         pathConfig: {
