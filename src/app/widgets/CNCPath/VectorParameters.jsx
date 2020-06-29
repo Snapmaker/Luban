@@ -95,7 +95,6 @@ class VectorParameters extends PureComponent {
             fillDensity,
             enableTab, tabWidth, tabHeight, tabSpace
         } = this.props;
-        console.log(disabled);
 
         return (
             <div>
