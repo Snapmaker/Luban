@@ -56,7 +56,7 @@ function processGcodeHeaderAfterCuraEngine(gcodeFilePath, boundingBox, thumbnail
         + `;thumbnail: ${thumbnail}\n`
         + `;file_total_lines: ${readFileSync.split('\n').length + 20}\n`
         + `;estimated_time(s): ${printTime}\n`
-        + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature.default_value}\n`
+        + `;nozzle_temperature(°C): ${definitionLoader.settings.material_print_temperature_layer_0.default_value}\n`
         + `;build_plate_temperature(°C): ${definitionLoader.settings.material_bed_temperature_layer_0.default_value}\n`
         + `;work_speed(mm/minute): ${definitionLoader.settings.speed_infill.default_value * 60}\n`
         + `;max_x(mm): ${boundingBoxMax.x}\n`
