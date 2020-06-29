@@ -15,6 +15,8 @@ class GcodeConfigRasterBW extends PureComponent {
     static propTypes = {
         density: PropTypes.number,
         direction: PropTypes.string,
+        disabled: PropTypes.bool,
+
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
@@ -35,7 +37,7 @@ class GcodeConfigRasterBW extends PureComponent {
     };
 
     render() {
-        const { density, direction } = this.props;
+        const { density, direction, disabled } = this.props;
 
         return (
             <div>
@@ -59,6 +61,7 @@ class GcodeConfigRasterBW extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Line Direction')}</span>
                                 <Select
+                                    disabled={disabled}
                                     backspaceRemoves={false}
                                     className="sm-parameter-row__select"
                                     clearable={false}
@@ -92,6 +95,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Density')}</span>
                                 <NumberInput
+                                    disabled={disabled}
                                     className="sm-parameter-row__input"
                                     value={density}
                                     min={1}

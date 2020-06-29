@@ -195,8 +195,22 @@ class Visualizer extends Component {
                 // this.canvas.current.controls.attach(model);
                 // this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
                 const meshObject = selectedModel.meshObject;
-                if (meshObject) {
+                // todo, this hide flag will be packaged
+                if (meshObject && !selectedModel.hideFlag) {
                     this.canvas.current.controls.attach(meshObject);
+                } else {
+                    this.canvas.current.controls.detach();
+                }
+            }
+        } else {
+            const selectedModel = this.props.getSelectedModel();
+            if (!selectedModel) {
+                this.canvas.current.controls.detach();
+            } else {
+                if (selectedModel.hideFlag) {
+                    this.canvas.current.controls.detach();
+                } else {
+                    this.canvas.current.controls.attach(selectedModel.meshObject);
                 }
             }
         }

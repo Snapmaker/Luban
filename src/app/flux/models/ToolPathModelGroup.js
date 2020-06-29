@@ -71,6 +71,15 @@ class ToolPathModelGroup {
         return this.getToolPathModels().filter(v => v.toolPathFilename).length;
     }
 
+    allNotHidedToolPathModelsArePreviewed() {
+        for (const toolPathModel of this.toolPathModels) {
+            if (!toolPathModel.hideFlag && toolPathModel.needPreview) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // unselectAllModels() {
     //     this.selectedToolPathModel = null;
     //     return this._emptyState;
@@ -179,6 +188,20 @@ class ToolPathModelGroup {
 
     cloneToolPathModels() {
         return this.toolPathModels.map(d => d.clone());
+    }
+
+    hideSelectedModel() {
+        const selectedToolPathModel = this.selectedToolPathModel;
+        selectedToolPathModel.hideFlag = true;
+        selectedToolPathModel.updateNeedPreview(true);
+        selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = false);
+    }
+
+    showSelectedModel() {
+        const selectedToolPathModel = this.selectedToolPathModel;
+        selectedToolPathModel.hideFlag = false;
+        selectedToolPathModel.updateNeedPreview(true);
+        selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = true);
     }
 }
 

@@ -9,6 +9,7 @@ import { actions as editorActions } from '../../../flux/editor';
 class ReliefParameters extends PureComponent {
     static propTypes = {
         invert: PropTypes.bool,
+        disabled: PropTypes.bool,
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
@@ -24,7 +25,7 @@ class ReliefParameters extends PureComponent {
     };
 
     render() {
-        const { invert } = this.props;
+        const { invert, disabled } = this.props;
 
         return (
             <div>
@@ -33,6 +34,7 @@ class ReliefParameters extends PureComponent {
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
                             <input
+                                disabled={disabled}
                                 className="sm-parameter-row__checkbox"
                                 type="checkbox"
                                 defaultChecked={invert}

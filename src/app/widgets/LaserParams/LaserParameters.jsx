@@ -39,6 +39,8 @@ class LaserParameters extends PureComponent {
 
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
+        selectedModelHideFlag: PropTypes.bool,
+        modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
@@ -179,7 +181,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelID, sourceType, mode,
+            selectedModelID, selectedModelHideFlag, modelGroup, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
@@ -228,6 +230,8 @@ class LaserParameters extends PureComponent {
                 {isEditor && (
                     <Transformation
                         selectedModelID={selectedModelID}
+                        selectedModelHideFlag={selectedModelHideFlag}
+                        modelGroup={modelGroup}
                         sourceType={sourceType}
                         transformation={transformation}
                         onModelAfterTransform={onModelAfterTransform}
@@ -239,6 +243,7 @@ class LaserParameters extends PureComponent {
                     <div>
                         {isProcessMode && (
                             <ImageProcessMode
+                                disabled={selectedModelHideFlag}
                                 sourceType={sourceType}
                                 mode={mode}
                                 showOrigin={showOrigin}
@@ -249,24 +254,25 @@ class LaserParameters extends PureComponent {
                         <div>
                             {isEditor && isTextVector && (
                                 <TextParameters
+                                    disabled={selectedModelHideFlag}
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
                             )}
                             {isProcess && isBW && (
-                                <GcodeConfigRasterBW />
+                                <GcodeConfigRasterBW disabled={selectedModelHideFlag} />
                             )}
                             {isProcess && isGreyscale && (
-                                <GcodeConfigGreyscale />
+                                <GcodeConfigGreyscale disabled={selectedModelHideFlag} />
                             )}
                             {isProcess && isRasterVector && (
-                                <GcodeConfigRasterVector />
+                                <GcodeConfigRasterVector disabled={selectedModelHideFlag} />
                             )}
                             {isProcess && isSvgVector && (
-                                <GcodeConfigSvgVector />
+                                <GcodeConfigSvgVector disabled={selectedModelHideFlag} />
                             )}
                             {isProcess && isTextVector && (
-                                <GcodeConfigSvgVector />
+                                <GcodeConfigSvgVector disabled={selectedModelHideFlag} />
                             )}
                         </div>
                     </div>
@@ -274,6 +280,7 @@ class LaserParameters extends PureComponent {
                 )}
                 {isProcess && (
                     <GcodeParameters
+                        selectedModelHideFlag={selectedModelHideFlag}
                         selectedModelID={selectedModelID}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
@@ -294,7 +301,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { page, selectedModelID, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.laser;
+    const { page, selectedModelID, modelGroup, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.laser;
 
     return {
         page,
@@ -302,6 +309,9 @@ const mapStateToProps = (state) => {
         transformation,
         gcodeConfig,
         selectedModelID,
+        // todo, next version fix like selectedModelID
+        selectedModelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
+        modelGroup,
         sourceType,
         mode,
         showOrigin,

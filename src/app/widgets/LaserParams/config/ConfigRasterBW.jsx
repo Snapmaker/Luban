@@ -13,6 +13,7 @@ class ConfigRasterBW extends PureComponent {
     static propTypes = {
         invert: PropTypes.bool,
         bwThreshold: PropTypes.number,
+        disabled: PropTypes.bool,
 
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
@@ -34,7 +35,7 @@ class ConfigRasterBW extends PureComponent {
     };
 
     render() {
-        const { invert, bwThreshold } = this.props;
+        const { invert, bwThreshold, disabled } = this.props;
 
         return (
             <div>
@@ -43,6 +44,7 @@ class ConfigRasterBW extends PureComponent {
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
                             <input
+                                disabled={disabled}
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 checked={invert}
@@ -56,6 +58,7 @@ class ConfigRasterBW extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('B&W')}</span>
                                 <NumberInput
+                                    disabled={disabled}
                                     className="sm-parameter-row__slider-input"
                                     value={bwThreshold}
                                     min={0}
@@ -63,6 +66,7 @@ class ConfigRasterBW extends PureComponent {
                                     onChange={this.actions.onChangeBWThreshold}
                                 />
                                 <Slider
+                                    disabled={disabled}
                                     className="sm-parameter-row__slider"
                                     value={bwThreshold}
                                     min={0}

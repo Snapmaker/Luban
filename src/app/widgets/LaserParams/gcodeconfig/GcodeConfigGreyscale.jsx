@@ -14,6 +14,8 @@ class GcodeConfigGreyscale extends PureComponent {
     static propTypes = {
         density: PropTypes.number.isRequired,
         movementMode: PropTypes.string.isRequired,
+        disabled: PropTypes.bool,
+
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
@@ -47,7 +49,7 @@ class GcodeConfigGreyscale extends PureComponent {
     };
 
     render() {
-        const { density, movementMode } = this.props;
+        const { density, movementMode, disabled } = this.props;
 
         return (
             <div>
@@ -68,6 +70,7 @@ class GcodeConfigGreyscale extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Movement Mode')}</span>
                                 <Select
+                                    disabled={disabled}
                                     backspaceRemoves={false}
                                     className="sm-parameter-row__select-lg"
                                     clearable={false}
@@ -94,6 +97,7 @@ class GcodeConfigGreyscale extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Density')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={density}
                                         min={1}

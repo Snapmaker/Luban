@@ -13,6 +13,7 @@ class ImageProcessMode extends PureComponent {
         sourceType: PropTypes.string.isRequired,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
+        disabled: PropTypes.bool,
 
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired
@@ -33,7 +34,7 @@ class ImageProcessMode extends PureComponent {
     };
 
     render() {
-        const { sourceType, mode, showOrigin } = this.props;
+        const { sourceType, mode, showOrigin, disabled } = this.props;
         const actions = this.actions;
         const isBW = (sourceType === 'raster' && mode === 'bw');
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
@@ -61,6 +62,7 @@ class ImageProcessMode extends PureComponent {
                             <div className={styles['laser-modes']}>
                                 <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'bw' })}>
                                     <Anchor
+                                        disabled={disabled}
                                         className={styles['laser-mode__btn']}
                                         onClick={() => actions.changeSelectedModelMode('bw')}
                                     >
@@ -70,6 +72,7 @@ class ImageProcessMode extends PureComponent {
                                 </div>
                                 <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
                                     <Anchor
+                                        disabled={disabled}
                                         className={styles['laser-mode__btn']}
                                         onClick={() => actions.changeSelectedModelMode('greyscale')}
                                     >
@@ -79,6 +82,7 @@ class ImageProcessMode extends PureComponent {
                                 </div>
                                 <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'vector' })}>
                                     <Anchor
+                                        disabled={disabled}
                                         className={styles['laser-mode__btn']}
                                         onClick={() => actions.changeSelectedModelMode('vector')}
                                     >
@@ -91,15 +95,16 @@ class ImageProcessMode extends PureComponent {
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label-lg">{i18n._('Show Original Image')}</span>
                             <input
+                                disabled={disabled}
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 checked={showOrigin}
                                 onChange={this.props.changeSelectedModelShowOrigin}
                             />
                         </div>
-                        {isBW && <ConfigRasterBW />}
-                        {isGreyscale && <ConfigGreyscale />}
-                        {isRasterVector && <ConfigRasterVector />}
+                        {isBW && <ConfigRasterBW disabled={disabled} />}
+                        {isGreyscale && <ConfigGreyscale disabled={disabled} />}
+                        {isRasterVector && <ConfigRasterVector disabled={disabled} />}
                     </React.Fragment>
                 )}
             </React.Fragment>

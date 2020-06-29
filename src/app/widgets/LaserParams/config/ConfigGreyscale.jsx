@@ -16,6 +16,7 @@ class ConfigGreyscale extends PureComponent {
         brightness: PropTypes.number.isRequired,
         whiteClip: PropTypes.number.isRequired,
         algorithm: PropTypes.string.isRequired,
+        disabled: PropTypes.bool,
 
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
@@ -46,7 +47,7 @@ class ConfigGreyscale extends PureComponent {
     };
 
     render() {
-        const { invert, contrast, brightness, whiteClip, algorithm } = this.props;
+        const { invert, contrast, brightness, whiteClip, algorithm, disabled } = this.props;
 
         return (
             <div>
@@ -56,6 +57,7 @@ class ConfigGreyscale extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
                                 <input
+                                    disabled={disabled}
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={invert}
@@ -69,6 +71,7 @@ class ConfigGreyscale extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Contrast')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={contrast}
                                         min={0}
@@ -76,6 +79,7 @@ class ConfigGreyscale extends PureComponent {
                                         onChange={this.actions.onChangeContrast}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         value={contrast}
                                         min={0}
@@ -92,6 +96,7 @@ class ConfigGreyscale extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Brightness')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={brightness}
                                         min={0}
@@ -99,6 +104,7 @@ class ConfigGreyscale extends PureComponent {
                                         onChange={this.actions.onChangeBrightness}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         value={brightness}
                                         min={0}
@@ -114,6 +120,7 @@ class ConfigGreyscale extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('White Clip')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={whiteClip}
                                         min={0}
@@ -121,6 +128,7 @@ class ConfigGreyscale extends PureComponent {
                                         onChange={this.actions.onChangeWhiteClip}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         value={whiteClip}
                                         min={0}
@@ -136,6 +144,7 @@ class ConfigGreyscale extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Algorithm')}</span>
                                     <Select
+                                        disabled={disabled}
                                         backspaceRemoves={false}
                                         className="sm-parameter-row__select-lg"
                                         clearable={false}

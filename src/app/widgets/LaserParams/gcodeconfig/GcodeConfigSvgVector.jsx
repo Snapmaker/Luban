@@ -16,6 +16,7 @@ class GcodeConfigSvgVector extends PureComponent {
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool.isRequired,
         fillDensity: PropTypes.number.isRequired,
+        disabled: PropTypes.bool,
 
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
@@ -40,7 +41,7 @@ class GcodeConfigSvgVector extends PureComponent {
     };
 
     render() {
-        const { optimizePath, fillEnabled, fillDensity } = this.props;
+        const { optimizePath, fillEnabled, fillDensity, disabled } = this.props;
 
         return (
             <div>
@@ -64,6 +65,7 @@ class GcodeConfigSvgVector extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>
                                 <input
+                                    disabled={disabled}
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={optimizePath}
@@ -84,6 +86,7 @@ class GcodeConfigSvgVector extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
                                     <Input
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider-input"
                                         value={fillDensity}
                                         min={0}
@@ -91,6 +94,7 @@ class GcodeConfigSvgVector extends PureComponent {
                                         onChange={this.actions.onChangeFillDensity}
                                     />
                                     <Slider
+                                        disabled={disabled}
                                         className="sm-parameter-row__slider"
                                         value={fillDensity}
                                         min={0}

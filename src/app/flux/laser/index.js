@@ -30,6 +30,7 @@ const INITIAL_STATE = {
 
     // model: null,
     selectedModelID: null,
+    selectedModelHideFlag: false,
     sourceType: '',
     mode: '',
     showOrigin: null,

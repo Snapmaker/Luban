@@ -16,6 +16,7 @@ class GcodeConfigRasterVector extends PureComponent {
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool,
         fillDensity: PropTypes.number,
+        disabled: PropTypes.bool,
 
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
@@ -40,7 +41,7 @@ class GcodeConfigRasterVector extends PureComponent {
     };
 
     render() {
-        const { optimizePath, fillEnabled, fillDensity } = this.props;
+        const { optimizePath, fillEnabled, fillDensity, disabled } = this.props;
 
         return (
             <div>
@@ -65,6 +66,7 @@ class GcodeConfigRasterVector extends PureComponent {
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>
                                     <input
+                                        disabled={disabled}
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={optimizePath}
@@ -73,6 +75,7 @@ class GcodeConfigRasterVector extends PureComponent {
                                 </div>
                             </TipTrigger>
                             <OptionalDropdown
+                                disabled={disabled}
                                 style={{ marginBottom: '10px' }}
                                 title={i18n._('Fill')}
                                 onClick={this.actions.onToggleFill}
@@ -85,6 +88,7 @@ class GcodeConfigRasterVector extends PureComponent {
                                     <div className="sm-parameter-row">
                                         <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
                                         <Input
+                                            disabled={disabled}
                                             className="sm-parameter-row__slider-input"
                                             value={fillDensity}
                                             min={0}
@@ -92,6 +96,7 @@ class GcodeConfigRasterVector extends PureComponent {
                                             onChange={this.actions.onChangeFillDensity}
                                         />
                                         <Slider
+                                            disabled={disabled}
                                             className="sm-parameter-row__slider"
                                             value={fillDensity}
                                             min={0}
