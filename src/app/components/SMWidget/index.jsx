@@ -76,7 +76,7 @@ function createDefaultWidget(WrappedWidget) {
     return connect(mapStateToProps, mapDispatchToProps)(class extends PureComponent {
         static propTypes = {
             widgetId: PropTypes.string.isRequired,
-            headType: PropTypes.string.isRequired,
+            headType: PropTypes.string,
             onRemove: PropTypes.func,
             onToggle: PropTypes.func,
 

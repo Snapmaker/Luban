@@ -155,7 +155,6 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('nextProps', nextProps.selectedModelID);
         const { renderingTimestamp } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {

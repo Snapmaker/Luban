@@ -289,6 +289,7 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         // model,
         selectedModelID,
+        // todo, next version fix like selectedModelID
         selectedModelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
         modelGroup,
         sourceType,

@@ -378,10 +378,12 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, width, height } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
+        this.width = width || this.width;
+        this.height = height || this.height;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
 

@@ -309,6 +309,7 @@ const mapStateToProps = (state) => {
         transformation,
         gcodeConfig,
         selectedModelID,
+        // todo, next version fix like selectedModelID
         selectedModelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
         modelGroup,
         sourceType,

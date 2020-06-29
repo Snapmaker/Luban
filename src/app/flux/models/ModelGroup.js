@@ -64,11 +64,11 @@ class ModelGroup {
                 baseName = 'Text';
             } else if (model.mode !== 'vector') {
                 baseName = model.originalName;
+                // todo, it may named when upload, but not when create model
             } else {
                 baseName = 'Shape';
             }
         }
-        console.log(model);
         let count = 1;
         let name = '';
         while (1) {
