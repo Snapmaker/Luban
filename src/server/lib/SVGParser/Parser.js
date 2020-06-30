@@ -21,6 +21,15 @@ const TOLERANCE = 0.08 / DEFAULT_MILLIMETER_PER_PIXEL;
 class SVGParser {
     constructor() {
         this.attributeParser = new AttributesParser(this);
+        this.tagParses = {
+            'circle': new CircleTagParser(TOLERANCE),
+            'ellipse': new EllipseTagParser(TOLERANCE),
+            'line': new LineTagParser(TOLERANCE),
+            'path': new PathTagParser(TOLERANCE),
+            'polygon': new PolygonTagParser(TOLERANCE),
+            'polyline': new PolylineTagParser(TOLERANCE),
+            'rect': new RectTagParser(TOLERANCE)
+        };
         // this.image = {
         //     shapes: []
         // };
@@ -110,38 +119,31 @@ class SVGParser {
         switch (tag) {
             // graphics elements
             case 'circle': {
-                const tagParser = new CircleTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.circle.parse(node, attributes));
                 break;
             }
             case 'ellipse': {
-                const tagParser = new EllipseTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.ellipse.parse(node, attributes));
                 break;
             }
             case 'line': {
-                const tagParser = new LineTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.line.parse(node, attributes));
                 break;
             }
             case 'path': {
-                const tagParser = new PathTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.path.parse(node, attributes));
                 break;
             }
             case 'polygon': {
-                const tagParser = new PolygonTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.polygon.parse(node, attributes));
                 break;
             }
             case 'polyline': {
-                const tagParser = new PolylineTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.polyline.parse(node, attributes));
                 break;
             }
             case 'rect': {
-                const tagParser = new RectTagParser(TOLERANCE);
-                shapes.push(tagParser.parse(node, attributes));
+                shapes.push(this.tagParses.rect.parse(node, attributes));
                 break;
             }
 
