@@ -141,6 +141,33 @@ class SvgModelGroup {
         return model;
     }
 
+    clearImageBackground() {
+        const backgroundGroup = this.svgContentGroup.backgroundGroup;
+        while (backgroundGroup.firstChild) {
+            backgroundGroup.removeChild(backgroundGroup.lastChild);
+        }
+    }
+
+    addImageBackgroundToSVG(model) {
+        const { x, y, width, height } = coordGmModelToSvg(this.size, model.transformation);
+        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
+        const elem = this.svgContentGroup.addSVGBackgroundElement({
+            element: 'image',
+            attr: {
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                href: uploadPath,
+                id: model.modelID,
+                preserveAspectRatio: 'none'
+            }
+        });
+        return {
+            modelID: elem.getAttribute('id')
+        };
+    }
+
     addModelToSVGElement(model) {
         const { x, y, width, height } = coordGmModelToSvg(this.size, model.transformation);
         const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;

@@ -6,8 +6,7 @@ import { NS } from './lib/namespaces';
 import {
     cleanupAttributes,
     setAttributes,
-    getBBox,
-    toString
+    getBBox
 } from './element-utils';
 import {
     transformPoint,
@@ -85,9 +84,13 @@ class SVGCanvas extends PureComponent {
         size: PropTypes.object
     };
 
-    state = {
-        scale: DEFAULT_SCALE
-    };
+    updateTime = 0;
+
+    scale = DEFAULT_SCALE;
+
+    offsetX = 0;
+
+    offsetY = 0;
 
     printableArea = null;
 
@@ -101,13 +104,8 @@ class SVGCanvas extends PureComponent {
         // fill: '#00B7E9',
         fill: DEFAULT_FILL_COLOR,
         stroke: '#000000',
-        strokeWidth: 1 / this.state.scale,
+        strokeWidth: 1 / this.scale,
         opacity: 1
-    };
-
-    currentResolution = {
-        width: 920,
-        height: 1000
     };
 
     // drawing variables
@@ -205,7 +203,7 @@ class SVGCanvas extends PureComponent {
 
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
-            scale: this.state.scale
+            scale: this.scale
         });
     }
 
@@ -213,7 +211,7 @@ class SVGCanvas extends PureComponent {
         this.svgContainer.addEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.addEventListener('wheel', this.onMouseWheel, false);
-        this.svgContainer.addEventListener('contextmenu', this.onContextmenu, false);
+        // this.svgContainer.addEventListener('contextmenu', this.onContextmenu, false);
         window.addEventListener('mouseup', this.onMouseUp, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
@@ -224,7 +222,7 @@ class SVGCanvas extends PureComponent {
 
         this.printableArea = new PrintableArea({
             size: this.props.size,
-            scale: this.state.scale,
+            scale: this.scale,
             getRoot
         });
     }
@@ -286,11 +284,10 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
 
-        if (rightClick) {
-            this.setMode('select');
-        }
-
-        if (mouseTarget === this.svgContentGroup.selectorParentGroup) {
+        if (rightClick || event.ctrlKey || event.metaKey || event.shiftKey) {
+            draw.mode = this.mode;
+            this.setMode('panMove');
+        } else if (mouseTarget === this.svgContentGroup.selectorParentGroup) {
             const grip = event.target;
             const gripType = grip.getAttribute('data-type');
             if (gripType === 'resize') {
@@ -378,6 +375,17 @@ class SVGCanvas extends PureComponent {
                 if (!angle) {
                     transformList.appendItem(this.svgContainer.createSVGTransform());
                 }
+
+                break;
+            }
+            case 'panMove': {
+                draw.started = true;
+                draw.startX = x;
+                draw.startY = y;
+
+                draw.offsetX = this.offsetX;
+                draw.offsetY = this.offsetY;
+                draw.matrix = this.svgContentGroup.getScreenCTM().inverse();
 
                 break;
             }
@@ -647,6 +655,15 @@ class SVGCanvas extends PureComponent {
 
                 break;
             }
+            case 'panMove': {
+                const panPoint = transformPoint({ x: event.pageX, y: event.pageY }, draw.matrix);
+                this.offsetX = draw.offsetX + panPoint.x - draw.startX;
+                this.offsetY = draw.offsetY + panPoint.y - draw.startY;
+                this.updateCanvas();
+                draw.moved = true;
+
+                break;
+            }
             case 'line': {
                 const { startX, startY } = draw;
 
@@ -803,6 +820,13 @@ class SVGCanvas extends PureComponent {
                 }
                 return; // note that this is return
             }
+            case 'panMove': {
+                if (!draw.moved) {
+                    this.onContextmenu(event);
+                }
+                this.setMode(draw.mode);
+                return;
+            }
             case 'line': {
                 const x1 = element.getAttribute('x1');
                 const y1 = element.getAttribute('y1');
@@ -886,17 +910,11 @@ class SVGCanvas extends PureComponent {
         event.preventDefault();
 
         if (event.deltaY < 0) {
-            this.setState({
-                scale: this.state.scale / SCALE_RATE
-            }, () => {
-                this.updateCanvas();
-            });
+            this.scale = this.scale / SCALE_RATE;
+            this.updateCanvas();
         } else {
-            this.setState({
-                scale: this.state.scale * SCALE_RATE
-            }, () => {
-                this.updateCanvas();
-            });
+            this.scale = this.scale * SCALE_RATE;
+            this.updateCanvas();
         }
     };
 
@@ -957,30 +975,27 @@ class SVGCanvas extends PureComponent {
     }
 
     autoFocus = () => {
-        this.setState({
-            scale: DEFAULT_SCALE
-        }, () => {
-            this.updateCanvas();
-        });
+        this.scale = DEFAULT_SCALE;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.updateCanvas();
     };
 
     zoomIn = () => {
-        this.setState({
-            scale: this.state.scale * 4 / 3
-        }, () => {
-            this.updateCanvas();
-        });
+        this.scale = this.scale * 4 / 3;
+        this.updateCanvas();
     };
 
     zoomOut = () => {
-        this.setState({
-            scale: this.state.scale * 3 / 4
-        }, () => {
-            this.updateCanvas();
-        });
+        this.scale = this.scale * 3 / 4;
+        this.updateCanvas();
     };
 
     updateCanvas = (size) => {
+        if (new Date().getTime() - this.updateTime < 20) {
+            this.updateTime = new Date().getTime();
+            return;
+        }
         const $container = jQuery(this.node.current);
 
         const width = $container.width();
@@ -995,30 +1010,30 @@ class SVGCanvas extends PureComponent {
         const viewBoxWidth = size.x * 2;
         const viewBoxHeight = size.y * 2;
 
-        const svgWidth = viewBoxWidth * this.state.scale;
-        const svgHeight = viewBoxHeight * this.state.scale;
+        const svgWidth = viewBoxWidth * this.scale;
+        const svgHeight = viewBoxHeight * this.scale;
 
-        const x = (width - svgWidth) / 2;
-        const y = (height - svgHeight) / 2;
+        const x = (width - svgWidth) / 2 + this.offsetX * this.scale;
+        const y = (height - svgHeight) / 2 + this.offsetY * this.scale;
 
         setAttributes(this.svgContent, {
             width: svgWidth,
             height: svgHeight,
-            x,
-            y,
+            x: x,
+            y: y,
             viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`
         });
 
         setAttributes(this.svgBackground, {
             width: this.svgContent.getAttribute('width'),
             height: this.svgContent.getAttribute('height'),
-            x,
-            y,
+            x: x,
+            y: y,
             viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`
         });
 
-        this.printableArea.updateScale({ size: size, scale: this.state.scale });
-        this.svgContentGroup.updateScale(this.state.scale);
+        this.printableArea.updateScale({ size: size, scale: this.scale });
+        this.svgContentGroup.updateScale(this.scale);
     };
 
     // TODO: need refactor and be moved out to a separate module
@@ -1257,35 +1272,6 @@ class SVGCanvas extends PureComponent {
 
             this.svgContent.append(this.group);
         }
-    }
-
-    // convert svg element to string
-    svgToString() {
-        const out = [];
-
-        const resolution = this.currentResolution;
-        out.push('<svg');
-        out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NS.SVG}"`);
-        if (this.svgContent.hasChildNodes()) {
-            out.push('>');
-
-            for (let i = 0; i < this.svgContent.childNodes.length; i++) {
-                const child = this.svgContent.childNodes.item(i);
-
-                const childOutput = toString(child, 1);
-                if (childOutput) {
-                    out.push('\n');
-                    out.push(childOutput);
-                }
-            }
-
-            out.push('\n');
-            out.push('</svg>');
-        } else {
-            out.push('/>');
-        }
-
-        return out.join('');
     }
 
     on(event, callback) {
