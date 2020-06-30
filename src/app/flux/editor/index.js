@@ -125,7 +125,7 @@ export const actions = {
         const startService = (envHeadType) => {
             dispatch(actions.getLastEnviroment(envHeadType));
             const action = actions.autoSaveEnviroment(envHeadType);
-            setInterval(() => dispatch(action), 5000);
+            setInterval(() => dispatch(action), 1000);
         };
 
         startService(HEAD_LASER);
