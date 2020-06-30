@@ -1,6 +1,7 @@
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
 import { DEFAULT_FILL_COLOR } from '../../constants/svg-constatns';
+import { isZero } from '../../lib/utils';
 
 function toXml(str) {
     // &apos; is ok in XML, but not HTML
@@ -111,7 +112,12 @@ function getBBox(elem) {
     }
 
     if (bbox) {
-        return bboxToObj(bbox);
+        const res = bboxToObj(bbox);
+        if (isZero(res.width) && isZero(res.height)) {
+            return null;
+        }
+        elem.bbox = res;
+        return res;
     }
 
     return null;

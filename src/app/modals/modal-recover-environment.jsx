@@ -64,12 +64,12 @@ class RecoveryEnvironmentModal extends PureComponent {
             <Modal disableOverlay showCloseButton={false} size="md" onClose={this.handleClose}>
                 <Modal.Header>
                     <Modal.Title>
-                        <div className={styles['device-not-recognized']}>{i18n._('Enviroment Recovery')}</div>
+                        <div className={styles['device-not-recognized']}>{i18n._('Project Recover')}</div>
 
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles['which-model']}>{i18n._('We found your last environment, do you want to recover?')}
+                    <div className={styles['which-model']}>{i18n._('The program quit due to an unknown error (reason.) Do you want to recover your last project?')}
                     </div>
 
                 </Modal.Body>

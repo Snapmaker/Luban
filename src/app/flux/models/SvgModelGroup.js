@@ -22,8 +22,11 @@ const coordGmModelToSvg = (size, transformation) => {
     };
 };
 
-const coordGmSvgToModel = (size, elem) => {
-    const bbox = getBBox(elem);
+const coordGmSvgToModel = (size, elem, bbox) => {
+    bbox = bbox || getBBox(elem);
+    if (!bbox) {
+        return null;
+    }
     const angle = getRotationAngle(elem) || 0;
     bbox.positionX = bbox.x + bbox.width / 2 - size.x;
     bbox.positionY = size.y - bbox.y - bbox.height / 2;
@@ -61,8 +64,13 @@ class SvgModelGroup {
     updateSize(size) {
         const data = [];
         for (const node of this.svgContentGroup.getChildNodes()) {
-            const transform = coordGmSvgToModel(this.size, node);
-            data.push([node, transform]);
+            let transform = coordGmSvgToModel(this.size, node);
+            if (!transform) {
+                transform = coordGmSvgToModel(this.size, node, node.bbox);
+                data.push([node, transform, node.bbox]);
+            } else {
+                data.push([node, transform]);
+            }
         }
         this.size = {
             ...size
@@ -71,7 +79,7 @@ class SvgModelGroup {
             this.updateTransformation({
                 positionX: datum[1].positionX,
                 positionY: datum[1].positionY
-            }, datum[0]);
+            }, datum[0], datum[2]);
         }
     }
 
@@ -276,7 +284,7 @@ class SvgModelGroup {
         }
     }
 
-    updateTransformation(transformation, elem) {
+    updateTransformation(transformation, elem, bbox) {
         elem = elem || this.svgContentGroup.getSelected();
         if (!elem) {
             return;
@@ -284,7 +292,10 @@ class SvgModelGroup {
         if (elem.hideFlag && elem.hideFlag) {
             return;
         }
-        const bbox = coordGmSvgToModel(this.size, elem);
+        bbox = bbox || coordGmSvgToModel(this.size, elem);
+        if (!bbox) {
+            return;
+        }
         const nbbox = coordGmModelToSvg(this.size, {
             ...bbox,
             ...transformation
