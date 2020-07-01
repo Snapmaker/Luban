@@ -2,7 +2,7 @@ import fs from 'fs';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
-import SVGParser from '../../lib/SVGParser';
+import SVGParser from '../../../shared/lib/SVGParser';
 import {
     CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
 } from '../../lib/ToolPathGenerator';

@@ -5,7 +5,7 @@ import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from './svg-convert';
 import DataStorage from '../DataStorage';
 import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../shared/lib/DXFParser/Parser';
-import { svgInverse, svgToString } from './SVGParser/SvgToString';
+import { svgInverse, svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
 
 function bit(x) {

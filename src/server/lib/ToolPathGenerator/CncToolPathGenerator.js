@@ -5,7 +5,7 @@
 
 import EventEmitter from 'events';
 import PolygonOffset from './PolygonOffset';
-import { flip, scale, rotate, translate } from '../SVGParser';
+import { flip, scale, rotate, translate } from '../../../shared/lib/SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 import { svgToSegments } from './SVGFill';
