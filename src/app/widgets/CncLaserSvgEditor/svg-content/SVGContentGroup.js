@@ -215,6 +215,12 @@ class SVGContentGroup {
         this.clearSelection();
         elem && this.addToSelection([elem]);
     }
+
+    removeAllElements() {
+        while (this.group.firstChild) {
+            this.deleteElement(this.group.lastChild);
+        }
+    }
 }
 
 export default SVGContentGroup;

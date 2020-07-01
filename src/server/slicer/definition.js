@@ -212,13 +212,14 @@ export function loadQualityDefinitions(configPath) {
     predefined.push('quality.normal_quality.def.json');
     predefined.push('quality.high_quality.def.json');
 
-    const configDir = `${DataStorage.configDir}/${configPath}`;
-    const filenames = fs.readdirSync(configDir);
+    const configDir = `${DataStorage.configDir}`;
+    const filenames = fs.readdirSync(`${configDir}`);
+    const defaultFilenames = fs.readdirSync(`${configDir}/${configPath}`);
 
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
-        if (includes(filenames, filename)) {
+        if (includes(defaultFilenames, filename)) {
             const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
             definitions.push(definitionLoader.toObject());
         }
@@ -226,7 +227,7 @@ export function loadQualityDefinitions(configPath) {
 
     for (const filename of filenames) {
         if (!includes(predefined, filename) && regex.test(filename)) {
-            const definitionLoader = loadDefinitionLoaderByFilename(filename, configPath);
+            const definitionLoader = loadDefinitionLoaderByFilename(filename, '');
             if (defaultDefinitionLoader) {
                 const ownKeys = Array.from(defaultDefinitionLoader.ownKeys).filter(e => !definitionLoader.ownKeys.has(e));
                 if (ownKeys && ownKeys.length > 0) {

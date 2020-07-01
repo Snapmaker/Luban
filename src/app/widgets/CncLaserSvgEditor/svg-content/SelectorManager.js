@@ -276,6 +276,7 @@ class SelectorManager {
 
     releaseSelector(elem) {
         const selector = this.selectorMap[elem.id];
+        if (!selector) return;
         selector.showGrips(false);
 
         delete this.selectorMap[elem.id];

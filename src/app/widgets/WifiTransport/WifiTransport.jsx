@@ -250,16 +250,22 @@ class WifiTransport extends PureComponent {
                             : gcodeFile.name;
                         let size = '';
                         const { isRenaming, uploadName } = gcodeFile;
-
-                        if (gcodeFile.size / 1024 / 1024 > 1) {
+                        if (!gcodeFile.size) {
+                            size = '';
+                        } else if (gcodeFile.size / 1024 / 1024 > 1) {
                             size = `${(gcodeFile.size / 1024 / 1024).toFixed(2)} MB`;
                         } else if (gcodeFile.size / 1024 > 1) {
                             size = `${(gcodeFile.size / 1024).toFixed(2)} KB`;
                         } else {
                             size = `${(gcodeFile.size).toFixed(2)} B`;
                         }
+
+
                         const lastModifiedDate = new Date(gcodeFile.lastModifiedDate);
-                        const date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
+                        let date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
+                        if (!gcodeFile.lastModifiedDate) {
+                            date = '';
+                        }
                         const selected = selectFileName === gcodeFile.uploadName;
                         return (
                             <div

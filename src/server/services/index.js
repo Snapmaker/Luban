@@ -145,6 +145,8 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/file/getEnv'), api.file.getEnv);
     app.post(urljoin(settings.route, 'api/file/recoverEnv'), api.file.recoverEnv);
     app.post(urljoin(settings.route, 'api/file/removeEnv'), api.file.removeEnv);
+    app.post(urljoin(settings.route, 'api/file/packageEnv'), api.file.packageEnv);
+    app.post(urljoin(settings.route, 'api/file/recoverProjectFile'), api.file.recoverProjectFile);
 
 
     app.get(urljoin(settings.route, 'api/printingQualityDefinitions/:series'), api.printingConfigs.getQualityDefinitions);

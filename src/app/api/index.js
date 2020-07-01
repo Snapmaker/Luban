@@ -63,6 +63,9 @@ const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').se
 const getEnv = defaultAPIFactory((data) => request.post('/api/file/getEnv').send(data));
 const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
 const removeEnv = defaultAPIFactory((data) => request.post('/api/file/removeEnv').send(data));
+const packageEnv = defaultAPIFactory((data) => request.post('/api/file/packageEnv').send(data));
+const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/recoverProjectFile').send(data));
+
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 const uploadLaserCaseImage = defaultAPIFactory((formdata) => request.post('/api/image/laserCaseImage').send(formdata));
@@ -301,6 +304,8 @@ export default {
     getEnv,
     recoverEnv,
     removeEnv,
+    packageEnv,
+    recoverProjectFile,
     uploadImage,
     uploadLaserCaseImage,
     stockRemapProcess,

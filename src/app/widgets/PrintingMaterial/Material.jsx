@@ -8,9 +8,11 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as printingActions } from '../../flux/printing';
+import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
+import { HEAD_3DP } from '../../constants';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -328,7 +330,10 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
-        updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
+        updateActiveDefinition: (definition, shouldSave = false) => {
+            dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
+            dispatch(projectActions.autoSaveEnviroment(HEAD_3DP, true));
+        },
         duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),
         updateMaterialDefinitionName: (definition, name) => dispatch(printingActions.updateMaterialDefinitionName(definition, name)),

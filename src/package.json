@@ -65,6 +65,7 @@
     "spawn-default-shell": "~2.0.0",
     "static-eval": "~2.0.5",
     "superagent": "~3.8.3",
+    "tar": "^6.0.2",
     "three": "~0.94.0",
     "universal-logger": "~1.0.1",
     "uuid": "~3.3.2",
