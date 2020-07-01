@@ -4,7 +4,7 @@ import mv from 'mv';
 import jimp from 'jimp';
 import async from 'async';
 import logger from '../../lib/logger';
-import SVGParser from '../../lib/SVGParser';
+import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
 import imageProcess from '../../lib/image-process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';

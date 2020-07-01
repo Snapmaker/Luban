@@ -652,11 +652,8 @@ class Visualizer extends Component {
         const { gcodeFile } = this.props;
         return (
             <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div className={styles['visualizer-notice']}>
-                    <p>{notice}</p>
-                </div>
                 <div className={styles['visualizer-progress']}>
-                    <ProgressBar progress={this.props.progress * 100} />
+                    <ProgressBar tips={notice} progress={this.props.progress * 100} />
                 </div>
                 {gcodeFile !== null && (
                     <div className={styles['visualizer-info']}>

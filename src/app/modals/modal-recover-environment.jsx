@@ -77,7 +77,7 @@ class RecoveryEnvironmentModal extends PureComponent {
                     <Button
                         onClick={this.quitRecovery}
                     >
-                        {i18n._('Quit')}
+                        {i18n._('No')}
                     </Button>
                     <Button
                         btnStyle="primary"

@@ -1,6 +1,10 @@
+// eslint-disable-next-line no-unused-vars
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
 import { DEFAULT_FILL_COLOR } from '../../constants/svg-constatns';
+// eslint-disable-next-line no-unused-vars
+import PathTagParser from '../../../shared/lib/SVGParser/PathTagParser';
+import AttributesParser from '../../../shared/lib/SVGParser/AttributesParser';
 import { isZero } from '../../lib/utils';
 
 function toXml(str) {
@@ -89,6 +93,78 @@ function bboxToObj({ x, y, width, height }) {
     return { x, y, width, height };
 }
 
+function getNumberAttributes(elem, attributes) {
+    const res = {};
+    for (const attribute of attributes) {
+        res[attribute] = Number(elem.getAttribute(attribute));
+    }
+    return res;
+}
+
+function getBBoxFromAttribute(elem) {
+    if (elem.nodeType !== 1) {
+        return null;
+    }
+    let bbox = null;
+    let attrs = null;
+    switch (elem.tagName) {
+        case 'circle':
+            attrs = getNumberAttributes(elem, ['cx', 'cy', 'r']);
+            bbox = {
+                x: attrs.cx - attrs.r,
+                y: attrs.cy - attrs.r,
+                width: 2 * attrs.r,
+                height: 2 * attrs.r
+            };
+            break;
+        case 'ellipse':
+            attrs = getNumberAttributes(elem, ['cx', 'cy', 'rx', 'ry']);
+            bbox = {
+                x: attrs.cx - attrs.rx,
+                y: attrs.cy - attrs.ry,
+                width: 2 * attrs.rx,
+                height: 2 * attrs.ry
+            };
+            break;
+        case 'line':
+            attrs = getNumberAttributes(elem, ['x1', 'y1', 'x2', 'y2']);
+            bbox = {
+                x: Math.min(attrs.x1, attrs.x2),
+                y: Math.min(attrs.y1, attrs.y2),
+                width: Math.abs(attrs.x1 - attrs.x2),
+                height: Math.abs(attrs.y1 - attrs.y2)
+            };
+            break;
+        case 'path': {
+            attrs = { xform: [1, 0, 0, 1, 0, 0] };
+            new AttributesParser().parseAttribute(attrs, {}, 'd', elem.getAttribute('d'));
+            const res = new PathTagParser(1).parse(null, attrs);
+
+            bbox = {
+                x: res.boundingBox.minX,
+                y: res.boundingBox.minY,
+                width: res.boundingBox.maxX - res.boundingBox.minX,
+                height: res.boundingBox.maxY - res.boundingBox.minY
+            };
+
+            break;
+        }
+        case 'rect':
+        case 'image':
+            attrs = getNumberAttributes(elem, ['x', 'y', 'width', 'height']);
+            bbox = {
+                x: attrs.x,
+                y: attrs.y,
+                width: attrs.width,
+                height: attrs.height
+            };
+            break;
+        default:
+            break;
+    }
+    return bbox;
+}
+
 function getBBox(elem) {
     if (elem.nodeType !== 1) {
         return null;
@@ -112,12 +188,10 @@ function getBBox(elem) {
     }
 
     if (bbox) {
-        const res = bboxToObj(bbox);
-        if (isZero(res.width) && isZero(res.height)) {
-            return null;
+        if (isZero(bbox.width) && isZero(bbox.height)) {
+            bbox = getBBoxFromAttribute(elem);
         }
-        elem.bbox = res;
-        return res;
+        return bboxToObj(bbox);
     }
 
     return null;
@@ -221,5 +295,6 @@ export {
     createSVGElement,
     getBBox,
     toString,
+    getBBoxFromAttribute,
     transformAngleFromXY
 };

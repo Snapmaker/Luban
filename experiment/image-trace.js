@@ -3,7 +3,7 @@ import fs from 'fs';
 import assert from 'assert';
 import Jimp from 'jimp';
 import { Potrace } from 'potrace';
-import SVGParser from '../src/server/lib/SVGParser';
+import SVGParser from '../src/shared/lib/SVGParser';
 
 
 const options = {

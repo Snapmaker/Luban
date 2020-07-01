@@ -6,6 +6,7 @@ import { getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
 import { getRotationAngle } from '../../widgets/CncLaserSvgEditor/element-transform';
+import { isZero } from '../../lib/utils';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -22,11 +23,8 @@ const coordGmModelToSvg = (size, transformation) => {
     };
 };
 
-const coordGmSvgToModel = (size, elem, bbox) => {
-    bbox = bbox || getBBox(elem);
-    if (!bbox) {
-        return null;
-    }
+const coordGmSvgToModel = (size, elem) => {
+    const bbox = getBBox(elem);
     const angle = getRotationAngle(elem) || 0;
     bbox.positionX = bbox.x + bbox.width / 2 - size.x;
     bbox.positionY = size.y - bbox.y - bbox.height / 2;
@@ -64,13 +62,8 @@ class SvgModelGroup {
     updateSize(size) {
         const data = [];
         for (const node of this.svgContentGroup.getChildNodes()) {
-            let transform = coordGmSvgToModel(this.size, node);
-            if (!transform) {
-                transform = coordGmSvgToModel(this.size, node, node.bbox);
-                data.push([node, transform, node.bbox]);
-            } else {
-                data.push([node, transform]);
-            }
+            const transform = coordGmSvgToModel(this.size, node);
+            data.push([node, transform]);
         }
         this.size = {
             ...size
@@ -79,7 +72,7 @@ class SvgModelGroup {
             this.updateTransformation({
                 positionX: datum[1].positionX,
                 positionY: datum[1].positionY
-            }, datum[0], datum[2]);
+            }, datum[0]);
         }
     }
 
@@ -284,7 +277,7 @@ class SvgModelGroup {
         }
     }
 
-    updateTransformation(transformation, elem, bbox) {
+    updateTransformation(transformation, elem) {
         elem = elem || this.svgContentGroup.getSelected();
         if (!elem) {
             return;
@@ -292,10 +285,7 @@ class SvgModelGroup {
         if (elem.hideFlag && elem.hideFlag) {
             return;
         }
-        bbox = bbox || coordGmSvgToModel(this.size, elem);
-        if (!bbox) {
-            return;
-        }
+        const bbox = coordGmSvgToModel(this.size, elem);
         const nbbox = coordGmModelToSvg(this.size, {
             ...bbox,
             ...transformation
@@ -306,7 +296,8 @@ class SvgModelGroup {
                 translateY: nbbox.y - bbox.y
             });
         }
-        if (transformation.width !== undefined || transformation.height !== undefined) {
+        if ((transformation.width !== undefined || transformation.height !== undefined)
+            && (!isZero(bbox.width) && !isZero(bbox.height))) {
             this.svgContentGroup.updateElementScale(elem, {
                 x: nbbox.x,
                 y: nbbox.y,

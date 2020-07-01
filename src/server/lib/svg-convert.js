@@ -5,9 +5,9 @@ import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
 import logger from './logger';
-import SVGParser, { flip } from './SVGParser';
+import SVGParser, { flip } from '../../shared/lib/SVGParser';
 import DataStorage from '../DataStorage';
-import { svgToString } from './SVGParser/SvgToString';
+import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
 const log = logger('svg-convert');
 

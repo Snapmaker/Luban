@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Jimp from 'jimp';
 import convert from 'color-convert';
-import SVGParser from './SVGParser';
+import SVGParser from '../../shared/lib/SVGParser';
 import { pathWithRandomSuffix } from './random-utils';
 import DataStorage from '../DataStorage';
 

@@ -1,6 +1,6 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
-import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGParser';
+import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../../../shared/lib/SVGParser';
 import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
