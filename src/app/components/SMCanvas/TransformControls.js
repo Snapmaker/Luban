@@ -582,10 +582,22 @@ class TransformControls extends Object3D {
                 const eVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.objectQuaternionInv);
                 eVec.divide(sVec);
 
-                eVec.x = (this.axis === 'X' ? eVec.x : 1);
-                eVec.y = (this.axis === 'Y' ? eVec.y : 1);
-                eVec.z = (this.axis === 'Z' ? eVec.z : 1);
-
+                if (this.object.scale.lockState === true) {
+                    if (this.axis === 'X') {
+                        eVec.y = eVec.x;
+                        eVec.z = eVec.x;
+                    } else if (this.axis === 'Y') {
+                        eVec.z = eVec.y;
+                        eVec.x = eVec.y;
+                    } else {
+                        eVec.y = eVec.z;
+                        eVec.x = eVec.z;
+                    }
+                } else {
+                    eVec.x = (this.axis === 'X' ? eVec.x : 1);
+                    eVec.y = (this.axis === 'Y' ? eVec.y : 1);
+                    eVec.z = (this.axis === 'Z' ? eVec.z : 1);
+                }
                 this.object.scale.copy(this.scaleStart).multiply(eVec);
                 break;
             }

@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
+import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -24,6 +25,7 @@ class VisualizerModelTransformation extends PureComponent {
             rotationX: PropTypes.number,
             rotationY: PropTypes.number,
             rotationZ: PropTypes.number,
+            lockState: PropTypes.bool,
             scaleX: PropTypes.number,
             scaleY: PropTypes.number,
             scaleZ: PropTypes.number
@@ -34,7 +36,13 @@ class VisualizerModelTransformation extends PureComponent {
         setTransformMode: PropTypes.func.isRequired
     };
 
+
     actions = {
+        changeLockState: () => {
+            const transformation = {};
+            transformation.lockState = !this.props.transformation.lockState;
+            this.props.updateSelectedModelTransformation(transformation);
+        },
         onModelTransform: (type, value) => {
             const { size } = this.props;
             const transformation = {};
@@ -81,7 +89,7 @@ class VisualizerModelTransformation extends PureComponent {
     render() {
         const actions = this.actions;
         const { size, selectedModelID, hasModel, transformMode } = this.props;
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = this.props.transformation;
+        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, lockState } = this.props.transformation;
         const disabled = !(selectedModelID && hasModel);
         const moveX = Number(toFixed(positionX, 1));
         const moveY = Number(toFixed(positionY, 1));
@@ -212,6 +220,19 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                         </div>
+                        <div className={styles.axis}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                onClick={() => {
+                                    actions.onModelTransform('moveX', 0);
+                                    actions.onModelTransform('moveY', 0);
+                                    actions.onModelAfterTransform();
+                                }}
+                            >
+                                <span>{i18n._('Reset')}</span>
+                            </Anchor>
+                        </div>
                     </div>
                 )}
                 {!disabled && transformMode === 'scale' && (
@@ -224,6 +245,10 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleXPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleX', value / 100);
+                                        if (lockState === true) {
+                                            actions.onModelTransform('scaleZ', value / 100);
+                                            actions.onModelTransform('scaleY', value / 100);
+                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -238,6 +263,10 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleYPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleY', value / 100);
+                                        if (lockState === true) {
+                                            actions.onModelTransform('scaleX', value / 100);
+                                            actions.onModelTransform('scaleZ', value / 100);
+                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -252,11 +281,39 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleZPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleZ', value / 100);
+                                        if (lockState === true) {
+                                            actions.onModelTransform('scaleX', value / 100);
+                                            actions.onModelTransform('scaleY', value / 100);
+                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
                             </span>
                             <span className={styles['axis-unit-2']}>%</span>
+                        </div>
+                        <div className={styles.axis}>
+                            <Anchor
+                                onClick={() => {
+                                    actions.changeLockState();
+                                }}
+                            >
+                                <i className={classNames(styles.icon, lockState ? styles['icon-checked'] : styles['icon-unchecked'])} />
+                                <span>{i18n._('Uniform Scaling')}</span>
+                            </Anchor>
+                        </div>
+                        <div className={styles.axis}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                onClick={() => {
+                                    actions.onModelTransform('scaleX', 1);
+                                    actions.onModelTransform('scaleZ', 1);
+                                    actions.onModelTransform('scaleY', 1);
+                                    actions.onModelAfterTransform();
+                                }}
+                            >
+                                <span>{i18n._('Reset')}</span>
+                            </Anchor>
                         </div>
                     </div>
                 )}
@@ -369,6 +426,21 @@ class VisualizerModelTransformation extends PureComponent {
                                     }}
                                 />
                             </span>
+                        </div>
+
+                        <div className={styles.axis}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                onClick={() => {
+                                    actions.onModelTransform('rotateX', 0);
+                                    actions.onModelTransform('rotateY', 0);
+                                    actions.onModelTransform('rotateZ', 0);
+                                    actions.onModelAfterTransform();
+                                }}
+                            >
+                                <span>{i18n._('Reset')}</span>
+                            </Anchor>
                         </div>
                     </div>
                 )}

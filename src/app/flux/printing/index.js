@@ -88,7 +88,8 @@ const INITIAL_STATE = {
         rotationZ: 0,
         scaleX: 1,
         scaleY: 1,
-        scaleZ: 1
+        scaleZ: 1,
+        lockState: true
     },
 
     // snapshots state

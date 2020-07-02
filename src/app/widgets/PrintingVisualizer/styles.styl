@@ -109,7 +109,6 @@ $visualizer-padding = 10px
 
         &.disabled
             opacity(.5)
-
     .model-operation
         display: block
         width: 56px
@@ -167,22 +166,47 @@ $visualizer-padding = 10px
         border: 1px solid $border-color
         border-radius: $border-radius
         opacity(.8)
-
+        .reset-button
+            margin-left: 8px;
+            //width: 114px;
+            width: 104px;
+            display: inline-block
+            border: 1px solid $grey-color2
+            border-radius: $border-radius
+            text-decoration: none
+            height: 30px
+            padding: 6px 9px
+            line-height: 1.4
+        .reset-button:hover
+            border: 1px solid $dark-blue-color
         &.move-panel
             top: 0
-            height: 93px
+            height: 132px
             transform: translate(0, 64px * .5 - 93px / 2)
 
         &.scale-panel
             top: 0
             transform: translate(0, 64px * 1.5 - 133px / 2)
-            height: 133px
-            width: 118px
+            height: 207px
+            width: 130px
+            .icon
+                display: inline-block
+                width: 30px
+                height: 30px
+                background-repeat: no-repeat;
+                background-position: center;
+                vertical-align: middle;
+                &.icon-checked
+                    background-image: url("../../images/checked-on-14x14.png")
+                &.icon-unchecked
+                    background-image: url("../../images/checked-off-14x14.png")
+
+
 
         &.rotate-panel
             top: 0
             transform: translate(0, 64px * 2.5 - 133px / 2)
-            height: 133px
+            height: 172px
 
         .axis
             margin: 12px 0
