@@ -176,7 +176,7 @@ class WifiTransport extends PureComponent {
                     } else {
                         (modalSmallHOC({
                             title: i18n._('File Sent Successfully'),
-                            text: i18n._('Please confirm and choose whether to start to print this file on the touchscreen.'),
+                            text: i18n._('Please confirm whether to start this print job on the touchscreen.'),
                             img: IMAGE_WIFI_CONNECTED
                         }));
                     }
@@ -352,7 +352,7 @@ class WifiTransport extends PureComponent {
                         onClick={actions.sendFile}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
-                        {i18n._('Send to Snapmaker via Wi-Fi')}
+                        {i18n._('Send to Device via Wi-Fi')}
                     </button>
                 </div>
             </div>

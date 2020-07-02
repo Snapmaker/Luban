@@ -35,8 +35,8 @@ class VisualizerTopLeft extends PureComponent {
             }
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
-                    title: i18n._('Parse Image Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
                 });
             });
         },

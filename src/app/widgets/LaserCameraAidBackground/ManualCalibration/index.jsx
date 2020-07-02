@@ -133,7 +133,7 @@ class ManualCalibration extends PureComponent {
 
                     <div className={styles['calibrate-advise']}>
                         <p style={{ margin: '1rem 0', textAlign: 'center' }}>
-                            {i18n._('Align the four corners of the quadrilateral with the corners of the printed square. This will affect how the captured images are mapped with the machine coordinates.') }
+                            {i18n._('Align the four corners of the quadrilateral with the corners of the printed square. This will affect how the captured image is mapped with machine coordinates.') }
                         </p>
                     </div>
                 </div>

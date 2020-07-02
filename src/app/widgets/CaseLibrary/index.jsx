@@ -99,8 +99,8 @@ class CaseLibrary extends PureComponent {
             if (config.mode === 'trace') {
                 const res = await api.uploadLaserCaseImage(config.pathConfig, config.mode, () => {
                     modal({
-                        title: i18n._('Parse Image Error'),
-                        body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                        title: i18n._('Parse Error'),
+                        body: i18n._('Failed to parse image file {{filename}}.', { filename: config.pathConfig.name })
                     });
                 });
                 const result = await api.processTrace({
@@ -120,15 +120,15 @@ class CaseLibrary extends PureComponent {
                 if (config.tag === 'laser') {
                     await this.props.uploadLaserCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
                         modal({
-                            title: i18n._('Parse Image Error'),
-                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                            title: i18n._('Parse Error'),
+                            body: i18n._('Failed to parse image file {{filename}}.', { filename: config.pathConfig.name })
                         });
                     });
                 } else {
                     await this.props.uploadCncCaseImage(config.pathConfig, config.mode, config.caseConfigs, config.caseTransformation, () => {
                         modal({
-                            title: i18n._('Parse Image Error'),
-                            body: i18n._('Failed to parse image file {{filename}}', { filename: config.pathConfig.name })
+                            title: i18n._('Parse Error'),
+                            body: i18n._('Failed to parse image file {{filename}}.', { filename: config.pathConfig.name })
                         });
                     });
                 }
