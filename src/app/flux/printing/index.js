@@ -89,7 +89,7 @@ const INITIAL_STATE = {
         scaleX: 1,
         scaleY: 1,
         scaleZ: 1,
-        lockState: true
+        uniformScalingState: true
     },
 
     // snapshots state

@@ -25,7 +25,7 @@ class VisualizerModelTransformation extends PureComponent {
             rotationX: PropTypes.number,
             rotationY: PropTypes.number,
             rotationZ: PropTypes.number,
-            lockState: PropTypes.bool,
+            uniformScalingState: PropTypes.bool,
             scaleX: PropTypes.number,
             scaleY: PropTypes.number,
             scaleZ: PropTypes.number
@@ -38,9 +38,9 @@ class VisualizerModelTransformation extends PureComponent {
 
 
     actions = {
-        changeLockState: () => {
+        changeUniformScalingState: () => {
             const transformation = {};
-            transformation.lockState = !this.props.transformation.lockState;
+            transformation.uniformScalingState = !this.props.transformation.uniformScalingState;
             this.props.updateSelectedModelTransformation(transformation);
         },
         onModelTransform: (type, value) => {
@@ -89,7 +89,7 @@ class VisualizerModelTransformation extends PureComponent {
     render() {
         const actions = this.actions;
         const { size, selectedModelID, hasModel, transformMode } = this.props;
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, lockState } = this.props.transformation;
+        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = this.props.transformation;
         const disabled = !(selectedModelID && hasModel);
         const moveX = Number(toFixed(positionX, 1));
         const moveY = Number(toFixed(positionY, 1));
@@ -245,7 +245,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleXPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleX', value / 100);
-                                        if (lockState === true) {
+                                        if (uniformScalingState === true) {
                                             actions.onModelTransform('scaleZ', value / 100);
                                             actions.onModelTransform('scaleY', value / 100);
                                         }
@@ -263,7 +263,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleYPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleY', value / 100);
-                                        if (lockState === true) {
+                                        if (uniformScalingState === true) {
                                             actions.onModelTransform('scaleX', value / 100);
                                             actions.onModelTransform('scaleZ', value / 100);
                                         }
@@ -281,7 +281,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleZPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleZ', value / 100);
-                                        if (lockState === true) {
+                                        if (uniformScalingState === true) {
                                             actions.onModelTransform('scaleX', value / 100);
                                             actions.onModelTransform('scaleY', value / 100);
                                         }
@@ -294,10 +294,10 @@ class VisualizerModelTransformation extends PureComponent {
                         <div className={styles.axis}>
                             <Anchor
                                 onClick={() => {
-                                    actions.changeLockState();
+                                    actions.changeUniformScalingState();
                                 }}
                             >
-                                <i className={classNames(styles.icon, lockState ? styles['icon-checked'] : styles['icon-unchecked'])} />
+                                <i className={classNames(styles.icon, uniformScalingState ? styles['icon-checked'] : styles['icon-unchecked'])} />
                                 <span>{i18n._('Uniform Scaling')}</span>
                             </Anchor>
                         </div>
