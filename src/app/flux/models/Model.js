@@ -29,6 +29,7 @@ const DEFAULT_TRANSFORMATION = {
     scaleX: 1,
     scaleY: 1,
     scaleZ: 1,
+    uniformScalingState: true,
     flip: 0
 };
 
@@ -282,8 +283,12 @@ class Model {
     }
 
     updateTransformation(transformation) {
-        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
+        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip, uniformScalingState } = transformation;
         const { width, height } = transformation;
+        if (uniformScalingState !== undefined) {
+            this.meshObject.uniformScalingState = uniformScalingState;
+            this.transformation.uniformScalingState = uniformScalingState;
+        }
 
         if (positionX !== undefined) {
             this.meshObject.position.x = positionX;
