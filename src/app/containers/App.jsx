@@ -19,15 +19,21 @@ import modal from '../lib/modal';
 import Space from '../components/Space';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import Workspace from './Workspace';
+import styles from './App.styl';
+import loadable from '../lib/loadable';
+// const Printing = loadable(() => import('./Printing'));
+// const Laser = loadable(() => import('./Laser'));
+// const Cnc = loadable(() => import('./Cnc'));
 import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
-import Settings from './Settings';
-import CaseLibrary from './CaseLibrary';
-import styles from './App.styl';
+
 import recoverEnvironmentModal from '../modals/modal-recover-environment';
 import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../constants';
+
+const Workspace = loadable(() => import('./Workspace'));
+const Settings = loadable(() => import('./Settings'));
+const CaseLibrary = loadable(() => import('./CaseLibrary'));
 
 class App extends PureComponent {
     static propTypes = {

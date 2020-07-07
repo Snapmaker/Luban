@@ -3,7 +3,7 @@ import path from 'path';
 import childProcess from 'child_process';
 
 import logger from '../lib/logger';
-import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
+import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX, CURA_ENGINE_LINUX_ARM } from '../constants';
 import DataStorage from '../DataStorage';
 import { DefinitionLoader } from './definition';
 import { pathWithRandomSuffix } from '../../shared/lib/random-utils';
@@ -24,6 +24,8 @@ let curaEnginePath;
     } else if (process.platform === 'linux') {
         if (process.arch === 'x64') {
             curaEnginePath = CURA_ENGINE_LINUX;
+        } else {
+            curaEnginePath = CURA_ENGINE_LINUX_ARM;
         }
     }
     if (!curaEnginePath || !fs.existsSync(curaEnginePath)) {

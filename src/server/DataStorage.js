@@ -1,8 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
-import { app } from 'electron';
-import isElectron from 'is-electron';
 import semver from 'semver';
 import logger from './lib/logger';
 import { initFonts } from './lib/FontManager';
@@ -58,11 +56,7 @@ class DataStorage {
     static envDir;
 
     static async init() {
-        if (isElectron()) {
-            this.userDataDir = app.getPath('userData');
-        } else {
-            this.userDataDir = './userData';
-        }
+        this.userDataDir = './userData';
         mkdirp.sync(this.userDataDir);
 
         this.sessionDir = `${this.userDataDir}/Sessions`;
