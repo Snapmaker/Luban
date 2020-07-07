@@ -37,9 +37,16 @@ export const threejsModelActions = {
 
     // callback
 
-    updateSelectedModelTransformation: (headType, transformation) => (dispatch, getState) => {
+    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
         const modelState = modelGroup.updateSelectedModelTransformation(transformation);
+        if (changeFrom && modelState && modelState.transformation.uniformScalingState === true) {
+            if (changeFrom.height === modelState.transformation.height) {
+                modelState.transformation.height = changeFrom.height * modelState.transformation.width / changeFrom.width;
+            } else if (changeFrom.width === modelState.transformation.width) {
+                modelState.transformation.width = changeFrom.width * modelState.transformation.height / changeFrom.height;
+            }
+        }
 
         if (modelState) {
             toolPathModelGroup.updateSelectedNeedPreview(true);

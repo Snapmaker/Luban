@@ -215,6 +215,29 @@ class SVGContentGroup {
         this.clearSelection();
         elem && this.addToSelection([elem]);
     }
+
+    getSelectedElementHideFlag() {
+        const selectedElement = this.getSelected();
+        return selectedElement.hideFlag;
+    }
+
+    setSelectedElementHideFlag(hideFlag) {
+        const selectedElement = this.getSelected();
+        selectedElement.hideFlag = hideFlag;
+    }
+
+    getSelectedElementUniformScalingState() {
+        const selectedElement = this.getSelected();
+        if (selectedElement.uniformScalingState === undefined) {
+            return true;
+        }
+        return selectedElement.uniformScalingState;
+    }
+
+    setSelectedElementUniformScalingState(uniformScalingState) {
+        const selectedElement = this.getSelected();
+        selectedElement.uniformScalingState = uniformScalingState;
+    }
 }
 
 export default SVGContentGroup;

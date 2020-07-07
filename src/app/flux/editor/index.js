@@ -384,6 +384,10 @@ export const actions = {
                 dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
             });
     },
+    // updateSelectedModelUniformScalingState: (headType, transformation) => (dispatch) => {
+    // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+    // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
+    // },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
@@ -421,8 +425,8 @@ export const actions = {
             });
     },
 
-    updateSelectedModelTransformation: (headType, transformation) => (dispatch) => {
-        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
+        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
         dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
     },
 

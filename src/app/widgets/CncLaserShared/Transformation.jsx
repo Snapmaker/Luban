@@ -1,14 +1,12 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
-// import Select from 'react-select';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
-import { NumberInput as Input } from '../../components/Input';
+import { NumberInput as Input, DegreeInput } from '../../components/Input';
 import styles from './styles.styl';
 
 class Transformation extends PureComponent {
@@ -22,11 +20,13 @@ class Transformation extends PureComponent {
             height: PropTypes.number,
             positionX: PropTypes.number,
             positionY: PropTypes.number,
-            flip: PropTypes.number
+            flip: PropTypes.number,
+            uniformScalingState: PropTypes.bool
         }),
 
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelFlip: PropTypes.func.isRequired,
+        updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         // redux
         size: PropTypes.shape({
@@ -45,13 +45,20 @@ class Transformation extends PureComponent {
             this.setState(state => ({ expanded: !state.expanded }));
         },
         onChangeWidth: (width) => {
-            this.props.updateSelectedModelTransformation({ width });
+            this.props.updateSelectedModelTransformation({ width }, {
+                width: this.props.transformation.width,
+                height: this.props.transformation.height
+            });
         },
         onChangeHeight: (height) => {
-            this.props.updateSelectedModelTransformation({ height });
+            this.props.updateSelectedModelTransformation({ height }, {
+                width: this.props.transformation.width,
+                height: this.props.transformation.height
+            });
         },
-        onChangeRotationZ: (degree) => {
-            const rotationZ = degree * Math.PI / 180;
+        onChangeRotationZ: (degreeStr) => {
+            const degree = parseInt(degreeStr, 10);
+            const rotationZ = (!degree) ? 0 : degree * Math.PI / 180;
             this.props.updateSelectedModelTransformation({ rotationZ });
         },
         onChangePositionX: (positionX) => {
@@ -63,6 +70,9 @@ class Transformation extends PureComponent {
         onChangeFlip: (option) => {
             this.props.updateSelectedModelFlip({ flip: option.value });
         },
+        onChangeUniformScalingState: (uniformScalingState) => {
+            this.props.updateSelectedModelUniformScalingState({ uniformScalingState });
+        },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
         }
@@ -70,7 +80,7 @@ class Transformation extends PureComponent {
 
     render() {
         const { size, selectedModelID, selectedModelHideFlag, sourceType } = this.props;
-        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0 } = this.props.transformation;
+        const { rotationZ, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
         const selectedNotHide = selectedModelID && !selectedModelHideFlag;
         const actions = this.actions;
@@ -95,7 +105,7 @@ class Transformation extends PureComponent {
                         >
                             <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
                             <Input
-                                style={{ width: '90px' }}
+                                style={{ width: '80px' }}
                                 disabled={!selectedNotHide}
                                 value={toFixed(positionX, 1)}
                                 min={-size.x}
@@ -107,16 +117,16 @@ class Transformation extends PureComponent {
                             />
                             <span
                                 className={styles['description-text']}
-                                style={{ marginLeft: '-15px', width: '11px', textAlign: 'center' }}
+                                style={{ marginLeft: '-15px', width: '15px', textAlign: 'center' }}
                             >
                                 X
                             </span>
                             <span
                                 className={styles['description-text']}
-                                style={{ width: '27px', textAlign: 'center', display: 'inline-block' }}
+                                style={{ width: '32px', textAlign: 'center', display: 'inline-block' }}
                             />
                             <Input
-                                style={{ width: '90px' }}
+                                style={{ width: '80px' }}
                                 disabled={!selectedNotHide}
                                 value={toFixed(positionY, 1)}
                                 min={-size.y}
@@ -128,7 +138,7 @@ class Transformation extends PureComponent {
                             />
                             <span
                                 className={styles['description-text']}
-                                style={{ marginLeft: '-15px', width: '11px', textAlign: 'center' }}
+                                style={{ marginLeft: '-15px', width: '15px', textAlign: 'center' }}
                             >
                                 Y
                             </span>
@@ -140,7 +150,7 @@ class Transformation extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
                                 <Input
-                                    style={{ width: '90px' }}
+                                    style={{ width: '80px' }}
                                     disabled={!selectedNotHide || canResize === false}
                                     value={toFixed(width, 1)}
                                     min={1}
@@ -152,16 +162,22 @@ class Transformation extends PureComponent {
                                 />
                                 <span
                                     className={styles['description-text']}
-                                    style={{ marginLeft: '-15px', width: '11px', textAlign: 'center' }}
+                                    style={{ marginLeft: '-18px', width: '18px', textAlign: 'center' }}
                                 >
                                    W
                                 </span>
-                                <span
-                                    className={styles.icon_size_lock}
-                                    style={{ height: '30px', width: '20px', display: 'inline-block', 'verticalAlign': 'bottom', marginLeft: '2px' }}
+                                <button
+                                    type="button"
+                                    disabled={!selectedNotHide}
+                                    className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
+                                    style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '7px', marginRight: '2px' }}
+                                    onClick={() => {
+                                        actions.onChangeUniformScalingState(!uniformScalingState);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                                 <Input
-                                    style={{ width: '90px' }}
+                                    style={{ width: '80px' }}
                                     disabled={!selectedNotHide || canResize === false}
                                     value={toFixed(height, 1)}
                                     min={1}
@@ -173,7 +189,7 @@ class Transformation extends PureComponent {
                                 />
                                 <span
                                     className={styles['description-text']}
-                                    style={{ marginLeft: '-15px', width: '11px', textAlign: 'center' }}
+                                    style={{ marginLeft: '-16px', width: '15px', textAlign: 'center' }}
                                 >
                                    H
                                 </span>
@@ -185,12 +201,11 @@ class Transformation extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
-                                <Input
-                                    style={{ width: '90px' }}
+                                <DegreeInput
+                                    style={{ width: '80px', height: '30px' }}
                                     disabled={!selectedNotHide}
-                                    value={toFixed(rotationZ * 180 / Math.PI, 1)}
-                                    min={-180}
-                                    max={180}
+                                    value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1).toString() : '0'}
+                                    suffix="°"
                                     onChange={(value) => {
                                         actions.onChangeRotationZ(value);
                                         actions.onModelAfterTransform();
@@ -200,125 +215,32 @@ class Transformation extends PureComponent {
                                     className={styles['description-text']}
                                     style={{ width: '25px', textAlign: 'center', display: 'inline-block' }}
                                 />
-                                {sourceType === 'raster' && (
-                                    <button
-                                        type="button"
-                                        className={styles.icon_flip_vertically}
-                                        style={(flip & 1) ? { backgroundColor: '#dfdfdf' } : null}
-                                        onClick={() => {
-                                            actions.onChangeFlip({ value: (flip ^ 1) });
-                                            actions.onModelAfterTransform();
-                                        }}
-                                    />
-                                )}
+                                <button
+                                    type="button"
+                                    disabled={!selectedNotHide}
+                                    className={styles.icon_flip_vertically}
+                                    style={(flip & 2) ? { backgroundColor: '#E7F2FD' } : null}
+                                    onClick={() => {
+                                        actions.onChangeFlip({ value: (flip ^ 2) });
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
                                 <span
                                     className={styles['description-text']}
-                                    style={{ width: '25px', textAlign: 'center', display: 'inline-block' }}
+                                    style={{ width: '21px', textAlign: 'center', display: 'inline-block' }}
                                 />
-                                {sourceType === 'raster' && (
-                                    <button
-                                        type="button"
-                                        className={styles.icon_flip_horizontal}
-                                        style={(flip & 2) ? { backgroundColor: '#dfdfdf' } : null}
-                                        onClick={() => {
-                                            actions.onChangeFlip({ value: (flip ^ 2) });
-                                            actions.onModelAfterTransform();
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Rotate')}
-                            content={i18n._('Rotate the image to the angle you need.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
-                                <Input
-                                    className="sm-parameter-row__slider-input"
+                                <button
+                                    type="button"
                                     disabled={!selectedNotHide}
-                                    value={toFixed(rotationZ * 180 / Math.PI, 1)}
-                                    min={-180}
-                                    max={180}
-                                    onChange={(value) => {
-                                        actions.onChangeRotationZ(value);
+                                    className={styles.icon_flip_horizontal}
+                                    style={(flip & 1) ? { backgroundColor: '#E7F2FD' } : null}
+                                    onClick={() => {
+                                        actions.onChangeFlip({ value: (flip ^ 1) });
                                         actions.onModelAfterTransform();
                                     }}
                                 />
-                                <Slider
-                                    className="sm-parameter-row__slider"
-                                    disabled={!selectedNotHide}
-                                    value={rotationZ * 180 / Math.PI}
-                                    min={-180}
-                                    max={180}
-                                    onChange={actions.onChangeRotationZ}
-                                    onAfterChange={actions.onModelAfterTransform}
-                                />
                             </div>
                         </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Move X (mm)')}
-                            content={i18n._('Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Move X (mm)')}</span>
-                                <Input
-                                    className="sm-parameter-row__slider-input"
-                                    disabled={!selectedNotHide}
-                                    value={toFixed(positionX, 1)}
-                                    min={-size.x}
-                                    max={size.x}
-                                    onChange={(value) => {
-                                        actions.onChangePositionX(value);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <Slider
-                                    className="sm-parameter-row__slider"
-                                    disabled={!selectedNotHide}
-                                    value={positionX}
-                                    min={-size.x}
-                                    max={size.x}
-                                    onChange={actions.onChangePositionX}
-                                    onAfterChange={actions.onModelAfterTransform}
-                                />
-                            </div>
-                        </TipTrigger>
-                        {/* old flip model*/}
-                        {/*{sourceType === 'raster' && (*/}
-                        {/*    <TipTrigger*/}
-                        {/*        title={i18n._('Flip Model')}*/}
-                        {/*        content={i18n._('Flip the selected Model vertically, horizontally or in both directions.')}*/}
-                        {/*    >*/}
-                        {/*        <div className="sm-parameter-row">*/}
-                        {/*            <span className="sm-parameter-row__label">{i18n._('Flip Model')}</span>*/}
-                        {/*            <Select*/}
-                        {/*                className="sm-parameter-row__select"*/}
-                        {/*                disabled={!selectedNotHide}*/}
-                        {/*                clearable={false}*/}
-                        {/*                options={[{*/}
-                        {/*                    value: 0,*/}
-                        {/*                    label: i18n._('None')*/}
-                        {/*                }, {*/}
-                        {/*                    value: 1,*/}
-                        {/*                    label: i18n._('Vertical')*/}
-                        {/*                }, {*/}
-                        {/*                    value: 2,*/}
-                        {/*                    label: i18n._('Horizontal')*/}
-                        {/*                }, {*/}
-                        {/*                    value: 3,*/}
-                        {/*                    label: i18n._('Both')*/}
-                        {/*                }]}*/}
-                        {/*                value={flip}*/}
-                        {/*                seachable={false}*/}
-                        {/*                onChange={(option) => {*/}
-                        {/*                    actions.onChangeFlip(option);*/}
-                        {/*                    actions.onModelAfterTransform();*/}
-                        {/*                }}*/}
-                        {/*            />*/}
-                        {/*        </div>*/}
-                        {/*    </TipTrigger>*/}
-                        {/*)}*/}
                     </React.Fragment>
                 )}
             </React.Fragment>

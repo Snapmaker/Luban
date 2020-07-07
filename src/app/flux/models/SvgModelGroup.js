@@ -311,12 +311,15 @@ class SvgModelGroup {
                 angle: nbbox.angle
             });
         }
+        if (transformation.uniformScalingState !== undefined) {
+            this.svgContentGroup.setSelectedElementUniformScalingState(transformation.uniformScalingState);
+        }
         this.svgContentGroup.selectOnly(elem);
     }
 
     hideSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
-        selectedElement.hideFlag = true;
+        this.svgContentGroup.setSelectedElementHideFlag(true);
         selectedElement.setAttribute('display', 'none');
         const selector = this.svgContentGroup.requestSelector(selectedElement);
         selector.showGrips(false);
@@ -324,7 +327,7 @@ class SvgModelGroup {
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
-        selectedElement.hideFlag = false;
+        this.svgContentGroup.setSelectedElementHideFlag(false);
         selectedElement.setAttribute('display', 'inherit');
         const selector = this.svgContentGroup.requestSelector(selectedElement);
         selector.showGrips(true);

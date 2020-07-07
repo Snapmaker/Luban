@@ -47,6 +47,7 @@ class CNCPath extends PureComponent {
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelFlip: PropTypes.func.isRequired,
+        updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
@@ -178,7 +179,8 @@ class CNCPath extends PureComponent {
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
-            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip
+            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip,
+            updateSelectedModelUniformScalingState
         } = this.props;
         const selectedNotHide = selectedModelID && !selectedModelHideFlag;
 
@@ -223,6 +225,7 @@ class CNCPath extends PureComponent {
                         sourceType={sourceType}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelFlip={updateSelectedModelFlip}
+                        updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                         onModelAfterTransform={onModelAfterTransform}
                     />
                 )}
@@ -302,8 +305,9 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
-        updateSelectedModelTransformation: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('cnc', params)),
+        updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('cnc', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),

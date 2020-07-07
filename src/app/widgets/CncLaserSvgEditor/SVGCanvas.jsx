@@ -604,7 +604,7 @@ class SVGCanvas extends PureComponent {
                 const translateBack = this.svgContainer.createSVGTransform();
 
                 translateOrigin.setTranslate(-(left + tx), -(top + ty));
-                if (event.shiftKey) {
+                if (event.shiftKey || this.svgContentGroup.getSelectedElementUniformScalingState()) {
                     if (sx === 1) {
                         sx = sy;
                     } else {
