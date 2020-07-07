@@ -85,18 +85,20 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement) {
+    constructor(sourceType, camera, group, domElement, isEditor) {
         super();
 
         this.sourceType = sourceType;
         this.camera = camera;
         this.group = group;
+        this.isEditor = isEditor;
         this.domElement = (domElement !== undefined) ? domElement : document;
 
         this.initTransformControls();
 
         this.bindEventListeners();
     }
+
 
     initTransformControls() {
         if (this.sourceType === '3D') {
@@ -265,7 +267,9 @@ class Controls extends EventEmitter {
                 this.handleMouseMovePan(event);
                 break;
             case STATE.TRANSFORM:
-                this.transformControl.onMouseMove(this.getMouseCoord(event));
+                if (this.isEditor === true || this.isEditor === undefined) {
+                    this.transformControl.onMouseMove(this.getMouseCoord(event));
+                }
                 this.emit(EVENTS.TRANSFORM_OBJECT);
                 break;
             default:

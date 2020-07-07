@@ -307,7 +307,6 @@ class Visualizer extends Component {
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
 
-
         return (
             <div
                 ref={this.visualizerRef}
@@ -338,6 +337,7 @@ class Visualizer extends Component {
                 >
                     <Canvas
                         ref={this.canvas}
+                        isEditor={isEditor}
                         size={this.props.size}
                         modelGroup={this.props.modelGroup.object}
                         toolPathModelGroup={this.props.toolPathModelGroup.object}
