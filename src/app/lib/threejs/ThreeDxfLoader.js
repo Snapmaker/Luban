@@ -468,6 +468,9 @@ class ThreeDxfLoader {
                 interpolatedPoints.push(new THREE.Vector3(vertex.x, vertex.y, 0));
             }
         }
+        if (entity.vertices.length > 2 && entity.shape === true) {
+            interpolatedPoints.push(new THREE.Vector3(entity.vertices[0].x, entity.vertices[0].y, 0));
+        }
         let previewPositon = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
             previewPositon = geometry.vertices[geometry.vertices.length - 1];
