@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import uuid from 'uuid';
 import { generateToolPathObject3D } from '../generator';
 import { DATA_PREFIX } from '../../constants';
 
@@ -79,6 +80,8 @@ class ToolPathModel {
     }
 
     getTaskInfo() {
+        const id = uuid.v4();
+        this.id = id;
         return {
             id: this.id,
             printOrder: this.printOrder,
@@ -121,6 +124,14 @@ class ToolPathModel {
             ...this.gcodeConfigPlaceholder
         };
         return toolPathModel;
+    }
+
+    setRelatedModel(model) {
+        this.relatedModel = model;
+    }
+
+    refresh() {
+        this.updateNeedPreview(true);
     }
 }
 

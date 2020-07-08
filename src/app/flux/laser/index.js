@@ -3,7 +3,9 @@ import * as THREE from 'three';
 import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
 import { controller } from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
+import SvgModelGroup from '../models/SvgModelGroup';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
+
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -11,8 +13,9 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
-import SvgModelGroup from '../models/SvgModelGroup';
 
+
+const initModelGroup = new ModelGroup('laser');
 const INITIAL_STATE = {
 
     page: PAGE_EDITOR,
@@ -20,9 +23,9 @@ const INITIAL_STATE = {
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
 
-    modelGroup: new ModelGroup(),
-    toolPathModelGroup: new ToolPathModelGroup(),
-    svgModelGroup: new SvgModelGroup(),
+    modelGroup: initModelGroup,
+    toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
+    svgModelGroup: new SvgModelGroup(initModelGroup),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
@@ -68,7 +71,12 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    init: () => (dispatch) => {
+    init: () => (dispatch, getState) => {
+        const { modelGroup } = getState().laser;
+        modelGroup.setDataChangedCallback(() => {
+            dispatch(editorActions.render('laser'));
+        });
+
         dispatch(editorActions.init('laser'));
 
         const controllerEvents = {

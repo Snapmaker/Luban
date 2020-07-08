@@ -320,8 +320,12 @@ class TransformControls extends Object3D {
             // objectPosition.setFromMatrixPosition(this.object.matrixWorld);
             this.objectQuaternionInv.copy(objectQuaternion).inverse();
 
-            // parent
-            this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
+            // Fix: undo will cause parent not exist
+            // Todo: need unselect current model, when undo-redo cause current model removed
+            if (this.object.parent) {
+                this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
+            }
+
             this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
 
             // Update peripherals

@@ -111,9 +111,9 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel } = this.props;
-        const isEditor = this.props.page === PAGE_EDITOR;
-        const isProcess = this.props.page === PAGE_PROCESS;
+        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel } = this.props;
+        const isEditor = page === PAGE_EDITOR;
+        const isProcess = page === PAGE_PROCESS;
 
         return (
             <div>
@@ -188,14 +188,14 @@ class Output extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
     const { widgets } = state.widget;
-    const { widgetId } = ownProps;
+    const { widgetId, headType } = ownProps;
     const { page, isGcodeGenerating, isAllModelsPreviewed,
-        previewFailed, autoPreviewEnabled, modelGroup, hasModel, toolPathModelGroup, gcodeFile } = state.laser;
+        previewFailed, autoPreviewEnabled, modelGroup, toolPathModelGroup, gcodeFile } = state[headType];
 
     return {
         page,
         modelGroup,
-        hasModel,
+        hasModel: modelGroup.hasModel(),
         toolPathModelGroup,
         isGcodeGenerating,
         workflowState,
@@ -208,13 +208,14 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
+    const { widgetId, headType } = ownProps;
     return {
-        togglePage: (page) => dispatch(editorActions.togglePage('laser', page)),
-        generateGcode: (thumbnail) => dispatch(editorActions.generateGcode('laser', thumbnail)),
+        togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
+        generateGcode: (thumbnail) => dispatch(editorActions.generateGcode(headType, thumbnail)),
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
-        manualPreview: () => dispatch(editorActions.manualPreview('laser', true)),
-        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
-        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(ownProps.widgetId, '', state))
+        manualPreview: () => dispatch(editorActions.manualPreview(headType, true)),
+        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview(headType, value)),
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state))
     };
 };
 

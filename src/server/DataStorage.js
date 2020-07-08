@@ -43,185 +43,187 @@ export const rmDir = (dirPath, removeSelf) => {
 
 
 class DataStorage {
-    static userDataDir;
+     userDataDir;
 
-    static sessionDir;
+     sessionDir;
 
-    static tmpDir;
+     tmpDir;
 
-    static configDir;
+     configDir;
 
-    static fontDir;
+     fontDir;
 
-    static userCaseDir;
+     userCaseDir;
 
-    static envDir;
+     envDir;
 
-    static async init() {
-        if (isElectron()) {
-            this.userDataDir = app.getPath('userData');
-        } else {
-            this.userDataDir = './userData';
-        }
-        mkdirp.sync(this.userDataDir);
+     constructor() {
+         if (isElectron()) {
+             this.userDataDir = app.getPath('userData');
+         } else {
+             this.userDataDir = './userData';
+         }
+         mkdirp.sync(this.userDataDir);
 
-        this.sessionDir = `${this.userDataDir}/Sessions`;
-        this.tmpDir = `${this.userDataDir}/Tmp`;
-        this.configDir = `${this.userDataDir}/Config`;
-        this.fontDir = `${this.userDataDir}/Fonts`;
-        this.userCaseDir = `${this.userDataDir}/UserCase`;
-        this.envDir = `${this.userDataDir}/Env`;
+         this.sessionDir = `${this.userDataDir}/Sessions`;
+         this.tmpDir = `${this.userDataDir}/Tmp`;
+         this.configDir = `${this.userDataDir}/Config`;
+         this.fontDir = `${this.userDataDir}/Fonts`;
+         this.userCaseDir = `${this.userDataDir}/UserCase`;
+         this.envDir = `${this.userDataDir}/env`;
+     }
 
-        mkdirp.sync(this.envDir);
-        mkdirp.sync(`${this.envDir}/3dp`);
-        mkdirp.sync(`${this.envDir}/laser`);
-        mkdirp.sync(`${this.envDir}/cnc`);
+     async init() {
+         mkdirp.sync(this.envDir);
+         mkdirp.sync(`${this.envDir}/3dp`);
+         mkdirp.sync(`${this.envDir}/laser`);
+         mkdirp.sync(`${this.envDir}/cnc`);
 
-        mkdirp.sync(this.tmpDir);
-        mkdirp.sync(this.sessionDir);
-        rmDir(this.tmpDir, false);
-        rmDir(this.sessionDir, false);
+         mkdirp.sync(this.tmpDir);
+         mkdirp.sync(this.sessionDir);
+         rmDir(this.tmpDir, false);
+         rmDir(this.sessionDir, false);
 
-        await this.initSlicer();
+         await this.initSlicer();
 
-        await this.initFonts();
-        await this.initUserCase();
-        await this.versionAdaptation();
-    }
+         await this.initFonts();
+         await this.initUserCase();
+         await this.versionAdaptation();
+     }
 
-    static async initSlicer() {
-        mkdirp.sync(this.configDir);
+     async initSlicer() {
+         mkdirp.sync(this.configDir);
 
-        const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
-        if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
-            const files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
-            for (const file of files) {
-                const src = path.join(CURA_ENGINE_CONFIG_LOCAL, file);
-                const dst = path.join(this.configDir, file);
-                if (fs.statSync(src)
-                    .isFile()) {
-                    fs.copyFileSync(src, dst, () => {
-                    });
-                } else {
-                    const srcPath = `${CURA_ENGINE_CONFIG_LOCAL}/${file}`;
-                    const dstPath = `${this.configDir}/${file}`;
-                    await this.copyDir(srcPath, dstPath);
-                }
-            }
-        }
-    }
+         const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
+         if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
+             const files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
+             for (const file of files) {
+                 const src = path.join(CURA_ENGINE_CONFIG_LOCAL, file);
+                 const dst = path.join(this.configDir, file);
+                 if (fs.statSync(src)
+                     .isFile()) {
+                     fs.copyFileSync(src, dst, () => {
+                     });
+                 } else {
+                     const srcPath = `${CURA_ENGINE_CONFIG_LOCAL}/${file}`;
+                     const dstPath = `${this.configDir}/${file}`;
+                     await this.copyDir(srcPath, dstPath);
+                 }
+             }
+         }
+     }
 
-    static async initFonts() {
-        mkdirp.sync(this.fontDir);
+     async initFonts() {
+         mkdirp.sync(this.fontDir);
 
-        const FONTS_LOCAL = '../resources/fonts';
-        if (fs.existsSync(FONTS_LOCAL)) {
-            const files = fs.readdirSync(FONTS_LOCAL);
-            for (const file of files) {
-                const src = path.join(FONTS_LOCAL, file);
-                const dst = path.join(this.fontDir, file);
-                if (fs.statSync(src)
-                    .isFile()) {
-                    fs.copyFileSync(src, dst, () => {
-                    });
-                }
-            }
-        }
-        await initFonts(this.fontDir);
-    }
+         const FONTS_LOCAL = '../resources/fonts';
+         if (fs.existsSync(FONTS_LOCAL)) {
+             const files = fs.readdirSync(FONTS_LOCAL);
+             for (const file of files) {
+                 const src = path.join(FONTS_LOCAL, file);
+                 const dst = path.join(this.fontDir, file);
+                 if (fs.statSync(src)
+                     .isFile()) {
+                     fs.copyFileSync(src, dst, () => {
+                     });
+                 }
+             }
+         }
+         await initFonts(this.fontDir);
+     }
 
-    static async initUserCase() {
-        mkdirp.sync(this.userCaseDir);
+     async initUserCase() {
+         mkdirp.sync(this.userCaseDir);
 
-        const USER_CASE_LOCAL = '../resources/user-case';
-        if (fs.existsSync(USER_CASE_LOCAL)) {
-            const files = fs.readdirSync(USER_CASE_LOCAL);
-            for (const file of files) {
-                const src = path.join(USER_CASE_LOCAL, file);
-                const dst = path.join(this.userCaseDir, file);
-                if (fs.statSync(src)
-                    .isFile()) {
-                    fs.copyFileSync(src, dst);
-                } else {
-                    const srcPath = `${USER_CASE_LOCAL}/${file}`;
-                    const dstPath = `${this.userCaseDir}/${file}`;
-                    await this.copyDir(srcPath, dstPath);
-                }
-            }
-        }
-    }
+         const USER_CASE_LOCAL = '../resources/user-case';
+         if (fs.existsSync(USER_CASE_LOCAL)) {
+             const files = fs.readdirSync(USER_CASE_LOCAL);
+             for (const file of files) {
+                 const src = path.join(USER_CASE_LOCAL, file);
+                 const dst = path.join(this.userCaseDir, file);
+                 if (fs.statSync(src)
+                     .isFile()) {
+                     fs.copyFileSync(src, dst);
+                 } else {
+                     const srcPath = `${USER_CASE_LOCAL}/${file}`;
+                     const dstPath = `${this.userCaseDir}/${file}`;
+                     await this.copyDir(srcPath, dstPath);
+                 }
+             }
+         }
+     }
 
-    static async copyDir(src, dst) {
-        mkdirp.sync(dst);
+     async copyDir(src, dst) {
+         mkdirp.sync(dst);
 
-        if (fs.existsSync(src)) {
-            const files = fs.readdirSync(src);
-            for (const file of files) {
-                const srcPath = path.join(src, file);
-                const dstPath = path.join(dst, file);
-                if (fs.statSync(srcPath).isFile()) {
-                    fs.copyFileSync(srcPath, dstPath);
-                }
-            }
-        }
-    }
+         if (fs.existsSync(src)) {
+             const files = fs.readdirSync(src);
+             for (const file of files) {
+                 const srcPath = path.join(src, file);
+                 const dstPath = path.join(dst, file);
+                 if (fs.statSync(srcPath).isFile()) {
+                     fs.copyFileSync(srcPath, dstPath);
+                 }
+             }
+         }
+     }
 
-    static async copyFile(src, dst, isCover = true) {
-        if (!fs.existsSync(src) || !fs.statSync(src).isFile()) {
-            return;
-        }
-        if (!isCover && fs.existsSync(dst)) {
-            return;
-        }
-        fs.copyFileSync(src, dst);
-    }
+     async copyFile(src, dst, isCover = true) {
+         if (!fs.existsSync(src) || !fs.statSync(src).isFile()) {
+             return;
+         }
+         if (!isCover && fs.existsSync(dst)) {
+             return;
+         }
+         fs.copyFileSync(src, dst);
+     }
 
-    static async versionAdaptation() {
-        // Copy custom quality configuration files to separate folders for varies machine types
-        if (semver.gte(settings.version, '3.3.0')) {
-            log.info(`Migration from version (<3.3.0) -> ${settings.version}, migrate 3DP configuration files.`);
+     async versionAdaptation() {
+         // Copy custom quality configuration files to separate folders for varies machine types
+         if (semver.gte(settings.version, '3.3.0')) {
+             log.info(`Migration from version (<3.3.0) -> ${settings.version}, migrate 3DP configuration files.`);
 
-            const isOfficialQualityConfigFile = (file) => {
-                if (file.indexOf('quality') === -1) return false;
-                return file.indexOf('quality.fast_print') !== -1 || file.indexOf('quality.normal_quality') !== -1 || file.indexOf('quality.high_quality') !== -1;
-            };
+             const isOfficialQualityConfigFile = (file) => {
+                 if (file.indexOf('quality') === -1) return false;
+                 return file.indexOf('quality.fast_print') !== -1 || file.indexOf('quality.normal_quality') !== -1 || file.indexOf('quality.high_quality') !== -1;
+             };
 
-            const isCustomQualityConfigFile = (file) => {
-                if (file.indexOf('quality') === -1) return false;
-                return file.indexOf('quality.fast_print') === -1 && file.indexOf('quality.normal_quality') === -1 && file.indexOf('quality.high_quality') === -1;
-            };
+             const isCustomQualityConfigFile = (file) => {
+                 if (file.indexOf('quality') === -1) return false;
+                 return file.indexOf('quality.fast_print') === -1 && file.indexOf('quality.normal_quality') === -1 && file.indexOf('quality.high_quality') === -1;
+             };
 
-            const files = fs.readdirSync(this.configDir);
-            for (const file of files) {
-                const src = path.join(this.configDir, file);
-                if (!fs.statSync(src).isFile()) continue;
+             const files = fs.readdirSync(this.configDir);
+             for (const file of files) {
+                 const src = path.join(this.configDir, file);
+                 if (!fs.statSync(src).isFile()) continue;
 
-                // Remove official quality configuration file directly
-                if (isOfficialQualityConfigFile(file)) {
-                    fs.unlinkSync(src);
-                }
+                 // Remove official quality configuration file directly
+                 if (isOfficialQualityConfigFile(file)) {
+                     fs.unlinkSync(src);
+                 }
 
-                // Copy custom quality configuration files to separate folders for varies machine types
-                if (isCustomQualityConfigFile(file)) {
-                    const dstA150 = path.join(`${this.configDir}/A150`, file);
-                    const dstA250 = path.join(`${this.configDir}/A250`, file);
-                    const dstA350 = path.join(`${this.configDir}/A350`, file);
+                 // Copy custom quality configuration files to separate folders for varies machine types
+                 if (isCustomQualityConfigFile(file)) {
+                     const dstA150 = path.join(`${this.configDir}/A150`, file);
+                     const dstA250 = path.join(`${this.configDir}/A250`, file);
+                     const dstA350 = path.join(`${this.configDir}/A350`, file);
 
-                    try {
-                        await this.copyFile(src, dstA150, false);
-                        await this.copyFile(src, dstA250, false);
-                        await this.copyFile(src, dstA350, false);
-                    } catch (e) {
-                        log.warn(`Migration script failed: ${e.toString()}`);
-                    } finally {
-                        // Regardless copy success or not, remove the configuration file
-                        fs.unlinkSync(src);
-                    }
-                }
-            }
-        }
-        log.info('Migration done.');
-    }
+                     try {
+                         await this.copyFile(src, dstA150, false);
+                         await this.copyFile(src, dstA250, false);
+                         await this.copyFile(src, dstA350, false);
+                     } catch (e) {
+                         log.warn(`Migration script failed: ${e.toString()}`);
+                     } finally {
+                         // Regardless copy success or not, remove the configuration file
+                         fs.unlinkSync(src);
+                     }
+                 }
+             }
+         }
+         log.info('Migration done.');
+     }
 }
 
-export default DataStorage;
+export default new DataStorage();

@@ -156,7 +156,6 @@ class Visualizer extends Component {
 
     componentWillReceiveProps(nextProps) {
         const { renderingTimestamp } = nextProps;
-
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
@@ -453,12 +452,12 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, selectedModelID, modelGroup, svgModelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.laser;
+    const { page, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
     return {
         page,
         size: machine.size,
-        hasModel,
-        selectedModelID,
+        hasModel: modelGroup.hasModel(),
+        selectedModelID: modelGroup.getSelectedModel().modelID,
         svgModelGroup,
         modelGroup,
         toolPathModelGroup,

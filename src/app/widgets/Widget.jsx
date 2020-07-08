@@ -11,12 +11,11 @@ import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
-import LaserOutputWidget from './LaserOutput';
 import LaserSetBackground from './LaserSetBackground';
 import LaserTestFocusWidget from './LaserTestFocus';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
-import CNCOutputWidget from './CNCOutput';
+import CncLaserOutputWidget from './CncLaserOutput';
 import PrintingMaterialWidget from './PrintingMaterial';
 import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
@@ -45,12 +44,12 @@ const getWidgetByName = (name) => {
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,
         'laser-params': LaserParamsWidget,
-        'laser-output': LaserOutputWidget,
+        'laser-output': CncLaserOutputWidget,
         'laser-set-background': LaserSetBackground,
         'laser-test-focus': LaserTestFocusWidget,
         'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,
-        'cnc-output': CNCOutputWidget,
+        'cnc-output': CncLaserOutputWidget,
         'cnc-laser-object-list': CncLaserObjectList
     }[name];
     if (!Widget) {

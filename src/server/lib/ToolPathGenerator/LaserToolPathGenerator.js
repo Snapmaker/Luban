@@ -41,6 +41,8 @@ class LaserToolPathGenerator extends EventEmitter {
             workingGcode = await this.generateGcodeDxf(modelInfo, modelPath);
         } else if (mode === 'vector' || mode === 'trace') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
+        } else if (sourceType === 'svg' && mode === 'text') {
+            workingGcode = await this.generateGcodeSvgText(modelInfo, modelPath);
         } else {
             return Promise.reject(new Error(`Unsupported process mode: ${mode}`));
         }
@@ -109,6 +111,10 @@ class LaserToolPathGenerator extends EventEmitter {
         content.push('G0 X0 Y0');
 
         return content;
+    }
+
+    async generateGcodeSvgText(modelInfo, modelPath) {
+        return this.generateGcodeGreyscale(modelInfo, modelPath);
     }
 
     async generateGcodeBW(modelInfo, modelPath) {
@@ -456,7 +462,6 @@ class LaserToolPathGenerator extends EventEmitter {
         }
         rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
-
 
         const normalizer = new Normalizer(
             'Center',

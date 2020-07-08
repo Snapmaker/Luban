@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import { IconAlignLeft, IconAlignCenter, IconAlignRight } from 'snapmaker-react-icon';
-import styles from './styles.styl';
+// import { IconAlignLeft, IconAlignCenter, IconAlignRight } from 'snapmaker-react-icon';
+// import styles from './styles.styl';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -18,13 +18,14 @@ class TextParameters extends PureComponent {
         disabled: PropTypes.bool,
         config: PropTypes.shape({
             text: PropTypes.string,
-            size: PropTypes.number,
-            font: PropTypes.string,
+            'font-size': PropTypes.string,
+            'font-family': PropTypes.string,
             lineHeight: PropTypes.number,
             alignment: PropTypes.string
         }),
         uploadFont: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired
+        // updateSelectedModelTextConfig: PropTypes.func.isRequired,
+        selectedModel: PropTypes.object.isRequired
     };
 
     state = {
@@ -32,6 +33,7 @@ class TextParameters extends PureComponent {
     };
 
     fileInput = React.createRef();
+
 
     actions = {
         onToggleExpand: () => {
@@ -47,7 +49,11 @@ class TextParameters extends PureComponent {
         },
         onChangeText: (event) => {
             const text = event.target.value;
-            this.props.updateSelectedModelTextConfig({ text });
+            this.props.selectedModel.relatedModels.svgModel.elem.textContent = text;
+            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
+
+
+            // this.props.updateSelectedModelTextConfig({ text });
         },
         onChangeFont: (option) => {
             if (option.value === 'AddFonts') {
@@ -55,24 +61,43 @@ class TextParameters extends PureComponent {
                 return;
             }
             const font = option.value;
-            this.props.updateSelectedModelTextConfig({ font });
+            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-family', font);
+            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
+            // this.props.updateSelectedModelTextConfig({ 'font-family': font });
         },
         onChangeSize: (size) => {
-            this.props.updateSelectedModelTextConfig({ size });
-        },
-        onChangeLineHeight: (option) => {
-            const lineHeight = option.value;
-            this.props.updateSelectedModelTextConfig({ lineHeight });
-        },
-        onChangeAlignment: (value) => {
-            const alignment = value;
-            this.props.updateSelectedModelTextConfig({ alignment });
-        }
+            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-size', size);
+            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
+            // this.props.updateSelectedModelTextConfig({ size });
+        } // ,
+        // onChangeLineHeight: (lineHeight) => {
+        //     this.props.selectedModel.updateAndRefresh({ lineHeight });
+        //     // this.props.updateSelectedModelTextConfig({ lineHeight });
+        // },
+        // onChangeAlignment: (option) => {
+        //     const alignment = option.value;
+        //     this.props.selectedModel.updateAndRefresh({ alignment });
+        //     // this.props.updateSelectedModelTextConfig({ alignment });
+        // }
     };
+
+    getBaseUpdateData() {
+        const { width, height } = this.props.selectedModel.relatedModels.svgModel.elem.getBBox();
+        return {
+            sourceWidth: width * 8,
+            sourceHeight: height * 8,
+            width,
+            height,
+            transformation: {
+                width,
+                height
+            }
+        };
+    }
 
     render() {
         const { config, fontOptions, disabled } = this.props;
-        const { text, size, font, lineHeight, alignment } = config;
+        const { text, 'font-size': fontSize, 'font-family': fontFamily } = config;
         const actions = this.actions;
 
         return (
@@ -114,7 +139,7 @@ Start a new line manually according to your needs.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font')}</span>
-                                <input
+                                {/* <input
                                     disabled={disabled}
                                     ref={this.fileInput}
                                     type="file"
@@ -123,15 +148,33 @@ Start a new line manually according to your needs.')}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
                                 />
+                                <button
+                                    disabled={disabled}
+                                    type="button"
+                                    style={{
+                                        display: 'inline-block',
+                                        width: '15%',
+                                        float: 'right',
+                                        padding: '5px 6px',
+                                        marginLeft: '4px',
+                                        height: '30px'
+                                    }}
+                                    className="sm-btn-small sm-btn-default"
+                                    title={i18n._('Upload')}
+                                    onClick={actions.onClickUpload}
+                                >
+                                    <i className="fa fa-upload" />
+                                </button> */}
                                 <Select
                                     disabled={disabled}
-                                    className="sm-parameter-row__select"
+                                    className="sm-parameter-row__font-select"
+                                    // style={{ width: '202px', float: 'right' }}
                                     backspaceRemoves={false}
                                     clearable={false}
                                     searchable={false}
                                     options={fontOptions}
                                     placeholder={i18n._('Choose font')}
-                                    value={font}
+                                    value={fontFamily}
                                     onChange={actions.onChangeFont}
                                 />
                             </div>
@@ -145,13 +188,13 @@ Start a new line manually according to your needs.')}
                                 <Input
                                     disabled={disabled}
                                     className="sm-parameter-row__input"
-                                    value={size}
+                                    value={parseInt(fontSize, 10)}
                                     onChange={actions.onChangeSize}
                                 />
                                 <span className="sm-parameter-row__input-unit">pt</span>
                             </div>
                         </TipTrigger>
-                        <TipTrigger
+                        {/* <TipTrigger
                             title={i18n._('Line Height')}
                             content={i18n._('Set the distance between each line in the text. The value you enter is the multiple of the font size.')}
                         >
@@ -218,7 +261,7 @@ Start a new line manually according to your needs.')}
                                     </button>
                                 </span>
                             </div>
-                        </TipTrigger>
+                        </TipTrigger> */}
                     </React.Fragment>
                 )}
             </div>
@@ -232,10 +275,7 @@ const mapStateToProps = (state) => {
         label: font.displayName,
         value: font.fontFamily
     }));
-    fontOptions.unshift({
-        label: `+ ${i18n._('Add Fonts')}`,
-        value: 'AddFonts'
-    });
+
     return {
         fontOptions
     };

@@ -107,6 +107,24 @@ function getRotationAngleFromTransformList(transformList) {
     return 0.0;
 }
 
+function getScaleFromTransformList(transformList) {
+    const scale = { scaleX: 1, scaleY: 1 };
+    if (!transformList) {
+        return scale;
+    } // <svg> elements have no tlist
+    const n = transformList.numberOfItems;
+    for (let i = 0; i < n; ++i) {
+        const xform = transformList.getItem(i);
+        if (xform.type === 3) {
+            const m = xform.matrix;
+            scale.scaleX *= m.a;
+
+            scale.scaleY *= m.d;
+        }
+    }
+    return scale;
+}
+
 function transformListToTransform(transformList, start, end) {
     // if (!transformList) {
     //     return svg.createSVGTransformFromMatrix(svg.createSVGMatrix());
@@ -135,6 +153,12 @@ function getRotationAngle(elem) {
     return getRotationAngleFromTransformList(transformList);
 }
 
+
+function getScale(elem) {
+    const transformList = getTransformList(elem);
+    return getScaleFromTransformList(transformList);
+}
+
 function getRotationTransform(elem) {
     const transformList = getTransformList(elem);
     for (const transformListElement of transformList) {
@@ -156,5 +180,6 @@ export {
     transformListToTransform,
     getTransformList,
     getRotationAngle,
+    getScale,
     getRotationTransform
 };

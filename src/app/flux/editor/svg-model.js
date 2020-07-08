@@ -5,12 +5,13 @@ export const svgModelActions = {
 
         const { modelID, sourceType, uploadName, processImageName, transformation } = options;
 
-        svgModelGroup.addModelToSVGElement({
+        const { elem } = svgModelGroup.addModelToSVGElement({
             modelID,
             limitSize: size,
             uploadName: sourceType !== 'raster' && sourceType !== 'dxf' ? uploadName : processImageName,
             transformation
         });
+        svgModelGroup.addModel(elem);
     },
 
     // eslint-disable-next-line no-unused-vars

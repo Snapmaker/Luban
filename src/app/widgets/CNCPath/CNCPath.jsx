@@ -5,9 +5,10 @@ import PropTypes from 'prop-types';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import i18n from '../../lib/i18n';
 import SvgTrace from '../CncLaserShared/SvgTrace';
+import TextParameters from '../CncLaserShared/TextParameters';
+// import Appearance from '../CncLaserShared/Appearance';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
-import TextParameters from '../CncLaserShared/TextParameters';
 import VectorParameters from './VectorParameters';
 import Modal from '../../components/Modal';
 import modal from '../../lib/modal';
@@ -41,20 +42,24 @@ class CNCPath extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
-        transformation: PropTypes.object.isRequired,
+        // transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelFlip: PropTypes.func.isRequired,
+        updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired,
+        changeSelectedModelMode: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired,
+
+        togglePage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
-        changeSelectedModelMode: PropTypes.func.isRequired
+        selectedModel: PropTypes.object
+
     };
 
     fileInput = React.createRef();
@@ -111,6 +116,7 @@ class CNCPath extends PureComponent {
             const file = event.target.files[0];
 
             const uploadMode = this.state.uploadMode;
+            this.props.togglePage(PAGE_EDITOR);
             if (uploadMode === 'trace') {
                 this.setState({
                     mode: uploadMode
@@ -140,6 +146,10 @@ class CNCPath extends PureComponent {
                 });
             }
         },
+        onClickInsertText: () => {
+            this.props.togglePage(PAGE_EDITOR);
+            this.props.insertDefaultTextVector();
+        },
         updateOptions: (options) => {
             this.setState({
                 options: {
@@ -147,9 +157,6 @@ class CNCPath extends PureComponent {
                     ...options
                 }
             });
-        },
-        onClickInsertText: () => {
-            this.props.insertDefaultTextVector();
         },
         updateModalSetting: (setting) => {
             this.setState({
@@ -175,10 +182,13 @@ class CNCPath extends PureComponent {
             page,
             selectedModelID, selectedModelVisible, sourceType, mode,
             showOrigin,
-            transformation, updateSelectedModelTransformation,
+            updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
-            onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip
+            changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip,
+            updateSelectedModelUniformScalingState,
+
+            selectedModel
         } = this.props;
         const selectedNotHide = selectedModelID && selectedModelVisible;
 
@@ -190,7 +200,6 @@ class CNCPath extends PureComponent {
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
         const isProcessMode = isEditor && sourceType === 'raster';
-
         return (
             <React.Fragment>
                 <input
@@ -216,14 +225,11 @@ class CNCPath extends PureComponent {
                 )}
                 {isEditor && (
                     <Transformation
-                        selectedModelID={selectedModelID}
-                        selectedModelVisible={selectedModelVisible}
                         headType="cnc"
-                        transformation={transformation}
-                        sourceType={sourceType}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelFlip={updateSelectedModelFlip}
-                        onModelAfterTransform={onModelAfterTransform}
+                        updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
+
                     />
                 )}
                 {selectedModelID && (
@@ -242,9 +248,18 @@ class CNCPath extends PureComponent {
                             <TextParameters
                                 disabled={!selectedModelVisible}
                                 config={config}
+                                selectedModel={selectedModel}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
                         )}
+                        {/* {isEditor && isSvgElement && (
+                            <Appearance
+                                disabled={selectedModelHideFlag}
+                                config={config}
+                                selectedModel={selectedModel}
+                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                            />
+                        )} */}
                         {isProcess && (isSvgVector || isTextVector) && (
                             <VectorParameters
                                 disabled={!selectedModelVisible}
@@ -263,8 +278,8 @@ class CNCPath extends PureComponent {
                         selectedModelVisible={selectedModelVisible}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
-                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
                         updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
                         paramsDescs={
                             {
                                 jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
@@ -280,15 +295,24 @@ class CNCPath extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { page, selectedModelID, modelGroup, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.cnc;
-
+    const { page, modelGroup, toolPathModelGroup, printOrder } = state.cnc;
+    const selectedModel = modelGroup.getSelectedModel();
+    const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
+    const selectedModelID = selectedModel.modelID;
+    const {
+        sourceType,
+        mode,
+        showOrigin,
+        transformation,
+        config
+    } = selectedModel;
     return {
         page,
         printOrder,
         transformation,
         gcodeConfig,
-        // model,
         selectedModelID,
+        selectedModel,
         // todo, next version fix like selectedModelID
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
@@ -301,9 +325,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        togglePage: (page) => dispatch(editorActions.togglePage('cnc', page)),
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
-        updateSelectedModelTransformation: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('cnc', params)),
+        updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('cnc', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),

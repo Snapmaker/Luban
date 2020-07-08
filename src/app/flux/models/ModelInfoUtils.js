@@ -6,9 +6,9 @@ const DEFAULT_FILL_DENSITY = 4;
 const DEFAULT_TEXT_CONFIG = {
     text: 'Snapmaker',
     name: 'text.svg',
-    size: 24,
-    font: 'Georgia',
-    lineHeight: 1.5,
+    'font-size': 24,
+    'font-family': 'Georgia',
+    'line-height': 1.5,
     alignment: 'left' // left, middle, right
 };
 
@@ -33,7 +33,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (!['3d', 'raster', 'svg', 'dxf', 'text'].includes(sourceType)) {
         return false;
     }
-    if (!['bw', 'greyscale', 'vector', 'trace'].includes(mode)) {
+    if (!['bw', 'greyscale', 'vector', 'trace', 'text'].includes(mode)) {
         return false;
     }
     return true;
@@ -73,6 +73,7 @@ const generateLaserDefaults = (mode, sourceType) => {
                 }
                 case 'svg': {
                     config = {
+                        'stroke-width': '0.25'
                     };
                     break;
                 }
@@ -82,11 +83,8 @@ const generateLaserDefaults = (mode, sourceType) => {
                     };
                     break;
                 }
-                case 'text': {
-                    config = { ...DEFAULT_TEXT_CONFIG };
-                    break;
-                }
                 default:
+                    config = {};
                     break;
             }
             break;
@@ -99,7 +97,19 @@ const generateLaserDefaults = (mode, sourceType) => {
             };
             break;
         }
+        case 'text':
+            config = {
+                ...DEFAULT_TEXT_CONFIG,
+                invert: false,
+                contrast: 50,
+                brightness: 50,
+                whiteClip: 255,
+                bwThreshold: 168,
+                algorithm: 'Atkinson'
+            };
+            break;
         default:
+            config = {};
             break;
     }
 
@@ -183,6 +193,9 @@ const generateCNCDefaults = (mode, sourceType) => {
             switch (sourceType) {
                 case 'raster': {
                     config = {
+                        vectorThreshold: 128,
+                        invert: false,
+                        turdSize: 2
                     };
                     break;
                 }
@@ -204,6 +217,7 @@ const generateCNCDefaults = (mode, sourceType) => {
                     break;
                 }
                 default:
+                    config = {};
                     break;
             }
             break;
@@ -211,7 +225,11 @@ const generateCNCDefaults = (mode, sourceType) => {
             config = {
             };
             break;
+        case 'text':
+            config = { ...DEFAULT_TEXT_CONFIG };
+            break;
         default:
+            config = {};
             break;
     }
 

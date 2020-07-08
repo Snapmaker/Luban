@@ -1,16 +1,20 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Vector3, Group } from 'three';
+import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
 import Model from './Model';
+
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
 
 // class ModelGroup extends Object3D {
-class ModelGroup {
-    constructor() {
+class ModelGroup extends EventEmitter {
+    constructor(headType) {
+        super();
+        this.headType = headType;
         // this.object = new Object3D();
         this.object = new Group();
 
@@ -20,14 +24,18 @@ class ModelGroup {
         this.estimatedTime = 0;
 
         this.candidatePoints = null;
-
         this._bbox = null;
     }
+
+    setDataChangedCallback(handler) {
+        this.onDataChangedCallback = handler;
+    }
+
 
     _getEmptyState = () => {
         return {
             mode: '',
-            hasModel: this._hasModel(),
+            hasModel: this.hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
             visible: true,
@@ -38,24 +46,6 @@ class ModelGroup {
     onModelUpdate = () => {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
-
-    getState(model) {
-        const { modelID, visible, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
-        return {
-            modelID,
-            sourceType,
-            mode,
-            showOrigin,
-            transformation,
-            config,
-            boundingBox,
-            selectedModelID: modelID,
-            visible,
-            estimatedTime: this.estimatedTime,
-            hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        };
-    }
 
     createNewModelName(model) {
         let baseName = '';
@@ -90,27 +80,6 @@ class ModelGroup {
         }
     }
 
-    addModel(model) {
-        if (model) {
-            this.selectedModel = model;
-            this.selectedModel.computeBoundingBox();
-            // if (model.sourceType === '3d') {
-            // model.meshObject.position.x = 0;
-            // model.meshObject.position.y = 0;
-            // model.meshObject.position.z = 0;
-            if (model.sourceType === '3d' && model.transformation.positionX === 0 && model.transformation.positionZ === 0) {
-                model.stickToPlate();
-                const point = this._computeAvailableXY(model);
-                model.meshObject.position.x = point.x;
-                model.meshObject.position.y = point.y;
-            }
-
-            model.updateModelName(this.createNewModelName(model));
-            this.models.push(model);
-            this.object.add(model.meshObject);
-        }
-    }
-
     getModel(modelID) {
         return this.models.find(d => d.modelID === modelID);
     }
@@ -137,7 +106,7 @@ class ModelGroup {
 
     removeSelectedModel() {
         const selected = this.getSelectedModel();
-        if (selected) {
+        if (selected.modelID) {
             this.selectedModel = null;
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             // this.remove(selected);
@@ -307,7 +276,7 @@ class ModelGroup {
     }
 
     removeAllModels() {
-        if (this._hasModel()) {
+        if (this.hasModel()) {
             this.unselectAllModels();
             const models = this.getModels();
             for (const model of models) {
@@ -357,22 +326,26 @@ class ModelGroup {
 
     selectModelById(modelID) {
         const model = this.models.find(d => d.modelID === modelID);
+        let state;
         if (model) {
             this.selectedModel = model;
             if (model.estimatedTime) {
                 this.estimatedTime = model.estimatedTime;
             }
             model.computeBoundingBox();
-            return this.getState(model);
+            state = this._getEmptyState();
         } else {
             this.selectedModel = null;
-            return this._getEmptyState();
+            state = this._getEmptyState();
         }
+        this.onDataChangedCallback();
+        // this._toolPathModelGroup.selectToolPathModel(modelID);
+        return state;
     }
 
     unselectAllModels() {
         this.selectedModel = null;
-        return this._emptyState;
+        return this._getEmptyState();
     }
 
     arrangeAllModels() {
@@ -395,12 +368,12 @@ class ModelGroup {
             this.object.add(model.meshObject);
         }
         this._checkAnyModelOverstepped();
-        return this.selectedModel ? this.getState(this.selectedModel) : this._emptyState;
+        return this._getEmptyState();
     }
 
     duplicateSelectedModel(modelID) {
         const selected = this.getSelectedModel();
-        if (selected) {
+        if (selected.modelID) {
             const model = selected.clone();
             if (selected.sourceType === '3d') {
                 const selectedConvexGeometry = selected.convexGeometry.clone();
@@ -436,7 +409,7 @@ class ModelGroup {
 
             return {
                 modelID: modelID,
-                hasModel: this._hasModel(),
+                hasModel: this.hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped()
             };
         }
@@ -445,22 +418,21 @@ class ModelGroup {
 
 
     getSelectedModel() {
-        return this.selectedModel;
+        if (this.selectedModel) {
+            return this.selectedModel;
+        }
+
+        return this.MOCK_MODEL;
     }
 
     updateSelectedMode(mode, config, processImageName) {
         this.selectedModel.processMode(mode, config, processImageName);
-        return this.getState(this.selectedModel);
+        return this._getEmptyState();
     }
 
     generateModel(modelInfo) {
-        const model = new Model(modelInfo);
-        model.meshObject.addEventListener('update', this.onModelUpdate);
-        model.generateModelObject3D();
-        // model.generateProcessObject3D();
-        model.processMode(modelInfo.mode, modelInfo.config);
-        this.addModel(model);
-        return this.getState(model);
+        this.addModel(modelInfo);
+        return this._getEmptyState();
     }
 
     updateSelectedSource(source) {
@@ -472,13 +444,13 @@ class ModelGroup {
 
     layFlatSelectedModel() {
         const selected = this.getSelectedModel();
-        if (!selected) {
+        if (!selected.modelID) {
             return null;
         }
 
         selected.layFlat();
         selected.computeBoundingBox();
-        return this.getState(selected);
+        return this._getEmptyState();
     }
 
     onModelTransform() {
@@ -493,14 +465,14 @@ class ModelGroup {
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp
-            hasModel: this._hasModel()
+            hasModel: this.hasModel()
         };
     }
 
     updateSelectedModelTransformation(transformation) {
         if (this.selectedModel) {
             this.selectedModel.updateTransformation(transformation);
-            return this.getState(this.selectedModel);
+            return this._getEmptyState();
         }
         return null;
     }
@@ -508,7 +480,7 @@ class ModelGroup {
     // model transformation triggered by controls
     onModelAfterTransform() {
         const selected = this.getSelectedModel();
-        if (!selected) {
+        if (!selected.modelID) {
             return null;
         }
 
@@ -516,7 +488,7 @@ class ModelGroup {
             selected.stickToPlate();
         }
         selected.computeBoundingBox();
-        return this.getState(selected);
+        return this._getEmptyState();
     }
 
     updateSelectedConfig(config, processImageName) {
@@ -655,7 +627,7 @@ class ModelGroup {
         return this._bbox && !this._bbox.containsBox(model.boundingBox);
     }
 
-    _hasModel() {
+    hasModel() {
         return this.getModels().length > 0;
     }
 
@@ -701,7 +673,56 @@ class ModelGroup {
     cloneModels() {
         return this.models.map(d => d.clone());
     }
+
+    addModel(modelInfo, relatedModels = {}) {
+        const model = new Model(modelInfo, this);
+        model.updateModelName(this.createNewModelName(model));
+        model.meshObject.addEventListener('update', this.onModelUpdate);
+        model.generateModelObject3D();
+        model.processMode(modelInfo.mode, modelInfo.config);
+
+        if (model.sourceType === '3d' && model.transformation.positionX === 0 && model.transformation.positionY === 0) {
+            model.stickToPlate();
+            const point = this._computeAvailableXY(model);
+            model.meshObject.position.x = point.x;
+            model.meshObject.position.y = point.y;
+        }
+        model.computeBoundingBox();
+
+        // add to group and select
+        this.models.push(model);
+        this.object.add(model.meshObject);
+        this.selectedModel = model;
+
+        // if (!relatedModels.toolPathModel) {
+        //     relatedModels.toolPathModel = this._toolPathModelGroup.addModel(modelInfo);
+        // }
+        this.emit('add', model);
+        model.setRelatedModels(relatedModels);
+        // refresh view
+        this.onDataChangedCallback();
+
+        return model;
+    }
+
+    modelChanged() {
+        this.onDataChangedCallback();
+    }
 }
 
+ModelGroup.prototype.MOCK_MODEL = {
+    mock: true,
+    sourceType: '',
+    mode: '',
+    config: {},
+    transformation: {
+        rotationZ: 0,
+        width: 0,
+        height: 0,
+        positionX: 0,
+        positionY: 0,
+        flip: 0
+    }
+};
 
 export default ModelGroup;

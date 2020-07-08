@@ -111,9 +111,10 @@ class GcodeConfigSvgVector extends PureComponent {
     }
 }
 
-
 const mapStateToProps = (state) => {
-    const { gcodeConfig } = state.laser;
+    const modelGroup = state.laser.toolPathModelGroup;
+    const model = modelGroup.getSelectedModel();
+    const { gcodeConfig } = model;
     const { optimizePath, fillEnabled, fillDensity } = gcodeConfig;
     return {
         optimizePath,

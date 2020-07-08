@@ -5,15 +5,17 @@ import map from 'lodash/map';
 import styles from './index.styl';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
-import { SVG_EVENT_ADD, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
+import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
+
+// import { createSVGElement } from './element-utils';
 
 class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         svgModelGroup: PropTypes.object,
-        showContextMenu: PropTypes.func,
+        showContextMenu: PropTypes.func
 
-        insertDefaultTextVector: PropTypes.func.isRequired
+        // insertDefaultTextVector: PropTypes.func.isRequired
     };
 
     canvas = React.createRef();
@@ -62,13 +64,16 @@ class SVGEditor extends PureComponent {
             this.props.svgModelGroup.emit(SVG_EVENT_SELECT, elem);
         });
 
-        this.canvas.current.on(SVG_EVENT_ADD, (elem) => {
-            this.props.svgModelGroup.emit(SVG_EVENT_ADD, elem);
-        });
+        // this.canvas.current.on(SVG_EVENT_ADD, (elem) => {
+        //     console.log('aa', elem);
+        //     // this.props.svgModelGroup.emit(SVG_EVENT_ADD, elem);
+        //     this.props.svgModelGroup.addModel('laser', elem);
+        // });
 
-        this.canvas.current.on(SVG_EVENT_MOVE, (elem) => {
-            this.props.svgModelGroup.emit(SVG_EVENT_MOVE, elem);
-        });
+        // this.canvas.current.on(SVG_EVENT_MOVE, (elem) => {
+        //     console.log(elem);
+        //     this.props.svgModelGroup.emit(SVG_EVENT_MOVE, elem);
+        // });
 
         this.canvas.current.on(SVG_EVENT_MODE, (mode) => {
             this.setState({
@@ -92,9 +97,27 @@ class SVGEditor extends PureComponent {
         }
     }
 
+
     setMode(mode, extShape) {
         // this.mode = mode;
         this.canvas.current.setMode(mode, extShape);
+    }
+
+    insertDefaultTextVector = () => {
+        const elem = this.props.svgModelGroup.svgContentGroup.addSVGElement({
+            element: 'text',
+            attr: {
+                x: 200,
+                y: 250,
+                fill: '#000000',
+                'font-size': 12,
+                'font-family': 'Arial',
+                'stroke-width': 0.25,
+                opacity: 1,
+                textContent: 'Snapmaker'
+            }
+        });
+        this.props.svgModelGroup.addModel(elem);
     }
 
     zoomIn() {
@@ -116,13 +139,14 @@ class SVGEditor extends PureComponent {
                     <div className={styles['view-space']}>
                         <SVGCanvas
                             className={styles['svg-content']}
+                            svgModelGroup={this.props.svgModelGroup}
                             size={this.props.size}
                             ref={this.canvas}
                         />
                     </div>
                     <SvgTool
                         mode={this.state.mode}
-                        insertDefaultTextVector={this.props.insertDefaultTextVector}
+                        insertDefaultTextVector={this.insertDefaultTextVector}
                         setMode={this.setMode}
                     />
                 </div>

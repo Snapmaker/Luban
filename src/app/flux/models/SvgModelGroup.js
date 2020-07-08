@@ -1,12 +1,16 @@
-import EventEmitter from 'events';
+// import EventEmitter from 'events';
 import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
-import { DEFAULT_SCALE, SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
-import { getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
+import { DEFAULT_SCALE } from '../../constants/svg-constants';
+import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
+
+
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
-import { getRotationAngle } from '../../widgets/CncLaserSvgEditor/element-transform';
 import { isZero } from '../../lib/utils';
+import { generateModelDefaultConfigs } from './ModelInfoUtils';
+import SvgModel from './SvgModel';
+import api from '../../api';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -23,14 +27,6 @@ const coordGmModelToSvg = (size, transformation) => {
     };
 };
 
-const coordGmSvgToModel = (size, elem) => {
-    const bbox = getBBox(elem);
-    const angle = getRotationAngle(elem) || 0;
-    bbox.positionX = bbox.x + bbox.width / 2 - size.x;
-    bbox.positionY = size.y - bbox.y - bbox.height / 2;
-    bbox.rotationZ = -angle / 180 * Math.PI;
-    return bbox;
-};
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 
@@ -50,9 +46,13 @@ const elementToString = (element, scale = 1) => {
 
 
 class SvgModelGroup {
-    event = new EventEmitter();
+    // event = new EventEmitter();
 
     svgModels = [];
+
+    constructor(modelGroup) {
+        this.modelGroup = modelGroup;
+    }
 
     init(svgContentGroup, size) {
         this.svgContentGroup = svgContentGroup;
@@ -76,50 +76,54 @@ class SvgModelGroup {
         }
     }
 
-    emit(key, ...args) {
-        switch (key) {
-            case SVG_EVENT_ADD:
-                this.event.emit(key, this.svgToModel(args[0]));
-                break;
-            case SVG_EVENT_MOVE:
-                this.event.emit(key, this.svgToTransformation(args[0]));
-                break;
-            case SVG_EVENT_SELECT:
-                this.event.emit(key, {
-                    modelID: args[0] !== null ? args[0].getAttribute('id') : null
-                });
-                break;
-            default:
-                this.event.emit(key, ...args);
-                break;
-        }
-    }
+    // emit(key, ...args) {
+    //     switch (key) {
+    //         case SVG_EVENT_ADD:
+    //             this.event.emit(key, this.svgToModel(args[0]));
+    //             break;
+    //         case SVG_EVENT_MOVE: {
+    //             this.event.emit(key, this.svgToTransformation(args[0]));
+    //             break;
+    //         }
+    //         case SVG_EVENT_SELECT:
+    //             this.event.emit(key, {
+    //                 modelID: args[0] !== null ? args[0].getAttribute('id') : null
+    //             });
+    //             break;
+    //         default:
+    //             this.event.emit(key, ...args);
+    //             break;
+    //     }
+    // }
 
-    on(key, func) {
-        this.event.on(key, func);
-    }
+    // on(key, func) {
+    //     this.event.on(key, func);
+    // }
 
     svgToTransformation(elem) {
-        const { width, height, positionX, positionY, rotationZ } = coordGmSvgToModel(this.size, elem);
+        const { width, height, positionX, positionY, rotationZ, scaleX, scaleY } = coordGmSvgToModel(this.size, elem);
 
-        const model = {
-            modelID: elem.getAttribute('id'),
+        const config = {
+
             transformation: {
                 positionX: positionX,
                 positionY: positionY,
                 rotationZ: rotationZ,
+                scaleX,
+                scaleY,
                 width: width,
                 height: height
             }
         };
 
-        return model;
+        return config;
     }
 
     svgToModel(elem) {
         const { x, y, width, height, positionX, positionY } = coordGmSvgToModel(this.size, elem);
 
-        const clone = elem.cloneNode();
+        const clone = elem.cloneNode(true);
+
         const scale = svg.createSVGTransform();
         scale.setScale(8, 8);
 
@@ -186,7 +190,8 @@ class SvgModelGroup {
         });
         this.svgContentGroup.selectOnly(elem);
         return {
-            modelID: elem.getAttribute('id')
+            modelID: elem.getAttribute('id'),
+            elem
         };
     }
 
@@ -204,7 +209,7 @@ class SvgModelGroup {
         if (!selected) {
             return;
         }
-        const clone = selected.cloneNode();
+        const clone = selected.cloneNode(true);
         clone.setAttribute('id', modelID);
         this.svgContentGroup.group.append(clone);
         this.updateTransformation({
@@ -212,6 +217,7 @@ class SvgModelGroup {
             positionY: 0
         }, clone);
         this.svgContentGroup.selectOnly(selected);
+        this.addModel(clone);
     }
 
     selectElementById(modelID) {
@@ -243,12 +249,7 @@ class SvgModelGroup {
         }
         if (childNodes[index] && childNodes[index + 1]) {
             const item = childNodes[index];
-            const item1 = childNodes[index + 1];
-            const clone = item.cloneNode();
-            const clone1 = item1.cloneNode();
-            this.svgContentGroup.group.replaceChild(clone1, item);
-            this.svgContentGroup.group.replaceChild(clone, item1);
-            this.svgContentGroup.selectOnly(clone);
+            this.svgContentGroup.group.appendChild(item);
         }
     }
 
@@ -268,12 +269,7 @@ class SvgModelGroup {
         }
         if (childNodes[index] && childNodes[index - 1]) {
             const item = childNodes[index];
-            const item1 = childNodes[index - 1];
-            const clone = item.cloneNode();
-            const clone1 = item1.cloneNode();
-            this.svgContentGroup.group.replaceChild(clone1, item);
-            this.svgContentGroup.group.replaceChild(clone, item1);
-            this.svgContentGroup.selectOnly(clone);
+            this.svgContentGroup.group.insertBefore(item, childNodes[0]);
         }
     }
 
@@ -305,11 +301,18 @@ class SvgModelGroup {
                 scaleY: nbbox.height / bbox.height
             });
         }
+        if (transformation.svgflip !== undefined) {
+            const flip = transformation.svgflip;
+            this.svgContentGroup.updateElementFlip(elem, flip);
+        }
         if (transformation.rotationZ !== undefined) {
             this.svgContentGroup.updateElementRotate(elem, {
                 ...nbbox,
                 angle: nbbox.angle
             });
+        }
+        if (transformation.uniformScalingState !== undefined) {
+            this.svgContentGroup.setSelectedElementUniformScalingState(transformation.uniformScalingState);
         }
         this.svgContentGroup.selectOnly(elem);
     }
@@ -328,6 +331,83 @@ class SvgModelGroup {
         selectedElement.setAttribute('display', 'inherit');
         const selector = this.svgContentGroup.requestSelector(selectedElement);
         selector.showGrips(true);
+    }
+
+    createFromModel(relatedModel) {
+        const { config } = relatedModel;
+        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName });
+
+        const model = new SvgModel(elem, this);
+        this.svgModels.push(model);
+        model.setParent(this.svgContentGroup.group);
+
+        relatedModel.relatedModels.svgModel = model;
+        model.relatedModel = relatedModel;
+        model.refresh();
+    }
+
+    addModel(elem) {
+        const headType = this.modelGroup.headType;
+        const model = new SvgModel(elem, this);
+        this.svgModels.push(model);
+        model.setParent(this.svgContentGroup.group);
+        const selector = this.svgContentGroup.requestSelector(elem);
+        selector.showGrips(true);
+        const data = model.genModelConfig();
+
+        const { modelID, content, width, height, transformation, config: elemConfig } = data;
+        const blob = new Blob([content], { type: 'image/svg+xml' });
+        const file = new File([blob], `${modelID}.svg`);
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        api.uploadImage(formData)
+            .then((res) => {
+                const { originalName, uploadName } = res.body;
+                const sourceType = model.type === 'text' ? 'raster' : 'svg';
+                const mode = 'vector';
+
+                let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
+
+                config = { ...config, ...elemConfig };
+                gcodeConfig = { ...gcodeConfig };
+                const options = {
+                    modelID,
+                    limitSize: this.size,
+                    headType,
+                    sourceType,
+                    mode,
+                    originalName,
+                    uploadName,
+                    sourceWidth: res.body.width,
+                    width,
+                    sourceHeight: res.body.height,
+                    height,
+                    transformation,
+                    config,
+                    gcodeConfig
+                };
+
+                this.modelGroup.addModel(options, { svgModel: model });
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+
+    resizeSelector(elem) {
+        const selector = this.svgContentGroup.requestSelector(elem);
+        selector.resize();
+    }
+
+    getModelByElement(elem) {
+        for (const model of this.svgModels) {
+            if (model.elem === elem) {
+                return model;
+            }
+        }
+        return null;
     }
 }
 

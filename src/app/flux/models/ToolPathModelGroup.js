@@ -3,7 +3,7 @@ import uuid from 'uuid';
 import ToolPathModel from './ToolPathModel';
 
 class ToolPathModelGroup {
-    constructor() {
+    constructor(modelGroup) {
         this.object = new Group();
         this.object.visible = false;
 
@@ -14,6 +14,11 @@ class ToolPathModelGroup {
             printOrder: 0,
             gcodeConfig: {}
         };
+        this.modelGroup = modelGroup;
+        this.modelGroup.on('add', (model) => {
+            const toolPathModel = this.addModel(model);
+            model.setRelatedModels({ toolPathModel });
+        });
     }
 
     getState(toolPathModel) {
@@ -73,6 +78,13 @@ class ToolPathModelGroup {
 
             this.selectedModel = toolPathModel;
         }
+    }
+
+    addModel(modelInfo) {
+        const toolPathModel = new ToolPathModel(modelInfo);
+        this.addToolPathModel(toolPathModel);
+        this.selectedToolPathModel = toolPathModel;
+        return toolPathModel;
     }
 
     previewToolPathModels() {
@@ -211,6 +223,18 @@ class ToolPathModelGroup {
         selectedToolPathModel.updateNeedPreview(true);
         selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = true);
     }
+
+    getSelectedModel() {
+        if (this.selectedToolPathModel) {
+            return this.selectedToolPathModel;
+        }
+        return this.MOCK_MODEL;
+    }
 }
 
+ToolPathModelGroup.prototype.MOCK_MODEL = {
+    mock: true,
+    sourceType: '',
+    gcodeConfig: {}
+};
 export default ToolPathModelGroup;
