@@ -23,6 +23,7 @@ class Visualizer extends PureComponent {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         // model: PropTypes.object,
+        hideFlag: PropTypes.bool,
         selectedModelID: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
@@ -147,13 +148,12 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp } = nextProps;
-
+        const { size, transformMode, selectedModelID, renderingTimestamp, hideFlag } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
 
-        if (selectedModelID !== this.props.selectedModelID) {
+        if (selectedModelID !== this.props.selectedModelID || hideFlag !== this.props.hideFlag) {
             const selectedModel = this.props.getSelectedModel();
             // if (!selectedModelID || !selectedModel) {
             if (!selectedModel) {
@@ -161,7 +161,7 @@ class Visualizer extends PureComponent {
             } else {
                 const meshObject = selectedModel.meshObject;
                 if (meshObject) {
-                    this.canvas.current.controls.attach(meshObject);
+                    this.canvas.current.controls.attach(meshObject, selectedModel.hideFlag);
                 }
             }
         }
@@ -179,7 +179,6 @@ class Visualizer extends PureComponent {
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
         }
-
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
@@ -345,10 +344,11 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, selectedModelID, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, selectedModelID, hideFlag, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
+        hideFlag,
         size,
         selectedModelID,
         modelGroup,

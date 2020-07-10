@@ -23,6 +23,7 @@ import PrintingOutputWidget from './PrintingOutput';
 import WifiTransport from './WifiTransport';
 import EnclosureWidget from './Enclosure';
 import CncLaserObjectList from './CncLaserObjectList';
+import PrintingObjectList from './PrintingObjectList';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -39,6 +40,7 @@ const getWidgetByName = (name) => {
         'webcam': WebcamWidget,
         'wifi-transport': WifiTransport,
         'enclosure': EnclosureWidget,
+        '3dp-object-list': PrintingObjectList,
         '3dp-material': PrintingMaterialWidget,
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,

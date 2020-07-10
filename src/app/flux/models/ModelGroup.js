@@ -30,6 +30,7 @@ class ModelGroup {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
+            hideFlag: false,
             transformation: {}
         };
     };
@@ -39,7 +40,7 @@ class ModelGroup {
     };
 
     getState(model) {
-        const { modelID, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
+        const { modelID, hideFlag, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
         return {
             modelID,
             sourceType,
@@ -49,6 +50,7 @@ class ModelGroup {
             config,
             boundingBox,
             selectedModelID: modelID,
+            hideFlag,
             estimatedTime: this.estimatedTime,
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
@@ -121,16 +123,43 @@ class ModelGroup {
         return this.selectedModel && this.selectedModel.changeShowOrigin();
     }
 
+    hideSelectedModel() {
+        const model = this.getSelectedModel();
+        model.hideFlag = true;
+        model.meshObject.visible = false;
+        this.addMeshObject();
+    }
+
+    showSelectedModel() {
+        const model = this.getSelectedModel();
+        model.hideFlag = false;
+        model.meshObject.visible = true;
+        this.addMeshObject();
+    }
+
     removeSelectedModel() {
         const selected = this.getSelectedModel();
         if (selected) {
-            this.selectedModel = null;
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             // this.remove(selected);
             this.models = this.models.filter(model => model !== selected);
-            this.object.remove(selected.meshObject);
+            if (this.models && this.models.length > 0) {
+                this.selectedModel = this.models[0];
+            } else {
+                this.selectedModel = null;
+            }
 
-            return this._getEmptyState();
+            this.object.remove(selected.meshObject);
+            if (this.selectedModel) {
+                return {
+                    ...this._getEmptyState(),
+                    selectedModelID: this.selectedModel.modelID,
+                    hideFlag: false,
+                    transformation: this.selectedModel.transformation
+                };
+            } else {
+                return this._getEmptyState();
+            }
         }
         return null;
     }
@@ -260,6 +289,17 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
+    }
+
+    addMeshObject() {
+        this.object.children.splice(0);
+        this.models.forEach((item) => {
+            if (item.hideFlag === false) {
+                if (item.meshObject) {
+                    this.object.children.push(item.meshObject);
+                }
+            }
+        });
     }
 
     setConvexGeometry(uploadName, convexGeometry) {
@@ -413,17 +453,6 @@ class ModelGroup {
         return null;
     }
 
-    hideSelectedModel() {
-        const model = this.getSelectedModel();
-        model.hideFlag = true;
-        model.meshObject.visible = false;
-    }
-
-    showSelectedModel() {
-        const model = this.getSelectedModel();
-        model.hideFlag = false;
-        model.meshObject.visible = true;
-    }
 
     getSelectedModel() {
         return this.selectedModel;
@@ -470,6 +499,7 @@ class ModelGroup {
             originalName: originalName,
             mode: mode,
             selectedModelID: modelID,
+            hideFlag: false,
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp

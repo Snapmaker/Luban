@@ -18,6 +18,7 @@ class VisualizerModelTransformation extends PureComponent {
         size: PropTypes.object.isRequired,
         selectedModelID: PropTypes.string,
         hasModel: PropTypes.bool.isRequired,
+        hideFlag: PropTypes.bool,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -88,9 +89,9 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelID, hasModel, transformMode } = this.props;
+        const { size, selectedModelID, hasModel, transformMode, hideFlag } = this.props;
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = this.props.transformation;
-        const disabled = !(selectedModelID && hasModel);
+        const disabled = !(selectedModelID && hasModel && !hideFlag);
         const moveX = Number(toFixed(positionX, 1));
         const moveY = Number(toFixed(positionY, 1));
         const scaleXPercent = Number(toFixed((scaleX * 100), 1));
@@ -454,6 +455,7 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const {
         selectedModelID,
+        hideFlag,
         hasModel,
         transformMode,
         transformation
@@ -463,6 +465,7 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelID,
         hasModel,
+        hideFlag,
         transformMode,
         transformation
     };

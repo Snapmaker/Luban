@@ -465,6 +465,7 @@ export const actions = {
         svgModelGroup.deleteElement();
         const modelState = modelGroup.removeSelectedModel();
         const toolPathModelState = toolPathModelGroup.removeSelectedToolPathModel();
+
         dispatch(baseActions.updateState(headType, {
             ...modelState,
             ...toolPathModelState

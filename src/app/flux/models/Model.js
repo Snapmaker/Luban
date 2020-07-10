@@ -150,7 +150,6 @@ class Model {
             this.meshObject.add(this.modelObject3D);
             this.modelObject3D.visible = this.showOrigin;
         }
-
         this.updateTransformation(this.transformation);
     }
 
