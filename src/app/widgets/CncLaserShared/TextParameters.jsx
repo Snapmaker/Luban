@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import { Iconleft, Iconcenter, Iconright } from 'snapmaker-react-icon';
+import { IconAlignLeft, IconAlignCenter, IconAlignRight } from 'snapmaker-react-icon';
 import styles from './styles.styl';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
@@ -192,7 +192,7 @@ Start a new line manually according to your needs.')}
                                         disabled={disabled}
                                         onClick={() => { actions.onChangeAlignment('left'); }}
                                     >
-                                        <Iconleft size={16} color="#666666" />
+                                        <IconAlignLeft size={16} color="#666666" />
                                     </button>
                                     <button
                                         type="button"
@@ -203,7 +203,7 @@ Start a new line manually according to your needs.')}
                                         disabled={disabled}
                                         onClick={() => { actions.onChangeAlignment('middle'); }}
                                     >
-                                        <Iconcenter size={16} color="#666666" />
+                                        <IconAlignCenter size={16} color="#666666" />
                                     </button>
                                     <button
                                         className={classNames(
@@ -214,7 +214,7 @@ Start a new line manually according to your needs.')}
                                         disabled={disabled}
                                         onClick={() => { actions.onChangeAlignment('right'); }}
                                     >
-                                        <Iconright size={16} color="#666666" />
+                                        <IconAlignRight size={16} color="#666666" />
                                     </button>
                                 </span>
                             </div>
