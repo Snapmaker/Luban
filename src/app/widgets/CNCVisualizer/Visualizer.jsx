@@ -337,7 +337,7 @@ class Visualizer extends Component {
                 >
                     <Canvas
                         ref={this.canvas}
-                        isEditor={isEditor}
+                        canOperateModel="false"
                         size={this.props.size}
                         modelGroup={this.props.modelGroup.object}
                         toolPathModelGroup={this.props.toolPathModelGroup.object}

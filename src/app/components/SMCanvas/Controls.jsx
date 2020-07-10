@@ -85,13 +85,13 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement, isEditor) {
+    constructor(sourceType, camera, group, domElement, canOperateModel) {
         super();
 
         this.sourceType = sourceType;
         this.camera = camera;
         this.group = group;
-        this.isEditor = isEditor;
+        this.canOperateModel = canOperateModel;
         this.domElement = (domElement !== undefined) ? domElement : document;
 
         this.initTransformControls();
@@ -267,7 +267,8 @@ class Controls extends EventEmitter {
                 this.handleMouseMovePan(event);
                 break;
             case STATE.TRANSFORM:
-                if (this.isEditor === true || this.isEditor === undefined) {
+                console.log('this.canOperateModel ', this.canOperateModel);
+                if (this.canOperateModel === 'true') {
                     this.transformControl.onMouseMove(this.getMouseCoord(event));
                 }
                 this.emit(EVENTS.TRANSFORM_OBJECT);

@@ -38,7 +38,7 @@ class Canvas extends Component {
         onModelTransform: PropTypes.func,
 
         // tmp
-        isEditor: PropTypes.bool,
+        canOperateModel: PropTypes.string.isRequired,
         showContextMenu: PropTypes.func
     };
 
@@ -147,7 +147,7 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, !this.props.isEditor);
+        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.props.canOperateModel);
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
@@ -163,12 +163,12 @@ class Canvas extends Component {
             this.onUnselectAllModels();
         });
         this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
-            if (this.props.showContextMenu && (this.props.isEditor === undefined)) {
+            if (this.props.showContextMenu && (this.props.canOperateModel === 'true')) {
                 this.props.showContextMenu(e);
             }
         });
         this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-            if (this.props.isEditor === undefined) {
+            if (this.props.canOperateModel === 'true') {
                 this.onModelTransform();
             }
         });
