@@ -90,7 +90,9 @@ class PrintingObjectListBox extends PureComponent {
                                                     modelIcon()
                                                 )}
                                             />
-                                            {modelName}
+                                            <span>
+                                                {modelName}
+                                            </span>
                                         </Anchor>
                                         <button
                                             type="button"
