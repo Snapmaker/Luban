@@ -16,6 +16,14 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
 
+const isDefaultQualityDefinition = (definitionId) => {
+    return definitionId.indexOf('quality') !== -1
+        && (definitionId.indexOf('fast_print') !== -1
+            || definitionId.indexOf('high_quality') !== -1
+            || definitionId.indexOf('normal_quality') !== -1
+        );
+};
+
 // eslint-disable-next-line no-unused-vars
 /*
 const customCompareTransformation = (tran1, tran2) => {
@@ -429,8 +437,13 @@ export const actions = {
 
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
+        // eslint-disable-next-line no-unused-vars
         const machine = getState().machine;
-        const name = newDefinitionName || definition.name;
+        let name = newDefinitionName || definition.name;
+        if (isDefaultQualityDefinition(definition.definitionId)) {
+            name = `${machine.series}-${name}`;
+        }
+
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
         if (isNil(newDefinitionId)) {
@@ -450,7 +463,7 @@ export const actions = {
 
         // Find a name not being used
         while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
-            newDefinition.name = `#${newDefinition.name}-${machine.series}`;
+            newDefinition.name = `#${newDefinition.name}`;
         }
 
         // Simplify settings

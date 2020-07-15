@@ -8,13 +8,9 @@ import path from 'path';
  */
 const Event = {
     on: (eventName, callback) => {
-        console.log('uni-api.event.on', eventName);
         if (isElectron()) {
-            console.log('is electron environment!');
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.on(eventName, callback);
-        } else {
-            console.log('not electron environment, nothing to do.');
         }
     }
 };
@@ -24,7 +20,6 @@ const Event = {
  */
 const Menu = {
     setItemEnabled(id, enabled) {
-        console.log('uni-api.menu.setItem.Enabled', id, enabled);
         if (isElectron()) {
             const { remote } = window.require('electron');
             const appMenu = remote.Menu.getApplicationMenu();
@@ -43,7 +38,6 @@ const File = {
             const fs = window.require('fs');
             const app = window.require('electron').remote.app;
             tmpFile = app.getPath('userData') + tmpFile;
-            console.log(tmpFile, targetFile);
 
             fs.copyFileSync(tmpFile, targetFile);
         }
@@ -76,7 +70,6 @@ const File = {
  */
 const Dialog = {
     showMessageBox(options) {
-        console.log('uni-api.dialog.showMessageBox', options);
         if (isElectron()) {
             const { dialog } = window.require('electron').remote;
             return dialog.showMessageBox(options);
