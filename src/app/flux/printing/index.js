@@ -429,6 +429,7 @@ export const actions = {
 
     duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
         const state = getState().printing;
+        const machine = getState().machine;
         const name = newDefinitionName || definition.name;
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
@@ -449,7 +450,7 @@ export const actions = {
 
         // Find a name not being used
         while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
-            newDefinition.name = `#${newDefinition.name}`;
+            newDefinition.name = `#${newDefinition.name}-${machine.series}`;
         }
 
         // Simplify settings

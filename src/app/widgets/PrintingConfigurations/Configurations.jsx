@@ -255,7 +255,7 @@ class Configurations extends PureComponent {
             const newDefinition = await this.props.duplicateQualityDefinition(definition);
 
             // Select new definition after creation
-            this.actions.onSelectCustomDefinition(newDefinition);
+            this.actions.onSelectCustomDefinitionById(newDefinition.definitionId);
         },
         onDownloadQualityDefinition: () => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
