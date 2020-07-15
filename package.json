@@ -230,7 +230,7 @@
     "redux": "~4.0.1",
     "redux-thunk": "~2.3.0",
     "regenerator-runtime": "~0.13.5",
-    "regression": "^2.0.1",
+    "regression": "~2.0.1",
     "semver": "~5.6.0",
     "serialport": "~8.0.8",
     "serve-favicon": "~2.5.0",
@@ -246,7 +246,7 @@
     "static-eval": "~2.0.5",
     "superagent": "~3.8.3",
     "superagent-use": "~0.1.0",
-    "tar": "^6.0.2",
+    "tar": "~6.0.2",
     "three": "~0.94.0",
     "universal-logger": "~1.0.1",
     "universal-logger-browser": "~1.0.1",
@@ -255,8 +255,8 @@
     "webappengine": "~1.2.0",
     "winston": "~3.0.0",
     "xml2js": "~0.4.19",
-    "xterm": "^4.0.0",
-    "xterm-addon-fit": "^0.3.0"
+    "xterm": "~4.0.0",
+    "xterm-addon-fit": "~0.3.0"
   },
   "devDependencies": {
     "@babel/cli": "~7.8.4",
@@ -307,7 +307,7 @@
     "plugin-error": "~1.0.1",
     "pofile": "~1.0.11",
     "progress": "~2.0.0",
-    "react-textarea-autosize": "^7.1.0",
+    "react-textarea-autosize": "~7.1.0",
     "redux-devtools": "~3.4.0",
     "style-loader": "~0.21.0",
     "stylint": "~1.5.9",
@@ -322,7 +322,7 @@
     "webpack-dev-server": "~3.10.3",
     "webpack-hot-middleware": "~2.25.0",
     "webpack-manifest-plugin": "~2.2.0",
-    "word-wrap": "^1.2.3",
+    "word-wrap": "~1.2.3",
     "worker-loader": "~2.0.0",
     "write-file-webpack-plugin": "~4.3.2",
     "xlsx": "~0.13.3"
