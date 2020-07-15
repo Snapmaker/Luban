@@ -87,7 +87,10 @@ export const actions = {
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
-        await api.removeEnv({ headType });
+        try {
+            await api.removeEnv({ headType });
+        } catch (e) { console.log(e); }
+
         dispatch(actions.updateState(headType, { findLastEnviroment: false, unSaved: false }));
     },
 

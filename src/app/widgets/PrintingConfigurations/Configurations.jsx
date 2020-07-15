@@ -299,7 +299,9 @@ class Configurations extends PureComponent {
 
 
         const isOfficialTab = isAdvised;
-        const qualityDefinition = qualityDefinitions.find(d => d.definitionId === defaultQualityId);
+        const qualityDefinition = qualityDefinitions.find(d => d.definitionId === defaultQualityId)
+            || qualityDefinitions[0];
+
         const customDefinitionOptions = qualityDefinitions.map(d => ({
             label: d.name,
             value: d.definitionId
