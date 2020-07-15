@@ -157,7 +157,7 @@ export const actions = {
      */
     uploadGcodeFile: (file) => (dispatch) => {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', (file instanceof File) ? file : JSON.stringify(file));
         const uploadName = pathWithRandomSuffix(file.name);
         formData.append('uploadName', uploadName);
 

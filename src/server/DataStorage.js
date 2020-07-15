@@ -70,7 +70,7 @@ class DataStorage {
         this.configDir = `${this.userDataDir}/Config`;
         this.fontDir = `${this.userDataDir}/Fonts`;
         this.userCaseDir = `${this.userDataDir}/UserCase`;
-        this.envDir = `${this.userDataDir}/env`;
+        this.envDir = `${this.userDataDir}/Env`;
 
         mkdirp.sync(this.envDir);
         mkdirp.sync(`${this.envDir}/3dp`);

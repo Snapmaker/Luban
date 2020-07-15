@@ -61,10 +61,10 @@ class VisualizerTopLeft extends PureComponent {
                     type="button"
                     className="sm-btn-small sm-btn-primary"
                     style={{ float: 'left' }}
-                    title={i18n._('Open File')}
+                    title={i18n._('Add...')}
                     onClick={() => this.actions.onClickToUpload()}
                 >
-                    {i18n._('Open File')}
+                    {i18n._('Add...')}
                 </button>
             </React.Fragment>
         );

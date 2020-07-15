@@ -12,6 +12,7 @@ import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
+import { actions as projectActions } from '../flux/project';
 
 import api from '../api';
 import i18n from '../lib/i18n';
@@ -26,8 +27,18 @@ import Cnc from './Cnc';
 import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
-import recoverEnvironmentModal from '../modals/modal-recover-environment';
+// import recoverEnvironmentModal from '../modals/modal-recover-environment';
 import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../constants';
+
+import UniApi from '../lib/uni-api';
+
+function getCurrentHeadType(pathname) {
+    let headType = null;
+    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
+    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
+    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
+    return headType;
+}
 
 class App extends PureComponent {
     static propTypes = {
@@ -46,10 +57,14 @@ class App extends PureComponent {
         printingInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
-        editorState: PropTypes.object.isRequired,
+        projectState: PropTypes.object.isRequired,
         onRecovery: PropTypes.func.isRequired,
-        quitRecovery: PropTypes.func.isRequired
+        quitRecovery: PropTypes.func.isRequired,
+        saveAsFile: PropTypes.func.isRequired,
+        openProject: PropTypes.func.isRequired
     };
+
+    fileInput = React.createRef();
 
     state = {
         platform: 'unknown',
@@ -59,7 +74,68 @@ class App extends PureComponent {
     actions = {
         onChangeShouldShowWarning: (event) => {
             this.setState({ shouldShowCncWarning: !event.target.checked });
+        },
+        saveAsFile: () => {
+            const headType = getCurrentHeadType(this.props.location.pathname);
+            if (!headType) {
+                console.log('error headType on save as file');
+                return;
+            }
+            this.props.saveAsFile(headType);
+        },
+        save: async () => {
+            const headType = getCurrentHeadType(this.props.location.pathname);
+            if (!headType) {
+                console.log('error headType on save');
+                return;
+            }
+            await this.props.save(headType);
+        },
+        saveAll: async () => {
+            const message = i18n._('Save changes to the existing file #fileName# before closing?');
+
+            const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            if (currentHeadType) {
+                await this.props.save(currentHeadType, { message });
+            }
+
+            for (const headType of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+                if (!this.props.projectState[headType].unSaved) continue;
+
+                this.props.history.push(`/${headType}`);
+                await this.props.save(headType, { message });
+            }
+            console.log('saved, can close here');
+        },
+        openProject: (file) => {
+            console.log('open file cmd with:', file);
+            if (!file) {
+                console.log('??', this.fileInput.current);
+                this.fileInput.current.value = null;
+                this.fileInput.current.click();
+            } else {
+                this.props.openProject(file, this.props.history);
+            }
+        },
+        initUniEvent: () => {
+            UniApi.Event.on('open-file', (event, file) => {
+                console.log('received an open-file message:', file);
+                this.actions.openProject(file);
+            });
+            UniApi.Event.on('save-as-file', (event, file) => {
+                console.log('received an save-file message:', file);
+                this.actions.saveAsFile(file);
+            });
+            UniApi.Event.on('save', () => {
+                console.log('received an save message');
+                this.actions.save();
+            });
+            UniApi.Event.on('save-and-close', async () => {
+                await this.actions.saveAll();
+                UniApi.Window.call('destroy');
+            });
         }
+
     };
 
     componentDidMount() {
@@ -129,20 +205,26 @@ class App extends PureComponent {
         this.props.printingInit();
         this.props.textInit();
         this.props.initRecoverService();
+
+        this.actions.initUniEvent();
     }
 
     componentWillReceiveProps(nextProps) {
         let headType = null;
 
         if (nextProps.location.pathname !== this.props.location.pathname) {
-            if (nextProps.location.pathname.indexOf(HEAD_CNC) > 0) headType = HEAD_CNC;
-            if (nextProps.location.pathname.indexOf(HEAD_LASER) > 0) headType = HEAD_LASER;
-            if (nextProps.location.pathname.indexOf(HEAD_3DP) > 0) headType = HEAD_3DP;
-            if (!headType) return;
+            headType = getCurrentHeadType(nextProps.location.pathname);
+            UniApi.Menu.setItemEnabled('save-as', !!headType);
+            UniApi.Menu.setItemEnabled('save', !!headType);
+            if (!headType) {
+                UniApi.Window.setOpenedFile();
+                return;
+            }
 
-            const { findLastEnviroment, recovered } = nextProps.editorState[headType];
+            const { findLastEnviroment, recovered, openedFile } = nextProps.projectState[headType];
+            UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
             if (findLastEnviroment && !recovered) {
-                recoverEnvironmentModal({ onRecovery: () => this.props.onRecovery(headType), quitRecovery: () => this.props.quitRecovery(headType) });
+                this.props.onRecovery(headType);
             }
         }
     }
@@ -231,10 +313,10 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
-    const editorState = state.editor;
+    const projectState = state.project;
     return {
         machineInfo,
-        editorState
+        projectState
     };
 };
 
@@ -248,7 +330,7 @@ const mapDispatchToProps = (dispatch) => {
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),
         textInit: () => dispatch(textActions.init()),
-        initRecoverService: () => dispatch(editorActions.initRecoverService()),
+        initRecoverService: () => dispatch(projectActions.initRecoverService()),
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
@@ -257,8 +339,11 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(editorActions.initModelsPreviewChecker('laser'));
             dispatch(editorActions.initModelsPreviewChecker('cnc'));
         },
-        onRecovery: (headType) => dispatch(editorActions.onRecovery(headType)),
-        quitRecovery: (headType) => dispatch(editorActions.quitRecovery(headType))
+        onRecovery: (headType) => dispatch(projectActions.onRecovery(headType)),
+        quitRecovery: (headType) => dispatch(projectActions.quitRecovery(headType)),
+        saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
+        save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
+        openProject: (headType, history) => dispatch(projectActions.open(headType, history))
     };
 };
 

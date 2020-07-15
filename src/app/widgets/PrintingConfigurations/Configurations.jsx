@@ -13,6 +13,9 @@ import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
+import { actions as projectActions } from '../../flux/project';
+import { HEAD_3DP } from '../../constants';
+
 import styles from './styles.styl';
 
 const OFFICIAL_CONFIG_KEYS = [
@@ -63,16 +66,12 @@ class Configurations extends PureComponent {
         notificationMessage: '',
         showOfficialConfigDetails: true,
 
-        isOfficialTab: true,
-        officialQualityDefinition: null,
-        customQualityDefinition: null,
 
         // rename custom config
         newName: null,
         isRenaming: false,
 
-        // custom config
-        customDefinitionOptions: [],
+
         customConfigGroup: [
             {
                 name: i18n._('Quality'),
@@ -178,24 +177,18 @@ class Configurations extends PureComponent {
             });
         },
         onSelectOfficialDefinition: (definition) => {
-            this.setState({
-                isOfficialTab: true,
-                officialQualityDefinition: definition
-            });
             this.props.updateDefaultQualityId(definition.definitionId);
+            console.log(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
         onSelectCustomDefinitionById: (definitionId) => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === definitionId);
-
             // has to update defaultQualityId
             this.props.updateDefaultQualityId(definitionId);
             this.actions.onSelectCustomDefinition(definition);
         },
         onSelectCustomDefinition: (definition) => {
             this.setState({
-                isOfficialTab: false,
-                customQualityDefinition: definition,
                 isRenaming: false
             });
             // this.props.updateDefaultQualityId(definition.definitionId);
@@ -209,7 +202,7 @@ class Configurations extends PureComponent {
         },
         onRenameDefinitionStart: () => {
             if (!this.state.isRenaming) {
-                const definition = this.state.customQualityDefinition;
+                const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
                 this.setState({
                     isRenaming: true,
                     newName: definition.name
@@ -219,7 +212,7 @@ class Configurations extends PureComponent {
             }
         },
         onRenameDefinitionEnd: async () => {
-            const definition = this.state.customQualityDefinition;
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             const { newName } = this.state;
 
             if (newName === definition.name) { // unchanged
@@ -235,19 +228,12 @@ class Configurations extends PureComponent {
                 this.actions.showNotification(err);
             }
 
-            // Update options
-            const customDefinitionOptions = this.props.qualityDefinitions.map(d => ({
-                label: d.name,
-                value: d.definitionId
-            }));
-
             this.setState({
-                isRenaming: false,
-                customDefinitionOptions
+                isRenaming: false
             });
         },
         onChangeCustomDefinition: (key, value) => {
-            const definition = this.state.customQualityDefinition;
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             if (!isDefinitionEditable(definition)) {
                 return;
             }
@@ -265,18 +251,18 @@ class Configurations extends PureComponent {
             });
         },
         onDuplicateDefinition: async () => {
-            const definition = this.state.customQualityDefinition;
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             const newDefinition = await this.props.duplicateQualityDefinition(definition);
 
             // Select new definition after creation
-            this.actions.onSelectCustomDefinition(newDefinition);
+            this.actions.onSelectCustomDefinitionById(newDefinition.definitionId);
         },
         onDownloadQualityDefinition: () => {
-            const definition = this.state.customQualityDefinition;
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             this.props.onDownloadQualityDefinition(definition.definitionId);
         },
         onRemoveDefinition: async () => {
-            const definition = this.state.customQualityDefinition;
+            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             await confirm({
                 body: `Are you sure to remove profile "${definition.name}"?`
             });
@@ -290,16 +276,9 @@ class Configurations extends PureComponent {
             }
         },
         onSetOfficialTab: (isAdvised) => {
-            if (isAdvised) {
-                this.setState({
-                    isOfficialTab: true
-                });
-            } else {
-                this.setState({
-                    isOfficialTab: false
-                });
+            if (isAdvised && /^quality.([0-9_]+)$/.test(this.props.defaultQualityId)) {
+                this.props.updateDefaultQualityId('quality.fast_print');
             }
-            this.props.updateDefaultQualityId('quality.fast_print');
             this.props.updateDefaultAdvised(isAdvised);
         }
     };
@@ -309,72 +288,8 @@ class Configurations extends PureComponent {
         this.props.setTitle(i18n._('Printing Settings'));
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
-            const newState = {};
-
-            // First load initialization
-            if (this.props.qualityDefinitions.length === 0) {
-                const definition = nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
-
-                Object.assign(newState, {
-                    isOfficialTab: true,
-                    officialQualityDefinition: definition,
-                    customQualityDefinition: definition
-                });
-
-                this.props.updateActiveDefinition(definition);
-            } else {
-                const officialQualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.officialQualityDefinition.definitionId)
-                || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
-                const customQualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.customQualityDefinition.definitionId)
-                    || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
-                Object.assign(newState, {
-                    officialQualityDefinition: officialQualityDefinition,
-                    customQualityDefinition: customQualityDefinition
-                });
-                this.props.updateActiveDefinition(officialQualityDefinition);
-                this.props.updateActiveDefinition(customQualityDefinition);
-            }
-
-            // Update custom definition options
-            const customDefinitionOptions = nextProps.qualityDefinitions.map(d => ({
-                label: d.name,
-                value: d.definitionId
-            }));
-            Object.assign(newState, {
-                customDefinitionOptions: customDefinitionOptions
-            });
-
-            this.setState(newState);
-        }
-
-
-        if (nextProps.isAdvised !== this.props.isAdvised) {
-            if (nextProps.isAdvised) {
-                this.actions.onSetOfficialTab(true);
-            } else {
-                this.actions.onSetOfficialTab(false);
-            }
-            if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
-                const definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-                if (nextProps.isAdvised) {
-                    this.actions.onSelectOfficialDefinition(definition);
-                } else {
-                    this.actions.onSelectCustomDefinition(definition);
-                }
-            }
-        } else if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
-            const definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-            if (nextProps.isAdvised) {
-                this.actions.onSelectOfficialDefinition(definition);
-            } else {
-                this.actions.onSelectCustomDefinition(definition);
-            }
-        }
-    }
-
     render() {
+        const { isAdvised, defaultQualityId, qualityDefinitions } = this.props;
         const state = this.state;
         const actions = this.actions;
 
@@ -382,8 +297,15 @@ class Configurations extends PureComponent {
         const normalQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
         const highQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
 
-        const { isOfficialTab, officialQualityDefinition, customQualityDefinition, customDefinitionOptions } = this.state;
-        const qualityDefinition = isOfficialTab ? officialQualityDefinition : customQualityDefinition;
+
+        const isOfficialTab = isAdvised;
+        const qualityDefinition = qualityDefinitions.find(d => d.definitionId === defaultQualityId)
+            || qualityDefinitions[0];
+
+        const customDefinitionOptions = qualityDefinitions.map(d => ({
+            label: d.name,
+            value: d.definitionId
+        }));
 
         if (!qualityDefinition) {
             return null;
@@ -771,7 +693,10 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
         updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
-        updateActiveDefinition: (definition) => dispatch(printingActions.updateActiveDefinition(definition)),
+        updateActiveDefinition: (definition) => {
+            dispatch(printingActions.updateActiveDefinition(definition));
+            dispatch(projectActions.autoSaveEnviroment(HEAD_3DP, true));
+        },
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
         onDownloadQualityDefinition: (definitionId) => dispatch(printingActions.onDownloadQualityDefinition(definitionId)),
         onUploadQualityDefinition: (file) => dispatch(printingActions.onUploadQualityDefinition(file)),

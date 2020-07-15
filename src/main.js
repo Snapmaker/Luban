@@ -56,8 +56,10 @@ const onReady = async () => {
 
         const url = `http://${address}:${port}`;
         const window = openBrowserWindow(url, combinedOptions);
-        window.on('close', () => {
+        window.on('close', (e) => {
+            e.preventDefault();
             config.set('winBounds', window.getBounds());
+            window.webContents.send('save-and-close');
         });
 
         setMainWindow(window);

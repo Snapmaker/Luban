@@ -10,6 +10,7 @@ import widget from './widget';
 import developTools from './develop-tools';
 // import models from './models';
 import text from './text';
+import project from './project';
 
 export default combineReducers({
     workspace,
@@ -22,5 +23,6 @@ export default combineReducers({
     text,
     widget,
     developTools,
-    editor
+    editor,
+    project
 });
