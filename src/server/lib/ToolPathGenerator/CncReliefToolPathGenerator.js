@@ -229,10 +229,11 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         // gcode.push('M3');
         // gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
+        this.toolPath.push({ G: 90 });
         this.toolPath.push({ G: 0, Z: this.stopHeight, F: 120 });
         this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, F: 120 });
         this.toolPath.push({ G: 0, Z: this.safetyHeight, F: 120 });
-        this.toolPath.push({ M: 3 });
+        this.toolPath.push({ M: 3, P: 100 });
         startPoint = { X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight };
         // endPoint.X !== undefined && (startPoint.X = endPoint.X);
         // endPoint.Y !== undefined && (startPoint.Y = endPoint.Y);
