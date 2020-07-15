@@ -40,6 +40,34 @@ function isPointInPolygon(point, polygon) {
 
 
 /**
+ * Get the first point from the svg
+ *
+ * @param svg
+ */
+function getFirstPointFromSvg(svg) {
+    for (let i = 0; i < svg.shapes.length; i++) {
+        const shape = svg.shapes[i];
+        if (!shape.visibility) {
+            continue;
+        }
+
+        for (let j = 0; j < shape.paths.length; j++) {
+            const path = shape.paths[j];
+            if (path.points.length === 0) {
+                continue;
+            }
+
+            if (path.outlinePoints) {
+                return path.outlinePoints[0];
+            } else {
+                return path.points[0];
+            }
+        }
+    }
+    return null;
+}
+
+/**
  * ToolPathGenerator
  */
 export default class CNCToolPathGenerator extends EventEmitter {
@@ -163,10 +191,14 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         // Start generate tool path
         const toolPath = new Toolpath();
-        toolPath.safeStart();
+        // toolPath.safeStart(normalizer, stopHeight, safetyHeight);
+        const point = getFirstPointFromSvg(svg);
+
+        toolPath.safeStart(normalizer.x(point[0]), normalizer.y(point[1]), stopHeight, safetyHeight);
+
         toolPath.spindleOn();
         // toolPath.move0Z(safetyHeight, jogSpeed);
-        toolPath.move0Z(safetyHeight, 100);
+        // toolPath.move0Z(safetyHeight, 100);
 
         const passes = Math.ceil(targetDepth / stepDown);
         let z = 0;
