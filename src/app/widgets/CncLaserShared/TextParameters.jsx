@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-
+import { IconAlignLeft, IconAlignCenter, IconAlignRight } from 'snapmaker-react-icon';
+import styles from './styles.styl';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -49,17 +50,22 @@ class TextParameters extends PureComponent {
             this.props.updateSelectedModelTextConfig({ text });
         },
         onChangeFont: (option) => {
+            if (option.value === 'AddFonts') {
+                this.actions.onClickUpload();
+                return;
+            }
             const font = option.value;
             this.props.updateSelectedModelTextConfig({ font });
         },
         onChangeSize: (size) => {
             this.props.updateSelectedModelTextConfig({ size });
         },
-        onChangeLineHeight: (lineHeight) => {
+        onChangeLineHeight: (option) => {
+            const lineHeight = option.value;
             this.props.updateSelectedModelTextConfig({ lineHeight });
         },
-        onChangeAlignment: (option) => {
-            const alignment = option.value;
+        onChangeAlignment: (value) => {
+            const alignment = value;
             this.props.updateSelectedModelTextConfig({ alignment });
         }
     };
@@ -117,23 +123,6 @@ Start a new line manually according to your needs.')}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
                                 />
-                                <button
-                                    disabled={disabled}
-                                    type="button"
-                                    style={{
-                                        display: 'inline-block',
-                                        width: '15%',
-                                        float: 'right',
-                                        padding: '5px 6px',
-                                        marginLeft: '4px',
-                                        height: '30px'
-                                    }}
-                                    className="sm-btn-small sm-btn-default"
-                                    title={i18n._('Upload')}
-                                    onClick={actions.onClickUpload}
-                                >
-                                    <i className="fa fa-upload" />
-                                </button>
                                 <Select
                                     disabled={disabled}
                                     className="sm-parameter-row__select"
@@ -168,9 +157,19 @@ Start a new line manually according to your needs.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Line Height')}</span>
-                                <Input
+
+                                <Select
                                     disabled={disabled}
-                                    className="sm-parameter-row__input"
+                                    className="sm-parameter-row__select"
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    searchable={false}
+                                    options={[
+                                        { label: i18n._('1.0'), value: 1 },
+                                        { label: i18n._('1.2'), value: 1.2 },
+                                        { label: i18n._('1.5'), value: 1.5 },
+                                        { label: i18n._('2.0'), value: 2 }
+                                    ]}
                                     value={lineHeight}
                                     onChange={actions.onChangeLineHeight}
                                 />
@@ -183,21 +182,41 @@ Start a new line manually according to your needs.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
-                                <Select
-                                    disabled={disabled}
-                                    className="sm-parameter-row__select"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={[
-                                        { label: i18n._('Left'), value: 'left' },
-                                        { label: i18n._('Middle'), value: 'middle' },
-                                        { label: i18n._('Right'), value: 'right' }
-                                    ]}
-                                    placeholder={i18n._('Alignment')}
-                                    value={alignment}
-                                    onChange={actions.onChangeAlignment}
-                                />
+                                <span className={styles.textAlignWrap}>
+                                    <button
+                                        className={classNames(
+                                            styles.textAlignButton,
+                                            { [styles.active]: alignment === 'left' }
+                                        )}
+                                        type="button"
+                                        disabled={disabled}
+                                        onClick={() => { actions.onChangeAlignment('left'); }}
+                                    >
+                                        <IconAlignLeft size={16} color="#666666" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={classNames(
+                                            styles.textAlignButton,
+                                            { [styles.active]: alignment === 'middle' },
+                                        )}
+                                        disabled={disabled}
+                                        onClick={() => { actions.onChangeAlignment('middle'); }}
+                                    >
+                                        <IconAlignCenter size={16} color="#666666" />
+                                    </button>
+                                    <button
+                                        className={classNames(
+                                            styles.textAlignButton,
+                                            { [styles.active]: alignment === 'right' },
+                                        )}
+                                        type="button"
+                                        disabled={disabled}
+                                        onClick={() => { actions.onChangeAlignment('right'); }}
+                                    >
+                                        <IconAlignRight size={16} color="#666666" />
+                                    </button>
+                                </span>
                             </div>
                         </TipTrigger>
                     </React.Fragment>
@@ -213,6 +232,10 @@ const mapStateToProps = (state) => {
         label: font.displayName,
         value: font.fontFamily
     }));
+    fontOptions.unshift({
+        label: `+ ${i18n._('Add Fonts')}`,
+        value: 'AddFonts'
+    });
     return {
         fontOptions
     };
