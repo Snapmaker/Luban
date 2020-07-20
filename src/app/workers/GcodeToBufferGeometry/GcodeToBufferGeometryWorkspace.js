@@ -46,6 +46,7 @@ class GcodeToBufferGeometryWorkspace {
             let indexCount = 0;
 
             let progress = 0;
+            let lastMotion = '';
 
             let boundingBox = null;
 
@@ -54,15 +55,20 @@ class GcodeToBufferGeometryWorkspace {
                     const { motion } = modal;
                     const color = motionColor[motion] || defaultColor;
                     const indexColor = indexMotionColor[motion] || defaultColor;
-                    positions.push(v1.x);
-                    positions.push(v1.y);
-                    positions.push(v1.z);
-                    colors.push(color[0]);
-                    colors.push(color[1]);
-                    colors.push(color[2]);
-                    indexColors.push(indexColor[0]);
-                    indexColors.push(indexColor[1]);
-                    indexColors.push(indexColor[2]);
+                    if (lastMotion !== motion) {
+                        positions.push(v1.x);
+                        positions.push(v1.y);
+                        positions.push(v1.z);
+                        colors.push(color[0]);
+                        colors.push(color[1]);
+                        colors.push(color[2]);
+                        indexColors.push(indexColor[0]);
+                        indexColors.push(indexColor[1]);
+                        indexColors.push(indexColor[2]);
+
+                        lastMotion = motion;
+                    }
+
                     positions.push(v2.x);
                     positions.push(v2.y);
                     positions.push(v2.z);

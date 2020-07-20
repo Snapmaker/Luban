@@ -15,6 +15,7 @@ export const readFileToList = (path, splitChar = '\n') => {
                 if (err) {
                     console.error(err);
                     reject(err);
+                    return;
                 }
                 const uint8array = new Uint8Array(res.body);
                 const splitCharCode = splitChar.charCodeAt(0);
