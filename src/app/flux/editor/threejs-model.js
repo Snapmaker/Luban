@@ -59,7 +59,6 @@ export const threejsModelActions = {
                 modelGroup.updateSelectedModelTransformation(transformation);
                 modelGroup.updateSelectedConfig({ size: Math.ceil(newSize) });
                 dispatch(baseActions.updateConfig(headType, { size: Math.ceil(newSize) }));
-                dispatch(baseActions.updateConfig(headType, { size: Math.ceil(newSize) }));
             }
         }
 
