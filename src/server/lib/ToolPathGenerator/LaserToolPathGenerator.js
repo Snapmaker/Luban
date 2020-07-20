@@ -449,7 +449,9 @@ class LaserToolPathGenerator extends EventEmitter {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
         });
-        if (optimizePath && svg.shapes.left < 2000) {
+
+        // For performance reason, we only optimize SVG with number of shapes less than 2000
+        if (optimizePath && svg.shapes.length < 2000) {
             sortShapes(svg);
         }
         rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
