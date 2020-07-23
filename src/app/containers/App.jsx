@@ -18,6 +18,7 @@ import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 import Space from '../components/Space';
+import Init from './Init';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
@@ -238,6 +239,7 @@ class App extends PureComponent {
     render() {
         const { location } = this.props;
         const accepted = ([
+            '/init',
             '/workspace',
             '/3dp',
             '/laser',
@@ -254,7 +256,7 @@ class App extends PureComponent {
             return (
                 <Redirect
                     to={{
-                        pathname: '/workspace',
+                        pathname: '/init',
                         state: {
                             from: location
                         }
@@ -304,6 +306,7 @@ class App extends PureComponent {
                         {location.pathname.indexOf('/caselibrary') === 0 && (
                             <CaseLibrary {...this.props} />
                         )}
+                        {location.pathname === '/init' && <Init />}
                     </div>
                 </div>
             </div>
@@ -348,3 +351,4 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));
+
