@@ -18,4 +18,3 @@ class Init extends PureComponent {
 }
 
 export default withRouter(Init);
-

@@ -1,4 +1,3 @@
-import Init from './Init';
+import Init from './init';
 
 export default Init;
-

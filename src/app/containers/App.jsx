@@ -18,7 +18,7 @@ import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 import Space from '../components/Space';
-import Init from './Init';
+import Init from './init';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
@@ -351,4 +351,3 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));
-
