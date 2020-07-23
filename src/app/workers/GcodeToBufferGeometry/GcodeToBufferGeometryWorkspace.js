@@ -3,7 +3,7 @@ import isEmpty from 'lodash/isEmpty';
 import noop from 'lodash/noop';
 import ToolPath from '../../../shared/lib/gcodeToolPath';
 import { DATA_PREFIX } from '../../constants';
-import { readFile } from './index';
+import { readFileToList } from './index';
 
 const defaultColor = [40, 167, 255];
 const motionColor = {
@@ -24,12 +24,15 @@ class GcodeToBufferGeometryWorkspace {
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
     async parse(gcodeFilename, gcode, onParsed = noop, onProgress = noop, onError = noop) {
         try {
+            let gcodeList;
             if (!isEmpty(gcodeFilename)) {
                 const gcodeFilepath = `${DATA_PREFIX}/${gcodeFilename}`;
-                gcode = await readFile(gcodeFilepath);
+                gcodeList = await readFileToList(gcodeFilepath);
+            } else {
+                gcodeList = gcode.split('\n');
             }
 
-            if (isEmpty(gcode)) {
+            if (!gcodeList || gcodeList.length === 0) {
                 onError('gcode is empty');
                 return;
             }
@@ -43,6 +46,7 @@ class GcodeToBufferGeometryWorkspace {
             let indexCount = 0;
 
             let progress = 0;
+            let lastMotion = '';
 
             let boundingBox = null;
 
@@ -51,15 +55,20 @@ class GcodeToBufferGeometryWorkspace {
                     const { motion } = modal;
                     const color = motionColor[motion] || defaultColor;
                     const indexColor = indexMotionColor[motion] || defaultColor;
-                    positions.push(v1.x);
-                    positions.push(v1.y);
-                    positions.push(v1.z);
-                    colors.push(color[0]);
-                    colors.push(color[1]);
-                    colors.push(color[2]);
-                    indexColors.push(indexColor[0]);
-                    indexColors.push(indexColor[1]);
-                    indexColors.push(indexColor[2]);
+                    if (lastMotion !== motion) {
+                        positions.push(v1.x);
+                        positions.push(v1.y);
+                        positions.push(v1.z);
+                        colors.push(color[0]);
+                        colors.push(color[1]);
+                        colors.push(color[2]);
+                        indexColors.push(indexColor[0]);
+                        indexColors.push(indexColor[1]);
+                        indexColors.push(indexColor[2]);
+
+                        lastMotion = motion;
+                    }
+
                     positions.push(v2.x);
                     positions.push(v2.y);
                     positions.push(v2.z);
@@ -172,7 +181,11 @@ class GcodeToBufferGeometryWorkspace {
                             bufferGeometry.addAttribute('a_index_color', indexColorAttribute);
                             bufferGeometry.addAttribute('a_index', indexAttribute);
 
-                            onParsed({ bufferGeometry: bufferGeometry, renderMethod: renderMethodTmp, isDone: false });
+                            onParsed({
+                                bufferGeometry: bufferGeometry,
+                                renderMethod: renderMethodTmp,
+                                isDone: false
+                            });
 
                             positions = [];
                             colors = [];
@@ -183,7 +196,7 @@ class GcodeToBufferGeometryWorkspace {
                 }
             });
 
-            toolPath.loadFromStringSync(gcode, (line, i, length) => {
+            toolPath.loadFromArraySync(gcodeList, (line, i, length) => {
                 const curProgress = i / length;
                 if ((curProgress - progress > 0.01)) {
                     progress = curProgress;
@@ -208,7 +221,12 @@ class GcodeToBufferGeometryWorkspace {
             bufferGeometry.addAttribute('a_color', colorAttribute);
             bufferGeometry.addAttribute('a_index_color', indexColorAttribute);
             bufferGeometry.addAttribute('a_index', indexAttribute);
-            onParsed({ bufferGeometry: bufferGeometry, renderMethod: renderMethodTmp, isDone: true, boundingBox: boundingBox });
+            onParsed({
+                bufferGeometry: bufferGeometry,
+                renderMethod: renderMethodTmp,
+                isDone: true,
+                boundingBox: boundingBox
+            });
         } catch (err) {
             onError(err);
         }
