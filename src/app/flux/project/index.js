@@ -110,6 +110,8 @@ export const actions = {
         }
 
         modState.modelGroup.removeAllModels();
+
+        modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.svgModelGroup && modState.svgModelGroup.svgContentGroup.removeAllElements();
         const { models, ...restState } = envObj;
         for (let k = 0; k < models.length; k++) {

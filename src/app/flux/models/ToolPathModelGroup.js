@@ -37,6 +37,14 @@ class ToolPathModelGroup {
         return null;
     }
 
+    removeAllModels() {
+        this.selectedToolPathModel = null;
+        for (const model of this.toolPathModels) {
+            this.object.remove(model.toolPathObj3D);
+        }
+        this.toolPathModels = [];
+    }
+
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);
         if (this.selectedToolPathModel) {

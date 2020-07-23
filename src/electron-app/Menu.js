@@ -1,9 +1,36 @@
 import { URL } from 'url';
 import path from 'path';
+import fs from 'fs';
 import { app, shell, globalShortcut, Menu, dialog, MenuItem } from 'electron';
 import { getMainWindow } from './window';
+import DataStorage from '../DataStorage';
 
-function addRecentFile(file) {
+
+function getSavedRecentFile() {
+    const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
+    let content;
+    try {
+        content = fs.readFileSync(recentFileName, 'utf-8');
+    } catch (e) {
+        return [];
+    }
+
+    try {
+        const arr = JSON.parse(content);
+        if (!(arr instanceof Array)) return [];
+        return arr;
+    } catch (e) { return []; }
+}
+
+function saveRecentFile(file) {
+    const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
+    const arr = getSavedRecentFile();
+    arr.push(file);
+    fs.writeFileSync(recentFileName, JSON.stringify(arr), 'utf-8');
+}
+
+
+function addRecentFile(file, isSave = true) {
     const menu = Menu.getApplicationMenu();
     const itemRecentFiles = menu.getMenuItemById('recent-files');
 
@@ -15,6 +42,14 @@ function addRecentFile(file) {
         } });
 
     itemRecentFiles.submenu.insert(0, item);
+    Menu.setApplicationMenu(menu);
+    if (isSave) saveRecentFile(file);
+}
+function recoverRecentFiles() {
+    const arr = getSavedRecentFile();
+    for (const file of arr) {
+        addRecentFile(file, false);
+    }
 }
 
 function onClickPreferences(browserWindow) {
@@ -76,6 +111,8 @@ function getMenuTemplate(options) {
                                 for (const item of menuItem.menu.items) {
                                     if (item !== menuItem) item.visible = false;
                                 }
+                                const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
+                                fs.writeFileSync(recentFileName, JSON.stringify([]), 'utf-8');
                             }
                         }
                     ]
@@ -162,7 +199,7 @@ export default function registerMenu(options) {
     const template = getMenuTemplate(options);
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-
+    recoverRecentFiles();
     // Bind Menu defined shortcuts
     globalShortcut.register('CommandOrControl+,', onClickPreferences);
 }
