@@ -307,7 +307,6 @@ class SvgModelGroup {
         }
         if (transformation.svgflip !== undefined) {
             const flip = transformation.svgflip;
-            console.log('----1----', flip, elem, transformation);
             this.svgContentGroup.updateElementFlip(elem, flip);
         }
         if (transformation.rotationZ !== undefined) {

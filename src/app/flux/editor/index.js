@@ -373,18 +373,20 @@ export const actions = {
             config: selectedModel.config
         };
 
-        console.log('----4----', transformation);
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
-
-        api.processImage(options)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
-                svgModelGroup.updateElementImage(processImageName);
-                dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
-            });
+        if (selectedModel.sourceType === 'svg' || selectedModel.sourceType === 'text') {
+            dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
+            dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+        } else {
+            api.processImage(options)
+                .then((res) => {
+                    const processImageName = res.body.filename;
+                    if (!processImageName) {
+                        return;
+                    }
+                    svgModelGroup.updateElementImage(processImageName);
+                    dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+                });
+        }
     },
     // updateSelectedModelUniformScalingState: (headType, transformation) => (dispatch) => {
     // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
@@ -462,6 +464,7 @@ export const actions = {
                 break;
             case 'Reset':
                 flip = 0;
+                svgflip = transformation.flip;
                 break;
             default:
         }

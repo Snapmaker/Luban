@@ -215,7 +215,6 @@ class SVGContentGroup {
         const transformScale = this.svgContent.createSVGTransform();
         const transformBack = this.svgContent.createSVGTransform();
         const bBox = getBBox(elem);
-        console.log(flip, elem, bBox);
         transformOrigin.setTranslate(bBox.x + bBox.width, bBox.y + bBox.height);
         transformScale.setScale(((flip & 2) > 0 ? -1 : 1), ((flip & 1) > 0 ? -1 : 1));
         transformBack.setTranslate(-(bBox.x + ((flip & 2) > 0 ? 0 : bBox.width)), -(bBox.y + ((flip & 1) > 0 ? 0 : bBox.height)));

@@ -68,7 +68,7 @@ class Transformation extends PureComponent {
             this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (option) => {
-            this.props.updateSelectedModelFlip({ flip: option.value });
+            this.props.updateSelectedModelFlip({ flip: option.value, svgflip: option.svgflip });
         },
         onChangeUniformScalingState: (uniformScalingState) => {
             this.props.updateSelectedModelUniformScalingState({ uniformScalingState });
@@ -221,7 +221,7 @@ class Transformation extends PureComponent {
                                     className={styles.icon_flip_vertically}
                                     style={(flip & 2) ? { backgroundColor: '#E7F2FD' } : null}
                                     onClick={() => {
-                                        actions.onChangeFlip({ value: (flip ^ 2) });
+                                        actions.onChangeFlip({ value: (flip ^ 2), svgflip: 2 });
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -235,7 +235,7 @@ class Transformation extends PureComponent {
                                     className={styles.icon_flip_horizontal}
                                     style={(flip & 1) ? { backgroundColor: '#E7F2FD' } : null}
                                     onClick={() => {
-                                        actions.onChangeFlip({ value: (flip ^ 1) });
+                                        actions.onChangeFlip({ value: (flip ^ 1), svgflip: 1 });
                                         actions.onModelAfterTransform();
                                     }}
                                 />

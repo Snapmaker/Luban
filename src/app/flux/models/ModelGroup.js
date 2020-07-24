@@ -496,7 +496,6 @@ class ModelGroup {
             selected.stickToPlate();
         }
         selected.computeBoundingBox();
-        console.log('----2----', this.getState(selected).transformation);
         return this.getState(selected);
     }
 

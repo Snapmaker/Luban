@@ -610,7 +610,6 @@ class SVGCanvas extends PureComponent {
                 const scale = this.svgContainer.createSVGTransform();
                 const translateBack = this.svgContainer.createSVGTransform();
 
-                console.log('----3----', left, top, tx, ty, sx, sy);
                 translateOrigin.setTranslate(-(left + tx), -(top + ty));
 
                 scale.setScale(sx, sy);
@@ -792,10 +791,34 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
 
         let keep = false;
+
         switch (this.mode) {
             case 'resize':
+                if (Math.abs(x - draw.startX) > draw.bbox.width || Math.abs(y - draw.startY) > draw.bbox.height) {
+                    let flip = 0;
+                    if (Math.abs(x - draw.startX) > draw.bbox.width) {
+                        flip |= 2;
+                    }
+                    if (Math.abs(y - draw.startY) > draw.bbox.height) {
+                        flip |= 1;
+                    }
+                    const transformList = getTransformList(this.svgContentGroup.selectedElements[0]);
+                    const transformOrigin = this.svgContent.createSVGTransform();
+                    const transformScale = this.svgContent.createSVGTransform();
+                    const transformBack = this.svgContent.createSVGTransform();
+                    const bBox = getBBox(this.svgContentGroup.selectedElements[0]);
+                    transformOrigin.setTranslate(bBox.x + bBox.width, bBox.y + bBox.height);
+                    transformScale.setScale(((flip & 2) > 0 ? -1 : 1), ((flip & 1) > 0 ? -1 : 1));
+                    transformBack.setTranslate(-bBox.x - ((flip & 2) > 0 ? 0 : bBox.width), -bBox.y - ((flip & 1) > 0 ? 0 : bBox.height));
+
+                    transformList.appendItem(transformOrigin);
+                    transformList.appendItem(transformScale);
+                    transformList.appendItem(transformBack);
+
+                    recalculateDimensions(this.svgContent, this.svgContentGroup.selectedElements[0]);
+                }
                 this.setMode('select');
-            // fallthrough
+                // fallthrough
             case 'rotate':
                 this.setMode('select');
                 // fallthrough
