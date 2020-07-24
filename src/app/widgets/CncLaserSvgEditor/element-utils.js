@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
-import { DEFAULT_FILL_COLOR } from '../../constants/svg-constatns';
+import { DEFAULT_FILL_COLOR } from '../../constants/svg-constants';
 // eslint-disable-next-line no-unused-vars
 import PathTagParser from '../../../shared/lib/SVGParser/PathTagParser';
 import AttributesParser from '../../../shared/lib/SVGParser/AttributesParser';

@@ -5,7 +5,7 @@ import map from 'lodash/map';
 import styles from './index.styl';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
-import { SVG_EVENT_ADD, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
+import { SVG_EVENT_ADD, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
 
 class SVGEditor extends PureComponent {
     static propTypes = {

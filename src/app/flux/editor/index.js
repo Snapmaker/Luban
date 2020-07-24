@@ -7,7 +7,7 @@ import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, sizeMode
 import { threejsModelActions } from './threejs-model';
 import { svgModelActions } from './svg-model';
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
-import { SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
+import { SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
 import { PAGE_EDITOR, PAGE_PROCESS, HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../../constants';
 import { controller } from '../../lib/controller';
 
@@ -358,7 +358,6 @@ export const actions = {
 
     updateSelectedModelFlip: (headType, transformation) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup } = getState()[headType];
-
         const selectedModel = modelGroup.getSelectedModel();
         const options = {
             headType: headType,
@@ -373,6 +372,9 @@ export const actions = {
             },
             config: selectedModel.config
         };
+
+        console.log('----4----', transformation);
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
 
         api.processImage(options)
             .then((res) => {
@@ -448,12 +450,15 @@ export const actions = {
         // const { model } = getState()[headType];
         const { transformation } = getState()[headType];
         let flip = transformation.flip;
+        let svgflip = 0;
         switch (flipStr) {
             case 'Vertical':
                 flip ^= 1;
+                svgflip = 1;
                 break;
             case 'Horizontal':
                 flip ^= 2;
+                svgflip = 2;
                 break;
             case 'Reset':
                 flip = 0;
@@ -461,7 +466,9 @@ export const actions = {
             default:
         }
         transformation.flip = flip;
+        transformation.svgflip = svgflip;
         dispatch(actions.updateSelectedModelFlip(headType, transformation));
+        // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {

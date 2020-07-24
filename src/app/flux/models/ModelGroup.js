@@ -16,7 +16,7 @@ class ModelGroup {
 
         this.models = [];
 
-        this.selectedModel = null;
+        this.Modelselected = null;
         this.estimatedTime = 0;
 
         this.candidatePoints = null;
@@ -496,6 +496,7 @@ class ModelGroup {
             selected.stickToPlate();
         }
         selected.computeBoundingBox();
+        console.log('----2----', this.getState(selected).transformation);
         return this.getState(selected);
     }
 

@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
-import { DEFAULT_SCALE, SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constatns';
+import { DEFAULT_SCALE, SVG_EVENT_ADD, SVG_EVENT_MOVE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
 import { getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
@@ -304,6 +304,11 @@ class SvgModelGroup {
                 scaleX: nbbox.width / bbox.width,
                 scaleY: nbbox.height / bbox.height
             });
+        }
+        if (transformation.svgflip !== undefined) {
+            const flip = transformation.svgflip;
+            console.log('----1----', flip, elem, transformation);
+            this.svgContentGroup.updateElementFlip(elem, flip);
         }
         if (transformation.rotationZ !== undefined) {
             this.svgContentGroup.updateElementRotate(elem, {

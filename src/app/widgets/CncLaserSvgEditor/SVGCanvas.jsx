@@ -25,7 +25,7 @@ import {
     SVG_EVENT_MODE,
     SVG_EVENT_MOVE,
     SVG_EVENT_SELECT, DEFAULT_FILL_COLOR
-} from '../../constants/svg-constatns';
+} from '../../constants/svg-constants';
 import { library } from './lib/ext-shapes';
 
 
@@ -598,12 +598,6 @@ class SVGCanvas extends PureComponent {
                     sy = height ? (height - dy) / height : 1;
                     ty = height;
                 }
-
-                const translateOrigin = this.svgContainer.createSVGTransform();
-                const scale = this.svgContainer.createSVGTransform();
-                const translateBack = this.svgContainer.createSVGTransform();
-
-                translateOrigin.setTranslate(-(left + tx), -(top + ty));
                 if (event.shiftKey || this.svgContentGroup.getSelectedElementUniformScalingState()) {
                     if (sx === 1) {
                         sx = sy;
@@ -611,6 +605,14 @@ class SVGCanvas extends PureComponent {
                         sy = sx;
                     }
                 }
+
+                const translateOrigin = this.svgContainer.createSVGTransform();
+                const scale = this.svgContainer.createSVGTransform();
+                const translateBack = this.svgContainer.createSVGTransform();
+
+                console.log('----3----', left, top, tx, ty, sx, sy);
+                translateOrigin.setTranslate(-(left + tx), -(top + ty));
+
                 scale.setScale(sx, sy);
 
                 translateBack.setTranslate(left + tx, top + ty);
@@ -642,7 +644,7 @@ class SVGCanvas extends PureComponent {
                 const cy = bbox.y + bbox.height / 2;
 
                 let angle = Math.atan2(y - cy, x - cx);
-                angle = (angle / Math.PI * 180 + 90) % 360;
+                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
 
                 const rotate = this.svgContainer.createSVGTransform();
                 rotate.setRotate(angle, cx, cy);
