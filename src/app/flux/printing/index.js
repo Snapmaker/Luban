@@ -329,7 +329,6 @@ export const actions = {
     },
 
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
-        console.log('updateActiveDefinition', definition);
         const state = getState().printing;
 
         const activeDefinition = {

@@ -7,31 +7,52 @@ import {
     DATA_PREFIX
 } from '../../constants';
 
-export const readFileToList = (path, splitChar = '\n') => {
-    return new Promise((resolve, reject) => {
-        request.get(path)
-            .responseType('arraybuffer')
-            .end((err, res) => {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                    return;
-                }
-                const uint8array = new Uint8Array(res.body);
-                const splitCharCode = splitChar.charCodeAt(0);
+const readFileToListByArrayBuffer = (path, splitChar = '\n', resolve, reject) => {
+    request.get(path)
+        .responseType('arraybuffer')
+        .end((err, res) => {
+            if (err) {
+                console.error(err);
+                reject(err);
+                return;
+            }
+            const uint8array = new Uint8Array(res.body);
+            const splitCharCode = splitChar.charCodeAt(0);
 
-                const result = [];
-                let str = [];
-                for (const elem of uint8array) {
-                    if (elem === splitCharCode) {
-                        result.push(String.fromCharCode.apply(null, str));
-                        str = [];
-                    } else {
-                        str.push(elem);
+            const result = [];
+            let strArr = [];
+            let str = '';
+            for (const elem of uint8array) {
+                if (elem === splitCharCode) {
+                    result.push(str + String.fromCharCode.apply(null, strArr));
+                    strArr = [];
+                    str = '';
+                } else {
+                    strArr.push(elem);
+                    if (strArr.length >= 1023) {
+                        str += String.fromCharCode.apply(null, strArr);
+                        strArr = [];
                     }
                 }
-                resolve(result);
-            });
+            }
+            resolve(result);
+        });
+};
+
+export const readFileToList = (path, splitChar = '\n') => {
+    return new Promise((resolve, reject) => {
+        request.get(path).end((err, res) => {
+            if (err) {
+                console.error(err);
+                reject(err);
+                return;
+            }
+            if (res.text.length === 0 && res.headers['content-length'] > 268435455) {
+                readFileToListByArrayBuffer(path, splitChar, resolve, reject);
+                return;
+            }
+            resolve(res.text.split(splitChar));
+        });
     });
 };
 
