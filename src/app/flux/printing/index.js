@@ -62,7 +62,7 @@ const INITIAL_STATE = {
     qualityDefinitions: [],
     isAdvised: true,
     defaultMaterialId: 'material.pla',
-    defaultQualityId: 'quality.fast_print',
+    defaultQualityId: '',
     // Active definition
     // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
@@ -329,6 +329,7 @@ export const actions = {
     },
 
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
+        console.log('updateActiveDefinition', definition);
         const state = getState().printing;
 
         const activeDefinition = {

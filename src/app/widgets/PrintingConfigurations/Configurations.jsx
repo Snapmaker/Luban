@@ -178,7 +178,6 @@ class Configurations extends PureComponent {
         },
         onSelectOfficialDefinition: (definition) => {
             this.props.updateDefaultQualityId(definition.definitionId);
-            console.log(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
         onSelectCustomDefinitionById: (definitionId) => {
@@ -286,6 +285,13 @@ class Configurations extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Printing Settings'));
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+        if (!qualityDefinition) {
+            this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
+        }
     }
 
     render() {
