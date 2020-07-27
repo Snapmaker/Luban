@@ -972,6 +972,23 @@ export const actions = {
             canUndo: undoSnapshots.length > 1,
             canRedo: redoSnapshots.length > 0
         }));
+    },
+
+    hideSelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        modelGroup.hideSelectedModel();
+        toolPathModelGroup.hideSelectedModel();
+        svgModelGroup.hideSelectedElement();
+        dispatch(baseActions.render(headType));
+    },
+
+    showSelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        modelGroup.showSelectedModel();
+        toolPathModelGroup.showSelectedModel();
+        svgModelGroup.showSelectedElement();
+        svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
+        dispatch(baseActions.render(headType));
     }
 };
 
