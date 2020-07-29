@@ -650,6 +650,7 @@ class Visualizer extends Component {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
+
         return (
             <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-progress']}>
@@ -698,7 +699,6 @@ class Visualizer extends Component {
                         subtext={i18n._('Please wait one second after you close the door to proceed.')}
                         img={IMAGE_WIFI_WARNING}
                     />
-
                 )}
             </div>
         );
