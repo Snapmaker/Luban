@@ -3,6 +3,8 @@ import path from 'path';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
+
+import Space from '../../components/Space';
 import { actions as printingActions } from '../../flux/printing';
 
 
@@ -80,10 +82,12 @@ class VisualizerInfo extends PureComponent {
                 <React.Fragment>
                     <p>
                         <span className="fa fa-bullseye" />
+                        <Space width={4} />
                         {filamentDes}
                     </p>
                     <p>
                         <span className="fa fa-clock-o" />
+                        <Space width={4} />
                         {printTimeDes}
                     </p>
                 </React.Fragment>

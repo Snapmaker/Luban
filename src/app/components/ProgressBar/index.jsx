@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import styles from './styles.styl';
 
 class ProgressBar extends React.PureComponent {
-    timeout = null;
-
     static propTypes = {
         progress: PropTypes.number,
         tips: PropTypes.string
-    }
+    };
+
+    timeout = null;
 
     constructor(props) {
         super(props);
@@ -19,7 +19,7 @@ class ProgressBar extends React.PureComponent {
         if (nextProps.progress !== this.props.progress) {
             this.setState({ display: 'block' });
             this.timeout && clearTimeout(this.timeout);
-            this.timeout = setInterval(() => this.setState({ display: 'none' }), 5000);
+            this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
         }
     }
 
@@ -28,7 +28,7 @@ class ProgressBar extends React.PureComponent {
         const { display } = this.state;
         return (
             <div style={{ display }}>
-                <div className={styles['visualizer-notice']}>
+                <div className={styles['progress-notice']}>
                     <p>{tips}</p>
                 </div>
                 <div className={styles.progressbar}>

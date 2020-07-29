@@ -32,10 +32,9 @@ class Thumbnail extends PureComponent {
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(new Vector3(0, 120, 500));
 
-
         this.renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         this.renderer.setClearColor(new Color(0xfafafa), 1);
-        this.renderer.setSize(width, height);
+        // this.renderer.setSize(width, height);
         this.renderer.shadowMap.enabled = true;
 
         this.scene = new Scene();
@@ -50,25 +49,29 @@ class Thumbnail extends PureComponent {
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
         this.object = this.props.modelGroup.object.clone();
+
+        // calculate center point
         const boundingBox = this.props.modelGroup.getAllBoundingBox();
-        const y = (boundingBox.max.y - boundingBox.min.y) / 2;
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;
+        const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const z = (boundingBox.max.z + boundingBox.min.z) / 2;
-        let rz = Math.max(
-            boundingBox.max.y - boundingBox.min.y,
-            boundingBox.max.x - boundingBox.min.x,
-            boundingBox.max.z - boundingBox.min.z
-        );
-        rz = rz * Math.tan(Math.PI / 12) + rz;
-        rz = rz * Math.tan(Math.PI / 6) + rz;
+
         for (const child of this.object.children) {
-            child.position.x += -x;
-            child.position.y += -y;
-            child.position.z += -z;
+            child.position.x -= x;
+            child.position.y -= y;
+            child.position.z -= z;
         }
-        this.object.rotation.y -= Math.PI / 6;
-        this.object.rotation.x += Math.PI / 12;
+
+        const rz = Math.max(
+            boundingBox.max.x - boundingBox.min.x,
+            boundingBox.max.y - boundingBox.min.y,
+            boundingBox.max.z - boundingBox.min.z
+        ) * 1.5;
+
+        // 15° up look at the object
+        this.object.rotation.x -= (Math.PI / 2 - Math.PI / 12);
         this.camera.position.copy(new Vector3(0, 0, rz));
+
         this.object.visible = true;
         this.scene.add(this.object);
 
