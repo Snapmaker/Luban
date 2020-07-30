@@ -65,11 +65,11 @@ function openFile(browserWindow, file) {
     if (!file) {
         const filePaths = dialog.showOpenDialog(
             {
+                title: 'Snapmaker Luban',
                 filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
             }
         );
         if (!filePaths) return;
-        console.log(browserWindow.id);
         browserWindow.webContents.focus();
         file = { path: filePaths[0], name: path.basename(filePaths[0]) };
         addRecentFile(file);
@@ -105,7 +105,7 @@ function getMenuTemplate(options) {
                     submenu: [
                         {
                             id: 'remove-recent',
-                            label: 'Clean All Recent File',
+                            label: 'Clean All Recent Files',
 
                             click: (menuItem) => {
                                 for (const item of menuItem.menu.items) {

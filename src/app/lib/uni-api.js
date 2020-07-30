@@ -75,6 +75,7 @@ const Dialog = {
     showMessageBox(options) {
         if (isElectron()) {
             const { dialog } = window.require('electron').remote;
+            options.title = 'Snapmaker Luban';
             return dialog.showMessageBox(options);
         } else {
             return window.confirm(options.message);
