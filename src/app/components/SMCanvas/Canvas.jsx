@@ -147,7 +147,8 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.props.canOperateModel);
+        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement);
+        this.controls.canOperateModel = this.props.canOperateModel;
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
