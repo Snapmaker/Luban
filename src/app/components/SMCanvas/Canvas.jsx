@@ -38,8 +38,12 @@ class Canvas extends Component {
         onModelTransform: PropTypes.func,
 
         // tmp
-        canOperateModel: PropTypes.string.isRequired,
+        canOperateModel: PropTypes.bool,
         showContextMenu: PropTypes.func
+    };
+
+    static defaultProps = {
+        canOperateModel: true
     };
 
     controls = null;
@@ -164,12 +168,12 @@ class Canvas extends Component {
             this.onUnselectAllModels();
         });
         this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
-            if (this.props.showContextMenu && (this.props.canOperateModel === 'true')) {
+            if (this.props.showContextMenu && this.props.canOperateModel) {
                 this.props.showContextMenu(e);
             }
         });
         this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-            if (this.props.canOperateModel === 'true') {
+            if (this.props.canOperateModel) {
                 this.onModelTransform();
             }
         });

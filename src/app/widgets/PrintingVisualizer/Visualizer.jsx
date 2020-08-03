@@ -261,7 +261,6 @@ class Visualizer extends PureComponent {
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
                     <Canvas
                         ref={this.canvas}
-                        canOperateModel="true"
                         size={size}
                         modelGroup={modelGroup.object}
                         printableArea={this.printableArea}

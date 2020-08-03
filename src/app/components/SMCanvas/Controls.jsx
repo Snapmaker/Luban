@@ -266,7 +266,7 @@ class Controls extends EventEmitter {
                 this.handleMouseMovePan(event);
                 break;
             case STATE.TRANSFORM:
-                if (this.canOperateModel === 'true') {
+                if (this.canOperateModel) {
                     this.transformControl.onMouseMove(this.getMouseCoord(event));
                 }
                 this.emit(EVENTS.TRANSFORM_OBJECT);

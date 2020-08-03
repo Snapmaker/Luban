@@ -135,7 +135,13 @@ class TransformControls2D extends Object3D {
         // translate
         const plane = new Mesh(
             new PlaneGeometry(1, 1),
-            new MeshBasicMaterial({ wireframe: false, visible: false, side: DoubleSide, transparent: true, opacity: 0.5 })
+            new MeshBasicMaterial({
+                wireframe: false,
+                visible: false,
+                side: DoubleSide,
+                transparent: true,
+                opacity: 0.5
+            })
         );
 
         this.translatePeripheral = this.createPeripheral([
@@ -186,30 +192,13 @@ class TransformControls2D extends Object3D {
 
             // translate
             this.translatePeripheral.scale.set(width, height, 1);
-
-            // rotate
-            // const top = new Vector3(0, size.y / 2, 0.1).applyMatrix4(this.object.matrixWorld);
-            // this.rotatePeripheral.position.copy(top);
-            // this.rotatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-
-            // scale
-            // this.scalePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-            // this.scalePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-            // for (const handle of this.scalePeripheral.children.concat(this.scalePicker.children)) {
-            //     const w = width / (eyeDistance / 8);
-            //     const h = height / (eyeDistance / 8);
-            //
-            //     const xDirection = Math.round(Math.cos(handle.tag * (Math.PI / 4)));
-            //     const yDirection = Math.round(Math.sin(handle.tag * (Math.PI / 4)));
-            //
-            //     handle.position.set(w / 2 * xDirection, h / 2 * yDirection, 0);
-            // }
         }
 
         super.updateMatrixWorld(force);
     }
 
     updateMouseCursor() {
+        /*
         switch (this.mode) {
             case 'translate':
                 document.body.style.cursor = 'pointer';
@@ -218,6 +207,7 @@ class TransformControls2D extends Object3D {
                 document.body.style.cursor = 'default';
                 break;
         }
+        */
     }
 
     attach(object) {

@@ -675,7 +675,6 @@ class Visualizer extends Component {
                     </div>
                     <Canvas
                         ref={this.canvas}
-                        canOperateModel="true"
                         size={this.props.size}
                         modelGroup={this.visualizerGroup}
                         printableArea={this.printableArea}
