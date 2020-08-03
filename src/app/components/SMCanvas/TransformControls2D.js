@@ -2,8 +2,8 @@ import {
     DoubleSide,
     Vector3, Quaternion,
     Object3D, Raycaster,
-    Geometry, PlaneGeometry, CircleGeometry,
-    LineBasicMaterial, LineDashedMaterial, MeshBasicMaterial,
+    Geometry, PlaneGeometry,
+    LineDashedMaterial, MeshBasicMaterial,
     Line, Mesh
 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
@@ -71,8 +71,8 @@ class TransformControls2D extends Object3D {
 
         this.initFramePeripherals();
         this.initTranslatePeripherals();
-        this.initRotatePeripherals();
-        this.initScalePeripherals();
+        // this.initRotatePeripherals();
+        // this.initScalePeripherals();
     }
 
     createPeripheral(definitions) {
@@ -135,7 +135,13 @@ class TransformControls2D extends Object3D {
         // translate
         const plane = new Mesh(
             new PlaneGeometry(1, 1),
-            new MeshBasicMaterial({ wireframe: false, visible: false, side: DoubleSide, transparent: true, opacity: 0.5 })
+            new MeshBasicMaterial({
+                wireframe: false,
+                visible: false,
+                side: DoubleSide,
+                transparent: true,
+                opacity: 0.5
+            })
         );
 
         this.translatePeripheral = this.createPeripheral([
@@ -144,80 +150,6 @@ class TransformControls2D extends Object3D {
         this.add(this.translatePeripheral);
 
         this.pickers.push(this.translatePeripheral);
-    }
-
-    initRotatePeripherals() {
-        // TODO: refactor
-        let geometry, material;
-
-        geometry = new CircleGeometry(0.06, 32);
-        material = new MeshBasicMaterial({ color: 0x000000 });
-        const circleOuter = new Mesh(geometry, material);
-
-        geometry = new CircleGeometry(0.05, 32);
-        material = new MeshBasicMaterial({ color: BLUE });
-        const circleInner = new Mesh(geometry, material);
-
-        geometry = new Geometry();
-        geometry.vertices.push(new Vector3(0, 0, 0));
-        geometry.vertices.push(new Vector3(0, 0.5, 0));
-        const line = new Line(geometry, new LineBasicMaterial({ color: BLUE }));
-
-        const plane = new Mesh(
-            new PlaneGeometry(0.25, 0.25),
-            new MeshBasicMaterial({ visible: false, side: DoubleSide, transparent: true, opacity: 0.5 })
-        );
-
-        this.rotatePeripheral = this.createPeripheral([
-            ['rotate', plane, [0, 0.5, 0]],
-            ['rotate', circleOuter, [0, 0.5, 0]],
-            ['rotate', circleInner, [0, 0.5, 0]],
-            ['rotate', line]
-        ]);
-        this.add(this.rotatePeripheral);
-
-        this.pickers.push(this.rotatePeripheral);
-    }
-
-    initScalePeripherals() {
-        let geometry, material;
-
-        const definitions = [];
-        for (let i = 0; i < 8; i++) {
-            geometry = new CircleGeometry(0.06, 32);
-            material = new MeshBasicMaterial({ color: 0x000000 });
-            const circleOuter = new Mesh(geometry, material);
-
-            geometry = new CircleGeometry(0.05, 32);
-            material = new MeshBasicMaterial({ color: 0xffffff });
-            const circleInner = new Mesh(geometry, material);
-
-            circleOuter.tag = i;
-            circleInner.tag = i;
-
-            definitions.push(
-                ['scale', circleOuter],
-                ['scale', circleInner]
-            );
-        }
-
-        this.scalePeripheral = this.createPeripheral(definitions);
-        this.add(this.scalePeripheral);
-
-        const pickerDefinitions = [];
-        for (let i = 0; i < 8; i++) {
-            const plane = new Mesh(
-                new PlaneGeometry(0.25, 0.25),
-                new MeshBasicMaterial({ visible: false, side: DoubleSide, transparent: true, opacity: 0.5 })
-            );
-            plane.tag = i; // record tag for later use
-
-            pickerDefinitions.push(['scale', plane]);
-        }
-        this.scalePicker = this.createPeripheral(pickerDefinitions);
-        this.add(this.scalePicker);
-
-        this.pickers.push(this.scalePicker);
     }
 
     updateMatrixWorld(force) {
@@ -234,10 +166,10 @@ class TransformControls2D extends Object3D {
             const width = size.x * objectScale.x;
             const height = size.y * objectScale.y;
 
-            const eyeDistance = this.camera.position.z;
+            // const eyeDistance = this.camera.position.z;
 
             // Update peripherals
-            const peripherals = [this.framePeripheral, this.translatePeripheral, this.rotatePeripheral, this.scalePeripheral, this.scalePicker];
+            const peripherals = [this.framePeripheral, this.translatePeripheral];
             for (const peripheral of peripherals) {
                 peripheral.position.copy(objectPosition);
                 peripheral.position.z = 0.1;
@@ -260,77 +192,22 @@ class TransformControls2D extends Object3D {
 
             // translate
             this.translatePeripheral.scale.set(width, height, 1);
-
-            // rotate
-            const top = new Vector3(0, size.y / 2, 0.1).applyMatrix4(this.object.matrixWorld);
-            this.rotatePeripheral.position.copy(top);
-            this.rotatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-
-            // scale
-            this.scalePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-            this.scalePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
-            for (const handle of this.scalePeripheral.children.concat(this.scalePicker.children)) {
-                const w = width / (eyeDistance / 8);
-                const h = height / (eyeDistance / 8);
-
-                const xDirection = Math.round(Math.cos(handle.tag * (Math.PI / 4)));
-                const yDirection = Math.round(Math.sin(handle.tag * (Math.PI / 4)));
-
-                handle.position.set(w / 2 * xDirection, h / 2 * yDirection, 0);
-            }
         }
 
         super.updateMatrixWorld(force);
     }
 
     updateMouseCursor() {
+        /*
         switch (this.mode) {
             case 'translate':
-                document.body.style.cursor = 'all-scroll';
+                document.body.style.cursor = 'pointer';
                 break;
-            case 'rotate':
-                document.body.style.cursor = 'url(images/cursor/rotate_16x16.ico), default';
-                break;
-            case 'scale': {
-                // TODO: Set cursor style on selection/rotation, rather than on mouse movement.
-                const anchorRadian = Math.PI * (this.tag / 4);
-                const currentAnchorRadian = anchorRadian + this.object.rotation.z;
-                const currentAnchorDirection = Math.round(currentAnchorRadian / (Math.PI / 4)) % 8;
-
-                switch (currentAnchorDirection) {
-                    case 0:
-                        document.body.style.cursor = 'e-resize';
-                        break;
-                    case 1:
-                        document.body.style.cursor = 'ne-resize';
-                        break;
-                    case 2:
-                        document.body.style.cursor = 'n-resize';
-                        break;
-                    case 3:
-                        document.body.style.cursor = 'nw-resize';
-                        break;
-                    case 4:
-                        document.body.style.cursor = 'w-resize';
-                        break;
-                    case 5:
-                        document.body.style.cursor = 'sw-resize';
-                        break;
-                    case 6:
-                        document.body.style.cursor = 's-resize';
-                        break;
-                    case 7:
-                        document.body.style.cursor = 'se-resize';
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            }
             default:
                 document.body.style.cursor = 'default';
                 break;
         }
+        */
     }
 
     attach(object) {

@@ -98,6 +98,7 @@ class Controls extends EventEmitter {
         this.bindEventListeners();
     }
 
+
     initTransformControls() {
         if (this.sourceType === '3D') {
             this.transformControl = new TransformControls(this.camera);
@@ -265,7 +266,9 @@ class Controls extends EventEmitter {
                 this.handleMouseMovePan(event);
                 break;
             case STATE.TRANSFORM:
-                this.transformControl.onMouseMove(this.getMouseCoord(event));
+                if (this.canOperateModel) {
+                    this.transformControl.onMouseMove(this.getMouseCoord(event));
+                }
                 this.emit(EVENTS.TRANSFORM_OBJECT);
                 break;
             default:

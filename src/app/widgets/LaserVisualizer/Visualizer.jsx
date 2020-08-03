@@ -296,6 +296,7 @@ class Visualizer extends Component {
                 >
                     <Canvas
                         ref={this.canvas}
+                        canOperateModel={false}
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup.object}

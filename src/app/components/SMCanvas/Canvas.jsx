@@ -38,7 +38,12 @@ class Canvas extends Component {
         onModelTransform: PropTypes.func,
 
         // tmp
+        canOperateModel: PropTypes.bool,
         showContextMenu: PropTypes.func
+    };
+
+    static defaultProps = {
+        canOperateModel: true
     };
 
     controls = null;
@@ -146,8 +151,8 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement);
+        this.controls.canOperateModel = this.props.canOperateModel;
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
@@ -156,19 +161,21 @@ class Canvas extends Component {
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
-        this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
-            if (this.props.showContextMenu) {
-                this.props.showContextMenu(e);
-            }
-        });
         this.controls.on(EVENTS.SELECT_OBJECT, (object) => {
             this.onSelectModel(object);
         });
         this.controls.on(EVENTS.UNSELECT_OBJECT, () => {
             this.onUnselectAllModels();
         });
+        this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
+            if (this.props.showContextMenu && this.props.canOperateModel) {
+                this.props.showContextMenu(e);
+            }
+        });
         this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
-            this.onModelTransform();
+            if (this.props.canOperateModel) {
+                this.onModelTransform();
+            }
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform();
@@ -178,7 +185,6 @@ class Canvas extends Component {
     setTransformMode(mode) {
         if (['translate', 'scale', 'rotate'].includes(mode)) {
             this.transformControls && this.transformControls.setMode(mode);
-
             this.controls && this.controls.setTransformMode(mode);
         }
     }
