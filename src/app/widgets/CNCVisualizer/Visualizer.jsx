@@ -196,7 +196,7 @@ class Visualizer extends Component {
                 // this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
                 const meshObject = selectedModel.meshObject;
                 // todo, this hide flag will be packaged
-                if (meshObject && !selectedModel.hideFlag) {
+                if (meshObject && selectedModel.visible) {
                     this.canvas.current.controls.attach(meshObject);
                 } else {
                     this.canvas.current.controls.detach();
@@ -207,10 +207,10 @@ class Visualizer extends Component {
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                if (selectedModel.hideFlag) {
-                    this.canvas.current.controls.detach();
-                } else {
+                if (selectedModel.visible) {
                     this.canvas.current.controls.attach(selectedModel.meshObject);
+                } else {
+                    this.canvas.current.controls.detach();
                 }
             }
         }

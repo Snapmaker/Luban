@@ -35,9 +35,9 @@ class ObjectListBox extends PureComponent {
         },
 
         onClickModelHideBox: (model) => {
-            const hideFlag = model.hideFlag;
+            const visible = model.visible;
             this.props.selectModelByID(model.modelID);
-            if (!hideFlag) {
+            if (visible) {
                 this.props.hideSelectedModel(model);
             } else {
                 this.props.showSelectedModel(model);
@@ -113,7 +113,7 @@ class ObjectListBox extends PureComponent {
                                             type="button"
                                             className={classNames(
                                                 styles.icon,
-                                                taskInfo.hideFlag ? styles.iconHideClose : styles.iconHideOpen,
+                                                taskInfo.visible ? styles.iconHideOpen : styles.iconHideClose,
                                                 styles.bt
                                             )}
                                             onClick={() => this.actions.onClickModelHideBox(model)}
@@ -146,8 +146,8 @@ const mapStateToProps = (state, ownProps) => {
         selectedModelID,
         toolPathModelGroup,
         workflowState,
-        previewFailed
-        // modelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag
+        previewFailed,
+        modelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible
     };
 };
 

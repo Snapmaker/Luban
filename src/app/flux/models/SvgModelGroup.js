@@ -282,7 +282,7 @@ class SvgModelGroup {
         if (!elem) {
             return;
         }
-        if (elem.hideFlag && elem.hideFlag) {
+        if (!elem.visible) {
             return;
         }
         const bbox = coordGmSvgToModel(this.size, elem);
@@ -316,7 +316,7 @@ class SvgModelGroup {
 
     hideSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
-        selectedElement.hideFlag = true;
+        selectedElement.visible = false;
         selectedElement.setAttribute('display', 'none');
         const selector = this.svgContentGroup.requestSelector(selectedElement);
         selector.showGrips(false);
@@ -324,7 +324,7 @@ class SvgModelGroup {
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
-        selectedElement.hideFlag = false;
+        selectedElement.visible = true;
         selectedElement.setAttribute('display', 'inherit');
         const selector = this.svgContentGroup.requestSelector(selectedElement);
         selector.showGrips(true);

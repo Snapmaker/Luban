@@ -62,8 +62,6 @@ class Model {
         this.config = config;
         this.mode = mode;
 
-        this.hideFlag = false; // hided in canvas
-
         this.processImageName = processImageName;
 
         this.transformation = {
@@ -86,6 +84,14 @@ class Model {
         this.showOrigin = this.sourceType !== 'raster';
     }
 
+    get visible() {
+        return this.meshObject.visible;
+    }
+
+    set visible(value) {
+        this.meshObject.visible = value;
+    }
+
     updateModelName(newName) {
         this.modelName = newName;
     }
@@ -98,7 +104,7 @@ class Model {
             sourceType: this.sourceType,
             mode: this.mode,
 
-            hideFlag: this.hideFlag,
+            visible: this.visible,
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,

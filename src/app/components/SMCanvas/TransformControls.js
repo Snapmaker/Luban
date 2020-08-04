@@ -461,10 +461,10 @@ class TransformControls extends Object3D {
         super.updateMatrixWorld(force);
     }
 
-    attach(object, hideFlag) {
+    attach(object, visible) {
         this.object = object;
         this.visible = true;
-        if (hideFlag === true) {
+        if (visible === false) {
             if (this.mode === 'scale') {
                 this.remove(this.scalePeripheral);
             } else if (this.mode === 'translate') {

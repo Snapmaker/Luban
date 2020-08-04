@@ -27,9 +27,9 @@ class PrintingObjectListBox extends PureComponent {
             this.props.selectTargetModel(model);
         },
         onClickHideShowSelectedModel: (model) => {
-            const hideFlag = model.hideFlag;
+            const visible = model.visible;
             this.props.selectTargetModel(model);
-            if (!hideFlag) {
+            if (visible) {
                 this.props.hideSelectedModel();
             } else {
                 this.props.showSelectedModel();
@@ -98,7 +98,7 @@ class PrintingObjectListBox extends PureComponent {
                                             type="button"
                                             className={classNames(
                                                 styles.icon,
-                                                model.hideFlag ? styles.iconHideClose : styles.iconHideOpen,
+                                                model.visible ? styles.iconHideOpen : styles.iconHideClose,
                                                 styles.bt
                                             )}
                                             onClick={() => this.actions.onClickHideShowSelectedModel(model)}
@@ -115,11 +115,11 @@ class PrintingObjectListBox extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { selectedModelID, modelGroup, hideFlag } = state.printing;
+    const { selectedModelID, modelGroup, visible } = state.printing;
     return {
         modelGroup,
         selectedModelID,
-        hideFlag
+        visible
     };
 };
 

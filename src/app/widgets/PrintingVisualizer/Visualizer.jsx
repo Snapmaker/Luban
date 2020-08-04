@@ -23,7 +23,7 @@ class Visualizer extends PureComponent {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         // model: PropTypes.object,
-        hideFlag: PropTypes.bool,
+        visible: PropTypes.bool,
         selectedModelID: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
@@ -148,12 +148,11 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp, hideFlag } = nextProps;
+        const { size, transformMode, selectedModelID, renderingTimestamp, visible } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
-
-        if (selectedModelID !== this.props.selectedModelID || hideFlag !== this.props.hideFlag) {
+        if (selectedModelID !== this.props.selectedModelID || visible !== this.props.visible) {
             const selectedModel = this.props.getSelectedModel();
             // if (!selectedModelID || !selectedModel) {
             if (!selectedModel) {
@@ -161,7 +160,7 @@ class Visualizer extends PureComponent {
             } else {
                 const meshObject = selectedModel.meshObject;
                 if (meshObject) {
-                    this.canvas.current.controls.attach(meshObject, selectedModel.hideFlag);
+                    this.canvas.current.controls.attach(meshObject, selectedModel.visible);
                 }
             }
         }
@@ -344,11 +343,11 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, selectedModelID, hideFlag, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, selectedModelID, visible, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
-        hideFlag,
+        visible,
         size,
         selectedModelID,
         modelGroup,

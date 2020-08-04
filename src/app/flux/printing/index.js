@@ -63,7 +63,7 @@ const INITIAL_STATE = {
     stage: PRINTING_STAGE.EMPTY,
 
     selectedModelID: null,
-    hideFlag: false,
+    visible: true,
     modelGroup: new ModelGroup(),
 
     // G-code
@@ -662,13 +662,15 @@ export const actions = {
             const uploadPath = `${DATA_PREFIX}/${originalName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
             const stlFileName = `${basenameWithoutExt}.stl`;
-            // Use setTimeout to force export executes in next tick, preventing block of updateState()
-            modelGroup.addMeshObject();
 
+            modelGroup.removeHiddenMeshObjects();
+
+            // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
                 // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
                 const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
+                modelGroup.addHiddenMeshObjects();
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);
 
@@ -796,7 +798,8 @@ export const actions = {
 
     hideSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.hideSelectedModel();
+        const modelState = modelGroup.hideSelectedModel();
+        dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
@@ -804,7 +807,8 @@ export const actions = {
 
     showSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.showSelectedModel();
+        const modelState = modelGroup.showSelectedModel();
+        dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());

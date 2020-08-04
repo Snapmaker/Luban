@@ -11,7 +11,7 @@ export const checkIsAllModelsPreviewed = (modelGroup, toolPathModelGroup) => {
         return false;
     }
 
-    // when hideFlag is not used
+    // when visible is not used
     // if (modelGroup.getModels().length === toolPathModelGroup.previewToolPathModels()) {
     //     return true;
     // }

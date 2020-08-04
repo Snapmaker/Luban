@@ -199,7 +199,7 @@ class Visualizer extends Component {
                 // this.canvas.current.controls.attach(model);
                 // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
-                if (meshObject && !selectedModel.hideFlag) {
+                if (meshObject && selectedModel.visible) {
                     this.canvas.current.controls.attach(meshObject);
                 } else {
                     this.canvas.current.controls.detach();
@@ -210,10 +210,10 @@ class Visualizer extends Component {
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                if (selectedModel.hideFlag) {
-                    this.canvas.current.controls.detach();
-                } else {
+                if (selectedModel.visible) {
                     this.canvas.current.controls.attach(selectedModel.meshObject);
+                } else {
+                    this.canvas.current.controls.detach();
                 }
             }
         }

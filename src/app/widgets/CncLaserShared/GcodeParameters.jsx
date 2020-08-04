@@ -14,7 +14,7 @@ import { ABSENT_VALUE } from '../../constants';
 class GcodeParameters extends PureComponent {
     static propTypes = {
         selectedModelID: PropTypes.string,
-        selectedModelHideFlag: PropTypes.bool,
+        selectedModelVisible: PropTypes.bool,
         printOrder: PropTypes.number.isRequired,
         gcodeConfig: PropTypes.shape({
             // jogSpeed: PropTypes.number.isRequired,
@@ -82,14 +82,14 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        const { printOrder, selectedModelID, selectedModelHideFlag } = this.props;
+        const { printOrder, selectedModelID, selectedModelVisible } = this.props;
         const actions = this.actions;
         const {
             jogSpeed = 0, workSpeed = 0, dwellTime = 0, plungeSpeed = 0,
             fixedPowerEnabled = false, fixedPower = 0,
             multiPassEnabled = false, multiPasses = 0, multiPassDepth = 0
         } = this.props.gcodeConfig;
-        const selectedNotHide = selectedModelID && !selectedModelHideFlag;
+        const selectedNotHide = selectedModelID && selectedModelVisible;
 
         return (
             <React.Fragment>

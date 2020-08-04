@@ -618,7 +618,7 @@ export const actions = {
                 .getTaskInfo();
             if (modelState) {
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelState.modelID);
-                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
+                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
                     const taskInfo = {
                         ...modelState,
                         ...toolPathModelTaskInfo
@@ -646,7 +646,7 @@ export const actions = {
             for (const model of modelGroup.getModels()) {
                 const modelTaskInfo = model.getTaskInfo();
                 const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
-                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
+                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
                     const taskInfo = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
@@ -870,7 +870,7 @@ export const actions = {
         const modelInfos = [];
         const { modelGroup, toolPathModelGroup } = getState()[headType];
         for (const model of modelGroup.getModels()) {
-            if (model.hideFlag) continue;
+            if (!model.visible) continue;
             const modelTaskInfo = model.getTaskInfo();
             const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
             if (toolPathModelTaskInfo) {
