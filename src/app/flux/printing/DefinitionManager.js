@@ -250,7 +250,6 @@ class DefinitionManager {
             `G1 Z${z} E-1 F3000 ;move Z up a bit and retract filament even more`,
             `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
             `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
-            'M84 ;steppers off',
             ';End GCode end'
         ];
 
