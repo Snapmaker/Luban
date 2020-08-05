@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -18,7 +19,7 @@ import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 import Space from '../components/Space';
-import Init from './init';
+
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
@@ -69,6 +70,7 @@ class App extends PureComponent {
 
     state = {
         platform: 'unknown',
+        recoveringProject: false,
         shouldShowCncWarning: true
     };
 
@@ -106,10 +108,8 @@ class App extends PureComponent {
                 this.props.history.push(`/${headType}`);
                 await this.props.save(headType, { message });
             }
-            console.log('saved, can close here');
         },
         openProject: (file) => {
-            console.log('open file cmd with:', file);
             if (!file) {
                 console.log('??', this.fileInput.current);
                 this.fileInput.current.value = null;
@@ -120,15 +120,12 @@ class App extends PureComponent {
         },
         initUniEvent: () => {
             UniApi.Event.on('open-file', (event, file) => {
-                console.log('received an open-file message:', file);
                 this.actions.openProject(file);
             });
             UniApi.Event.on('save-as-file', (event, file) => {
-                console.log('received an save-file message:', file);
                 this.actions.saveAsFile(file);
             });
             UniApi.Event.on('save', () => {
-                console.log('received an save message');
                 this.actions.save();
             });
             UniApi.Event.on('save-and-close', async () => {
@@ -207,25 +204,29 @@ class App extends PureComponent {
         this.props.textInit();
         this.props.initRecoverService();
 
+        UniApi.Window.initWindow();
         this.actions.initUniEvent();
     }
 
     componentWillReceiveProps(nextProps) {
-        let headType = null;
+        const headType = getCurrentHeadType(nextProps.location.pathname);
 
         if (nextProps.location.pathname !== this.props.location.pathname) {
-            headType = getCurrentHeadType(nextProps.location.pathname);
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
-            if (!headType) {
-                UniApi.Window.setOpenedFile();
-                return;
-            }
+        }
 
-            const { findLastEnviroment, recovered, openedFile } = nextProps.projectState[headType];
-            UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
-            if (findLastEnviroment && !recovered) {
-                this.props.onRecovery(headType);
+        if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
+            const { findLastEnvironment, openedFile } = nextProps.projectState[headType];
+
+            if (findLastEnvironment) {
+                if (!this.state.recoveringProject) {
+                    this.setState({ recoveringProject: true });
+                    UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
+                    this.props.onRecovery(headType);
+                }
+            } else if (this.state.recoveringProject) {
+                this.setState({ recoveringProject: false });
             }
         }
     }
@@ -239,7 +240,6 @@ class App extends PureComponent {
     render() {
         const { location } = this.props;
         const accepted = ([
-            '/init',
             '/workspace',
             '/3dp',
             '/laser',
@@ -256,7 +256,7 @@ class App extends PureComponent {
             return (
                 <Redirect
                     to={{
-                        pathname: '/init',
+                        pathname: '/3dp',
                         state: {
                             from: location
                         }
@@ -306,7 +306,6 @@ class App extends PureComponent {
                         {location.pathname.indexOf('/caselibrary') === 0 && (
                             <CaseLibrary {...this.props} />
                         )}
-                        {location.pathname === '/init' && <Init />}
                     </div>
                 </div>
             </div>

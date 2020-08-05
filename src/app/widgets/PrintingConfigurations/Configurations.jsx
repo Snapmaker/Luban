@@ -288,9 +288,12 @@ class Configurations extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-        if (!qualityDefinition) {
-            this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
+        if (nextProps.qualityDefinitions.length > 0) {
+            const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+            if (!qualityDefinition) {
+                console.log('qualityDefinitions', nextProps.qualityDefinitions);
+                this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
+            }
         }
     }
 
@@ -701,7 +704,7 @@ const mapDispatchToProps = (dispatch) => {
         updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
         updateActiveDefinition: (definition) => {
             dispatch(printingActions.updateActiveDefinition(definition));
-            dispatch(projectActions.autoSaveEnviroment(HEAD_3DP, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         },
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
         onDownloadQualityDefinition: (definitionId) => dispatch(printingActions.onDownloadQualityDefinition(definitionId)),
