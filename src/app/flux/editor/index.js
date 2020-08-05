@@ -1,7 +1,13 @@
 import path from 'path';
 import uuid from 'uuid';
 import api from '../../api';
-import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, sizeModelByMachineSize } from '../models/ModelInfoUtils';
+import {
+    checkParams,
+    DEFAULT_TEXT_CONFIG,
+    generateModelDefaultConfigs,
+    sizeModelByMachineSize
+} from '../models/ModelInfoUtils';
+
 import { threejsModelActions } from './threejs-model';
 import { svgModelActions } from './svg-model';
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
@@ -134,8 +140,7 @@ export const actions = {
             });
     },
 
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight,
-        mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
+    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { toolParams } = getState()[headType];
 

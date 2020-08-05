@@ -9,21 +9,21 @@ import UniApi from '../../lib/uni-api';
 
 const INITIAL_STATE = {
     [HEAD_3DP]: {
-        findLastEnviroment: false,
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
         initState: true
     },
     [HEAD_CNC]: {
-        findLastEnviroment: false,
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
         initState: true
     },
     [HEAD_LASER]: {
-        findLastEnviroment: false,
+        findLastEnvironment: false,
         openedFile: null,
         unSaved: false,
         content: null,
@@ -47,8 +47,8 @@ export const actions = {
 
     initRecoverService: () => (dispatch) => {
         const startService = (envHeadType) => {
-            dispatch(actions.getLastEnviroment(envHeadType));
-            const action = actions.autoSaveEnviroment(envHeadType);
+            dispatch(actions.getLastEnvironment(envHeadType));
+            const action = actions.autoSaveEnvironment(envHeadType);
             setInterval(() => dispatch(action), 1000);
         };
 
@@ -58,7 +58,7 @@ export const actions = {
     },
 
 
-    autoSaveEnviroment: (headType, force = false) => async (dispatch, getState) => {
+    autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
         const fluxMod = headType2FluxMod(headType);
         const editorState = getState()[fluxMod];
         const { initState, content: lastString } = getState().project[headType];
@@ -81,22 +81,29 @@ export const actions = {
         }
     },
 
-    getLastEnviroment: (headType) => async (dispatch) => {
+    getLastEnvironment: (headType) => async (dispatch) => {
         const { body: { content } } = await api.getEnv({ headType });
-        content && dispatch(actions.updateState(headType, { findLastEnviroment: true, content }));
+        content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
     clearSavedEnvironment: (headType) => async (dispatch) => {
         try {
             await api.removeEnv({ headType });
-        } catch (e) { console.log(e); }
+        } catch (e) {
+            console.log(e);
+        }
 
-        dispatch(actions.updateState(headType, { findLastEnviroment: false, unSaved: false }));
+        dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
     },
 
     onRecovery: (envHeadType, backendRecover = true) => async (dispatch, getState) => {
         const { content } = getState().project[envHeadType];
-        backendRecover && await api.recoverEnv({ content });
+
+        // backup project if needed
+        if (backendRecover) {
+            await api.recoverEnv({ content });
+        }
+
         const envObj = JSON.parse(content);
         let modActions = null;
         let modState = null;
@@ -134,7 +141,7 @@ export const actions = {
         const openedFile = UniApi.File.saveAs(targetFile, tmpFile);
         if (openedFile) {
             openedFile && UniApi.Window.setOpenedFile(openedFile.name);
-            dispatch(actions.updateState(headType, { findLastEnviroment: false, openedFile }));
+            dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile }));
             UniApi.Menu.setItemEnabled('save', !!openedFile);
         }
         await dispatch(actions.clearSavedEnvironment(headType));
@@ -196,7 +203,7 @@ export const actions = {
                 message: i18n._('Save changes to the existing file #fileName# before opening the new file?')
             }));
 
-            content && dispatch(actions.updateState(headType, { findLastEnviroment: false, content, openedFile, unSaved: false }));
+            content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));
             history.push(`/${headType}`);
             dispatch(actions.onRecovery(headType, false));
             setTimeout(() => {

@@ -154,8 +154,15 @@ export const removeEnv = async (req, res) => {
     res.end();
 };
 
+function copyFileSync(src, dst) {
+    if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dst);
+    }
+}
+
+
 /**
- * save editor enviroment as files, and copy related resource files
+ * save editor environment as files, and copy related resource files
  */
 export const saveEnv = async (req, res) => {
     const { content } = req.body;
@@ -178,16 +185,15 @@ export const saveEnv = async (req, res) => {
     });
     config.models.forEach((model) => {
         const { originalName, uploadName } = model;
-        fs.existsSync(`${DataStorage.tmpDir}/${originalName}`)
-         && fs.copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
 
-        fs.copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
+        copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
+        copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        fs.copyFileSync(`${DataStorage.configDir}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}`);
+        copyFileSync(`${DataStorage.configDir}/${config.defaultMaterialId}.def.json`, `${envDir}/${config.defaultMaterialId}.def.json`);
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        fs.copyFileSync(`${DataStorage.configDir}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}`);
+        copyFileSync(`${DataStorage.configDir}/${config.defaultQualityId}.def.json`, `${envDir}/${config.defaultQualityId}.def.json`);
     }
     res.send(result);
     res.end();
@@ -218,10 +224,9 @@ export const recoverEnv = async (req, res) => {
     const envDir = `${DataStorage.envDir}/${config.headType}`;
     config.models.forEach((model) => {
         const { originalName, uploadName } = model;
-        fs.existsSync(`${envDir}/${originalName}`)
-         && fs.copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
 
-        fs.copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
+        copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
+        copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
     });
     res.send({ result: 1 });
     res.end();

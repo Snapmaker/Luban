@@ -47,7 +47,10 @@ const File = {
             const fs = window.require('fs');
             const { app, dialog } = window.require('electron').remote;
             tmpFile = app.getPath('userData') + tmpFile;
-            targetFile = dialog.showSaveDialog({ title: targetFile, filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }] });
+            targetFile = dialog.showSaveDialog({
+                title: targetFile,
+                filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
+            });
             if (!targetFile) throw new Error('select file canceled');
 
             fs.copyFileSync(tmpFile, targetFile);
@@ -84,32 +87,36 @@ const Dialog = {
  * Window control in electron
  */
 const Window = {
+    window: null,
+    initTitle: '',
+
     call(func) {
         if (isElectron()) {
             window.require('electron').remote.getCurrentWindow()[func]();
         }
     },
 
-    setOpenedFile: (() => {
-        let win, initTitle;
+    initWindow() {
         if (isElectron()) {
-            win = window.require('electron').remote.getCurrentWindow();
-            initTitle = win.getTitle();
+            this.window = window.require('electron').remote.getCurrentWindow();
+            this.initTitle = this.window.getTitle();
         } else {
-            win = {
+            this.window = {
                 setTitle(title) {
                     document.title = title;
                 }
             };
-            initTitle = document.title;
+            this.initTitle = document.title;
         }
-        return (filename) => {
-            let title = initTitle;
-            if (filename) title = `${initTitle} / ${filename}`;
-            win.setTitle(title);
-        };
-    })()
+    },
 
+    setOpenedFile(filename) {
+        let title = this.initTitle;
+        if (filename) {
+            title = `${this.initTitle} / ${filename}`;
+        }
+        this.window.setTitle(title);
+    }
 };
 
 export default {

@@ -332,7 +332,7 @@ const mapDispatchToProps = (dispatch) => {
         updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
         updateActiveDefinition: (definition, shouldSave = false) => {
             dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
-            dispatch(projectActions.autoSaveEnviroment(HEAD_3DP, true));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         },
         duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),
