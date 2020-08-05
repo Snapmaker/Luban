@@ -90,7 +90,6 @@ class VisualizerModelTransformation extends PureComponent {
     render() {
         const actions = this.actions;
         const { size, selectedModelID, hasModel, transformMode, visible } = this.props;
-        console.log('visible', visible);
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = this.props.transformation;
         const disabled = !(selectedModelID && hasModel && visible);
         const moveX = Number(toFixed(positionX, 1));

@@ -138,22 +138,13 @@ class ModelGroup {
     removeSelectedModel() {
         const selected = this.getSelectedModel();
         if (selected) {
+            this.selectedModel = null;
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             // this.remove(selected);
             this.models = this.models.filter(model => model !== selected);
-            // Select the first model after removing selected
-            if (this.models && this.models.length > 0) {
-                this.selectedModel = this.models[0];
-            } else {
-                this.selectedModel = null;
-            }
 
             this.object.remove(selected.meshObject);
-            if (this.selectedModel) {
-                return this.getState(this.selectedModel);
-            } else {
-                return this._getEmptyState();
-            }
+            return this._getEmptyState();
         }
         return null;
     }
@@ -288,10 +279,8 @@ class ModelGroup {
     removeHiddenMeshObjects() {
         this.object.children.splice(0);
         this.models.forEach((item) => {
-            if (item.visible === false) {
-                if (item.meshObject) {
-                    this.object.children.push(item.meshObject);
-                }
+            if (item.visible === true) {
+                this.object.children.push(item.meshObject);
             }
         });
     }
@@ -299,9 +288,7 @@ class ModelGroup {
     addHiddenMeshObjects() {
         this.object.children.splice(0);
         this.models.forEach((item) => {
-            if (item.meshObject) {
-                this.object.children.push(item.meshObject);
-            }
+            this.object.children.push(item.meshObject);
         });
     }
 
