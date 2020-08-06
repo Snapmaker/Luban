@@ -1,4 +1,4 @@
-import { MeshBasicMaterial, Object3D, Group, CylinderBufferGeometry, Mesh } from 'three';
+import { MeshBasicMaterial, Object3D, Group, CylinderBufferGeometry, Mesh, PlaneGeometry, DoubleSide } from 'three';
 import each from 'lodash/each';
 import colornames from 'colornames';
 
@@ -13,7 +13,7 @@ const METRIC_GRID_SPACING = 10; // 10 mm
 
 
 class PrintablePlate extends Object3D {
-    constructor(size) {
+    constructor(size, materials) {
         super();
         this.isPrintPlane = true;
         this.type = 'PrintPlane';
@@ -21,11 +21,15 @@ class PrintablePlate extends Object3D {
         // this.coordinateVisible = true;
         this.coordinateSystem = null;
         this.size = size;
+        this.materials = {
+            ...materials
+        };
         this._setup();
     }
 
-    updateSize(size) {
+    updateSize(size = this.size, materials = this.materials) {
         this.size = size;
+        this.materials = materials;
         this.remove(...this.children);
         this._setup();
     }
@@ -33,16 +37,16 @@ class PrintablePlate extends Object3D {
     _setup() {
         // Metric
         const gridSpacing = METRIC_GRID_SPACING;
-        const axisXLength = Math.ceil(this.size.x / gridSpacing) * gridSpacing;
-        const axisYLength = Math.ceil(this.size.y / gridSpacing) * gridSpacing;
+        const axisXLength = Math.floor(this.size.x / gridSpacing) * gridSpacing;
+        const axisYLength = Math.floor(this.size.y / gridSpacing) * gridSpacing;
 
         const group = new Group();
 
         { // Coordinate Grid
             const gridLine = new GridLine(
-                axisXLength,
+                this.size.x,
                 gridSpacing,
-                axisYLength,
+                this.size.y,
                 gridSpacing,
                 colornames('blue'), // center line
                 colornames('gray 44') // grid
@@ -57,7 +61,7 @@ class PrintablePlate extends Object3D {
         }
 
         { // Coordinate Control
-            const coordinateAxes = new CoordinateAxes(axisXLength, axisYLength);
+            const coordinateAxes = new CoordinateAxes(this.size.x, this.size.y);
             coordinateAxes.name = 'CoordinateAxes';
             group.add(coordinateAxes);
 
@@ -65,7 +69,7 @@ class PrintablePlate extends Object3D {
                 new CylinderBufferGeometry(0, 1, 4),
                 new MeshBasicMaterial({ color: RED })
             );
-            arrowX.position.set(axisXLength + 2, 0, 0);
+            arrowX.position.set(this.size.x + 2, 0, 0);
             arrowX.rotation.set(0, 0, -Math.PI / 2);
             group.add(arrowX);
 
@@ -73,13 +77,13 @@ class PrintablePlate extends Object3D {
                 new CylinderBufferGeometry(0, 1, 4),
                 new MeshBasicMaterial({ color: GREEN })
             );
-            arrowY.position.set(0, axisYLength + 2, 0);
+            arrowY.position.set(0, this.size.y + 2, 0);
             group.add(arrowY);
         }
 
         { // Axis Labels
             const axisXLabel = new TextSprite({
-                x: axisXLength + 10,
+                x: this.size.x + 10,
                 y: 0,
                 z: 0,
                 size: 10,
@@ -88,7 +92,7 @@ class PrintablePlate extends Object3D {
             });
             const axisYLabel = new TextSprite({
                 x: 0,
-                y: axisYLength + 10,
+                y: this.size.y + 10,
                 z: 0,
                 size: 10,
                 text: 'Y',
@@ -144,6 +148,28 @@ class PrintablePlate extends Object3D {
         this.targetPoint.name = 'TargetPoint';
         this.targetPoint.visible = true;
         this.add(this.targetPoint);
+
+        // this._setMaterialsRect();
+    }
+
+    _setMaterialsRect() {
+        // eslint-disable-next-line no-unused-vars
+        const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
+
+        if (!x && !y) {
+            return;
+        }
+
+        const editableAreaGeometry = new PlaneGeometry(x, y, 1, 1);
+        const editableAreaMesh = new Mesh(editableAreaGeometry, new MeshBasicMaterial({ color: '#fff', opacity: 0.5, side: DoubleSide }));
+        editableAreaMesh.position.y = y / 2 + 0.1;
+
+        const nonEditableAreaGeometry = new PlaneGeometry(x, Math.min(fixtureLength, y), 1, 1);
+        const nonEditableAreaMesh = new Mesh(nonEditableAreaGeometry, new MeshBasicMaterial({ color: '#FFFBFB', opacity: 0.5, side: DoubleSide }));
+        nonEditableAreaMesh.position.y = y + 0.1 - fixtureLength / 2;
+
+        this.add(editableAreaMesh);
+        this.add(nonEditableAreaMesh);
     }
 
     changeCoordinateVisibility(value) {

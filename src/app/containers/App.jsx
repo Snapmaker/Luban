@@ -53,7 +53,6 @@ class App extends PureComponent {
         developToolsInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
-        initModelsPreviewChecker: PropTypes.func.isRequired,
         workspaceInit: PropTypes.func.isRequired,
         laserInit: PropTypes.func.isRequired,
         cncInit: PropTypes.func.isRequired,
@@ -237,7 +236,6 @@ class App extends PureComponent {
         this.props.keyboardShortcutInit();
 
         this.props.functionsInit();
-        this.props.initModelsPreviewChecker();
         this.props.workspaceInit();
         this.props.laserInit();
         this.props.cncInit();
@@ -393,10 +391,6 @@ const mapDispatchToProps = (dispatch) => {
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));
-        },
-        initModelsPreviewChecker: () => {
-            dispatch(editorActions.initModelsPreviewChecker('laser'));
-            dispatch(editorActions.initModelsPreviewChecker('cnc'));
         },
         onRecovery: (headType) => dispatch(projectActions.onRecovery(headType)),
         quitRecovery: (headType) => dispatch(projectActions.quitRecovery(headType)),

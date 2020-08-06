@@ -1,8 +1,8 @@
-import process from '../../lib/image-process';
+import { editorProcess } from '../../lib/editor/process';
 
 const _processImage = async (modelInfo, onProgress) => {
     try {
-        return process(modelInfo, onProgress);
+        return editorProcess(modelInfo, onProgress);
     } catch (e) {
         return Promise.reject(new Error('Unknown error.'));
     }

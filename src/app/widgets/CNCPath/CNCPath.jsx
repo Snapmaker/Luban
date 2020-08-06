@@ -2,31 +2,17 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants';
 import i18n from '../../lib/i18n';
-import SvgTrace from '../CncLaserShared/SvgTrace';
 import TextParameters from '../CncLaserShared/TextParameters';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import VectorParameters from './VectorParameters';
-import Modal from '../../components/Modal';
-import modal from '../../lib/modal';
-import api from '../../api';
+import Image3dParameters from './Image3dParameters';
 import ImageProcessMode from './ImageProcessMode';
 import ReliefGcodeParameters from './gcodeconfig/ReliefGcodeParameters';
+import Image3DGcodeParameters from './gcodeconfig/Image3DGcodeParameters';
 import { actions as editorActions } from '../../flux/editor';
-
-const getAccept = (uploadMode) => {
-    let accept = '';
-    if (['greyscale'].includes(uploadMode)) {
-        accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(uploadMode)) {
-        accept = '.svg, .dxf';
-    } else if (['trace'].includes(uploadMode)) {
-        accept = '.svg, .png, .jpg, .jpeg, .bmp';
-    }
-    return accept;
-};
 
 class CNCPath extends PureComponent {
     static propTypes = {
@@ -41,6 +27,7 @@ class CNCPath extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
+        materials: PropTypes.object.isRequired,
         // transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
@@ -49,128 +36,23 @@ class CNCPath extends PureComponent {
         // functions
         setDisplay: PropTypes.func.isRequired,
 
-        uploadImage: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
 
-        togglePage: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
+        updateSelectedModelConfig: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
 
         // operator functions
         modifyText: PropTypes.func.isRequired
     };
 
-    fileInput = React.createRef();
-
     state = {
-        uploadMode: '', // raster, vector
-        from: 'cnc',
-        mode: '', // bw, greyscale, vector
-        accept: '',
-        options: {
-            originalName: '',
-            uploadName: '',
-            width: 0,
-            height: 0,
-            blackThreshold: 30,
-            maskThreshold: 28,
-            iterations: 1,
-            colorRange: 15,
-            numberOfObjects: 2
-        },
-        modalSetting: {
-            width: 640,
-            height: 640
-        },
-        traceFilenames: [],
-        status: 'Idle',
-        showModal: false
     };
 
     actions = {
-        onClickToUpload: (uploadMode) => {
-            this.setState({
-                uploadMode: uploadMode,
-                accept: getAccept(uploadMode)
-            }, () => {
-                this.fileInput.current.value = null;
-                this.fileInput.current.click();
-            });
-        },
-        processTrace: () => {
-            this.setState({
-                status: 'Busy'
-            });
-            api.processTrace(this.state.options)
-                .then((res) => {
-                    this.setState({
-                        traceFilenames: res.body.filenames,
-                        status: 'Idle',
-                        showModal: true
-                    });
-                });
-        },
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-
-            const uploadMode = this.state.uploadMode;
-            this.props.togglePage(PAGE_EDITOR);
-            if (uploadMode === 'trace') {
-                this.setState({
-                    mode: uploadMode
-                });
-                const formData = new FormData();
-                formData.append('image', file);
-                api.uploadImage(formData)
-                    .then(async (res) => {
-                        const newOptions = {
-                            originalName: res.body.originalName,
-                            uploadName: res.body.uploadName,
-                            width: res.body.width,
-                            height: res.body.height
-                        };
-                        this.actions.updateOptions(newOptions);
-                        await this.actions.processTrace();
-                    });
-            } else {
-                if (uploadMode === 'greyscale') {
-                    this.props.setAutoPreview(false);
-                }
-                this.props.uploadImage(file, uploadMode, () => {
-                    modal({
-                        title: i18n._('Parse Error'),
-                        body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
-                    });
-                });
-            }
-        },
-        onClickInsertText: () => {
-            this.props.togglePage(PAGE_EDITOR);
-            this.props.insertDefaultTextVector();
-        },
-        updateOptions: (options) => {
-            this.setState({
-                options: {
-                    ...this.state.options,
-                    ...options
-                }
-            });
-        },
-        updateModalSetting: (setting) => {
-            this.setState({
-                modalSetting: setting
-            });
-        },
-        hideModal: () => {
-            this.setState({
-                showModal: false
-            });
-        }
     };
 
     constructor(props) {
@@ -197,8 +79,6 @@ class CNCPath extends PureComponent {
     }
 
     render() {
-        const actions = this.actions;
-        const { accept } = this.state;
         const {
             page, selectedModelArray,
             selectedModelVisible, sourceType, mode,
@@ -209,41 +89,22 @@ class CNCPath extends PureComponent {
             changeSelectedModelShowOrigin, changeSelectedModelMode,
             updateSelectedModelUniformScalingState,
             selectedModel,
-            modifyText
+            modifyText,
+            updateSelectedModelConfig,
+            materials
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
-
-        const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (config.svgNodeName === 'text');
+        const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
         const showProcessImage = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
+        const { isRotate } = materials;
         return (
             <React.Fragment>
-                <input
-                    ref={this.fileInput}
-                    type="file"
-                    accept={accept}
-                    style={{ display: 'none' }}
-                    multiple={false}
-                    onChange={actions.onChangeFile}
-                />
-                {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
-                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                            <SvgTrace
-                                state={this.state}
-                                from={this.state.from}
-                                traceFilenames={this.state.traceFilenames}
-                                status={this.state.status}
-                                actions={this.actions}
-                            />
-                        </Modal.Body>
-                    </Modal>
-                )}
                 {isEditor && (
                     <Transformation
                         headType="cnc"
@@ -273,6 +134,13 @@ class CNCPath extends PureComponent {
                                 modifyText={modifyText}
                             />
                         )}
+                        {isEditor && isImage3d && !isRotate && (
+                            <Image3dParameters
+                                disabled={!selectedModelVisible}
+                                config={config}
+                                updateSelectedModelConfig={updateSelectedModelConfig}
+                            />
+                        )}
                         {isProcess && (isSvgVector) && (
                             <VectorParameters
                                 disabled={!selectedModelVisible}
@@ -280,6 +148,11 @@ class CNCPath extends PureComponent {
                         )}
                         {isProcess && isRasterGreyscale && (
                             <ReliefGcodeParameters
+                                disabled={!selectedModelVisible}
+                            />
+                        )}
+                        {isProcess && isImage3d && (
+                            <Image3DGcodeParameters
                                 disabled={!selectedModelVisible}
                             />
                         )}
@@ -309,7 +182,7 @@ class CNCPath extends PureComponent {
 
 // todo, selected model will be instead
 const mapStateToProps = (state) => {
-    const { page, modelGroup, toolPathModelGroup, printOrder } = state.cnc;
+    const { page, modelGroup, toolPathModelGroup, printOrder, materials } = state.cnc;
     const selectedModel = modelGroup.getSelectedModel();
     const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
     const selectedModelID = selectedModel.modelID;
@@ -335,21 +208,18 @@ const mapStateToProps = (state) => {
         sourceType,
         mode,
         showOrigin,
-        config
+        config,
+        materials
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        togglePage: (page) => dispatch(editorActions.togglePage('cnc', page)),
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('cnc', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
-        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),
-        insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('cnc')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc')),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode)),
 

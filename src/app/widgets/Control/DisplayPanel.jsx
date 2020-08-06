@@ -36,6 +36,7 @@ class DisplayPanel extends PureComponent {
         let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         let machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         let machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
+        let machinePositionB = (Math.round(parseFloat(workPosition.b)* 1000) / 1000).toFixed(3);
         if (headType === MACHINE_HEAD_TYPE['3DP'].value) {
             machinePositionX = workPosition.x;
             machinePositionY = workPosition.y;
@@ -178,6 +179,49 @@ class DisplayPanel extends PureComponent {
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary Z Axis (G92 Z0)')}
+                                        </Dropdown.Item>
+                                    </DropdownButton>
+                                </td>
+                            </tr>
+                        )}
+                        {workPosition.isFourAxis && (
+                            <tr>
+                                <td className={styles['field-axis']}>B</td>
+                                <td className={styles['field-position']}>
+                                    <div>
+                                        <span className={styles['integer-part']}>{machinePositionB}</span>
+                                    </div>
+                                    <span className={styles.unit}>{lengthUnits}</span>
+                                </td>
+                                <td className={styles['field-position']}>
+                                    <div>
+                                        <span className={styles['integer-part']}>{machinePositionB.split('.')[0]}</span>
+                                        <span className={styles['decimal-point']}>.</span>
+                                        <span className={styles['fractional-part']}>{machinePositionB.split('.')[1]}</span>
+                                    </div>
+                                    <span className={styles.unit}>{lengthUnits}</span>
+                                </td>
+                                <td className={styles.action}>
+                                    <DropdownButton
+                                        id="axis-z-dropdown"
+                                        title="B"
+                                        variant="outline-secondary"
+                                        alignRight
+                                        disabled={!canClick}
+                                    >
+                                        <Dropdown.Item
+                                            eventKey="G0 B0"
+                                            onSelect={this.actions.onSelect}
+                                            disabled={!canClick}
+                                        >
+                                            {i18n._('Go To Work Zero On B Axis (G0 B0)')}
+                                        </Dropdown.Item>
+                                        <Dropdown.Item
+                                            eventKey="G92 B0"
+                                            onSelect={this.actions.onSelect}
+                                            disabled={!canClick}
+                                        >
+                                            {i18n._('Zero Out Temporary B Axis (G92 B0)')}
                                         </Dropdown.Item>
                                     </DropdownButton>
                                 </td>

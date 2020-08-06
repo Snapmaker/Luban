@@ -191,12 +191,14 @@ export class Server extends events.EventEmitter {
                     return;
                 }
 
-                const { status, x, y, z, offsetX, offsetY, offsetZ } = data;
+                const { status, x, y, z, b, offsetX, offsetY, offsetZ } = data;
+
                 this.status = status.toLowerCase();
                 this.state.workPosition = {
                     x: x,
                     y: y,
-                    z: z
+                    z: z,
+                    b: b
                 };
                 this.state.originOffset = {
                     x: offsetX,
@@ -447,6 +449,7 @@ export class Server extends events.EventEmitter {
             x: this.state.workPosition.x,
             y: this.state.workPosition.y,
             z: this.state.workPosition.z,
+            b: this.state.workPosition.b,
             offsetX: this.state.originOffset.x,
             offsetY: this.state.originOffset.y,
             offsetZ: this.state.originOffset.z,

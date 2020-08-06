@@ -239,7 +239,6 @@ export const actions = {
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }
-
         if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
             return;
         }

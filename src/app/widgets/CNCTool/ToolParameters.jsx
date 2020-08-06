@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
-import { noop, includes } from 'lodash';
+import _ from 'lodash';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import Anchor from '../../components/Anchor';
 import {
     CNC_TOOL_SNAP_V_BIT,
     CNC_TOOL_SNAP_V_BIT_CONFIG,
@@ -11,7 +12,7 @@ import {
     CNC_TOOL_SNAP_BALL_END_MILL,
     CNC_TOOL_SNAP_BALL_END_MILL_CONFIG,
     CNC_TOOL_CUSTOM,
-    CNC_TOOL_CUSTOM_CONFIG, PAGE_PROCESS
+    CNC_TOOL_CUSTOM_CONFIG, PAGE_PROCESS, CNC_TOOL_SNAP_S_F_S, CNC_TOOL_SNAP_S_F_S_CONFIG
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
@@ -40,18 +41,23 @@ class ToolParameters extends PureComponent {
 
     actions = {
         onChangeTool: (tool) => {
-            if (!includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_CUSTOM], tool)) {
+            if (!_.includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_SNAP_S_F_S, CNC_TOOL_CUSTOM], tool)) {
                 return;
             }
             const map = {
                 [CNC_TOOL_SNAP_V_BIT]: CNC_TOOL_SNAP_V_BIT_CONFIG,
                 [CNC_TOOL_SNAP_FLAT_END_MILL]: CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG,
                 [CNC_TOOL_SNAP_BALL_END_MILL]: CNC_TOOL_SNAP_BALL_END_MILL_CONFIG,
+                [CNC_TOOL_SNAP_S_F_S]: CNC_TOOL_SNAP_S_F_S_CONFIG,
                 [CNC_TOOL_CUSTOM]: CNC_TOOL_CUSTOM_CONFIG
             };
             const config = map[tool];
             this.setState({ tool: tool });
-            this.props.changeToolParams({ toolDiameter: config.diameter, toolAngle: config.angle });
+            this.props.changeToolParams({
+                toolDiameter: config.diameter,
+                toolAngle: config.angle,
+                toolShaftDiameter: config.shaftDiameter
+            });
             this.props.updateToolSnap(tool);
         },
         onChangeToolDiameter: (toolDiameter) => {
@@ -59,6 +65,9 @@ class ToolParameters extends PureComponent {
         },
         onChangeToolAngle: (toolAngle) => {
             this.props.changeToolParams({ toolAngle: toolAngle });
+        },
+        onChangeToolShaftDiameter: (toolShaftDiameter) => {
+            this.props.changeToolParams({ toolShaftDiameter });
         }
     };
 
@@ -83,12 +92,9 @@ class ToolParameters extends PureComponent {
             <React.Fragment>
                 <div className={styles['select-tools']}>
                     <div className={styles['select-tool']}>
-                        <div
+                        <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_V_BIT })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_V_BIT)}
-                            onKeyDown={noop}
-                            role="button"
-                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-v-bit-88x88.png"
@@ -96,16 +102,13 @@ class ToolParameters extends PureComponent {
                                 draggable="false"
                                 alt="V-Bit"
                             />
-                        </div>
+                        </Anchor>
                         <span className={styles.selectToolText}>{i18n._('Carving V-bit')}</span>
                     </div>
                     <div className={styles['select-tool']}>
-                        <div
+                        <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_FLAT_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_FLAT_END_MILL)}
-                            onKeyDown={noop}
-                            role="button"
-                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-flat-end-mill-88x88.png"
@@ -113,16 +116,13 @@ class ToolParameters extends PureComponent {
                                 alt="Flat End Mill"
                                 draggable="false"
                             />
-                        </div>
+                        </Anchor>
                         <span className={styles.selectToolText}>{i18n._('Flat End Mill')}</span>
                     </div>
                     <div className={styles['select-tool']}>
-                        <div
+                        <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_BALL_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_BALL_END_MILL)}
-                            onKeyDown={noop}
-                            role="button"
-                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-ball-end-mill-88x88.png"
@@ -130,9 +130,23 @@ class ToolParameters extends PureComponent {
                                 alt="Ball End Mill"
                                 draggable="false"
                             />
-                        </div>
+                        </Anchor>
                         <span className={styles['select-tool-text']}>{i18n._('Ball End Mill')}</span>
                     </div>
+                    <div className={styles['select-tool']}>
+                        <Anchor
+                            className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_S_F_S })}
+                            onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_S_F_S)}
+                        >
+                            <img
+                                src="images/cnc/cnc-tool-straight-flut-88x88.png"
+                                role="presentation"
+                                alt="Straight Flute V-Bit"
+                            />
+                        </Anchor>
+                        <span className={styles['select-tool-text']}>{i18n._('Straight Flute V-Bit')}</span>
+                    </div>
+
                 </div>
 
                 <OptionalDropdown
@@ -149,9 +163,10 @@ class ToolParameters extends PureComponent {
                                 </p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 0.2 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
-                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 1.5 mm</li>
+                                    <li><b>{i18n._('Straight Flute V-Bit')}</b>: 0.3 mm</li>
                                 </ul>
                             </div>
                         )}
@@ -179,6 +194,7 @@ class ToolParameters extends PureComponent {
                                     <li><b>{i18n._('Carving V-bit')}</b>: 30°</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
+                                    <li><b>{i18n._('Straight Flute V-Bit')}</b>: 20°</li>
                                 </ul>
                             </div>
                         )}
@@ -194,6 +210,35 @@ class ToolParameters extends PureComponent {
                                 onChange={actions.onChangeToolAngle}
                             />
                             <span className="sm-parameter-row__input-unit">°</span>
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Shaft Diameter')}
+                        content={(
+                            <div>
+                                <p>{i18n._('Enter the diameter of the widest part of the shank.')}
+                                </p>
+                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
+                                <ul>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Ball End Mill')}</b>: 1.5 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                </ul>
+                            </div>
+                        )}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Shaft Diameter')}</span>
+                            <Input
+                                className="sm-parameter-row__input"
+                                value={state.toolShaftDiameter}
+                                min={0.1}
+                                max={10}
+                                step={0.1}
+                                onChange={actions.onChangeToolShaftDiameter}
+                            />
+                            <span className="sm-parameter-row__input-unit">mm</span>
                         </div>
                     </TipTrigger>
                 </OptionalDropdown>

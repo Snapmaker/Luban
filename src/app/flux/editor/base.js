@@ -11,10 +11,6 @@ export const checkIsAllModelsPreviewed = (modelGroup, toolPathModelGroup) => {
         return false;
     }
 
-    // when visible is not used
-    // if (modelGroup.getModels().length === toolPathModelGroup.previewToolPathModels()) {
-    //     return true;
-    // }
     if (toolPathModelGroup.allNotHidedToolPathModelsArePreviewed()) {
         return true;
     }

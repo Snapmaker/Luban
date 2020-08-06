@@ -1,4 +1,4 @@
-import { CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_V_BIT } from '../../constants';
+import { CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_S_F_S } from '../../constants';
 
 export const CaseConfigOriginal = [
     {
@@ -445,5 +445,100 @@ export const CaseConfig350 = [
         },
         caseTransformation: {
         }
+    }
+];
+
+export const CaseConfigFourAxis = [
+    {
+        tag: 'laser',
+        title: 'Rotary Laser Engraved Lion',
+        materials: {
+            diameter: 40,
+            fixtureLength: 20,
+            isCW: true,
+            isRotate: true,
+            length: 70
+        },
+        // sourceType: 'svg', // raster/svg/text
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        imgSrc: '../../images/user-case/FourAxis/4th-Laser-A250&A350.png',
+        pathConfig: {
+            name: 'Laser_test_4th.jpg',
+            casePath: './FourAxis'
+        },
+        caseConfigs: {
+            config: {
+                density: 7
+                // movementMode: 'greyscale-line',
+            },
+            gcodeConfig: {
+                jogSpeed: 1500,
+                workSpeed: 2500,
+                // multiPassEnabled: true,
+                // multiPassDepth: 0.6, // 2+
+                // multiPasses: 2, // 0+
+                fixedPowerEnabled: true, // bool
+                fixedPower: 28 // 0~100
+            }
+        },
+        caseTransformation: {
+            positionX: 0,
+            positionY: 34.8,
+            rotationZ: 0, // 90 / 180 * Math.PI
+            width: 53.1,
+            height: 69.2,
+            flip: 0
+        }
+    },
+    {
+        tag: 'cnc',
+        title: 'Rotary CNC Carved Chess',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        materials: {
+            diameter: 35,
+            fixtureLength: 20,
+            isCW: true,
+            isRotate: true,
+            length: 75
+        },
+        imgSrc: '../../images/user-case/FourAxis/4th-CNC-A250&A350.png',
+        pathConfig: {
+            // for stl in cnc
+            isRotate: true,
+            name: 'CNC_test_4th.stl',
+            casePath: './FourAxis/'
+        },
+        caseConfigs: {
+            config: {
+
+            },
+            gcodeConfig: {
+                toolSnap: CNC_TOOL_SNAP_S_F_S,
+                stepDown: 17.5,
+                safetyHeight: 1,
+                stopHeight: 10,
+                jogSpeed: 1500
+                // plungeSpeed: 400,
+                // workSpeed: 400
+            }
+        },
+        caseTransformation: {
+            positionX: 0,
+            positionY: 20.1,
+            rotationZ: 0,
+            width: 110,
+            height: 40.2
+        }
+    },
+
+    {
+        tag: 'workspace', // 3dp、laser、cnc、workspace
+        title: '4-Axis Linkage CNC Carved Lion',
+        imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
+        pathConfig: {
+            name: 'CNC_test_4th.cnc.zip',
+            casePath: './FourAxis/'
+        },
+        loadText: 'load gcode'
     }
 ];

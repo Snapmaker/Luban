@@ -60,13 +60,15 @@ export const DATA_PATH = `${publicPath}/data`;
 export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
-export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };
+export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 0.2, angle: 30, shaftDiameter: 3.175 };
 export const CNC_TOOL_SNAP_FLAT_END_MILL = 'snap.flat-end-mill';
-export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 1.5, angle: 180, shaftDiameter: 1.5 };
 export const CNC_TOOL_SNAP_BALL_END_MILL = 'snap.ball-end-mill';
-export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180, shaftDiameter: 3.175 };
+export const CNC_TOOL_SNAP_S_F_S = 'snap.straight-flute-sharp';
+export const CNC_TOOL_SNAP_S_F_S_CONFIG = { diameter: 0.3, angle: 20, shaftDiameter: 3.715 };
 export const CNC_TOOL_CUSTOM = 'custom';
-export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 0.1, angle: 180, shaftDiameter: 3.175 };
 
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
@@ -233,3 +235,31 @@ export const HEAD_TYPE_ENV_NAME = {
     'cnc': 'CNC'
 };
 export const LASER_MOCK_PLATE_HEIGHT = 6;
+
+
+// Model
+export const SOURCE_TYPE_3DP = '3dp';
+export const SOURCE_TYPE_SVG = 'svg';
+export const SOURCE_TYPE_TEXT = 'text';
+export const SOURCE_TYPE_RASTER = 'raster';
+export const SOURCE_TYPE_DXF = 'dxf';
+export const SOURCE_TYPE_IMAGE3D = 'image3d';
+
+export const PROCESS_MODE_BW = 'bw';
+export const PROCESS_MODE_HALFTONE = 'halftone';
+export const PROCESS_MODE_VECTOR = 'vector';
+export const PROCESS_MODE_GREYSCALE = 'greyscale';
+export const PROCESS_MODE_ROTATION = 'rotation';
+export const PROCESS_MODE_PLANE = 'plane';
+export const PROCESS_MODE_4AXIS_LINKAGE = '4axisLinkage';
+
+// 3D Mesh Convert 2D Image
+export const FACE_FRONT = 'front';
+export const FACE_BACK = 'back';
+export const FACE_LEFT = 'left';
+export const FACE_RIGHT = 'right';
+export const FACE_UP = 'up';
+export const FACE_DOWN = 'down';
+
+export const CNC_MESH_SLICE_MODE_ROTATION = 'rotation';
+export const CNC_MESH_SLICE_MODE_MULTI_FACE = 'multi face';

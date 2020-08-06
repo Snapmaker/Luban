@@ -20,6 +20,8 @@ import {
     MACHINE_HEAD_TYPE
 } from '../../constants';
 import { actions as workspaceActions } from '../../flux/workspace';
+import { actions as projectActions } from '../../flux/project';
+
 import modalSmallHOC from '../../components/Modal/modal-small';
 
 
@@ -39,6 +41,7 @@ class WifiTransport extends PureComponent {
 
         renameGcodeFile: PropTypes.func.isRequired,
         removeGcodeFile: PropTypes.func.isRequired,
+        exportFile: PropTypes.func.isRequired,
 
         uploadGcodeFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
@@ -60,7 +63,6 @@ class WifiTransport extends PureComponent {
     actions = {
         onChangeFile: async (event) => {
             const file = event.target.files[0];
-
             const { loadToWorkspaceOnLoad } = this.state;
 
             if (loadToWorkspaceOnLoad) {
@@ -73,7 +75,12 @@ class WifiTransport extends PureComponent {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
-
+        onExport: () => {
+            if (!this.state.selectFileName) {
+                return;
+            }
+            this.props.exportFile(this.state.selectFileName);
+        },
         onChangeShouldPreview: () => {
             this.setState(state => ({
                 loadToWorkspaceOnLoad: !state.loadToWorkspaceOnLoad
@@ -230,11 +237,19 @@ class WifiTransport extends PureComponent {
                     />
                     <button
                         type="button"
-                        className="sm-btn-small sm-btn-primary"
+                        className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickToUpload}
-                        style={{ display: 'block', width: '100%' }}
+                        style={{ display: 'inline-block', width: '49%' }}
                     >
-                        {i18n._('Open G-code File')}
+                        {i18n._('Open G-code')}
+                    </button>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={actions.onExport}
+                        style={{ display: 'inline-block', width: '49%', marginLeft: '2%' }}
+                    >
+                        {i18n._('Export G-code')}
                     </button>
                     <div style={{ marginTop: '10px' }}>
                         <input
@@ -387,6 +402,7 @@ const mapDispatchToProps = (dispatch) => {
         uploadGcodeFile: (fileInfo) => dispatch(workspaceActions.uploadGcodeFile(fileInfo)),
         removeGcodeFile: (fileInfo) => dispatch(workspaceActions.removeGcodeFile(fileInfo)),
         renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file, false)),
+        exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
         uploadGcodeFileToList: (fileInfo) => dispatch(workspaceActions.uploadGcodeFileToList(fileInfo))
     };
 };
