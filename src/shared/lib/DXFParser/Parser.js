@@ -3,10 +3,26 @@ import * as THREE from 'three';
 import { isUndefined } from 'lodash';
 import DxfParser from './DxfParser';
 
+function angle2(p1, p2) {
+    const v1 = new THREE.Vector2(p1.x, p1.y);
+    const v2 = new THREE.Vector2(p2.x, p2.y);
+    v2.sub(v1); // sets v2 to be our chord
+    v2.normalize();
+    if (v2.y < 0) return -Math.acos(v2.x);
+    return Math.acos(v2.x);
+}
+
+function polar(point, distance, angle) {
+    const result = {};
+    result.x = point.x + distance * Math.cos(angle);
+    result.y = point.y + distance * Math.sin(angle);
+    return result;
+}
 function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
     let points;
     let interpolatedPoints = [];
     let curve;
+
     if (fitPoints && fitPoints.length > 0) {
         points = fitPoints.map((vec) => {
             return new THREE.Vector2(vec.x, vec.y);
@@ -27,7 +43,7 @@ function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
         } else {
             if (controlPoints.length === 4) {
                 let p0, p1;
-                for (let t = 0; t < 1; t += 0.1) {
+                for (let t = 0; t < 1; t += 0.01) {
                     p0 = (1 - t) ** 3 * controlPoints[0].x + 3 * t * (1 - t) ** 2 * controlPoints[1].x + 3 * t ** 2 * (1 - t) * controlPoints[2].x + t ** 3 * controlPoints[3].x;
                     p1 = (1 - t) ** 3 * controlPoints[0].y + 3 * t * (1 - t) ** 2 * controlPoints[1].y + 3 * t ** 2 * (1 - t) * controlPoints[2].y + t ** 3 * controlPoints[3].y;
                     interpolatedPoints.push({ x: p0, y: p1, z: 0 });
@@ -48,6 +64,7 @@ function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
             }
         }
     }
+
     // if (controlPoints.length === 4 && fitPoints.length === 0) {
     //     let p0, p1;
     //     for (let t = 0; t < 1; t += 0.1) {
@@ -115,6 +132,42 @@ function addInsertContent(entities, dxf, position = { x: 0, y: 0 }) {
     }
 }
 
+function BulgeGeometry(startPoint, endPoint, bulge, segments) {
+    let vertex, i;
+    THREE.Geometry.call(this);
+    const p0 = startPoint ? new THREE.Vector2(startPoint.x, startPoint.y) : new THREE.Vector2(0, 0);
+    const p1 = endPoint ? new THREE.Vector2(endPoint.x, endPoint.y) : new THREE.Vector2(1, 0);
+    bulge = bulge || 1;
+    this.startPoint = p0;
+    this.endPoint = p1;
+    this.bulge = bulge;
+
+    const angle = 4 * Math.atan(bulge);
+    const radius = p0.distanceTo(p1) / 2 / Math.sin(angle / 2);
+    const center = polar(startPoint, radius, angle2(p0, p1) + (Math.PI / 2 - angle / 2));
+
+
+    if (segments !== undefined) {
+        this.segments = segments;
+    } else {
+        this.segments = Math.max(Math.abs(Math.ceil(angle / (Math.PI / 36))), 6); // By default want a segment roughly every 5 degrees
+    }
+
+    const startAngle = angle2(center, p0);
+    const thetaAngle = angle / this.segments;
+
+
+    this.vertices.push(new THREE.Vector3(p0.x, p0.y, 0));
+
+    for (i = 1; i <= this.segments - 1; i++) {
+        vertex = polar(center, Math.abs(radius), startAngle + thetaAngle * i);
+
+        this.vertices.push(new THREE.Vector3(vertex.x, vertex.y, 0));
+    }
+}
+
+BulgeGeometry.prototype = Object.create(THREE.Geometry.prototype);
+
 export const dxfToSvg = (dxf) => {
     const shapes = []; let
         res = {};
@@ -130,23 +183,35 @@ export const dxfToSvg = (dxf) => {
         const pathsObj = {};
         pathsObj.points = [];
 
-        if (entities.type === 'LINE') {
+
+        if (entities.type === 'LINE' || entities.type === 'POLYLINE' || entities.type === 'LWPOLYLINE') {
             pathsObj.points = [];
             pathsObj.closed = false;
-            entities.vertices.forEach((item) => {
-                pathsObj.points.push([item.x, item.y]);
-            });
-            pathsObj.closed = false;
-            shape.paths.push(pathsObj);
-        } else if (entities.type === 'POLYLINE' || entities.type === 'LWPOLYLINE') {
-            pathsObj.points = [];
-            pathsObj.closed = false;
-            entities.vertices.forEach((item) => {
-                pathsObj.points.push([item.x, item.y]);
-            });
+
+            let vertex, startPoint, endPoint, bulgeGeometry,
+                bulge, i;
+
+            // create geometry
+            for (i = 0; i < entities.vertices.length; i++) {
+                if (entities.vertices[i].bulge) {
+                    bulge = entities.vertices[i].bulge;
+                    startPoint = entities.vertices[i];
+                    endPoint = i + 1 < entities.vertices.length ? entities.vertices[i + 1] : entities.vertices[0];
+
+                    bulgeGeometry = new BulgeGeometry(startPoint, endPoint, bulge);
+                    bulgeGeometry.vertices.forEach((vertice) => {
+                        pathsObj.points.push([vertice.x, vertice.y]);
+                    });
+                } else {
+                    vertex = entities.vertices[i];
+                    pathsObj.points.push([vertex.x, vertex.y]);
+                }
+            }
+
             if (entities.vertices.length > 2 && entities.shape === true) {
                 pathsObj.points.push([entities.vertices[0].x, entities.vertices[0].y]);
             }
+
             pathsObj.closed = false;
             shape.paths.push(pathsObj);
         } else if (entities.type === 'SPLINE') {
@@ -260,7 +325,6 @@ export const measureBoundary = (dxfString) => {
             addInsertContent(entities, dxf);
         }
     }
-
     for (const entities of dxf.entities) {
         if (entities.type === 'LINE' || entities.type === 'LWPOLYLINE') {
             entities.vertices.forEach((point) => {
