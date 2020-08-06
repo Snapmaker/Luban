@@ -116,6 +116,7 @@ export const actions = {
             modState = getState().printing;
         }
 
+        await dispatch(modActions.init(envHeadType));
         modState.modelGroup.removeAllModels();
 
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
