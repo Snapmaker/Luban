@@ -92,6 +92,8 @@ const INITIAL_STATE = {
         x: '0.000',
         y: '0.000',
         z: '0.000',
+        b: '0.000',
+        isFourAxis: false,
         a: '0.000'
     },
 

@@ -14,8 +14,8 @@ const EVENTS = {
 
 let updateTimer;
 
-const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
-const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 });
+const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+const materialSelected = new THREE.MeshPhongMaterial({ color: 0xd0d0d0, shininess: 0 });
 
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
@@ -92,8 +92,11 @@ class Model {
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-        this.showOrigin = (this.sourceType !== 'raster');
+        this.showOrigin = (this.sourceType !== 'raster' && this.sourceType !== 'image3d');
         this.modelGroup = modelGroup;
+
+        this.lastToolPathStr = null;
+        this.isToolPath = false;
     }
 
     get visible() {
@@ -102,6 +105,7 @@ class Model {
 
     set visible(value) {
         this.meshObject.visible = value;
+        this.showOrigin = this.sourceType !== 'raster' && this.sourceType !== 'image3d';
     }
 
     updateModelName(newName) {
@@ -122,6 +126,7 @@ class Model {
             sourceWidth: this.sourceWidth,
             originalName: this.originalName,
             uploadName: this.uploadName,
+            processImageName: this.processImageName,
 
             transformation: {
                 ...this.transformation
@@ -156,7 +161,7 @@ class Model {
                 this.meshObject.add(this.modelObject3D);
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
-        } else if (this.sourceType !== '3d') {
+        } else if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
@@ -183,36 +188,35 @@ class Model {
     }
 
     generateProcessObject3D() {
-        if (this.sourceType !== 'raster') {
+        if (this.sourceType !== 'raster' && this.sourceType !== 'image3d') {
             return;
         }
         if (!this.processImageName) {
             return;
         }
-
-        if (this.sourceType === 'raster') {
-            const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
-            // const texture = new THREE.TextureLoader().load(uploadPath);
-            const texture = new THREE.TextureLoader().load(uploadPath, () => {
-                this.meshObject.dispatchEvent(EVENTS.UPDATE);
-            });
-            const material = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 1,
-                map: texture,
-                side: THREE.DoubleSide
-            });
-            if (this.processObject3D) {
-                this.meshObject.remove(this.processObject3D);
-                this.processObject3D = null;
-            }
-            this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
-            this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-
-            this.meshObject.add(this.processObject3D);
-            this.processObject3D.visible = !this.showOrigin;
+        const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
+        // const texture = new THREE.TextureLoader().load(uploadPath);
+        const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            this.meshObject.dispatchEvent(EVENTS.UPDATE);
+        });
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture,
+            side: THREE.DoubleSide
+        });
+        if (this.processObject3D) {
+            this.meshObject.remove(this.processObject3D);
+            this.processObject3D = null;
         }
+        this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
+        this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+
+        this.meshObject.add(this.processObject3D);
+
+
+        this.processObject3D.visible = !this.showOrigin;
 
         this.updateTransformation(this.transformation);
     }
@@ -316,6 +320,7 @@ class Model {
     updateTransformation(transformation) {
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip, uniformScalingState } = transformation;
         const { width, height } = transformation;
+
         if (uniformScalingState !== undefined) {
             this.meshObject.uniformScalingState = uniformScalingState;
             this.transformation.uniformScalingState = uniformScalingState;
@@ -735,7 +740,6 @@ class Model {
             }
         }
 
-
         this.refreshRelatedModel();
         this.modelGroup.modelChanged();
         if (this.config.svgNodeName === 'text') {
@@ -761,22 +765,31 @@ class Model {
         }
     }
 
-    async preview() {
+    async preview(options) {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-        // if (toolPathModelTaskInfo && this.visible) {
-        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
+        if (toolPathModelTaskInfo && toolPathModelTaskInfo.visible) {
             const taskInfo = {
                 ...modelTaskInfo,
-                ...toolPathModelTaskInfo
-
+                ...toolPathModelTaskInfo,
+                ...options
             };
+            const lastToolPathStr = JSON.stringify({ ...taskInfo, toolPathFilename: '' });
+            if (this.lastToolPathStr === lastToolPathStr) {
+                return true;
+            }
+            const id = uuid.v4();
+            this.relatedModels.toolPathModel.id = id;
+            taskInfo.id = id;
+            this.lastToolPathStr = lastToolPathStr;
+            this.relatedModels.toolPathModel.isPreview = false;
             controller.commitToolPathTask({
                 taskId: taskInfo.modelID,
                 headType: this.headType,
                 data: taskInfo
             });
         }
+        return false;
     }
 }
 

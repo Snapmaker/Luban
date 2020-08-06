@@ -30,12 +30,12 @@ const DEFAULT_STATE = {
     },
     laser: {
         default: {
-            widgets: ['cnc-laser-object-list', 'laser-set-background', 'laser-params', 'laser-output']
+            widgets: ['job-type', 'cnc-laser-object-list', 'laser-set-background', 'laser-params', 'laser-output']
         }
     },
     cnc: {
         default: {
-            widgets: ['cnc-laser-object-list', 'cnc-tool', 'cnc-path', 'cnc-output']
+            widgets: ['job-type', 'cnc-laser-object-list', 'cnc-tool', 'cnc-path', 'cnc-output']
         }
     },
     developerPanel: {
@@ -53,11 +53,14 @@ const DEFAULT_STATE = {
         control: {
             minimized: false,
             headInfoExpanded: true,
-            axes: ['x', 'y', 'z'],
+            axes: ['x', 'y', 'z', 'b'],
             jog: {
                 keypad: false,
                 selectedDistance: '1',
-                customDistance: 10
+                customDistance: 10,
+                selectedAngle: '1',
+                customAngle: 5
+
             },
             shuttle: {
                 feedrateMin: 500,
@@ -196,21 +199,21 @@ const SERIES_STATES = {
     A150: {
         laser: {
             default: {
-                widgets: ['cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     },
     A250: {
         laser: {
             default: {
-                widgets: ['cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     },
     A350: {
         laser: {
             default: {
-                widgets: ['cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     }

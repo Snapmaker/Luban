@@ -7,7 +7,7 @@
 
 import noop from 'lodash/noop';
 import React, { Component } from 'react';
-import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, WebGLRenderer } from 'three';
+import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight, WebGLRenderer } from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -85,6 +85,7 @@ class Canvas extends Component {
 
         // threejs
         this.camera = null;
+        this.light = null;
         this.renderer = null;
         this.scene = null;
         this.group = null;
@@ -164,6 +165,8 @@ class Canvas extends Component {
 
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
+        this.light = new DirectionalLight(0xffffff, 0.6);
+        this.light.position.copy(this.cameraInitialPosition);
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
@@ -177,12 +180,13 @@ class Canvas extends Component {
 
         this.scene = new Scene();
         this.scene.add(this.camera);
+        this.scene.add(this.light);
 
         this.group = new Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
 
-        this.scene.add(new HemisphereLight(0x000000, 0xe0e0e0));
+        this.scene.add(new HemisphereLight(0x000000, 0xcecece));
 
         this.node.current.appendChild(this.renderer.domElement);
     }
@@ -465,6 +469,8 @@ class Canvas extends Component {
     }
 
     renderScene() {
+        this.light.position.copy(this.camera.position);
+
         this.renderer.render(this.scene, this.camera);
 
         TWEEN.update();

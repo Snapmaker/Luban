@@ -57,6 +57,10 @@
 // Control Panel
 .control-panel {
     .jog-pad {
+        .column-5{
+            flex: 0 0 20%;
+            max-width: 20%;
+        }
         button[class^="jog-"],
         button[class*=" jog-"] {
             font-size: 16px;
@@ -126,6 +130,9 @@
 .jog-distance-control {
     :global {
         .input-group {
+            .select-distance{
+                padding: 0
+            }
             .btn:first-child {
                 border-top-right-radius: 0
                 border-bottom-right-radius: 0

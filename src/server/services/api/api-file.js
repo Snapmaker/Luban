@@ -333,7 +333,6 @@ export const uploadFileToTmp = (req, res) => {
 };
 
 export const recoverProjectFile = async (req, res) => {
-    // FIXME: lack of exception handling
     const file = req.files.file || JSON.parse(req.body.file);
     const { uploadName } = await cpFileToTmp(file);
 

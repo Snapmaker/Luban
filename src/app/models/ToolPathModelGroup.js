@@ -1,11 +1,24 @@
-import { Group } from 'three';
+import * as THREE from 'three';
+
 import uuid from 'uuid';
 import ToolPathModel from './ToolPathModel';
+import { DATA_PREFIX } from '../constants';
+import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
+import { materialSelected, materialUnselected } from '../lib/renderer/ToolPathRenderer';
 
 class ToolPathModelGroup {
     constructor(modelGroup) {
-        this.object = new Group();
+        this.object = new THREE.Group();
         this.object.visible = false;
+
+        this.toolPathObjs = new THREE.Group();
+        this.materialsObj = null;
+
+        this.viewPathObjs = new THREE.Group();
+        this.viewPathObjs.visible = false;
+
+        this.object.add(this.toolPathObjs);
+        this.object.add(this.viewPathObjs);
 
         this.toolPathModels = [];
         this.selectedToolPathModelArray = [];
@@ -20,6 +33,12 @@ class ToolPathModelGroup {
             const toolPathModel = this.addModel(model);
             model.setRelatedModels({ toolPathModel });
         });
+
+        this.viewPathObj = null;
+    }
+
+    getIsAllToolPath() {
+
     }
 
     getState(toolPathModel) {
@@ -46,7 +65,7 @@ class ToolPathModelGroup {
         if (selected) {
             this.selectedToolPathModel = null;
             this.toolPathModels = this.toolPathModels.filter(d => d !== selected);
-            this.object.remove(selected.toolPathObj3D);
+            this.toolPathObjs.remove(selected.toolPathObj3D);
             selected.id = '';
             return this._emptyState;
         }
@@ -57,7 +76,7 @@ class ToolPathModelGroup {
         this.selectedToolPathModel = null;
         this.selectedToolPathModelArray = [];
         for (const model of this.toolPathModels) {
-            this.object.remove(model.toolPathObj3D);
+            this.toolPathObjs.remove(model.toolPathObj3D);
         }
         this.toolPathModels = [];
     }
@@ -72,7 +91,15 @@ class ToolPathModelGroup {
 
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);
+        this.toolPathModels.forEach((item) => {
+            if (item.toolPathObj3D) {
+                item.toolPathObj3D.material = materialUnselected;
+            }
+        });
         if (this.selectedToolPathModel) {
+            if (this.selectedToolPathModel.toolPathObj3D) {
+                this.selectedToolPathModel.toolPathObj3D.material = materialSelected;
+            }
             return this.getState(this.selectedToolPathModel);
         } else {
             this.selectedToolPathModel = null;
@@ -115,7 +142,7 @@ class ToolPathModelGroup {
 
     allNotHidedToolPathModelsArePreviewed() {
         for (const toolPathModel of this.toolPathModels) {
-            if (toolPathModel.visible && toolPathModel.needPreview) {
+            if (toolPathModel.visible && !toolPathModel.isPreview) {
                 return false;
             }
         }
@@ -157,16 +184,6 @@ class ToolPathModelGroup {
         this.selectedToolPathModel.updateGcodeConfig(gcodeConfig);
     }
 
-    updateSelectedNeedPreview(param) {
-        this.selectedToolPathModel && this.selectedToolPathModel.updateNeedPreview(param);
-    }
-
-    updateAllNeedPreview(param) {
-        for (const toolPathModel of this.getToolPathModels()) {
-            toolPathModel.updateNeedPreview(param);
-        }
-    }
-
     // updateSelectedConfig(config) {
     //     this.selectedToolPathModel && (this.selectedToolPathModel.updateConfig(config));
     //     this.selectedToolPathModel && (this.selectedToolPathModel.updateNeedPreview(true));
@@ -178,29 +195,40 @@ class ToolPathModelGroup {
         }
     }
 
-    showAllToolPathModelsObj3D() {
-        this.object.visible = true;
-    }
-
-    hideAllToolPathModelsObj3D() {
-        this.object.visible = false;
-    }
 
     getToolPathModelByID(id) {
         return this.toolPathModels.find(d => d.id === id);
     }
 
+    hideAllToolPathModels() {
+        this.object.visible = false;
+    }
+
+    showAllToolPathModels() {
+        this.object.visible = true;
+    }
+
+    showToolPathObjs() {
+        this.toolPathObjs.visible = true;
+        this.viewPathObjs.visible = false;
+    }
+
+    showViewPathObjs() {
+        this.toolPathObjs.visible = false;
+        this.viewPathObjs.visible = true;
+    }
+
     async receiveTaskResult(data, filename) {
         const toolPathModel = this.toolPathModels.find(d => d.id === data.id);
         if (toolPathModel) {
-            toolPathModel.toolPathObj3D && this.object.remove(toolPathModel.toolPathObj3D);
-            const toolPathObj3D = await toolPathModel.loadToolPath(filename);
+            const isSelected = this.selectedToolPathModel && toolPathModel.modelID === this.selectedToolPathModel.modelID;
+            toolPathModel.toolPathObj3D && this.toolPathObjs.remove(toolPathModel.toolPathObj3D);
+            const toolPathObj3D = await toolPathModel.loadToolPath(filename, isSelected);
             if (!toolPathObj3D) {
                 return null;
             }
             if (toolPathModel.id === data.id) {
-                toolPathModel.updateNeedPreview(false);
-                this.object.add(toolPathModel.toolPathObj3D);
+                this.toolPathObjs.add(toolPathModel.toolPathObj3D);
 
                 return this.getState(toolPathModel);
             }
@@ -208,17 +236,40 @@ class ToolPathModelGroup {
         return null;
     }
 
+    receiveViewPathTaskResult(viewPathFile, size) {
+        const toolPathFilePath = `${DATA_PREFIX}/${viewPathFile}`;
+        return new Promise((resolve, reject) => {
+            new THREE.FileLoader().load(
+                toolPathFilePath,
+                async (data) => {
+                    this.viewPathObj && (this.viewPathObjs.remove(this.viewPathObj));
+
+                    const viewPathObj = JSON.parse(data);
+                    this.viewPathObj = await new ViewPathRenderer().render(viewPathObj, size);
+
+                    this.viewPathObjs.add(this.viewPathObj);
+
+                    this.showViewPathObjs();
+
+                    resolve();
+                },
+                null,
+                (err) => {
+                    reject(err);
+                }
+            );
+        });
+    }
+
     duplicateSelectedModel(modelID) {
         const clone = this.selectedToolPathModel.clone();
         clone.modelID = modelID;
-        clone.updateNeedPreview(true);
         this.toolPathModels.push(clone);
     }
 
     undoRedo(toolPathModels) {
         for (const toolPathModel of this.toolPathModels) {
-            this.object.remove(toolPathModel.toolPathObj3D);
-            toolPathModel.updateNeedPreview(true);
+            this.toolPathObjs.remove(toolPathModel.toolPathObj3D);
         }
         this.toolPathModels.splice(0);
         for (const toolPathModel of toolPathModels) {
@@ -235,14 +286,12 @@ class ToolPathModelGroup {
     hideSelectedModel() {
         const selectedToolPathModel = this.selectedToolPathModel;
         selectedToolPathModel.visible = false;
-        selectedToolPathModel.updateNeedPreview(true);
         selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = false);
     }
 
     showSelectedModel() {
         const selectedToolPathModel = this.selectedToolPathModel;
         selectedToolPathModel.visible = true;
-        selectedToolPathModel.updateNeedPreview(true);
         selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = true);
     }
 
@@ -251,6 +300,29 @@ class ToolPathModelGroup {
             return this.selectedToolPathModel;
         }
         return this.MOCK_MODEL;
+    }
+
+    updateMaterials(materials) {
+        this.materialsObj && this.toolPathObjs.remove(this.materialsObj);
+        if (materials.isRotate) {
+            const geometry = new THREE.CylinderGeometry(materials.diameter / 2 - 0.1, materials.diameter / 2 - 0.1, materials.length, 32);
+            const texture = new THREE.TextureLoader().load('../../images/wood.png');
+            const material = new THREE.MeshPhongMaterial(
+                {
+                    color: '#ffffff',
+                    shininess: 0,
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.MultiplyBlending,
+                    depthTest: false
+                }
+            );
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.y = materials.length / 2;
+            this.materialsObj = mesh;
+            this.toolPathObjs.add(mesh);
+        }
     }
 }
 

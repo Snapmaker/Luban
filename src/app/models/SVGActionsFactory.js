@@ -5,7 +5,7 @@ import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
 import { NS } from '../ui/SVGEditor/lib/namespaces';
-import { isZero } from '../lib/utils';
+import { isZero } from '../../shared/lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';

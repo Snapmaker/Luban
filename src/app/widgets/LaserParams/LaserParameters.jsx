@@ -7,10 +7,8 @@ import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import TextParameters from '../CncLaserShared/TextParameters';
-// import ConfigSvgTrace from './ConfigSvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
-import api from '../../api';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
 import ImageProcessMode from './ImageProcessMode';
@@ -19,17 +17,6 @@ import GcodeConfigRasterBW from './gcodeconfig/GcodeConfigRasterBW';
 import GcodeConfigGreyscale from './gcodeconfig/GcodeConfigGreyscale';
 import GcodeConfigRasterVector from './gcodeconfig/GcodeConfigRasterVector';
 import { actions as editorActions } from '../../flux/editor';
-
-
-const getAccept = (mode) => {
-    let accept = '';
-    if (['bw', 'greyscale'].includes(mode)) {
-        accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector', 'trace'].includes(mode)) {
-        accept = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
-    }
-    return accept;
-};
 
 class LaserParameters extends PureComponent {
     static propTypes = {
@@ -53,7 +40,6 @@ class LaserParameters extends PureComponent {
         setDisplay: PropTypes.func.isRequired,
 
         uploadImage: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
@@ -96,65 +82,22 @@ class LaserParameters extends PureComponent {
     };
 
     actions = {
-        onClickToUpload: (mode) => {
-            this.setState({
-                uploadMode: mode,
-                accept: getAccept(mode)
-            }, () => {
-                this.fileInput.current.value = null;
-                this.fileInput.current.click();
-            });
-        },
-
-        processTrace: () => {
-            this.setState({
-                status: 'BUSY' // no use here
-            });
-            api.processTrace(this.state.options)
-                .then((res) => {
-                    this.setState({
-                        traceFilenames: res.body.filenames,
-                        status: 'IDLE',
-                        showModal: true
-                    });
-                });
-        },
         onChangeFile: (event) => {
             const file = event.target.files[0];
 
             const uploadMode = this.state.uploadMode;
             this.props.togglePage(PAGE_EDITOR);
-            if (uploadMode === 'trace') {
-                this.setState({
-                    mode: uploadMode
-                });
-                const formData = new FormData();
-                formData.append('image', file);
-                api.uploadImage(formData)
-                    .then(async (res) => {
-                        this.actions.updateOptions({
-                            originalName: res.body.originalName,
-                            uploadName: res.body.uploadName,
-                            width: res.body.width,
-                            height: res.body.height
-                        });
-                        await this.actions.processTrace();
-                    });
-            } else {
-                if (uploadMode === 'greyscale') {
-                    this.props.setAutoPreview(false);
-                }
-                this.props.uploadImage(file, uploadMode, () => {
-                    modal({
-                        title: i18n._('Parse Error'),
-                        body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
-                    });
-                });
+
+            if (uploadMode === 'greyscale') {
+                this.props.setAutoPreview(false);
             }
-        },
-        onClickInsertText: async () => {
-            this.props.togglePage(PAGE_EDITOR);
-            await this.props.insertDefaultTextVector();
+
+            this.props.uploadImage(file, uploadMode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
         },
         updateOptions: (options) => {
             this.setState({
@@ -372,6 +315,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),

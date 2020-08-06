@@ -6,8 +6,8 @@ import EventEmitter from 'events';
 import uuid from 'uuid';
 import Model from './Model';
 
-const materialNormal = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
-const materialSelected = new MeshPhongMaterial({ color: 0xf0f0f0 });
+const materialNormal = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+const materialSelected = new MeshPhongMaterial({ color: 0xd0d0d0, shininess: 0 });
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -943,11 +943,15 @@ class ModelGroup extends EventEmitter {
         }
     }
 
+    hideAllModelsObj3D() {
+        this.object.visible = false;
+    }
+
     showAllModelsObj3D() {
         this.object.visible = true;
-        for (const model of this.getModels()) {
-            model.updateVisible(true);
-        }
+        // for (const model of this.getModels()) {
+        //     model.updateVisible(true);
+        // }
     }
 
     _computeAvailableXY(model) {

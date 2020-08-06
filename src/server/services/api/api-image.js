@@ -6,7 +6,7 @@ import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
-import imageProcess from '../../lib/image-process';
+import { editorProcess } from '../../lib/editor/process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';
 import trace from '../../lib/image-trace';
@@ -14,7 +14,8 @@ import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-
+import { MeshProcess } from '../../lib/MeshProcess/MeshProcess';
+import { mmToPixel } from '../../../shared/lib/utils';
 
 const log = logger('api:image');
 
@@ -24,6 +25,8 @@ export const set = (req, res) => {
 
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+
+    const { isRotate } = req.body;
 
     async.series([
         (next) => {
@@ -56,6 +59,15 @@ export const set = (req, res) => {
                 });
 
                 next();
+            } else if (path.extname(uploadName) === '.stl') {
+                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
+                const { width, height } = meshProcess.getWidthAndHeight();
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width: mmToPixel(width),
+                    height: mmToPixel(height)
+                });
             } else {
                 jimp.read(uploadPath).then((image) => {
                     res.send({
@@ -138,7 +150,7 @@ export const laserCaseImage = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    imageProcess(options)
+    editorProcess(options)
         .then((result) => {
             res.send(result);
         })

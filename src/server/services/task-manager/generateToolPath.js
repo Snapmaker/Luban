@@ -3,13 +3,22 @@ import path from 'path';
 import Jimp from '../../lib/jimp';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
-import processImage from '../../lib/image-process';
+import { editorProcess } from '../../lib/editor/process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
+import {
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_VECTOR,
+    SOURCE_TYPE_DXF,
+    SOURCE_TYPE_IMAGE3D,
+    SOURCE_TYPE_RASTER,
+    SOURCE_TYPE_SVG
+} from '../../constants';
+import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
 
 const log = logger('service:TaskManager');
 
@@ -23,7 +32,8 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
     let modelPath = null;
     // no need to process model
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace'))) {
+    if (((sourceType === SOURCE_TYPE_SVG || sourceType === SOURCE_TYPE_DXF)
+        && (mode === PROCESS_MODE_VECTOR))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         if (uploadName.indexOf('svg') > 0) {
@@ -31,15 +41,17 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
         }
         // processImage: do "scale, rotate, greyscale/bw"
         try {
-            const result = await processImage(modelInfo);
+            const result = await editorProcess(modelInfo);
             modelPath = `${DataStorage.tmpDir}/${result.filename}`;
         } catch (e) {
             return Promise.reject(new Error(`process Image Error ${e.message}`));
         }
+        const result = await editorProcess(modelInfo);
+        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
 
     if (modelPath) {
-        const generator = new LaserToolPathGenerator();
+        const generator = new LaserToolPathGenerator(modelInfo);
         generator.on('progress', (p) => {
             onProgress(p);
         });
@@ -93,7 +105,7 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
         img.alphaToWhite();
 
         // text to be engraved, so invert to turn black to white.
-        img.invert();
+        // img.invert();
 
         const result = await new Promise(resolve => {
             const outputFilename = pathWithRandomSuffix(uploadName);
@@ -106,9 +118,9 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
         modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
 
+    // const originFilename = uploadName;
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
-
 
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         let toolPath;
@@ -117,14 +129,14 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
             svg = dxfToSvg(svg);
             updateDxfBoundingBox(svg);
 
-            const generator = new CncToolPathGenerator();
+            const generator = new CncToolPathGenerator(modelInfo);
             generator.on('progress', (p) => onProgress(p));
             toolPath = await generator.generateToolPathObj(svg, modelInfo);
         } else {
             const svgParser = new SVGParser();
             const svg = await svgParser.parseFile(modelPath);
 
-            const generator = new CncToolPathGenerator();
+            const generator = new CncToolPathGenerator(modelInfo);
             generator.on('progress', (p) => onProgress(p));
             toolPath = await generator.generateToolPathObj(svg, modelInfo);
         }
@@ -140,7 +152,28 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
                 }
             });
         });
-    } else if (sourceType === 'raster' && mode === 'greyscale') {
+    } else if (sourceType === SOURCE_TYPE_IMAGE3D && mode === PROCESS_MODE_GREYSCALE) {
+        // TODO Parameters used twice resulted in no invert
+        modelInfo.config.invert = false;
+
+        const generator = new CncMeshToolPathGenerator(modelInfo);
+        generator.on('progress', (p) => onProgress(p));
+
+        const toolPath = await generator.generateToolPathObj();
+
+        return new Promise((resolve, reject) => {
+            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                } else {
+                    resolve({
+                        filename: outputFilename
+                    });
+                }
+            });
+        });
+    } else if (sourceType === SOURCE_TYPE_RASTER && mode === PROCESS_MODE_GREYSCALE) {
         const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
         generator.on('progress', (p) => onProgress(p));
 

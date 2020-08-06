@@ -9,10 +9,10 @@ import styles from './index.styl';
 const ControlPanel = (props) => (
     <div className={styles['control-panel']}>
         <div className="row no-gutters">
-            <div className="col-sm-6">
+            <div className="col-sm-7">
                 <JogPad {...props} />
             </div>
-            <div className="col-sm-6">
+            <div className="col-sm-5">
                 <MotionButtonGroup {...props} />
             </div>
         </div>

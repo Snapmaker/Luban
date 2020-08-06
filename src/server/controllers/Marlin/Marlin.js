@@ -1,4 +1,5 @@
 import isEqual from 'lodash/isEqual';
+import isUndefined from 'lodash/isUndefined';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
@@ -307,7 +308,7 @@ class MarlinLineParserResultStart {
 class MarlinLineParserResultPosition {
     // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
     static parse(line) {
-        const r = line.match(/^(?:(?:X|Y|Z|E):[0-9.-]+\s+)+/i);
+        const r = line.match(/^(?:(?:X|Y|Z|E|B):[0-9.-]+\s+)+/i);
         if (!r) {
             return null;
         }
@@ -315,7 +316,7 @@ class MarlinLineParserResultPosition {
         const payload = {
             pos: {}
         };
-        const pattern = /((X|Y|Z|E):[0-9.-]+)+/gi;
+        const pattern = /((X|Y|Z|E|B):[0-9.-]+)+/gi;
         const params = r[0].match(pattern);
 
         for (const param of params) {
@@ -326,6 +327,12 @@ class MarlinLineParserResultPosition {
                 const digits = decimalPlaces(pos);
                 payload.pos[axis] = Number(pos).toFixed(digits);
             }
+        }
+
+        if (isUndefined(payload.pos.b)) {
+            payload.pos.isFourAxis = false;
+        } else {
+            payload.pos.isFourAxis = true;
         }
 
         return {
@@ -623,7 +630,8 @@ class Marlin extends events.EventEmitter {
             x: '0.000',
             y: '0.000',
             z: '0.000',
-            e: '0.000'
+            e: '0.000',
+            isFourAxis: false
         },
         modal: {
             motion: 'G0', // G0, G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80
