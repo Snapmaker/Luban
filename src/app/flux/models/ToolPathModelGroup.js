@@ -81,7 +81,7 @@ class ToolPathModelGroup {
 
     allNotHidedToolPathModelsArePreviewed() {
         for (const toolPathModel of this.toolPathModels) {
-            if (!toolPathModel.hideFlag && toolPathModel.needPreview) {
+            if (toolPathModel.visible && toolPathModel.needPreview) {
                 return false;
             }
         }
@@ -200,14 +200,14 @@ class ToolPathModelGroup {
 
     hideSelectedModel() {
         const selectedToolPathModel = this.selectedToolPathModel;
-        selectedToolPathModel.hideFlag = true;
+        selectedToolPathModel.visible = false;
         selectedToolPathModel.updateNeedPreview(true);
         selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = false);
     }
 
     showSelectedModel() {
         const selectedToolPathModel = this.selectedToolPathModel;
-        selectedToolPathModel.hideFlag = false;
+        selectedToolPathModel.visible = true;
         selectedToolPathModel.updateNeedPreview(true);
         selectedToolPathModel.toolPathObj3D && (selectedToolPathModel.toolPathObj3D.visible = true);
     }

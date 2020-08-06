@@ -461,9 +461,30 @@ class TransformControls extends Object3D {
         super.updateMatrixWorld(force);
     }
 
-    attach(object) {
+    attach(object, visible) {
         this.object = object;
         this.visible = true;
+        if (visible === false) {
+            if (this.mode === 'scale') {
+                this.remove(this.scalePeripheral);
+            } else if (this.mode === 'translate') {
+                this.remove(this.translatePeripheral);
+            } else if (this.mode === 'rotate') {
+                this.remove(this.rotatePeripheral);
+            }
+        } else {
+            if (this.mode === 'scale') {
+                this.add(this.scalePeripheral);
+            } else if (this.mode === 'translate') {
+                this.add(this.translatePeripheral);
+            } else if (this.mode === 'rotate') {
+                this.add(this.rotatePeripheral);
+            }
+        }
+
+        // this.translatePeripheral.visible = (this.mode === 'translate');
+        // this.rotatePeripheral.visible = (this.mode === 'rotate');
+        // this.scalePeripheral.visible = (this.mode === 'scale');
         this.dispatchEvent(EVENTS.UPDATE);
     }
 

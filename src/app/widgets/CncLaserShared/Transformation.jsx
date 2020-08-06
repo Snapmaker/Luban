@@ -15,7 +15,7 @@ import styles from './styles.styl';
 class Transformation extends PureComponent {
     static propTypes = {
         selectedModelID: PropTypes.string,
-        selectedModelHideFlag: PropTypes.bool,
+        selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             rotationZ: PropTypes.number,
@@ -70,10 +70,10 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelID, selectedModelHideFlag, sourceType } = this.props;
+        const { size, selectedModelID, selectedModelVisible, sourceType } = this.props;
         const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0 } = this.props.transformation;
         const canResize = sourceType !== 'text';
-        const selectedNotHide = selectedModelID && !selectedModelHideFlag;
+        const selectedNotHide = selectedModelID && selectedModelVisible;
         const actions = this.actions;
 
         return (

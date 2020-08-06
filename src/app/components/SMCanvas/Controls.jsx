@@ -387,9 +387,9 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
-    attach(object) {
+    attach(object, visible) {
         this.selectedObject = object;
-        this.transformControl.attach(object);
+        this.transformControl.attach(object, visible);
     }
 
     detach() {

@@ -30,6 +30,7 @@ class ModelGroup {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
+            visible: true,
             transformation: {}
         };
     };
@@ -39,7 +40,7 @@ class ModelGroup {
     };
 
     getState(model) {
-        const { modelID, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
+        const { modelID, visible, sourceType, mode, showOrigin, transformation, config, boundingBox } = model;
         return {
             modelID,
             sourceType,
@@ -49,6 +50,7 @@ class ModelGroup {
             config,
             boundingBox,
             selectedModelID: modelID,
+            visible,
             estimatedTime: this.estimatedTime,
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
@@ -121,6 +123,18 @@ class ModelGroup {
         return this.selectedModel && this.selectedModel.changeShowOrigin();
     }
 
+    hideSelectedModel() {
+        const model = this.getSelectedModel();
+        model.visible = false;
+        return this.getState(model);
+    }
+
+    showSelectedModel() {
+        const model = this.getSelectedModel();
+        model.visible = true;
+        return this.getState(model);
+    }
+
     removeSelectedModel() {
         const selected = this.getSelectedModel();
         if (selected) {
@@ -128,8 +142,8 @@ class ModelGroup {
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             // this.remove(selected);
             this.models = this.models.filter(model => model !== selected);
-            this.object.remove(selected.meshObject);
 
+            this.object.remove(selected.meshObject);
             return this._getEmptyState();
         }
         return null;
@@ -260,6 +274,22 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
+    }
+
+    removeHiddenMeshObjects() {
+        this.object.children.splice(0);
+        this.models.forEach((item) => {
+            if (item.visible === true) {
+                this.object.children.push(item.meshObject);
+            }
+        });
+    }
+
+    addHiddenMeshObjects() {
+        this.object.children.splice(0);
+        this.models.forEach((item) => {
+            this.object.children.push(item.meshObject);
+        });
     }
 
     setConvexGeometry(uploadName, convexGeometry) {
@@ -413,17 +443,6 @@ class ModelGroup {
         return null;
     }
 
-    hideSelectedModel() {
-        const model = this.getSelectedModel();
-        model.hideFlag = true;
-        model.meshObject.visible = false;
-    }
-
-    showSelectedModel() {
-        const model = this.getSelectedModel();
-        model.hideFlag = false;
-        model.meshObject.visible = true;
-    }
 
     getSelectedModel() {
         return this.selectedModel;
@@ -470,6 +489,7 @@ class ModelGroup {
             originalName: originalName,
             mode: mode,
             selectedModelID: modelID,
+            visible: true,
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp

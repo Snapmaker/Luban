@@ -36,7 +36,7 @@ class CNCPath extends PureComponent {
 
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
-        selectedModelHideFlag: PropTypes.bool,
+        selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
@@ -173,14 +173,14 @@ class CNCPath extends PureComponent {
         const { accept } = this.state;
         const {
             page,
-            selectedModelID, selectedModelHideFlag, sourceType, mode,
+            selectedModelID, selectedModelVisible, sourceType, mode,
             showOrigin,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
             onModelAfterTransform, changeSelectedModelShowOrigin, changeSelectedModelMode, updateSelectedModelFlip
         } = this.props;
-        const selectedNotHide = selectedModelID && !selectedModelHideFlag;
+        const selectedNotHide = selectedModelID && selectedModelVisible;
 
         const { width, height } = this.state.modalSetting;
 
@@ -217,7 +217,7 @@ class CNCPath extends PureComponent {
                 {isEditor && (
                     <Transformation
                         selectedModelID={selectedModelID}
-                        selectedModelHideFlag={selectedModelHideFlag}
+                        selectedModelVisible={selectedModelVisible}
                         headType="cnc"
                         transformation={transformation}
                         sourceType={sourceType}
@@ -240,19 +240,19 @@ class CNCPath extends PureComponent {
                         )}
                         {isEditor && isTextVector && (
                             <TextParameters
-                                disabled={selectedModelHideFlag}
+                                disabled={!selectedModelVisible}
                                 config={config}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
                         )}
                         {isProcess && (isSvgVector || isTextVector) && (
                             <VectorParameters
-                                disabled={selectedModelHideFlag}
+                                disabled={!selectedModelVisible}
                             />
                         )}
                         {isProcess && isRasterGreyscale && (
                             <ReliefGcodeParameters
-                                disabled={selectedModelHideFlag}
+                                disabled={!selectedModelVisible}
                             />
                         )}
                     </div>
@@ -260,7 +260,7 @@ class CNCPath extends PureComponent {
                 {isProcess && (
                     <GcodeParameters
                         selectedModelID={selectedModelID}
-                        selectedModelHideFlag={selectedModelHideFlag}
+                        selectedModelVisible={selectedModelVisible}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
                         updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
@@ -290,7 +290,7 @@ const mapStateToProps = (state) => {
         // model,
         selectedModelID,
         // todo, next version fix like selectedModelID
-        selectedModelHideFlag: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().hideFlag,
+        selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
         sourceType,
         mode,

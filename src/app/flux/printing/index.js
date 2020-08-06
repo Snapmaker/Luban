@@ -71,6 +71,7 @@ const INITIAL_STATE = {
     stage: PRINTING_STAGE.EMPTY,
 
     selectedModelID: null,
+    visible: true,
     modelGroup: new ModelGroup(),
 
     // G-code
@@ -637,6 +638,8 @@ export const actions = {
         }));
 
         // Prepare model file
+
+
         const result = await dispatch(actions.prepareModel());
         const { originalName, uploadName } = result;
 
@@ -673,10 +676,15 @@ export const actions = {
             const uploadPath = `${DATA_PREFIX}/${originalName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
             const stlFileName = `${basenameWithoutExt}.stl`;
+
+            modelGroup.removeHiddenMeshObjects();
+
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
+
             setTimeout(async () => {
                 // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
                 const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
+                modelGroup.addHiddenMeshObjects();
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);
 
@@ -766,6 +774,7 @@ export const actions = {
         const find = modelGroup.getModels().find(v => v.meshObject === modelMeshObject);
         const modelState = modelGroup.selectModelById(find.modelID);
         dispatch(actions.updateState(modelState));
+        dispatch(actions.displayModel());
     },
 
     getSelectedModel: () => (dispatch, getState) => {
@@ -794,10 +803,34 @@ export const actions = {
         ));
     },
 
+    selectTargetModel: (model) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.selectModelById(model.modelID);
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.render());
+    },
+
+    hideSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.hideSelectedModel();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
+    showSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.showSelectedModel();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.removeSelectedModel();
-
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
                 stage: PRINTING_STAGE.EMPTY,

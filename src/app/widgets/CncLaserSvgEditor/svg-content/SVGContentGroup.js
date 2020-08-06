@@ -160,7 +160,7 @@ class SVGContentGroup {
         if (this.selectedElements.length === 1) {
             const elem = this.selectedElements[0];
             const selector = this.requestSelector(elem);
-            if (!elem.hideFlag) {
+            if (elem.visible) {
                 selector.showGrips(true);
             }
         }
