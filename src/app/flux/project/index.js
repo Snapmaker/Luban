@@ -158,7 +158,7 @@ export const actions = {
                 'cnc': 'CNC'
             };
 
-            dialogOptions.message = dialogOptions.message.replace('#headType#', map[headType]);
+            dialogOptions.message = i18n._(dialogOptions.message, { headType: map[headType] });
             const idxClicked = UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
@@ -205,7 +205,7 @@ export const actions = {
 
 
             await dispatch(actions.save(headType, {
-                message: i18n._('Do you want to save the changes in the #headType# editor?')
+                message: 'Do you want to save the changes in the {{headType}} editor?'
             }));
 
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));

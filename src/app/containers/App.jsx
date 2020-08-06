@@ -93,7 +93,7 @@ class App extends PureComponent {
             await this.props.save(headType);
         },
         saveAll: async () => {
-            const message = i18n._('Do you want to save the changes in the #headType# editor?');
+            const message = 'Do you want to save the changes in the {{headType}} editor?';
 
             const currentHeadType = getCurrentHeadType(this.props.location.pathname);
             if (currentHeadType) {

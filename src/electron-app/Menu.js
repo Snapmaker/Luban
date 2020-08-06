@@ -30,7 +30,7 @@ function saveRecentFile(file) {
 }
 
 
-function addRecentFile(file, isSave = true) {
+export function addRecentFile(file, isSave = true) {
     const menu = Menu.getApplicationMenu();
     const itemRecentFiles = menu.getMenuItemById('recent-files');
 
