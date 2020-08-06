@@ -62,28 +62,37 @@ class ToolPathRenderer {
         };
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
+
+            if (item.G !== 0 && item.G !== 1) {
+                continue;
+            }
+
             const newState = { ...state };
             item.G !== undefined && (newState.G = item.G);
             item.X !== undefined && (newState.X = item.X);
             item.Y !== undefined && (newState.Y = item.Y);
             item.Z !== undefined && (newState.Z = item.Z);
 
-            if ((state.G === 1) && (newState.G === 0)) {
-                positions.push(state.X);
-                positions.push(state.Y);
-                positions.push(state.Z);
-                gCodes.push(newState.G);
-            }
+            // if ((state.G === 1) && (newState.G === 0)) {
+            //     positions.push(state.X);
+            //     positions.push(state.Y);
+            //     positions.push(state.Z);
+            //     gCodes.push(newState.G);
+            // }
 
             if (state.G !== newState.G
                 || state.X !== newState.X
                 || state.Y !== newState.Y
                 || state.Z !== newState.Z) {
+                positions.push(newState.X);
+                positions.push(newState.Y);
+                positions.push(newState.Z);
+                if (state.G === 0 && newState.G === 1) {
+                    gCodes.push(0);
+                } else {
+                    gCodes.push(newState.G);
+                }
                 state = newState;
-                positions.push(state.X);
-                positions.push(state.Y);
-                positions.push(state.Z);
-                gCodes.push(state.G);
             }
         }
         const bufferGeometry = new THREE.BufferGeometry();
