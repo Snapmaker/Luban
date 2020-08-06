@@ -219,5 +219,9 @@ export const IMAGE_WIFI_CONNECTED = '../../images/connection/ic_complete_64x64.p
 export const IMAGE_WIFI_ERROR = '../../images/connection/ic_error_64x64.png';
 export const IMAGE_WIFI_WAITING = '../../images/connection/ic_WI-FI_64x64.png';
 export const IMAGE_WIFI_WARNING = '../../images/ic_warning-64x64.png';
-
+export const HEAD_TYPE_ENV_NAME = {
+    '3dp': '3D printing',
+    'laser': 'Laser',
+    'cnc': 'CNC'
+};
 export const LASER_MOCK_PLATE_HEIGHT = 6;

@@ -1,4 +1,4 @@
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -153,13 +153,6 @@ export const actions = {
         const { openedFile, unSaved } = state;
         if (!unSaved) return;
         if (dialogOptions) {
-            const map = {
-                '3dp': '3D printing',
-                'laser': 'Laser',
-                'cnc': 'CNC'
-            };
-
-            dialogOptions.message = i18n._(dialogOptions.message, { headType: map[headType] });
             const idxClicked = UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
@@ -206,7 +199,7 @@ export const actions = {
 
 
             await dispatch(actions.save(headType, {
-                message: 'Do you want to save the changes in the {{headType}} editor?'
+                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] })
             }));
 
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));

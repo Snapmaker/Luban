@@ -30,7 +30,7 @@ import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
 // import recoverEnvironmentModal from '../modals/modal-recover-environment';
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
 
@@ -93,9 +93,8 @@ class App extends PureComponent {
             await this.props.save(headType);
         },
         saveAll: async () => {
-            const message = 'Do you want to save the changes in the {{headType}} editor?';
-
             const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            const message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
             if (currentHeadType) {
                 await this.props.save(currentHeadType, { message });
             }
