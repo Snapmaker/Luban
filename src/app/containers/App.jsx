@@ -30,7 +30,7 @@ import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
 // import recoverEnvironmentModal from '../modals/modal-recover-environment';
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
 
@@ -81,7 +81,6 @@ class App extends PureComponent {
         saveAsFile: () => {
             const headType = getCurrentHeadType(this.props.location.pathname);
             if (!headType) {
-                console.log('error headType on save as file');
                 return;
             }
             this.props.saveAsFile(headType);
@@ -89,15 +88,13 @@ class App extends PureComponent {
         save: async () => {
             const headType = getCurrentHeadType(this.props.location.pathname);
             if (!headType) {
-                console.log('error headType on save');
                 return;
             }
             await this.props.save(headType);
         },
         saveAll: async () => {
-            const message = i18n._('Save changes to the existing file #fileName# before closing?');
-
             const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            const message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
             if (currentHeadType) {
                 await this.props.save(currentHeadType, { message });
             }
@@ -111,7 +108,6 @@ class App extends PureComponent {
         },
         openProject: (file) => {
             if (!file) {
-                console.log('??', this.fileInput.current);
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             } else {

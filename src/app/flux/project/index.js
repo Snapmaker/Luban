@@ -1,4 +1,4 @@
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP } from '../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -116,6 +116,7 @@ export const actions = {
             modState = getState().printing;
         }
 
+        await dispatch(modActions.init(envHeadType));
         modState.modelGroup.removeAllModels();
 
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
@@ -152,8 +153,6 @@ export const actions = {
         const { openedFile, unSaved } = state;
         if (!unSaved) return;
         if (dialogOptions) {
-            const fileName = openedFile ? openedFile.name : `${headType} environment`;
-            dialogOptions.message = dialogOptions.message.replace('#fileName#', `: ${fileName}`);
             const idxClicked = UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
@@ -200,7 +199,7 @@ export const actions = {
 
 
             await dispatch(actions.save(headType, {
-                message: i18n._('Save changes to the existing file #fileName# before opening the new file?')
+                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] })
             }));
 
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));

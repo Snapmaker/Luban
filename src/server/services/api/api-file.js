@@ -228,6 +228,13 @@ export const recoverEnv = async (req, res) => {
         copyFileSync(`${envDir}/${originalName}`, `${DataStorage.tmpDir}/${originalName}`);
         copyFileSync(`${envDir}/${uploadName}`, `${DataStorage.tmpDir}/${uploadName}`);
     });
+
+    if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
+        copyFileSync(`${envDir}/${config.defaultMaterialId}.def.json`, `${DataStorage.configDir}/${config.defaultMaterialId}.def.json`);
+    }
+    if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
+        copyFileSync(`${envDir}/${config.defaultQualityId}.def.json`, `${DataStorage.configDir}/${config.defaultQualityId}.def.json`);
+    }
     res.send({ result: 1 });
     res.end();
 };

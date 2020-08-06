@@ -26,6 +26,10 @@ const Menu = {
             const item = appMenu.getMenuItemById(id);
             item.enabled = enabled;
         }
+    },
+    addRecentFile(file, isSave) {
+        const menu = require('electron').remote.require('./Menu');
+        menu.addRecentFile(file, isSave);
     }
 };
 
@@ -53,8 +57,12 @@ const File = {
             });
             if (!targetFile) throw new Error('select file canceled');
 
+            const file = { path: targetFile, name: path.basename(targetFile) };
             fs.copyFileSync(tmpFile, targetFile);
-            return { path: targetFile, name: path.basename(targetFile) };
+            const menu = window.require('electron').remote.require('./electron-app/Menu');
+            menu.addRecentFile(file);
+
+            return file;
         } else {
             request
                 .get(`/data${tmpFile}`)
@@ -75,6 +83,7 @@ const Dialog = {
     showMessageBox(options) {
         if (isElectron()) {
             const { dialog } = window.require('electron').remote;
+            options.title = 'Snapmaker Luban';
             return dialog.showMessageBox(options);
         } else {
             return window.confirm(options.message);

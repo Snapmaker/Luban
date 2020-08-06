@@ -652,7 +652,7 @@ class ModelGroup {
 
     _checkOverstepped(model) {
         model.computeBoundingBox();
-        return !this._bbox.containsBox(model.boundingBox);
+        return this._bbox && !this._bbox.containsBox(model.boundingBox);
     }
 
     _hasModel() {
