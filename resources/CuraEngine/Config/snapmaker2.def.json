@@ -102,11 +102,11 @@
                 },
                 "z_seam_type": {
                     "label": "Z Seam Alignment",
-                    "default_value": "sharpest co"
+                    "default_value": "sharpest_corner"
                 },
                 "z_seam_corner": {
                     "label": "Seam Corner Preference",
-                    "default_value": "hide seam"
+                    "default_value": "z_seam_corner_inner"
                 }
             }
         },
