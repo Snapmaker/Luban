@@ -12,7 +12,7 @@ class ProgressBar extends React.PureComponent {
 
     constructor(props) {
         super(props);
-        this.state = { display: 'block' };
+        this.state = { display: 'none' };
     }
 
     componentWillReceiveProps(nextProps) {

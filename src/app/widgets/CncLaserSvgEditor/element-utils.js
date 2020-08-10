@@ -1,7 +1,10 @@
 // eslint-disable-next-line no-unused-vars
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
-import { DEFAULT_FILL_COLOR } from '../../constants/svg-constatns';
+import { getRotationAngle, getScale } from './element-transform';
+import { DEFAULT_FILL_COLOR } from '../../constants/svg-constants';
+
+
 // eslint-disable-next-line no-unused-vars
 import PathTagParser from '../../../shared/lib/SVGParser/PathTagParser';
 import AttributesParser from '../../../shared/lib/SVGParser/AttributesParser';
@@ -80,7 +83,9 @@ function createSVGElement(data) {
     });
     setAttributes(element, data.attr);
     cleanupAttributes(element);
-
+    if (data.element === 'text' && data.attr.textContent) {
+        element.textContent = data.attr.textContent;
+    }
     // add children?
     return element;
 }
@@ -105,7 +110,7 @@ function getBBoxFromAttribute(elem) {
     if (elem.nodeType !== 1) {
         return null;
     }
-    let bbox = null;
+    let bbox = { x: 0, y: 0, width: 0, height: 0 };
     let attrs = null;
     switch (elem.tagName) {
         case 'circle':
@@ -173,11 +178,11 @@ function getBBox(elem) {
     let bbox = null;
     switch (elem.nodeName) {
         case 'text': {
-            if (elem.textContent) {
-                elem.textContent = 'a';
+            if (elem.textContent === '') {
+                elem.textContent = 'a'; // Some character needed for the selector to use.
                 bbox = elem.getBBox();
                 elem.textContent = '';
-            } else {
+            } else if (elem.getBBox) {
                 bbox = elem.getBBox();
             }
             break;
@@ -186,7 +191,6 @@ function getBBox(elem) {
             bbox = elem.getBBox();
             break;
     }
-
     if (bbox) {
         if (isZero(bbox.width) && isZero(bbox.height)) {
             bbox = getBBoxFromAttribute(elem);
@@ -288,6 +292,20 @@ const transformAngleFromXY = (x, y, cx, cy) => {
     return (Math.atan2(cy - y, cx - x) / Math.PI * 180 + SVG_ANGLE_OFFSET) % 360;
 };
 
+const coordGmSvgToModel = (size, elem) => {
+    const bbox = getBBox(elem);
+    const angle = getRotationAngle(elem) || 0;
+    const { scaleX, scaleY } = getScale(elem);
+
+
+    bbox.positionX = bbox.x + bbox.width / 2 - size.x;
+    bbox.positionY = size.y - bbox.y - bbox.height / 2;
+    bbox.rotationZ = -angle / 180 * Math.PI;
+    bbox.scaleX = scaleX;
+    bbox.scaleY = scaleY;
+    return bbox;
+};
+
 export {
     shortFloat,
     cleanupAttributes,
@@ -296,5 +314,6 @@ export {
     getBBox,
     toString,
     getBBoxFromAttribute,
-    transformAngleFromXY
+    transformAngleFromXY,
+    coordGmSvgToModel
 };

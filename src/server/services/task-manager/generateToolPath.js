@@ -22,12 +22,19 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
     let modelPath = null;
     // no need to process model
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
+    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace' || mode === 'text')) || (sourceType === 'text' && mode === 'vector')) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
+        if (uploadName.indexOf('svg') > 0) {
+            return Promise.reject(new Error('process image need an image uploadName'));
+        }
         // processImage: do "scale, rotate, greyscale/bw"
-        const result = await processImage(modelInfo);
-        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
+        try {
+            const result = await processImage(modelInfo);
+            modelPath = `${DataStorage.tmpDir}/${result.filename}`;
+        } catch (e) {
+            return Promise.reject(new Error(`process Image Error ${e.message}`));
+        }
     }
 
     if (modelPath) {
@@ -57,13 +64,20 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     const suffix = '.json';
     // const { mode, source } = modelInfo;
     // const originFilename = source.filename;
-    const { sourceType, mode, uploadName } = modelInfo;
+    const { sourceType, mode, uploadName, config } = modelInfo;
     // const originFilename = uploadName;
-    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    if (config.svgNodeName === 'text') {
+        const result = await processImage(modelInfo);
+        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
+    }
+
+
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
+
+    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         let toolPath;
         if (sourceType === 'dxf') {
             let { svg } = await parseDxf(modelPath);

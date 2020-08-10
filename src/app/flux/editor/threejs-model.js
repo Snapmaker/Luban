@@ -1,5 +1,5 @@
 import { baseActions } from './base';
-import { EPSILON } from '../../constants';
+// import { EPSILON } from '../../constants';
 
 export const threejsModelActions = {
     generateThreejsModel: (headType, options) => (dispatch, getState) => {
@@ -38,27 +38,22 @@ export const threejsModelActions = {
 
     // callback
 
-    updateSelectedModelTransformation: (headType, transformation) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, svgModelGroup, config } = getState()[headType];
+    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
         const modelState = modelGroup.updateSelectedModelTransformation(transformation);
-        const selectedModel = modelGroup.getSelectedModel();
+        if (changeFrom && modelState && modelState.transformation.uniformScalingState === true) {
+            if (changeFrom.height === modelState.transformation.height) {
+                modelState.transformation.height = changeFrom.height * modelState.transformation.width / changeFrom.width;
+            } else if (changeFrom.width === modelState.transformation.width) {
+                modelState.transformation.width = changeFrom.width * modelState.transformation.height / changeFrom.height;
+            }
+        }
 
-        const { text, lineHeight, size } = config;
-        if (text) {
-            const numberOfLines = text.split('\n').length;
-            const estimatedHeight = numberOfLines === 1 ? transformation.height : transformation.height / (1 + lineHeight * (numberOfLines - 1));
-            const newSize = (estimatedHeight * 72 / 25.4);
-
-            if (Math.abs(newSize - size) > EPSILON) {
-                const source = {
-                    width: selectedModel.transformation.width,
-                    height: selectedModel.transformation.height
-                };
-                svgModelGroup.updateTransformation(transformation);
-                modelGroup.updateSelectedSource(source);
-                modelGroup.updateSelectedModelTransformation(transformation);
-                modelGroup.updateSelectedConfig({ size: Math.ceil(newSize) });
-                dispatch(baseActions.updateConfig(headType, { size: Math.ceil(newSize) }));
+        if (changeFrom && modelState && modelState.transformation.uniformScalingState === true) {
+            if (changeFrom.height === modelState.transformation.height) {
+                modelState.transformation.height = changeFrom.height * modelState.transformation.width / changeFrom.width;
+            } else if (changeFrom.width === modelState.transformation.width) {
+                modelState.transformation.width = changeFrom.width * modelState.transformation.height / changeFrom.height;
             }
         }
 

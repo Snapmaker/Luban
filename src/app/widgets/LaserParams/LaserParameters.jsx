@@ -52,6 +52,7 @@ class LaserParameters extends PureComponent {
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelFlip: PropTypes.func.isRequired,
+        updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
@@ -59,7 +60,8 @@ class LaserParameters extends PureComponent {
         onModelAfterTransform: PropTypes.func.isRequired,
         togglePage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
-        changeSelectedModelShowOrigin: PropTypes.func.isRequired
+        changeSelectedModelShowOrigin: PropTypes.func.isRequired,
+        headType: PropTypes.string
     };
 
     fileInput = React.createRef();
@@ -182,12 +184,13 @@ class LaserParameters extends PureComponent {
         const { accept } = this.state;
         const {
             selectedModelID, selectedModelVisible, modelGroup, sourceType, mode,
-            transformation, updateSelectedModelTransformation,
+            updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
-            onModelAfterTransform, updateSelectedModelFlip
+            onModelAfterTransform, updateSelectedModelFlip, headType, updateSelectedModelUniformScalingState, transformation
         } = this.props;
+
         const actions = this.actions;
         const { width, height } = this.state.modalSetting;
 
@@ -197,8 +200,8 @@ class LaserParameters extends PureComponent {
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
-        const isTextVector = (sourceType === 'text' && mode === 'vector');
-        const isProcessMode = isEditor && sourceType === 'raster';
+        const isTextVector = (sourceType === 'raster' && mode === 'vector' && config.svgNodeName === 'text');
+        const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
 
         return (
             <React.Fragment>
@@ -234,12 +237,25 @@ class LaserParameters extends PureComponent {
                         modelGroup={modelGroup}
                         sourceType={sourceType}
                         transformation={transformation}
+                        headType={headType}
                         onModelAfterTransform={onModelAfterTransform}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelFlip={updateSelectedModelFlip}
+                        updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
-                {selectedModelID && (
+
+                <div>
+                    {isProcessMode && (
+                        <ImageProcessMode
+                            disabled={!selectedModelVisible}
+                            sourceType={sourceType}
+                            mode={mode}
+                            showOrigin={showOrigin}
+                            changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
+                            changeSelectedModelMode={changeSelectedModelMode}
+                        />
+                    )}
                     <div>
                         {isProcessMode && (
                             <ImageProcessMode
@@ -276,8 +292,9 @@ class LaserParameters extends PureComponent {
                             )}
                         </div>
                     </div>
+                </div>
 
-                )}
+
                 {isProcess && (
                     <GcodeParameters
                         selectedModelVisible={selectedModelVisible}
@@ -301,14 +318,24 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { page, selectedModelID, modelGroup, sourceType, mode, showOrigin, transformation, gcodeConfig, printOrder, config } = state.laser;
-
+    const { page, modelGroup, toolPathModelGroup, printOrder } = state.laser;
+    const selectedModel = modelGroup.getSelectedModel();
+    const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
+    const selectedModelID = selectedModel.modelID;
+    const {
+        sourceType,
+        mode,
+        showOrigin,
+        transformation,
+        config
+    } = selectedModel;
     return {
         page,
         printOrder,
         transformation,
         gcodeConfig,
         selectedModelID,
+        selectedModel,
         // todo, next version fix like selectedModelID
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
@@ -324,14 +351,15 @@ const mapDispatchToProps = (dispatch) => {
         togglePage: (page) => dispatch(editorActions.togglePage('laser', page)),
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
-        updateSelectedModelTransformation: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
+        updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('laser', config)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser')),
+        onModelAfterTransform: () => {},
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value))
     };
 };

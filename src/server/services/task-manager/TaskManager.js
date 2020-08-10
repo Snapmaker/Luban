@@ -58,7 +58,7 @@ class TaskManager extends EventEmitter {
                 log.info('Scheduling task * 20');
             }
 
-            log.debug(taskSelected);
+            // log.debug(taskSelected);
 
             if (taskSelected.taskType === 'generateToolPath') {
                 await this.generateToolPathTaskHandle(taskSelected);

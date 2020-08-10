@@ -10,8 +10,8 @@ import {
 } from './element-utils';
 import {
     transformPoint,
-    getTransformList,
-    getRotationAngle, hasMatrixTransform
+    getTransformList
+    // getRotationAngle, hasMatrixTransform
 } from './element-transform';
 import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
@@ -21,12 +21,14 @@ import SVGContentGroup from './svg-content/SVGContentGroup';
 import {
     DEFAULT_SCALE,
     SCALE_RATE, SVG_EVENT_CONTEXTMENU,
-    SVG_EVENT_ADD,
+    // SVG_EVENT_ADD,
     SVG_EVENT_MODE,
-    SVG_EVENT_MOVE,
-    SVG_EVENT_SELECT, DEFAULT_FILL_COLOR
-} from '../../constants/svg-constatns';
+    // SVG_EVENT_MOVE,
+    // SVG_EVENT_SELECT,
+    DEFAULT_FILL_COLOR
+} from '../../constants/svg-constants';
 import { library } from './lib/ext-shapes';
+import textActionCreator from './text-actions';
 
 
 const STEP_COUNT = 10;
@@ -81,7 +83,8 @@ const CURRENTDRAWING_INIT = {
 class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        size: PropTypes.object
+        size: PropTypes.object,
+        svgModelGroup: PropTypes.object
     };
 
     updateTime = 0;
@@ -95,6 +98,8 @@ class SVGCanvas extends PureComponent {
     printableArea = null;
 
     node = React.createRef();
+
+    input = React.createRef();
 
     mode = 'select';
 
@@ -124,12 +129,20 @@ class SVGCanvas extends PureComponent {
         this.setupMouseEvents();
         this.setupPrintableArea();
         this.onResize();
+        this.setupTextActions();
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.size !== this.props.size) {
             this.updateCanvas(nextProps.size);
         }
+    }
+
+    setupTextActions() {
+        this.textActions = textActionCreator(
+            this, jQuery
+        );
+        this.textActions.setInputElem(this.input.current);
     }
 
     setupSVGContainer() {
@@ -215,6 +228,7 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('mouseup', this.onMouseUp, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
+        window.addEventListener('dblclick', this.onDblClick, false);
     }
 
     setupPrintableArea() {
@@ -262,10 +276,9 @@ class SVGCanvas extends PureComponent {
             return this.svgContentGroup.selectorParentGroup;
         }
 
-        while (target && target.parentNode !== this.svgContentGroup.group) {
+        while (target && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
             target = target.parentNode;
         }
-
         return target;
     };
 
@@ -310,7 +323,8 @@ class SVGCanvas extends PureComponent {
                 }
 
                 if (mouseTarget && mouseTarget !== this.svgContainer) {
-                    if (!this.svgContentGroup.selectedElements.includes(mouseTarget)) {
+                    if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
+                    && mouseTarget.id !== 'printable-area-group') {
                         // TODO: deal with shift key (multi-select)
                         this.clearSelection();
                         this.addToSelection([mouseTarget]);
@@ -343,19 +357,19 @@ class SVGCanvas extends PureComponent {
                 const selector = this.svgContentGroup.requestSelector(selected);
                 draw.bbox = getBBox(selector.selectorRect);
 
-                const transformList = getTransformList(selected);
-                const hasMatrix = hasMatrixTransform(transformList);
+                // const transformList = getTransformList(selected);
+                // const hasMatrix = hasMatrixTransform(transformList);
 
-                if (hasMatrix) {
-                    const pos = getRotationAngle(selected) ? 1 : 0;
-                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                } else {
-                    transformList.appendItem(this.svgContainer.createSVGTransform());
-                    transformList.appendItem(this.svgContainer.createSVGTransform());
-                    transformList.appendItem(this.svgContainer.createSVGTransform());
-                }
+                // if (hasMatrix) {
+                //     const pos = getRotationAngle(selected) ? 1 : 0;
+                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                // } else {
+                //     transformList.appendItem(this.svgContainer.createSVGTransform());
+                //     transformList.appendItem(this.svgContainer.createSVGTransform());
+                //     transformList.appendItem(this.svgContainer.createSVGTransform());
+                // }
 
                 break;
             }
@@ -369,12 +383,12 @@ class SVGCanvas extends PureComponent {
                 const selector = this.svgContentGroup.requestSelector(selected);
                 draw.bbox = getBBox(selector.selectorRect);
 
-                const transformList = getTransformList(selected);
-                const angle = getRotationAngle(selected);
+                // const transformList = getTransformList(selected);
+                // const angle = getRotationAngle(selected);
 
-                if (!angle) {
-                    transformList.appendItem(this.svgContainer.createSVGTransform());
-                }
+                // if (!angle) {
+                //     transformList.appendItem(this.svgContainer.createSVGTransform());
+                // }
 
                 break;
             }
@@ -457,6 +471,24 @@ class SVGCanvas extends PureComponent {
                 });
                 break;
             }
+            case 'text':
+                draw.started = true;
+                this.svgContentGroup.addSVGElement({
+                    element: 'text',
+                    curStyles: true,
+                    attr: {
+                        x,
+                        y,
+                        'stroke-width': 1,
+                        'font-size': 20,
+                        'font-family': '',
+                        'text-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        opacity: opacity / 2
+                    }
+                });
+                // newText.textContent = 'text';
+                break;
             case 'ext': {
                 if (!this.extShape) {
                     return;
@@ -513,6 +545,12 @@ class SVGCanvas extends PureComponent {
                 draw.freeHand.maxY = y;
                 break;
             }
+            case 'textedit':
+                draw.startX = x;
+                draw.startY = y;
+                this.textActions.mouseDown(event, mouseTarget, draw.startX, draw.startY);
+                draw.started = true;
+                break;
             default:
                 break;
         }
@@ -537,7 +575,6 @@ class SVGCanvas extends PureComponent {
                     const dy = y - draw.startY;
 
                     if (dx !== 0 || dy !== 0) {
-                        //
                         const elem = this.svgContentGroup.selectedElements[0];
                         const transformList = getTransformList(elem);
 
@@ -558,76 +595,11 @@ class SVGCanvas extends PureComponent {
             }
             case 'resize': {
                 const selected = this.svgContentGroup.selectedElements[0];
-
-                const bbox = draw.bbox;
-
-                const left = bbox.x;
-                const top = bbox.y;
-                const { width, height } = bbox;
-
-                let dx = x - draw.startX;
-                let dy = y - draw.startY;
-
-                // If rotated, adjust the dx, dy value
-                const angle = getRotationAngle(selected);
-                if (angle) {
-                    const r = Math.sqrt(dx * dx + dy * dy),
-                        theta = Math.atan2(dy, dx) - angle * Math.PI / 180.0;
-                    dx = r * Math.cos(theta);
-                    dy = r * Math.sin(theta);
-                }
-
-                const m = this.resizeMode;
-                if (!m.includes('n') && !m.includes('s')) {
-                    dy = 0;
-                }
-                if (!m.includes('e') && !m.includes('w')) {
-                    dx = 0;
-                }
-
-                let tx = 0, ty = 0;
-                let sx = width ? (width + dx) / width : 1;
-                let sy = height ? (height + dy) / height : 1;
-
-                if (m.includes('w')) {
-                    sx = width ? (width - dx) / width : 1;
-                    tx = width;
-                }
-
-                if (m.includes('n')) {
-                    sy = height ? (height - dy) / height : 1;
-                    ty = height;
-                }
-
-                const translateOrigin = this.svgContainer.createSVGTransform();
-                const scale = this.svgContainer.createSVGTransform();
-                const translateBack = this.svgContainer.createSVGTransform();
-
-                translateOrigin.setTranslate(-(left + tx), -(top + ty));
-                if (event.shiftKey) {
-                    if (sx === 1) {
-                        sx = sy;
-                    } else {
-                        sy = sx;
-                    }
-                }
-                scale.setScale(sx, sy);
-
-                translateBack.setTranslate(left + tx, top + ty);
-
-                const transformList = getTransformList(selected);
-                const hasMatrix = hasMatrixTransform(transformList);
-                if (hasMatrix) {
-                    const pos = angle ? 1 : 0;
-                    transformList.replaceItem(translateBack, pos);
-                    transformList.replaceItem(scale, pos + 1);
-                    transformList.replaceItem(translateOrigin, pos + 2);
-                } else {
-                    const n = transformList.numberOfItems;
-                    transformList.replaceItem(translateBack, n - 3);
-                    transformList.replaceItem(scale, n - 2);
-                    transformList.replaceItem(translateOrigin, n - 1);
-                }
+                const model = this.props.svgModelGroup.getModelByElement(selected);
+                model.elemResize({
+                    resizeDir: this.resizeMode,
+                    resizeTo: pt
+                });
 
                 const selector = this.svgContentGroup.requestSelector(selected);
                 selector.resize();
@@ -642,13 +614,23 @@ class SVGCanvas extends PureComponent {
                 const cy = bbox.y + bbox.height / 2;
 
                 let angle = Math.atan2(y - cy, x - cx);
-                angle = (angle / Math.PI * 180 + 90) % 360;
+                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
 
                 const rotate = this.svgContainer.createSVGTransform();
-                rotate.setRotate(angle, cx, cy);
+                rotate.setRotate(angle, 0, 0);
 
                 const transformList = getTransformList(selected);
-                transformList.replaceItem(rotate, transformList.numberOfItems - 1);
+                const findIndex = (list, type) => {
+                    for (let k = 0; k < list.length; k++) {
+                        if (list.getItem(k).type === type) {
+                            return k;
+                        }
+                    }
+                    return -1;
+                };
+                let idx = findIndex(transformList, 4);
+                if (idx === -1) idx = transformList.numberOfItems - 1;
+                transformList.replaceItem(rotate, idx);
 
                 const selector = this.svgContentGroup.requestSelector(selected);
                 selector.resize();
@@ -791,6 +773,9 @@ class SVGCanvas extends PureComponent {
 
         let keep = false;
         switch (this.mode) {
+            case 'textedit':
+                this.textActions.mouseUp(event, x, y);
+                return;
             case 'resize':
                 this.setMode('select');
             // fallthrough
@@ -808,14 +793,17 @@ class SVGCanvas extends PureComponent {
                     selector.showGrips(true);
                 }
 
-                this.recalculateAllSelectedDimensions();
-
+                // this.recalculateAllSelectedDimensions();
                 // being moved
                 if (x !== draw.startX || y !== draw.startY) {
                     for (const elem of this.svgContentGroup.selectedElements) {
                         const selector = this.svgContentGroup.requestSelector(elem);
                         selector.resize();
-                        this.trigger(SVG_EVENT_MOVE, elem);
+                        // console.log(SVG_EVENT_MOVE);
+                        const model = this.props.svgModelGroup.getModelByElement(elem);
+                        model.onUpdate();
+
+                        // this.trigger(SVG_EVENT_MOVE, elem);
                     }
                 }
                 return; // note that this is return
@@ -889,7 +877,8 @@ class SVGCanvas extends PureComponent {
                 element.setAttribute('opacity', this.currentProperties.opacity);
 
                 cleanupAttributes(element);
-                this.trigger(SVG_EVENT_ADD, element);
+                this.props.svgModelGroup.addModel(element);
+                // this.trigger(SVG_EVENT_ADD, element);
                 this.selectOnly([element]);
             } else {
                 element.remove();
@@ -905,6 +894,17 @@ class SVGCanvas extends PureComponent {
             }
         }
     };
+
+    onDblClick = (evt) => {
+        const mouseTarget = this.getMouseTarget(evt);
+        const { tagName } = mouseTarget;
+
+        if (tagName === 'text' && this.mode !== 'textedit') {
+            const matrix = this.svgContentGroup.getScreenCTM().inverse();
+            const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
+            this.textActions.select(mouseTarget, pt.x, pt.y);
+        }
+    }
 
     onMouseWheel = (event) => {
         event.preventDefault();
@@ -1152,12 +1152,16 @@ class SVGCanvas extends PureComponent {
 
     clearSelection() {
         this.svgContentGroup.clearSelection();
-        this.trigger(SVG_EVENT_SELECT, []);
+        this.props.svgModelGroup.modelGroup.selectModelById();
+        // this.trigger(SVG_EVENT_SELECT, []);
     }
 
     addToSelection(elements) {
         this.svgContentGroup.addToSelection(elements);
-        this.trigger(SVG_EVENT_SELECT, elements);
+        const svgModel = this.props.svgModelGroup.getModelByElement(elements[0]);
+        this.props.svgModelGroup.resizeSelector(elements[0]);
+        svgModel.relatedModel && svgModel.relatedModel.modelGroup.selectModelById(svgModel.relatedModel.modelID);
+        // this.trigger(SVG_EVENT_SELECT, elements);
     }
 
     selectOnly(elements) {
@@ -1305,7 +1309,10 @@ class SVGCanvas extends PureComponent {
         const { className = '' } = this.props;
 
         return (
-            <div ref={this.node} className={className} />
+            <React.Fragment>
+                <div ref={this.node} className={className} />
+                <input ref={this.input} type="text" size="35" autoComplete="off" />
+            </React.Fragment>
         );
     }
 }

@@ -72,7 +72,7 @@ const INITIAL_STATE = {
 
     selectedModelID: null,
     visible: true,
-    modelGroup: new ModelGroup(),
+    modelGroup: new ModelGroup('printing'),
 
     // G-code
     gcodeFile: null,
@@ -153,6 +153,13 @@ export const actions = {
     },
 
     init: () => async (dispatch, getState) => {
+        // state
+        const printingState = getState().printing;
+        const { modelGroup, gcodeLineGroup } = printingState;
+        modelGroup.setDataChangedCallback(() => {
+            dispatch(actions.render());
+        });
+
         const { series } = getState().machine;
         await definitionManager.init(series);
 
@@ -168,9 +175,6 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-        // state
-        const printingState = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printingState;
 
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(

@@ -77,7 +77,7 @@ class NumberInput extends PureComponent {
         if (Number.isNaN(numericValue)) {
             const absentValue = this.getAbsentValue();
             onChange(absentValue);
-            this.onChange(absentValue);
+            this.onChange({ target: { value: absentValue } });
             return;
         }
 

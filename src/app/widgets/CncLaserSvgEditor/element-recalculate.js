@@ -1,7 +1,7 @@
 import { setAttributes, getBBox } from './element-utils';
 import {
     isIdentity,
-    transformListToTransform,
+    // transformListToTransform,
     transformPoint,
     transformBox,
     getTransformList
@@ -11,6 +11,20 @@ const PATH_MAP = [
     0, 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'Q', 'q',
     'A', 'a', 'H', 'h', 'V', 'v', 'S', 's', 'T', 't'
 ];
+
+// const findScaleTranformIndex = (transformList) => {
+//     for (let k = 1; k < transformList.length - 1; k++) {
+//         console.log(k, transformList.getItem(k).type === 3 && transformList.getItem(k - 1).type === 2
+//         && transformList.getItem(k + 1).type === 2);
+//         if (
+//             transformList.getItem(k).type === 3 && transformList.getItem(k - 1).type === 2
+//         && transformList.getItem(k + 1).type === 2
+//         ) {
+//             return k;
+//         }
+//     }
+//     return -1;
+// };
 
 function remapElement(elem, m) {
     const changes = {};
@@ -30,6 +44,9 @@ function remapElement(elem, m) {
             break;
         case 'rect':
             numberAttrs.push('x', 'y', 'width', 'height');
+            break;
+        case 'text':
+            numberAttrs.push('x', 'y');
             break;
         case 'image':
             numberAttrs.push('x', 'y', 'width', 'height');
@@ -216,6 +233,15 @@ function remapElement(elem, m) {
             finishUp();
             break;
         }
+        case 'text': {
+            const pt1 = remap(changes.x, changes.y);
+
+            changes.x = pt1.x;
+            changes.y = pt1.y;
+            finishUp();
+            break;
+        }
+
         default:
             break;
     }
@@ -226,7 +252,6 @@ function remapElement(elem, m) {
  */
 function recalculateDimensions(root, elem) {
     const transformList = getTransformList(elem);
-
     // Remove any unnecessary transforms
     if (transformList && transformList.numberOfItems > 0) {
         const number = transformList.numberOfItems;
@@ -277,14 +302,17 @@ function recalculateDimensions(root, elem) {
 
     // [T][S][T], non-skewed element
 
-    if (n >= 3 && transformList.getItem(n - 2).type === 3 && transformList.getItem(n - 3).type === 2
-        && transformList.getItem(n - 1).type === 2) {
-        operation = 3; // scale
-        m = transformListToTransform(transformList, n - 3, n - 1).matrix;
-        transformList.removeItem(n - 1);
-        transformList.removeItem(n - 2);
-        transformList.removeItem(n - 3);
-    }
+    // if (n >= 3 && findScaleTranformIndex(transformList) >= 0) {
+    //     // operation = 3; // scale
+    //     const idx = findScaleTranformIndex(transformList);
+    //     const matrix = transformListToTransform(transformList, idx - 1, idx + 1).matrix;
+    //     const transform = root.createSVGTransform();
+    //     transform.setMatrix(matrix);
+    //     transformList.removeItem(idx - 1);
+    //     transformList.removeItem(idx - 1);
+    //     transformList.removeItem(idx - 1);
+    //     transformList.appendItem(transform);
+    // }
 
     if (operation === 2 || operation === 3) {
         remapElement(elem, m);

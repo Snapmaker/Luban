@@ -1,14 +1,18 @@
 import uuid from 'uuid';
 import * as THREE from 'three';
+
 import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
 
 import { DATA_PREFIX } from '../../constants';
 
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
+import { controller } from '../../lib/controller';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
+
+let updateTimer;
 
 // const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
 const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
@@ -37,8 +41,10 @@ const DEFAULT_TRANSFORMATION = {
 class Model {
     modeConfigs = {}
 
-    constructor(modelInfo) {
-        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, mode,
+    relatedModels = {}
+
+    constructor(modelInfo, modelGroup) {
+        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
             transformation, processImageName } = modelInfo;
 
         this.limitSize = limitSize;
@@ -60,6 +66,7 @@ class Model {
         this.originalName = originalName;
         this.uploadName = uploadName;
         this.config = config;
+        this.gcodeConfig = gcodeConfig;
         this.mode = mode;
 
         this.processImageName = processImageName;
@@ -81,7 +88,8 @@ class Model {
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-        this.showOrigin = this.sourceType !== 'raster';
+        this.showOrigin = true; // this.sourceType !== 'raster';
+        this.modelGroup = modelGroup;
     }
 
     get visible() {
@@ -370,18 +378,24 @@ class Model {
                 }
             }
         }
+        // updated scale and width will both effected on meshObject
         if (width) {
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
 
-            this.meshObject.scale.x = width / geometrySize.x;
+            this.meshObject.scale.x = width / geometrySize.x * this.transformation.scaleX;
+
+
             this.transformation.width = width;
         }
         if (height) {
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
+            this.meshObject.scale.y = height / geometrySize.y * this.transformation.scaleY;
 
-            this.meshObject.scale.y = height / geometrySize.y;
+
             this.transformation.height = height;
         }
+
+        this.transformation = { ...this.transformation };
         return this.transformation;
     }
 
@@ -432,9 +446,9 @@ class Model {
                 this.boundingBox = clone.boundingBox;
             }
         } else {
-            const { width, height, rotationZ } = this.transformation;
-            const bboxWidth = Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ));
-            const bboxHeight = Math.abs(width * Math.sin(rotationZ)) + Math.abs(height * Math.cos(rotationZ));
+            const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
+            const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
+            const bboxHeight = (Math.abs(width * Math.sin(rotationZ)) + Math.abs(height * Math.cos(rotationZ))) * scaleY;
             const { x, y } = this.meshObject.position;
             this.boundingBox = new THREE.Box2(
                 new THREE.Vector2(x - bboxWidth / 2, y - bboxHeight / 2),
@@ -669,6 +683,72 @@ class Model {
             transformation,
             processImageName
         };
+    }
+
+
+    async updateAndRefresh({ transformation, config, ...others }) {
+        let textNeedUpdate;
+        if (transformation) {
+            this.updateTransformation(transformation);
+        }
+        if (config) {
+            textNeedUpdate = this.config.svgNodeName === 'text' && Object.keys(config).length;
+
+            this.config = {
+                ...this.config,
+                ...config
+            };
+        }
+        if (Object.keys(others)) {
+            for (const key of Object.keys(others)) {
+                this[key] = others[key];
+            }
+        }
+
+
+        this.refreshRelatedModel();
+        this.modelGroup.modelChanged();
+        if (textNeedUpdate) {
+            updateTimer && clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                this.relatedModels.svgModel.updateSource();
+            }, 300); // to prevent continuous input cause frequently update
+        }
+    }
+
+    setRelatedModels(relatedModels) {
+        this.relatedModels = { ...this.relatedModels, ...relatedModels };
+        for (const key of Object.keys(this.relatedModels)) {
+            const relatedModel = this.relatedModels[key];
+            relatedModel.setRelatedModel(this);
+        }
+    }
+
+    refreshRelatedModel() {
+        for (const key of Object.keys(this.relatedModels)) {
+            const relatedModel = this.relatedModels[key];
+            relatedModel.refresh();
+        }
+    }
+
+    async preview() {
+        const modelTaskInfo = this.getTaskInfo();
+        const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
+        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
+            const taskInfo = {
+                ...modelTaskInfo,
+                ...toolPathModelTaskInfo
+
+            };
+            if (this.config.svgNodeName && this.config.svgNodeName === 'text') {
+                taskInfo.uploadName = await this.relatedModels.svgModel.uploadTextImage();
+            }
+            controller.commitToolPathTask({
+                taskId: taskInfo.modelID,
+                headType: this.headType,
+                data: taskInfo
+            });
+        }
     }
 }
 

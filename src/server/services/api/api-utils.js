@@ -18,20 +18,34 @@ export const getPlatform = (req, res) => {
 };
 
 export const getFonts = (req, res) => {
-    const fonts = fontManager.fonts
-        .map((font) => {
-            return {
-                fontFamily: font.names.fontFamily.en,
-                fontSubfamily: font.names.fontSubfamily.en,
-                fullName: font.names.fullName.en,
-                displayName: font.names.displayName.en
-            };
-        })
-        .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
+    // const fonts = fontManager.fonts
 
-    res.send({
-        fonts: fonts
-    });
+    const fontList = require('font-list');
+
+    fontList.getFonts()
+        .then(fonts => {
+            fonts = fonts.filter(font => !!font)
+                .map((font) => {
+                    if (font[0] === '"') {
+                        font = font.substr(1, font.length - 2);
+                    }
+
+                    return {
+                        fontFamily: font,
+                        fontSubfamily: '',
+                        fullName: font,
+                        displayName: font
+                    };
+                })
+                .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
+
+            res.send({
+                fonts: fonts
+            });
+        })
+        .catch(err => {
+            console.log(err);
+        });
 };
 
 export const uploadFont = (req, res) => {
