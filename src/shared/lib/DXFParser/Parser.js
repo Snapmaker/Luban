@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { isUndefined } from 'lodash';
 import DxfParser from './DxfParser';
 
+const EPSILON = 1e-6;
+
 function angle2(p1, p2) {
     const v1 = new THREE.Vector2(p1.x, p1.y);
     const v2 = new THREE.Vector2(p2.x, p2.y);
@@ -44,7 +46,7 @@ function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
                 let p0, p1;
                 // A spline divided into 40 parts is accurate enough and enlarge it to 50 parts
                 // and js floating point number is not accurate enough should add more 0.02
-                for (let t = 0; t < 1.02; t += 0.02) {
+                for (let t = 0; t <= 1 + EPSILON; t += 0.02) {
                     p0 = (1 - t) ** 3 * controlPoints[0].x + 3 * t * (1 - t) ** 2 * controlPoints[1].x + 3 * t ** 2 * (1 - t) * controlPoints[2].x + t ** 3 * controlPoints[3].x;
                     p1 = (1 - t) ** 3 * controlPoints[0].y + 3 * t * (1 - t) ** 2 * controlPoints[1].y + 3 * t ** 2 * (1 - t) * controlPoints[2].y + t ** 3 * controlPoints[3].y;
                     interpolatedPoints.push({ x: p0, y: p1, z: 0 });
