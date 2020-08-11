@@ -339,7 +339,7 @@ class ModelGroup extends EventEmitter {
             state = this._getEmptyState();
         }
         this.onDataChangedCallback();
-        // this._toolPathModelGroup.selectToolPathModel(modelID);
+        this.emit('select');
         return state;
     }
 

@@ -269,15 +269,18 @@ Start a new line manually according to your needs.')}
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, props) => {
+    const { headType } = props;
     const { fonts } = state.text;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
-
+    const { modelGroup } = state[headType];
+    const selectedModel = modelGroup.getSelectedModel();
     return {
-        fontOptions
+        fontOptions,
+        selectedModel
     };
 };
 

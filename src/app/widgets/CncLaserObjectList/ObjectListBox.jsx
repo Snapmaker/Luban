@@ -137,17 +137,17 @@ class ObjectListBox extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
-    const { page, previewFailed, selectedModelID, modelGroup, toolPathModelGroup } = state[ownProps.headType];
+    const { page, previewFailed, modelGroup, toolPathModelGroup } = state[ownProps.headType];
     const { headType } = ownProps;
     return {
         headType,
         page,
         modelGroup,
-        selectedModelID,
+        selectedModelID: modelGroup.getSelectedModel().modelID,
         toolPathModelGroup,
         workflowState,
         previewFailed,
-        modelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible
+        modelVisible: modelGroup.getSelectedModel().visible
     };
 };
 

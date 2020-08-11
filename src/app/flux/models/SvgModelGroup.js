@@ -52,6 +52,12 @@ class SvgModelGroup {
 
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
+        this.modelGroup.on('select', () => {
+            const selectedModel = this.modelGroup.getSelectedModel();
+            if (!selectedModel.modelID) return;
+            this.selectElementById(selectedModel.modelID);
+            this.showSelectedElement();
+        });
     }
 
     init(svgContentGroup, size) {
@@ -335,7 +341,7 @@ class SvgModelGroup {
 
     createFromModel(relatedModel) {
         const { config } = relatedModel;
-        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName });
+        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName, attr: { id: relatedModel.modelID } });
 
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
