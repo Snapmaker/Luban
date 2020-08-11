@@ -37,13 +37,14 @@ function drawBezierCurve(degreeOfSplineCurve, controlPoints, fitPoints) {
             interpolatedPoints = curve.getPoints(points.length * 8);
         }
     } else {
-        // interpolatedPoints = controlPoints;
         if (controlPoints && controlPoints.length > 7) {
             interpolatedPoints = controlPoints;
         } else {
             if (controlPoints.length === 4) {
                 let p0, p1;
-                for (let t = 0; t < 1; t += 0.01) {
+                // A spline divided into 40 parts is accurate enough and enlarge it to 50 parts
+                // and js floating point number is not accurate enough should add more 0.02
+                for (let t = 0; t < 1.02; t += 0.02) {
                     p0 = (1 - t) ** 3 * controlPoints[0].x + 3 * t * (1 - t) ** 2 * controlPoints[1].x + 3 * t ** 2 * (1 - t) * controlPoints[2].x + t ** 3 * controlPoints[3].x;
                     p1 = (1 - t) ** 3 * controlPoints[0].y + 3 * t * (1 - t) ** 2 * controlPoints[1].y + 3 * t ** 2 * (1 - t) * controlPoints[2].y + t ** 3 * controlPoints[3].y;
                     interpolatedPoints.push({ x: p0, y: p1, z: 0 });
@@ -211,7 +212,6 @@ export const dxfToSvg = (dxf) => {
             if (entities.vertices.length > 2 && entities.shape === true) {
                 pathsObj.points.push([entities.vertices[0].x, entities.vertices[0].y]);
             }
-
             pathsObj.closed = false;
             shape.paths.push(pathsObj);
         } else if (entities.type === 'SPLINE') {
@@ -275,7 +275,7 @@ export const dxfToSvg = (dxf) => {
                 false, // Always counterclockwise
                 rotation
             );
-            const points = curve.getPoints(40);
+            const points = curve.getPoints(80);
             points.forEach((item) => {
                 pathsObj.points.push([item.x, item.y]);
             });
@@ -293,6 +293,7 @@ export const dxfToSvg = (dxf) => {
     res = {
         shapes
     };
+
     return res;
 };
 export function updateShapeBoundingBox(shape) {

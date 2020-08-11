@@ -291,7 +291,6 @@ class Configurations extends PureComponent {
         if (nextProps.qualityDefinitions.length > 0) {
             const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
             if (!qualityDefinition) {
-                console.log('qualityDefinitions', nextProps.qualityDefinitions);
                 this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
             }
         }

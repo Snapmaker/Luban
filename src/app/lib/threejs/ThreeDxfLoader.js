@@ -278,7 +278,7 @@ class ThreeDxfLoader {
             false, // Always counterclockwise
             rotation
         );
-        const interpolatedPoints = curve.getPoints(20);
+        const interpolatedPoints = curve.getPoints(80);
         let previousPosition = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
             previousPosition = geometry.vertices[geometry.vertices.length - 1];
