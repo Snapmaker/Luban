@@ -68,7 +68,7 @@ class Selector {
 
         let offset = 0 / this.manager.scale;
         if (this.element.getAttribute('stroke') !== 'none') {
-            const strokeWidth = this.element.getAttribute('stroke-width');
+            const strokeWidth = parseFloat(this.element.getAttribute('stroke-width')) || 0;
             offset += strokeWidth / 2;
         }
 

@@ -235,7 +235,7 @@ class SvgModel {
         const v = await Canvg.fromString(ctx, content, presets.offscreen());
         await v.render();
         const blob = await canvas.convertToBlob();
-        console.log(content, URL.createObjectURL(blob));
+        // console.log(content, URL.createObjectURL(blob));
 
         const formData = new FormData();
         formData.append('image', new File([blob], 'abc.png'));
@@ -334,11 +334,6 @@ class SvgModel {
         this.elemTransformList().clear();
         this.refreshElemAttrs();
 
-
-        // if (this.elem.nodeName === 'text' && text) {
-        //     this.elem.textContent = text;
-        // }
-
         this.modelGroup.resizeSelector(this.elem);
     }
 
@@ -368,7 +363,6 @@ class SvgModel {
             return scaleY * w;
         }
 
-        // const size = this.modelGroup.size;
         const center = { x: x + width / 2, y: y + height / 2 };
         const { x: positionX, y: positionY } = this.pointSvgToModel(remap(center));
 
@@ -378,12 +372,9 @@ class SvgModel {
             },
             width: width,
             height: height,
-            // sourceWidth: oldAttrs.sourceWidth,
-            // sourceHeight: height * 8,
             transformation: {
                 positionX: positionX,
                 positionY: positionY,
-                // rotationZ: rotationZ,
                 scaleX,
                 scaleY,
                 width: width,
@@ -393,36 +384,15 @@ class SvgModel {
         if (this.type === 'path') {
             const d = remapPath(this.elem, remap, scaleW, scaleH);
             attrs.config.d = d;
-            // this.elem.setAttribute('d', d);
         }
-        if (this.type === 'text') {
-            // const fontSizeScale = Math.min(scaleX, scaleY);
-            // attrs.transformation.scaleX /= fontSizeScale;
-            // attrs.transformation.scaleY /= fontSizeScale;
-            // attrs.width /= fontSizeScale;
-            // attrs.height /= fontSizeScale;
-            // attrs.sourceWidth /= fontSizeScale;
-            // attrs.sourceHeight /= fontSizeScale;
-            // attrs.transformation.width /= fontSizeScale;
-            // attrs.transformation.height /= fontSizeScale;
-            // attrs.config['font-size'] = (this.relatedModel.config['font-size'] * fontSizeScale).toFixed(2);
-        } else {
+
+        if (this.type !== 'text' && this.type !== 'image') {
             attrs.transformation.scaleX = 1;
             attrs.transformation.scaleY = 1;
             attrs.width *= Math.abs(scaleX);
             attrs.height *= Math.abs(scaleY);
-            // attrs.sourceWidth *= scaleX;
-            // attrs.sourceHeight *= scaleY;
             attrs.transformation.width *= Math.abs(scaleX);
             attrs.transformation.height *= Math.abs(scaleY);
-
-            // attrs.transformation.flip = flip;
-            // if (scaleX < 0) {
-            //     attrs.transformation.flip ^= 2;
-            // }
-            // if (scaleY < 0) {
-            //     attrs.transformation.flip ^= 1;
-            // }
         }
         this.relatedModel.updateAndRefresh(attrs);
     }
@@ -496,7 +466,6 @@ class SvgModel {
 
         const { positionX, positionY, width, height, scaleX, scaleY, flip } = this.relatedModel.transformation;
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
-
 
         const flipVertical = (flip & 1), flipHorizontal = (flip & 2);
         // calculate the points when model moves from ptFrom to ptTo by ptFixed

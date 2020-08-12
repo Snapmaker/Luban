@@ -105,7 +105,7 @@ class Model {
     }
 
     getTaskInfo() {
-        return {
+        const taskInfo = {
             modelID: this.modelID,
             modelName: this.modelName,
             headType: this.headType,
@@ -126,6 +126,11 @@ class Model {
                 ...this.config
             }
         };
+        if (this.config.svgNodeName === 'image') {
+            taskInfo.transformation.width *= this.transformation.scaleX;
+            taskInfo.transformation.height *= this.transformation.scaleY;
+        }
+        return taskInfo;
     }
 
     generateModelObject3D() {

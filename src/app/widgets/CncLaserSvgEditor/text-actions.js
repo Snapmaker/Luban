@@ -143,12 +143,8 @@ const textActionCreator = (canvas, $) => {
      * @param {boolean} skipInput
      * @returns {void}
      */
-    function setSelection(start, end, skipInput) {
-        if (start === end) {
-            console.log(end);
-        }
+    function setSelection(start, end) {
         setCursor(end);
-        console.log(skipInput);
 
         // if (!skipInput) {
         //     textinput.setSelectionRange(start, end);
@@ -345,7 +341,7 @@ const textActionCreator = (canvas, $) => {
             // const pt = screenToPt(mouseX, mouseY);
 
 
-            console.log(evt.target, curtext, mouseX, mouseY);
+            // console.log(evt.target, curtext, mouseX, mouseY);
             // TODO: Find a way to make this work: Use transformed BBox instead of evt.target
             // if (lastX === mouseX && lastY === mouseY
             //   && !rectsIntersect(transbb, {x: pt.x, y: pt.y, width: 0, height: 0})) {

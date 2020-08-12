@@ -244,55 +244,40 @@ class LaserParameters extends PureComponent {
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
+                {isProcessMode && (
+                    <ImageProcessMode
+                        disabled={!selectedModelVisible}
+                        sourceType={sourceType}
+                        mode={mode}
+                        showOrigin={showOrigin}
+                        changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
+                        changeSelectedModelMode={changeSelectedModelMode}
+                    />
+                )}
 
-                <div>
-                    {isProcessMode && (
-                        <ImageProcessMode
-                            disabled={!selectedModelVisible}
-                            sourceType={sourceType}
-                            mode={mode}
-                            showOrigin={showOrigin}
-                            changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
-                            changeSelectedModelMode={changeSelectedModelMode}
-                        />
-                    )}
-                    <div>
-                        {isProcessMode && (
-                            <ImageProcessMode
-                                disabled={!selectedModelVisible}
-                                sourceType={sourceType}
-                                mode={mode}
-                                showOrigin={showOrigin}
-                                changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
-                                changeSelectedModelMode={changeSelectedModelMode}
-                            />
-                        )}
-                        <div>
-                            {isEditor && isTextVector && (
-                                <TextParameters
-                                    disabled={!selectedModelVisible}
-                                    config={config}
-                                    updateSelectedModelTextConfig={updateSelectedModelTextConfig}
-                                />
-                            )}
-                            {isProcess && isBW && (
-                                <GcodeConfigRasterBW disabled={!selectedModelVisible} />
-                            )}
-                            {isProcess && isGreyscale && (
-                                <GcodeConfigGreyscale disabled={!selectedModelVisible} />
-                            )}
-                            {isProcess && isRasterVector && (
-                                <GcodeConfigRasterVector disabled={!selectedModelVisible} />
-                            )}
-                            {isProcess && isSvgVector && (
-                                <GcodeConfigSvgVector disabled={!selectedModelVisible} />
-                            )}
-                            {isProcess && isTextVector && (
-                                <GcodeConfigSvgVector disabled={!selectedModelVisible} />
-                            )}
-                        </div>
-                    </div>
-                </div>
+                {isEditor && isTextVector && (
+                    <TextParameters
+                        disabled={!selectedModelVisible}
+                        headType={headType}
+                        config={config}
+                        updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                    />
+                )}
+                {isProcess && isBW && (
+                    <GcodeConfigRasterBW disabled={!selectedModelVisible} />
+                )}
+                {isProcess && isGreyscale && (
+                    <GcodeConfigGreyscale disabled={!selectedModelVisible} />
+                )}
+                {isProcess && isRasterVector && (
+                    <GcodeConfigRasterVector disabled={!selectedModelVisible} />
+                )}
+                {isProcess && isSvgVector && (
+                    <GcodeConfigSvgVector disabled={!selectedModelVisible} />
+                )}
+                {isProcess && isTextVector && (
+                    <GcodeConfigSvgVector disabled={!selectedModelVisible} />
+                )}
 
 
                 {isProcess && (
