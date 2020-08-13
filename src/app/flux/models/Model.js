@@ -528,8 +528,8 @@ class Model {
             return;
         }
         this.computeBoundingBox();
-        this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
 
+        this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
     }
 
@@ -797,7 +797,7 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-        if (toolPathModelTaskInfo && this.visible) {
+        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo

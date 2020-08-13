@@ -54,7 +54,7 @@ class Visualizer extends Component {
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
-        selectModel: PropTypes.func.isRequired,
+        selectTargetModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
@@ -96,7 +96,7 @@ class Visualizer extends Component {
             }
         },
         onSelectModels: (model) => {
-            this.props.selectModel(model);
+            this.props.selectTargetModel(model);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -479,7 +479,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
-        selectModel: (model) => dispatch(editorActions.selectModel('laser', model)),
+        selectTargetModel: (model) => dispatch(editorActions.selectTargetModel(model, 'laser')),
         unselectAllModels: () => dispatch(editorActions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),

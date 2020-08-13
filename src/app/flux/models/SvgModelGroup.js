@@ -50,6 +50,8 @@ class SvgModelGroup {
 
     svgModels = [];
 
+    selectedSvgModels = [];
+
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
         this.modelGroup.on('select', () => {
@@ -412,6 +414,17 @@ class SvgModelGroup {
         selector.resize();
     }
 
+    resizeSelectorByElementsSelected(elements) {
+        for (const elem of elements) {
+            if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
+                return;
+            }
+        }
+        this.svgContentGroup.requestSelectorByElements(elements);
+        // const selector = this.svgContentGroup.requestSelectorByElements(elements);
+        // selector.resize();
+    }
+
     getModelByElement(elem) {
         for (const model of this.svgModels) {
             if (model.elem === elem) {
@@ -419,6 +432,16 @@ class SvgModelGroup {
             }
         }
         return null;
+    }
+
+    getModelsByElements(elems) {
+        const models = [];
+        for (const model of this.svgModels) {
+            if (elems.includes(model.elem)) {
+                models.push(model);
+            }
+        }
+        return models;
     }
 }
 

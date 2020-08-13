@@ -29,10 +29,12 @@ class SVGContentGroup {
         });
     }
 
+    // for create new elem
     getId() {
         return `id${this.counter}`;
     }
 
+    // for create new elem
     getNextId() {
         this.counter++;
         return `id${this.counter}`;
@@ -93,6 +95,7 @@ class SVGContentGroup {
         }
     }
 
+    // todo getSelected will be instead
     updateTransform(elem, attributes) {
         setAttributes(elem, attributes);
         if (elem === this.getSelected()) {
@@ -130,6 +133,10 @@ class SVGContentGroup {
 
     requestSelector(elem, bbox) {
         return this.selectorManager.requestSelector(elem, bbox);
+    }
+
+    requestSelectorByElements(elements) {
+        return this.selectorManager.requestSelectorByElements(elements);
     }
 
     releaseSelector(elem) {
@@ -200,12 +207,6 @@ class SVGContentGroup {
         transformList.appendItem(transformScale);
         transformList.appendItem(transformBack);
 
-        for (let i = 0; i < transformList.numberOfItems; i++) {
-            if (transformList.getItem(i).type === 4) {
-                const index = i;
-                console.log(index, transformList.getItem(i));
-            }
-        }
         recalculateDimensions(this.svgContent, elem);
     }
 
@@ -215,7 +216,6 @@ class SVGContentGroup {
         const transformScale = this.svgContent.createSVGTransform();
         const transformBack = this.svgContent.createSVGTransform();
         const bBox = getBBox(elem);
-        console.log(flip, elem, bBox);
         transformOrigin.setTranslate(bBox.x + bBox.width, bBox.y + bBox.height);
         transformScale.setScale(((flip & 2) > 0 ? -1 : 1), ((flip & 1) > 0 ? -1 : 1));
         transformBack.setTranslate(-(bBox.x + ((flip & 2) > 0 ? 0 : bBox.width)), -(bBox.y + ((flip & 1) > 0 ? 0 : bBox.height)));
@@ -223,7 +223,6 @@ class SVGContentGroup {
         transformList.appendItem(transformOrigin);
         transformList.appendItem(transformScale);
         transformList.appendItem(transformBack);
-        // console.log(transformScale, transformList);
 
         recalculateDimensions(this.svgContent, elem);
     }

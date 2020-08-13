@@ -13,13 +13,13 @@ import TipTrigger from '../../components/TipTrigger';
 class ObjectListBox extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
-        selectModelByID: PropTypes.func.isRequired,
+        selectTargetModel: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
         hideSelectedModel: PropTypes.func.isRequired,
         showSelectedModel: PropTypes.func.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
-        selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired
     };
@@ -30,13 +30,13 @@ class ObjectListBox extends PureComponent {
     contextMenuRef = React.createRef();
 
     actions = {
-        onClickModelNameBox: (model) => {
-            this.props.selectModelByID(model.modelID);
+        onClickModelNameBox: (model, event) => {
+            this.props.selectTargetModel(model, event.shiftKey);
         },
 
         onClickModelHideBox: (model) => {
             const visible = model.visible;
-            this.props.selectModelByID(model.modelID);
+            this.props.selectTargetModel(model);
             if (visible) {
                 this.props.hideSelectedModel(model);
             } else {
@@ -63,7 +63,7 @@ class ObjectListBox extends PureComponent {
     }
 
     render() {
-        const { modelGroup, selectedModelID } = this.props;
+        const { modelGroup, selectedModelArray } = this.props;
         return (
             <div>
                 <div
@@ -72,6 +72,7 @@ class ObjectListBox extends PureComponent {
                     )}
                 >
                     {modelGroup.models.map((model) => {
+                        // console.log(model.modelID, selectedModelArray, selectedModelArray && selectedModelArray.includes(model));
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
                         const modelIcon = () => {
@@ -91,7 +92,7 @@ class ObjectListBox extends PureComponent {
                                     <div
                                         className={classNames(
                                             styles.bgr,
-                                            selectedModelID && selectedModelID === model.modelID ? styles.selected : null,
+                                            selectedModelArray && selectedModelArray.includes(model) ? styles.selected : null,
                                         )}
                                     >
                                         <Anchor
@@ -99,7 +100,7 @@ class ObjectListBox extends PureComponent {
                                                 styles.name,
                                                 styles.bt
                                             )}
-                                            onClick={() => this.actions.onClickModelNameBox(model)}
+                                            onClick={(event) => this.actions.onClickModelNameBox(model, event)}
                                         >
                                             <span
                                                 className={classNames(
@@ -138,22 +139,23 @@ class ObjectListBox extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
     const { page, previewFailed, modelGroup, toolPathModelGroup } = state[ownProps.headType];
+    const { selectedModelArray } = modelGroup;
     const { headType } = ownProps;
     return {
         headType,
         page,
         modelGroup,
-        selectedModelID: modelGroup.getSelectedModel().modelID,
+        selectedModelArray,
         toolPathModelGroup,
         workflowState,
-        previewFailed,
-        modelVisible: modelGroup.getSelectedModel().visible
+        previewFailed
+        // modelVisible: modelGroup.getSelectedModel().visible
     };
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        selectModelByID: (modelID) => dispatch(editorActions.selectModelByID(ownProps.headType, modelID)),
+        selectTargetModel: (model, shiftKey) => dispatch(editorActions.selectTargetModel(model, ownProps.headType, shiftKey)),
         hideSelectedModel: () => dispatch(editorActions.hideSelectedModel(ownProps.headType)),
         showSelectedModel: () => dispatch(editorActions.showSelectedModel(ownProps.headType))
     };

@@ -38,7 +38,7 @@ class LaserParameters extends PureComponent {
         page: PropTypes.string.isRequired,
 
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
@@ -183,7 +183,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelID, selectedModelVisible, modelGroup, sourceType, mode,
+            selectedModelArray, selectedModelVisible, modelGroup, sourceType, mode,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
@@ -232,7 +232,7 @@ class LaserParameters extends PureComponent {
                 )}
                 {isEditor && (
                     <Transformation
-                        selectedModelID={selectedModelID}
+                        selectedModelArray={selectedModelArray}
                         selectedModelVisible={selectedModelVisible}
                         modelGroup={modelGroup}
                         sourceType={sourceType}
@@ -283,7 +283,7 @@ class LaserParameters extends PureComponent {
                 {isProcess && (
                     <GcodeParameters
                         selectedModelVisible={selectedModelVisible}
-                        selectedModelID={selectedModelID}
+                        selectedModelArray={selectedModelArray}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
                         updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
@@ -306,7 +306,7 @@ const mapStateToProps = (state) => {
     const { page, modelGroup, toolPathModelGroup, printOrder } = state.laser;
     const selectedModel = modelGroup.getSelectedModel();
     const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
-    const selectedModelID = selectedModel.modelID;
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     const {
         sourceType,
         mode,
@@ -319,7 +319,7 @@ const mapStateToProps = (state) => {
         printOrder,
         transformation,
         gcodeConfig,
-        selectedModelID,
+        selectedModelArray,
         selectedModel,
         // todo, next version fix like selectedModelID
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,

@@ -205,6 +205,15 @@ export const actions = {
         dispatch(actions.selectModelByID(headType, find.modelID));
     },
 
+    selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+        const modelState = modelGroup.selectModelById(model, shiftKey);
+        dispatch(baseActions.updateState(headType, modelState));
+        dispatch(baseActions.render(headType));
+        dispatch(svgModelActions.selectModel(headType, model.modelID));
+        dispatch(threejsModelActions.selectModel(headType, model));
+    },
+
     selectModelByID: (headType, modelID) => (dispatch) => {
         dispatch(svgModelActions.selectModel(headType, modelID));
         dispatch(threejsModelActions.selectModel(headType, modelID));
@@ -781,7 +790,7 @@ export const actions = {
                 // } else {
                 // toolPath.updateVisible(true);
                 // model.updateVisible(false);
-            // }
+                // }
             }
             dispatch(actions.manualPreview(headType));
         }

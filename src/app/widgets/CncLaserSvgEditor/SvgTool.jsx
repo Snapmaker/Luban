@@ -48,7 +48,7 @@ class SvgTool extends PureComponent {
                         <Anchor
                             componentClass="button"
                             className={classNames(styles['btn-center'],
-                                { [styles.selected]: mode === 'select' })}
+                                { [styles.selected]: (mode === 'select' || mode === 'shiftSelect') })}
                             onClick={() => this.actions.setMode('select')}
                         >
                             <i className={styles['btn-select']} />

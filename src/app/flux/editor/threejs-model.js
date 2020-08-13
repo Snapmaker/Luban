@@ -14,10 +14,10 @@ export const threejsModelActions = {
         }));
     },
 
-    selectModel: (headType, modelID) => (dispatch, getState) => {
+    selectModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        const selectedModelState = modelGroup.selectModelById(modelID);
-        const toolPathModelState = toolPathModelGroup.selectToolPathModel(modelID);
+        const selectedModelState = modelGroup.selectModelById(model);
+        const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
 
         const state = {
             ...selectedModelState,

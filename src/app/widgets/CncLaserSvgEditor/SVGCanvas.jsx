@@ -116,7 +116,7 @@ class SVGCanvas extends PureComponent {
     // drawing variables
     currentDrawing = {};
 
-    selectedElements = [];
+    // selectedElements = [];
 
     counter = 0;
 
@@ -277,6 +277,7 @@ class SVGCanvas extends PureComponent {
         }
 
         while (target && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
+            console.log('----xx----', target);
             target = target.parentNode;
         }
         return target;
@@ -297,7 +298,11 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
 
-        if (rightClick || event.ctrlKey || event.metaKey || event.shiftKey) {
+        // if (event.shiftKey) {
+        //     draw.mode = this.mode;
+        //     this.setMode('shiftSelect');
+        // }
+        if (rightClick || event.ctrlKey || event.metaKey) {
             draw.mode = this.mode;
             this.setMode('panMove');
         } else if (mouseTarget === this.svgContentGroup.selectorParentGroup) {
@@ -310,12 +315,28 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
+        if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
+            this.mode = 'move';
+        }
 
         switch (this.mode) {
+            case 'move':
             case 'select': {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
+                this.svgContentGroup.addSVGElement({
+                    element: 'rect',
+                    attr: {
+                        x,
+                        y,
+                        width: 0,
+                        height: 0,
+                        stroke,
+                        'stroke-width': strokeWidth,
+                        opacity: opacity / 2
+                    }
+                });
 
                 this.resizeMode = 'none';
                 if (rightClick) {
@@ -326,7 +347,9 @@ class SVGCanvas extends PureComponent {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                     && mouseTarget.id !== 'printable-area-group') {
                         // TODO: deal with shift key (multi-select)
-                        this.clearSelection();
+                        if (!event.shiftKey) {
+                            this.clearSelection();
+                        }
                         this.addToSelection([mouseTarget]);
                     }
 
@@ -570,6 +593,26 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
+                const { startX, startY } = draw;
+                let width = Math.abs(startX - x);
+                let height = Math.abs(startY - y);
+                let newX = Math.min(startX, x);
+                let newY = Math.min(startY, y);
+                if (event.shiftKey) {
+                    width = Math.max(width, height);
+                    height = width;
+                    newX = startX < x ? startX : startX - width;
+                    newY = startY < y ? startY : startY - height;
+                }
+                setAttributes(element, {
+                    x: newX,
+                    y: newY,
+                    width,
+                    height
+                });
+                break;
+            }
+            case 'move': {
                 if (this.svgContentGroup.selectedElements.length > 0) {
                     const dx = x - draw.startX;
                     const dy = y - draw.startY;
@@ -801,13 +844,13 @@ class SVGCanvas extends PureComponent {
                     for (const elem of this.svgContentGroup.selectedElements) {
                         const selector = this.svgContentGroup.requestSelector(elem);
                         selector.resize();
-                        // console.log(SVG_EVENT_MOVE);
                         const model = this.props.svgModelGroup.getModelByElement(elem);
                         model.onUpdate();
 
                         // this.trigger(SVG_EVENT_MOVE, elem);
                     }
                 }
+                element.remove();
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1159,10 +1202,16 @@ class SVGCanvas extends PureComponent {
     }
 
     addToSelection(elements) {
+        // create new transformation
+        // create new transformList
         this.svgContentGroup.addToSelection(elements);
-        const svgModel = this.props.svgModelGroup.getModelByElement(elements[0]);
-        this.props.svgModelGroup.resizeSelector(elements[0]);
-        svgModel.relatedModel && svgModel.relatedModel.modelGroup.selectModelById(svgModel.relatedModel.modelID);
+        const selectedSvgModels = this.props.svgModelGroup.getModelsByElements(elements);
+        for (const svgModel of selectedSvgModels) {
+            const model = svgModel.relatedModel;
+            model && model.modelGroup.selectModelById(model, true);
+        }
+        this.props.svgModelGroup.resizeSelectorByElementsSelected(this.svgContentGroup.selectedElements);
+
         // this.trigger(SVG_EVENT_SELECT, elements);
     }
 

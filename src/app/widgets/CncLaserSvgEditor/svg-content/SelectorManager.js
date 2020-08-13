@@ -58,14 +58,12 @@ class Selector {
         }
     }
 
-    // eslint-disable-next-line no-unused-vars
     updateScale(scale) {
         this.selectorRect.setAttribute('stroke-width', 1 / scale);
     }
 
     resize(bbox) {
         const rect = this.selectorRect;
-
         let offset = 0 / this.manager.scale;
         if (this.element.getAttribute('stroke') !== 'none') {
             const strokeWidth = parseFloat(this.element.getAttribute('stroke-width')) || 0;
@@ -76,12 +74,14 @@ class Selector {
             bbox = getBBox(this.element);
         }
 
+        // (x,y) = topLeft, before matrix, before offset
         const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
 
         const transformList = getTransformList(this.element);
 
         const transform = transformListToTransform(transformList);
 
+        // four points of conner, after matrix, before offset
         const transformedBox = transformBox(x, y, w, h, transform.matrix);
 
         let nx = transformedBox.x - offset;
@@ -244,7 +244,7 @@ class SelectorManager {
         this.selectorGripsGroup.append(this.rotateGrip);
     }
 
-    updateScale(scale) {
+    updateScale(scale) { // just change the engineer scale
         this.scale = scale;
         this.rotateGripConnector.setAttribute('stroke-width', 1 / this.scale);
         const ny = this.rotateGripConnector.getAttribute('y1');
@@ -262,7 +262,8 @@ class SelectorManager {
         }
     }
 
-    requestSelector(elem, bbox) {
+    // todo
+    requestSelector(elem, bbox) { // maybe used in text action and svgContent
         if (this.selectorMap[elem.id]) {
             return this.selectorMap[elem.id];
         }
@@ -274,6 +275,12 @@ class SelectorManager {
         return selector;
     }
 
+    // todo
+    requestSelectorByElements(elements) {
+        this.resize(elements);
+    }
+
+    // todo
     releaseSelector(elem) {
         const selector = this.selectorMap[elem.id];
         if (!selector) return;
@@ -286,11 +293,29 @@ class SelectorManager {
         this.selectors.splice(this.selectors.indexOf(selector), 1);
     }
 
+    // todo
     clearSelectors() {
         for (const selector of this.selectors) {
             selector.selectorGroup.remove();
         }
         this.selectors.splice(0);
+    }
+
+    // todo resize for all elements
+    // resize(matrix)? resize(transformList)?
+    resize(elements) {
+        if (elements.length === 1 && this.selectorMap[elements[0].id]) {
+            const selector = this.selectorMap[elements[0].id];
+            selector.resize();
+            return;
+        }
+        this.selectors = [];
+        for (const elem of elements) {
+            const selector = new Selector(this, this.svgFactory, elem);
+            this.selectors.push(selector);
+            this.selectorMap[elem.id] = selector;
+            this.selectorParentGroup.prepend(selector.selectorGroup);
+        }
     }
 }
 
