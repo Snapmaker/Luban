@@ -223,22 +223,30 @@ class SvgModel {
     async updateSource() {
         const bbox = this.elem.getBBox();
         const { width, height } = bbox;
-        const uploadName = await this.uploadTextImage();
+        const uploadName = await this.uploadSourceFile();
         this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * 8, sourceHeight: height * 8 });
     }
 
-    async uploadTextImage() {
+    async uploadSourceFile() {
         const width = 100, height = 100;
         const { content } = this.genModelConfig();
-        const canvas = new OffscreenCanvas(width, height);
-        const ctx = canvas.getContext('2d');
-        const v = await Canvg.fromString(ctx, content, presets.offscreen());
-        await v.render();
-        const blob = await canvas.convertToBlob();
+        let blob, file;
+        if (this.type === 'text') {
+            const canvas = new OffscreenCanvas(width, height);
+            const ctx = canvas.getContext('2d');
+            const v = await Canvg.fromString(ctx, content, presets.offscreen());
+            await v.render();
+            blob = await canvas.convertToBlob();
+            file = new File([blob], 'gen.png');
+        } else {
+            blob = new Blob([content], { type: 'image/svg+xml' });
+            file = new File([blob], 'gen.svg');
+        }
+
         // console.log(content, URL.createObjectURL(blob));
 
         const formData = new FormData();
-        formData.append('image', new File([blob], 'abc.png'));
+        formData.append('image', file);
         const res = await api.uploadImage(formData);
         return res.body.uploadName;
     }
@@ -381,19 +389,25 @@ class SvgModel {
                 height: height
             }
         };
+        // reserve scale cause stroke-width scaled
+        if (this.type === 'rect' || this.type === 'ellipse') {
+            attrs.config['stroke-width'] = 0.25 / Math.min(scaleX, scaleY);
+        }
+
+        // remap will reset all transforms
         if (this.type === 'path') {
             const d = remapPath(this.elem, remap, scaleW, scaleH);
             attrs.config.d = d;
-        }
-
-        if (this.type !== 'text' && this.type !== 'image') {
             attrs.transformation.scaleX = 1;
             attrs.transformation.scaleY = 1;
             attrs.width *= Math.abs(scaleX);
             attrs.height *= Math.abs(scaleY);
             attrs.transformation.width *= Math.abs(scaleX);
             attrs.transformation.height *= Math.abs(scaleY);
+            this.elem.setAttribute('d', d);
+            this.updateSource();
         }
+
         this.relatedModel.updateAndRefresh(attrs);
     }
 
@@ -447,15 +461,12 @@ class SvgModel {
         return transform;
     }
 
-    elemResize({ resizeDir, resizeTo }) {
-        // resizeto is current position (svg)
+    elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
         this.setElementTransformToList(transformList);
         const matrix = transformList.consolidate().matrix;
-        // matrix.a = Math.abs(matrix.a);
-        // matrix.d = Math.abs(matrix.d);
         const matrixInverse = matrix.inverse();
         function transformPoint(p, m) {
             const svgPoint = svg.createSVGPoint();
@@ -464,73 +475,52 @@ class SvgModel {
             return svgPoint.matrixTransform(m);
         }
 
-        const { positionX, positionY, width, height, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const { positionX, positionY, width, height, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
+        // ( x, y ) is the center of model on modelGroup
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
 
-        const flipVertical = (flip & 1), flipHorizontal = (flip & 2);
-        // calculate the points when model moves from ptFrom to ptTo by ptFixed
-        // ptFixed: center of scale (svg)
-        // ptFrom: position of resize from (svg)
-        // ptTo: position of resize to (svg)
-        const ptFrom = { x, y };
-        const ptFixed = { x, y };
-        if (!(flipHorizontal) && resizeDir.includes('e') || (flipHorizontal) && resizeDir.includes('w')) {
-            ptFrom.x += width / 2;
-            ptFixed.x -= width / 2;
-        }
-        if ((flipHorizontal) && resizeDir.includes('e') || !(flipHorizontal) && resizeDir.includes('w')) {
-            ptFrom.x -= width / 2;
-            ptFixed.x += width / 2;
-        }
-        if (!(flipVertical) && resizeDir.includes('n') || (flipVertical) && resizeDir.includes('s')) {
-            ptFrom.y -= height / 2;
-            ptFixed.y += height / 2;
-        }
-        if ((flipVertical) && resizeDir.includes('n') || !(flipVertical) && resizeDir.includes('s')) {
-            ptFrom.y += height / 2;
-            ptFixed.y -= height / 2;
-        }
+        // 3 points before matrix
+        // resize model from ptFrom to ptTo base the center ptFixed
+        const ptFrom = transformPoint(resizeFrom, matrixInverse);
         const ptTo = transformPoint(resizeTo, matrixInverse);
-        const ptFixedFrom = transformPoint(ptFixed, matrix);
-        // repair the points of moving while model is flipped (scale < 0)
-        if (flipHorizontal) {
-            if (resizeDir.includes('e')) {
-                // ptTo.x -= width;
-                ptTo.x = ptFixedFrom.x * 2 - ptTo.x + 2 * width;
-            }
+        const ptFixed = { x, y };
+        if (ptFrom.x > x + width / 3) ptFixed.x -= width / 2;
+        if (ptFrom.x < x - width / 3) ptFixed.x += width / 2;
+        if (ptFrom.y > y + height / 3) ptFixed.y -= height / 2;
+        if (ptFrom.y < y - height / 3) ptFixed.y += height / 2;
+        // scale before matrix
+        let sx = 1;
+        let sy = 1;
+        if (Math.abs(ptFrom.x - x) > width / 10) {
+            sx = (ptFixed.x - ptTo.x) / width * ((flip & 2) ? 1 : -1) * (scaleX > 0 ? 1 : -1);
             if (resizeDir.includes('w')) {
-                // ptTo.x += width;
-                ptTo.x = ptFixedFrom.x * 2 - ptTo.x - 2 * width;
+                sx *= -1;
             }
         }
-        if (flipVertical) {
+        if (Math.abs(ptFrom.y - y) > height / 10) {
+            sy = (ptFixed.y - ptTo.y) / height * ((flip & 1) ? 1 : -1) * (scaleY > 0 ? 1 : -1);
             if (resizeDir.includes('n')) {
-                // ptTo.y += height;
-                ptTo.y = ptFixedFrom.y * 2 - ptTo.y - height;
+                sy *= -1;
             }
-            if (resizeDir.includes('s')) {
-                // ptTo.y -= height;
-                ptTo.y = ptFixedFrom.y * 2 - ptTo.y + height;
+        }
+        // while uniform scaling
+        const uniformScaling = uniformScalingState || isUniformScaling;
+        if (uniformScaling) {
+            if (Math.abs(sx) === 1) {
+                sx *= Math.abs(sy);
+            } else {
+                sy = Math.abs(sx) * sy / Math.abs(sy);
             }
         }
 
-        let dx = 0;
-        let dy = 0;
-        if (ptFrom.x !== x) {
-            dx = ((ptFrom.x - x > 0) ? 1 : -1) * (ptTo.x - ptFrom.x);
-        }
-        if (ptFrom.y !== y) {
-            dy = ((ptFrom.y - y > 0) ? 1 : -1) * (ptTo.y - ptFrom.y);
-        }
-        const sx = (width + dx) / width;
-        const sy = (height + dy) / height;
-
+        // scale after matrix
         const list = this.elemTransformList();
         const scale = list.getItem(findItemIndexByType(list, 3));
-        scale.setScale(sx * scaleX, sy * scaleY);
+        scale.setScale(sx * scaleX * ((flip & 2) ? -1 : 1), sy * scaleY * ((flip & 1) ? -1 : 1));
 
         clonedElem = this.elem.cloneNode();
         clonedElem.transform.baseVal.getItem(0).setTranslate(x, y);
+        const ptFixedFrom = transformPoint(ptFixed, matrix);
         const matrixTrans = clonedElem.transform.baseVal.consolidate().matrix;
         const ptFixedTo = transformPoint(ptFixed, matrixTrans);
         const tx = ptFixedTo.x - ptFixedFrom.x;

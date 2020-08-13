@@ -95,7 +95,7 @@ export const actions = {
         sourceType = sourceType || getSourceType(originalName);
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height } = sizeModelByMachineSize(size, sourceWidth, sourceHeight);
+        let { width, height } = sizeModelByMachineSize(size, sourceWidth / 8, sourceHeight / 8);
         if (sourceType === 'text') {
             const textSize = computeTransformationSizeForTextVector(
                 DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, {
@@ -365,27 +365,38 @@ export const actions = {
     },
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
-        // const { model } = getState()[headType];
-        const { transformation } = getState()[headType];
-        let flip = transformation.flip;
-        let svgflip = 0;
+        const model = getState()[headType].modelGroup.getSelectedModel();
+        let { scaleX, scaleY } = model.transformation;
+
         switch (flipStr) {
             case 'Vertical':
-                flip ^= 1;
-                svgflip = 1;
+                scaleY *= -1;
                 break;
             case 'Horizontal':
-                flip ^= 2;
-                svgflip = 2;
+                scaleX *= -1;
                 break;
             case 'Reset':
-                flip = 0;
+                scaleX = Math.abs(scaleX);
+                scaleY = Math.abs(scaleY);
                 break;
             default:
         }
-        transformation.flip = flip;
-        transformation.svgflip = svgflip;
-        dispatch(actions.updateSelectedModelFlip(headType, transformation));
+        if (model.modelID) {
+            model.updateAndRefresh({
+                transformation: {
+                    scaleX,
+                    scaleY
+                }
+            });
+        }
+
+
+        // const flip = transformation.flip;
+        // const svgflip = 0;
+
+        // transformation.flip = flip;
+        // transformation.svgflip = svgflip;
+        // dispatch(actions.updateSelectedModelFlip(headType, transformation));
         // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
     },
 
@@ -764,13 +775,13 @@ export const actions = {
             toolPathModelGroup.showAllToolPathModelsObj3D();
             for (const model of modelGroup.getModels()) {
                 const toolPath = toolPathModelGroup.getToolPathModel(model.modelID);
-                if (toolPath.needPreview) {
-                    toolPath.updateVisible(false);
-                    model.updateVisible(true);
-                } else {
-                    toolPath.updateVisible(true);
-                    model.updateVisible(false);
-                }
+                // if (toolPath.needPreview) {
+                toolPath.updateVisible(false);
+                model.updateVisible(true);
+                // } else {
+                // toolPath.updateVisible(true);
+                // model.updateVisible(false);
+            // }
             }
             dispatch(actions.manualPreview(headType));
         }
@@ -936,7 +947,7 @@ export const actions = {
         modelGroup.showSelectedModel();
         toolPathModelGroup.showSelectedModel();
         svgModelGroup.showSelectedElement();
-        svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
+        // svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
         dispatch(baseActions.render(headType));
     }
 };

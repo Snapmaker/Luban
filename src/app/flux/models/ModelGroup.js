@@ -95,13 +95,13 @@ class ModelGroup extends EventEmitter {
     hideSelectedModel() {
         const model = this.getSelectedModel();
         model.visible = false;
-        return this.getState(model);
+        return this._getEmptyState();
     }
 
     showSelectedModel() {
         const model = this.getSelectedModel();
         model.visible = true;
-        return this.getState(model);
+        return this._getEmptyState();
     }
 
     removeSelectedModel() {
