@@ -847,7 +847,6 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'select';
                 // todo transformation not suit locate
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
-                console.log('----mouse up rotate----', transformation);
                 this.svgContentGroup.resetSelection(transformation);
                 return; // note that this is return
             }

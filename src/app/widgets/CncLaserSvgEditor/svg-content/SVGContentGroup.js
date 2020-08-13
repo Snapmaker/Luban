@@ -273,7 +273,6 @@ class SVGContentGroup {
     }
 
     setElementTransformList(element, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
-        console.log('set', modelGroupTransformation);
         element.transform.baseVal.clear();
         const transformList = element.transform.baseVal;
         const elementsBBox = getBBox(element);
