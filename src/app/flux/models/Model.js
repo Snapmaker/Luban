@@ -2,11 +2,11 @@ import uuid from 'uuid';
 import * as THREE from 'three';
 
 import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
-
+import { controller } from '../../lib/controller';
 import { DATA_PREFIX } from '../../constants';
 
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
-import { controller } from '../../lib/controller';
+
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -14,8 +14,9 @@ const EVENTS = {
 
 let updateTimer;
 
-// const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
 const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 });
+
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
     shininess: 30,
@@ -57,6 +58,7 @@ class Model {
         this.modelID = modelID;
         this.modelName = '';
 
+        this.visible = true;
         this.headType = headType;
         this.sourceType = sourceType; // 3d, raster, svg, text
         this.sourceHeight = sourceHeight;
@@ -287,7 +289,7 @@ class Model {
 
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        const { position, rotation, scale } = this.meshObject;
+        const { position, rotation, scale, uniformScalingState } = this.meshObject;
         const transformation = {
             positionX: position.x,
             positionY: position.y,
@@ -299,7 +301,8 @@ class Model {
             scaleY: scale.y,
             scaleZ: scale.z,
             width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y
+            height: geometrySize.y * scale.y,
+            uniformScalingState
         };
         this.transformation = {
             ...this.transformation,
@@ -480,6 +483,7 @@ class Model {
             return;
         }
         this.computeBoundingBox();
+
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
     }
@@ -501,19 +505,17 @@ class Model {
         // this.scale.copy(scale);
     }
 
-    setOverstepped(overstepped) {
-        if (this.overstepped === overstepped) {
-            return;
-        }
+    setOversteppedAndSelected(overstepped, isSelected) {
         this.overstepped = overstepped;
         if (this.overstepped) {
-            // this.material = materialOverstepped;
             this.meshObject.material = materialOverstepped;
+        } else if (isSelected) {
+            this.meshObject.material = materialSelected;
         } else {
-            // this.material = (this.selected ? materialSelected : materialNormal);
             this.meshObject.material = materialNormal;
         }
     }
+
 
     clone() {
         const clone = new Model({
@@ -699,6 +701,10 @@ class Model {
             this.updateTransformation(transformation);
         }
         if (config) {
+<<<<<<< HEAD
+=======
+            textNeedUpdate = this.config.svgNodeName === 'text' && Object.keys(config).length;
+>>>>>>> Feature: Add multiselect in 3D printing
             this.config = {
                 ...this.config,
                 ...config
@@ -739,7 +745,11 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
+<<<<<<< HEAD
         if (toolPathModelTaskInfo && this.visible) {
+=======
+        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
+>>>>>>> Feature: Add multiselect in 3D printing
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo

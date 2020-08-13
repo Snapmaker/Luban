@@ -22,9 +22,10 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
+        allModel: PropTypes.array,
         // model: PropTypes.object,
-        visible: PropTypes.bool,
-        selectedModelID: PropTypes.string,
+        // selectedModelID: PropTypes.string,
+        selectedModelIDArray: PropTypes.any,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -33,8 +34,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
-        selectModel: PropTypes.func.isRequired,
-        getSelectedModel: PropTypes.func.isRequired,
+        selectMultiModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -78,8 +78,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModel: (modelMesh) => {
-            this.props.selectModel(modelMesh);
+        onSelectMultiModel: (modelMesh) => {
+            this.props.selectMultiModel(modelMesh);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -148,19 +148,25 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp, visible } = nextProps;
+        const { size, transformMode, selectedModelIDArray, renderingTimestamp } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
-        if (selectedModelID !== this.props.selectedModelID || visible !== this.props.visible) {
-            const selectedModel = this.props.getSelectedModel();
-            // if (!selectedModelID || !selectedModel) {
-            if (!selectedModel) {
+        if (selectedModelIDArray !== this.props.selectedModelIDArray) {
+            const selectedModelArray = this.props.allModel.filter((item) => {
+                return selectedModelIDArray.indexOf(item.modelID) > -1;
+            });
+
+
+            if (!(selectedModelArray.length > 0)) {
                 this.canvas.current.controls.detach();
             } else {
-                const meshObject = selectedModel.meshObject;
-                if (meshObject) {
-                    this.canvas.current.controls.attach(meshObject, selectedModel.visible);
+                const meshObjectArray = [];
+                selectedModelArray.forEach((item, index) => {
+                    meshObjectArray[index] = item.meshObject;
+                });
+                if (meshObjectArray.length > 0) {
+                    this.canvas.current.controls.attach(meshObjectArray);
                 }
             }
         }
@@ -218,13 +224,12 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, selectedModelID, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+        const { size, hasModel, selectedModelIDArray, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
 
         // const actions = this.actions;
 
-        const isModelSelected = !!selectedModelID;
+        const isModelSelected = (selectedModelIDArray.length > 0);
         const isModelDisplayed = (displayedType === 'model');
-
         const notice = this.getNotice();
 
         return (
@@ -267,6 +272,7 @@ class Visualizer extends PureComponent {
                         cameraUp={new Vector3(0, 0, 1)}
                         gcodeLineGroup={gcodeLineGroup}
                         onSelectModel={this.actions.onSelectModel}
+                        onSelectMultiModel={this.actions.onSelectMultiModel}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
@@ -343,13 +349,13 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, selectedModelID, visible, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
-        visible,
         size,
-        selectedModelID,
+        allModel: modelGroup.models,
+        selectedModelIDArray: modelGroup.selectedModelIDArray,
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -361,8 +367,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectModel: (modelMesh) => dispatch(printingActions.selectModel(modelMesh)),
-    getSelectedModel: () => dispatch(printingActions.getSelectedModel()),
+    selectMultiModel: (modelMesh) => dispatch(printingActions.selectMultiModel(modelMesh)),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),

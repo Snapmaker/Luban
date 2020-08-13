@@ -21,6 +21,34 @@ const commandKeys = [
         preventDefault: true
     },
     {
+        keys: ['ctrl+a', 'mod+a'],
+        cmd: 'SELECTALL',
+        payload: {
+        },
+        preventDefault: true
+    },
+    {
+        keys: ['ctrl+c', 'mod+c'],
+        cmd: 'COPY',
+        payload: {
+        },
+        preventDefault: true
+    },
+    {
+        keys: ['ctrl+v', 'mod+v'],
+        cmd: 'PASTE',
+        payload: {
+        },
+        preventDefault: true
+    },
+    {
+        keys: ['ctrl+z', 'mod+z'],
+        cmd: 'UNDO',
+        payload: {
+        },
+        preventDefault: true
+    },
+    {
         keys: ['mod', 'd'].join('+'),
         cmd: 'DUPLICATE',
         payload: {

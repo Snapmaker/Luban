@@ -24,7 +24,7 @@ const STATE = {
 export const EVENTS = {
     UPDATE: 'update',
     CONTEXT_MENU: 'contextmenu',
-    SELECT_OBJECT: 'object:select',
+    SELECT_MULTIOBJECT: 'object:multiselect',
     UNSELECT_OBJECT: 'object:unselect',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
@@ -78,7 +78,10 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
 
-    selectedObject = null;
+    lastSelectedMultiObject = [];
+
+
+    selectedMultiObject = [];
 
     ray = new THREE.Raycaster();
 
@@ -200,14 +203,12 @@ class Controls extends EventEmitter {
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
                 // Transform on selected object
-                if (this.selectedObject) {
-                    const coord = this.getMouseCoord(event);
-                    // Call hover to update axis selected
-                    this.transformControl.onMouseHover(coord);
-                    if (this.transformControl.onMouseDown(coord)) {
-                        this.state = STATE.TRANSFORM;
-                        break;
-                    }
+                const coord = this.getMouseCoord(event);
+                // Call hover to update axis selected
+                this.transformControl.onMouseHover(coord);
+                if (this.transformControl.onMouseDown(coord)) {
+                    this.state = STATE.TRANSFORM;
+                    break;
                 }
 
                 if (event.ctrlKey || event.metaKey || event.shiftKey) {
@@ -243,8 +244,7 @@ class Controls extends EventEmitter {
 
     onMouseHover = (event) => {
         event.preventDefault();
-
-        if (!this.selectedObject || this.state !== STATE.NONE) {
+        if (!(this.selectedMultiObject && this.selectedMultiObject.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
@@ -281,7 +281,7 @@ class Controls extends EventEmitter {
             case STATE.ROTATE:
                 // Left click to unselect object
                 if (!this.rotateMoved) {
-                    this.selectedObject = null;
+                    this.selectedMultiObject = [];
                     this.transformControl.detach();
 
                     this.emit(EVENTS.UNSELECT_OBJECT);
@@ -313,26 +313,51 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-    onClick = (event) => {
-        const mousePosition = this.getMouseCoord(event);
-        const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+     onClick = (event) => {
+         const mousePosition = this.getMouseCoord(event);
+         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+         if (event.shiftKey) {
+             if (distance < 0.004 && this.selectableObjects) {
+                 // Check if we select a new object
+                 const coord = this.getMouseCoord(event);
+                 this.ray.setFromCamera(coord, this.camera);
 
-        if (distance < 0.004 && this.selectableObjects) {
-            // Check if we select a new object
-            const coord = this.getMouseCoord(event);
-            this.ray.setFromCamera(coord, this.camera);
+                 const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
 
-            const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
+                 if (intersect) {
+                     if (this.lastSelectedMultiObject && this.lastSelectedMultiObject.length === 1) {
+                         this.selectedMultiObject[0] = this.lastSelectedMultiObject[0];
+                     }
+                     if (this.selectedMultiObject.indexOf(intersect.object) === -1) {
+                         this.selectedMultiObject[this.selectedMultiObject.length] = intersect.object;
+                     } else {
+                         this.selectedMultiObject.splice(this.selectedMultiObject.indexOf(intersect.object), 1);
+                     }
 
-            if (intersect && intersect.object !== this.selectedObject) {
-                this.selectedObject = intersect.object;
-                this.transformControl.attach(this.selectedObject);
-                this.emit(EVENTS.SELECT_OBJECT, this.selectedObject);
-                this.emit(EVENTS.UPDATE);
-            }
-        }
-        this.mouseDownPosition = null;
-    };
+                     this.transformControl.attach(this.selectedMultiObject);
+                     this.emit(EVENTS.SELECT_MULTIOBJECT, this.selectedMultiObject);
+                     this.emit(EVENTS.UPDATE);
+                 }
+             }
+         } else {
+             if (distance < 0.004 && this.selectableObjects) {
+                 // Check if we select a new object
+                 const coord = this.getMouseCoord(event);
+
+                 this.ray.setFromCamera(coord, this.camera);
+                 const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
+                 this.selectedMultiObject = [];
+
+                 if (intersect) {
+                     this.selectedMultiObject[0] = intersect.object;
+                 }
+                 this.transformControl.attach(this.selectedMultiObject);
+                 this.emit(EVENTS.SELECT_MULTIOBJECT, this.selectedMultiObject);
+                 this.emit(EVENTS.UPDATE);
+             }
+         }
+         this.mouseDownPosition = null;
+     };
 
     onMouseWheel = (event) => {
         if (this.state !== STATE.NONE) {
@@ -387,13 +412,16 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
-    attach(object, visible) {
-        this.selectedObject = object;
-        this.transformControl.attach(object, visible);
+
+    attach(object) {
+        this.lastSelectedMultiObject = object;
+        this.selectedMultiObject = object;
+        this.transformControl.attach(object);
     }
 
     detach() {
-        this.selectedObject = null;
+        this.lastSelectedMultiObject = null;
+        this.selectedMultiObject = [];
         this.transformControl.detach();
     }
 

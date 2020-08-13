@@ -1,10 +1,12 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, MeshPhongMaterial } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
 import Model from './Model';
 
+const materialNormal = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+const materialSelected = new MeshPhongMaterial({ color: 0xf0f0f0 });
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -21,7 +23,13 @@ class ModelGroup extends EventEmitter {
         this.models = [];
 
         this.selectedModel = null;
+        this.selectedModelArray = [];
+        this.copiedModelArray = [];
         this.estimatedTime = 0;
+        this.selectedModelIDArray = [];
+        this.multiObjectPosition = new Vector3();
+        this.multiObjectRotation = new Vector3();
+        this.multiObjectScale = new Vector3();
 
         this.candidatePoints = null;
         this._bbox = null;
@@ -37,15 +45,34 @@ class ModelGroup extends EventEmitter {
             mode: '',
             hasModel: this.hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            selectedModelID: null,
-            visible: true,
+            selectedModelIDArray: [],
+            selectedModelArray: [],
             transformation: {}
         };
     };
 
+    setUpdateHandler(handler) {
+        this._updateView = handler;
+    }
+
     onModelUpdate = () => {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
+
+    getState() {
+        this.selectedModelIDArray = [];
+        this.selectedModelArray.forEach((item) => {
+            this.selectedModelIDArray.push(item.modelID);
+        });
+
+        return {
+            selectedModelArray: this.selectedModelArray,
+            selectedModelIDArray: this.selectedModelIDArray,
+            estimatedTime: this.estimatedTime,
+            hasModel: this.hasModel(),
+            isAnyModelOverstepped: this._checkAnyModelOverstepped()
+        };
+    }
 
     createNewModelName(model) {
         let baseName = '';
@@ -88,34 +115,74 @@ class ModelGroup extends EventEmitter {
         return this.models.find(d => d.modelName === modelName);
     }
 
+    getSelectedModelTransformation() {
+        if (this.selectedModelArray.length === 1 && this.selectedModelArray[0]) {
+            return this.selectedModelArray[0].transformation;
+        } else if (this.selectedModelArray.length > 1) {
+            const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, 0);
+            const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, 0);
+            this.selectedModelArray.forEach((model) => {
+                const { positionX, positionY } = model.transformation;
+                maxObjectPosition.x = Math.max(positionX, maxObjectPosition.x);
+                maxObjectPosition.y = Math.max(positionY, maxObjectPosition.y);
+
+                minObjectPosition.x = Math.min(positionX, minObjectPosition.x);
+                minObjectPosition.y = Math.min(positionY, minObjectPosition.y);
+            });
+            this.multiObjectPosition.x = (maxObjectPosition.x + minObjectPosition.x) / 2;
+            this.multiObjectPosition.y = (maxObjectPosition.y + minObjectPosition.y) / 2;
+            this.multiObjectRotation.x = this.selectedModelArray[0].transformation.rotationX;
+            this.multiObjectRotation.y = this.selectedModelArray[0].transformation.rotationY;
+            this.multiObjectRotation.z = this.selectedModelArray[0].transformation.rotationZ;
+
+
+            return {
+                positionX: this.multiObjectPosition.x,
+                positionY: this.multiObjectPosition.y,
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                rotationX: this.multiObjectRotation.x,
+                rotationY: this.multiObjectRotation.y,
+                rotationZ: this.multiObjectRotation.z
+            };
+        } else {
+            return {};
+        }
+    }
+
     changeShowOrigin() {
         return this.selectedModel && this.selectedModel.changeShowOrigin();
     }
 
     hideSelectedModel() {
-        const model = this.getSelectedModel();
-        model.visible = false;
-        return this._getEmptyState();
+        const models = this.getSelectedModelArray();
+        models.forEach((model) => {
+            model.visible = false;
+        });
+        return this.getState();
     }
 
     showSelectedModel() {
-        const model = this.getSelectedModel();
-        model.visible = true;
-        return this._getEmptyState();
+        const models = this.getSelectedModelArray();
+        models.forEach((model) => {
+            model.visible = true;
+        });
+        return this.getState();
     }
 
     removeSelectedModel() {
-        const selected = this.getSelectedModel();
-        if (selected.modelID) {
-            this.selectedModel = null;
-            selected.meshObject.removeEventListener('update', this.onModelUpdate);
-            // this.remove(selected);
-            this.models = this.models.filter(model => model !== selected);
-
-            this.object.remove(selected.meshObject);
-            return this._getEmptyState();
+        const selectedArray = this.getSelectedModelArray();
+        if (selectedArray.length > 0) {
+            selectedArray.forEach((selected) => {
+                if (selected) {
+                    selected.meshObject.removeEventListener('update', this.onModelUpdate);
+                    this.models = this.models.filter(model => model !== selected);
+                    this.object.remove(selected.meshObject);
+                }
+            });
         }
-        return null;
+        return this._getEmptyState();
     }
 
     // model.transformation.positionZ !== model.meshObject3D.position.z
@@ -283,7 +350,10 @@ class ModelGroup extends EventEmitter {
                 this.object.remove(model.meshObject);
             }
             this.models.splice(0);
-            return this._getEmptyState();
+            return {
+                selectedModelArray: this.selectedModelArray,
+                selectedModelIDArray: this.selectedModelIDArray
+            };
         }
         return this._getEmptyState();
     }
@@ -312,7 +382,6 @@ class ModelGroup extends EventEmitter {
             this.models.push(newModel);
             this.object.add(newModel.meshObject);
         }
-        this.selectedModel = null;
         return this._getEmptyState();
     }
 
@@ -324,18 +393,60 @@ class ModelGroup extends EventEmitter {
         return models;
     }
 
-    selectModelById(modelID) {
+    selectModelById(modelID, shiftKey) {
         const model = this.models.find(d => d.modelID === modelID);
         let state;
+        if (shiftKey === false || shiftKey === undefined) {
+            this.selectedModelArray = [];
+            this.selectedModelIDArray = [];
+            this.models.forEach((item) => {
+                item.isSelected = false;
+                item.meshObject.material = materialNormal;
+            });
+        }
         if (model) {
-            this.selectedModel = model;
+            model.isSelected = true;
+            model.meshObject.material = materialSelected;
+            this.selectedModelArray.push(model);
+            this.selectedModelIDArray.push(model.modelID);
             if (model.estimatedTime) {
                 this.estimatedTime = model.estimatedTime;
             }
             model.computeBoundingBox();
-            state = this._getEmptyState();
+            state = this.getState();
         } else {
-            this.selectedModel = null;
+            this.selectedModelArray = [];
+            state = this._getEmptyState();
+        }
+        return state;
+    }
+
+
+    selectMultiModel(modelArray) {
+        this.selectedModelArray = [];
+        let state;
+        this.models.forEach((item) => {
+            item.isSelected = false;
+            item.meshObject.material = materialNormal;
+        });
+        if (modelArray.length) {
+            modelArray.forEach((model) => {
+                if (model) {
+                    model.isSelected = true;
+                    model.meshObject.material = materialSelected;
+                    this.selectedModelArray.push(model);
+                    this.selectedModelIDArray.push(model.modelID);
+                    if (model.estimatedTime) {
+                        this.estimatedTime = model.estimatedTime;
+                    }
+                    model.computeBoundingBox();
+                }
+            });
+        }
+        if (this.selectedModelArray[0]) {
+            const modelState = this.getState();
+            state = modelState;
+        } else {
             state = this._getEmptyState();
         }
         this.onDataChangedCallback();
@@ -343,8 +454,25 @@ class ModelGroup extends EventEmitter {
         return state;
     }
 
+    selectAllModels() {
+        this.selectedModelArray = this.models;
+        this.selectedModelIDArray = [];
+        this.selectedModelArray.forEach((item) => {
+            item.isSelected = true;
+            item.meshObject.material = materialSelected;
+            this.selectedModelIDArray.push(item.modelID);
+        });
+
+        return {
+            selectedModelArray: this.selectedModelArray,
+            isAnyModelOverstepped: this._checkAnyModelOverstepped(),
+            selectedModelIDArray: this.selectedModelIDArray
+        };
+    }
+
     unselectAllModels() {
-        this.selectedModel = null;
+        this.selectedModelArray = [];
+        this.selectedModelIDArray = [];
         return this._getEmptyState();
     }
 
@@ -368,52 +496,114 @@ class ModelGroup extends EventEmitter {
             this.object.add(model.meshObject);
         }
         this._checkAnyModelOverstepped();
-        return this._getEmptyState();
+        // return this._getEmptyState();
+        return this.getState();
     }
 
     duplicateSelectedModel(modelID) {
-        const selected = this.getSelectedModel();
-        if (selected.modelID) {
-            const model = selected.clone();
-            if (selected.sourceType === '3d') {
-                const selectedConvexGeometry = selected.convexGeometry.clone();
-                model.convexGeometry = selectedConvexGeometry;
-                model.stickToPlate();
-                model.meshObject.position.x = 0;
-                model.meshObject.position.y = 0;
-                const point = this._computeAvailableXY(model);
-                model.meshObject.position.x = point.x;
-                model.meshObject.position.y = point.y;
+        const selectedArray = this.getSelectedModelArray();
+        this.selectedModelArray = [];
+        selectedArray.forEach((selected) => {
+            if (selected) {
+                const model = selected.clone();
+                selected.isSelected = false;
+                selected.meshObject.material = materialNormal;
+                if (selected.sourceType === '3d') {
+                    const selectedConvexGeometry = selected.convexGeometry.clone();
+                    model.convexGeometry = selectedConvexGeometry;
+                    model.stickToPlate();
+                    model.meshObject.position.x = 0;
+                    model.meshObject.position.y = 0;
+                    const point = this._computeAvailableXY(model);
+                    model.meshObject.position.x = point.x;
+                    model.meshObject.position.y = point.y;
 
-                model.updateTransformation({
-                    positionX: point.x,
-                    positionZ: point.z
-                });
+                    model.updateTransformation({
+                        positionX: point.x,
+                        positionZ: point.z
+                    });
 
-                model.modelID = modelID || uuid.v4();
-            } else {
-                model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.modelID = modelID || uuid.v4();
-                model.computeBoundingBox();
-                model.updateTransformation({
-                    positionX: 0,
-                    positionY: 0,
-                    positionZ: 0
-                });
+                    model.modelID = modelID || uuid.v4();
+                } else {
+                    model.meshObject.addEventListener('update', this.onModelUpdate);
+                    model.modelID = modelID || uuid.v4();
+                    model.computeBoundingBox();
+                    model.updateTransformation({
+                        positionX: 0,
+                        positionY: 0,
+                        positionZ: 0
+                    });
+                }
+                model.updateModelName(this.createNewModelName(model));
+
+                // this.add(model);
+                this.models.push(model);
+                this.object.add(model.meshObject);
+                this.selectedModelArray.push(model);
             }
-            model.updateModelName(this.createNewModelName(model));
+        });
 
-            // this.add(model);
-            this.models.push(model);
-            this.object.add(model.meshObject);
+        return {
+            modelID: modelID,
+            hasModel: this.hasModel(),
+            isAnyModelOverstepped: this._checkAnyModelOverstepped()
+        };
+    }
 
+    pasteModelArray() {
+        const copiedArray = this.copiedModelArray;
+        if (copiedArray.length > 0) {
+            this.selectedModelArray = [];
+            this.selectedModelIDArray = [];
+        }
+        this.models.forEach((model) => {
+            model.isSelected = false;
+            model.meshObject.material = materialNormal;
+        });
+
+        copiedArray.forEach((selected) => {
+            if (selected) {
+                const model = selected.clone();
+
+                if (selected.sourceType === '3d') {
+                    const selectedConvexGeometry = selected.convexGeometry.clone();
+                    model.convexGeometry = selectedConvexGeometry;
+                    model.stickToPlate();
+                    model.meshObject.position.x = 0;
+                    model.meshObject.position.y = 0;
+                    const point = this._computeAvailableXY(model);
+
+                    model.meshObject.position.x = point.x;
+                    model.meshObject.position.y = point.y;
+
+                    model.updateTransformation({
+                        positionX: point.x,
+                        positionZ: point.z
+                    });
+                    model.modelID = uuid.v4();
+                }
+                model.updateModelName(this.createNewModelName(model));
+                this.models.push(model);
+                this.object.add(model.meshObject);
+
+                model.isSelected = true;
+                selected.meshObject.material = materialSelected;
+                this.selectedModelArray.push(model);
+                this.selectedModelIDArray.push(model.modelID);
+            }
+        });
+        this.onModelAfterTransform();
+
+        if (copiedArray.length > 0) {
             return {
-                modelID: modelID,
+                selectedModelArray: this.selectedModelArray,
+                selectedModelIDArray: this.selectedModelIDArray,
                 hasModel: this.hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped()
             };
+        } else {
+            return null;
         }
-        return null;
     }
 
 
@@ -423,6 +613,22 @@ class ModelGroup extends EventEmitter {
         }
 
         return this.MOCK_MODEL;
+    }
+
+    getSelectedModelArray() {
+        return this.selectedModelArray;
+    }
+
+    copyModelArray() {
+        this.copiedModelArray = this.selectedModelArray;
+    }
+
+    copyAllModel(allModel) {
+        this.copiedModelArray = allModel;
+    }
+
+    clearSelectedModelArray() {
+        this.selectedModelArray = [];
     }
 
     updateSelectedMode(mode, config, processImageName) {
@@ -443,26 +649,30 @@ class ModelGroup extends EventEmitter {
 
 
     layFlatSelectedModel() {
-        const selected = this.getSelectedModel();
-        if (!selected.modelID) {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
             return null;
         }
-
-        selected.layFlat();
-        selected.computeBoundingBox();
-        return this._getEmptyState();
+        selected.forEach((item) => {
+            item.layFlat();
+            item.computeBoundingBox();
+        });
+        return this.getState();
     }
 
     onModelTransform() {
-        this.selectedModel.onTransform();
-        const { sourceType, mode, modelID, transformation, boundingBox, originalName } = this.selectedModel;
+        this.selectedModelIDArray = [];
+        this.selectedModelArray.forEach((item) => {
+            this.selectedModelIDArray.push(item.modelID);
+            item.onTransform();
+        });
+        const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
         return {
             sourceType: sourceType,
             originalName: originalName,
             mode: mode,
-            selectedModelID: modelID,
-            visible: true,
-            modelID: modelID,
+            selectedModelIDArray: this.selectedModelIDArray,
+            isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             transformation: { ...transformation },
             boundingBox, // only used in 3dp
             hasModel: this.hasModel()
@@ -470,25 +680,75 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedModelTransformation(transformation) {
-        if (this.selectedModel) {
-            this.selectedModel.updateTransformation(transformation);
-            return this._getEmptyState();
+        if (this.selectedModelArray.length === 1) {
+            this.selectedModelArray[0].updateTransformation(transformation);
+        } else {
+            // const { positionX, positionY, rotationX, rotationY, rotationZ } = transformation;
+            const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = transformation;
+
+            const diffTransformation = {
+                positionX: 0,
+                positionY: 0,
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: 0
+            };
+            if (positionX !== undefined) {
+                diffTransformation.positionX = transformation.positionX - this.multiObjectPosition.x;
+            }
+            if (positionY !== undefined) {
+                diffTransformation.positionY = transformation.positionY - this.multiObjectPosition.y;
+            }
+            if (scaleX !== undefined) {
+                diffTransformation.scaleX = transformation.scaleX;
+            }
+            if (scaleY !== undefined) {
+                diffTransformation.scaleY = transformation.scaleY;
+            }
+            if (scaleZ !== undefined) {
+                diffTransformation.scaleZ = transformation.scaleZ;
+            }
+            if (rotationX !== undefined) {
+                diffTransformation.rotationX = transformation.rotationX - this.multiObjectRotation.x;
+            }
+            if (rotationY !== undefined) {
+                diffTransformation.rotationY = transformation.rotationY - this.multiObjectRotation.y;
+            }
+            if (rotationZ !== undefined) {
+                diffTransformation.rotationZ = transformation.rotationZ - this.multiObjectRotation.z;
+            }
+            this.selectedModelArray.forEach((model) => {
+                model.updateTransformation({
+                    positionX: model.transformation.positionX + diffTransformation.positionX,
+                    positionY: model.transformation.positionY + diffTransformation.positionY,
+                    rotationX: model.transformation.rotationX + diffTransformation.rotationX,
+                    rotationY: model.transformation.rotationY + diffTransformation.rotationY,
+                    rotationZ: model.transformation.rotationZ + diffTransformation.rotationZ,
+                    scaleX: model.transformation.scaleX * diffTransformation.scaleX,
+                    scaleY: model.transformation.scaleY * diffTransformation.scaleY,
+                    scaleZ: model.transformation.scaleZ * diffTransformation.scaleZ
+                });
+            });
         }
-        return null;
     }
 
     // model transformation triggered by controls
     onModelAfterTransform() {
-        const selected = this.getSelectedModel();
-        if (!selected.modelID) {
+        const selectedModelArray = this.selectedModelArray;
+        selectedModelArray.forEach((selected) => {
+            if (selected.sourceType === '3d') {
+                selected.stickToPlate();
+            }
+            selected.computeBoundingBox();
+        });
+        if (selectedModelArray.length === 0) {
             return null;
+        } else {
+            return this.getState();
         }
-
-        if (selected.sourceType === '3d') {
-            selected.stickToPlate();
-        }
-        selected.computeBoundingBox();
-        return this._getEmptyState();
     }
 
     updateSelectedConfig(config, processImageName) {
@@ -615,7 +875,7 @@ class ModelGroup extends EventEmitter {
         for (const model of this.getModels()) {
             if (model.sourceType === '3d') {
                 const overstepped = this._checkOverstepped(model);
-                model.setOverstepped(overstepped);
+                model.setOversteppedAndSelected(overstepped, model.isSelected);
                 isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
             }
         }
@@ -674,6 +934,7 @@ class ModelGroup extends EventEmitter {
         return this.models.map(d => d.clone());
     }
 
+
     addModel(modelInfo, relatedModels = {}) {
         const model = new Model(modelInfo, this);
         model.updateModelName(this.createNewModelName(model));
@@ -689,14 +950,13 @@ class ModelGroup extends EventEmitter {
         }
         model.computeBoundingBox();
 
+
         // add to group and select
         this.models.push(model);
         this.object.add(model.meshObject);
-        this.selectedModel = model;
+        this.selectMultiModel([model]);
 
-        // if (!relatedModels.toolPathModel) {
-        //     relatedModels.toolPathModel = this._toolPathModelGroup.addModel(modelInfo);
-        // }
+
         this.emit('add', model);
         model.setRelatedModels(relatedModels);
         // refresh view
