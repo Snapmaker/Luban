@@ -277,6 +277,7 @@ class SVGCanvas extends PureComponent {
         }
 
         while (target && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
+            console.log('----xx----', target);
             target = target.parentNode;
         }
         return target;
