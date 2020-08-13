@@ -649,6 +649,7 @@ class SVGCanvas extends PureComponent {
                 const cy = bbox.y + bbox.height / 2;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
+                // todo, do not use modelGroup here
                 const angleOld = -this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
 
                 angle = (angle - angleOld + 540) % 360 - 180;
@@ -819,9 +820,9 @@ class SVGCanvas extends PureComponent {
                 const cy = bbox.y + bbox.height / 2;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
+                // todo, do not use modelGroup here
                 const angleOld = -this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
                 angle = (angle - angleOld + 540) % 360 - 180;
-                console.log('mouse up rotate');
                 this.props.svgModelGroup.updateSelectedModelsByTransformation({
                     angle, cx, cy
                 });
@@ -845,7 +846,7 @@ class SVGCanvas extends PureComponent {
                     dy
                 });
                 this.mode = 'select';
-                // todo transformation not suit locate
+                // todo do not use modelGroup here
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
                 this.svgContentGroup.resetSelection(transformation);
                 return; // note that this is return
@@ -1194,10 +1195,9 @@ class SVGCanvas extends PureComponent {
     }
 
     clearSelection() {
-        // TODO: DO NOT call ModelGroup's method here!!!
-        this.props.svgModelGroup.modelGroup.removeAllSelectedModels();
-        this.svgContentGroup.clearSelection();
+        // TODO: move it out
         this.props.svgModelGroup.clearSelection();
+        this.svgContentGroup.clearSelection();
     }
 
     // TODO: DO NOT use attributes/methods of SvgModelGroup, ModelGroup, Model directly in Component!!!

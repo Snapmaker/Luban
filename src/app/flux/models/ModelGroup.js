@@ -437,21 +437,21 @@ class ModelGroup extends EventEmitter {
         }
         // TODO: why?
         this.selectedModelArray = [...this.selectedModelArray];
-        this.onDataChangedCallback();
-    }
+        console.log('----model group----', this.selectedModelArray);
 
-    removeSelectedModels(modelArray) {
-        const newSelectedModelArray = [];
-        for (const model of this.selectedModelArray) {
-            if (!modelArray.includes(model)) {
-                newSelectedModelArray.push(model);
-            }
+        let state;
+        if (this.selectedModelArray.length > 0) {
+            const modelState = this.getState();
+            state = modelState;
+        } else {
+            state = this._getEmptyState();
         }
-        this.selectedModelArray = newSelectedModelArray;
         this.onDataChangedCallback();
+
+        return state;
     }
 
-    removeAllSelectedModels() {
+    emptySelectedModelArray() {
         this.selectedModelArray = [];
         this.onDataChangedCallback();
     }

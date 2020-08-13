@@ -36,6 +36,10 @@ class SVGContentGroup {
             getRoot: () => this.svgContent,
             scale: this.scale
         });
+        this.operatorPoints = new OperatorPoints({
+            getRoot: () => this.svgContent,
+            scale: this.scale
+        });
     }
 
     // for create new elem
@@ -382,6 +386,7 @@ class SVGContentGroup {
 
     transformSelectorOnMouseup() {
     }
+
 
     rotateSelectedElements(rotate) {
         for (const elem of this.selectedElements) {

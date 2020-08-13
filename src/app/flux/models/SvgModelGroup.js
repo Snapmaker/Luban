@@ -53,12 +53,12 @@ class SvgModelGroup {
 
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
-        this.modelGroup.on('select', () => {
-            const selectedModel = this.modelGroup.getSelectedModel();
-            if (!selectedModel.modelID) return;
-            this.selectElementById(selectedModel.modelID);
-            this.showSelectedElement();
-        });
+        // this.modelGroup.on('select', () => {
+        //     const selectedModel = this.modelGroup.getSelectedModel();
+        //     if (!selectedModel.modelID) return;
+        //     this.selectElementById(selectedModel.modelID);
+        //     this.showSelectedElement();
+        // });
     }
 
     init(svgContentGroup, size) {
@@ -547,13 +547,35 @@ class SvgModelGroup {
 
     clearSelection() {
         this.selectedSvgModels = [];
+        this.modelGroup.emptySelectedModelArray();
+        this.svgContentGroup.clearSelection();
+    }
+
+    addSelectedSvgModelsByModels(models) {
+        this.modelGroup.addSelectedModels(models);
+        for (const model of models) {
+            const svgModel = model.relatedModels.svgModel;
+            if (!this.selectedSvgModels.includes(svgModel)) {
+                this.selectedSvgModels.push(svgModel);
+                this.svgContentGroup.addToSelection([svgModel.elem]);
+            }
+        }
     }
 
     addSelectedSvgModelsByElements(elements) {
         for (const model of this.svgModels) {
             if (elements.includes(model.elem)) {
                 this.selectedSvgModels.push(model);
+                // this.modelGroup.addSelectedModels([model.relatedModel]);
             }
+        }
+    }
+
+    resetSelection(transformation) {
+        if (!transformation) {
+            this.svgContentGroup.resetSelection(this.modelGroup.getSelectedModelTransformation());
+        } else {
+            this.svgContentGroup.resetSelection(transformation);
         }
     }
 }

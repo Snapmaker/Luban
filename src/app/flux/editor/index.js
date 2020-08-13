@@ -200,20 +200,26 @@ export const actions = {
     },
 
     // TODO: Check usage of this method
-    selectModel: (headType, model) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
-        const find = modelGroup.getModels().find(v => v.meshObject === model);
-        dispatch(actions.selectModelByID(headType, find.modelID));
-    },
+    // selectModel: (headType, model) => (dispatch, getState) => {
+    //     const { modelGroup } = getState()[headType];
+    //     const find = modelGroup.getModels().find(v => v.meshObject === model);
+    //     dispatch(actions.selectModelByID(headType, find.modelID));
+    // },
 
     // TODO: rename to selectModel(headType, model, isMultiSelect = true)
     // TODO: method docs
     selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
-        const modelState = modelGroup.selectModelById(model, shiftKey);
-        dispatch(baseActions.updateState(headType, modelState));
-        dispatch(baseActions.render(headType));
-        dispatch(svgModelActions.selectModel(headType, model.modelID));
+        if (!shiftKey) {
+            // remove all selected model
+            modelGroup.emptySelectedModelArray();
+            dispatch(svgModelActions.emptySelectedModelArray(headType));
+        }
+        dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+        // todo, donot reset here
+        dispatch(svgModelActions.resetSelection(headType));
+
+        // todo multi select toopath model
         dispatch(threejsModelActions.selectModel(headType, model));
     },
 

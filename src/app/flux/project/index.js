@@ -76,7 +76,6 @@ export const actions = {
         const content = JSON.stringify(envObj);
 
         if (force || content !== lastString) {
-            console.log(JSON.parse(content));
             dispatch(actions.updateState(headType, { content, unSaved: true, initState: false }));
             await api.saveEnv({ content });
         }

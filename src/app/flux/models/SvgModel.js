@@ -262,6 +262,7 @@ class SvgModel {
     refreshElemAttrs() {
         const elem = this.elem;
         const { config, transformation, uploadName } = this.relatedModel;
+        console.log('----refresh----', transformation);
         const href = `${DATA_PREFIX}/${uploadName}`;
         const { positionX, positionY, width, height } = transformation;
         for (const key of Object.keys(config)) {
@@ -527,6 +528,7 @@ class SvgModel {
         const ty = ptFixedTo.y - ptFixedFrom.y;
         const trans = list.getItem(0);
         trans.setTranslate(x - tx, y - ty);
+        console.log('----resize on mouse move----', resizeDir, resizeFrom, resizeTo, { x, y }, ptFixed, ptFixedFrom, ptFixedTo);
     }
 
     pointModelToSvg({ x, y }) {

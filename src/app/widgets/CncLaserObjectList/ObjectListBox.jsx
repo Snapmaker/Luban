@@ -64,6 +64,7 @@ class ObjectListBox extends PureComponent {
 
     render() {
         const { modelGroup, selectedModelArray } = this.props;
+        console.log('----obj list----', selectedModelArray);
         return (
             <div>
                 <div
