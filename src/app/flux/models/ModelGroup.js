@@ -182,6 +182,7 @@ class ModelGroup extends EventEmitter {
                 }
             });
         }
+        this.onDataChangedCallback();
         return this._getEmptyState();
     }
 

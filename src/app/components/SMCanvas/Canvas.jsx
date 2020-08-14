@@ -32,8 +32,7 @@ class Canvas extends Component {
         cameraInitialTarget: PropTypes.object.isRequired,
         cameraUp: PropTypes.object,
         // callback
-        onSelectModel: PropTypes.func,
-        onSelectMultiModel: PropTypes.func,
+        onSelectModels: PropTypes.func,
         onUnselectAllModels: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
@@ -68,8 +67,7 @@ class Canvas extends Component {
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
         // callback
-        this.onSelectModel = this.props.onSelectModel || noop;
-        this.onSelectMultiModel = this.props.onSelectMultiModel || noop;
+        this.onSelectModels = this.props.onSelectModels || noop;
         this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
@@ -161,11 +159,8 @@ class Canvas extends Component {
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
-        this.controls.on(EVENTS.SELECT_OBJECT, (object) => {
-            this.onSelectModel(object);
-        });
-        this.controls.on(EVENTS.SELECT_MULTIOBJECT, (objects) => {
-            this.onSelectMultiModel(objects);
+        this.controls.on(EVENTS.SELECT_OBJECTS, (objects) => {
+            this.onSelectModels(objects);
         });
 
         this.controls.on(EVENTS.UNSELECT_OBJECT, () => {

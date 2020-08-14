@@ -24,7 +24,7 @@ const STATE = {
 export const EVENTS = {
     UPDATE: 'update',
     CONTEXT_MENU: 'contextmenu',
-    SELECT_MULTIOBJECT: 'object:multiselect',
+    SELECT_OBJECTS: 'object:select',
     UNSELECT_OBJECT: 'object:unselect',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
@@ -78,10 +78,7 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
 
-    lastSelectedMultiObject = [];
-
-
-    selectedMultiObject = [];
+    selectedObjects = [];
 
     ray = new THREE.Raycaster();
 
@@ -203,7 +200,7 @@ class Controls extends EventEmitter {
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
                 // Transform on selected object
-                if (this.selectedMultiObject.length > 0) {
+                if (this.selectedObjects.length > 0) {
                     const coord = this.getMouseCoord(event);
                     // Call hover to update axis selected
                     this.transformControl.onMouseHover(coord);
@@ -246,7 +243,7 @@ class Controls extends EventEmitter {
 
     onMouseHover = (event) => {
         event.preventDefault();
-        if (!(this.selectedMultiObject && this.selectedMultiObject.length > 0) || this.state !== STATE.NONE) {
+        if (!(this.selectedObjects && this.selectedObjects.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
@@ -283,7 +280,7 @@ class Controls extends EventEmitter {
             case STATE.ROTATE:
                 // Left click to unselect object
                 if (!this.rotateMoved) {
-                    this.selectedMultiObject = [];
+                    this.selectedObjects = [];
                     this.transformControl.detach();
 
                     this.emit(EVENTS.UNSELECT_OBJECT);
@@ -327,17 +324,15 @@ class Controls extends EventEmitter {
                  const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
 
                  if (intersect) {
-                     if (this.lastSelectedMultiObject && this.lastSelectedMultiObject.length === 1) {
-                         this.selectedMultiObject[0] = this.lastSelectedMultiObject[0];
-                     }
-                     if (this.selectedMultiObject.indexOf(intersect.object) === -1) {
-                         this.selectedMultiObject[this.selectedMultiObject.length] = intersect.object;
+                     const objectIndex = this.selectedObjects.indexOf(intersect.object);
+                     if (objectIndex === -1) {
+                         this.selectedObjects.push(intersect.object);
                      } else {
-                         this.selectedMultiObject.splice(this.selectedMultiObject.indexOf(intersect.object), 1);
+                         this.selectedObjects.splice(objectIndex, 1);
                      }
 
-                     this.transformControl.attach(this.selectedMultiObject);
-                     this.emit(EVENTS.SELECT_MULTIOBJECT, this.selectedMultiObject);
+                     this.transformControl.attach(this.selectedObjects);
+                     this.emit(EVENTS.SELECT_OBJECTS, this.selectedObjects);
                      this.emit(EVENTS.UPDATE);
                  }
              }
@@ -348,13 +343,15 @@ class Controls extends EventEmitter {
 
                  this.ray.setFromCamera(coord, this.camera);
                  const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
-                 this.selectedMultiObject = [];
+                 this.selectedObjects = [];
 
                  if (intersect) {
-                     this.selectedMultiObject[0] = intersect.object;
+                     this.selectedObjects[0] = (intersect.object);
+                     this.transformControl.attach(this.selectedObjects);
+                 } else {
+                     this.transformControl.detach();
                  }
-                 this.transformControl.attach(this.selectedMultiObject);
-                 this.emit(EVENTS.SELECT_MULTIOBJECT, this.selectedMultiObject);
+                 this.emit(EVENTS.SELECT_OBJECTS, this.selectedObjects);
                  this.emit(EVENTS.UPDATE);
              }
          }
@@ -415,15 +412,13 @@ class Controls extends EventEmitter {
     }
 
 
-    attach(object) {
-        this.lastSelectedMultiObject = object;
-        this.selectedMultiObject = object;
-        this.transformControl.attach(object);
+    attach(objects) {
+        this.selectedObjects = objects;
+        this.transformControl.attach(objects);
     }
 
     detach() {
-        this.lastSelectedMultiObject = null;
-        this.selectedMultiObject = [];
+        this.selectedObjects = [];
         this.transformControl.detach();
     }
 

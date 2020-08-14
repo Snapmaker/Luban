@@ -34,7 +34,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
-        selectMultiModel: PropTypes.func.isRequired,
+        selectModels: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -78,8 +78,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectMultiModel: (modelMesh) => {
-            this.props.selectMultiModel(modelMesh);
+        onSelectModels: (modelMesh) => {
+            this.props.selectModels(modelMesh);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -156,7 +156,7 @@ class Visualizer extends PureComponent {
             const selectedModelArray = this.props.allModel.filter((item) => {
                 return selectedModelIDArray.indexOf(item.modelID) > -1;
             });
-
+            console.log('selectedModelIDArray', selectedModelIDArray, this.props.selectedModelIDArray);
 
             if (!(selectedModelArray.length > 0)) {
                 this.canvas.current.controls.detach();
@@ -271,8 +271,7 @@ class Visualizer extends PureComponent {
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}
                         cameraUp={new Vector3(0, 0, 1)}
                         gcodeLineGroup={gcodeLineGroup}
-                        onSelectModel={this.actions.onSelectModel}
-                        onSelectMultiModel={this.actions.onSelectMultiModel}
+                        onSelectModels={this.actions.onSelectModels}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
@@ -367,7 +366,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectMultiModel: (modelMesh) => dispatch(printingActions.selectMultiModel(modelMesh)),
+    selectModels: (modelMesh) => dispatch(printingActions.selectMultiModel(modelMesh)),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
