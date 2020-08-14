@@ -203,12 +203,14 @@ class Controls extends EventEmitter {
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
                 // Transform on selected object
-                const coord = this.getMouseCoord(event);
-                // Call hover to update axis selected
-                this.transformControl.onMouseHover(coord);
-                if (this.transformControl.onMouseDown(coord)) {
-                    this.state = STATE.TRANSFORM;
-                    break;
+                if (this.selectedMultiObject.length > 0) {
+                    const coord = this.getMouseCoord(event);
+                    // Call hover to update axis selected
+                    this.transformControl.onMouseHover(coord);
+                    if (this.transformControl.onMouseDown(coord)) {
+                        this.state = STATE.TRANSFORM;
+                        break;
+                    }
                 }
 
                 if (event.ctrlKey || event.metaKey || event.shiftKey) {

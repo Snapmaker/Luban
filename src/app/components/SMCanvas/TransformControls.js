@@ -182,7 +182,7 @@ class TransformControls extends Object3D {
         const GREEN = 0x22ac38;
         const BLUE = 0x00b7ee;
         const GRAY = 0x787878;
-        const DARKBLUE = 0x2778dd;
+        const DARKGRAY = 0x2778dd;
 
         const meshMaterialRed = meshMaterial.clone();
         meshMaterialRed.color.set(RED);
@@ -196,8 +196,8 @@ class TransformControls extends Object3D {
         const meshMaterialInvisible = meshMaterial.clone();
         meshMaterialInvisible.visible = false;
 
-        const lineMaterialDarkblue = selectedlineMaterial.clone();
-        lineMaterialDarkblue.color.set(DARKBLUE);
+        const lineMaterialDarkGray = selectedlineMaterial.clone();
+        lineMaterialDarkGray.color.set(DARKGRAY);
 
         const lineMaterialRed = lineMaterial.clone();
         lineMaterialRed.color.set(RED);
@@ -229,7 +229,7 @@ class TransformControls extends Object3D {
             MESH_MATERIAL_BLUE: meshMaterialBlue,
             MESH_MATERIAL_INVISIBLE: meshMaterialInvisible,
 
-            LINE_MATERIAL_DARKBLUE: lineMaterialDarkblue,
+            LINE_MATERIAL_DARKGRAY: lineMaterialDarkGray,
             LINE_MATERIAL_RED: lineMaterialRed,
             LINE_MATERIAL_GREEN: lineMaterialGreen,
             LINE_MATERIAL_BLUE: lineMaterialBlue,
@@ -271,45 +271,45 @@ class TransformControls extends Object3D {
         const defaults = this.defaults;
         // bottom
         this.selectedFrontLeftBottom = this.createPeripheral([
-            ['X', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
         ]);
         this.selectedFrontRightBottom = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [-0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
         ]);
         this.selectedBackLeftBottom = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
         ]);
         this.selectedBackRightBottom = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [-0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
         ]);
         // top
         this.selectedFrontLeftTop = this.createPeripheral([
-            ['X', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
         ]);
         this.selectedFrontRightTop = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [-0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
         ]);
         this.selectedBackLeftTop = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
         ]);
         this.selectedBackRightTop = this.createPeripheral([
-            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, null, [-0.2, 0.2, 0.2]],
-            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
-            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKBLUE.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+            ['X', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
         ]);
         // this.selectedPeripheralLeftBottom.visible = true;
         this.add(this.selectedFrontLeftBottom);
