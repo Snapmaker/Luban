@@ -39,6 +39,8 @@ function parseLWPolylineVertices(n, scanner) {
                     if (curr.value !== 0) vertex.bulge = curr.value;
                     break;
                 default:
+                    // https://github.com/gdsestimating/dxf-parser/issues/47
+                    scanner.rewind();
                     // if we do not hit known code return vertices.  Code might belong to entity
                     if (vertexIsStarted) {
                         vertices.push(vertex);

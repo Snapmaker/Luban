@@ -48,14 +48,18 @@ function BulgeGeometry(startPoint, endPoint, bulge, segments) {
     const radius = p0.distanceTo(p1) / 2 / Math.sin(angle / 2);
     const center = polar(startPoint, radius, angle2(p0, p1) + (Math.PI / 2 - angle / 2));
 
-    this.segments = Math.max(Math.abs(Math.ceil(angle / (Math.PI / 18))), 6); // By default want a segment roughly every 10 degrees
+    if (segments !== undefined) {
+        this.segments = segments;
+    } else {
+        this.segments = Math.max(Math.abs(Math.ceil(angle / (Math.PI / 36))), 6); // By default want a segment roughly every 5 degrees
+    }
     const startAngle = angle2(center, p0);
-    const thetaAngle = angle / segments;
+    const thetaAngle = angle / this.segments;
 
 
     this.vertices.push(new THREE.Vector3(p0.x, p0.y, 0));
 
-    for (i = 1; i <= segments - 1; i++) {
+    for (i = 1; i <= this.segments - 1; i++) {
         vertex = polar(center, Math.abs(radius), startAngle + thetaAngle * i);
 
         this.vertices.push(new THREE.Vector3(vertex.x, vertex.y, 0));
@@ -274,7 +278,7 @@ class ThreeDxfLoader {
             false, // Always counterclockwise
             rotation
         );
-        const interpolatedPoints = curve.getPoints(20);
+        const interpolatedPoints = curve.getPoints(80);
         let previousPosition = { x: 0, y: 0, z: 0 };
         if (geometry.vertices.length > 0) {
             previousPosition = geometry.vertices[geometry.vertices.length - 1];
@@ -401,7 +405,7 @@ class ThreeDxfLoader {
             } else {
                 if (entity.controlPoints.length === 4) {
                     let p0, p1;
-                    for (let t = 0; t < 1; t += 0.1) {
+                    for (let t = 0; t < 1; t += 0.01) {
                         p0 = (1 - t) ** 3 * entity.controlPoints[0].x + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].x
                         + 3 * t ** 2 * (1 - t) * entity.controlPoints[2].x + t ** 3 * entity.controlPoints[3].x;
                         p1 = (1 - t) ** 3 * entity.controlPoints[0].y + 3 * t * (1 - t) ** 2 * entity.controlPoints[1].y
@@ -459,7 +463,7 @@ class ThreeDxfLoader {
             if (entity.vertices[i].bulge) {
                 bulge = entity.vertices[i].bulge;
                 startPoint = entity.vertices[i];
-                endPoint = i + 1 < entity.vertices.length ? entity.vertices[i + 1] : geometry.vertices[0];
+                endPoint = i + 1 < entity.vertices.length ? entity.vertices[i + 1] : entity.vertices[0];
 
                 bulgeGeometry = new BulgeGeometry(startPoint, endPoint, bulge);
                 interpolatedPoints.push(...bulgeGeometry.vertices);
