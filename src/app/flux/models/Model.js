@@ -701,10 +701,6 @@ class Model {
             this.updateTransformation(transformation);
         }
         if (config) {
-<<<<<<< HEAD
-=======
-            textNeedUpdate = this.config.svgNodeName === 'text' && Object.keys(config).length;
->>>>>>> Feature: Add multiselect in 3D printing
             this.config = {
                 ...this.config,
                 ...config
@@ -745,11 +741,7 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-<<<<<<< HEAD
         if (toolPathModelTaskInfo && this.visible) {
-=======
-        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
->>>>>>> Feature: Add multiselect in 3D printing
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo

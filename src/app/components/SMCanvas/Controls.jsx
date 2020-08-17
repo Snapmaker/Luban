@@ -35,6 +35,7 @@ class Controls extends EventEmitter {
 
     group = null;
 
+
     domElement = null;
 
     transformControl = null;
@@ -78,7 +79,9 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
 
-    selectedObjects = [];
+    modelGroup = null;
+
+    selectedGroup = null;
 
     ray = new THREE.Raycaster();
 
@@ -200,7 +203,7 @@ class Controls extends EventEmitter {
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
                 // Transform on selected object
-                if (this.selectedObjects.length > 0) {
+                if (this.selectedGroup && this.selectedGroup.children.length > 0) {
                     const coord = this.getMouseCoord(event);
                     // Call hover to update axis selected
                     this.transformControl.onMouseHover(coord);
@@ -243,7 +246,7 @@ class Controls extends EventEmitter {
 
     onMouseHover = (event) => {
         event.preventDefault();
-        if (!(this.selectedObjects && this.selectedObjects.length > 0) || this.state !== STATE.NONE) {
+        if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
@@ -278,11 +281,41 @@ class Controls extends EventEmitter {
     onDocumentMouseUp = (event) => {
         switch (this.state) {
             case STATE.ROTATE:
+                if (this.selectedGroup) {
+                    if (this.selectedGroup.position.x !== 0 || this.selectedGroup.position.y !== 0 || this.selectedGroup.position.z !== 0) {
+                        this.selectedGroup.children.forEach((item) => {
+                            const find = this.modelGroup.getModels().find(v => v.meshObject === item);
+                            find.updateTransformation({
+                                positionX: item.realTranslatePosition.x,
+                                positionY: item.realTranslatePosition.y
+                            });
+                        });
+                        this.selectedGroup.position.set(0, 0, 0);
+                    }
+                    if (this.selectedGroup.scale.x !== 1 || this.selectedGroup.scale.y !== 1 || this.selectedGroup.scale.z !== 1) {
+                        this.selectedGroup.children.forEach((item) => {
+                            const find = this.modelGroup.getModels().find(v => v.meshObject === item);
+                            find.updateTransformation({
+                                scaleX: item.scale.x * this.selectedGroup.scale.x,
+                                scaleY: item.scale.y * this.selectedGroup.scale.y,
+                                scaleZ: item.scale.z * this.selectedGroup.scale.z
+                            });
+                            find.computeBoundingBox();
+                            const positionZ = find.meshObject.position.z - find.boundingBox.min.z;
+
+                            find.updateTransformation({
+                                positionX: item.realScalePosition.x,
+                                positionY: item.realScalePosition.y,
+                                positionZ: positionZ
+                            });
+                        });
+                        this.selectedGroup.scale.set(1, 1, 1);
+                    }
+                }
                 // Left click to unselect object
                 if (!this.rotateMoved) {
-                    this.selectedObjects = [];
+                    console.log('this.selectedGroup', this.selectedGroup);
                     this.transformControl.detach();
-
                     this.emit(EVENTS.UNSELECT_OBJECT);
                     this.emit(EVENTS.UPDATE);
                 }
@@ -294,7 +327,7 @@ class Controls extends EventEmitter {
                 }
                 break;
             case STATE.TRANSFORM:
-                this.transformControl.onMouseUp();
+                this.transformControl.onMouseUp(this.modelGroup);
                 this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
                 break;
             default:
@@ -307,6 +340,26 @@ class Controls extends EventEmitter {
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
+    applySelectedObjectParentMatrix(meshObject) {
+        const matrix = new THREE.Matrix4().getInverse(this.selectedGroup.matrixWorld);
+        const scale = meshObject.scale;
+        const position = meshObject.position;
+        // console.log('scale111', scale);
+        scale.applyMatrix4(matrix);
+        position.applyMatrix4(matrix);
+        meshObject.scale.copy(scale);
+        meshObject.position.copy(position);
+    }
+
+    removeSelectedObjectParentMatrix(meshObject) {
+        const scale = meshObject.scale;
+        const position = meshObject.position;
+        scale.applyMatrix4(this.selectedGroup.matrixWorld);
+        position.applyMatrix4(this.selectedGroup.matrixWorld);
+        meshObject.scale.copy(scale);
+        meshObject.position.copy(position);
+    }
+
     /**
      * Trigger by mouse event "mousedown" + "mouseup", Check if a new object is selected.
      *
@@ -316,43 +369,43 @@ class Controls extends EventEmitter {
          const mousePosition = this.getMouseCoord(event);
          const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
          if (event.shiftKey) {
-             if (distance < 0.004 && this.selectableObjects) {
+             if (distance < 0.004 && this.selectableObjects.children) {
                  // Check if we select a new object
                  const coord = this.getMouseCoord(event);
                  this.ray.setFromCamera(coord, this.camera);
 
-                 const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
-
+                 const intersect = this.ray.intersectObjects(this.selectableObjects.children.concat(this.selectedGroup.children), false)[0];
                  if (intersect) {
-                     const objectIndex = this.selectedObjects.indexOf(intersect.object);
+                     const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
                      if (objectIndex === -1) {
-                         this.selectedObjects.push(intersect.object);
+                         this.applySelectedObjectParentMatrix(intersect.object);
+                         this.selectedGroup.add(intersect.object);
                      } else {
-                         this.selectedObjects.splice(objectIndex, 1);
+                         this.removeSelectedObjectParentMatrix(intersect.object);
+                         this.selectableObjects.add(intersect.object);
                      }
 
-                     this.transformControl.attach(this.selectedObjects);
-                     this.emit(EVENTS.SELECT_OBJECTS, this.selectedObjects);
+                     this.transformControl.attach(this.selectedGroup);
+                     this.emit(EVENTS.SELECT_OBJECTS, this.selectedGroup);
                      this.emit(EVENTS.UPDATE);
                  }
              }
          } else {
-             if (distance < 0.004 && this.selectableObjects) {
+             if (distance < 0.004 && this.selectableObjects.children) {
                  // Check if we select a new object
                  const coord = this.getMouseCoord(event);
 
                  this.ray.setFromCamera(coord, this.camera);
-                 const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
-                 this.selectedObjects = [];
-
+                 const intersect = this.ray.intersectObjects(this.selectableObjects.children.concat(this.selectedGroup.children), false)[0];
                  if (intersect) {
-                     this.selectedObjects[0] = (intersect.object);
-                     this.transformControl.attach(this.selectedObjects);
+                     this.applySelectedObjectParentMatrix(intersect.object);
+                     this.selectedGroup.add(intersect.object);
+                     this.transformControl.attach(this.selectedGroup);
+                     this.emit(EVENTS.SELECT_OBJECTS, this.selectedGroup);
+                     this.emit(EVENTS.UPDATE);
                  } else {
                      this.transformControl.detach();
                  }
-                 this.emit(EVENTS.SELECT_OBJECTS, this.selectedObjects);
-                 this.emit(EVENTS.UPDATE);
              }
          }
          this.mouseDownPosition = null;
@@ -411,14 +464,17 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
+    setModelGroup(modelGroup) {
+        this.modelGroup = modelGroup;
+    }
+
 
     attach(objects) {
-        this.selectedObjects = objects;
+        this.selectedGroup = objects;
         this.transformControl.attach(objects);
     }
 
     detach() {
-        this.selectedObjects = [];
         this.transformControl.detach();
     }
 

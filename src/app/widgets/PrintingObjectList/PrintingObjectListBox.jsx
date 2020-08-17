@@ -50,7 +50,6 @@ class PrintingObjectListBox extends PureComponent {
 
     render() {
         const { modelGroup, selectedModelIDArray } = this.props;
-
         return (
             <div>
                 <div

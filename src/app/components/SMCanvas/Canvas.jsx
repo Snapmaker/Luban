@@ -90,8 +90,7 @@ class Canvas extends Component {
 
         this.group.add(this.printableArea);
         this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
-
-        this.group.add(this.modelGroup);
+        this.group.add(this.modelGroup.object);
 
         this.toolPathModelGroup && this.group.add(this.toolPathModelGroup);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
@@ -155,7 +154,8 @@ class Canvas extends Component {
         this.controls.canOperateModel = this.props.canOperateModel;
 
         this.controls.setTarget(this.initialTarget);
-        this.controls.setSelectableObjects(this.modelGroup.children);
+        this.controls.setSelectableObjects(this.modelGroup.object);
+        this.controls.setModelGroup(this.modelGroup);
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });

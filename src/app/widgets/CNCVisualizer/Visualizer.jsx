@@ -339,7 +339,7 @@ class Visualizer extends Component {
                         ref={this.canvas}
                         canOperateModel={false}
                         size={this.props.size}
-                        modelGroup={this.props.modelGroup.object}
+                        modelGroup={this.props.modelGroup}
                         toolPathModelGroup={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}

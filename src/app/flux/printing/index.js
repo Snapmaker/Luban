@@ -790,29 +790,30 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.updateSelectedModelTransformation(transformation);
+        const modelState = modelGroup.updateSelectedModelTransformation(transformation);
+        dispatch(actions.updateState(modelState));
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
-    selectMultiModel: (modelMeshObjects) => (dispatch, getState) => {
+    selectMultiModel: (selectedGroup, shouldResetScale) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const selectedModelArray = [];
-        modelMeshObjects.forEach((item) => {
+        selectedGroup.children.forEach((item) => {
             const find = modelGroup.getModels().find(v => v.meshObject === item);
             selectedModelArray.push(find);
         });
 
-        const modelState = modelGroup.selectMultiModel(selectedModelArray);
+        const modelState = modelGroup.selectMultiModel(selectedModelArray, shouldResetScale);
 
         dispatch(actions.updateState(modelState));
 
         dispatch(actions.render());
     },
 
-    selectTargetModel: (model, shiftKey) => (dispatch, getState) => {
+    selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.selectModelById(model.modelID, shiftKey);
+        const modelState = modelGroup.selectModelById(model.modelID, isMultiSelect);
         dispatch(actions.updateState(modelState));
         dispatch(actions.render());
     },

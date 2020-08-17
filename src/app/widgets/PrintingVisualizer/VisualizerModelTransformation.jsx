@@ -103,7 +103,7 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateZ = 0;
         let uniformScalingState = true;
 
-        const disabled = !(selectedModelArray.length > 0 && selectedModelArray[0].visible && hasModel);
+        const disabled = !(selectedModelArray.length > 0 && hasModel);
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));
             moveY = Number(toFixed(transformation.positionY, 1));
@@ -345,8 +345,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     resettodefaultvalue="true"
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleX', value / 100);
-                                        actions.onModelTransform('scaleZ', value / 100);
-                                        actions.onModelTransform('scaleY', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -362,8 +360,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     resettodefaultvalue="true"
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleY', value / 100);
-                                        actions.onModelTransform('scaleX', value / 100);
-                                        actions.onModelTransform('scaleZ', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -379,8 +375,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     resettodefaultvalue="true"
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleZ', value / 100);
-                                        actions.onModelTransform('scaleX', value / 100);
-                                        actions.onModelTransform('scaleY', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />

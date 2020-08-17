@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
+
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
@@ -78,8 +79,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModels: (modelMesh) => {
-            this.props.selectModels(modelMesh);
+        onSelectModels: (selectedGroup) => {
+            this.props.selectModels(selectedGroup);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -148,7 +149,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelIDArray, renderingTimestamp } = nextProps;
+        const { size, transformMode, selectedModelIDArray, renderingTimestamp, modelGroup } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
@@ -156,24 +157,17 @@ class Visualizer extends PureComponent {
             const selectedModelArray = this.props.allModel.filter((item) => {
                 return selectedModelIDArray.indexOf(item.modelID) > -1;
             });
-            console.log('selectedModelIDArray', selectedModelIDArray, this.props.selectedModelIDArray);
 
             if (!(selectedModelArray.length > 0)) {
                 this.canvas.current.controls.detach();
             } else {
-                const meshObjectArray = [];
-                selectedModelArray.forEach((item, index) => {
-                    meshObjectArray[index] = item.meshObject;
-                });
-                if (meshObjectArray.length > 0) {
-                    this.canvas.current.controls.attach(meshObjectArray);
-                }
+                this.canvas.current.controls.attach(modelGroup.selectedGroup);
             }
         }
 
         if (!isEqual(size, this.props.size)) {
             this.printableArea.updateSize(size);
-            const { modelGroup, gcodeLineGroup } = this.props;
+            const { gcodeLineGroup } = this.props;
 
             modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -265,7 +259,7 @@ class Visualizer extends PureComponent {
                     <Canvas
                         ref={this.canvas}
                         size={size}
-                        modelGroup={modelGroup.object}
+                        modelGroup={modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}

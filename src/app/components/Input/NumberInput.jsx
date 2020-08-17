@@ -5,8 +5,6 @@ import classNames from 'classnames';
 import log from '../../lib/log';
 import styles from './styles.styl';
 
-const SCALE_DEFAULT_VALUE = 100;
-
 class NumberInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
@@ -14,7 +12,6 @@ class NumberInput extends PureComponent {
         defaultValue: PropTypes.number,
         min: PropTypes.number,
         max: PropTypes.number,
-        resettodefaultvalue: PropTypes.string,
         onChange: PropTypes.func
     };
 
@@ -58,12 +55,6 @@ class NumberInput extends PureComponent {
         });
     };
 
-    onChangeToDefault = (value) => {
-        this.setState({
-            displayValue: value
-        });
-    };
-
     onBlur = (event) => {
         this.onAfterChangeWrapper(event.target.value);
     };
@@ -76,7 +67,7 @@ class NumberInput extends PureComponent {
     };
 
     onAfterChangeWrapper(value) {
-        const { min, max, onChange, resettodefaultvalue } = this.props;
+        const { min, max, onChange } = this.props;
 
         let numericValue = parseFloat(value);
         let useEdgeValue = false;
@@ -105,9 +96,6 @@ class NumberInput extends PureComponent {
 
         // call onAfterChange to change value
         onChange && onChange(numericValue);
-        if (resettodefaultvalue === 'true') {
-            this.onChangeToDefault(SCALE_DEFAULT_VALUE);
-        }
     }
 
     getAbsentValue() {
