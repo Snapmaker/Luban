@@ -1,6 +1,18 @@
 @import "../../styles/variables"
 @import "../styles.styl"
 
+.input-box-left
+    margin-left: 4px
+    width: 85px
+    height: 30px
+
+.input-box-right
+    width: 85px
+
+.input-box-inner-text
+    width: 15px
+    textAlign: center
+
 .text-align-wrap
     float: right
     border: none
@@ -124,18 +136,19 @@
     background: url("../../images/cnc-laser/property-lock-checked-88x88.png") no-repeat 0 0
     background-size: 100%
     background-position: center
-    background-color: #e4e4e4
     border: none
-    &:active
-        opacity(.3)
+    &:hover
+        background-color: #e4e4e4
+        opacity(1)
 
 .icon_size_unlock
     background: url("../../images/cnc-laser/property-lock-unchecked-88x88.png") no-repeat 0 0
     background-size: 100%
     background-position: center
     border: none
-    &:active
-        opacity(.3)
+    &:hover
+        background-color: #e4e4e4
+        opacity(1)
 
 .icon_flip_vertically
     height: 30px
@@ -147,8 +160,10 @@
     background-position: center
     border: 1px solid #C8C8C8
     border-radius: 4px
+    &:hover
     &:active
-        opacity(.3)
+        background-color: #e4e4e4
+        opacity(1)
 
 .icon_flip_horizontal
     height: 30px
@@ -160,5 +175,7 @@
     background-position: center
     border: 1px solid #C8C8C8
     border-radius: 4px
+    &:hover
     &:active
-        opacity(.3)
+        background-color: #e4e4e4
+        opacity(1)

@@ -122,7 +122,7 @@ class Transformation extends PureComponent {
                         >
                             <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
                             <Input
-                                style={{ width: '80px' }}
+                                className={styles['input-box-left']}
                                 disabled={!selectedNotHide}
                                 value={toFixed(positionX, 1)}
                                 min={-size.x}
@@ -133,17 +133,17 @@ class Transformation extends PureComponent {
                                 }}
                             />
                             <span
-                                className={styles['description-text']}
-                                style={{ marginLeft: '-15px', width: '15px', textAlign: 'center' }}
+                                className={styles['input-box-inner-text']}
+                                style={{ marginLeft: '-15px' }}
                             >
                                 X
                             </span>
                             <span
                                 className={styles['description-text']}
-                                style={{ width: '32px', textAlign: 'center', display: 'inline-block' }}
+                                style={{ 'margin-left': '6px', width: '32px', textAlign: 'center', display: 'inline-block' }}
                             />
                             <Input
-                                style={{ width: '80px' }}
+                                className={styles['input-box-right']}
                                 disabled={!selectedNotHide}
                                 value={toFixed(positionY, 1)}
                                 min={-size.y}
@@ -154,8 +154,8 @@ class Transformation extends PureComponent {
                                 }}
                             />
                             <span
-                                className={styles['description-text']}
-                                style={{ marginLeft: '-15px', width: '15px', textAlign: 'center' }}
+                                className={styles['input-box-inner-text']}
+                                style={{ marginLeft: '-15px' }}
                             >
                                 Y
                             </span>
@@ -167,7 +167,7 @@ class Transformation extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
                                 <Input
-                                    style={{ width: '80px' }}
+                                    className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
                                     value={toFixed(width, 1)}
                                     min={1}
@@ -178,8 +178,8 @@ class Transformation extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className={styles['description-text']}
-                                    style={{ marginLeft: '-18px', width: '18px', textAlign: 'center' }}
+                                    className={styles['input-box-inner-text']}
+                                    style={{ marginLeft: '-17px' }}
                                 >
                                    W
                                 </span>
@@ -187,14 +187,14 @@ class Transformation extends PureComponent {
                                     type="button"
                                     disabled={!selectedNotHide}
                                     className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
-                                    style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '7px', marginRight: '2px' }}
+                                    style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '10px', marginRight: '5px' }}
                                     onClick={() => {
                                         actions.onChangeUniformScalingState(!uniformScalingState);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
                                 <Input
-                                    style={{ width: '80px' }}
+                                    className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
                                     value={toFixed(height, 1)}
                                     min={1}
@@ -205,8 +205,8 @@ class Transformation extends PureComponent {
                                     }}
                                 />
                                 <span
-                                    className={styles['description-text']}
-                                    style={{ marginLeft: '-16px', width: '15px', textAlign: 'center' }}
+                                    className={styles['input-box-inner-text']}
+                                    style={{ marginLeft: '-16px' }}
                                 >
                                    H
                                 </span>
@@ -219,7 +219,7 @@ class Transformation extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
                                 <DegreeInput
-                                    style={{ width: '80px', height: '30px' }}
+                                    className={styles['input-box-left']}
                                     disabled={!selectedNotHide}
                                     value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1).toString() : '0'}
                                     suffix="°"
@@ -230,7 +230,7 @@ class Transformation extends PureComponent {
                                 />
                                 <span
                                     className={styles['description-text']}
-                                    style={{ width: '25px', textAlign: 'center', display: 'inline-block' }}
+                                    style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
                                 />
                                 <button
                                     type="button"
@@ -244,7 +244,7 @@ class Transformation extends PureComponent {
                                 />
                                 <span
                                     className={styles['description-text']}
-                                    style={{ width: '21px', textAlign: 'center', display: 'inline-block' }}
+                                    style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
                                 />
                                 <button
                                     type="button"
@@ -270,20 +270,13 @@ const mapStateToProps = (state, props) => {
     const machine = state.machine;
     const { modelGroup } = state[headType];
     const selectedModel = modelGroup.getSelectedModel();
-    const { modelID, sourceType, hideFlag } = selectedModel;
-    const transformation = { ...selectedModel.transformation };
-    if (sourceType === 'raster') {
-        transformation.width *= selectedModel.transformation.scaleX;
-        transformation.height *= selectedModel.transformation.scaleY;
-    }
-    // console.log(transformation);
-
+    const { modelID, sourceType, visible, transformation } = selectedModel;
     return {
         size: machine.size,
         selectedModel,
         modelID,
         sourceType,
-        hideFlag,
+        visible,
         transformation
     };
 };
