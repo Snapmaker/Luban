@@ -400,9 +400,14 @@ class SvgModelGroup {
             .catch((err) => {
                 console.error(err);
             });
+        this.resizeSelector(elem);
     }
 
+    // only resize when element selected
     resizeSelector(elem) {
+        if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
+            return;
+        }
         const selector = this.svgContentGroup.requestSelector(elem);
         selector.resize();
     }

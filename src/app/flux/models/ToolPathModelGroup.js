@@ -235,6 +235,10 @@ class ToolPathModelGroup {
 ToolPathModelGroup.prototype.MOCK_MODEL = {
     mock: true,
     sourceType: '',
-    gcodeConfig: {}
+    gcodeConfig: {
+        optimizePath: true,
+        fillEnabled: true,
+        fillDensity: 0
+    }
 };
 export default ToolPathModelGroup;

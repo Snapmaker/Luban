@@ -248,6 +248,7 @@ class CNCPath extends PureComponent {
                             <TextParameters
                                 disabled={!selectedModelVisible}
                                 config={config}
+                                headType="cnc"
                                 selectedModel={selectedModel}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />

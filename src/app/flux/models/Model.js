@@ -126,9 +126,17 @@ class Model {
                 ...this.config
             }
         };
-        if (this.config.svgNodeName === 'image') {
-            taskInfo.transformation.width *= this.transformation.scaleX;
-            taskInfo.transformation.height *= this.transformation.scaleY;
+        // because of text sourcefile has been transformed
+        if (this.config.svgNodeName !== 'text') {
+            taskInfo.transformation.width *= Math.abs(this.transformation.scaleX);
+            taskInfo.transformation.height *= Math.abs(this.transformation.scaleY);
+            taskInfo.transformation.flip = 0;
+            if (this.transformation.scaleX < 0) {
+                taskInfo.transformation.flip += 2;
+            }
+            if (this.transformation.scaleY < 0) {
+                taskInfo.transformation.flip += 1;
+            }
         }
         return taskInfo;
     }
@@ -383,23 +391,18 @@ class Model {
                 }
             }
         }
-        // updated scale and width will both effected on meshObject
+        // width & height dont effected on meshobject any more
         if (width) {
-            const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-
-            this.meshObject.scale.x = width / geometrySize.x * this.transformation.scaleX;
-
-
             this.transformation.width = width;
         }
         if (height) {
-            const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-            this.meshObject.scale.y = height / geometrySize.y * this.transformation.scaleY;
-
-
             this.transformation.height = height;
         }
-
+        // because of text source has been transformed
+        if (this.config && this.config.svgNodeName === 'text') {
+            this.meshObject.scale.x = Math.abs(scaleX);
+            this.meshObject.scale.y = Math.abs(scaleY);
+        }
         this.transformation = { ...this.transformation };
         return this.transformation;
     }
@@ -692,13 +695,10 @@ class Model {
 
 
     async updateAndRefresh({ transformation, config, ...others }) {
-        let textNeedUpdate;
         if (transformation) {
             this.updateTransformation(transformation);
         }
         if (config) {
-            textNeedUpdate = this.config.svgNodeName === 'text' && Object.keys(config).length;
-
             this.config = {
                 ...this.config,
                 ...config
@@ -713,7 +713,7 @@ class Model {
 
         this.refreshRelatedModel();
         this.modelGroup.modelChanged();
-        if (textNeedUpdate) {
+        if (this.config.svgNodeName === 'text') {
             updateTimer && clearTimeout(updateTimer);
             updateTimer = setTimeout(() => {
                 this.relatedModels.svgModel.updateSource();
@@ -739,15 +739,12 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
+        if (toolPathModelTaskInfo && this.visible) {
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo
 
             };
-            if (this.config.svgNodeName && this.config.svgNodeName === 'text') {
-                taskInfo.uploadName = await this.relatedModels.svgModel.uploadTextImage();
-            }
             controller.commitToolPathTask({
                 taskId: taskInfo.modelID,
                 headType: this.headType,

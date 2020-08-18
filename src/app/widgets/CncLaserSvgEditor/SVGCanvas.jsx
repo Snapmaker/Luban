@@ -598,7 +598,9 @@ class SVGCanvas extends PureComponent {
                 const model = this.props.svgModelGroup.getModelByElement(selected);
                 model.elemResize({
                     resizeDir: this.resizeMode,
-                    resizeTo: pt
+                    resizeFrom: { x: draw.startX, y: draw.startY },
+                    resizeTo: pt,
+                    isUniformScaling: event.shiftKey
                 });
 
                 const selector = this.svgContentGroup.requestSelector(selected);

@@ -133,6 +133,12 @@ const textActionCreator = (canvas, $) => {
             display: 'inline'
         });
 
+        // curtext may be transformed!
+        const list = curtext.cloneNode().transform;
+        if (list) {
+            cursor.setAttribute('transform', 'translate(0,0)');
+            cursor.transform.baseVal.appendItem(list.baseVal.consolidate());
+        }
         if (selblock) { selblock.setAttribute('d', ''); }
     }
 
@@ -191,10 +197,14 @@ const textActionCreator = (canvas, $) => {
      */
     function getIndexFromPoint(mouseX, mouseY) {
         // Position cursor here
-        const pt = svgroot.createSVGPoint();
+        let pt = svgroot.createSVGPoint();
         pt.x = mouseX;
         pt.y = mouseY;
 
+        const list = curtext.cloneNode().transform;
+        if (list) {
+            pt = pt.matrixTransform(list.baseVal.consolidate().matrix.inverse());
+        }
         // No content, so return 0
         if (chardata.length === 1) { return 0; }
         // Determine if cursor should be on left or right of character

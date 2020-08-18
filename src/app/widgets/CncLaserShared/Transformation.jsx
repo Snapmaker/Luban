@@ -11,8 +11,8 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
-        selectedModelID: PropTypes.string,
-        selectedModelVisible: PropTypes.bool,
+        // selectedModelID: PropTypes.string,
+        // selectedModelVisible: PropTypes.bool,
         selectedModel: PropTypes.object,
         modelID: PropTypes.string,
         sourceType: PropTypes.string.isRequired,
@@ -46,14 +46,19 @@ class Transformation extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
+        // dont set width and height on transform
         onChangeWidth: (width) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { width } });
+            const { selectedModel } = this.props;
+
+            if (selectedModel.modelID) {
+                selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
             }
         },
         onChangeHeight: (height) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { height } });
+            const { selectedModel } = this.props;
+
+            if (selectedModel.modelID) {
+                selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
             }
         },
         onChangeRotationZ: (degree) => {
@@ -91,10 +96,10 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { size, selectedModelID, selectedModelVisible, sourceType } = this.props;
+        const { size, selectedModel, sourceType } = this.props;
         const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
-        const selectedNotHide = selectedModelID && selectedModelVisible;
+        const selectedNotHide = selectedModel.modelID && selectedModel.visible;
         const actions = this.actions;
         return (
             <React.Fragment>
@@ -265,7 +270,14 @@ const mapStateToProps = (state, props) => {
     const machine = state.machine;
     const { modelGroup } = state[headType];
     const selectedModel = modelGroup.getSelectedModel();
-    const { modelID, sourceType, hideFlag, transformation } = selectedModel;
+    const { modelID, sourceType, hideFlag } = selectedModel;
+    const transformation = { ...selectedModel.transformation };
+    if (sourceType === 'raster') {
+        transformation.width *= selectedModel.transformation.scaleX;
+        transformation.height *= selectedModel.transformation.scaleY;
+    }
+    // console.log(transformation);
+
     return {
         size: machine.size,
         selectedModel,
