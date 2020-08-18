@@ -172,8 +172,6 @@ class Model {
         };
         // because of text sourcefile has been transformed
         if (this.config && this.config.svgNodeName !== 'text') {
-            taskInfo.transformation.width *= Math.abs(this.transformation.scaleX);
-            taskInfo.transformation.height *= Math.abs(this.transformation.scaleY);
             taskInfo.transformation.flip = 0;
             if (this.transformation.scaleX < 0) {
                 taskInfo.transformation.flip += 2;

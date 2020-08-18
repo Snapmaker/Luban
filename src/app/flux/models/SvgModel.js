@@ -221,10 +221,10 @@ class SvgModel {
     }
 
     async updateSource() {
-        const bbox = this.elem.getBBox();
-        const { width, height } = bbox;
+        const { width, height } = this.elem.getBBox();
+        const { scaleX, scaleY } = this.relatedModel.transformation;
         const uploadName = await this.uploadSourceFile();
-        this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * 8, sourceHeight: height * 8 });
+        this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * scaleX * 8, sourceHeight: height * scaleY * 8 });
     }
 
     async uploadSourceFile() {
@@ -263,9 +263,9 @@ class SvgModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, uploadName } = this.relatedModel;
+        const { config, transformation, uploadName, width, height } = this.relatedModel;
         const href = `${DATA_PREFIX}/${uploadName}`;
-        const { positionX, positionY, width, height } = transformation;
+        const { positionX, positionY } = transformation;
         for (const key of Object.keys(config)) {
             if (key === 'text') {
                 elem.textContent = config[key];
@@ -387,14 +387,10 @@ class SvgModel {
                 positionY: positionY,
                 scaleX,
                 scaleY,
-                width: width,
-                height: height
+                width: width * Math.abs(scaleX),
+                height: height * Math.abs(scaleY)
             }
         };
-        // reserve scale cause stroke-width scaled
-        if (this.type === 'rect' || this.type === 'ellipse') {
-            attrs.config['stroke-width'] = 0.25 / Math.min(Math.abs(scaleX), Math.abs(scaleY));
-        }
 
         // remap will reset all transforms
         if (this.type === 'path') {
@@ -404,9 +400,25 @@ class SvgModel {
             attrs.transformation.scaleY = 1;
             attrs.width *= Math.abs(scaleX);
             attrs.height *= Math.abs(scaleY);
-            attrs.transformation.width *= Math.abs(scaleX);
-            attrs.transformation.height *= Math.abs(scaleY);
             this.elem.setAttribute('d', d);
+            this.updateSource();
+        }
+        if (this.type === 'rect') {
+            attrs.transformation.scaleX = 1;
+            attrs.transformation.scaleY = 1;
+            attrs.width *= Math.abs(scaleX);
+            attrs.height *= Math.abs(scaleY);
+            this.elem.setAttribute('width', attrs.transformation.width);
+            this.elem.setAttribute('height', attrs.transformation.height);
+            this.updateSource();
+        }
+        if (this.type === 'ellipse') {
+            attrs.transformation.scaleX = 1;
+            attrs.transformation.scaleY = 1;
+            attrs.width *= Math.abs(scaleX);
+            attrs.height *= Math.abs(scaleY);
+            this.elem.setAttribute('rx', attrs.transformation.width / 2);
+            this.elem.setAttribute('ry', attrs.transformation.height / 2);
             this.updateSource();
         }
 
@@ -477,7 +489,8 @@ class SvgModel {
             return svgPoint.matrixTransform(m);
         }
 
-        const { positionX, positionY, width, height, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
+        const { width, height } = this.relatedModel;
+        const { positionX, positionY, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
         // ( x, y ) is the center of model on modelGroup
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
 

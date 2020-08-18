@@ -144,7 +144,7 @@ Start a new line manually according to your needs.')}
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Font')}
-                            content={i18n._('Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.')}
+                            content={i18n._('Select a font')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font')}</span>

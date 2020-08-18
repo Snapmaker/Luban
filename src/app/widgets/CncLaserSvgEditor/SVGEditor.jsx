@@ -107,8 +107,8 @@ class SVGEditor extends PureComponent {
         const elem = this.props.svgModelGroup.svgContentGroup.addSVGElement({
             element: 'text',
             attr: {
-                x: this.props.size.x - 30.75,
-                y: this.props.size.y,
+                x: this.props.svgModelGroup.size.x - 30,
+                y: this.props.svgModelGroup.size.y,
                 fill: '#000000',
                 'font-size': 12,
                 'font-family': 'Arial',
