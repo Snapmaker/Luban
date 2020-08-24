@@ -790,13 +790,12 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.updateSelectedModelTransformation(transformation);
-        dispatch(actions.updateState(modelState));
+        modelGroup.updateSelectedModelTransformation(transformation);
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
 
-    selectMultiModel: (selectedGroup, shouldResetScale) => (dispatch, getState) => {
+    selectMultiModel: (selectedGroup) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const selectedModelArray = [];
         selectedGroup.children.forEach((item) => {
@@ -804,8 +803,7 @@ export const actions = {
             selectedModelArray.push(find);
         });
 
-        const modelState = modelGroup.selectMultiModel(selectedModelArray, shouldResetScale);
-
+        const modelState = modelGroup.selectMultiModel(selectedModelArray);
         dispatch(actions.updateState(modelState));
 
         dispatch(actions.render());
@@ -813,7 +811,8 @@ export const actions = {
 
     selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.selectModelById(model.modelID, isMultiSelect);
+        const modelState = modelGroup.selectModelById([model], isMultiSelect);
+
         dispatch(actions.updateState(modelState));
         dispatch(actions.render());
     },

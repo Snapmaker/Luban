@@ -290,6 +290,7 @@ class Model {
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { position, rotation, scale, uniformScalingState } = this.meshObject;
+
         const transformation = {
             positionX: position.x,
             positionY: position.y,
@@ -304,6 +305,7 @@ class Model {
             height: geometrySize.y * scale.y,
             uniformScalingState
         };
+
         this.transformation = {
             ...this.transformation,
             ...transformation
@@ -407,6 +409,7 @@ class Model {
             this.meshObject.scale.y = Math.abs(scaleY);
         }
         this.transformation = { ...this.transformation };
+
         return this.transformation;
     }
 
@@ -485,6 +488,7 @@ class Model {
         this.computeBoundingBox();
 
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
+
         this.onTransform();
     }
 

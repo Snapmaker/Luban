@@ -23,7 +23,6 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        allModel: PropTypes.array,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelIDArray: PropTypes.any,
@@ -154,15 +153,12 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(transformMode);
         }
         if (selectedModelIDArray !== this.props.selectedModelIDArray) {
-            const selectedModelArray = this.props.allModel.filter((item) => {
-                return selectedModelIDArray.indexOf(item.modelID) > -1;
+            selectedModelIDArray.forEach((modelID) => {
+                const model = modelGroup.models.find(d => d.modelID === modelID);
+                modelGroup.selectedGroup.add(model.meshObject);
             });
 
-            if (!(selectedModelArray.length > 0)) {
-                this.canvas.current.controls.detach();
-            } else {
-                this.canvas.current.controls.attach(modelGroup.selectedGroup);
-            }
+            this.canvas.current.controls.attach(modelGroup.selectedGroup);
         }
 
         if (!isEqual(size, this.props.size)) {

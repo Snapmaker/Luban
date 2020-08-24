@@ -113,8 +113,6 @@ class VisualizerModelTransformation extends PureComponent {
             scaleXPercent = Number(toFixed((transformation.scaleX * 100), 1));
             scaleYPercent = Number(toFixed((transformation.scaleY * 100), 1));
             scaleZPercent = Number(toFixed((transformation.scaleZ * 100), 1));
-        }
-        if (selectedModelArray.length === 1) {
             uniformScalingState = transformation.uniformScalingState;
         }
 
@@ -251,7 +249,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!disabled && transformMode === 'scale' && selectedModelArray.length === 1 && (
+                {!disabled && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -261,10 +259,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleXPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleX', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleZ', value / 100);
-                                            actions.onModelTransform('scaleY', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -279,10 +273,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleYPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleY', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleX', value / 100);
-                                            actions.onModelTransform('scaleZ', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -297,10 +287,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleZPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleZ', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleX', value / 100);
-                                            actions.onModelTransform('scaleY', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -334,55 +320,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!disabled && transformMode === 'scale' && selectedModelArray.length > 1 && (
-                    <div className={classNames(styles.panel, styles['scale-panel-multi'])}>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={0}
-                                    value={scaleXPercent}
-                                    resettodefaultvalue="true"
-                                    onChange={(value) => {
-                                        actions.onModelTransform('scaleX', value / 100);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={0}
-                                    value={scaleYPercent}
-                                    resettodefaultvalue="true"
-                                    onChange={(value) => {
-                                        actions.onModelTransform('scaleY', value / 100);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={0}
-                                    value={scaleZPercent}
-                                    resettodefaultvalue="true"
-                                    onChange={(value) => {
-                                        actions.onModelTransform('scaleZ', value / 100);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                    </div>
-                )}
+
                 {!disabled && transformMode === 'rotate' && (
                     <div className={classNames(styles.panel, styles['rotate-panel'])}>
                         <div className={styles.axis}>
@@ -414,10 +352,10 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(degree) => {
                                         actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
-
-
                                 />
                             </span>
                         </div>
@@ -450,6 +388,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(degree) => {
                                         actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
 
@@ -486,6 +426,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(degree) => {
                                         actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
 

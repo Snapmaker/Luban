@@ -73,7 +73,13 @@ class TransformControls extends Object3D {
 
     // (world space)
 
-    objectQuaternionInv = [];
+    // selectObjectPosition = new Vector3();
+    //
+    // selectObjectQuaternion = new Quaternion();
+    //
+    // selectObjectScale = new Vector3();
+    //
+    // selectObjectQuaternionInv = new Quaternion();
 
     parentPosition = new Vector3();
 
@@ -104,16 +110,15 @@ class TransformControls extends Object3D {
         this.destroyDefaults();
     }
 
-    // multiplyVector(vector1, vector2) {
-    //     return new Vector3(vector1.x * vector2.x, vector1.y * vector2.y, vector1.z * vector2.z);
-    // }
-
     calculateScalePosition(originalPosition, centerPosition, eVec) {
         const positionX = centerPosition.x + (originalPosition.x - centerPosition.x) * eVec.x;
         const positionY = centerPosition.y + (originalPosition.y - centerPosition.y) * eVec.y;
         const positionZ = centerPosition.z + (originalPosition.z - centerPosition.z) * eVec.z;
-        console.log('calculateScalePosition', positionX, positionY);
-        return [positionX, positionY, positionZ];
+        return {
+            x: positionX,
+            y: positionY,
+            z: positionZ
+        };
     }
 
 
@@ -447,7 +452,6 @@ class TransformControls extends Object3D {
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
             const multiObjectPosition = new Vector3();
-            const objectQuaternion = new Quaternion();
             const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             const multiObjectWidth = new Vector3();
@@ -455,12 +459,10 @@ class TransformControls extends Object3D {
             const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-            this.object.children.forEach((objectControl, index) => {
+            this.object.children.forEach((objectControl) => {
                 const objectPosition = new Vector3();
                 const objectScale = new Vector3();
-                const eachParentPosition = new Vector3();
-                const eachParentQuaternion = new Quaternion();
-                const eachParentScale = new Vector3();
+                const objectQuaternion = new Quaternion();
                 // object
 
                 objectControl.updateMatrixWorld();
@@ -492,17 +494,18 @@ class TransformControls extends Object3D {
                 }
 
 
-                objectControl.matrixWorld.decompose(eachParentPosition, eachParentQuaternion, eachParentScale);
-                this.objectQuaternionInv[index] = new Quaternion();
-                this.objectQuaternionInv[index].copy(eachParentQuaternion).inverse();
-
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && objectControl.visible);
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && objectControl.visible);
                 this.scalePeripheral.visible = (this.mode === 'scale' && objectControl.visible);
             });
-            this.object.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
+
+            // this.object.matrixWorld.decompose(this.selectObjectPosition, this.selectObjectQuaternion, this.selectObjectScale);
+            //
+            // this.selectObjectQuaternionInv.copy(this.selectObjectQuaternion).inverse();
+
             // parent
+            this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
 
 
@@ -845,7 +848,6 @@ class TransformControls extends Object3D {
         const MatrixCoor = [];
         this.object.children.forEach((item, index) => {
             MatrixCoor[index] = item.parent.matrixWorld;
-            // console.log('MatrixCoor', MatrixCoor, item.matrixWorld);
         });
 
         // translate
@@ -858,46 +860,33 @@ class TransformControls extends Object3D {
                 offset.z = (this.axis === 'Z' ? offset.z : 0);
                 // Dive in to object local offset
                 offset.applyQuaternion(this.parentQuaternionInv).divide(this.parentScale);
-                if (this.object.children.length > 1) {
-                    this.object.position.copy(this.positionStart).add(offset);
-                    this.object.children.forEach((item) => {
-                        item.realTranslatePosition = new Vector3(
-                            item.position.x + this.object.position.x,
-                            item.position.y + this.object.position.y,
-                            item.position.z,
-                        );
-                    });
-                } else {
-                    this.object.children[0].position.copy(this.eachObjectPositionStart[0]).add(offset);
-                }
+                this.object.position.copy(this.positionStart).add(offset);
+
                 break;
             }
             case 'rotate': {
                 const offset = new Vector3().subVectors(this.pointEnd, this.pointStart);
+
+                const objectPosition = new Vector3().copy(this.object.position).applyMatrix4(this.object.parent.matrixWorld); // TODO: optimize?
                 const cameraPosition = new Vector3().setFromMatrixPosition(this.camera.matrixWorld);
+                const eyeDistance = cameraPosition.distanceTo(objectPosition);
+                const ROTATION_SPEED = 20 / eyeDistance;
 
-                this.object.children.forEach((item, index) => {
-                    const objectPosition = new Vector3().copy(item.position).applyMatrix4(MatrixCoor[index]); // TODO: optimize?
-                    const eyeDistance = cameraPosition.distanceTo(objectPosition);
-                    const ROTATION_SPEED = 20 / eyeDistance;
-
-                    const rotationAxis = new Vector3((this.axis === 'X') ? 1 : 0, (this.axis === 'Y') ? 1 : 0, (this.axis === 'Z') ? 1 : 0);
-                    const rotationAngle = offset.dot(new Vector3().crossVectors(rotationAxis, cameraPosition).normalize()) * ROTATION_SPEED;
-                    rotationAxis.applyQuaternion(this.parentQuaternionInv);
-                    const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
-
-                    item.quaternion.copy(quaternion).multiply(this.eachObjectQuaternionStart[index]).normalize();
-                });
+                const rotationAxis = new Vector3((this.axis === 'X') ? 1 : 0, (this.axis === 'Y') ? 1 : 0, (this.axis === 'Z') ? 1 : 0);
+                const rotationAngle = offset.dot(new Vector3().crossVectors(rotationAxis, cameraPosition).normalize()) * ROTATION_SPEED;
 
 
+                rotationAxis.applyQuaternion(this.parentQuaternionInv);
+                const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
+
+                this.object.quaternion.copy(quaternion).multiply(this.quaternionStart).normalize();
                 break;
             }
             case 'scale': {
-                if (this.object.children.length > 1) {
-                    const parentObjectPosition = new Vector3().copy(this.object.position).applyMatrix4(this.object.matrixWorld);
-                    const parentSVec = new Vector3().copy(this.pointStart).sub(parentObjectPosition).applyQuaternion(this.parentQuaternionInv);
-                    const parentEVec = new Vector3().copy(this.pointEnd).sub(parentObjectPosition).applyQuaternion(this.parentQuaternionInv);
-                    parentEVec.divide(parentSVec);
+                const parentSVec = new Vector3().copy(this.pointStart).applyQuaternion(this.parentQuaternionInv);
+                const parentEVec = new Vector3().copy(this.pointEnd).applyQuaternion(this.parentQuaternionInv);
+                parentEVec.divide(parentSVec);
+                if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
                         parentEVec.y = parentEVec.x;
                         parentEVec.z = parentEVec.x;
@@ -908,39 +897,13 @@ class TransformControls extends Object3D {
                         parentEVec.y = parentEVec.z;
                         parentEVec.x = parentEVec.z;
                     }
-                    this.object.scale.copy(this.scaleStart).multiply(parentEVec);
-
-                    this.object.children.forEach((item, index) => {
-                        // item.position.set(...this.calculateScalePosition(this.eachObjectPositionStart[index], this.multiObjectScaleCenter, parentEVec));
-                        item.realScalePosition = new Vector3(...this.calculateScalePosition(this.eachObjectPositionStart[index], this.multiObjectScaleCenter, parentEVec));
-                    });
                 } else {
-                    this.object.children.forEach((item, index) => {
-                        const objectPosition = new Vector3().copy(this.object.position).applyMatrix4(MatrixCoor[index]); // TODO: optimize?
-                        const sVec = new Vector3().copy(this.pointStart).sub(objectPosition).applyQuaternion(this.objectQuaternionInv[index]);
-                        const eVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.objectQuaternionInv[index]);
-                        eVec.divide(sVec);
-
-                        if (item.uniformScalingState === true) {
-                            if (this.axis === 'X') {
-                                eVec.y = eVec.x;
-                                eVec.z = eVec.x;
-                            } else if (this.axis === 'Y') {
-                                eVec.z = eVec.y;
-                                eVec.x = eVec.y;
-                            } else {
-                                eVec.y = eVec.z;
-                                eVec.x = eVec.z;
-                            }
-                        } else {
-                            eVec.x = (this.axis === 'X' ? eVec.x : 1);
-                            eVec.y = (this.axis === 'Y' ? eVec.y : 1);
-                            eVec.z = (this.axis === 'Z' ? eVec.z : 1);
-                        }
-                        item.scale.copy(this.eachObjectScaleStart[index]).multiply(eVec);
-                    });
+                    parentEVec.x = (this.axis === 'X' ? parentEVec.x : 1);
+                    parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
+                    parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
                 }
 
+                this.object.scale.copy(this.scaleStart).multiply(parentEVec);
 
                 break;
             }
@@ -954,10 +917,7 @@ class TransformControls extends Object3D {
         return true;
     }
 
-    onMouseUp(modelGroup) {
-        if (this.object.children.length > 1) {
-            console.log('this.multiObjectScaleCenter', modelGroup, this.multiObjectScaleCenter);
-        }
+    onMouseUp() {
         this.dragging = false;
     }
 }
