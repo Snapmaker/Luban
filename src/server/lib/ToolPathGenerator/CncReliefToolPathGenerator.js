@@ -57,18 +57,25 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     img.invert();
                 }
 
+                const { width, height } = img.bitmap;
+
                 img
                     .greyscale()
                     .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
-                    .resize(this.targetWidth, this.targetHeight)
                     .rotate(-this.rotationZ * 180 / Math.PI)
                     .background(0xffffffff);
+
+                // targetWidth&targetHeight will be changed after rotated
+                this.targetWidth = Math.round(this.targetWidth * img.bitmap.width / width);
+                this.targetHeight = Math.round(this.targetHeight * img.bitmap.height / height);
 
                 data = [];
                 for (let i = 0; i < this.targetWidth; i++) {
                     data[i] = [];
                     for (let j = 0; j < this.targetHeight; j++) {
-                        const idx = j * img.bitmap.width * 4 + i * 4;
+                        const x = Math.floor(i / this.targetWidth * img.bitmap.width);
+                        const y = Math.floor(j / this.targetHeight * img.bitmap.height);
+                        const idx = y * img.bitmap.width * 4 + x * 4;
                         data[i][j] = img.bitmap.data[idx];
                     }
                 }
