@@ -57,18 +57,25 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     img.invert();
                 }
 
+                const { width, height } = img.bitmap;
+
                 img
                     .greyscale()
                     .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
-                    .resize(this.targetWidth, this.targetHeight)
                     .rotate(-this.rotationZ * 180 / Math.PI)
                     .background(0xffffffff);
+
+                // targetWidth&targetHeight will be changed after rotated
+                this.targetWidth = Math.round(this.targetWidth * img.bitmap.width / width);
+                this.targetHeight = Math.round(this.targetHeight * img.bitmap.height / height);
 
                 data = [];
                 for (let i = 0; i < this.targetWidth; i++) {
                     data[i] = [];
                     for (let j = 0; j < this.targetHeight; j++) {
-                        const idx = j * img.bitmap.width * 4 + i * 4;
+                        const x = Math.floor(i / this.targetWidth * img.bitmap.width);
+                        const y = Math.floor(j / this.targetHeight * img.bitmap.height);
+                        const idx = y * img.bitmap.width * 4 + x * 4;
                         data[i][j] = img.bitmap.data[idx];
                     }
                 }
@@ -160,9 +167,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             if (zState) {
                 const lastCommand = this.toolPath.getLastCommand();
                 if (lastCommand.G !== 0 || lastCommand.Z < zState.z) {
-                    this.toolPath.move0Z(zState.z, zState.f);
+                    this.toolPath.move0Z(zState.maxZ, zState.f);
                 }
                 this.toolPath.move0XY(zState.x, zState.y, zState.f);
+                this.toolPath.move0Z(zState.z, zState.f);
             }
         };
 
@@ -209,23 +217,27 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
                         z = Math.max(curDepth, z);
                         if (currentZ === z) {
-                            this.toolPath.move1Y(gY, this.plungeSpeed);
+                            this.toolPath.move1Y(gY, this.workSpeed);
                         } else {
-                            this.toolPath.move1YZ(gY, z, this.plungeSpeed);
+                            this.toolPath.move1YZ(gY, z, this.workSpeed);
                         }
                         currentZ = z;
                         cutDown = true;
                     } else {
                         if (!zState) {
-                            zState = { x: gX, y: gY, z: z, f: this.jogSpeed };
+                            zState = { x: gX, y: gY, z: z, maxZ: z, f: this.jogSpeed };
                         } else {
-                            zState = { x: gX, y: gY, z: Math.max(z, zState.z), f: this.jogSpeed };
+                            zState = { x: gX, y: gY, z: z, maxZ: Math.max(z, zState.maxZ), f: this.jogSpeed };
                         }
                     }
                 }
-                move0Z(zState);
-
-                this.toolPath.move0Z(this.safetyHeight, this.jogSpeed);
+                if (zState) {
+                    zState.z = this.safetyHeight;
+                    zState.maxZ = Math.max(zState.maxZ, this.safetyHeight);
+                    move0Z(zState);
+                } else {
+                    this.toolPath.move0Z(this.safetyHeight, this.jogSpeed);
+                }
 
                 currentZ = this.safetyHeight;
                 const p = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
