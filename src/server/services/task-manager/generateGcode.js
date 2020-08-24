@@ -136,6 +136,9 @@ export const generateGcode = (modelInfos, onProgress) => {
         + `;power(%): ${power}\n`
         + ';Header End\n'
         + '\n';
+
+    fileTotalLines += headerStart.split('\n').length - 1;
+
     headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
 
 

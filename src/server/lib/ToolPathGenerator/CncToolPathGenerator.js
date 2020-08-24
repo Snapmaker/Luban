@@ -7,7 +7,6 @@ import EventEmitter from 'events';
 import PolygonOffset from './PolygonOffset';
 import { flip, scale, rotate, translate } from '../../../shared/lib/SVGParser';
 import Toolpath from '../ToolPath';
-import GcodeParser from './GcodeParser';
 import { svgToSegments } from './SVGFill';
 import Normalizer from './Normalizer';
 
@@ -150,15 +149,16 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
     // Static method to generate `ToolPath` from SVG
     generateToolPath(svg, modelInfo) {
-        const { gcodeConfig, gcodeConfigPlaceholder } = modelInfo;
+        const { gcodeConfig } = modelInfo;
         const {
             pathType = 'path',
             toolDiameter, toolAngle,
-            targetDepth, stepDown, safetyHeight, stopHeight,
+            targetDepth, stepDown,
             enableTab = false, tabWidth, tabHeight, tabSpace,
-            fillEnabled, fillDensity
+            jogSpeed, workSpeed, plungeSpeed,
+            fillEnabled, fillDensity, isRotate, radius
         } = gcodeConfig;
-        const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
+        let { safetyHeight, stopHeight } = gcodeConfig;
 
         // Process path according to path type
         this.processPathType(svg, pathType, {
@@ -171,15 +171,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
             toolDiameter
         });
 
-        /*
-        // TODO: normalizer
-        CNCToolPathGenerator.processAnchor(svg,
-            'Center',
-            svg.viewBox[0],
-            svg.viewBox[0] + svg.viewBox[2],
-            svg.viewBox[1],
-            svg.viewBox[1] + svg.viewBox[3]);
-        */
         const normalizer = new Normalizer(
             'Center',
             svg.viewBox[0],
@@ -189,23 +180,24 @@ export default class CNCToolPathGenerator extends EventEmitter {
             { x: 1, y: 1 }
         );
 
-        // Start generate tool path
-        const toolPath = new Toolpath();
-        // toolPath.safeStart(normalizer, stopHeight, safetyHeight);
+        const toolPath = new Toolpath({ isRotate, radius });
+
         const point = getFirstPointFromSvg(svg);
+
+        const initialZ = isRotate ? radius : 0;
+        stopHeight += initialZ;
+        safetyHeight += initialZ;
 
         toolPath.safeStart(normalizer.x(point[0]), normalizer.y(point[1]), stopHeight, safetyHeight);
 
         toolPath.spindleOn();
-        // toolPath.move0Z(safetyHeight, jogSpeed);
-        // toolPath.move0Z(safetyHeight, 100);
 
         const passes = Math.ceil(targetDepth / stepDown);
-        let z = 0;
+        let z = initialZ;
         let progress = 0;
         for (let pass = 0; pass < passes; pass++) {
             // drop z
-            z = Math.max(-targetDepth, z - stepDown);
+            z = Math.max(initialZ - targetDepth, z - stepDown);
 
             // move to safety height
             toolPath.move0Z(safetyHeight, jogSpeed);
@@ -306,7 +298,10 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
     generateToolPathObj(svg, modelInfo) {
         // const { transformation, source } = modelInfo;
-        const { transformation, sourceHeight, sourceWidth, sourceType } = modelInfo;
+        const { headType, mode, transformation, sourceHeight, sourceWidth, sourceType, gcodeConfig } = modelInfo;
+
+        const { positionX, positionY, positionZ } = transformation;
+
         const originHeight = sourceHeight;
         const originWidth = sourceWidth;
         const targetHeight = transformation.height;
@@ -329,10 +324,25 @@ export default class CNCToolPathGenerator extends EventEmitter {
         rotate(svg, rotationZ);
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
-
         const toolPath = this.generateToolPath(svg, modelInfo);
-        const fakeGcodes = toolPath.toGcode();
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcodes, modelInfo);
-        return toolPathObject;
+
+        const boundingBox = toolPath.boundingBox;
+
+        boundingBox.max.x += positionX;
+        boundingBox.min.x += positionX;
+        boundingBox.max.y += positionY;
+        boundingBox.min.y += positionY;
+
+        return {
+            headType: headType,
+            mode: mode,
+            movementMode: (headType === 'laser' && mode === 'greyscale') ? gcodeConfig.movementMode : '',
+            data: toolPath.commands,
+            estimatedTime: toolPath.estimatedTime * 1.4,
+            positionX: positionX,
+            positionY: positionY,
+            positionZ: positionZ,
+            boundingBox: boundingBox
+        };
     }
 }

@@ -156,9 +156,9 @@ class ReliefGcodeParameters extends PureComponent {
                                         disabled={disabled}
                                         className="sm-parameter-row__input"
                                         value={density}
-                                        min={1}
-                                        max={10}
-                                        step={1}
+                                        min={0.1}
+                                        max={20}
+                                        step={0.1}
                                         onChange={this.actions.onChangeDensity}
                                     />
                                     <span className="sm-parameter-row__input-unit">dot/mm</span>

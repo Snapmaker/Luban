@@ -240,9 +240,9 @@ const generateCNCDefaults = (mode, sourceType) => {
             // greyscale-dot: workSpeed: null, dwellTime: 42
             toolDiameter: 3.175, // tool diameter (in mm)
             toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-            targetDepth: 1.0,
-            stepDown: 0.1,
-            safetyHeight: 5.0,
+            targetDepth: 2.0,
+            stepDown: 0.5,
+            safetyHeight: 1.0,
             stopHeight: 10,
             density: 5,
             jogSpeed: 3000,
@@ -258,9 +258,9 @@ const generateCNCDefaults = (mode, sourceType) => {
             fillEnabled: DEFAULT_FILL_ENABLED,
             fillDensity: DEFAULT_FILL_DENSITY,
             pathType: 'path',
-            targetDepth: 1.0,
-            stepDown: 0.2,
-            safetyHeight: 0.2,
+            targetDepth: 2.0,
+            stepDown: 0.5,
+            safetyHeight: 1,
             stopHeight: 10,
             enableTab: false,
             tabWidth: 2,
