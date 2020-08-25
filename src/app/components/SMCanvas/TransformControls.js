@@ -875,7 +875,6 @@ class TransformControls extends Object3D {
                 const rotationAxis = new Vector3((this.axis === 'X') ? 1 : 0, (this.axis === 'Y') ? 1 : 0, (this.axis === 'Z') ? 1 : 0);
                 const rotationAngle = offset.dot(new Vector3().crossVectors(rotationAxis, cameraPosition).normalize()) * ROTATION_SPEED;
 
-
                 rotationAxis.applyQuaternion(this.parentQuaternionInv);
                 const quaternion = new Quaternion().setFromAxisAngle(rotationAxis, rotationAngle);
 

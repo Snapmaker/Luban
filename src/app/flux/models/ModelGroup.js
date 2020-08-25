@@ -428,6 +428,10 @@ class ModelGroup extends EventEmitter {
         }
         this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
         this.selectedGroup.updateMatrix();
+        this.selectedGroup.children.forEach((meshObject) => {
+            const model = this.models.find(d => d.meshObject === meshObject);
+            model.onTransform();
+        });
     }
 
     selectModelById(modelArray, isMultiSelect = false) {
@@ -803,6 +807,10 @@ class ModelGroup extends EventEmitter {
     // model transformation triggered by controls
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
+        if (this.selectedGroup.position.z !== 0) {
+            this.selectedGroup.position.setZ(0);
+            this.selectedGroup.updateMatrix();
+        }
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
