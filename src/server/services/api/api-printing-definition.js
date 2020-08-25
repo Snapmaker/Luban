@@ -122,7 +122,7 @@ export const updateDefinition = (req, res) => {
 };
 
 export const uploadDefinition = (req, res) => {
-    const { definitionId, tmpPath, series } = req.body;
+    const { definitionId, tmpPath } = req.body;
     const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${tmpPath}`, 'utf-8');
     const obj = JSON.parse(readFileSync);
 
@@ -138,7 +138,7 @@ export const uploadDefinition = (req, res) => {
     const definitionLoader = new DefinitionLoader();
     try {
         definitionLoader.loadJSON(definitionId, obj);
-        const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionId}.def.json`);
+        const filePath = path.join(`${DataStorage.configDir}`, `${definitionId}.def.json`);
         fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
             if (err) {
                 res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

@@ -140,7 +140,7 @@ class Transformation extends PureComponent {
                             </span>
                             <span
                                 className={styles['description-text']}
-                                style={{ 'margin-left': '6px', width: '32px', textAlign: 'center', display: 'inline-block' }}
+                                style={{ marginLeft: '6px', width: '32px', textAlign: 'center', display: 'inline-block' }}
                             />
                             <Input
                                 className={styles['input-box-right']}
