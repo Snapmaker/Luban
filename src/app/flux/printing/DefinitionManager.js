@@ -61,7 +61,7 @@ class DefinitionManager {
     }
 
     async uploadDefinition(definitionId, tmpPath) {
-        const res = await api.printingConfigs.uploadDefinition(definitionId, tmpPath, this.series);
+        const res = await api.printingConfigs.uploadDefinition(definitionId, tmpPath);
         const { err, definition } = res.body;
         if (err) {
             console.error(err);
