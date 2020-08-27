@@ -112,7 +112,7 @@ const INITIAL_STATE = {
         elapsedTime: 0,
         remainingTime: 0
     },
-
+    shouldShowCncWarning: true,
     connectionTimeout: 3000
 };
 
@@ -151,6 +151,12 @@ export const actions = {
             logger.info(e);
         }
 
+        // Load CNC security warning
+        let shouldShowCncWarning = machineStore.get('settings.shouldShowCncWarning');
+        if (shouldShowCncWarning === undefined) {
+            shouldShowCncWarning = INITIAL_STATE.shouldShowCncWarning;
+        }
+
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
             seriesInfo.setting.size = size;
             seriesInfo.setting.laserSize = seriesInfo.setting.size;
@@ -164,7 +170,8 @@ export const actions = {
             port: machinePort,
             manualIp: manualIp,
             connectionType: connectionType,
-            connectionTimeout: connectionTimeout
+            connectionTimeout: connectionTimeout,
+            shouldShowCncWarning
         }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
@@ -782,8 +789,13 @@ export const actions = {
         dispatch(actions.updateState({
             consoleLogs: consoleLogs
         }));
+    },
+    setShouldShowCncWarning: (value) => (dispatch) => {
+        machineStore.set('settings.shouldShowCncWarning', value);
+        dispatch(actions.updateState({
+            shouldShowCncWarning: value
+        }));
     }
-
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

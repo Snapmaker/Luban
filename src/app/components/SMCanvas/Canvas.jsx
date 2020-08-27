@@ -16,6 +16,7 @@ import Controls, { EVENTS } from './Controls';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
+const EPS = 0.000001;
 
 
 class Canvas extends Component {
@@ -31,8 +32,13 @@ class Canvas extends Component {
         cameraInitialPosition: PropTypes.object.isRequired,
         cameraInitialTarget: PropTypes.object.isRequired,
         cameraUp: PropTypes.object,
+        scale: PropTypes.number,
+        target: PropTypes.object,
+
         // callback
         onSelectModels: PropTypes.func,
+        updateTarget: PropTypes.func,
+        updateScale: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
 
@@ -99,6 +105,21 @@ class Canvas extends Component {
         window.addEventListener('resize', this.resizeWindow, false);
     }
 
+    // just for laser and cnc, dont set scale prop for 3dp
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.scale !== this.lastScale) {
+            const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
+            this.controls.setScale(currentScale / nextProps.scale);
+            this.lastScale = nextProps.scale;
+            this.controls.updateCamera();
+        }
+        if (nextProps.target !== this.lastTarget) {
+            const { x, y } = nextProps.target;
+            this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
+            this.controls.updateCamera();
+        }
+    }
+
     componentWillUnmount() {
         if (this.controls) {
             this.controls.dispose();
@@ -106,6 +127,20 @@ class Canvas extends Component {
 
         this.transformControls && this.transformControls.dispose();
     }
+
+    onScale = () => {
+        const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
+        if (Math.abs(currentScale - this.lastScale) > EPS) {
+            this.lastScale = currentScale;
+            this.props.updateScale(currentScale);
+        }
+    };
+
+    onChangeTarget = () => {
+        const { x, y } = this.controls.target;
+        this.lastTarget = { x, y };
+        this.props.updateTarget(this.lastTarget);
+    };
 
     getVisibleWidth() {
         return this.node.current.parentElement.clientWidth;
@@ -148,11 +183,14 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement);
+        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget);
         this.controls.canOperateModel = this.props.canOperateModel;
+        this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
+
+
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
@@ -207,7 +245,18 @@ class Canvas extends Component {
         this.camera.position.copy(position);
         this.controls.setTarget(target);
         this.renderScene();
+
+        if (position.x === 0 && position.y === 0) {
+            this.initialDistance = (position.z - target.z);
+        }
     };
+
+    setCameraOnTop = () => {
+        const dist = this.camera.position.distanceTo(this.controls.target);
+        this.camera.position.copy(new Vector3(0, 0, dist));
+        this.controls.setTarget(new Vector3(0, 0, 0));
+        this.controls.updateCamera();
+    }
 
     resizeWindow = () => {
         const width = this.getVisibleWidth();
@@ -256,10 +305,8 @@ class Canvas extends Component {
     }
 
     autoFocus(model) {
-        this.camera.position.copy(this.cameraInitialPosition);
-
         const target = model ? model.position.clone() : this.initialTarget;
-        this.controls.setTarget(target);
+        this.setCamera(this.cameraInitialPosition, target);
 
         const object = {
             positionX: this.camera.position.x,

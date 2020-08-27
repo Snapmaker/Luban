@@ -21,6 +21,8 @@ const INITIAL_STATE = {
 
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
+    scale: 1,
+    target: undefined,
 
     modelGroup: initModelGroup,
     toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
