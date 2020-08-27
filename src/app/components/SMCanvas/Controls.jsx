@@ -310,15 +310,23 @@ class Controls extends EventEmitter {
      onClick = (event) => {
          const mousePosition = this.getMouseCoord(event);
          const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
-         if (event.shiftKey) {
-             if (distance < 0.004 && this.selectableObjects.children) {
-                 // Check if we select a new object
-                 const coord = this.getMouseCoord(event);
-                 this.ray.setFromCamera(coord, this.camera);
+         if (distance < 0.004 && this.selectableObjects.children) {
+             let allObjects = this.selectableObjects.children;
+             if (this.selectedGroup && this.selectedGroup.children) {
+                 allObjects = allObjects.concat(this.selectedGroup.children);
+             }
 
-                 const intersect = this.ray.intersectObjects(this.selectableObjects.children.concat(this.selectedGroup.children), false)[0];
-                 this.modelGroup.removeSelectedObjectParentMatrix();
+             // Check if we select a new object
+             const coord = this.getMouseCoord(event);
+             this.ray.setFromCamera(coord, this.camera);
 
+             const intersect = this.ray.intersectObjects(allObjects, false)[0];
+             this.modelGroup.removeSelectedObjectParentMatrix();
+             this.selectedGroup.scale.copy(new THREE.Vector3(1, 1, 1));
+             this.selectedGroup.rotation.copy(new THREE.Euler(0, 0, 0));
+             this.selectedGroup.updateMatrix();
+
+             if (event.shiftKey) {
                  if (intersect) {
                      const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
                      if (objectIndex === -1) {
@@ -327,32 +335,18 @@ class Controls extends EventEmitter {
                          this.selectableObjects.add(intersect.object);
                      }
                  }
-                 this.modelGroup.applySelectedObjectParentMatrix();
-                 this.transformControl.attach(this.selectedGroup);
-                 this.emit(EVENTS.SELECT_OBJECTS, this.selectedGroup);
-                 this.emit(EVENTS.UPDATE);
-             }
-         } else {
-             if (distance < 0.004 && this.selectableObjects.children) {
-                 // Check if we select a new object
-                 const coord = this.getMouseCoord(event);
-
-                 this.ray.setFromCamera(coord, this.camera);
-                 const intersect = this.ray.intersectObjects(this.selectableObjects.children.concat(this.selectedGroup.children), false)[0];
-                 this.modelGroup.removeSelectedObjectParentMatrix();
-
+             } else {
                  this.modelGroup.unselectAllModels();
                  if (intersect) {
                      this.selectedGroup.add(intersect.object);
                  }
-                 this.modelGroup.applySelectedObjectParentMatrix();
-
-                 this.transformControl.attach(this.selectedGroup);
-                 this.emit(EVENTS.SELECT_OBJECTS, this.selectedGroup);
-                 this.emit(EVENTS.UPDATE);
              }
+             this.modelGroup.applySelectedObjectParentMatrix();
+             this.emit(EVENTS.SELECT_OBJECTS, this.selectedGroup);
+             this.transformControl.attach(this.selectedGroup);
+             this.emit(EVENTS.UPDATE);
+             this.mouseDownPosition = null;
          }
-         this.mouseDownPosition = null;
      };
 
     onMouseWheel = (event) => {

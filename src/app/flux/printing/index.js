@@ -687,8 +687,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
-                const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
+                const stl = new ModelExporter().parse(modelGroup.showObject, 'stl', true);
                 modelGroup.addHiddenMeshObjects();
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);

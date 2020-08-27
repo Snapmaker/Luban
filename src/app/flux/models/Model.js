@@ -46,7 +46,7 @@ class Model {
 
     constructor(modelInfo, modelGroup) {
         const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName } = modelInfo;
+            transformation, processImageName, modelName } = modelInfo;
 
         this.limitSize = limitSize;
 
@@ -56,7 +56,11 @@ class Model {
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = modelID;
-        this.modelName = '';
+        this.modelName = (modelName !== undefined ? modelName : this.createNewModelName(modelGroup, {
+            'sourceType': sourceType,
+            'mode': mode,
+            'originalName': originalName
+        }));
 
         this.visible = true;
         this.headType = headType;
@@ -106,6 +110,42 @@ class Model {
         this.modelName = newName;
     }
 
+    createNewModelName(modelGroup, model) {
+        if (model === undefined) {
+            model = this.getTaskInfo();
+        }
+        let baseName = '';
+        if (model.sourceType === '3d') {
+            baseName = '3DModel';
+        } else {
+            if (model.sourceType === 'text') {
+                baseName = 'Text';
+            } else if (model.mode !== 'vector') {
+                baseName = model.originalName;
+            // todo, it may named when upload, but not when create model
+            } else {
+                baseName = 'Shape';
+            }
+        }
+        let count = 1;
+        let name = '';
+        while (1) {
+            if (baseName === 'Text' || baseName === 'Shape') {
+                name = `${baseName} ${count.toString()}`;
+            } else {
+                if (count === 1) {
+                    name = baseName;
+                } else {
+                    name = `${baseName}(${count.toString()})`;
+                }
+            }
+            if (!modelGroup || !modelGroup.getModelByModelName(name)) {
+                return name;
+            }
+            count++;
+        }
+    }
+
     getTaskInfo() {
         const taskInfo = {
             modelID: this.modelID,
@@ -129,7 +169,7 @@ class Model {
             }
         };
         // because of text sourcefile has been transformed
-        if (this.config.svgNodeName !== 'text') {
+        if (this.config && this.config.svgNodeName !== 'text') {
             taskInfo.transformation.width *= Math.abs(this.transformation.scaleX);
             taskInfo.transformation.height *= Math.abs(this.transformation.scaleY);
             taskInfo.transformation.flip = 0;
@@ -486,7 +526,6 @@ class Model {
             return;
         }
         this.computeBoundingBox();
-
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
 
         this.onTransform();
@@ -652,6 +691,7 @@ class Model {
         this.stickToPlate();
         this.meshObject.position.x = positionX;
         this.meshObject.position.y = positionY;
+        this.meshObject.updateMatrix();
 
         this.onTransform();
     }
