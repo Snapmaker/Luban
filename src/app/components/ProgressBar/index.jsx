@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './styles.styl';
+import { EPSILON } from '../../constants';
 
 class ProgressBar extends React.PureComponent {
     static propTypes = {
@@ -18,8 +19,13 @@ class ProgressBar extends React.PureComponent {
     componentWillReceiveProps(nextProps) {
         if (nextProps.progress !== this.props.progress) {
             this.setState({ display: 'block' });
-            this.timeout && clearTimeout(this.timeout);
-            this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+                this.timeout = null;
+            }
+            if (nextProps.progress > 100 - EPSILON) {
+                this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
+            }
         }
     }
 
