@@ -185,7 +185,7 @@ class MarlinReplyParserEnclosure {
         return {
             type: MarlinReplyParserEnclosure,
             payload: {
-                enclosure: r[1] === 'On'
+                enclosureDoorDetection: r[1] === 'On'
             }
         };
     }
@@ -713,8 +713,8 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserEnclosure) {
-            if (this.settings.enclosure !== payload.enclosure) {
-                this.set({ enclosure: payload.enclosure });
+            if (this.settings.enclosureDoorDetection !== payload.enclosureDoorDetection) {
+                this.set({ enclosureDoorDetection: payload.enclosureDoorDetection });
             }
             this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserEnclosureOnline) {
