@@ -19,7 +19,7 @@ class ProgressBar extends React.PureComponent {
         if (nextProps.progress !== this.props.progress) {
             this.setState({ display: 'block' });
             this.timeout && clearTimeout(this.timeout);
-            // this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
+            this.timeout = setTimeout(() => this.setState({ display: 'none' }), 5000);
         }
     }
 

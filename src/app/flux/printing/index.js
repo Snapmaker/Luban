@@ -794,15 +794,10 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    selectMultiModel: (selectedGroup) => (dispatch, getState) => {
+    selectMultiModel: (intersect, isMultiSelect) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const selectedModelArray = [];
-        selectedGroup.children.forEach((item) => {
-            const find = modelGroup.getModels().find(v => v.meshObject === item);
-            selectedModelArray.push(find);
-        });
 
-        const modelState = modelGroup.selectMultiModel(selectedModelArray);
+        const modelState = modelGroup.selectMultiModel(intersect, isMultiSelect);
         dispatch(actions.updateState(modelState));
 
         dispatch(actions.render());

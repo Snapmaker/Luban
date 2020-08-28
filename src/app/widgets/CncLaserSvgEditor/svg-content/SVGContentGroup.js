@@ -247,12 +247,12 @@ class SVGContentGroup {
         }
     }
 
-    getSelectedElementHideFlag() {
+    getSelectedElementVisible() {
         const selectedElement = this.getSelected();
         return selectedElement.visible;
     }
 
-    setSelectedElementHideFlag(visible) {
+    setSelectedElementVisible(visible) {
         const selectedElement = this.getSelected();
         selectedElement.visible = visible;
     }

@@ -351,8 +351,8 @@ class ModelGroup extends EventEmitter {
 
 
     calculateSelectedGroupPosition() {
-        const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, 0);
-        const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, 0);
+        const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+        const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         this.selectedGroup.children.forEach((meshObject) => {
             maxObjectPosition.x = Math.max(meshObject.position.x, maxObjectPosition.x);
             maxObjectPosition.y = Math.max(meshObject.position.y, maxObjectPosition.y);
@@ -409,11 +409,11 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup.updateMatrix();
     }
 
+    // use for widget
     selectModelById(modelArray = [], isMultiSelect = false) {
         let state;
         this.removeSelectedObjectParentMatrix();
         this.resetSelectedObjectScaleAndRotation();
-
         if (isMultiSelect === false) {
             this.selectedModelArray = [];
             this.selectedModelIDArray = [];
@@ -457,28 +457,50 @@ class ModelGroup extends EventEmitter {
         return state;
     }
 
-    selectMultiModel(modelArray) {
-        this.selectedModelArray = [];
+    // use for canvas
+    selectMultiModel(intersect, isMultiSelect) {
         let state;
-        this.models.forEach((model) => {
-            model.isSelected = false;
-            model.meshObject.material = materialNormal;
-            this.object.add(model.meshObject);
-        });
-        if (modelArray.length) {
-            modelArray.forEach((model) => {
+        this.removeSelectedObjectParentMatrix();
+        if (isMultiSelect) {
+            if (intersect) {
+                this.resetSelectedObjectScaleAndRotation();
+                const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                if (objectIndex === -1) {
+                    const model = this.models.find(d => d.meshObject === intersect.object);
+                    if (model) {
+                        model.isSelected = true;
+                        model.meshObject.material = materialSelected;
+                        this.selectedModelArray.push(model);
+                        this.selectedGroup.add(model.meshObject);
+                    }
+                } else {
+                    const model = this.models.find(d => d.meshObject === intersect.object);
+                    if (model) {
+                        model.isSelected = false;
+                        model.meshObject.material = materialNormal;
+                        this.object.add(model.meshObject);
+                        this.selectedModelArray = [];
+                        this.selectedGroup.children.forEach((meshObject) => {
+                            const selectedModel = this.models.find(d => d.meshObject === meshObject);
+                            this.selectedModelArray.push(selectedModel);
+                        });
+                    }
+                }
+            }
+        } else {
+            this.unselectAllModels();
+            if (intersect) {
+                this.resetSelectedObjectScaleAndRotation();
+                const model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
                     model.isSelected = true;
                     model.meshObject.material = materialSelected;
                     this.selectedModelArray.push(model);
                     this.selectedGroup.add(model.meshObject);
-                    if (model.estimatedTime) {
-                        this.estimatedTime = model.estimatedTime;
-                    }
-                    model.computeBoundingBox();
                 }
-            });
+            }
         }
+        this.applySelectedObjectParentMatrix();
         if (this.selectedModelArray.length > 0) {
             const modelState = this.getState();
             state = modelState;
@@ -518,6 +540,8 @@ class ModelGroup extends EventEmitter {
         this.selectedModelIDArray = [];
         this.selectedGroup.children.splice(0);
         this.models.forEach((model) => {
+            model.isSelected = false;
+            model.meshObject.material = materialNormal;
             this.object.add(model.meshObject);
         });
         // this.removeSelectedObjectParentMatrix();
@@ -566,8 +590,10 @@ class ModelGroup extends EventEmitter {
                 selected.isSelected = false;
                 selected.meshObject.material = materialNormal;
                 if (selected.sourceType === '3d') {
-                    const selectedConvexGeometry = selected.convexGeometry.clone();
-                    model.convexGeometry = selectedConvexGeometry;
+                    if (selected.convexGeometry) {
+                        const selectedConvexGeometry = selected.convexGeometry.clone();
+                        model.convexGeometry = selectedConvexGeometry;
+                    }
                     model.stickToPlate();
                     model.modelName = model.createNewModelName(this);
                     model.meshObject.position.x = 0;
@@ -626,8 +652,10 @@ class ModelGroup extends EventEmitter {
                 const model = selected.clone();
                 this.object.add(selected.meshObject);
                 if (selected.sourceType === '3d') {
-                    const selectedConvexGeometry = selected.convexGeometry.clone();
-                    model.convexGeometry = selectedConvexGeometry;
+                    if (selected.convexGeometry) {
+                        const selectedConvexGeometry = selected.convexGeometry.clone();
+                        model.convexGeometry = selectedConvexGeometry;
+                    }
                     model.stickToPlate();
                     model.modelName = model.createNewModelName(this);
                     model.meshObject.position.x = 0;

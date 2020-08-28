@@ -255,7 +255,7 @@ class CNCPath extends PureComponent {
                         )}
                         {/* {isEditor && isSvgElement && (
                             <Appearance
-                                disabled={selectedModelHideFlag}
+                                disabled={selectedModelVisible}
                                 config={config}
                                 selectedModel={selectedModel}
                                 updateSelectedModelTextConfig={updateSelectedModelTextConfig}

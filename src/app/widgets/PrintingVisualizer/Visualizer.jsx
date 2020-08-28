@@ -23,9 +23,7 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        // model: PropTypes.object,
-        // selectedModelID: PropTypes.string,
-        selectedModelIDArray: PropTypes.any,
+        selectedModelIDArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -34,7 +32,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
-        selectModels: PropTypes.func.isRequired,
+        selectMultiModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -78,8 +76,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModels: (selectedGroup) => {
-            this.props.selectModels(selectedGroup);
+        onSelectModels: (intersect, isMultiSelect,) => {
+            this.props.selectMultiModel(intersect, isMultiSelect);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -356,7 +354,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectModels: (modelMesh) => dispatch(printingActions.selectMultiModel(modelMesh)),
+    selectMultiModel: (intersect, isMultiSelect) => dispatch(printingActions.selectMultiModel(intersect, isMultiSelect)),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),

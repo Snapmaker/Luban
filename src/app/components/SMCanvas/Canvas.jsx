@@ -155,12 +155,11 @@ class Canvas extends Component {
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
-        this.controls.setModelGroup(this.modelGroup);
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
-        this.controls.on(EVENTS.SELECT_OBJECTS, (objects) => {
-            this.onSelectModels(objects);
+        this.controls.on(EVENTS.SELECT_OBJECTS, (intersect, isMultiSelect) => {
+            this.onSelectModels(intersect, isMultiSelect);
         });
 
         this.controls.on(EVENTS.UNSELECT_OBJECT, () => {
