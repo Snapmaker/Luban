@@ -559,7 +559,6 @@ class Model {
         }
     }
 
-
     clone() {
         const clone = new Model({
             ...this,
