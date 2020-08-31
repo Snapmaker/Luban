@@ -301,7 +301,6 @@ class Controls extends EventEmitter {
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
-
     /**
      * Trigger by mouse event "mousedown" + "mouseup", Check if a new object is selected.
      *
