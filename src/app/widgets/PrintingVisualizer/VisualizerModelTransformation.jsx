@@ -16,9 +16,8 @@ import { actions as printingActions } from '../../flux/printing';
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         hasModel: PropTypes.bool.isRequired,
-        visible: PropTypes.bool,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -31,7 +30,7 @@ class VisualizerModelTransformation extends PureComponent {
             scaleY: PropTypes.number,
             scaleZ: PropTypes.number
         }).isRequired,
-
+        // transformation: PropTypes.object,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
@@ -39,10 +38,11 @@ class VisualizerModelTransformation extends PureComponent {
 
 
     actions = {
-        changeUniformScalingState: () => {
+        changeUniformScalingState: (uniformScalingState) => {
             const transformation = {};
-            transformation.uniformScalingState = !this.props.transformation.uniformScalingState;
+            transformation.uniformScalingState = !uniformScalingState;
             this.props.updateSelectedModelTransformation(transformation);
+            this.props.onModelAfterTransform();
         },
         onModelTransform: (type, value) => {
             const { size } = this.props;
@@ -74,6 +74,9 @@ class VisualizerModelTransformation extends PureComponent {
                 case 'rotateZ':
                     transformation.rotationZ = value;
                     break;
+                case 'uniformScalingState':
+                    transformation.uniformScalingState = value;
+                    break;
                 default:
                     break;
             }
@@ -89,17 +92,29 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelID, hasModel, transformMode, visible } = this.props;
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = this.props.transformation;
-        const disabled = !(selectedModelID && hasModel && visible);
-        const moveX = Number(toFixed(positionX, 1));
-        const moveY = Number(toFixed(positionY, 1));
-        const scaleXPercent = Number(toFixed((scaleX * 100), 1));
-        const scaleYPercent = Number(toFixed((scaleY * 100), 1));
-        const scaleZPercent = Number(toFixed((scaleZ * 100), 1));
-        const rotateX = Number(toFixed(THREE.Math.radToDeg(rotationX), 1));
-        const rotateY = Number(toFixed(THREE.Math.radToDeg(rotationY), 1));
-        const rotateZ = Number(toFixed(THREE.Math.radToDeg(rotationZ), 1));
+        const { size, selectedModelArray, hasModel, transformMode, transformation } = this.props;
+        let moveX = 0;
+        let moveY = 0;
+        let scaleXPercent = 100;
+        let scaleYPercent = 100;
+        let scaleZPercent = 100;
+        let rotateX = 0;
+        let rotateY = 0;
+        let rotateZ = 0;
+        let uniformScalingState = true;
+
+        const disabled = !(selectedModelArray.length > 0 && hasModel);
+        if (selectedModelArray.length >= 1) {
+            moveX = Number(toFixed(transformation.positionX, 1));
+            moveY = Number(toFixed(transformation.positionY, 1));
+            rotateX = Number(toFixed(THREE.Math.radToDeg(transformation.rotationX), 1));
+            rotateY = Number(toFixed(THREE.Math.radToDeg(transformation.rotationY), 1));
+            rotateZ = Number(toFixed(THREE.Math.radToDeg(transformation.rotationZ), 1));
+            scaleXPercent = Number(toFixed((transformation.scaleX * 100), 1));
+            scaleYPercent = Number(toFixed((transformation.scaleY * 100), 1));
+            scaleZPercent = Number(toFixed((transformation.scaleZ * 100), 1));
+            uniformScalingState = transformation.uniformScalingState;
+        }
 
         return (
             <React.Fragment>
@@ -178,8 +193,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(value) => {
                                         actions.onModelTransform('moveX', value);
-                                    }}
-                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -214,10 +227,10 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(value) => {
                                         actions.onModelTransform('moveY', value);
-                                    }}
-                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
+
+
                                 />
                             </span>
                         </div>
@@ -246,10 +259,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleXPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleX', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleZ', value / 100);
-                                            actions.onModelTransform('scaleY', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -264,10 +273,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleYPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleY', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleX', value / 100);
-                                            actions.onModelTransform('scaleZ', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -282,10 +287,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     value={scaleZPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scaleZ', value / 100);
-                                        if (uniformScalingState === true) {
-                                            actions.onModelTransform('scaleX', value / 100);
-                                            actions.onModelTransform('scaleY', value / 100);
-                                        }
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -295,7 +296,7 @@ class VisualizerModelTransformation extends PureComponent {
                         <div className={styles.axis}>
                             <Anchor
                                 onClick={() => {
-                                    actions.changeUniformScalingState();
+                                    actions.changeUniformScalingState(uniformScalingState);
                                 }}
                             >
                                 <i className={classNames(styles.icon, uniformScalingState ? styles['icon-checked'] : styles['icon-unchecked'])} />
@@ -310,6 +311,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     actions.onModelTransform('scaleX', 1);
                                     actions.onModelTransform('scaleZ', 1);
                                     actions.onModelTransform('scaleY', 1);
+                                    actions.onModelTransform('uniformScalingState', true);
                                     actions.onModelAfterTransform();
                                 }}
                             >
@@ -318,6 +320,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
+
                 {!disabled && transformMode === 'rotate' && (
                     <div className={classNames(styles.panel, styles['rotate-panel'])}>
                         <div className={styles.axis}>
@@ -389,6 +392,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
+
+
                                 />
                             </span>
                         </div>
@@ -425,6 +430,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
+
+
                                 />
                             </span>
                         </div>
@@ -454,20 +461,17 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const {
-        selectedModelID,
-        visible,
+        modelGroup,
         hasModel,
-        transformMode,
-        transformation
+        transformMode
     } = printing;
 
     return {
         size: machine.size,
-        selectedModelID,
+        selectedModelArray: modelGroup.selectedModelArray,
+        transformation: modelGroup.getSelectedModelTransformation(),
         hasModel,
-        visible,
-        transformMode,
-        transformation
+        transformMode
     };
 };
 

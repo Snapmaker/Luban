@@ -32,7 +32,7 @@ class Canvas extends Component {
         cameraInitialTarget: PropTypes.object.isRequired,
         cameraUp: PropTypes.object,
         // callback
-        onSelectModel: PropTypes.func,
+        onSelectModels: PropTypes.func,
         onUnselectAllModels: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
@@ -67,7 +67,7 @@ class Canvas extends Component {
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
         // callback
-        this.onSelectModel = this.props.onSelectModel || noop;
+        this.onSelectModels = this.props.onSelectModels || noop;
         this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
@@ -90,8 +90,7 @@ class Canvas extends Component {
 
         this.group.add(this.printableArea);
         this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
-
-        this.group.add(this.modelGroup);
+        this.group.add(this.modelGroup.object);
 
         this.toolPathModelGroup && this.group.add(this.toolPathModelGroup);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
@@ -155,15 +154,14 @@ class Canvas extends Component {
         this.controls.canOperateModel = this.props.canOperateModel;
 
         this.controls.setTarget(this.initialTarget);
-        this.controls.setSelectableObjects(this.modelGroup.children);
-
-
+        this.controls.setSelectableObjects(this.modelGroup.object);
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
-        this.controls.on(EVENTS.SELECT_OBJECT, (object) => {
-            this.onSelectModel(object);
+        this.controls.on(EVENTS.SELECT_OBJECTS, (intersect, isMultiSelect) => {
+            this.onSelectModels(intersect, isMultiSelect);
         });
+
         this.controls.on(EVENTS.UNSELECT_OBJECT, () => {
             this.onUnselectAllModels();
         });

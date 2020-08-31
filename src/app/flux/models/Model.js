@@ -2,11 +2,11 @@ import uuid from 'uuid';
 import * as THREE from 'three';
 
 import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
-
+import { controller } from '../../lib/controller';
 import { DATA_PREFIX } from '../../constants';
 
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
-import { controller } from '../../lib/controller';
+
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -14,8 +14,9 @@ const EVENTS = {
 
 let updateTimer;
 
-// const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
 const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0 });
+
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
     shininess: 30,
@@ -45,7 +46,7 @@ class Model {
 
     constructor(modelInfo, modelGroup) {
         const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName } = modelInfo;
+            transformation, processImageName, modelName } = modelInfo;
 
         this.limitSize = limitSize;
 
@@ -55,8 +56,13 @@ class Model {
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = modelID;
-        this.modelName = '';
+        this.modelName = (modelName !== undefined ? modelName : this.createNewModelName(modelGroup, {
+            'sourceType': sourceType,
+            'mode': mode,
+            'originalName': originalName
+        }));
 
+        this.visible = true;
         this.headType = headType;
         this.sourceType = sourceType; // 3d, raster, svg, text
         this.sourceHeight = sourceHeight;
@@ -104,6 +110,42 @@ class Model {
         this.modelName = newName;
     }
 
+    createNewModelName(modelGroup, model) {
+        if (model === undefined) {
+            model = this.getTaskInfo();
+        }
+        let baseName = '';
+        if (model.sourceType === '3d') {
+            baseName = '3DModel';
+        } else {
+            if (model.sourceType === 'text') {
+                baseName = 'Text';
+            } else if (model.mode !== 'vector') {
+                baseName = model.originalName;
+            // todo, it may named when upload, but not when create model
+            } else {
+                baseName = 'Shape';
+            }
+        }
+        let count = 1;
+        let name = '';
+        while (1) {
+            if (baseName === 'Text' || baseName === 'Shape') {
+                name = `${baseName} ${count.toString()}`;
+            } else {
+                if (count === 1) {
+                    name = baseName;
+                } else {
+                    name = `${baseName}(${count.toString()})`;
+                }
+            }
+            if (!modelGroup || !modelGroup.getModelByModelName(name)) {
+                return name;
+            }
+            count++;
+        }
+    }
+
     getTaskInfo() {
         const taskInfo = {
             modelID: this.modelID,
@@ -127,7 +169,7 @@ class Model {
             }
         };
         // because of text sourcefile has been transformed
-        if (this.config.svgNodeName !== 'text') {
+        if (this.config && this.config.svgNodeName !== 'text') {
             taskInfo.transformation.width *= Math.abs(this.transformation.scaleX);
             taskInfo.transformation.height *= Math.abs(this.transformation.scaleY);
             taskInfo.transformation.flip = 0;
@@ -287,7 +329,8 @@ class Model {
 
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        const { position, rotation, scale } = this.meshObject;
+        const { position, rotation, scale, uniformScalingState } = this.meshObject;
+
         const transformation = {
             positionX: position.x,
             positionY: position.y,
@@ -299,8 +342,10 @@ class Model {
             scaleY: scale.y,
             scaleZ: scale.z,
             width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y
+            height: geometrySize.y * scale.y,
+            uniformScalingState
         };
+
         this.transformation = {
             ...this.transformation,
             ...transformation
@@ -404,6 +449,7 @@ class Model {
             this.meshObject.scale.y = Math.abs(scaleY);
         }
         this.transformation = { ...this.transformation };
+
         return this.transformation;
     }
 
@@ -481,6 +527,7 @@ class Model {
         }
         this.computeBoundingBox();
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
+
         this.onTransform();
     }
 
@@ -501,16 +548,13 @@ class Model {
         // this.scale.copy(scale);
     }
 
-    setOverstepped(overstepped) {
-        if (this.overstepped === overstepped) {
-            return;
-        }
+    setOversteppedAndSelected(overstepped, isSelected) {
         this.overstepped = overstepped;
         if (this.overstepped) {
-            // this.material = materialOverstepped;
             this.meshObject.material = materialOverstepped;
+        } else if (isSelected) {
+            this.meshObject.material = materialSelected;
         } else {
-            // this.material = (this.selected ? materialSelected : materialNormal);
             this.meshObject.material = materialNormal;
         }
     }
@@ -646,6 +690,7 @@ class Model {
         this.stickToPlate();
         this.meshObject.position.x = positionX;
         this.meshObject.position.y = positionY;
+        this.meshObject.updateMatrix();
 
         this.onTransform();
     }

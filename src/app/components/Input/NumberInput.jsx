@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import log from '../../lib/log';
 import styles from './styles.styl';
 
-
 class NumberInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,

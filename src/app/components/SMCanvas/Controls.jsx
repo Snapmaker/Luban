@@ -24,7 +24,7 @@ const STATE = {
 export const EVENTS = {
     UPDATE: 'update',
     CONTEXT_MENU: 'contextmenu',
-    SELECT_OBJECT: 'object:select',
+    SELECT_OBJECTS: 'object:select',
     UNSELECT_OBJECT: 'object:unselect',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
@@ -34,6 +34,7 @@ class Controls extends EventEmitter {
     camera = null;
 
     group = null;
+
 
     domElement = null;
 
@@ -78,7 +79,9 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
 
-    selectedObject = null;
+    modelGroup = null;
+
+    selectedGroup = null;
 
     ray = new THREE.Raycaster();
 
@@ -200,7 +203,7 @@ class Controls extends EventEmitter {
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
                 // Transform on selected object
-                if (this.selectedObject) {
+                if (this.selectedGroup && this.selectedGroup.children.length > 0) {
                     const coord = this.getMouseCoord(event);
                     // Call hover to update axis selected
                     this.transformControl.onMouseHover(coord);
@@ -244,7 +247,7 @@ class Controls extends EventEmitter {
     onMouseHover = (event) => {
         event.preventDefault();
 
-        if (!this.selectedObject || this.state !== STATE.NONE) {
+        if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
 
@@ -278,16 +281,6 @@ class Controls extends EventEmitter {
 
     onDocumentMouseUp = (event) => {
         switch (this.state) {
-            case STATE.ROTATE:
-                // Left click to unselect object
-                if (!this.rotateMoved) {
-                    this.selectedObject = null;
-                    this.transformControl.detach();
-
-                    this.emit(EVENTS.UNSELECT_OBJECT);
-                    this.emit(EVENTS.UPDATE);
-                }
-                break;
             case STATE.PAN:
                 if (!this.panMoved) { // Right click to open context menu
                     // Note that the event is mouse up, not really contextmenu
@@ -313,26 +306,26 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-    onClick = (event) => {
-        const mousePosition = this.getMouseCoord(event);
-        const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+     onClick = (event) => {
+         const mousePosition = this.getMouseCoord(event);
+         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+         if (distance < 0.004 && this.selectableObjects.children) {
+             let allObjects = this.selectableObjects.children;
+             if (this.selectedGroup && this.selectedGroup.children) {
+                 allObjects = allObjects.concat(this.selectedGroup.children);
+             }
+             // Check if we select a new object
+             const coord = this.getMouseCoord(event);
+             this.ray.setFromCamera(coord, this.camera);
 
-        if (distance < 0.004 && this.selectableObjects) {
-            // Check if we select a new object
-            const coord = this.getMouseCoord(event);
-            this.ray.setFromCamera(coord, this.camera);
-
-            const intersect = this.ray.intersectObjects(this.selectableObjects, false)[0];
-
-            if (intersect && intersect.object !== this.selectedObject) {
-                this.selectedObject = intersect.object;
-                this.transformControl.attach(this.selectedObject);
-                this.emit(EVENTS.SELECT_OBJECT, this.selectedObject);
-                this.emit(EVENTS.UPDATE);
-            }
-        }
-        this.mouseDownPosition = null;
-    };
+             const intersect = this.ray.intersectObjects(allObjects, false)[0];
+             const isMultiSelect = event.shiftKey;
+             this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
+             this.transformControl.attach(this.selectedGroup);
+             this.emit(EVENTS.UPDATE);
+             this.mouseDownPosition = null;
+         }
+     };
 
     onMouseWheel = (event) => {
         if (this.state !== STATE.NONE) {
@@ -387,13 +380,13 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
-    attach(object, visible) {
-        this.selectedObject = object;
-        this.transformControl.attach(object, visible);
+
+    attach(objects) {
+        this.selectedGroup = objects;
+        this.transformControl.attach(objects);
     }
 
     detach() {
-        this.selectedObject = null;
         this.transformControl.detach();
     }
 

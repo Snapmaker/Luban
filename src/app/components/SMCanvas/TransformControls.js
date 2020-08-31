@@ -4,6 +4,7 @@ import {
     Vector3,
     Quaternion,
     Matrix4,
+    Group,
     Object3D,
     Raycaster,
     Mesh,
@@ -17,11 +18,15 @@ import {
     MeshBasicMaterial,
     LineBasicMaterial
 } from 'three';
+// import * as THREE from 'three';
+
 import { ArcBufferGeometry } from './ArcGeometry';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
+
+const OUTLINE = 'OUTLINE';
 
 /**
  * TransformControls
@@ -40,7 +45,7 @@ const EVENTS = {
 class TransformControls extends Object3D {
     camera = null;
 
-    object = null;
+    object = new Group();
 
     _mode = 'translate';
 
@@ -52,11 +57,11 @@ class TransformControls extends Object3D {
     dragging = false;
 
     // (local space)
-    positionStart = new Vector3();
-
     quaternionStart = new Quaternion();
 
-    scaleStart = new Vector3();
+    scaleStart = new Vector3(1, 1, 1);
+
+    positionStart = new Vector3(0, 0, 0);
 
     // (world space)
 
@@ -66,9 +71,9 @@ class TransformControls extends Object3D {
 
     parentQuaternion = new Quaternion();
 
-    parentQuaternionInv = new Quaternion();
-
     parentScale = new Vector3();
+
+    parentQuaternionInv = new Quaternion();
 
     // Mouse down point which intersects with plane (world space)
     pointStart = new Vector3();
@@ -84,10 +89,23 @@ class TransformControls extends Object3D {
         this.initDefaults();
         this.initTranslatePeripherals();
         this.initRotatePeripherals();
+        this.initSelectedPeripherals();
         this.initScalePeripherals();
         this.initPlane();
         this.destroyDefaults();
     }
+
+    calculateScalePosition(originalPosition, centerPosition, eVec) {
+        const positionX = centerPosition.x + (originalPosition.x - centerPosition.x) * eVec.x;
+        const positionY = centerPosition.y + (originalPosition.y - centerPosition.y) * eVec.y;
+        const positionZ = centerPosition.z + (originalPosition.z - centerPosition.z) * eVec.z;
+        return {
+            x: positionX,
+            y: positionY,
+            z: positionZ
+        };
+    }
+
 
     createPeripheral(definitions) {
         const peripheral = new Object3D();
@@ -144,10 +162,20 @@ class TransformControls extends Object3D {
             fog: false
         });
 
+        const selectedlineMaterial = new LineBasicMaterial({
+            depthTest: false,
+            depthWrite: false,
+            transparent: true,
+            linewidth: 4,
+            fog: false
+        });
+
+
         const RED = 0xe93100;
         const GREEN = 0x22ac38;
         const BLUE = 0x00b7ee;
         const GRAY = 0x787878;
+        const DARKGRAY = 0x2778dd;
 
         const meshMaterialRed = meshMaterial.clone();
         meshMaterialRed.color.set(RED);
@@ -161,6 +189,9 @@ class TransformControls extends Object3D {
         const meshMaterialInvisible = meshMaterial.clone();
         meshMaterialInvisible.visible = false;
 
+        const lineMaterialDarkGray = selectedlineMaterial.clone();
+        lineMaterialDarkGray.color.set(DARKGRAY);
+
         const lineMaterialRed = lineMaterial.clone();
         lineMaterialRed.color.set(RED);
 
@@ -173,9 +204,14 @@ class TransformControls extends Object3D {
         const lineMaterialGray = lineMaterial.clone();
         lineMaterialGray.color.set(GRAY);
 
+        const selectedPoints = [];
+        selectedPoints.push(new Vector3(0, 0, 0));
+        selectedPoints.push(new Vector3(1, 0, 0));
+
         this.defaults = {
             ARROW: new CylinderBufferGeometry(0, 0.05, 0.2, 12, 1, false),
             LINE: new BufferGeometry(),
+            SELECTEDLINE: new BufferGeometry().setFromPoints(selectedPoints),
             BOX: new BoxBufferGeometry(0.125, 0.125, 0.125),
 
             TRANSLATE_PICKER: new CylinderBufferGeometry(0.2, 0, 1, 4, 1, false),
@@ -186,6 +222,7 @@ class TransformControls extends Object3D {
             MESH_MATERIAL_BLUE: meshMaterialBlue,
             MESH_MATERIAL_INVISIBLE: meshMaterialInvisible,
 
+            LINE_MATERIAL_DARKGRAY: lineMaterialDarkGray,
             LINE_MATERIAL_RED: lineMaterialRed,
             LINE_MATERIAL_GREEN: lineMaterialGreen,
             LINE_MATERIAL_BLUE: lineMaterialBlue,
@@ -221,6 +258,83 @@ class TransformControls extends Object3D {
         ]);
         this.translatePicker.visiable = false;
         this.add(this.translatePicker);
+    }
+
+    initSelectedPeripherals() {
+        const defaults = this.defaults;
+        // bottom
+        this.selectedFrontLeftBottom = this.createPeripheral([
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+        ]);
+        this.selectedFrontRightBottom = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+        ]);
+        this.selectedBackLeftBottom = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+        ]);
+        this.selectedBackRightBottom = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [0.2, 0.2, 0.2]]
+        ]);
+        // top
+        this.selectedFrontLeftTop = this.createPeripheral([
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.SELECTEDLINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+        ]);
+        this.selectedFrontRightTop = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+        ]);
+        this.selectedBackLeftTop = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+        ]);
+        this.selectedBackRightTop = this.createPeripheral([
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, null, [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, 0, Math.PI / 2], [-0.2, 0.2, 0.2]],
+            [OUTLINE, new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_DARKGRAY.clone()), null, [0, -Math.PI / 2, 0], [-0.2, 0.2, 0.2]]
+        ]);
+        this.allSelectedPeripherals = [
+            this.selectedFrontLeftBottom,
+            this.selectedFrontRightBottom,
+            this.selectedBackLeftBottom,
+            this.selectedBackRightBottom,
+            this.selectedFrontLeftTop,
+            this.selectedFrontRightTop,
+            this.selectedBackLeftTop,
+            this.selectedBackRightTop
+        ];
+        this.allSelectedPeripherals.forEach((peripheral) => {
+            this.add(peripheral);
+        });
+    }
+
+    hideAllPeripherals() {
+        this.translatePeripheral.visible = false;
+        this.rotatePeripheral.visible = false;
+        this.scalePeripheral.visible = false;
+    }
+
+    hideSelectedPeripherals() {
+        this.allSelectedPeripherals.forEach((peripheral) => {
+            peripheral.visible = false;
+        });
+    }
+
+    showSelectedPeripherals() {
+        this.allSelectedPeripherals.forEach((peripheral) => {
+            peripheral.visible = true;
+        });
     }
 
     initRotatePeripherals() {
@@ -299,80 +413,177 @@ class TransformControls extends Object3D {
         }
     }
 
+
     // Will be called when rendering scene
     updateMatrixWorld(force) {
-        if (this.object) {
-            // camera
+        if (this.object.children.length === 0) {
+            this.hideSelectedPeripherals();
+            this.hideAllPeripherals();
+        } else {
+            this.showSelectedPeripherals();
+        }
+
+        if (this.object.children && this.object.children.length > 0) {
             const cameraPosition = new Vector3();
             const cameraQuaternion = new Quaternion();
             const cameraScale = new Vector3();
-
+            // camera
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
+            const multiObjectPosition = this.object.position;
+            const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            const multiObjectWidth = new Vector3();
 
-            // object
             const objectPosition = new Vector3();
-            const objectQuaternion = new Quaternion();
             const objectScale = new Vector3();
+            const objectQuaternion = new Quaternion();
 
-            this.object.updateMatrixWorld();
+            this.object.children.forEach((objectControl) => {
+                const objectChildrenPosition = new Vector3();
+                const objectChildrenScale = new Vector3();
+                const objectChildrenQuaternion = new Quaternion();
+                // object
+
+                // objectControl.updateMatrixWorld();
+                objectControl.updateMatrix();
+                // const clone = objectControl.geometry.clone();
+                // clone.applyMatrix(new Matrix4().getInverse(this.object.matrix));
+                // clone.computeBoundingBox();
+                // objectControl.geometry.boundingBox = clone.boundingBox;
+
+                objectControl.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
+
+                if (objectControl.geometry.boundingBox) {
+                    const boundingBox = objectControl.geometry.boundingBox;
+                    minObjectBoundingBox.x = Math.min(boundingBox.min.x * objectChildrenScale.x + objectChildrenPosition.x, minObjectBoundingBox.x);
+                    minObjectBoundingBox.y = Math.min(boundingBox.min.y * objectChildrenScale.y + objectChildrenPosition.y, minObjectBoundingBox.y);
+                    minObjectBoundingBox.z = Math.min(boundingBox.min.z * objectChildrenScale.z + objectChildrenPosition.z, minObjectBoundingBox.z);
+
+                    maxObjectBoundingBox.x = Math.max(boundingBox.max.x * objectChildrenScale.x + objectChildrenPosition.x, maxObjectBoundingBox.x);
+                    maxObjectBoundingBox.y = Math.max(boundingBox.max.y * objectChildrenScale.y + objectChildrenPosition.y, maxObjectBoundingBox.y);
+                    maxObjectBoundingBox.z = Math.max(boundingBox.max.z * objectChildrenScale.z + objectChildrenPosition.z, maxObjectBoundingBox.z);
+                }
+
+
+                // Update peripherals
+                this.translatePeripheral.visible = (this.mode === 'translate' && objectControl.visible);
+                this.rotatePeripheral.visible = (this.mode === 'rotate' && objectControl.visible);
+                this.scalePeripheral.visible = (this.mode === 'scale' && objectControl.visible);
+            });
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
-            // objectPosition.setFromMatrixPosition(this.object.matrixWorld);
             this.objectQuaternionInv.copy(objectQuaternion).inverse();
 
-            // Fix: undo will cause parent not exist
-            // Todo: need unselect current model, when undo-redo cause current model removed
-            if (this.object.parent) {
-                this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
-            }
-
+            // parent
+            this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
 
-            // Update peripherals
-            this.translatePeripheral.visible = (this.mode === 'translate');
-            this.rotatePeripheral.visible = (this.mode === 'rotate');
-            this.scalePeripheral.visible = (this.mode === 'scale');
 
-            const eyeDistance = cameraPosition.distanceTo(objectPosition);
+            multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
+            multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
+            multiObjectWidth.z = (maxObjectBoundingBox.z - minObjectBoundingBox.z);
+
+
+            const eyeDistance = cameraPosition.distanceTo(multiObjectPosition);
             const zero = new Vector3();
             const unitX = new Vector3(1, 0, 0);
             const unitY = new Vector3(0, 1, 0);
             const unitZ = new Vector3(0, 0, 1);
 
+
+            const FrontLeftBottomPosition = new Vector3(
+                minObjectBoundingBox.x,
+                minObjectBoundingBox.y,
+                minObjectBoundingBox.z
+            );
+            const FrontRightBottomPosition = new Vector3(
+                maxObjectBoundingBox.x,
+                minObjectBoundingBox.y,
+                minObjectBoundingBox.z
+            );
+            const BackLeftBottomPosition = new Vector3(
+                minObjectBoundingBox.x,
+                maxObjectBoundingBox.y,
+                minObjectBoundingBox.z
+            );
+            const BackRightBottomPosition = new Vector3(
+                maxObjectBoundingBox.x,
+                maxObjectBoundingBox.y,
+                minObjectBoundingBox.z
+            );
+            const FrontLeftTopPosition = new Vector3(
+                minObjectBoundingBox.x,
+                minObjectBoundingBox.y,
+                maxObjectBoundingBox.z
+            );
+            const FrontRightTopPosition = new Vector3(
+                maxObjectBoundingBox.x,
+                minObjectBoundingBox.y,
+                maxObjectBoundingBox.z
+            );
+            const BackLeftTopPosition = new Vector3(
+                minObjectBoundingBox.x,
+                maxObjectBoundingBox.y,
+                maxObjectBoundingBox.z
+            );
+            const BackRightTopPosition = new Vector3(
+                maxObjectBoundingBox.x,
+                maxObjectBoundingBox.y,
+                maxObjectBoundingBox.z
+            );
+
             // Update peripherals as a whole (position, rotation, scale)
             const handles = [];
+            this.selectedFrontLeftBottom.position.copy(FrontLeftBottomPosition);
+            this.selectedFrontRightBottom.position.copy(FrontRightBottomPosition);
+
+            this.selectedBackLeftBottom.position.copy(BackLeftBottomPosition);
+            this.selectedBackRightBottom.position.copy(BackRightBottomPosition);
+
+            this.selectedFrontLeftTop.position.copy(FrontLeftTopPosition);
+            this.selectedFrontRightTop.position.copy(FrontRightTopPosition);
+
+            this.selectedBackLeftTop.position.copy(BackLeftTopPosition);
+            this.selectedBackRightTop.position.copy(BackRightTopPosition);
+
+            this.allSelectedPeripherals.forEach((peripheral) => {
+                peripheral.scale.set(multiObjectWidth.x, multiObjectWidth.y, multiObjectWidth.z);
+                handles.push(...peripheral.children);
+            });
+
             if (this.mode === 'translate') {
-                this.translatePeripheral.position.copy(objectPosition);
+                this.translatePeripheral.position.copy(multiObjectPosition);
                 this.translatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.translatePicker.position.copy(objectPosition);
+                this.translatePicker.position.copy(multiObjectPosition);
                 this.translatePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.translatePeripheral.children);
             } else if (this.mode === 'rotate') {
-                this.rotatePeripheral.position.copy(objectPosition);
+                this.rotatePeripheral.position.copy(multiObjectPosition);
                 this.rotatePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.rotatePicker.position.copy(objectPosition);
+                this.rotatePicker.position.copy(multiObjectPosition);
                 this.rotatePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.rotatePeripheral.children);
             } else if (this.mode === 'scale') {
-                this.scalePeripheral.position.copy(objectPosition);
+                this.scalePeripheral.position.copy(multiObjectPosition);
                 this.scalePeripheral.quaternion.copy(objectQuaternion);
                 this.scalePeripheral.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
-                this.scalePicker.position.copy(objectPosition);
+                this.scalePicker.position.copy(multiObjectPosition);
                 this.scalePicker.quaternion.copy(objectQuaternion);
                 this.scalePicker.scale.set(1, 1, 1).multiplyScalar(eyeDistance / 8);
 
                 handles.push(...this.scalePeripheral.children);
             }
 
+
             // Highlight peripherals internals based on axis selected
             for (const handle of handles) {
                 if (this.mode === 'rotate') {
-                    const alignVector = new Vector3().copy(cameraPosition).sub(objectPosition);
+                    const alignVector = new Vector3().copy(cameraPosition).sub(multiObjectPosition);
 
                     if (handle.label === 'X') {
                         const quaternion = new Quaternion().setFromAxisAngle(unitX, Math.atan2(-alignVector.z, -alignVector.y));
@@ -384,7 +595,7 @@ class TransformControls extends Object3D {
                         const quaternion = new Quaternion().setFromAxisAngle(unitZ, Math.atan2(alignVector.x, -alignVector.y));
                         handle.quaternion.copy(quaternion);
                     } else if (handle.label === 'XYZE') {
-                        const rotationMatrix = new Matrix4().lookAt(cameraPosition, objectPosition, unitZ);
+                        const rotationMatrix = new Matrix4().lookAt(cameraPosition, multiObjectPosition, unitZ);
                         handle.quaternion.setFromRotationMatrix(rotationMatrix);
                     }
                 }
@@ -397,7 +608,7 @@ class TransformControls extends Object3D {
                 handle.material.opacity = handle.material._opacity;
 
                 if (this.axis) {
-                    if (handle.label === this.axis || handle.label.includes(this.axis)) {
+                    if (handle.label === this.axis || handle.label.includes(this.axis) || handle.label === OUTLINE) {
                         handle.material.opacity = 1;
                     } else {
                         handle.material.opacity = 0.15;
@@ -406,9 +617,9 @@ class TransformControls extends Object3D {
             }
 
             // Place plane according to axis selected
-            this.plane.position.copy(objectPosition);
+            this.plane.position.copy(multiObjectPosition);
 
-            const eye = cameraPosition.sub(objectPosition).normalize();
+            const eye = cameraPosition.sub(multiObjectPosition).normalize();
 
             const alignVector = new Vector3();
             const dirVector = new Vector3();
@@ -461,45 +672,25 @@ class TransformControls extends Object3D {
                 this.plane.quaternion.setFromRotationMatrix(m);
             }
         }
-
         super.updateMatrixWorld(force);
     }
 
-    attach(object, visible) {
-        this.object = object;
+    attach(objects) {
+        this.object = objects;
         this.visible = true;
-        if (visible === false) {
-            if (this.mode === 'scale') {
-                this.remove(this.scalePeripheral);
-            } else if (this.mode === 'translate') {
-                this.remove(this.translatePeripheral);
-            } else if (this.mode === 'rotate') {
-                this.remove(this.rotatePeripheral);
-            }
-        } else {
-            if (this.mode === 'scale') {
-                this.add(this.scalePeripheral);
-            } else if (this.mode === 'translate') {
-                this.add(this.translatePeripheral);
-            } else if (this.mode === 'rotate') {
-                this.add(this.rotatePeripheral);
-            }
-        }
 
-        // this.translatePeripheral.visible = (this.mode === 'translate');
-        // this.rotatePeripheral.visible = (this.mode === 'rotate');
-        // this.scalePeripheral.visible = (this.mode === 'scale');
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
+
     detach() {
-        this.object = null;
+        // this.object = new Group();
         this.visible = false;
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
     onMouseHover(coord) {
-        if (!this.object) {
+        if (!(this.object.children && this.object.children.length > 0)) {
             return false;
         }
 
@@ -531,7 +722,7 @@ class TransformControls extends Object3D {
     }
 
     onMouseDown(coord) {
-        if (!this.object || !this.axis) {
+        if (!(this.object.children && this.object.children.length > 0) || !this.axis) {
             return false;
         }
 
@@ -542,20 +733,21 @@ class TransformControls extends Object3D {
             return false;
         }
 
-        this.positionStart.copy(this.object.position);
+
         this.quaternionStart.copy(this.object.quaternion);
         this.scaleStart.copy(this.object.scale);
+        this.positionStart.copy(this.object.position);
+
 
         // pointStart is in world space
         this.pointStart.copy(intersect.point);
-
         this.dragging = true;
 
         return true;
     }
 
     onMouseMove(coord) {
-        if (!this.object || !this.axis || !this.dragging) {
+        if (!(this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
             return false;
         }
 
@@ -565,22 +757,19 @@ class TransformControls extends Object3D {
         if (!intersect) {
             return false;
         }
-
         this.pointEnd.copy(intersect.point);
 
         // translate
         switch (this.mode) {
             case 'translate': {
                 const offset = new Vector3().subVectors(this.pointEnd, this.pointStart);
-
                 offset.x = (this.axis === 'X' ? offset.x : 0);
                 offset.y = (this.axis === 'Y' ? offset.y : 0);
                 offset.z = (this.axis === 'Z' ? offset.z : 0);
-
                 // Dive in to object local offset
                 offset.applyQuaternion(this.parentQuaternionInv).divide(this.parentScale);
-
                 this.object.position.copy(this.positionStart).add(offset);
+
                 break;
             }
             case 'rotate': {
@@ -601,29 +790,28 @@ class TransformControls extends Object3D {
                 break;
             }
             case 'scale': {
-                const objectPosition = new Vector3().copy(this.object.position).applyMatrix4(this.object.parent.matrixWorld); // TODO: optimize?
-
-                const sVec = new Vector3().copy(this.pointStart).sub(objectPosition).applyQuaternion(this.objectQuaternionInv);
-                const eVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.objectQuaternionInv);
-                eVec.divide(sVec);
-
+                const parentSVec = new Vector3().copy(this.pointStart).applyQuaternion(this.parentQuaternionInv);
+                const parentEVec = new Vector3().copy(this.pointEnd).applyQuaternion(this.parentQuaternionInv);
+                parentEVec.divide(parentSVec);
                 if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
-                        eVec.y = eVec.x;
-                        eVec.z = eVec.x;
+                        parentEVec.y = parentEVec.x;
+                        parentEVec.z = parentEVec.x;
                     } else if (this.axis === 'Y') {
-                        eVec.z = eVec.y;
-                        eVec.x = eVec.y;
+                        parentEVec.z = parentEVec.y;
+                        parentEVec.x = parentEVec.y;
                     } else {
-                        eVec.y = eVec.z;
-                        eVec.x = eVec.z;
+                        parentEVec.y = parentEVec.z;
+                        parentEVec.x = parentEVec.z;
                     }
                 } else {
-                    eVec.x = (this.axis === 'X' ? eVec.x : 1);
-                    eVec.y = (this.axis === 'Y' ? eVec.y : 1);
-                    eVec.z = (this.axis === 'Z' ? eVec.z : 1);
+                    parentEVec.x = (this.axis === 'X' ? parentEVec.x : 1);
+                    parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
+                    parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
                 }
-                this.object.scale.copy(this.scaleStart).multiply(eVec);
+
+                this.object.scale.copy(this.scaleStart).multiply(parentEVec);
+
                 break;
             }
             default:

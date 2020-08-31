@@ -70,8 +70,8 @@ const INITIAL_STATE = {
     // Stage reflects current state of visualizer
     stage: PRINTING_STAGE.EMPTY,
 
-    selectedModelID: null,
-    visible: true,
+    selectedModelIDArray: [],
+    selectedModelArray: [],
     modelGroup: new ModelGroup('printing'),
 
     // G-code
@@ -162,6 +162,7 @@ export const actions = {
 
         const { series } = getState().machine;
         await definitionManager.init(series);
+
 
         dispatch(actions.updateState({
             materialDefinitions: definitionManager.materialDefinitions,
@@ -686,8 +687,7 @@ export const actions = {
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
-                const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
+                const stl = new ModelExporter().parse(modelGroup.showObject, 'stl', true);
                 modelGroup.addHiddenMeshObjects();
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);
@@ -775,15 +775,50 @@ export const actions = {
 
     selectModel: (modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const find = modelGroup.getModels().find(v => v.meshObject === modelMeshObject);
-        const modelState = modelGroup.selectModelById(find.modelID);
+        let modelState;
+        if (modelMeshObject) {
+            const find = modelGroup.getModels().find(v => v.meshObject === modelMeshObject);
+            modelState = modelGroup.selectModelById(find.modelID);
+        } else {
+            modelState = modelGroup.selectModelById(modelMeshObject);
+        }
+
         dispatch(actions.updateState(modelState));
         dispatch(actions.displayModel());
+    },
+
+    updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.updateSelectedModelTransformation(transformation);
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
+    selectMultiModel: (intersect, isMultiSelect) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const modelState = modelGroup.selectMultiModel(intersect, isMultiSelect);
+        dispatch(actions.updateState(modelState));
+
+        dispatch(actions.render());
+    },
+
+    selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.selectModelById(model, isMultiSelect);
+
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.render());
     },
 
     getSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         return modelGroup.selectedModel;
+    },
+
+    getSelectedModelArray: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        return modelGroup.selectedModelArray;
     },
 
     getSelectedModelOriginalName: () => (dispatch, getState) => {
@@ -796,23 +831,23 @@ export const actions = {
         }
     },
 
+    selectAllModels: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.selectAllModels();
+        dispatch(actions.updateState(modelState));
+    },
+
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.selectModelById(null);
         dispatch(actions.updateState(
             {
                 // model,
-                selectedModelID: null
+                selectedModelIDArray: []
             }
         ));
     },
 
-    selectTargetModel: (model) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.selectModelById(model.modelID);
-        dispatch(actions.updateState(modelState));
-        dispatch(actions.render());
-    },
 
     hideSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -891,17 +926,24 @@ export const actions = {
         // }
     },
 
-    updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        const modelState = modelGroup.updateSelectedModelTransformation(transformation);
-        dispatch(actions.updateTransformation(modelState.transformation));
-        dispatch(actions.destroyGcodeLine());
-        dispatch(actions.displayModel());
-    },
 
     duplicateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.duplicateSelectedModel();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
+    copyModelArray: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.copyModelArray();
+    },
+
+    pasteModelArray: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.pasteModelArray();
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
@@ -1009,6 +1051,7 @@ export const actions = {
             const data = e.data;
 
             const { type } = data;
+
             switch (type) {
                 case 'LOAD_MODEL_POSITIONS': {
                     const { positions } = data;
@@ -1037,7 +1080,6 @@ export const actions = {
                         material: material,
                         transformation
                     });
-
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());

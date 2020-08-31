@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
+
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
@@ -22,9 +23,7 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        // model: PropTypes.object,
-        visible: PropTypes.bool,
-        selectedModelID: PropTypes.string,
+        selectedModelIDArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -33,8 +32,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
-        selectModel: PropTypes.func.isRequired,
-        getSelectedModel: PropTypes.func.isRequired,
+        selectMultiModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -78,8 +76,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModel: (modelMesh) => {
-            this.props.selectModel(modelMesh);
+        onSelectModels: (intersect, isMultiSelect,) => {
+            this.props.selectMultiModel(intersect, isMultiSelect);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -148,26 +146,22 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelID, renderingTimestamp, visible } = nextProps;
+        const { size, transformMode, selectedModelIDArray, renderingTimestamp, modelGroup } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
-        if (selectedModelID !== this.props.selectedModelID || visible !== this.props.visible) {
-            const selectedModel = this.props.getSelectedModel();
-            // if (!selectedModelID || !selectedModel) {
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                const meshObject = selectedModel.meshObject;
-                if (meshObject) {
-                    this.canvas.current.controls.attach(meshObject, selectedModel.visible);
-                }
-            }
+        if (selectedModelIDArray !== this.props.selectedModelIDArray) {
+            selectedModelIDArray.forEach((modelID) => {
+                const model = modelGroup.models.find(d => d.modelID === modelID);
+                modelGroup.selectedGroup.add(model.meshObject);
+            });
+
+            this.canvas.current.controls.attach(modelGroup.selectedGroup);
         }
 
         if (!isEqual(size, this.props.size)) {
             this.printableArea.updateSize(size);
-            const { modelGroup, gcodeLineGroup } = this.props;
+            const { gcodeLineGroup } = this.props;
 
             modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -218,13 +212,12 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, selectedModelID, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+        const { size, hasModel, selectedModelIDArray, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
 
         // const actions = this.actions;
 
-        const isModelSelected = !!selectedModelID;
+        const isModelSelected = (selectedModelIDArray.length > 0);
         const isModelDisplayed = (displayedType === 'model');
-
         const notice = this.getNotice();
 
         return (
@@ -260,13 +253,13 @@ class Visualizer extends PureComponent {
                     <Canvas
                         ref={this.canvas}
                         size={size}
-                        modelGroup={modelGroup.object}
+                        modelGroup={modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}
                         cameraUp={new Vector3(0, 0, 1)}
                         gcodeLineGroup={gcodeLineGroup}
-                        onSelectModel={this.actions.onSelectModel}
+                        onSelectModels={this.actions.onSelectModels}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
@@ -343,13 +336,13 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, selectedModelID, visible, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
-        visible,
         size,
-        selectedModelID,
+        allModel: modelGroup.models,
+        selectedModelIDArray: modelGroup.selectedModelIDArray,
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -361,8 +354,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectModel: (modelMesh) => dispatch(printingActions.selectModel(modelMesh)),
-    getSelectedModel: () => dispatch(printingActions.getSelectedModel()),
+    selectMultiModel: (intersect, isMultiSelect) => dispatch(printingActions.selectMultiModel(intersect, isMultiSelect)),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),

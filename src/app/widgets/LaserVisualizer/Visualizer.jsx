@@ -95,7 +95,7 @@ class Visualizer extends Component {
                 this.canvas.current.autoFocus();
             }
         },
-        onSelectModel: (model) => {
+        onSelectModels: (model) => {
             this.props.selectModel(model);
         },
         onUnselectAllModels: () => {
@@ -298,12 +298,12 @@ class Visualizer extends Component {
                         canOperateModel={false}
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
-                        modelGroup={this.props.modelGroup.object}
+                        modelGroup={this.props.modelGroup}
                         toolPathModelGroup={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
-                        onSelectModel={this.actions.onSelectModel}
+                        onSelectModels={this.actions.onSelectModels}
                         onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}

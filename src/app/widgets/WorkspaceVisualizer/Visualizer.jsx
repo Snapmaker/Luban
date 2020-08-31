@@ -75,7 +75,7 @@ class Visualizer extends Component {
 
     printableArea = null;
 
-    visualizerGroup = new THREE.Group();
+    visualizerGroup = { object: new THREE.Group() };
 
     canvas = React.createRef();
 
@@ -464,7 +464,7 @@ class Visualizer extends Component {
         this.addControllerEvents();
         this.setupToolhead();
         this.setupTargetPoint();
-        this.visualizerGroup.add(this.props.modelGroup);
+        this.visualizerGroup.object.add(this.props.modelGroup);
     }
 
     /**
@@ -539,7 +539,7 @@ class Visualizer extends Component {
             color: colornames('indianred'),
             radius: 0.5
         });
-        this.visualizerGroup.add(this.targetPoint);
+        this.visualizerGroup.object.add(this.targetPoint);
     }
 
     setupToolhead() {
@@ -547,7 +547,7 @@ class Visualizer extends Component {
         const url = 'textures/brushed-steel-texture.jpg';
         loadTexture(url, (err, texture) => {
             this.toolhead = new ToolHead(color, texture);
-            this.visualizerGroup.add(this.toolhead);
+            this.visualizerGroup.object.add(this.toolhead);
 
             this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
                 .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);

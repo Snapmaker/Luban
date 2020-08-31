@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import path from 'path';
+import { timestamp } from '../../../shared/lib/random-utils';
 // import { ListIconOpen, ListIconClose, IconLock } from 'snapmaker-react-icon';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
@@ -18,18 +19,18 @@ class PrintingObjectListBox extends PureComponent {
         showSelectedModel: PropTypes.func.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
-        selectedModelID: PropTypes.string
+        selectedModelIDArray: PropTypes.array
     };
 
 
     actions = {
-        onClickSelectModel: (model) => {
-            this.props.selectTargetModel(model);
+        onClickSelectModel: (model, event) => {
+            this.props.selectTargetModel(model, event.shiftKey);
         },
         onClickHideShowSelectedModel: (model) => {
             const visible = model.visible;
             this.props.selectTargetModel(model);
-            if (visible) {
+            if (visible === true) {
                 this.props.hideSelectedModel();
             } else {
                 this.props.showSelectedModel();
@@ -48,7 +49,7 @@ class PrintingObjectListBox extends PureComponent {
 
 
     render() {
-        const { modelGroup, selectedModelID } = this.props;
+        const { modelGroup, selectedModelIDArray } = this.props;
         return (
             <div>
                 <div
@@ -58,15 +59,15 @@ class PrintingObjectListBox extends PureComponent {
                 >
                     {(modelGroup.models) && modelGroup.models.map((model, index) => {
                         let modelName = path.basename(model.originalName, path.extname(model.originalName));
-                        if (index > 0 && model.modelName) {
-                            modelName += model.modelName.match(/\(\d/)[0].replace(/\(/, ' ');
+                        if (index > 0 && model.modelName && model.modelName.match(/\(\d+/)) {
+                            modelName += model.modelName.match(/\(\d+/)[0].replace(/\(/, ' ');
                         }
                         const modelIcon = () => {
                             return styles.iconShape;
                         };
                         return (
                             <TipTrigger
-                                key={model.modelName}
+                                key={model.modelName + timestamp()}
                                 title={i18n._('object list')}
                                 content={modelName}
                             >
@@ -74,7 +75,7 @@ class PrintingObjectListBox extends PureComponent {
                                     <div
                                         className={classNames(
                                             styles.bgr,
-                                            selectedModelID && selectedModelID === model.modelID ? styles.selected : null,
+                                            selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0 ? styles.selected : null,
                                         )}
                                     >
                                         <Anchor
@@ -82,7 +83,7 @@ class PrintingObjectListBox extends PureComponent {
                                                 styles.name,
                                                 styles.bt
                                             )}
-                                            onClick={() => this.actions.onClickSelectModel(model)}
+                                            onClick={(event) => this.actions.onClickSelectModel(model, event)}
                                         >
                                             <span
                                                 className={classNames(
@@ -115,17 +116,16 @@ class PrintingObjectListBox extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { selectedModelID, modelGroup, visible } = state.printing;
+    const { modelGroup, selectedModelIDArray } = state.printing;
     return {
         modelGroup,
-        selectedModelID,
-        visible
+        selectedModelIDArray
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        selectTargetModel: (model) => dispatch(printingActions.selectTargetModel(model)),
+        selectTargetModel: (model, shiftKey) => dispatch(printingActions.selectTargetModel(model, shiftKey)),
         hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
         showSelectedModel: () => dispatch(printingActions.showSelectedModel())
     };

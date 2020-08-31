@@ -33,6 +33,34 @@ export const actions = {
                     dispatch(editorActions.duplicateSelectedModel(from));
                 }
             },
+            'SELECTALL': () => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.selectAllModels()));
+                }
+            },
+            'COPY': () => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.copyModelArray()));
+                }
+            },
+            'UNDO': () => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.undo()));
+                }
+            },
+            'PASTE': () => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.pasteModelArray()));
+                }
+            },
             'JOG': (event, { direction }) => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
