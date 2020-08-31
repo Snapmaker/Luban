@@ -57,7 +57,7 @@ function getFirstPointFromSvg(svg) {
             }
 
             if (path.outlinePoints) {
-                return path.outlinePoints[0];
+                return path.outlinePoints[0][0];
             } else {
                 return path.points[0];
             }
