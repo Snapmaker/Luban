@@ -186,7 +186,7 @@ class GcodeParameters extends PureComponent {
                                         step={0.1}
                                         onChange={actions.onChangeDwellTime}
                                     />
-                                    <span className="sm-parameter-row__input-unit">mm/min</span>
+                                    <span className="sm-parameter-row__input-unit">ms/dot</span>
                                 </div>
                             </TipTrigger>
                         )}
