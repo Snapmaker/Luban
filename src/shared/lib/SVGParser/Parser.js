@@ -115,7 +115,7 @@ class SVGParser {
         const attributes = this.attributeParser.parse(node, parentAttributes);
 
         const shapes = [];
-
+        let shouldParseChildren = true;
         switch (tag) {
             // graphics elements
             case 'circle': {
@@ -158,12 +158,16 @@ class SVGParser {
                 tagParser.parse(node, attributes);
                 break;
             }
+            case 'pattern': {
+                shouldParseChildren = false;
+                break;
+            }
             default:
                 break;
         }
 
         // parse children
-        if (node.$$) {
+        if (node.$$ && shouldParseChildren) {
             node.$$.forEach((child) => {
                 const childNode = this.parseNode(child, attributes);
                 for (const shape of childNode.shapes) {
