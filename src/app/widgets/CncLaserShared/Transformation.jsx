@@ -11,18 +11,18 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
-        // selectedModelID: PropTypes.string,
-        // selectedModelVisible: PropTypes.bool,
-        selectedModel: PropTypes.object,
-        modelID: PropTypes.string,
-        sourceType: PropTypes.string.isRequired,
+        modelGroup: PropTypes.object,
+        selectedModelArray: PropTypes.array,
+        sourceType: PropTypes.string,
         transformation: PropTypes.shape({
             rotationZ: PropTypes.number,
             width: PropTypes.number,
             height: PropTypes.number,
             positionX: PropTypes.number,
             positionY: PropTypes.number,
-            flip: PropTypes.number,
+            flip: PropTypes.number, // not used
+            scaleX: PropTypes.number, // not used
+            scaleY: PropTypes.number, // not used
             uniformScalingState: PropTypes.bool
         }),
 
@@ -48,44 +48,55 @@ class Transformation extends PureComponent {
         },
         // dont set width and height on transform
         onChangeWidth: (width) => {
-            const { selectedModel } = this.props;
-
-            if (selectedModel.modelID) {
-                selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
+            const { selectedModelArray, modelGroup } = this.props;
+            if (selectedModelArray.length === 1) {
+                modelGroup.updateSelectedModelTransformation({ scaleX: width / selectedModelArray[0].transformation.width });
+                modelGroup.onModelAfterTransform();
             }
+            //selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
         },
         onChangeHeight: (height) => {
-            const { selectedModel } = this.props;
-
-            if (selectedModel.modelID) {
-                selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
+            const { selectedModelArray, modelGroup } = this.props;
+            if (selectedModelArray.length === 1) {
+                modelGroup.updateSelectedModelTransformation({ scaleY: height / selectedModelArray[0].transformation.height });
+                modelGroup.onModelAfterTransform();
             }
+            //selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
         },
         onChangeRotationZ: (degree) => {
             const rotationZ = degree * Math.PI / 180;
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
-            }
+            const { modelGroup } = this.props;
+            modelGroup.updateSelectedModelTransformation({ rotationZ });
+            modelGroup.onModelAfterTransform();
+            // this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
         },
         onChangePositionX: (positionX) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
-            }
+            const { modelGroup } = this.props;
+            modelGroup.updateSelectedModelTransformation({ positionX });
+            modelGroup.onModelAfterTransform();
+            // this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
         },
         onChangePositionY: (positionY) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { positionY } });
-            }
+            const { modelGroup } = this.props;
+            modelGroup.updateSelectedModelTransformation({ positionY });
+            modelGroup.onModelAfterTransform();
+            // this.props.selectedModel.updateAndRefresh({ transformation: { positionY } });
         },
         onChangeFlip: (key) => {
-            const model = this.props.selectedModel;
-            if (model.modelID) {
-                model.updateAndRefresh({
-                    transformation: {
-                        [key]: model.transformation[key] * -1
-                    }
-                });
-            }
+            // single flip
+            // const { selectedModelArray, modelGroup } = this.props;
+            // if (selectedModelArray.length === 1) {
+            //     modelGroup.updateSelectedModelTransformation({ [key]: selectedModelArray[0].transformation[key] * -1 });
+            // }
+            // multi flip ^_^
+            const { modelGroup, transformation } = this.props;
+            modelGroup.updateSelectedModelTransformation({ [key]: (transformation[key] * -1) });
+            modelGroup.onModelAfterTransform();
+            // model.updateAndRefresh({
+            //     transformation: {
+            //         [key]: model.transformation[key] * -1
+            //     }
+            // });
         },
         onChangeUniformScalingState: (uniformScalingState) => {
             this.props.updateSelectedModelUniformScalingState({ uniformScalingState });
@@ -96,10 +107,10 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { size, selectedModel, sourceType } = this.props;
-        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0, uniformScalingState = false } = this.props.transformation;
+        const { size, selectedModelArray, sourceType } = this.props;
+        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
-        const selectedNotHide = selectedModel.modelID && selectedModel.visible;
+        const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
         return (
             <React.Fragment>
@@ -236,7 +247,6 @@ class Transformation extends PureComponent {
                                     type="button"
                                     disabled={!selectedNotHide}
                                     className={styles.icon_flip_vertically}
-                                    style={(flip & 2) ? { backgroundColor: '#E7F2FD' } : null}
                                     onClick={() => {
                                         actions.onChangeFlip('scaleX');
                                         actions.onModelAfterTransform();
@@ -250,7 +260,6 @@ class Transformation extends PureComponent {
                                     type="button"
                                     disabled={!selectedNotHide}
                                     className={styles.icon_flip_horizontal}
-                                    style={(flip & 1) ? { backgroundColor: '#E7F2FD' } : null}
                                     onClick={() => {
                                         actions.onChangeFlip('scaleY');
                                         actions.onModelAfterTransform();
@@ -269,15 +278,18 @@ const mapStateToProps = (state, props) => {
     const { headType } = props;
     const machine = state.machine;
     const { modelGroup } = state[headType];
-    const selectedModel = modelGroup.getSelectedModel();
-    const { modelID, sourceType, visible, transformation } = selectedModel;
+    const transformation = modelGroup.getSelectedModelTransformation();
+    const selectedModelArray = modelGroup.getSelectedModelArray();
+    // const { modelID, sourceType, visible } = selectedModel;
+    const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
+    const visible = (selectedModelArray.length === 1) ? selectedModelArray[0].visible : null;
     return {
         size: machine.size,
-        selectedModel,
-        modelID,
+        selectedModelArray,
         sourceType,
         visible,
-        transformation
+        transformation,
+        modelGroup
     };
 };
 

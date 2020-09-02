@@ -310,11 +310,12 @@ class SvgModel {
                 break;
         }
 
-        this.setElementTransformToList(this.elemTransformList());
+        this.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
-    setElementTransformToList(transformList) {
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    setElementTransformToList(transformList, transformation) { // set new transformation list, move to util
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
         const center = this.pointModelToSvg({ x: positionX, y: positionY });
 
         const translateOrigin = svg.createSVGTransform();
@@ -465,7 +466,7 @@ class SvgModel {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
-        this.setElementTransformToList(transformList);
+        this.setElementTransformToList(transformList, this.relatedModel.transformation);
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
         function transformPoint(p, m) {

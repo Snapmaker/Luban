@@ -97,6 +97,9 @@ class ModelGroup extends EventEmitter {
     }
 
     getSelectedModelTransformation() {
+        if (this.selectedModelArray.length === 1) {
+            return this.selectedModelArray[0].transformation;
+        }
         if (this.selectedModelArray.length > 0) {
             return {
                 positionX: this.selectedGroup.position.x,
@@ -774,11 +777,16 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         this.removeSelectedObjectParentMatrix();
+        // console.log('----on model after transform----');
         selectedModelArray.forEach((selected) => {
+            // console.log(selected.sourceType, selected);
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
             }
             selected.computeBoundingBox();
+            if (selected.sourceType !== '3d') { // all 2d types, like svg, raster, so on
+                selected.updateAndRefresh(this.selectedGroup);
+            }
         });
         this._checkAnyModelOversteppedOrSelected();
         this.applySelectedObjectParentMatrix();

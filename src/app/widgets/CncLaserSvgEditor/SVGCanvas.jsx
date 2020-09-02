@@ -1196,23 +1196,25 @@ class SVGCanvas extends PureComponent {
     }
 
     clearSelection() {
+        // remove transformation
+        // remove transformList
         this.svgContentGroup.clearSelection();
         this.props.svgModelGroup.modelGroup.selectModelById();
         // this.trigger(SVG_EVENT_SELECT, []);
     }
 
     addToSelection(elements) {
-        // create new transformation
-        // create new transformList
-        this.svgContentGroup.addToSelection(elements);
         const selectedSvgModels = this.props.svgModelGroup.getModelsByElements(elements);
         for (const svgModel of selectedSvgModels) {
             const model = svgModel.relatedModel;
-            model && model.modelGroup.selectModelById(model, true);
+            const modelGroup = model && model.modelGroup;
+            if (modelGroup) {
+                modelGroup.selectModelById(model, true);
+            }
         }
-        this.props.svgModelGroup.resizeSelectorByElementsSelected(this.svgContentGroup.selectedElements);
-
-        // this.trigger(SVG_EVENT_SELECT, elements);
+        this.svgContentGroup.addToSelection(elements);
+        // create new transformList, find the points and position
+        // create new transformation, center - modelGroup.size = position
     }
 
     selectOnly(elements) {

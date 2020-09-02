@@ -1,6 +1,7 @@
 import { createSVGElement, getBBox, setAttributes, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
 import SelectorManager from './SelectorManager';
+import OperatorPoints from './OperatorPoints';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
 
@@ -24,6 +25,10 @@ class SVGContentGroup {
         this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
         this.selectorManager = new SelectorManager({
+            getRoot: () => this.svgContent,
+            scale: this.scale
+        });
+        this.operatorPoints = new OperatorPoints({
             getRoot: () => this.svgContent,
             scale: this.scale
         });
@@ -144,33 +149,22 @@ class SVGContentGroup {
     }
 
     clearSelection() {
-        for (const elem of this.selectedElements) {
-            this.releaseSelector(elem);
-        }
-
+        this.operatorPoints.showGrips(false);
         this.selectedElements = [];
     }
 
     addToSelection(elements) {
         for (const elem of elements) {
-            const bbox = getBBox(elem);
-            if (!bbox) {
-                continue;
-            }
             if (!this.selectedElements.includes(elem)) {
                 this.selectedElements.push(elem);
-
-                this.requestSelector(elem, bbox);
             }
         }
-        // If only one element is selected right now, then show grips.
-        if (this.selectedElements.length === 1) {
-            const elem = this.selectedElements[0];
-            const selector = this.requestSelector(elem);
-            if (elem.visible) {
-                selector.showGrips(true);
-            }
-        }
+        this.operatorPoints.resizeGrips(this.selectedElements);
+        this.operatorPoints.showGrips(true);
+        const selectedElementsBBox = getBBox(this.operatorPoints.getSelectedElementsBox());
+        const cx = selectedElementsBBox.x + selectedElementsBBox.width / 2;
+        const cy = selectedElementsBBox.y + selectedElementsBBox.height / 2;
+        console.log('----svg content group----', cx, cy);
     }
 
     updateElementRotate(elem, rotate) {
