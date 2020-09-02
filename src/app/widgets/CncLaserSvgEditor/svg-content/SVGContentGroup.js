@@ -32,6 +32,10 @@ class SVGContentGroup {
             getRoot: () => this.svgContent,
             scale: this.scale
         });
+        this.operatorPoints = new OperatorPoints({
+            getRoot: () => this.svgContent,
+            scale: this.scale
+        });
     }
 
     // for create new elem

@@ -806,7 +806,9 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         this.removeSelectedObjectParentMatrix();
+        // console.log('----on model after transform----');
         selectedModelArray.forEach((selected) => {
+            // console.log(selected.sourceType, selected);
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
             }
