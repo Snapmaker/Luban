@@ -128,6 +128,7 @@ class ModelGroup extends EventEmitter {
                     selected.meshObject.removeEventListener('update', this.onModelUpdate);
                     this.models = this.models.filter(model => model !== selected);
                     this.selectedGroup.remove(selected.meshObject);
+                    this.selectedModelArray = [];
                 }
             });
         }
@@ -307,7 +308,7 @@ class ModelGroup extends EventEmitter {
                 selectedModelIDArray: this.selectedModelIDArray
             };
         }
-
+        this.onDataChangedCallback();
         return this._getEmptyState();
     }
 
@@ -402,8 +403,15 @@ class ModelGroup extends EventEmitter {
     }
 
     resetSelectedObjectScaleAndRotation() {
-        this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
-        this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
+        if (this.selectedGroup.children.length === 1) {
+            const meshObject = this.selectedGroup.children[0];
+            this.selectedGroup.scale.copy(meshObject.scale);
+            this.selectedGroup.rotation.copy(meshObject.rotation);
+        } else if (this.selectedGroup.children.length > 1) {
+            this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
+            this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
+            this.selectedGroup.uniformScalingState = true;
+        }
         this.selectedGroup.updateMatrix();
     }
 
@@ -413,7 +421,6 @@ class ModelGroup extends EventEmitter {
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
             if (selectModel) {
-                this.resetSelectedObjectScaleAndRotation();
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
                     selectModel.isSelected = true;
@@ -434,47 +441,13 @@ class ModelGroup extends EventEmitter {
         } else {
             this.unselectAllModels();
             if (selectModel) {
-                this.resetSelectedObjectScaleAndRotation();
                 selectModel.isSelected = true;
                 selectModel.meshObject.material = materialSelected;
                 this.selectedModelArray.push(selectModel);
                 this.selectedGroup.add(selectModel.meshObject);
             }
         }
-        // if (isMultiSelect === false) {
-        //     this.selectedModelArray = [];
-        //     this.selectedModelIDArray = [];
-        //     this.models.forEach((item) => {
-        //         item.isSelected = false;
-        //         item.meshObject.material = materialNormal;
-        //         this.object.add(item.meshObject);
-        //     });
-        // }
-        // modelArray.forEach((model) => {
-        //     const objectIndex = this.selectedModelArray.indexOf(model);
-        //     if (objectIndex === -1) {
-        //         model.isSelected = true;
-        //         model.meshObject.material = materialSelected;
-        //         this.selectedModelArray.push(model);
-        //         this.selectedGroup.add(model.meshObject);
-        //         if (model.estimatedTime) {
-        //             this.estimatedTime = model.estimatedTime;
-        //         }
-        //         model.computeBoundingBox();
-        //     } else {
-        //         model.isSelected = false;
-        //         model.meshObject.material = materialNormal;
-        //         this.object.add(model.meshObject);
-        //         this.selectedGroup.children.forEach((meshObject) => {
-        //             const selectedModel = this.models.find(d => d.meshObject === meshObject);
-        //             this.selectedModelArray.push(selectedModel);
-        //         });
-        //         if (model.estimatedTime) {
-        //             this.estimatedTime = model.estimatedTime;
-        //         }
-        //         model.computeBoundingBox();
-        //     }
-        // });
+        this.resetSelectedObjectScaleAndRotation();
         this.applySelectedObjectParentMatrix();
         if (this.selectedModelArray.length > 0) {
             const modelState = this.getState();
@@ -493,7 +466,6 @@ class ModelGroup extends EventEmitter {
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
             if (intersect) {
-                this.resetSelectedObjectScaleAndRotation();
                 const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
                 if (objectIndex === -1) {
                     const model = this.models.find(d => d.meshObject === intersect.object);
@@ -520,7 +492,6 @@ class ModelGroup extends EventEmitter {
         } else {
             this.unselectAllModels();
             if (intersect) {
-                this.resetSelectedObjectScaleAndRotation();
                 const model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
                     model.isSelected = true;
@@ -530,6 +501,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         }
+        this.resetSelectedObjectScaleAndRotation();
         this.applySelectedObjectParentMatrix();
         if (this.selectedModelArray.length > 0) {
             const modelState = this.getState();
@@ -547,13 +519,13 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = this.models;
         this.selectedModelIDArray = [];
         this.removeSelectedObjectParentMatrix();
-        this.resetSelectedObjectScaleAndRotation();
         this.selectedModelArray.forEach((item) => {
             item.isSelected = true;
             item.meshObject.material = materialSelected;
             this.selectedGroup.add(item.meshObject);
             this.selectedModelIDArray.push(item.modelID);
         });
+        this.resetSelectedObjectScaleAndRotation();
         this.applySelectedObjectParentMatrix();
         this.onDataChangedCallback();
 
@@ -792,43 +764,43 @@ class ModelGroup extends EventEmitter {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
 
         if (positionX !== undefined) {
-            this.selectedGroup.position.setX(transformation.positionX);
+            this.selectedGroup.position.setX(positionX);
         }
         if (positionY !== undefined) {
-            this.selectedGroup.position.setY(transformation.positionY);
+            this.selectedGroup.position.setY(positionY);
         }
         if (this.selectedGroup.uniformScalingState === true) {
             if (scaleX !== undefined) {
-                this.selectedGroup.scale.set(transformation.scaleX, transformation.scaleX, transformation.scaleX);
+                this.selectedGroup.scale.set(scaleX, scaleX, scaleX);
             }
             if (scaleY !== undefined) {
-                this.selectedGroup.scale.set(transformation.scaleY, transformation.scaleY, transformation.scaleY);
+                this.selectedGroup.scale.set(scaleY, scaleY, scaleY);
             }
             if (scaleZ !== undefined) {
-                this.selectedGroup.scale.set(transformation.scaleZ, transformation.scaleZ, transformation.scaleZ);
+                this.selectedGroup.scale.set(scaleZ, scaleZ, scaleZ);
             }
         } else {
             if (scaleX !== undefined) {
-                this.selectedGroup.scale.setX(transformation.scaleX);
+                this.selectedGroup.scale.setX(scaleX);
             }
             if (scaleY !== undefined) {
-                this.selectedGroup.scale.setY(transformation.scaleY);
+                this.selectedGroup.scale.setY(scaleY);
             }
             if (scaleZ !== undefined) {
-                this.selectedGroup.scale.setZ(transformation.scaleZ);
+                this.selectedGroup.scale.setZ(scaleZ);
             }
         }
         if (uniformScalingState !== undefined) {
             this.selectedGroup.uniformScalingState = uniformScalingState;
         }
         if (rotationX !== undefined) {
-            this.selectedGroup.rotation.x = transformation.rotationX;
+            this.selectedGroup.rotation.x = rotationX;
         }
         if (rotationY !== undefined) {
-            this.selectedGroup.rotation.y = transformation.rotationY;
+            this.selectedGroup.rotation.y = rotationY;
         }
         if (rotationZ !== undefined) {
-            this.selectedGroup.rotation.z = transformation.rotationZ;
+            this.selectedGroup.rotation.z = rotationZ;
         }
         this.selectedGroup.updateMatrix();
     }
