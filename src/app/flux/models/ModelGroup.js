@@ -121,19 +121,8 @@ class ModelGroup extends EventEmitter {
     }
 
     removeSelectedModel() {
-        const selectedArray = this.getSelectedModelArray();
-        if (selectedArray.length > 0) {
-            selectedArray.forEach((selected) => {
-                if (selected) {
-                    selected.meshObject.removeEventListener('update', this.onModelUpdate);
-                    this.models = this.models.filter(model => model !== selected);
-                    this.selectedGroup.remove(selected.meshObject);
-                    this.selectedModelArray = [];
-                }
-            });
-        }
-        this.resetSelectedObjectScaleAndRotation();
-
+        this.deleteSelectedModels();
+        this.unselectAllModels();
         this.onDataChangedCallback();
         return this._getEmptyState();
     }
@@ -293,20 +282,28 @@ class ModelGroup extends EventEmitter {
         this._bbox = bbox;
     }
 
+    deleteSelectedModels() {
+        const selectedArray = this.getSelectedModelArray();
+        selectedArray.forEach((selected) => {
+            this.copiedModelArray = this.copiedModelArray.filter(model => model !== selected);
+            selected.meshObject.removeEventListener('update', this.onModelUpdate);
+            this.models = this.models.filter(model => model !== selected);
+        });
+    }
+
+    deleteAllModels() {
+        const models = this.getModels();
+        for (const model of models) {
+            model.meshObject.removeEventListener('update', this.onModelUpdate);
+            this.object.remove(model.meshObject);
+        }
+        this.models.splice(0);
+    }
+
     removeAllModels() {
         if (this.hasModel()) {
+            this.deleteAllModels();
             this.unselectAllModels();
-            const models = this.getModels();
-            for (const model of models) {
-                this.object.remove(model.meshObject);
-                this.selectedGroup.remove(model.meshObject);
-            }
-            this.models.splice(0);
-            this.resetSelectedObjectScaleAndRotation();
-            return {
-                selectedModelArray: this.selectedModelArray,
-                selectedModelIDArray: this.selectedModelIDArray
-            };
         }
         this.onDataChangedCallback();
         return this._getEmptyState();
@@ -382,6 +379,13 @@ class ModelGroup extends EventEmitter {
     }
 
     applySelectedObjectParentMatrix() {
+        if (this.selectedGroup.children.length === 1) {
+            const meshObject = this.selectedGroup.children[0];
+            this.selectedGroup.scale.copy(meshObject.scale);
+            this.selectedGroup.rotation.copy(meshObject.rotation);
+            this.selectedGroup.uniformScalingState = meshObject.uniformScalingState;
+        }
+        this.selectedGroup.updateMatrix();
         const newPosition = this.calculateSelectedGroupPosition(this.selectedGroup);
         this.selectedGroup.position.copy(newPosition);
         this.selectedGroup.updateMatrix();
@@ -402,49 +406,24 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    resetSelectedObjectScaleAndRotation() {
-        if (this.selectedGroup.children.length === 1) {
-            const meshObject = this.selectedGroup.children[0];
-            this.selectedGroup.scale.copy(meshObject.scale);
-            this.selectedGroup.rotation.copy(meshObject.rotation);
-        } else if (this.selectedGroup.children.length > 1) {
-            this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
-            this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
-            this.selectedGroup.uniformScalingState = true;
-        }
-        this.selectedGroup.updateMatrix();
-    }
-
     // use for widget
-    selectModelById(selectModel, isMultiSelect = false) {
+    selectModelById(modelID, isMultiSelect = false) {
         let state;
+        const selectModel = this.models.find(d => d.modelID === modelID);
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
-                    selectModel.isSelected = true;
-                    selectModel.meshObject.material = materialSelected;
-                    this.selectedModelArray.push(selectModel);
-                    this.selectedGroup.add(selectModel.meshObject);
+                    this.addModelInSelectedGroup(selectModel);
                 } else {
-                    selectModel.isSelected = false;
-                    selectModel.meshObject.material = materialNormal;
-                    this.object.add(selectModel.meshObject);
-                    this.selectedModelArray = [];
-                    this.selectedGroup.children.forEach((meshObject) => {
-                        const selectedModel = this.models.find(d => d.meshObject === meshObject);
-                        this.selectedModelArray.push(selectedModel);
-                    });
+                    this.removeModelInSelectedGroup(selectModel);
                 }
             }
         } else {
             this.unselectAllModels();
             if (selectModel) {
-                selectModel.isSelected = true;
-                selectModel.meshObject.material = materialSelected;
-                this.selectedModelArray.push(selectModel);
-                this.selectedGroup.add(selectModel.meshObject);
+                this.addModelInSelectedGroup(selectModel);
             }
         }
         this.resetSelectedObjectScaleAndRotation();
@@ -470,22 +449,12 @@ class ModelGroup extends EventEmitter {
                 if (objectIndex === -1) {
                     const model = this.models.find(d => d.meshObject === intersect.object);
                     if (model) {
-                        model.isSelected = true;
-                        model.meshObject.material = materialSelected;
-                        this.selectedModelArray.push(model);
-                        this.selectedGroup.add(model.meshObject);
+                        this.addModelInSelectedGroup(model);
                     }
                 } else {
                     const model = this.models.find(d => d.meshObject === intersect.object);
                     if (model) {
-                        model.isSelected = false;
-                        model.meshObject.material = materialNormal;
-                        this.object.add(model.meshObject);
-                        this.selectedModelArray = [];
-                        this.selectedGroup.children.forEach((meshObject) => {
-                            const selectedModel = this.models.find(d => d.meshObject === meshObject);
-                            this.selectedModelArray.push(selectedModel);
-                        });
+                        this.removeModelInSelectedGroup(model);
                     }
                 }
             }
@@ -494,10 +463,7 @@ class ModelGroup extends EventEmitter {
             if (intersect) {
                 const model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
-                    model.isSelected = true;
-                    model.meshObject.material = materialSelected;
-                    this.selectedModelArray.push(model);
-                    this.selectedGroup.add(model.meshObject);
+                    this.addModelInSelectedGroup(model);
                 }
             }
         }
@@ -513,6 +479,32 @@ class ModelGroup extends EventEmitter {
         this.onDataChangedCallback();
         this.emit('select');
         return state;
+    }
+
+    resetSelectedObjectScaleAndRotation() {
+        if (this.selectedGroup.children.length > 1) {
+            this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
+            this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
+            this.selectedGroup.uniformScalingState = true;
+        }
+    }
+
+    addModelInSelectedGroup(model) {
+        model.isSelected = true;
+        model.meshObject.material = materialSelected;
+        this.selectedModelArray.push(model);
+        this.selectedGroup.add(model.meshObject);
+    }
+
+    removeModelInSelectedGroup(model) {
+        model.isSelected = false;
+        model.meshObject.material = materialNormal;
+        this.object.add(model.meshObject);
+        this.selectedModelArray = [];
+        this.selectedGroup.children.forEach((meshObject) => {
+            const selectedModel = this.models.find(d => d.meshObject === meshObject);
+            this.selectedModelArray.push(selectedModel);
+        });
     }
 
     selectAllModels() {
@@ -574,7 +566,6 @@ class ModelGroup extends EventEmitter {
         const selectedArray = this.getSelectedModelArray();
         if (selectedArray.length > 0) {
             this.selectedModelArray = [];
-            this.selectedModelIDArray = [];
             this.models.forEach((model) => {
                 model.isSelected = false;
                 model.meshObject.material = materialNormal;
@@ -615,19 +606,12 @@ class ModelGroup extends EventEmitter {
 
                 this.models.push(model);
                 this.object.add(model.meshObject);
-                model.isSelected = true;
-                model.meshObject.material = materialSelected;
-                this.selectedModelArray.push(model);
-                this.selectedGroup.add(model.meshObject);
+                this.addModelInSelectedGroup(model);
             }
         });
         this.applySelectedObjectParentMatrix();
 
-        return {
-            selectedModelArray: this.selectedModelArray,
-            selectedModelIDArray: this.selectedModelIDArray,
-            hasModel: this.hasModel()
-        };
+        return this.getState();
     }
 
     pasteModelArray() {
@@ -635,7 +619,6 @@ class ModelGroup extends EventEmitter {
         const copiedArray = this.copiedModelArray;
         if (copiedArray.length > 0) {
             this.selectedModelArray = [];
-            this.selectedModelIDArray = [];
             this.models.forEach((model) => {
                 model.isSelected = false;
                 model.meshObject.material = materialNormal;
@@ -662,28 +645,24 @@ class ModelGroup extends EventEmitter {
                     // Once the position of selectedGroup is changed, updateMatrix must be called
                     model.meshObject.updateMatrix();
                     model.modelID = uuid.v4();
+                } else {
+                    model.meshObject.addEventListener('update', this.onModelUpdate);
+                    model.modelID = uuid.v4();
+                    model.computeBoundingBox();
+                    model.updateTransformation({
+                        positionX: 0,
+                        positionY: 0,
+                        positionZ: 0
+                    });
                 }
                 this.models.push(model);
 
-                model.isSelected = true;
-                model.meshObject.material = materialSelected;
-                this.selectedModelArray.push(model);
-                this.selectedModelIDArray.push(model.modelID);
-                this.selectedGroup.add(model.meshObject);
+                this.addModelInSelectedGroup(model);
             }
         });
         this.applySelectedObjectParentMatrix();
 
-        if (copiedArray.length > 0) {
-            return {
-                selectedModelArray: this.selectedModelArray,
-                selectedModelIDArray: this.selectedModelIDArray,
-                selectedGroup: this.selectedGroup,
-                hasModel: this.hasModel()
-            };
-        } else {
-            return null;
-        }
+        return this.getState();
     }
 
 
@@ -791,7 +770,11 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (uniformScalingState !== undefined) {
-            this.selectedGroup.uniformScalingState = uniformScalingState;
+            if (this.selectedGroup.children.length === 1) {
+                this.selectedGroup.children[0].uniformScalingState = uniformScalingState;
+            } else {
+                this.selectedGroup.uniformScalingState = uniformScalingState;
+            }
         }
         if (rotationX !== undefined) {
             this.selectedGroup.rotation.x = rotationX;
@@ -1031,7 +1014,7 @@ class ModelGroup extends EventEmitter {
         // add to group and select
         this.models.push(model);
         this.object.add(model.meshObject);
-        this.selectModelById(model);
+        this.selectModelById(model.modelID);
 
 
         this.emit('add', model);

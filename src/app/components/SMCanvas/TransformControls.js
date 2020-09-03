@@ -2,6 +2,7 @@ import {
     DoubleSide,
     Float32BufferAttribute,
     Vector3,
+    Euler,
     Quaternion,
     Matrix4,
     Group,
@@ -439,30 +440,58 @@ class TransformControls extends Object3D {
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
 
+            this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
+            this.objectQuaternionInv.copy(objectQuaternion).inverse();
+
             this.object.children.forEach((objectControl) => {
                 const objectChildrenPosition = new Vector3();
                 const objectChildrenScale = new Vector3();
                 const objectChildrenQuaternion = new Quaternion();
                 // object
 
-                // objectControl.updateMatrixWorld();
-                objectControl.updateMatrix();
-                // const clone = objectControl.geometry.clone();
-                // clone.applyMatrix(new Matrix4().getInverse(this.object.matrix));
-                // clone.computeBoundingBox();
-                // objectControl.geometry.boundingBox = clone.boundingBox;
-
                 objectControl.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
 
-                if (objectControl.geometry.boundingBox) {
-                    const boundingBox = objectControl.geometry.boundingBox;
-                    minObjectBoundingBox.x = Math.min(boundingBox.min.x * objectChildrenScale.x + objectChildrenPosition.x, minObjectBoundingBox.x);
-                    minObjectBoundingBox.y = Math.min(boundingBox.min.y * objectChildrenScale.y + objectChildrenPosition.y, minObjectBoundingBox.y);
-                    minObjectBoundingBox.z = Math.min(boundingBox.min.z * objectChildrenScale.z + objectChildrenPosition.z, minObjectBoundingBox.z);
 
-                    maxObjectBoundingBox.x = Math.max(boundingBox.max.x * objectChildrenScale.x + objectChildrenPosition.x, maxObjectBoundingBox.x);
-                    maxObjectBoundingBox.y = Math.max(boundingBox.max.y * objectChildrenScale.y + objectChildrenPosition.y, maxObjectBoundingBox.y);
-                    maxObjectBoundingBox.z = Math.max(boundingBox.max.z * objectChildrenScale.z + objectChildrenPosition.z, maxObjectBoundingBox.z);
+                if (objectControl.geometry.boundingBox) {
+                    const clone = objectControl.geometry.clone();
+                    if (this.object.children.length === 1) {
+                        clone.applyMatrix(this.object.matrix);
+                        clone.computeBoundingBox();
+                        const boundingBox = clone.boundingBox;
+                        minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
+                        minObjectBoundingBox.y = Math.min(boundingBox.min.y, minObjectBoundingBox.y);
+                        minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
+
+                        maxObjectBoundingBox.x = Math.max(boundingBox.max.x, maxObjectBoundingBox.x);
+                        maxObjectBoundingBox.y = Math.max(boundingBox.max.y, maxObjectBoundingBox.y);
+                        maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
+                    } else {
+                        const parentClone = this.object.clone();
+                        const newRotation = new Euler(
+                            objectControl.rotation.x + this.object.rotation.x,
+                            objectControl.rotation.y + this.object.rotation.y,
+                            objectControl.rotation.z + this.object.rotation.z,
+                        );
+                        const newScale = new Vector3(
+                            objectControl.scale.x * this.object.scale.x,
+                            objectControl.scale.y * this.object.scale.y,
+                            objectControl.scale.z * this.object.scale.z,
+                        );
+                        parentClone.rotation.copy(newRotation);
+                        parentClone.scale.copy(newScale);
+                        parentClone.updateMatrix();
+                        clone.applyMatrix(parentClone.matrix);
+                        clone.computeBoundingBox();
+                        const boundingBox = clone.boundingBox;
+
+                        minObjectBoundingBox.x = Math.min(boundingBox.min.x + objectChildrenPosition.x - objectPosition.x, minObjectBoundingBox.x);
+                        minObjectBoundingBox.y = Math.min(boundingBox.min.y + objectChildrenPosition.y - objectPosition.y, minObjectBoundingBox.y);
+                        minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
+
+                        maxObjectBoundingBox.x = Math.max(boundingBox.max.x + objectChildrenPosition.x - objectPosition.x, maxObjectBoundingBox.x);
+                        maxObjectBoundingBox.y = Math.max(boundingBox.max.y + objectChildrenPosition.y - objectPosition.y, maxObjectBoundingBox.y);
+                        maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
+                    }
                 }
 
 
@@ -471,8 +500,6 @@ class TransformControls extends Object3D {
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && objectControl.visible);
                 this.scalePeripheral.visible = (this.mode === 'scale' && objectControl.visible);
             });
-            this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
-            this.objectQuaternionInv.copy(objectQuaternion).inverse();
 
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);

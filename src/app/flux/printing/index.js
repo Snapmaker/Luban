@@ -805,7 +805,7 @@ export const actions = {
 
     selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.selectModelById(model, isMultiSelect);
+        const modelState = modelGroup.selectModelById(model.modelID, isMultiSelect);
 
         dispatch(actions.updateState(modelState));
         dispatch(actions.render());
