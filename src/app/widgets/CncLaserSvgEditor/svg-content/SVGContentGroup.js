@@ -1,6 +1,6 @@
-import { createSVGElement, getBBox, setAttributes, toString } from '../element-utils';
+import { createSVGElement, getBBox, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
-import SelectorManager from './SelectorManager';
+// import SelectorManager from './SelectorManager';
 import OperatorPoints from './OperatorPoints';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
@@ -24,10 +24,10 @@ class SVGContentGroup {
 
         this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
-        this.selectorManager = new SelectorManager({
-            getRoot: () => this.svgContent,
-            scale: this.scale
-        });
+        // this.selectorManager = new SelectorManager({
+        //     getRoot: () => this.svgContent,
+        //     scale: this.scale
+        // });
         this.operatorPoints = new OperatorPoints({
             getRoot: () => this.svgContent,
             scale: this.scale
@@ -54,7 +54,7 @@ class SVGContentGroup {
     }
 
     updateScale(scale) {
-        this.selectorManager.updateScale(scale);
+        this.operatorPoints.updateScale(scale);
         for (const childNode of this.getChildNodes()) {
             childNode.setAttribute('stroke-width', 1 / scale);
         }
@@ -94,18 +94,9 @@ class SVGContentGroup {
 
     deleteElement(elem) {
         if (elem) {
-            this.selectorManager.releaseSelector(elem);
+            this.operatorPoints.showGrips(false);
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
             elem.remove();
-        }
-    }
-
-    // todo getSelected will be instead
-    updateTransform(elem, attributes) {
-        setAttributes(elem, attributes);
-        if (elem === this.getSelected()) {
-            const selector = this.selectorManager.requestSelector(elem);
-            selector.resize();
         }
     }
 
@@ -136,35 +127,39 @@ class SVGContentGroup {
         return element;
     }
 
-    requestSelector(elem, bbox) {
-        return this.selectorManager.requestSelector(elem, bbox);
-    }
-
-    requestSelectorByElements(elements) {
-        return this.selectorManager.requestSelectorByElements(elements);
-    }
-
-    releaseSelector(elem) {
-        return this.selectorManager.releaseSelector(elem);
-    }
-
     clearSelection() {
         this.operatorPoints.showGrips(false);
+        for (const elem of this.selectedElements) {
+            elem.setAttribute('fill', '#e7f2fd');
+        }
         this.selectedElements = [];
     }
 
     addToSelection(elements) {
         for (const elem of elements) {
             if (!this.selectedElements.includes(elem)) {
+                console.log(elem);
+                elem.setAttribute('fill', '#8888FF');
                 this.selectedElements.push(elem);
             }
         }
         this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
-        const selectedElementsBBox = getBBox(this.operatorPoints.getSelectedElementsBox());
-        const cx = selectedElementsBBox.x + selectedElementsBBox.width / 2;
-        const cy = selectedElementsBBox.y + selectedElementsBBox.height / 2;
-        console.log('----svg content group----', cx, cy);
+        const selectedElementsBox = this.operatorPoints.getSelectedElementsBox();
+        this.resetElementTransformList(selectedElementsBox); // reset transformList of selectedBox
+        this.resetSelection();
+        console.log('----svg content group----', getTransformList(selectedElementsBox));
+    }
+
+    // after element transform
+    resetSelection() {
+        this.resetElementTransformList(this.operatorPoints.operatorPointsGroup);
+        this.operatorPoints.resizeGrips(this.selectedElements);
+        this.operatorPoints.resetTransformList();
+    }
+
+    isElementOperator(elem) {
+        return elem === this.operatorPoints.operatorPointsGroup;
     }
 
     updateElementRotate(elem, rotate) {
@@ -229,9 +224,9 @@ class SVGContentGroup {
         recalculateDimensions(this.svgContent, elem);
     }
 
-    selectOnly(elem) {
+    selectOnly(elems) {
         this.clearSelection();
-        elem && this.addToSelection([elem]);
+        elems && this.addToSelection(elems);
     }
 
     removeAllElements() {
@@ -261,6 +256,107 @@ class SVGContentGroup {
     setSelectedElementUniformScalingState(uniformScalingState) {
         const selectedElement = this.getSelected();
         selectedElement.uniformScalingState = uniformScalingState;
+    }
+
+    resetElementTransformList(element, modelGroupTransformation) {
+        element.transform.baseVal.clear();
+        this.setElementTransformList(element, modelGroupTransformation);
+    }
+
+    setElementTransformList(element, modelGroupTransformation) {
+        const transformList = element.transform.baseVal;
+        const elementsBBox = getBBox(element);
+        const transformation = (modelGroupTransformation !== undefined ? modelGroupTransformation : ({
+            positionX: elementsBBox.x + elementsBBox.width / 2,
+            positionY: elementsBBox.y + elementsBBox.height / 2,
+            rotationZ: 0,
+            scaleX: 1,
+            scaleY: 1,
+            flip: 0
+        }));
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        const center = { x: positionX, y: positionY };
+
+        const translateOrigin = this.svgContent.createSVGTransform();
+        translateOrigin.tag = 'translateOrigin';
+        translateOrigin.setTranslate(-center.x, -center.y);
+        transformList.insertItemBefore(translateOrigin, 0);
+
+        const scale = this.svgContent.createSVGTransform();
+        scale.tag = 'scale';
+        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+        transformList.insertItemBefore(scale, 0);
+
+        const rotate = this.svgContent.createSVGTransform();
+        rotate.tag = 'rotate';
+        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+        transformList.insertItemBefore(rotate, 0);
+
+        const translateBack = this.svgContent.createSVGTransform();
+        translateBack.setTranslate(center.x, center.y);
+        transformList.insertItemBefore(translateBack, 0);
+        transformList.getItem(0).tag = 'translateBack';
+    }
+
+    getSelectedElementsBBox() {
+        const selectedElementsBox = this.operatorPoints.getSelectedElementsBox();
+        return getBBox(selectedElementsBox);
+    }
+
+    getSelectedElementsCenterPoint() {
+        return this.operatorPoints.getCenterPoint();
+    }
+
+    transformSelectedElementsOnMouseMove(transform) {
+        for (const elem of this.selectedElements) {
+            const transformList = getTransformList(elem);
+
+            if (transformList.numberOfItems) {
+                transformList.replaceItem(transform, 0);
+            } else {
+                transformList.appendItem(transform);
+            }
+        }
+    }
+
+    transformSelectorOnMouseDown(transform) {
+        const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+        if (transformList.numberOfItems) {
+            transformList.replaceItem(transform, 0);
+        } else {
+            transformList.appendItem(transform);
+        }
+    }
+
+    transformSelectorOnMouseMove(transform) {
+        const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+        if (transformList.numberOfItems) {
+            transformList.replaceItem(transform, 0);
+        } else {
+            transformList.appendItem(transform);
+        }
+    }
+
+    transformSelectorOnMouseup() {
+    //
+    }
+
+    rotateSelectedElements(rotate) {
+        for (const elem of this.selectedElements) {
+            const transformList = getTransformList(elem);
+            const findIndex = (list, type) => {
+                for (let k = 0; k < list.length; k++) {
+                    if (list.getItem(k).type === type) {
+                        return k;
+                    }
+                }
+                return -1;
+            };
+            let idx = findIndex(transformList, 4);
+            if (idx === -1) idx = transformList.numberOfItems - 1;
+            transformList.replaceItem(rotate, idx);
+        }
     }
 }
 

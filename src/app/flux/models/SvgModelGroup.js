@@ -196,7 +196,7 @@ class SvgModelGroup {
                 preserveAspectRatio: 'none'
             }
         });
-        this.svgContentGroup.selectOnly(elem);
+        this.svgContentGroup.selectOnly([elem]);
         return {
             modelID: elem.getAttribute('id'),
             elem
@@ -224,13 +224,13 @@ class SvgModelGroup {
             positionX: 0,
             positionY: 0
         }, clone);
-        this.svgContentGroup.selectOnly(selected);
+        this.svgContentGroup.selectOnly([selected]);
         this.addModel(clone);
     }
 
     selectElementById(modelID) {
         const elem = this.svgContentGroup.findSVGElement(modelID);
-        this.svgContentGroup.selectOnly(elem);
+        this.svgContentGroup.selectOnly([elem]);
     }
 
     deleteElement() {
@@ -322,23 +322,21 @@ class SvgModelGroup {
         if (transformation.uniformScalingState !== undefined) {
             this.svgContentGroup.setSelectedElementUniformScalingState(transformation.uniformScalingState);
         }
-        this.svgContentGroup.selectOnly(elem);
+        this.svgContentGroup.selectOnly([elem]);
     }
 
     hideSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = false;
         selectedElement.setAttribute('display', 'none');
-        const selector = this.svgContentGroup.requestSelector(selectedElement);
-        selector.showGrips(false);
+        this.svgContentGroup.operatorPoints.showGrips(false);
     }
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = true;
         selectedElement.setAttribute('display', 'inherit');
-        const selector = this.svgContentGroup.requestSelector(selectedElement);
-        selector.showGrips(true);
+        this.svgContentGroup.operatorPoints.showGrips(true);
     }
 
     createFromModel(relatedModel) {
@@ -359,8 +357,6 @@ class SvgModelGroup {
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
         model.setParent(this.svgContentGroup.group);
-        const selector = this.svgContentGroup.requestSelector(elem);
-        selector.showGrips(true);
         const data = model.genModelConfig();
 
         const { modelID, content, width, height, transformation, config: elemConfig } = data;
@@ -402,27 +398,6 @@ class SvgModelGroup {
             .catch((err) => {
                 console.error(err);
             });
-        this.resizeSelector(elem);
-    }
-
-    // only resize when element selected
-    resizeSelector(elem) {
-        if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
-            return;
-        }
-        const selector = this.svgContentGroup.requestSelector(elem);
-        selector.resize();
-    }
-
-    resizeSelectorByElementsSelected(elements) {
-        for (const elem of elements) {
-            if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
-                return;
-            }
-        }
-        this.svgContentGroup.requestSelectorByElements(elements);
-        // const selector = this.svgContentGroup.requestSelectorByElements(elements);
-        // selector.resize();
     }
 
     getModelByElement(elem) {

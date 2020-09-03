@@ -33,7 +33,7 @@ const textActionCreator = (canvas, $) => {
         return svgroot.querySelector(`#${id}`);
     };
 
-    const selectorManager = canvas.svgContentGroup.selectorManager;
+    // const selectorManager = canvas.svgContentGroup.selectorManager;
     const rootSctm = canvas.svgContentGroup.getScreenCTM().inverse();
     /**
      *
@@ -114,7 +114,7 @@ const textActionCreator = (canvas, $) => {
                 stroke: '#333',
                 'stroke-width': 1
             });
-            cursor = canvas.svgContentGroup.selectorManager.selectorParentGroup.appendChild(cursor);
+            // cursor = canvas.svgContentGroup.selectorManager.selectorParentGroup.appendChild(cursor);
         }
 
         if (!blinker) {
@@ -383,9 +383,9 @@ const textActionCreator = (canvas, $) => {
         toEditMode(x, y) {
             allowDbl = false;
             canvas.mode = 'textedit';
-            selectorManager.requestSelector(curtext).showGrips(false);
+            // selectorManager.requestSelector(curtext).showGrips(false);
             // Make selector group accept clicks
-            /* const selector = */ selectorManager.requestSelector(curtext); // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
+            // /* const selector = */ selectorManager.requestSelector(curtext); // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
             // const sel = selector.selectorRect;
 
             textActions.init();
@@ -421,7 +421,7 @@ const textActionCreator = (canvas, $) => {
             if (selblock) { $(selblock).attr('display', 'none'); }
             if (cursor) { $(cursor).attr('visibility', 'hidden'); }
             $(curtext).css('cursor', 'move');
-            selectorManager.requestSelector(curtext).showGrips(true);
+            // selectorManager.requestSelector(curtext).showGrips(true);
 
             // if (curtext && !curtext.textContent.length) {
             //     // No content, so delete

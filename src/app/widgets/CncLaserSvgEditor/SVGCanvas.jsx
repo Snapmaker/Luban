@@ -298,14 +298,10 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
 
-        // if (event.shiftKey) {
-        //     draw.mode = this.mode;
-        //     this.setMode('shiftSelect');
-        // }
         if (rightClick || event.ctrlKey || event.metaKey) {
             draw.mode = this.mode;
             this.setMode('panMove');
-        } else if (mouseTarget === this.svgContentGroup.selectorParentGroup) {
+        } else if (this.svgContentGroup.isElementOperator(mouseTarget)) {
             const grip = event.target;
             const gripType = grip.getAttribute('data-type');
             if (gripType === 'resize') {
@@ -371,14 +367,11 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'resize': {
-                const selected = this.svgContentGroup.selectedElements[0];
-
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
 
-                const selector = this.svgContentGroup.requestSelector(selected);
-                draw.bbox = getBBox(selector.selectorRect);
+                draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
                 // const transformList = getTransformList(selected);
                 // const hasMatrix = hasMatrixTransform(transformList);
@@ -397,14 +390,11 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'rotate': {
-                const selected = this.svgContentGroup.selectedElements[0];
-
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
 
-                const selector = this.svgContentGroup.requestSelector(selected);
-                draw.bbox = getBBox(selector.selectorRect);
+                draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
                 // const transformList = getTransformList(selected);
                 // const angle = getRotationAngle(selected);
@@ -613,30 +603,26 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'move': {
-                if (this.svgContentGroup.selectedElements.length > 0) {
-                    const dx = x - draw.startX;
-                    const dy = y - draw.startY;
-
-                    if (dx !== 0 || dy !== 0) {
-                        const elem = this.svgContentGroup.selectedElements[0];
-                        const transformList = getTransformList(elem);
-
-                        const transform = this.svgContainer.createSVGTransform();
-                        transform.setTranslate(dx, dy);
-
-                        if (transformList.numberOfItems) {
-                            transformList.replaceItem(transform, 0);
-                        } else {
-                            transformList.appendItem(transform);
-                        }
-
-                        const selector = this.svgContentGroup.requestSelector(elem);
-                        selector.resize();
-                    }
+                const dx = x - draw.startX;
+                const dy = y - draw.startY;
+                if (dx === 0 && dy === 0) {
+                    break;
                 }
+                const transform = this.svgContainer.createSVGTransform();
+                transform.setTranslate(dx, dy);
+                this.svgContentGroup.transformSelectedElementsOnMouseMove(transform);
+                const transformBox = this.svgContainer.createSVGTransform();
+                const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
+                transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
+                this.svgContentGroup.transformSelectorOnMouseMove(transform);
+
                 break;
             }
             case 'resize': {
+                // todo resize multi element
+                if (this.svgContentGroup.selectedElements.length !== 1) {
+                    break;
+                }
                 const selected = this.svgContentGroup.selectedElements[0];
                 const model = this.props.svgModelGroup.getModelByElement(selected);
                 model.elemResize({
@@ -645,41 +631,22 @@ class SVGCanvas extends PureComponent {
                     resizeTo: pt,
                     isUniformScaling: event.shiftKey
                 });
-
-                const selector = this.svgContentGroup.requestSelector(selected);
-                selector.resize();
+                // this.svgContentGroup.resetSelection();
 
                 break;
             }
             case 'rotate': {
-                const selected = this.svgContentGroup.selectedElements[0];
-
                 const bbox = draw.bbox;
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;
-
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-
-                const rotate = this.svgContainer.createSVGTransform();
-                rotate.setRotate(angle, 0, 0);
-
-                const transformList = getTransformList(selected);
-                const findIndex = (list, type) => {
-                    for (let k = 0; k < list.length; k++) {
-                        if (list.getItem(k).type === type) {
-                            return k;
-                        }
-                    }
-                    return -1;
-                };
-                let idx = findIndex(transformList, 4);
-                if (idx === -1) idx = transformList.numberOfItems - 1;
-                transformList.replaceItem(rotate, idx);
-
-                const selector = this.svgContentGroup.requestSelector(selected);
-                selector.resize();
-
+                // rotate box
+                const rotateBox = this.svgContainer.createSVGTransform();
+                rotateBox.setRotate(angle, cx, cy);
+                console.log('----mouse move rotate----', angle, rotateBox.matrix);
+                this.svgContentGroup.transformSelectedElementsOnMouseMove(rotateBox);
+                this.svgContentGroup.transformSelectorOnMouseMove(rotateBox);
                 break;
             }
             case 'panMove': {
@@ -805,6 +772,7 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseUp = (event) => {
+        console.log(this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
@@ -824,33 +792,61 @@ class SVGCanvas extends PureComponent {
             case 'resize':
                 this.setMode('select');
             // fallthrough
-            case 'rotate':
-                this.setMode('select');
-                // fallthrough
             case 'select': {
                 if (this.svgContentGroup.selectedElements.length === 1) {
                     const selected = this.svgContentGroup.selectedElements[0];
                     this.currentProperties.fill = selected.getAttribute('fill');
                     this.currentProperties.stroke = selected.getAttribute('stroke');
                     // this.currentProperties.opacity = selectedElement.getAttribute('opacity');
-
-                    const selector = this.svgContentGroup.requestSelector(selected);
-                    selector.showGrips(true);
-                }
-
-                // this.recalculateAllSelectedDimensions();
-                // being moved
-                if (x !== draw.startX || y !== draw.startY) {
-                    for (const elem of this.svgContentGroup.selectedElements) {
-                        const selector = this.svgContentGroup.requestSelector(elem);
-                        selector.resize();
-                        const model = this.props.svgModelGroup.getModelByElement(elem);
-                        model.onUpdate();
-
-                        // this.trigger(SVG_EVENT_MOVE, elem);
-                    }
+                    // this.recalculateAllSelectedDimensions();
                 }
                 element.remove();
+                return;
+            }
+            case 'rotate': {
+                const bbox = draw.bbox;
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                let angle = Math.atan2(y - cy, x - cx);
+                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
+                const rotateBox = this.svgContainer.createSVGTransform();
+                rotateBox.setRotate(angle, cx, cy);
+                console.log('----rotate mouse up----', angle, rotateBox.matrix);
+                for (const elem of this.svgContentGroup.selectedElements) {
+                    // move
+                    const startBbox = getBBox(elem);
+                    const startCenter = this.svgContainer.createSVGPoint();
+                    startCenter.x = startBbox.x + startBbox.width / 2;
+                    startCenter.y = startBbox.y + startBbox.height / 2;
+                    const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                    console.log(startCenter, endCenter);
+                    const svgModel = this.props.svgModelGroup.getModelByElement(elem);
+                    const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                    const model = svgModel.relatedModel;
+                    const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - angle + 360) % 360 - 180) * Math.PI / 180;
+                    const positionX = modelNewCenter.x;
+                    const positionY = modelNewCenter.y;
+                    console.log(rotationZ, positionX, positionY);
+                    model.updateAndRefresh({
+                        transformation: {
+                            positionX: positionX,
+                            positionY: positionY,
+                            rotationZ: rotationZ
+                        }
+                    });
+                }
+                // this.svgContentGroup.resetSelection();
+                this.svgContentGroup.operatorPoints.showGrips(true);
+                break;
+            }
+            case 'move': { // being moved
+                if (x !== draw.startX || y !== draw.startY) {
+                    for (const elem of this.svgContentGroup.selectedElements) {
+                        const model = this.props.svgModelGroup.getModelByElement(elem);
+                        model.onUpdate();
+                    }
+                }
+                // this.svgContentGroup.resetSelection();
                 return; // note that this is return
             }
             case 'panMove': {
@@ -938,6 +934,7 @@ class SVGCanvas extends PureComponent {
                 this.setMode('select');
             }
         }
+        this.setMode('select');
     };
 
     onDblClick = (evt) => {

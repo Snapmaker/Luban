@@ -1,4 +1,5 @@
 import { createSVGElement } from '../element-utils';
+import { transformBox, transformListToTransform } from '../element-transform';
 
 const GRIP_RADIUS = 8;
 
@@ -132,11 +133,21 @@ class OperatorPoints {
         this.operatorPointsGroup.setAttribute('display', show ? 'inline' : 'none');
     }
 
-    resetTransformList() {}
+    resetTransformList() {
+        this.operatorPointsGroup.transform.baseVal.clear();
+    }
 
-    updateTransform() {}
-
+    // updateTransform() {
+    //     this.operatorPointsGroup.transform.baseVal.clear();
+    // }
     removeGrips() {}
+
+    getCenterPoint() {
+        return {
+            x: this.operatorGripCoords.nw[0] + this.operatorGripCoords.se[0] / 2,
+            y: this.operatorGripCoords.nw[1] + this.operatorGripCoords.se[1] / 2
+        };
+    }
 
     resizeGrips(elements) {
         if (!elements || elements.length === 0) {
@@ -145,16 +156,18 @@ class OperatorPoints {
 
         // Calculate the bounding
         let bBox = elements[0].getBBox();
-        let minX = bBox.x;
-        let maxX = bBox.x + bBox.width;
-        let minY = bBox.y;
-        let maxY = bBox.y + bBox.height;
+        let box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(elements[0].transform.baseVal).matrix);
+        let minX = box.x;
+        let maxX = box.x + box.width;
+        let minY = box.y;
+        let maxY = box.y + box.height;
         for (const element of elements) {
             bBox = element.getBBox();
-            minX = Math.min(minX, bBox.x);
-            maxX = Math.max(maxX, bBox.x + bBox.width);
-            minY = Math.min(minY, bBox.y);
-            maxY = Math.max(maxY, bBox.y + bBox.height);
+            box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(element.transform.baseVal).matrix);
+            minX = Math.min(minX, box.x);
+            maxX = Math.max(maxX, box.x + box.width);
+            minY = Math.min(minY, box.y);
+            maxY = Math.max(maxY, box.y + box.height);
         }
 
         // set 8 points for resize
@@ -168,11 +181,13 @@ class OperatorPoints {
             w: [minX, (minY + maxY) / 2],
             e: [maxX, (minY + maxY) / 2]
         };
+        console.log('----1----');
         Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('cx', coords[0]);
             grip.setAttribute('cy', coords[1]);
         });
+        console.log('----2----');
         // set rotation point
         this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y1', minY);
@@ -180,13 +195,14 @@ class OperatorPoints {
         this.rotateGripConnector.setAttribute('y2', minY - GRIP_RADIUS * 9.4 / this.scale);
         this.rotateGrip.setAttribute('cx', (minX + maxX) / 2);
         this.rotateGrip.setAttribute('cy', minY - GRIP_RADIUS * 9.4 / this.scale);
-
+        console.log('----3----');
         // resize line box
         const dstr = `M${minX},${minY}
             L${maxX},${minY}
             L${maxX},${maxY}
             L${minX},${maxY} z`;
         this.selectedElementsBox.setAttribute('d', dstr);
+        console.log('----4----');
     }
 
     getSelectedElementBBox() {

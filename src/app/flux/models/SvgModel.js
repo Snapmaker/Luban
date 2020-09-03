@@ -313,7 +313,7 @@ class SvgModel {
         this.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
-    setElementTransformToList(transformList, transformation) { // set new transformation list, move to util
+    setElementTransformToList(transformList, transformation) {
         // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
         const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
         const center = this.pointModelToSvg({ x: positionX, y: positionY });
@@ -342,8 +342,6 @@ class SvgModel {
     refresh() {
         this.elemTransformList().clear();
         this.refreshElemAttrs();
-
-        this.modelGroup.resizeSelector(this.elem);
     }
 
     onUpdate() {
@@ -528,6 +526,10 @@ class SvgModel {
         const ty = ptFixedTo.y - ptFixedFrom.y;
         const trans = list.getItem(0);
         trans.setTranslate(x - tx, y - ty);
+    }
+
+    elemResizeOnMouseMove(matrix) {
+        this.setElementTransformList(matrix);
     }
 
     pointModelToSvg({ x, y }) {
