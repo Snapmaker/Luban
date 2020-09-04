@@ -152,20 +152,21 @@ export const actions = {
         const state = getState().project[headType];
         const { openedFile, unSaved } = state;
         if (!unSaved) return;
+        // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {
             const idxClicked = UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
                 defaultId: 2,
                 buttons: [
-                    i18n._('Don\'t Save'),
+                    i18n._('Save'),
                     i18n._('Cancel'),
-                    i18n._('Save')
+                    i18n._('Don\'t Save')
                 ]
             });
 
             if (idxClicked === 1) throw new Error('Cancel');
-            if (idxClicked === 0) {
+            if (idxClicked === 2) {
                 await dispatch(actions.clearSavedEnvironment(headType));
                 return;
             }
