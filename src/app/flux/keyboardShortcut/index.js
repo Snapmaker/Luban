@@ -44,7 +44,7 @@ export const actions = {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
                     const { displayedType } = getState().printing;
-                    displayedType === 'model' && (dispatch(printingActions.copyModelArray()));
+                    displayedType === 'model' && (dispatch(printingActions.copy()));
                 }
             },
             'UNDO': () => {
@@ -58,7 +58,7 @@ export const actions = {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
                     const { displayedType } = getState().printing;
-                    displayedType === 'model' && (dispatch(printingActions.pasteModelArray()));
+                    displayedType === 'model' && (dispatch(printingActions.paste()));
                 }
             },
             'JOG': (event, { direction }) => {

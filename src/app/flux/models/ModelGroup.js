@@ -28,7 +28,7 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup.uniformScalingState = true;
         this.object.add(this.selectedGroup);
         this.selectedModelArray = [];
-        this.copiedModelArray = [];
+        this.clipboard = [];
         this.estimatedTime = 0;
         this.selectedModelIDArray = [];
 
@@ -120,9 +120,41 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
+    _removeSelectedModels() {
+        const selectedArray = this.getSelectedModelArray();
+        selectedArray.forEach((selected) => {
+            selected.meshObject.removeEventListener('update', this.onModelUpdate);
+            this.models = this.models.filter(model => model !== selected);
+        });
+    }
+
+    /**
+     * Remove selected models and reset selected state.
+     */
     removeSelectedModel() {
-        this.deleteSelectedModels();
+        this._removeSelectedModels();
         this.unselectAllModels();
+        this.onDataChangedCallback();
+        return this._getEmptyState();
+    }
+
+    _removeAllModels() {
+        const models = this.getModels();
+        for (const model of models) {
+            model.meshObject.removeEventListener('update', this.onModelUpdate);
+            this.object.remove(model.meshObject);
+        }
+        this.models.splice(0);
+    }
+
+    /**
+     * Remove all models.
+     */
+    removeAllModels() {
+        if (this.hasModel()) {
+            this._removeAllModels();
+            this.unselectAllModels();
+        }
         this.onDataChangedCallback();
         return this._getEmptyState();
     }
@@ -282,33 +314,6 @@ class ModelGroup extends EventEmitter {
         this._bbox = bbox;
     }
 
-    deleteSelectedModels() {
-        const selectedArray = this.getSelectedModelArray();
-        selectedArray.forEach((selected) => {
-            this.copiedModelArray = this.copiedModelArray.filter(model => model !== selected);
-            selected.meshObject.removeEventListener('update', this.onModelUpdate);
-            this.models = this.models.filter(model => model !== selected);
-        });
-    }
-
-    deleteAllModels() {
-        const models = this.getModels();
-        for (const model of models) {
-            model.meshObject.removeEventListener('update', this.onModelUpdate);
-            this.object.remove(model.meshObject);
-        }
-        this.models.splice(0);
-    }
-
-    removeAllModels() {
-        if (this.hasModel()) {
-            this.deleteAllModels();
-            this.unselectAllModels();
-        }
-        this.onDataChangedCallback();
-        return this._getEmptyState();
-    }
-
     totalEstimatedTime() {
         let totalEstimatedTime_ = 0;
         for (const model of this.models) {
@@ -415,15 +420,15 @@ class ModelGroup extends EventEmitter {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
                 if (objectIndex === -1) {
-                    this.addModelInSelectedGroup(selectModel);
+                    this.addModelToSelectedGroup(selectModel);
                 } else {
-                    this.removeModelInSelectedGroup(selectModel);
+                    this.removeModelFromSelectedGroup(selectModel);
                 }
             }
         } else {
             this.unselectAllModels();
             if (selectModel) {
-                this.addModelInSelectedGroup(selectModel);
+                this.addModelToSelectedGroup(selectModel);
             }
         }
         this.resetSelectedObjectScaleAndRotation();
@@ -449,12 +454,12 @@ class ModelGroup extends EventEmitter {
                 if (objectIndex === -1) {
                     const model = this.models.find(d => d.meshObject === intersect.object);
                     if (model) {
-                        this.addModelInSelectedGroup(model);
+                        this.addModelToSelectedGroup(model);
                     }
                 } else {
                     const model = this.models.find(d => d.meshObject === intersect.object);
                     if (model) {
-                        this.removeModelInSelectedGroup(model);
+                        this.removeModelFromSelectedGroup(model);
                     }
                 }
             }
@@ -463,7 +468,7 @@ class ModelGroup extends EventEmitter {
             if (intersect) {
                 const model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
-                    this.addModelInSelectedGroup(model);
+                    this.addModelToSelectedGroup(model);
                 }
             }
         }
@@ -489,14 +494,14 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    addModelInSelectedGroup(model) {
+    addModelToSelectedGroup(model) {
         model.isSelected = true;
         model.meshObject.material = materialSelected;
         this.selectedModelArray.push(model);
         this.selectedGroup.add(model.meshObject);
     }
 
-    removeModelInSelectedGroup(model) {
+    removeModelFromSelectedGroup(model) {
         model.isSelected = false;
         model.meshObject.material = materialNormal;
         this.object.add(model.meshObject);
@@ -606,7 +611,7 @@ class ModelGroup extends EventEmitter {
 
                 this.models.push(model);
                 this.object.add(model.meshObject);
-                this.addModelInSelectedGroup(model);
+                this.addModelToSelectedGroup(model);
             }
         });
         this.applySelectedObjectParentMatrix();
@@ -614,57 +619,63 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    pasteModelArray() {
+    /**
+     * Copy action: copy selected models (simply save the objects without their current positions).
+     */
+    copy() {
+        this.clipboard = [];
+
+        this.selectedModelArray.forEach((model) => {
+            this.clipboard.push(model.clone());
+        });
+    }
+
+    /**
+     * Paste action: paste(duplicate) models in clipboard.
+     */
+    paste() {
+        const copiedArray = this.clipboard;
+        if (copiedArray.length === 0) return this._getEmptyState();
+
         this.removeSelectedObjectParentMatrix();
-        const copiedArray = this.copiedModelArray;
-        if (copiedArray.length > 0) {
-            this.selectedModelArray = [];
-            this.models.forEach((model) => {
-                model.isSelected = false;
-                model.meshObject.material = materialNormal;
-                this.object.add(model.meshObject);
-            });
-        }
 
-        copiedArray.forEach((selected) => {
-            if (selected) {
-                const model = selected.clone();
-                this.object.add(selected.meshObject);
-                if (selected.sourceType === '3d') {
-                    if (selected.convexGeometry) {
-                        const selectedConvexGeometry = selected.convexGeometry.clone();
-                        model.convexGeometry = selectedConvexGeometry;
-                    }
-                    model.stickToPlate();
-                    model.modelName = model.createNewModelName(this);
-                    model.meshObject.position.x = 0;
-                    model.meshObject.position.y = 0;
-                    const point = this._computeAvailableXY(model);
-                    model.meshObject.position.x = point.x;
-                    model.meshObject.position.y = point.y;
-                    // Once the position of selectedGroup is changed, updateMatrix must be called
-                    model.meshObject.updateMatrix();
-                    model.modelID = uuid.v4();
-                } else {
-                    model.meshObject.addEventListener('update', this.onModelUpdate);
-                    model.modelID = uuid.v4();
-                    model.computeBoundingBox();
-                    model.updateTransformation({
-                        positionX: 0,
-                        positionY: 0,
-                        positionZ: 0
-                    });
+        // Unselect all models
+        this.selectedModelArray.forEach((model) => {
+            model.isSelected = false;
+            model.meshObject.material = materialNormal;
+            this.object.add(model.meshObject); // TODO: to be refactored
+        });
+        this.selectedModelArray = [];
+
+        // paste objects from clipboard
+        // TODO: paste all objects from clipboard without losing their relative positions
+        copiedArray.forEach((clone) => {
+            const model = clone.clone();
+            this.object.add(model.meshObject);
+            if (model.sourceType === '3d') {
+                if (model.convexGeometry) {
+                    const selectedConvexGeometry = model.convexGeometry.clone();
+                    model.convexGeometry = selectedConvexGeometry;
                 }
-                this.models.push(model);
+                model.stickToPlate();
+                model.modelName = model.createNewModelName(this);
+                model.meshObject.position.x = 0;
+                model.meshObject.position.y = 0;
+                const point = this._computeAvailableXY(model);
+                model.meshObject.position.x = point.x;
+                model.meshObject.position.y = point.y;
+                // Once the position of selectedGroup is changed, updateMatrix must be called
+                model.meshObject.updateMatrix();
+                model.modelID = uuid.v4();
 
-                this.addModelInSelectedGroup(model);
+                this.models.push(model);
+                this.addModelToSelectedGroup(model);
             }
         });
         this.applySelectedObjectParentMatrix();
 
         return this.getState();
     }
-
 
     getSelectedModel() {
         if (this.selectedModel) {
@@ -676,18 +687,6 @@ class ModelGroup extends EventEmitter {
 
     getSelectedModelArray() {
         return this.selectedModelArray;
-    }
-
-    copyModelArray() {
-        this.copiedModelArray = this.selectedModelArray;
-    }
-
-    copyAllModel(allModel) {
-        this.copiedModelArray = allModel;
-    }
-
-    clearSelectedModelArray() {
-        this.selectedModelArray = [];
     }
 
     updateSelectedMode(mode, config, processImageName) {
