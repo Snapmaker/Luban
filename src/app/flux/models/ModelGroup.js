@@ -98,7 +98,6 @@ class ModelGroup extends EventEmitter {
 
     getSelectedModelTransformation() {
         if (this.selectedModelArray.length === 1) {
-            console.log(this.selectedModelArray[0].transformation);
             return this.selectedModelArray[0].transformation;
         }
         if (this.selectedModelArray.length > 0) {
@@ -427,6 +426,30 @@ class ModelGroup extends EventEmitter {
             const model = this.models.find(d => d.meshObject === meshObject);
             model.onTransform();
         });
+    }
+
+    addSelectedModels(modelArray) {
+        for (const model of modelArray) {
+            if (!this.selectedModelArray.includes(model)) {
+                this.selectedModelArray.push(model);
+            }
+        }
+        this.onDataChangedCallback();
+    }
+
+    removeSelectedModels(modelArray) {
+        const newSelectedModelArray = [];
+        for (const model of this.selectedModelArray) {
+            if (!modelArray.includes(model)) {
+                newSelectedModelArray.push(model);
+            }
+        }
+        this.selectedModelArray = newSelectedModelArray;
+        this.onDataChangedCallback();
+    }
+
+    removeAllSelectedModels() {
+        this.selectedModelArray = [];
     }
 
     // use for widget
@@ -778,9 +801,7 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         this.removeSelectedObjectParentMatrix();
-        // console.log('----on model after transform----');
         selectedModelArray.forEach((selected) => {
-            // console.log(selected.sourceType, selected);
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
             }

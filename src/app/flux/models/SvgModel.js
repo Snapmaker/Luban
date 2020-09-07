@@ -526,6 +526,7 @@ class SvgModel {
         const ty = ptFixedTo.y - ptFixedFrom.y;
         const trans = list.getItem(0);
         trans.setTranslate(x - tx, y - ty);
+        console.log('----resize on mouse move----', resizeDir, resizeFrom, resizeTo, { x, y }, ptFixed, ptFixedFrom, ptFixedTo);
     }
 
     pointModelToSvg({ x, y }) {

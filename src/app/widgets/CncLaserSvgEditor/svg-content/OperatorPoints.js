@@ -1,5 +1,5 @@
 import { createSVGElement } from '../element-utils';
-import { transformBox, transformListToTransform } from '../element-transform';
+import { getTransformList, transformBox, transformListToTransform } from '../element-transform';
 
 const GRIP_RADIUS = 8;
 
@@ -81,7 +81,6 @@ class OperatorPoints {
             grip.setAttribute('data-dir', dir);
             grip.setAttribute('data-type', 'resize');
             this.operatorGrips[dir] = grip;
-            console.log(grip);
             this.operatorPointsGroup.append(grip);
         }
 
@@ -134,12 +133,46 @@ class OperatorPoints {
     }
 
     resetTransformList() {
+        this.operatorPointsGroup.setAttribute('transform', 'translate(0,0)');
         this.operatorPointsGroup.transform.baseVal.clear();
     }
 
-    // updateTransform() {
-    //     this.operatorPointsGroup.transform.baseVal.clear();
-    // }
+    setTransformList(transform) {
+        this.operatorPointsGroup.transform.baseVal = transform;
+    }
+
+    updateTransformByTransformation(transformation) {
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const transformList = this.operatorPointsGroup.transform.baseVal;
+        transformList.clear();
+        const size = this.svgFactory.svgModelGroup.size;
+        function pointModelToSvg({ x, y }) {
+            return { x: size.x + x, y: size.y - y };
+        }
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        const center = pointModelToSvg({ x: positionX, y: positionY });
+
+        const translateOrigin = this.svgFactory.svgContent.createSVGTransform();
+        translateOrigin.tag = 'translateOrigin';
+        translateOrigin.setTranslate(-center.x, -center.y);
+        transformList.insertItemBefore(translateOrigin, 0);
+
+        const scale = this.svgFactory.svgContent.createSVGTransform();
+        scale.tag = 'scale';
+        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+        transformList.insertItemBefore(scale, 0);
+
+        const rotate = this.svgFactory.svgContent.createSVGTransform();
+        rotate.tag = 'rotate';
+        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+        transformList.insertItemBefore(rotate, 0);
+
+        const translateBack = this.svgFactory.svgContent.createSVGTransform();
+        translateBack.setTranslate(center.x, center.y);
+        transformList.insertItemBefore(translateBack, 0);
+        transformList.getItem(0).tag = 'translateBack';
+    }
+
     removeGrips() {}
 
     getCenterPoint() {
@@ -154,20 +187,38 @@ class OperatorPoints {
             return;
         }
 
+        let bBox, box, minX, maxX, minY, maxY;
         // Calculate the bounding
-        let bBox = elements[0].getBBox();
-        let box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(elements[0].transform.baseVal).matrix);
-        let minX = box.x;
-        let maxX = box.x + box.width;
-        let minY = box.y;
-        let maxY = box.y + box.height;
-        for (const element of elements) {
-            bBox = element.getBBox();
-            box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(element.transform.baseVal).matrix);
-            minX = Math.min(minX, box.x);
-            maxX = Math.max(maxX, box.x + box.width);
-            minY = Math.min(minY, box.y);
-            maxY = Math.max(maxY, box.y + box.height);
+        if (elements.length === 1) {
+            bBox = elements[0].getBBox();
+            box = bBox;
+            minX = box.x;
+            maxX = box.x + box.width;
+            minY = box.y;
+            maxY = box.y + box.height;
+            // todo
+            console.log(this.svgFactory);
+            const transformation = this.svgFactory.svgModelGroup.getModelsByElements(elements)[0].transformation;
+            this.updateTransformByTransformation(transformation);
+            console.log('----operator resize grip transformation----', transformation);
+            this.setTransformList(getTransformList(elements[0]));
+        } else {
+            bBox = elements[0].getBBox();
+            box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(elements[0].transform.baseVal).matrix);
+            minX = box.x;
+            maxX = box.x + box.width;
+            minY = box.y;
+            maxY = box.y + box.height;
+            for (const element of elements) {
+                bBox = element.getBBox();
+                box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(element.transform.baseVal).matrix);
+                minX = Math.min(minX, box.x);
+                maxX = Math.max(maxX, box.x + box.width);
+                minY = Math.min(minY, box.y);
+                maxY = Math.max(maxY, box.y + box.height);
+            }
+            this.resetTransformList();
+            this.operatorPointsGroup.setAttribute('transform', 'translate(0,0)');
         }
 
         // set 8 points for resize
@@ -195,10 +246,11 @@ class OperatorPoints {
         this.rotateGrip.setAttribute('cy', minY - GRIP_RADIUS * 9.4 / this.scale);
         // resize line box
         const dstr = `M${minX},${minY}
-            L${maxX},${minY}
-            L${maxX},${maxY}
-            L${minX},${maxY} z`;
+        L${maxX},${minY}
+        L${maxX},${maxY}
+        L${minX},${maxY} z`;
         this.selectedElementsBox.setAttribute('d', dstr);
+        console.log('----operator resize grip----', this.operatorPointsGroup.transform.baseVal);
     }
 
     getSelectedElementBBox() {

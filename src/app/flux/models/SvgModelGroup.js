@@ -10,7 +10,6 @@ import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../../api';
-import { toFixed } from '../../lib/numeric-utils';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -448,7 +447,6 @@ class SvgModelGroup {
         translateBack.setTranslate(center.x, center.y);
         transformList.insertItemBefore(translateBack, 0);
         transformList.getItem(0).tag = 'translateBack';
-        console.log(translateBack);
     }
 
     updateSelectedModelsByTransformation(deviation) {
@@ -483,7 +481,6 @@ class SvgModelGroup {
         if (deviation.angle) {
             // translate and rotate models
             for (const svgModel of selectedModels) {
-                console.log('----rotate mouseup----');
                 const elem = svgModel.elem;
                 const rotateBox = svg.createSVGTransform();
                 rotateBox.setRotate(deviation.angle, deviation.cx, deviation.cy);
@@ -491,22 +488,19 @@ class SvgModelGroup {
                 const startCenter = svg.createSVGPoint();
                 startCenter.x = startBbox.x + startBbox.width / 2;
                 startCenter.y = startBbox.y + startBbox.height / 2;
-                const endCenter = startCenter.matrixTransform(rotateBox.matrix);
-                console.log(startCenter, endCenter);
-                const modelNewCenter = svgModel.pointSvgToModel(endCenter);
-                const model = svgModel.relatedModel;
-                const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
-                console.log('----rotate mouse up----', toFixed(rotationZ * 180 / Math.PI, 1));
-                const positionX = modelNewCenter.x;
-                const positionY = modelNewCenter.y;
-                console.log(rotationZ, positionX, positionY);
-                model.updateAndRefresh({
-                    transformation: {
-                        positionX: positionX,
-                        positionY: positionY,
-                        rotationZ: rotationZ
-                    }
-                });
+                // const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                // const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                // const model = svgModel.relatedModel;
+                // const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
+                // const positionX = modelNewCenter.x;
+                // const positionY = modelNewCenter.y;
+                // model.updateAndRefresh({
+                //     transformation: {
+                //         positionX: positionX,
+                //         positionY: positionY,
+                //         rotationZ: rotationZ
+                //     }
+                // });
                 svgModel.onUpdate();
             }
             // rotate operationGrips
@@ -520,7 +514,6 @@ class SvgModelGroup {
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
-        console.log('----after mouse up ----', transformation, this.modelGroup.getSelectedModelTransformation(), this.modelGroup.selectedModelArray[0].transformation);
     }
 
     clearSelection() {

@@ -138,7 +138,6 @@ class SVGContentGroup {
     addToSelection(elements) {
         for (const elem of elements) {
             if (!this.selectedElements.includes(elem)) {
-                console.log(elem);
                 elem.setAttribute('fill', '#8888FF');
                 this.selectedElements.push(elem);
             }
@@ -146,14 +145,15 @@ class SVGContentGroup {
         this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
         const selectedElementsBox = this.operatorPoints.getSelectedElementsBox();
-        this.resetElementTransformList(selectedElementsBox); // reset transformList of selectedBox
+        // this.resetElementTransformList(selectedElementsBox, (elements.length === 1) ? transformation : null);
+        this.resetElementTransformList(selectedElementsBox);
+        // reset transformList of selectedBox
         this.resetSelection();
-        console.log('----svg content group----', getTransformList(selectedElementsBox));
     }
 
     // after element transform
     resetSelection() {
-        this.resetElementTransformList(this.operatorPoints.operatorPointsGroup);
+        // this.resetElementTransformList(this.operatorPoints.operatorPointsGroup);
         this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.resetTransformList();
     }
@@ -327,7 +327,6 @@ class SVGContentGroup {
 
     transformSelectorOnMouseMove(transform) { // change the new transform
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        console.log(transformList);
         transformList.replaceItem(transform, transformList.numberOfItems - 1);
     }
 

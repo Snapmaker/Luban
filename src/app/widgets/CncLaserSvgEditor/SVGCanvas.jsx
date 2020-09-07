@@ -310,11 +310,9 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
-        console.log('mouse down', this.mode);
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
-        console.log(this.mode);
 
         switch (this.mode) {
             case 'move': {
@@ -579,7 +577,6 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseMove = (event) => {
-        console.log('onmouse move', this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
@@ -641,8 +638,7 @@ class SVGCanvas extends PureComponent {
                     resizeTo: pt,
                     isUniformScaling: event.shiftKey
                 });
-                // this.svgContentGroup.resetSelection();
-
+                // this.svgContentGroup.setElementTransformList(this.svgContentGroup.operatorPoints.operatorPointsGroup, model.transformation);
                 break;
             }
             case 'rotate': {
@@ -798,8 +794,13 @@ class SVGCanvas extends PureComponent {
                 this.textActions.mouseUp(event, x, y);
                 return;
             case 'resize':
+                if (this.svgContentGroup.selectedElements.length === 1) {
+                    const selected = this.svgContentGroup.selectedElements[0];
+                    const model = this.props.svgModelGroup.getModelByElement(selected);
+                    model.onUpdate();
+                }
                 this.setMode('select');
-            // fallthrough
+                break;
             case 'select': {
                 element.remove();
                 return; // note this is not break
@@ -1175,9 +1176,9 @@ class SVGCanvas extends PureComponent {
     }
 
     clearSelection() {
+        this.props.svgModelGroup.modelGroup.removeAllSelectedModels();
         this.svgContentGroup.clearSelection();
         this.props.svgModelGroup.clearSelection();
-        this.props.svgModelGroup.modelGroup.selectModelById();
     }
 
     addToSelection(elements) {
@@ -1187,7 +1188,7 @@ class SVGCanvas extends PureComponent {
             const model = svgModel.relatedModel;
             const modelGroup = model && model.modelGroup;
             if (modelGroup) {
-                modelGroup.selectModelById(model, true);
+                modelGroup.addSelectedModels([model]);
                 modelGroup.updateSelectedModelTransformation({
                     positionX: 0,
                     positionY: 0
