@@ -142,7 +142,6 @@ class SVGContentGroup {
     addToSelection(elements) {
         for (const elem of elements) {
             if (!this.selectedElements.includes(elem)) {
-                console.log(elem);
                 elem.setAttribute('fill', '#8888FF');
                 this.selectedElements.push(elem);
             }

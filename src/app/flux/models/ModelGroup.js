@@ -99,7 +99,6 @@ class ModelGroup extends EventEmitter {
     // TODO: Unify method return type, it causes unnecessary calculations.
     getSelectedModelTransformation() {
         if (this.selectedModelArray.length === 1) {
-            console.log(this.selectedModelArray[0].transformation);
             return this.selectedModelArray[0].transformation;
         }
         if (this.selectedModelArray.length > 0) {
@@ -807,9 +806,7 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         this.removeSelectedObjectParentMatrix();
-        // console.log('----on model after transform----');
         selectedModelArray.forEach((selected) => {
-            // console.log(selected.sourceType, selected);
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
             }

@@ -310,11 +310,9 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
-        console.log('mouse down', this.mode);
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
-        console.log(this.mode);
 
         switch (this.mode) {
             case 'move': {
@@ -581,7 +579,6 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseMove = (event) => {
-        console.log('onmouse move', this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
