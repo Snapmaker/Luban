@@ -116,10 +116,10 @@ class PrintingObjectListBox extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { modelGroup, selectedModelIDArray } = state.printing;
+    const { modelGroup } = state.printing;
     return {
         modelGroup,
-        selectedModelIDArray
+        selectedModelIDArray: modelGroup.selectedModelIDArray
     };
 };
 

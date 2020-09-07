@@ -60,6 +60,20 @@ class ModelGroup extends EventEmitter {
     };
 
     getState() {
+        this.selectedModelIDArray.splice(0);
+        this.selectedModelArray.forEach((item) => {
+            this.selectedModelIDArray.push(item.modelID);
+        });
+
+        return {
+            selectedModelArray: this.selectedModelArray,
+            selectedModelIDArray: this.selectedModelIDArray,
+            estimatedTime: this.estimatedTime,
+            hasModel: this.hasModel()
+        };
+    }
+
+    getStateAndUpdateBoundingBox() {
         this.selectedModelIDArray = [];
         this.selectedModelArray.forEach((item) => {
             this.selectedModelIDArray.push(item.modelID);
@@ -413,7 +427,6 @@ class ModelGroup extends EventEmitter {
 
     // use for widget
     selectModelById(modelID, isMultiSelect = false) {
-        let state;
         const selectModel = this.models.find(d => d.modelID === modelID);
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
@@ -433,20 +446,13 @@ class ModelGroup extends EventEmitter {
         }
         this.resetSelectedObjectScaleAndRotation();
         this.applySelectedObjectParentMatrix();
-        if (this.selectedModelArray.length > 0) {
-            const modelState = this.getState();
-            state = modelState;
-        } else {
-            state = this._getEmptyState();
-        }
-        this.onDataChangedCallback();
 
-        return state;
+        this.onDataChangedCallback();
+        return this.getStateAndUpdateBoundingBox();
     }
 
     // use for canvas
     selectMultiModel(intersect, isMultiSelect) {
-        let state;
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
             if (intersect) {
@@ -474,16 +480,9 @@ class ModelGroup extends EventEmitter {
         }
         this.resetSelectedObjectScaleAndRotation();
         this.applySelectedObjectParentMatrix();
-        if (this.selectedModelArray.length > 0) {
-            const modelState = this.getState();
-            state = modelState;
-        } else {
-            state = this._getEmptyState();
-        }
-        this.getState();
         this.onDataChangedCallback();
         this.emit('select');
-        return state;
+        return this.getStateAndUpdateBoundingBox();
     }
 
     resetSelectedObjectScaleAndRotation() {
@@ -563,7 +562,7 @@ class ModelGroup extends EventEmitter {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        return this.getState();
+        return this.getStateAndUpdateBoundingBox();
     }
 
     duplicateSelectedModel(modelID) {
@@ -616,7 +615,7 @@ class ModelGroup extends EventEmitter {
         });
         this.applySelectedObjectParentMatrix();
 
-        return this.getState();
+        return this.getStateAndUpdateBoundingBox();
     }
 
     /**
@@ -640,12 +639,7 @@ class ModelGroup extends EventEmitter {
         this.removeSelectedObjectParentMatrix();
 
         // Unselect all models
-        this.selectedModelArray.forEach((model) => {
-            model.isSelected = false;
-            model.meshObject.material = materialNormal;
-            this.object.add(model.meshObject); // TODO: to be refactored
-        });
-        this.selectedModelArray = [];
+        this.unselectAllModels();
 
         // paste objects from clipboard
         // TODO: paste all objects from clipboard without losing their relative positions
@@ -674,7 +668,7 @@ class ModelGroup extends EventEmitter {
         });
         this.applySelectedObjectParentMatrix();
 
-        return this.getState();
+        return this.getStateAndUpdateBoundingBox();
     }
 
     getSelectedModel() {
@@ -721,7 +715,7 @@ class ModelGroup extends EventEmitter {
     }
 
     onModelTransform() {
-        this.selectedModelIDArray = [];
+        this.selectedModelIDArray.splice(0);
         this.selectedModelArray.forEach((item) => {
             this.selectedModelIDArray.push(item.modelID);
             item.onTransform();
@@ -785,6 +779,7 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.rotation.z = rotationZ;
         }
         this.selectedGroup.updateMatrix();
+        this.selectedGroup.shouldUpdateBoundingbox = false;
     }
 
     // model transformation triggered by controls
@@ -799,6 +794,7 @@ class ModelGroup extends EventEmitter {
         });
         this._checkAnyModelOversteppedOrSelected();
         this.applySelectedObjectParentMatrix();
+        this.selectedGroup.shouldUpdateBoundingbox = true;
 
         if (selectedModelArray.length === 0) {
             return null;

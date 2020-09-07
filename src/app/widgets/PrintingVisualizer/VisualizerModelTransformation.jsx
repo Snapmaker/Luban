@@ -31,6 +31,7 @@ class VisualizerModelTransformation extends PureComponent {
             scaleZ: PropTypes.number
         }).isRequired,
         // transformation: PropTypes.object,
+        updateBoundingBox: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
@@ -42,7 +43,7 @@ class VisualizerModelTransformation extends PureComponent {
             const transformation = {};
             transformation.uniformScalingState = !uniformScalingState;
             this.props.updateSelectedModelTransformation(transformation);
-            this.props.onModelAfterTransform();
+            this.actions.onModelAfterTransform();
         },
         onModelTransform: (transformations) => {
             const { size } = this.props;
@@ -112,10 +113,12 @@ class VisualizerModelTransformation extends PureComponent {
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
+            this.props.updateBoundingBox();
         },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
         }
+
     };
 
     render() {
@@ -220,6 +223,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(value) => {
                                         actions.onModelTransform({ 'moveX': value });
+                                    }}
+                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -254,6 +259,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     step={0.1}
                                     onChange={(value) => {
                                         actions.onModelTransform({ 'moveY': value });
+                                    }}
+                                    onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
 

@@ -66,8 +66,6 @@ class TransformControls extends Object3D {
 
     // (world space)
 
-    objectQuaternionInv = new Quaternion();
-
     parentPosition = new Vector3();
 
     parentQuaternion = new Quaternion();
@@ -80,6 +78,8 @@ class TransformControls extends Object3D {
     pointStart = new Vector3();
 
     pointEnd = new Vector3();
+
+    boundingBox = [];
 
     constructor(camera) {
         super();
@@ -420,6 +420,9 @@ class TransformControls extends Object3D {
         if (this.object.children.length === 0) {
             this.hideSelectedPeripherals();
             this.hideAllPeripherals();
+            this.boundingBox = [];
+        } else if (!this.object.shouldUpdateBoundingbox) {
+            this.hideSelectedPeripherals();
         } else {
             this.showSelectedPeripherals();
         }
@@ -440,55 +443,37 @@ class TransformControls extends Object3D {
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
 
-            this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
-            this.objectQuaternionInv.copy(objectQuaternion).inverse();
+            this.object.children.forEach((child, index) => {
+                const objectChildrenPosition = new Vector3();
+                const objectChildrenScale = new Vector3();
+                const objectChildrenQuaternion = new Quaternion();
+                // object
 
-            this.object.children.forEach((child) => {
-                const childPosition = new Vector3();
-                const childScale = new Vector3();
-                const childQuaternion = new Quaternion();
+                child.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
 
-                child.matrixWorld.decompose(childPosition, childQuaternion, childScale);
+                if (this.object.shouldUpdateBoundingbox) {
+                    if (!this.boundingBox[index]) {
+                        this.updateBoundingBox();
+                    }
+                    const boundingBox = this.boundingBox[index];
+                    if (boundingBox && boundingBox.min && boundingBox.max) {
+                        if (this.object.children.length === 1) {
+                            minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
+                            minObjectBoundingBox.y = Math.min(boundingBox.min.y, minObjectBoundingBox.y);
+                            minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
 
-                if (child.geometry.boundingBox) {
-                    const clone = child.geometry.clone();
-                    if (this.object.children.length === 1) {
-                        clone.applyMatrix(this.object.matrix);
-                        clone.computeBoundingBox();
-                        const boundingBox = clone.boundingBox;
-                        minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
-                        minObjectBoundingBox.y = Math.min(boundingBox.min.y, minObjectBoundingBox.y);
-                        minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
+                            maxObjectBoundingBox.x = Math.max(boundingBox.max.x, maxObjectBoundingBox.x);
+                            maxObjectBoundingBox.y = Math.max(boundingBox.max.y, maxObjectBoundingBox.y);
+                            maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
+                        } else {
+                            minObjectBoundingBox.x = Math.min(boundingBox.min.x + objectChildrenPosition.x - objectPosition.x, minObjectBoundingBox.x);
+                            minObjectBoundingBox.y = Math.min(boundingBox.min.y + objectChildrenPosition.y - objectPosition.y, minObjectBoundingBox.y);
+                            minObjectBoundingBox.z = Math.min(0, minObjectBoundingBox.z);
 
-                        maxObjectBoundingBox.x = Math.max(boundingBox.max.x, maxObjectBoundingBox.x);
-                        maxObjectBoundingBox.y = Math.max(boundingBox.max.y, maxObjectBoundingBox.y);
-                        maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
-                    } else {
-                        const parentClone = this.object.clone();
-                        const newRotation = new Euler(
-                            child.rotation.x + this.object.rotation.x,
-                            child.rotation.y + this.object.rotation.y,
-                            child.rotation.z + this.object.rotation.z,
-                        );
-                        const newScale = new Vector3(
-                            child.scale.x * this.object.scale.x,
-                            child.scale.y * this.object.scale.y,
-                            child.scale.z * this.object.scale.z,
-                        );
-                        parentClone.rotation.copy(newRotation);
-                        parentClone.scale.copy(newScale);
-                        parentClone.updateMatrix();
-                        clone.applyMatrix(parentClone.matrix);
-                        clone.computeBoundingBox();
-                        const boundingBox = clone.boundingBox;
-
-                        minObjectBoundingBox.x = Math.min(boundingBox.min.x + childPosition.x - objectPosition.x, minObjectBoundingBox.x);
-                        minObjectBoundingBox.y = Math.min(boundingBox.min.y + childPosition.y - objectPosition.y, minObjectBoundingBox.y);
-                        minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
-
-                        maxObjectBoundingBox.x = Math.max(boundingBox.max.x + childPosition.x - objectPosition.x, maxObjectBoundingBox.x);
-                        maxObjectBoundingBox.y = Math.max(boundingBox.max.y + childPosition.y - objectPosition.y, maxObjectBoundingBox.y);
-                        maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
+                            maxObjectBoundingBox.x = Math.max(boundingBox.max.x + objectChildrenPosition.x - objectPosition.x, maxObjectBoundingBox.x);
+                            maxObjectBoundingBox.y = Math.max(boundingBox.max.y + objectChildrenPosition.y - objectPosition.y, maxObjectBoundingBox.y);
+                            maxObjectBoundingBox.z = Math.max(boundingBox.max.z - boundingBox.min.z, maxObjectBoundingBox.z);
+                        }
                     }
                 }
 
@@ -498,82 +483,82 @@ class TransformControls extends Object3D {
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
             });
 
+            this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
             this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
 
 
-            multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
-            multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
-            multiObjectWidth.z = (maxObjectBoundingBox.z - minObjectBoundingBox.z);
-
-
+            // Update peripherals as a whole (position, rotation, scale)
+            const handles = [];
             const eyeDistance = cameraPosition.distanceTo(multiObjectPosition);
             const zero = new Vector3();
             const unitX = new Vector3(1, 0, 0);
             const unitY = new Vector3(0, 1, 0);
             const unitZ = new Vector3(0, 0, 1);
 
+            if (this.object.shouldUpdateBoundingbox) {
+                multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
+                multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
+                multiObjectWidth.z = (maxObjectBoundingBox.z - minObjectBoundingBox.z);
+                const FrontLeftBottomPosition = new Vector3(
+                    minObjectBoundingBox.x,
+                    minObjectBoundingBox.y,
+                    minObjectBoundingBox.z
+                );
+                const FrontRightBottomPosition = new Vector3(
+                    maxObjectBoundingBox.x,
+                    minObjectBoundingBox.y,
+                    minObjectBoundingBox.z
+                );
+                const BackLeftBottomPosition = new Vector3(
+                    minObjectBoundingBox.x,
+                    maxObjectBoundingBox.y,
+                    minObjectBoundingBox.z
+                );
+                const BackRightBottomPosition = new Vector3(
+                    maxObjectBoundingBox.x,
+                    maxObjectBoundingBox.y,
+                    minObjectBoundingBox.z
+                );
+                const FrontLeftTopPosition = new Vector3(
+                    minObjectBoundingBox.x,
+                    minObjectBoundingBox.y,
+                    maxObjectBoundingBox.z
+                );
+                const FrontRightTopPosition = new Vector3(
+                    maxObjectBoundingBox.x,
+                    minObjectBoundingBox.y,
+                    maxObjectBoundingBox.z
+                );
+                const BackLeftTopPosition = new Vector3(
+                    minObjectBoundingBox.x,
+                    maxObjectBoundingBox.y,
+                    maxObjectBoundingBox.z
+                );
+                const BackRightTopPosition = new Vector3(
+                    maxObjectBoundingBox.x,
+                    maxObjectBoundingBox.y,
+                    maxObjectBoundingBox.z
+                );
 
-            const FrontLeftBottomPosition = new Vector3(
-                minObjectBoundingBox.x,
-                minObjectBoundingBox.y,
-                minObjectBoundingBox.z
-            );
-            const FrontRightBottomPosition = new Vector3(
-                maxObjectBoundingBox.x,
-                minObjectBoundingBox.y,
-                minObjectBoundingBox.z
-            );
-            const BackLeftBottomPosition = new Vector3(
-                minObjectBoundingBox.x,
-                maxObjectBoundingBox.y,
-                minObjectBoundingBox.z
-            );
-            const BackRightBottomPosition = new Vector3(
-                maxObjectBoundingBox.x,
-                maxObjectBoundingBox.y,
-                minObjectBoundingBox.z
-            );
-            const FrontLeftTopPosition = new Vector3(
-                minObjectBoundingBox.x,
-                minObjectBoundingBox.y,
-                maxObjectBoundingBox.z
-            );
-            const FrontRightTopPosition = new Vector3(
-                maxObjectBoundingBox.x,
-                minObjectBoundingBox.y,
-                maxObjectBoundingBox.z
-            );
-            const BackLeftTopPosition = new Vector3(
-                minObjectBoundingBox.x,
-                maxObjectBoundingBox.y,
-                maxObjectBoundingBox.z
-            );
-            const BackRightTopPosition = new Vector3(
-                maxObjectBoundingBox.x,
-                maxObjectBoundingBox.y,
-                maxObjectBoundingBox.z
-            );
+                this.selectedFrontLeftBottom.position.copy(FrontLeftBottomPosition);
+                this.selectedFrontRightBottom.position.copy(FrontRightBottomPosition);
 
-            // Update peripherals as a whole (position, rotation, scale)
-            const handles = [];
-            this.selectedFrontLeftBottom.position.copy(FrontLeftBottomPosition);
-            this.selectedFrontRightBottom.position.copy(FrontRightBottomPosition);
+                this.selectedBackLeftBottom.position.copy(BackLeftBottomPosition);
+                this.selectedBackRightBottom.position.copy(BackRightBottomPosition);
 
-            this.selectedBackLeftBottom.position.copy(BackLeftBottomPosition);
-            this.selectedBackRightBottom.position.copy(BackRightBottomPosition);
+                this.selectedFrontLeftTop.position.copy(FrontLeftTopPosition);
+                this.selectedFrontRightTop.position.copy(FrontRightTopPosition);
 
-            this.selectedFrontLeftTop.position.copy(FrontLeftTopPosition);
-            this.selectedFrontRightTop.position.copy(FrontRightTopPosition);
+                this.selectedBackLeftTop.position.copy(BackLeftTopPosition);
+                this.selectedBackRightTop.position.copy(BackRightTopPosition);
 
-            this.selectedBackLeftTop.position.copy(BackLeftTopPosition);
-            this.selectedBackRightTop.position.copy(BackRightTopPosition);
-
-            this.allSelectedPeripherals.forEach((peripheral) => {
-                peripheral.scale.set(multiObjectWidth.x, multiObjectWidth.y, multiObjectWidth.z);
-                handles.push(...peripheral.children);
-            });
+                this.allSelectedPeripherals.forEach((peripheral) => {
+                    peripheral.scale.set(multiObjectWidth.x, multiObjectWidth.y, multiObjectWidth.z);
+                    handles.push(...peripheral.children);
+                });
+            }
 
             if (this.mode === 'translate') {
                 this.translatePeripheral.position.copy(multiObjectPosition);
@@ -771,6 +756,7 @@ class TransformControls extends Object3D {
     }
 
     onMouseMove(coord) {
+        this.object.shouldUpdateBoundingbox = false;
         if (!(this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
             return false;
         }
@@ -849,7 +835,52 @@ class TransformControls extends Object3D {
     }
 
     onMouseUp() {
+        this.updateBoundingBox();
         this.dragging = false;
+        this.object.shouldUpdateBoundingbox = true;
+    }
+
+    updateBoundingBox() {
+        this.object.children.forEach((child, index) => {
+            if (child.geometry.boundingBox) {
+                const clone = child.geometry.clone();
+                if (this.object.children.length === 1) {
+                    clone.applyMatrix(this.object.matrix);
+                    clone.computeBoundingBox();
+                    this.boundingBox[index] = clone.boundingBox;
+                } else {
+                    const parentClone = this.object.clone();
+                    const newRotation = new Euler(
+                        child.rotation.x + this.object.rotation.x,
+                        child.rotation.y + this.object.rotation.y,
+                        child.rotation.z + this.object.rotation.z,
+                    );
+                    const newScale = new Vector3(
+                        child.scale.x * this.object.scale.x,
+                        child.scale.y * this.object.scale.y,
+                        child.scale.z * this.object.scale.z,
+                    );
+
+                    parentClone.rotation.copy(newRotation);
+                    parentClone.scale.copy(newScale);
+                    parentClone.updateMatrix();
+                    clone.applyMatrix(parentClone.matrix);
+                    clone.computeBoundingBox();
+                    const minBoundingBox = clone.boundingBox.min;
+                    const maxBoundingBox = clone.boundingBox.max;
+                    const centerPosition = new Vector3(
+                        (minBoundingBox.x + maxBoundingBox.x) / 2,
+                        (minBoundingBox.y + maxBoundingBox.y) / 2,
+                        (minBoundingBox.z + maxBoundingBox.z) / 2,
+                    );
+                    const newBoundingBox = {
+                        min: new Vector3(minBoundingBox.x - centerPosition.x, minBoundingBox.y - centerPosition.y, minBoundingBox.z - centerPosition.z),
+                        max: new Vector3(maxBoundingBox.x - centerPosition.x, maxBoundingBox.y - centerPosition.y, maxBoundingBox.z - centerPosition.z)
+                    };
+                    this.boundingBox[index] = newBoundingBox;
+                }
+            }
+        });
     }
 }
 
