@@ -531,10 +531,6 @@ class SvgModel {
         console.log('----resize on mouse move----', resizeDir, resizeFrom, resizeTo, { x, y }, ptFixed, ptFixedFrom, ptFixedTo);
     }
 
-    elemResizeOnMouseMove(matrix) {
-        this.setElementTransformList(matrix);
-    }
-
     pointModelToSvg({ x, y }) {
         return { x: this.modelGroup.size.x + x, y: this.modelGroup.size.y - y };
     }

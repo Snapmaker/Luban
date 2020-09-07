@@ -10,6 +10,7 @@ import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../../api';
+import { toFixed } from '../../lib/numeric-utils';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
