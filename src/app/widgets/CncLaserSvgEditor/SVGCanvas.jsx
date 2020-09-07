@@ -277,7 +277,6 @@ class SVGCanvas extends PureComponent {
         }
 
         while (target && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
-            console.log('----xx----', target);
             target = target.parentNode;
         }
         return target;
@@ -311,12 +310,19 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
+        console.log('mouse down', this.mode);
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
+        console.log(this.mode);
 
         switch (this.mode) {
-            case 'move':
+            case 'move': {
+                const transform = this.svgContainer.createSVGTransform();
+                transform.setTranslate(0, 0);
+                this.svgContentGroup.transformSelectorOnMouseDown(transform);
+            }
+            // fall through
             case 'select': {
                 draw.started = true;
                 draw.startX = x;
@@ -396,6 +402,9 @@ class SVGCanvas extends PureComponent {
 
                 draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
+                const transform = this.svgContainer.createSVGTransform();
+                transform.setTranslate(0, 0);
+                this.svgContentGroup.transformSelectorOnMouseDown(transform);
                 // const transformList = getTransformList(selected);
                 // const angle = getRotationAngle(selected);
 
@@ -570,6 +579,7 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseMove = (event) => {
+        console.log('onmouse move', this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
@@ -644,7 +654,6 @@ class SVGCanvas extends PureComponent {
                 // rotate box
                 const rotateBox = this.svgContainer.createSVGTransform();
                 rotateBox.setRotate(angle, cx, cy);
-                console.log('----mouse move rotate----', angle, rotateBox.matrix);
                 this.svgContentGroup.transformSelectedElementsOnMouseMove(rotateBox);
                 this.svgContentGroup.transformSelectorOnMouseMove(rotateBox);
                 break;
@@ -772,7 +781,6 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseUp = (event) => {
-        console.log(this.mode);
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
@@ -793,15 +801,8 @@ class SVGCanvas extends PureComponent {
                 this.setMode('select');
             // fallthrough
             case 'select': {
-                if (this.svgContentGroup.selectedElements.length === 1) {
-                    const selected = this.svgContentGroup.selectedElements[0];
-                    this.currentProperties.fill = selected.getAttribute('fill');
-                    this.currentProperties.stroke = selected.getAttribute('stroke');
-                    // this.currentProperties.opacity = selectedElement.getAttribute('opacity');
-                    // this.recalculateAllSelectedDimensions();
-                }
                 element.remove();
-                return;
+                return; // note this is not break
             }
             case 'rotate': {
                 const bbox = draw.bbox;
@@ -809,44 +810,25 @@ class SVGCanvas extends PureComponent {
                 const cy = bbox.y + bbox.height / 2;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-                const rotateBox = this.svgContainer.createSVGTransform();
-                rotateBox.setRotate(angle, cx, cy);
-                console.log('----rotate mouse up----', angle, rotateBox.matrix);
-                for (const elem of this.svgContentGroup.selectedElements) {
-                    // move
-                    const startBbox = getBBox(elem);
-                    const startCenter = this.svgContainer.createSVGPoint();
-                    startCenter.x = startBbox.x + startBbox.width / 2;
-                    startCenter.y = startBbox.y + startBbox.height / 2;
-                    const endCenter = startCenter.matrixTransform(rotateBox.matrix);
-                    console.log(startCenter, endCenter);
-                    const svgModel = this.props.svgModelGroup.getModelByElement(elem);
-                    const modelNewCenter = svgModel.pointSvgToModel(endCenter);
-                    const model = svgModel.relatedModel;
-                    const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - angle + 360) % 360 - 180) * Math.PI / 180;
-                    const positionX = modelNewCenter.x;
-                    const positionY = modelNewCenter.y;
-                    console.log(rotationZ, positionX, positionY);
-                    model.updateAndRefresh({
-                        transformation: {
-                            positionX: positionX,
-                            positionY: positionY,
-                            rotationZ: rotationZ
-                        }
-                    });
-                }
+                this.props.svgModelGroup.updateSelectedModelsByTransformation({
+                    angle, cx, cy
+                });
                 // this.svgContentGroup.resetSelection();
                 this.svgContentGroup.operatorPoints.showGrips(true);
-                break;
+                this.mode = 'select';
+                return;
             }
             case 'move': { // being moved
-                if (x !== draw.startX || y !== draw.startY) {
-                    for (const elem of this.svgContentGroup.selectedElements) {
-                        const model = this.props.svgModelGroup.getModelByElement(elem);
-                        model.onUpdate();
-                    }
+                const dx = x - draw.startX;
+                const dy = y - draw.startY;
+                if (dx === 0 && dy === 0) {
+                    break;
                 }
-                // this.svgContentGroup.resetSelection();
+                this.props.svgModelGroup.updateSelectedModelsByTransformation({
+                    dx,
+                    dy
+                });
+                this.mode = 'select';
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1193,25 +1175,27 @@ class SVGCanvas extends PureComponent {
     }
 
     clearSelection() {
-        // remove transformation
-        // remove transformList
         this.svgContentGroup.clearSelection();
+        this.props.svgModelGroup.clearSelection();
         this.props.svgModelGroup.modelGroup.selectModelById();
-        // this.trigger(SVG_EVENT_SELECT, []);
     }
 
     addToSelection(elements) {
+        this.props.svgModelGroup.addSelectedSvgModelsByElements(elements);
         const selectedSvgModels = this.props.svgModelGroup.getModelsByElements(elements);
         for (const svgModel of selectedSvgModels) {
             const model = svgModel.relatedModel;
             const modelGroup = model && model.modelGroup;
             if (modelGroup) {
                 modelGroup.selectModelById(model, true);
+                modelGroup.updateSelectedModelTransformation({
+                    positionX: 0,
+                    positionY: 0
+                });
+                modelGroup.resetSelectedObjectScaleAndRotation();
             }
         }
         this.svgContentGroup.addToSelection(elements);
-        // create new transformList, find the points and position
-        // create new transformation, center - modelGroup.size = position
     }
 
     selectOnly(elements) {

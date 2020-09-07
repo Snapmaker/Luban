@@ -98,6 +98,7 @@ class ModelGroup extends EventEmitter {
 
     getSelectedModelTransformation() {
         if (this.selectedModelArray.length === 1) {
+            console.log(this.selectedModelArray[0].transformation);
             return this.selectedModelArray[0].transformation;
         }
         if (this.selectedModelArray.length > 0) {

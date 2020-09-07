@@ -451,7 +451,6 @@ class Model {
             this.meshObject.scale.y = Math.abs(scaleY);
         }
         this.transformation = { ...this.transformation };
-
         return this.transformation;
     }
 

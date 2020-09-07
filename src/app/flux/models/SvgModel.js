@@ -310,7 +310,7 @@ class SvgModel {
                 break;
         }
 
-        this.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
+        this.modelGroup.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
     setElementTransformToList(transformList, transformation) {
@@ -464,7 +464,7 @@ class SvgModel {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
-        this.setElementTransformToList(transformList, this.relatedModel.transformation);
+        this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
         function transformPoint(p, m) {
@@ -526,10 +526,6 @@ class SvgModel {
         const ty = ptFixedTo.y - ptFixedFrom.y;
         const trans = list.getItem(0);
         trans.setTranslate(x - tx, y - ty);
-    }
-
-    elemResizeOnMouseMove(matrix) {
-        this.setElementTransformList(matrix);
     }
 
     pointModelToSvg({ x, y }) {

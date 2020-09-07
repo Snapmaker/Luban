@@ -181,13 +181,11 @@ class OperatorPoints {
             w: [minX, (minY + maxY) / 2],
             e: [maxX, (minY + maxY) / 2]
         };
-        console.log('----1----');
         Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('cx', coords[0]);
             grip.setAttribute('cy', coords[1]);
         });
-        console.log('----2----');
         // set rotation point
         this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y1', minY);
@@ -195,14 +193,12 @@ class OperatorPoints {
         this.rotateGripConnector.setAttribute('y2', minY - GRIP_RADIUS * 9.4 / this.scale);
         this.rotateGrip.setAttribute('cx', (minX + maxX) / 2);
         this.rotateGrip.setAttribute('cy', minY - GRIP_RADIUS * 9.4 / this.scale);
-        console.log('----3----');
         // resize line box
         const dstr = `M${minX},${minY}
             L${maxX},${minY}
             L${maxX},${maxY}
             L${minX},${maxY} z`;
         this.selectedElementsBox.setAttribute('d', dstr);
-        console.log('----4----');
     }
 
     getSelectedElementBBox() {

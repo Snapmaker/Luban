@@ -320,26 +320,18 @@ class SVGContentGroup {
         }
     }
 
-    transformSelectorOnMouseDown(transform) {
+    transformSelectorOnMouseDown(transform) { // add a new transform to list
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        if (transformList.numberOfItems) {
-            transformList.replaceItem(transform, 0);
-        } else {
-            transformList.appendItem(transform);
-        }
+        transformList.appendItem(transform);
     }
 
-    transformSelectorOnMouseMove(transform) {
+    transformSelectorOnMouseMove(transform) { // change the new transform
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        if (transformList.numberOfItems) {
-            transformList.replaceItem(transform, 0);
-        } else {
-            transformList.appendItem(transform);
-        }
+        console.log(transformList);
+        transformList.replaceItem(transform, transformList.numberOfItems - 1);
     }
 
     transformSelectorOnMouseup() {
-    //
     }
 
     rotateSelectedElements(rotate) {

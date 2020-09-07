@@ -2,8 +2,7 @@
 import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
 import { DEFAULT_SCALE } from '../../constants/svg-constants';
-import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
-
+import { coordGmSvgToModel, getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
@@ -11,6 +10,7 @@ import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../../api';
+import { toFixed } from '../../lib/numeric-utils';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -417,6 +417,122 @@ class SvgModelGroup {
             }
         }
         return models;
+    }
+
+    setElementTransformToList(transformList, transformation) {
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        transformList.clear();
+        const size = this.size;
+        function pointModelToSvg({ x, y }) {
+            return { x: size.x + x, y: size.y - y };
+        }
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        const center = pointModelToSvg({ x: positionX, y: positionY });
+
+        const translateOrigin = svg.createSVGTransform();
+        translateOrigin.tag = 'translateOrigin';
+        translateOrigin.setTranslate(-center.x, -center.y);
+        transformList.insertItemBefore(translateOrigin, 0);
+
+        const scale = svg.createSVGTransform();
+        scale.tag = 'scale';
+        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+        transformList.insertItemBefore(scale, 0);
+
+        const rotate = svg.createSVGTransform();
+        rotate.tag = 'rotate';
+        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+        transformList.insertItemBefore(rotate, 0);
+
+        const translateBack = svg.createSVGTransform();
+        translateBack.setTranslate(center.x, center.y);
+        transformList.insertItemBefore(translateBack, 0);
+        transformList.getItem(0).tag = 'translateBack';
+        console.log(translateBack);
+    }
+
+    updateSelectedModelsByTransformation(deviation) {
+        // deviation: dx dy, angle cx cy, scaleX scaleY
+        const selectedModels = this.selectedSvgModels;
+        const selectedModelsTransformation = this.modelGroup.getSelectedModelTransformation();
+        const transformation = {
+            positionX: selectedModelsTransformation.positionX,
+            positionY: selectedModelsTransformation.positionY,
+            rotationZ: selectedModelsTransformation.rotationZ,
+            scaleX: selectedModelsTransformation.scaleX,
+            scaleY: selectedModelsTransformation.scaleY
+        };
+
+        // comeback to transform before mouse down
+        // for (const svgModel of selectedModels) {
+        //     this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, svgModel.relatedModel.transformation);
+        // }
+
+        // translate after mouseup
+        if (deviation.dx || deviation.dy) {
+            // translate models
+            for (const svgModel of selectedModels) {
+                svgModel.onUpdate();
+            }
+            // translate operationGrips
+            transformation.positionX = selectedModelsTransformation.positionX + deviation.dx;
+            transformation.positionY = selectedModelsTransformation.positionY + deviation.dy;
+        }
+
+        // rotate after mouseup
+        if (deviation.angle) {
+            // translate and rotate models
+            for (const svgModel of selectedModels) {
+                console.log('----rotate mouseup----');
+                const elem = svgModel.elem;
+                const rotateBox = svg.createSVGTransform();
+                rotateBox.setRotate(deviation.angle, deviation.cx, deviation.cy);
+                const startBbox = getBBox(elem);
+                const startCenter = svg.createSVGPoint();
+                startCenter.x = startBbox.x + startBbox.width / 2;
+                startCenter.y = startBbox.y + startBbox.height / 2;
+                const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                console.log(startCenter, endCenter);
+                const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                const model = svgModel.relatedModel;
+                const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
+                console.log('----rotate mouse up----', toFixed(rotationZ * 180 / Math.PI, 1));
+                const positionX = modelNewCenter.x;
+                const positionY = modelNewCenter.y;
+                console.log(rotationZ, positionX, positionY);
+                model.updateAndRefresh({
+                    transformation: {
+                        positionX: positionX,
+                        positionY: positionY,
+                        rotationZ: rotationZ
+                    }
+                });
+                svgModel.onUpdate();
+            }
+            // rotate operationGrips
+            transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.angle + 180) % 360 - 180) * Math.PI / 180;
+        }
+        if (deviation.scaleX) {
+            //
+        }
+        if (deviation.scaleY) {
+            //
+        }
+        this.modelGroup.updateSelectedModelTransformation(transformation);
+        // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
+        console.log('----after mouse up ----', transformation, this.modelGroup.getSelectedModelTransformation(), this.modelGroup.selectedModelArray[0].transformation);
+    }
+
+    clearSelection() {
+        this.selectedSvgModels = [];
+    }
+
+    addSelectedSvgModelsByElements(elements) {
+        for (const model of this.svgModels) {
+            if (elements.includes(model.elem)) {
+                this.selectedSvgModels.push(model);
+            }
+        }
     }
 }
 
