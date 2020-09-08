@@ -96,6 +96,7 @@ class ModelGroup extends EventEmitter {
         return this.models.find(d => d.modelName === modelName);
     }
 
+    // TODO: Unify method return type, it causes unnecessary calculations.
     getSelectedModelTransformation() {
         if (this.selectedModelArray.length === 1) {
             return this.selectedModelArray[0].transformation;
@@ -434,6 +435,7 @@ class ModelGroup extends EventEmitter {
                 this.selectedModelArray.push(model);
             }
         }
+        // TODO: why?
         this.selectedModelArray = [...this.selectedModelArray];
         this.onDataChangedCallback();
     }
@@ -454,6 +456,7 @@ class ModelGroup extends EventEmitter {
         this.onDataChangedCallback();
     }
 
+    // TODO: model or modelID, need rename this method and add docs
     // use for widget
     selectModelById(modelID, isMultiSelect = false) {
         const selectModel = this.models.find(d => d.modelID === modelID);

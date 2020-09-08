@@ -418,6 +418,7 @@ class SvgModelGroup {
         return models;
     }
 
+    // TODO: move out as a helper function.
     setElementTransformToList(transformList, transformation) {
         // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
         transformList.clear();

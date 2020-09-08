@@ -313,6 +313,7 @@ class SvgModel {
         this.modelGroup.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
+    // TODO: Remove this method!!!
     setElementTransformToList(transformList, transformation) {
         // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
         const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;

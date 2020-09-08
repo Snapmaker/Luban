@@ -199,12 +199,15 @@ export const actions = {
             });
     },
 
+    // TODO: Check usage of this method
     selectModel: (headType, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         const find = modelGroup.getModels().find(v => v.meshObject === model);
         dispatch(actions.selectModelByID(headType, find.modelID));
     },
 
+    // TODO: rename to selectModel(headType, model, isMultiSelect = true)
+    // TODO: method docs
     selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         const modelState = modelGroup.selectModelById(model, shiftKey);
@@ -214,6 +217,7 @@ export const actions = {
         dispatch(threejsModelActions.selectModel(headType, model));
     },
 
+    // TODO: Check usage of this method
     selectModelByID: (headType, modelID) => (dispatch) => {
         dispatch(svgModelActions.selectModel(headType, modelID));
         dispatch(threejsModelActions.selectModel(headType, modelID));

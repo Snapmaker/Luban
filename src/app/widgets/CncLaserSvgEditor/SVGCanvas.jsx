@@ -1196,11 +1196,13 @@ class SVGCanvas extends PureComponent {
     }
 
     clearSelection() {
+        // TODO: DO NOT call ModelGroup's method here!!!
         this.props.svgModelGroup.modelGroup.removeAllSelectedModels();
         this.svgContentGroup.clearSelection();
         this.props.svgModelGroup.clearSelection();
     }
 
+    // TODO: DO NOT use attributes/methods of SvgModelGroup, ModelGroup, Model directly in Component!!!
     addToSelection(elements) {
         this.props.svgModelGroup.addSelectedSvgModelsByElements(elements);
         const selectedSvgModels = this.props.svgModelGroup.getModelsByElements(elements);
@@ -1209,6 +1211,7 @@ class SVGCanvas extends PureComponent {
             const modelGroup = model && model.modelGroup;
             if (modelGroup) {
                 modelGroup.addSelectedModels([model]);
+                // TODO: ???
                 modelGroup.updateSelectedModelTransformation({
                     positionX: 0,
                     positionY: 0

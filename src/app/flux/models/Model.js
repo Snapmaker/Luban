@@ -750,7 +750,8 @@ class Model {
         };
     }
 
-
+    // TODO: DO NOT call updateAndRefresh() from React Components!!!
+    //       What we need is a ViewModel for Model.
     async updateAndRefresh({ transformation, config, ...others }) {
         if (transformation) {
             this.updateTransformation(transformation);
