@@ -590,23 +590,24 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
-                const { startX, startY } = draw;
-                let width = Math.abs(startX - x);
-                let height = Math.abs(startY - y);
-                let newX = Math.min(startX, x);
-                let newY = Math.min(startY, y);
-                if (event.shiftKey) {
-                    width = Math.max(width, height);
-                    height = width;
-                    newX = startX < x ? startX : startX - width;
-                    newY = startY < y ? startY : startY - height;
-                }
-                setAttributes(element, {
-                    x: newX,
-                    y: newY,
-                    width,
-                    height
-                });
+                // TODO select with drawing box
+                // const { startX, startY } = draw;
+                // let width = Math.abs(startX - x);
+                // let height = Math.abs(startY - y);
+                // let newX = Math.min(startX, x);
+                // let newY = Math.min(startY, y);
+                // if (event.shiftKey) {
+                //     width = Math.max(width, height);
+                //     height = width;
+                //     newX = startX < x ? startX : startX - width;
+                //     newY = startY < y ? startY : startY - height;
+                // }
+                // setAttributes(element, {
+                //     x: newX,
+                //     y: newY,
+                //     width,
+                //     height
+                // });
                 break;
             }
             case 'move': {
@@ -637,7 +638,8 @@ class SVGCanvas extends PureComponent {
                     resizeTo: pt,
                     isUniformScaling: event.shiftKey
                 });
-                // this.svgContentGroup.setElementTransformList(this.svgContentGroup.operatorPoints.operatorPointsGroup, model.transformation);
+                // todo move to content group public
+                this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(selected);
                 break;
             }
             case 'rotate': {
@@ -844,6 +846,10 @@ class SVGCanvas extends PureComponent {
                 // todo transformation not suit locate
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
                 this.svgContentGroup.resetSelection(transformation);
+                // todo move to content group public
+                if (this.svgContentGroup.selectedElements.length === 1) {
+                    this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(this.svgContentGroup.selectedElements[0]);
+                }
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1212,6 +1218,10 @@ class SVGCanvas extends PureComponent {
         }
         this.svgContentGroup.addToSelection(elements);
         this.svgContentGroup.resetSelection(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
+        // todo move to content group public
+        if (this.svgContentGroup.selectedElements.length === 1) {
+            this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(this.svgContentGroup.selectedElements[0]);
+        }
 
         // if (this.props.svgModelGroup.selectedSvgModels.length === 1) {
         //     this.svgContentGroup.setElementTransformList(this.svgContentGroup.operatorPoints.operatorPointsGroup,

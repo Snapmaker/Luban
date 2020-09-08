@@ -289,7 +289,13 @@ class SVGContentGroup {
             scaleY: 1,
             flip: 0
         }));
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        let { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        positionX = positionX ?? 0;
+        positionY = positionY ?? 0;
+        rotationZ = rotationZ ?? 0;
+        scaleX = scaleX ?? 1;
+        scaleY = scaleY ?? 1;
+        flip = flip ?? 0;
         // todo move to svgModelGroup, size need
         const center = { x: 230 + positionX, y: 250 - positionY };
 
@@ -318,8 +324,8 @@ class SVGContentGroup {
     }
 
     getSelectedElementsBBox() {
-        const selectedElementsBox = this.operatorPoints.getSelectedElementsBox();
-        return getBBox(selectedElementsBox);
+        const allSelectedElementsBox = this.operatorPoints.getAllSelectedElementsBox();
+        return getBBox(allSelectedElementsBox);
     }
 
     getSelectedElementsCenterPoint() {

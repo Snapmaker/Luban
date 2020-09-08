@@ -1025,12 +1025,10 @@ class ModelGroup extends EventEmitter {
         }
         model.computeBoundingBox();
 
-
         // add to group and select
         this.models.push(model);
         this.object.add(model.meshObject);
         this.selectModelById(model.modelID);
-
 
         this.emit('add', model);
         model.setRelatedModels(relatedModels);

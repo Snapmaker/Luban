@@ -1,5 +1,5 @@
-import { createSVGElement } from '../element-utils';
-import { transformBox, transformListToTransform } from '../element-transform';
+import { createSVGElement, getBBox } from '../element-utils';
+import { transformBox, transformListToTransform, getTransformList, getRotationAngle, transformPoint } from '../element-transform';
 
 const GRIP_RADIUS = 8;
 
@@ -10,8 +10,8 @@ class OperatorPoints {
 
         this.operatorPointsGroup = null;
 
-        // copy from selector
-        this.selectedElementsBox = createSVGElement({
+        // big box cover all elements
+        this.allSelectedElementsBox = createSVGElement({
             element: 'path',
             attr: {
                 id: 'selected-elements-box',
@@ -22,6 +22,9 @@ class OperatorPoints {
                 style: 'pointer-events:none'
             }
         });
+
+        // small box cover each elem
+        this.selectedElements = [];
 
         // this holds a reference to the grip elements
         this.operatorGripCoords = {
@@ -61,7 +64,7 @@ class OperatorPoints {
         });
 
         this.svgFactory.getRoot().append(this.operatorPointsGroup);
-        this.operatorPointsGroup.append(this.selectedElementsBox);
+        this.operatorPointsGroup.append(this.allSelectedElementsBox);
 
         // grips
         for (const dir of Object.keys(this.operatorGrips)) {
@@ -70,8 +73,7 @@ class OperatorPoints {
                 element: 'circle',
                 attr: {
                     id: `operator-grip-size-${dir}`,
-                    // fill: '#ffffff',
-                    fill: '#ffff00',
+                    fill: '#ffffff',
                     r: GRIP_RADIUS / this.scale,
                     'stroke-width': 2 / this.scale,
                     style: `cursor: ${dir}-resize`,
@@ -124,8 +126,8 @@ class OperatorPoints {
         }
     }
 
-    getSelectedElementsBox() {
-        return this.selectedElementsBox;
+    getAllSelectedElementsBox() {
+        return this.allSelectedElementsBox;
     }
 
     showGrips(show) {
@@ -212,10 +214,30 @@ class OperatorPoints {
                 maxX = Math.max(maxX, box.x + box.width);
                 minY = Math.min(minY, box.y);
                 maxY = Math.max(maxY, box.y + box.height);
+
+                // set small box cover each elem
+                // const elemDstr = `M${box.x},${box.y}
+                //     L${box.x + box.width},${box.y}
+                //     L${box.x + box.width},${box.y + box.height}
+                //     L${box},${box.y + box.height} z`;
+                // const elemBox = createSVGElement({
+                //     element: 'path',
+                //     attr: {
+                //         id: 'selected-elements-box',
+                //         fill: 'none',
+                //         stroke: '#00b7ee',
+                //         'stroke-width': 1 / this.scale,
+                //         'stroke-dasharray': '2, 1',
+                //         style: 'pointer-events:none'
+                //     }
+                // });
+                // elemBox.setAttribute('d', elemDstr);
+                // this.operatorPointsGroup.append(elemBox);
             }
             this.resetTransformList();
             this.operatorPointsGroup.setAttribute('transform', 'translate(0,0)');
         }
+
 
         // set 8 points for resize
         this.operatorGripCoords = {
@@ -245,7 +267,93 @@ class OperatorPoints {
         L${maxX},${minY}
         L${maxX},${maxY}
         L${minX},${maxY} z`;
-        this.selectedElementsBox.setAttribute('d', dstr);
+        this.allSelectedElementsBox.setAttribute('d', dstr);
+    }
+
+    // todo merge into resize grips
+    resizeGripsOnElementResize(element) {
+        const rect = this.allSelectedElementsBox;
+
+        const offset = 0 / this.scale;
+        // if (this.element.getAttribute('stroke') !== 'none') {
+        //     const strokeWidth = parseFloat(this.element.getAttribute('stroke-width')) || 0;
+        //     offset += strokeWidth / 2;
+        // }
+
+        const bbox = getBBox(element);
+
+        const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
+
+        const transformList = getTransformList(element);
+
+        const transform = transformListToTransform(transformList);
+
+        const transformedBox = transformBox(x, y, w, h, transform.matrix);
+
+        let nx = transformedBox.x - offset;
+        let ny = transformedBox.y - offset;
+        let nw = transformedBox.width + offset * 2;
+        let nh = transformedBox.height + offset * 2;
+
+        const angle = getRotationAngle(element);
+        const cx = nx + nw / 2, cy = ny + nh / 2;
+        if (angle) {
+            const rotate = this.svgFactory.getRoot().createSVGTransform();
+            rotate.setRotate(-angle, cx, cy);
+
+            const rm = rotate.matrix;
+            const { tl, tr, bl, br } = transformedBox;
+            const nbox = {};
+
+            nbox.tl = transformPoint(tl, rm);
+            nbox.tr = transformPoint(tr, rm);
+            nbox.bl = transformPoint(bl, rm);
+            nbox.br = transformPoint(br, rm);
+
+            const minx = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))) - offset;
+            const miny = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))) - offset;
+            const maxx = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))) + offset;
+            const maxy = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y))) + offset;
+
+            nx = minx;
+            ny = miny;
+            nw = (maxx - minx);
+            nh = (maxy - miny);
+        }
+
+        const dstr = `M${nx},${ny}
+            L${nx + nw},${ny}
+            L${nx + nw},${ny + nh}
+            L${nx},${ny + nh} z`;
+
+        rect.setAttribute('d', dstr);
+
+        const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
+        this.operatorPointsGroup.setAttribute('transform', xform);
+
+        // recalculate grip coordinates
+        this.operatorGripCoords = {
+            nw: [nx, ny],
+            ne: [nx + nw, ny],
+            sw: [nx, ny + nh],
+            se: [nx + nw, ny + nh],
+            n: [nx + (nw) / 2, ny],
+            w: [nx, ny + (nh) / 2],
+            e: [nx + nw, ny + (nh) / 2],
+            s: [nx + (nw) / 2, ny + nh]
+        };
+
+        Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
+            const grip = this.operatorGrips[dir];
+            grip.setAttribute('cx', coords[0]);
+            grip.setAttribute('cy', coords[1]);
+        });
+        this.rotateGripConnector.setAttribute('x1', nx + nw / 2);
+        this.rotateGripConnector.setAttribute('y1', ny);
+        this.rotateGripConnector.setAttribute('x2', nx + nw / 2);
+        this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
+        this.rotateGrip.setAttribute('cx', nx + nw / 2);
+        this.rotateGrip.setAttribute('cy', ny - GRIP_RADIUS * 9.4 / this.scale);
     }
 
     getSelectedElementBBox() {
