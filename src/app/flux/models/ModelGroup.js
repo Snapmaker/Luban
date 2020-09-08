@@ -434,6 +434,7 @@ class ModelGroup extends EventEmitter {
                 this.selectedModelArray.push(model);
             }
         }
+        this.selectedModelArray = [...this.selectedModelArray];
         this.onDataChangedCallback();
     }
 
@@ -450,6 +451,7 @@ class ModelGroup extends EventEmitter {
 
     removeAllSelectedModels() {
         this.selectedModelArray = [];
+        this.onDataChangedCallback();
     }
 
     // use for widget
