@@ -320,6 +320,7 @@ class SVGContentGroup {
         transformList.insertItemBefore(translateOrigin, 0);
 
         transformList.getItem(0).tag = 'translateBack';
+        console.log(element, modelGroupTransformation);
     }
 
     getSelectedElementsBBox() {
