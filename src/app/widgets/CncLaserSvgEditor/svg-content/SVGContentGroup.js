@@ -144,18 +144,19 @@ class SVGContentGroup {
         }
         this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
-        const selectedElementsBox = this.operatorPoints.getSelectedElementsBox();
-        // this.resetElementTransformList(selectedElementsBox, (elements.length === 1) ? transformation : null);
-        this.resetElementTransformList(selectedElementsBox);
+        this.operatorPoints.resetTransformList();
         // reset transformList of selectedBox
-        this.resetSelection();
+        // this.resetSelection();
     }
 
     // after element transform
-    resetSelection() {
-        // this.resetElementTransformList(this.operatorPoints.operatorPointsGroup);
+    resetSelection(transformation) {
         this.operatorPoints.resizeGrips(this.selectedElements);
-        this.operatorPoints.resetTransformList();
+        this.setSelectorTransformList(transformation);
+    }
+
+    setSelectorTransformList(transformation) {
+        this.setElementTransformList(this.operatorPoints.operatorPointsGroup, transformation);
     }
 
     isElementOperator(elem) {
@@ -258,12 +259,26 @@ class SVGContentGroup {
         selectedElement.uniformScalingState = uniformScalingState;
     }
 
-    resetElementTransformList(element, modelGroupTransformation) {
-        element.transform.baseVal.clear();
+    resetElementTransformList(element, modelGroupTransformation, dx, dy) {
         this.setElementTransformList(element, modelGroupTransformation);
+
+        // const { positionX, positionY } = modelGroupTransformation;
+        // todo move to svgModelGroup, size need
+        // const center = { x: positionX, y: -positionY };
+        // const translate = `translate(${center.x},${center.y})`;
+        const translate = `translate(${dx},${dy})`;
+        element.setAttribute('transform', translate);
+        // const translate = this.svgContent.createSVGTransform();
+        // translate.setTranslate(center.x, center.y);
+        // const transformList = element.transform.baseVal;
+        // transformList.appendItem(translate);
+
+        console.log(element, modelGroupTransformation, translate);
     }
 
-    setElementTransformList(element, modelGroupTransformation) {
+    setElementTransformList(element, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
+        console.log('set');
+        element.transform.baseVal.clear();
         const transformList = element.transform.baseVal;
         const elementsBBox = getBBox(element);
         const transformation = (modelGroupTransformation !== undefined ? modelGroupTransformation : ({
@@ -274,29 +289,32 @@ class SVGContentGroup {
             scaleY: 1,
             flip: 0
         }));
-        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
         const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
-        const center = { x: positionX, y: positionY };
+        // todo move to svgModelGroup, size need
+        const center = { x: 230 + positionX, y: 250 - positionY };
 
-        const translateOrigin = this.svgContent.createSVGTransform();
-        translateOrigin.tag = 'translateOrigin';
-        translateOrigin.setTranslate(-center.x, -center.y);
-        transformList.insertItemBefore(translateOrigin, 0);
-
-        const scale = this.svgContent.createSVGTransform();
-        scale.tag = 'scale';
-        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
-        transformList.insertItemBefore(scale, 0);
+        const translateBack = this.svgContent.createSVGTransform();
+        // translateBack.setTranslate(center.x, center.y);
+        translateBack.setTranslate(0, 0);
+        transformList.insertItemBefore(translateBack, 0);
 
         const rotate = this.svgContent.createSVGTransform();
         rotate.tag = 'rotate';
-        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+        rotate.setRotate(-rotationZ / Math.PI * 180, center.x, center.y);
         transformList.insertItemBefore(rotate, 0);
 
-        const translateBack = this.svgContent.createSVGTransform();
-        translateBack.setTranslate(center.x, center.y);
-        transformList.insertItemBefore(translateBack, 0);
+        const scale = this.svgContent.createSVGTransform();
+        scale.tag = 'scale';
+        scale.setScale(scaleX * ((flip & 2) ? -1 : 1) / Math.abs(scaleX), scaleY * ((flip & 1) ? -1 : 1) / Math.abs(scaleY));
+        transformList.insertItemBefore(scale, 0);
+
+        const translateOrigin = this.svgContent.createSVGTransform();
+        translateOrigin.tag = 'translateOrigin';
+        translateOrigin.setTranslate(0, 0);
+        transformList.insertItemBefore(translateOrigin, 0);
+
         transformList.getItem(0).tag = 'translateBack';
+        console.log(element, modelGroupTransformation);
     }
 
     getSelectedElementsBBox() {
@@ -308,26 +326,44 @@ class SVGContentGroup {
         return this.operatorPoints.getCenterPoint();
     }
 
-    transformSelectedElementsOnMouseMove(transform) {
+    translateSelectedElementsOnMouseMove(transform) {
         for (const elem of this.selectedElements) {
             const transformList = getTransformList(elem);
-
-            if (transformList.numberOfItems) {
-                transformList.replaceItem(transform, 0);
-            } else {
-                transformList.appendItem(transform);
-            }
+            transformList.replaceItem(transform, 0);
         }
     }
 
-    transformSelectorOnMouseDown(transform) { // add a new transform to list
+    rotateSelectedElementsOnMouseDown() {
+        for (const elem of this.selectedElements) {
+            const transformList = getTransformList(elem);
+            const transform = this.svgContent.createSVGTransform();
+            transform.setRotate(0, 0, 0);
+            transformList.appendItem(transform);
+        }
+    }
+
+    rotateSelectedElementsOnMouseMove(transform) {
+        for (const elem of this.selectedElements) {
+            const transformList = getTransformList(elem);
+            transformList.replaceItem(transform, transformList.numberOfItems - 1);
+            // if (!transformList.numberOfItems) {
+            //     transformList.replaceItem(transform, 0);
+            // } else {
+            //     // transformList.appendItem(transform);
+            //     transformList.replaceItem(transform, 1);
+            // }
+            // console.log(elem, transform, transformList[0], transformList[1], transformList[2], transformList[3], transformList);
+        }
+    }
+
+    translateSelectorOnMouseDown(transform) { // add a new transform to list
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        transformList.appendItem(transform);
+        transformList.insertItemBefore(transform, 0);
     }
 
     transformSelectorOnMouseMove(transform) { // change the new transform
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        transformList.replaceItem(transform, transformList.numberOfItems - 1);
+        transformList.replaceItem(transform, 0);
     }
 
     transformSelectorOnMouseup() {

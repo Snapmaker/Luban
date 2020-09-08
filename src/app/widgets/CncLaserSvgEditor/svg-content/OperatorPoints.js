@@ -1,5 +1,5 @@
 import { createSVGElement } from '../element-utils';
-import { getTransformList, transformBox, transformListToTransform } from '../element-transform';
+import { transformBox, transformListToTransform } from '../element-transform';
 
 const GRIP_RADIUS = 8;
 
@@ -137,41 +137,41 @@ class OperatorPoints {
         this.operatorPointsGroup.transform.baseVal.clear();
     }
 
-    setTransformList(transform) {
-        this.operatorPointsGroup.transform.baseVal = transform;
-    }
+    // setTransformList(transform) {
+    //     this.operatorPointsGroup.transform.baseVal = transform;
+    // }
 
-    updateTransformByTransformation(transformation) {
-        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
-        const transformList = this.operatorPointsGroup.transform.baseVal;
-        transformList.clear();
-        const size = this.svgFactory.svgModelGroup.size;
-        function pointModelToSvg({ x, y }) {
-            return { x: size.x + x, y: size.y - y };
-        }
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
-        const center = pointModelToSvg({ x: positionX, y: positionY });
-
-        const translateOrigin = this.svgFactory.svgContent.createSVGTransform();
-        translateOrigin.tag = 'translateOrigin';
-        translateOrigin.setTranslate(-center.x, -center.y);
-        transformList.insertItemBefore(translateOrigin, 0);
-
-        const scale = this.svgFactory.svgContent.createSVGTransform();
-        scale.tag = 'scale';
-        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
-        transformList.insertItemBefore(scale, 0);
-
-        const rotate = this.svgFactory.svgContent.createSVGTransform();
-        rotate.tag = 'rotate';
-        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
-        transformList.insertItemBefore(rotate, 0);
-
-        const translateBack = this.svgFactory.svgContent.createSVGTransform();
-        translateBack.setTranslate(center.x, center.y);
-        transformList.insertItemBefore(translateBack, 0);
-        transformList.getItem(0).tag = 'translateBack';
-    }
+    // updateTransformByTransformation(transformation) {
+    //     // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    //     const transformList = this.operatorPointsGroup.transform.baseVal;
+    //     transformList.clear();
+    //     const size = this.svgFactory.svgModelGroup.size;
+    //     function pointModelToSvg({ x, y }) {
+    //         return { x: size.x + x, y: size.y - y };
+    //     }
+    //     const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+    //     const center = pointModelToSvg({ x: positionX, y: positionY });
+    //
+    //     const translateOrigin = this.svgFactory.svgContent.createSVGTransform();
+    //     translateOrigin.tag = 'translateOrigin';
+    //     translateOrigin.setTranslate(-center.x, -center.y);
+    //     transformList.insertItemBefore(translateOrigin, 0);
+    //
+    //     const scale = this.svgFactory.svgContent.createSVGTransform();
+    //     scale.tag = 'scale';
+    //     scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+    //     transformList.insertItemBefore(scale, 0);
+    //
+    //     const rotate = this.svgFactory.svgContent.createSVGTransform();
+    //     rotate.tag = 'rotate';
+    //     rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+    //     transformList.insertItemBefore(rotate, 0);
+    //
+    //     const translateBack = this.svgFactory.svgContent.createSVGTransform();
+    //     translateBack.setTranslate(center.x, center.y);
+    //     transformList.insertItemBefore(translateBack, 0);
+    //     transformList.getItem(0).tag = 'translateBack';
+    // }
 
     removeGrips() {}
 
@@ -196,12 +196,8 @@ class OperatorPoints {
             maxX = box.x + box.width;
             minY = box.y;
             maxY = box.y + box.height;
-            // todo
-            console.log(this.svgFactory);
-            const transformation = this.svgFactory.svgModelGroup.getModelsByElements(elements)[0].transformation;
-            this.updateTransformByTransformation(transformation);
-            console.log('----operator resize grip transformation----', transformation);
-            this.setTransformList(getTransformList(elements[0]));
+            // todo set transform list from the only selected element
+            // this.setTransformList(getTransformList(elements[0]));
         } else {
             bBox = elements[0].getBBox();
             box = transformBox(bBox.x, bBox.y, bBox.width, bBox.height, transformListToTransform(elements[0].transform.baseVal).matrix);
@@ -250,7 +246,6 @@ class OperatorPoints {
         L${maxX},${maxY}
         L${minX},${maxY} z`;
         this.selectedElementsBox.setAttribute('d', dstr);
-        console.log('----operator resize grip----', this.operatorPointsGroup.transform.baseVal);
     }
 
     getSelectedElementBBox() {

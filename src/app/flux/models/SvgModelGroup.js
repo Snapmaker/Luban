@@ -488,20 +488,20 @@ class SvgModelGroup {
                 const startCenter = svg.createSVGPoint();
                 startCenter.x = startBbox.x + startBbox.width / 2;
                 startCenter.y = startBbox.y + startBbox.height / 2;
-                // const endCenter = startCenter.matrixTransform(rotateBox.matrix);
-                // const modelNewCenter = svgModel.pointSvgToModel(endCenter);
-                // const model = svgModel.relatedModel;
-                // const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
-                // const positionX = modelNewCenter.x;
-                // const positionY = modelNewCenter.y;
-                // model.updateAndRefresh({
-                //     transformation: {
-                //         positionX: positionX,
-                //         positionY: positionY,
-                //         rotationZ: rotationZ
-                //     }
-                // });
-                svgModel.onUpdate();
+                const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                const model = svgModel.relatedModel;
+                const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
+                const positionX = modelNewCenter.x;
+                const positionY = modelNewCenter.y;
+                console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
+                model.updateAndRefresh({
+                    transformation: {
+                        positionX: positionX,
+                        positionY: positionY,
+                        rotationZ: rotationZ
+                    }
+                });
             }
             // rotate operationGrips
             transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.angle + 180) % 360 - 180) * Math.PI / 180;
