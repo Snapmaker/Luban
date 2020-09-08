@@ -849,6 +849,10 @@ class SVGCanvas extends PureComponent {
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
                 console.log('----mouse up rotate----', transformation);
                 this.svgContentGroup.resetSelection(transformation);
+                // todo move to content group public
+                if (this.svgContentGroup.selectedElements.length === 1) {
+                    this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(this.svgContentGroup.selectedElements[0]);
+                }
                 return; // note that this is return
             }
             case 'panMove': {
