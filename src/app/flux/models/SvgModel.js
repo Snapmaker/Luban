@@ -271,7 +271,6 @@ class SvgModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        console.log(this.relatedModel);
         const { config, transformation, uploadName, width, height } = this.relatedModel;
         const href = `${DATA_PREFIX}/${uploadName}`;
         const { positionX, positionY } = transformation;
@@ -315,7 +314,6 @@ class SvgModel {
             }
             case 'text': {
                 const diffY = elem.getAttribute('y') - elem.getBBox().y;
-                console.log({ x, y }, { width, height, diffY });
                 elem.setAttribute('x', x - width / 2);
                 elem.setAttribute('y', y - height / 2 + diffY);
                 elem.setAttribute('fill', '#000');

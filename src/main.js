@@ -1,9 +1,9 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import Store from 'electron-store';
 import { configureWindow } from './electron-app/window';
-import MenuBuilder from './electron-app/menu';
+import MenuBuilder from './electron-app/Menu';
 import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
@@ -24,12 +24,18 @@ function getBrowserWindowOptions() {
     };
 
     // { x, y, width, height }
-    const windowBounds = config.get('winBounds');
+    const lastBounds = config.get('winBounds');
+    const displayBounds = screen.getDisplayMatching(lastBounds).bounds;
+
+    const windowBounds = {
+        width: Math.min(lastBounds.width, displayBounds.width),
+        height: Math.min(lastBounds.height, displayBounds.height)
+    };
+    windowBounds.x = displayBounds.x + (displayBounds.width - windowBounds.width) / 2;
+    windowBounds.y = displayBounds.y + (displayBounds.height - windowBounds.height) / 2;
 
     return Object.assign({}, defaultOptions, windowBounds);
 }
-
-const combinedOptions = getBrowserWindowOptions();
 
 
 const createWindow = async () => {
@@ -43,6 +49,7 @@ const createWindow = async () => {
     const data = await launchServer();
 
     const { address, port } = { ...data };
+    const combinedOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(combinedOptions);
     mainWindow = window;
 
