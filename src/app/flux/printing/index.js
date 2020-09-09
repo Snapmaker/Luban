@@ -805,7 +805,7 @@ export const actions = {
 
     selectTargetModel: (model, isMultiSelect) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.selectModelById(model, isMultiSelect);
+        const modelState = modelGroup.selectModelById(model.modelID, isMultiSelect);
 
         dispatch(actions.updateState(modelState));
         dispatch(actions.render());
@@ -936,14 +936,14 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    copyModelArray: () => (dispatch, getState) => {
+    copy: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.copyModelArray();
+        modelGroup.copy();
     },
 
-    pasteModelArray: () => (dispatch, getState) => {
+    paste: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.pasteModelArray();
+        const modelState = modelGroup.paste();
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());

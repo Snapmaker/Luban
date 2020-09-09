@@ -380,6 +380,9 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
+    updateBoundingBox() {
+        this.transformControl.updateBoundingBox();
+    }
 
     attach(objects) {
         this.selectedGroup = objects;

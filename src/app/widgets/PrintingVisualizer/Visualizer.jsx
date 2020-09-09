@@ -91,6 +91,7 @@ class Visualizer extends PureComponent {
         // context menu
         centerSelectedModel: () => {
             this.props.updateSelectedModelTransformation({ positionX: 0, positionY: 0 });
+            this.actions.updateBoundingBox();
             this.props.onModelAfterTransform();
         },
         deleteSelectedModel: () => {
@@ -118,6 +119,9 @@ class Visualizer extends PureComponent {
         },
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
+        },
+        updateBoundingBox: () => {
+            this.canvas.current.controls.updateBoundingBox();
         }
     };
 
@@ -155,7 +159,7 @@ class Visualizer extends PureComponent {
                 const model = modelGroup.models.find(d => d.modelID === modelID);
                 modelGroup.selectedGroup.add(model.meshObject);
             });
-
+            this.canvas.current.controls.updateBoundingBox();
             this.canvas.current.controls.attach(modelGroup.selectedGroup);
         }
 
@@ -230,7 +234,7 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation />
+                    <VisualizerModelTransformation updateBoundingBox={this.actions.updateBoundingBox} />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
