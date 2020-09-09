@@ -197,13 +197,6 @@ class OperatorPoints {
         };
     }
 
-    getCenterPoint() {
-        return {
-            x: this.operatorGripCoords.nw[0] + this.operatorGripCoords.se[0] / 2,
-            y: this.operatorGripCoords.nw[1] + this.operatorGripCoords.se[1] / 2
-        };
-    }
-
     resizeGrips(elements) {
         for (const elemRect of this.selectedElementsBox) {
             elemRect.remove();
