@@ -566,52 +566,42 @@ class ModelGroup extends EventEmitter {
     }
 
     duplicateSelectedModel(modelID) {
+        const modelsToCopy = this.selectedModelArray;
+        if (modelsToCopy.length === 0) return this._getEmptyState();
+
         this.removeSelectedObjectParentMatrix();
-        const selectedArray = this.getSelectedModelArray();
-        if (selectedArray.length > 0) {
-            this.selectedModelArray = [];
-            this.models.forEach((model) => {
-                model.isSelected = false;
-                model.meshObject.material = materialNormal;
-                this.object.add(model.meshObject);
-            });
-        }
-        selectedArray.forEach((selected) => {
-            if (selected) {
-                const model = selected.clone();
-                selected.isSelected = false;
-                selected.meshObject.material = materialNormal;
-                if (selected.sourceType === '3d') {
-                    if (selected.convexGeometry) {
-                        const selectedConvexGeometry = selected.convexGeometry.clone();
-                        model.convexGeometry = selectedConvexGeometry;
-                    }
-                    model.stickToPlate();
-                    model.modelName = model.createNewModelName(this);
-                    model.meshObject.position.x = 0;
-                    model.meshObject.position.y = 0;
-                    const point = this._computeAvailableXY(model);
-                    model.meshObject.position.x = point.x;
-                    model.meshObject.position.y = point.y;
-                    model.meshObject.updateMatrix();
 
+        // Unselect all models
+        this.unselectAllModels();
 
-                    model.modelID = modelID || uuid.v4();
-                } else {
-                    model.meshObject.addEventListener('update', this.onModelUpdate);
-                    model.modelID = modelID || uuid.v4();
-                    model.computeBoundingBox();
-                    model.updateTransformation({
-                        positionX: 0,
-                        positionY: 0,
-                        positionZ: 0
-                    });
-                }
+        modelsToCopy.forEach((model) => {
+            const newModel = model.clone();
 
-                this.models.push(model);
-                this.object.add(model.meshObject);
-                this.addModelToSelectedGroup(model);
+            if (model.sourceType === '3d') {
+                newModel.stickToPlate();
+                newModel.modelName = newModel.createNewModelName(this);
+                newModel.meshObject.position.x = 0;
+                newModel.meshObject.position.y = 0;
+                const point = this._computeAvailableXY(newModel);
+                newModel.meshObject.position.x = point.x;
+                newModel.meshObject.position.y = point.y;
+                newModel.meshObject.updateMatrix();
+
+                newModel.modelID = modelID || uuid.v4();
+            } else {
+                newModel.meshObject.addEventListener('update', this.onModelUpdate);
+                newModel.modelID = modelID || uuid.v4();
+                newModel.computeBoundingBox();
+                newModel.updateTransformation({
+                    positionX: 0,
+                    positionY: 0,
+                    positionZ: 0
+                });
             }
+
+            this.models.push(newModel);
+            this.object.add(newModel.meshObject);
+            this.addModelToSelectedGroup(newModel);
         });
         this.applySelectedObjectParentMatrix();
 
@@ -622,19 +612,19 @@ class ModelGroup extends EventEmitter {
      * Copy action: copy selected models (simply save the objects without their current positions).
      */
     copy() {
-        this.clipboard = [];
+        this.removeSelectedObjectParentMatrix();
 
-        this.selectedModelArray.forEach((model) => {
-            this.clipboard.push(model.clone());
-        });
+        this.clipboard = this.selectedModelArray.map(model => model.clone());
+
+        this.applySelectedObjectParentMatrix();
     }
 
     /**
      * Paste action: paste(duplicate) models in clipboard.
      */
     paste() {
-        const copiedArray = this.clipboard;
-        if (copiedArray.length === 0) return this._getEmptyState();
+        const modelsToCopy = this.clipboard;
+        if (modelsToCopy.length === 0) return this._getEmptyState();
 
         this.removeSelectedObjectParentMatrix();
 
@@ -643,27 +633,25 @@ class ModelGroup extends EventEmitter {
 
         // paste objects from clipboard
         // TODO: paste all objects from clipboard without losing their relative positions
-        copiedArray.forEach((clone) => {
-            const model = clone.clone();
-            this.object.add(model.meshObject);
-            if (model.sourceType === '3d') {
-                if (model.convexGeometry) {
-                    const selectedConvexGeometry = model.convexGeometry.clone();
-                    model.convexGeometry = selectedConvexGeometry;
-                }
-                model.stickToPlate();
-                model.modelName = model.createNewModelName(this);
-                model.meshObject.position.x = 0;
-                model.meshObject.position.y = 0;
-                const point = this._computeAvailableXY(model);
-                model.meshObject.position.x = point.x;
-                model.meshObject.position.y = point.y;
-                // Once the position of selectedGroup is changed, updateMatrix must be called
-                model.meshObject.updateMatrix();
-                model.modelID = uuid.v4();
+        modelsToCopy.forEach((model) => {
+            const newModel = model.clone();
 
-                this.models.push(model);
-                this.addModelToSelectedGroup(model);
+            if (newModel.sourceType === '3d') {
+                newModel.stickToPlate();
+                newModel.modelName = newModel.createNewModelName(this);
+                newModel.meshObject.position.x = 0;
+                newModel.meshObject.position.y = 0;
+                const point = this._computeAvailableXY(newModel);
+                newModel.meshObject.position.x = point.x;
+                newModel.meshObject.position.y = point.y;
+                // Once the position of selectedGroup is changed, updateMatrix must be called
+                newModel.meshObject.updateMatrix();
+
+                newModel.modelID = uuid.v4();
+
+                this.models.push(newModel);
+                this.object.add(newModel.meshObject);
+                this.addModelToSelectedGroup(newModel);
             }
         });
         this.applySelectedObjectParentMatrix();

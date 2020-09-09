@@ -45,8 +45,10 @@ class Model {
     relatedModels = {}
 
     constructor(modelInfo, modelGroup) {
-        const { modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName, modelName } = modelInfo;
+        const {
+            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
+            transformation, processImageName, modelName
+        } = modelInfo;
 
         this.limitSize = limitSize;
 
@@ -122,7 +124,7 @@ class Model {
                 baseName = 'Text';
             } else if (model.mode !== 'vector') {
                 baseName = model.originalName;
-            // todo, it may named when upload, but not when create model
+                // todo, it may named when upload, but not when create model
             } else {
                 baseName = 'Shape';
             }
@@ -565,13 +567,22 @@ class Model {
             geometry: this.meshObject.geometry.clone(),
             material: this.meshObject.material.clone()
         });
-        clone.modelID = this.modelID;
+        // clone.modelID = this.modelID;
+        clone.modelID = uuid.v4();
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
         // this.updateMatrix();
         // clone.setMatrix(this.mesh.Object.matrix);
         this.meshObject.updateMatrix();
         clone.setMatrix(this.meshObject.matrix);
+
+        // copy convex geometry as well
+        if (this.sourceType === '3d') {
+            if (this.convexGeometry) {
+                clone.convexGeometry = this.convexGeometry.clone();
+            }
+        }
+
         return clone;
     }
 
@@ -718,8 +729,10 @@ class Model {
     }
 
     getSerializableConfig() {
-        const { modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
-            transformation, processImageName } = this;
+        const {
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
+            transformation, processImageName
+        } = this;
         return {
             modelID,
             limitSize,
