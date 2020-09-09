@@ -495,7 +495,7 @@ class SvgModelGroup {
                 const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
                 const positionX = modelNewCenter.x;
                 const positionY = modelNewCenter.y;
-                console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
+                // console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
                 model.updateAndRefresh({
                     transformation: {
                         positionX: positionX,

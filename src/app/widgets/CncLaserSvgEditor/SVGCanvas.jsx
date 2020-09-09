@@ -318,6 +318,7 @@ class SVGCanvas extends PureComponent {
             case 'move': {
                 const transform = this.svgContainer.createSVGTransform();
                 transform.setTranslate(0, 0);
+                this.svgContentGroup.translateSelectedElementsOnMouseDown();
                 this.svgContentGroup.translateSelectorOnMouseDown(transform);
             }
             // fall through
@@ -403,6 +404,7 @@ class SVGCanvas extends PureComponent {
                 const transform = this.svgContainer.createSVGTransform();
                 transform.setTranslate(0, 0);
                 this.svgContentGroup.rotateSelectedElementsOnMouseDown();
+                this.svgContentGroup.rotateSelectorOnMouseDown();
                 // const transformList = getTransformList(selected);
                 // const angle = getRotationAngle(selected);
 
@@ -622,7 +624,7 @@ class SVGCanvas extends PureComponent {
                 const transformBox = this.svgContainer.createSVGTransform();
                 const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
                 transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
-                this.svgContentGroup.transformSelectorOnMouseMove(transform);
+                this.svgContentGroup.translateSelectorOnMouseMove(transform);
                 break;
             }
             case 'resize': {
@@ -638,8 +640,7 @@ class SVGCanvas extends PureComponent {
                     resizeTo: pt,
                     isUniformScaling: event.shiftKey
                 });
-                // todo move to content group public
-                this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(selected);
+                this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
                 break;
             }
             case 'rotate': {
@@ -650,13 +651,11 @@ class SVGCanvas extends PureComponent {
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
                 const angleOld = -this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
 
-                console.log('----rotation mouse move----', angleOld, angle, cx, cy);
                 angle = (angle - angleOld + 540) % 360 - 180;
-                console.log(angle);
                 // rotate box
                 const rotateBox = this.svgContainer.createSVGTransform();
                 rotateBox.setRotate(angle, cx, cy);
-                this.svgContentGroup.transformSelectorOnMouseMove(rotateBox);
+                this.svgContentGroup.rotateSelectorOnMouseMove(rotateBox);
                 const rotateElements = this.svgContainer.createSVGTransform();
                 rotateElements.setRotate(angle, cx, cy);
                 this.svgContentGroup.rotateSelectedElementsOnMouseMove(rotateElements);
@@ -822,13 +821,16 @@ class SVGCanvas extends PureComponent {
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
                 const angleOld = -this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
                 angle = (angle - angleOld + 540) % 360 - 180;
-                console.log(angle);
+                console.log('mouse up rotate');
                 this.props.svgModelGroup.updateSelectedModelsByTransformation({
                     angle, cx, cy
                 });
+
+                // todo, save the rotation in transformation but no reselect
+                this.selectOnly(this.svgContentGroup.selectedElements);
                 // this.svgContentGroup.resetSelection();
-                this.svgContentGroup.setSelectorTransformList(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
-                this.svgContentGroup.operatorPoints.showGrips(true);
+                // this.svgContentGroup.setSelectorTransformList(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
+                // this.svgContentGroup.operatorPoints.showGrips(true);
                 this.mode = 'select';
                 return;
             }
@@ -845,11 +847,8 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'select';
                 // todo transformation not suit locate
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
+                console.log('----mouse up rotate----', transformation);
                 this.svgContentGroup.resetSelection(transformation);
-                // todo move to content group public
-                if (this.svgContentGroup.selectedElements.length === 1) {
-                    this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(this.svgContentGroup.selectedElements[0]);
-                }
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1221,15 +1220,6 @@ class SVGCanvas extends PureComponent {
         }
         this.svgContentGroup.addToSelection(elements);
         this.svgContentGroup.resetSelection(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
-        // todo move to content group public
-        if (this.svgContentGroup.selectedElements.length === 1) {
-            this.svgContentGroup.operatorPoints.resizeGripsOnElementResize(this.svgContentGroup.selectedElements[0]);
-        }
-
-        // if (this.props.svgModelGroup.selectedSvgModels.length === 1) {
-        //     this.svgContentGroup.setElementTransformList(this.svgContentGroup.operatorPoints.operatorPointsGroup,
-        //         this.props.svgModelGroup.selectedSvgModels[0].relatedModel.transformation);
-        // }
     }
 
     selectOnly(elements) {

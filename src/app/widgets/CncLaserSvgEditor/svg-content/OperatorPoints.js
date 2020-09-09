@@ -175,7 +175,8 @@ class OperatorPoints {
     //     transformList.getItem(0).tag = 'translateBack';
     // }
 
-    removeGrips() {}
+    removeGrips() {
+    }
 
     getCenterPoint() {
         return {
@@ -184,7 +185,7 @@ class OperatorPoints {
         };
     }
 
-    resizeGrips(elements) {
+    resizeGrips2(elements) {
         if (!elements || elements.length === 0) {
             return;
         }
@@ -270,56 +271,160 @@ class OperatorPoints {
         this.allSelectedElementsBox.setAttribute('d', dstr);
     }
 
-    // todo merge into resize grips
-    resizeGripsOnElementResize(element) {
-        const rect = this.allSelectedElementsBox;
-
-        const offset = 0 / this.scale;
-        // if (this.element.getAttribute('stroke') !== 'none') {
-        //     const strokeWidth = parseFloat(this.element.getAttribute('stroke-width')) || 0;
-        //     offset += strokeWidth / 2;
-        // }
-
+    getElementBBoxAndRotation(element) {
+        let offset = 0 / this.scale;
+        if (element.getAttribute('stroke') !== 'none') {
+            const strokeWidth = parseFloat(element.getAttribute('stroke-width')) || 0;
+            offset += strokeWidth / 2;
+        }
         const bbox = getBBox(element);
-
         const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
-
         const transformList = getTransformList(element);
-
         const transform = transformListToTransform(transformList);
-
         const transformedBox = transformBox(x, y, w, h, transform.matrix);
-
         let nx = transformedBox.x - offset;
         let ny = transformedBox.y - offset;
         let nw = transformedBox.width + offset * 2;
         let nh = transformedBox.height + offset * 2;
-
         const angle = getRotationAngle(element);
         const cx = nx + nw / 2, cy = ny + nh / 2;
+        // rotate back to angle = 0
+        // then rotate to element's rotation angle
+        // because it show calculate for the offset
         if (angle) {
             const rotate = this.svgFactory.getRoot().createSVGTransform();
             rotate.setRotate(-angle, cx, cy);
-
             const rm = rotate.matrix;
             const { tl, tr, bl, br } = transformedBox;
             const nbox = {};
-
             nbox.tl = transformPoint(tl, rm);
             nbox.tr = transformPoint(tr, rm);
             nbox.bl = transformPoint(bl, rm);
             nbox.br = transformPoint(br, rm);
-
             const minx = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))) - offset;
             const miny = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))) - offset;
             const maxx = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))) + offset;
             const maxy = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y))) + offset;
-
             nx = minx;
             ny = miny;
             nw = (maxx - minx);
             nh = (maxy - miny);
+
+            // todo draw each element box
+            // console.log('resize', nx, ny, nx + nw, ny + nh);
+            // const dstr = `M${nx},${ny}
+            // L${nx + nw},${ny}
+            // L${nx + nw},${ny + nh}
+            // L${nx},${ny + nh} z`;
+            // rect.setAttribute('d', dstr);
+            //
+            // const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
+            // this.operatorPointsGroup.setAttribute('transform', xform);
         }
+        return {
+            nx, ny, nw, nh, angle, cx, cy
+        };
+    }
+
+    resizeGrips(elements) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        const rect = this.allSelectedElementsBox;
+        // todo add each selected element box
+
+        let element = elements[0];
+        let { nx, ny, nw, nh, angle, cx, cy } = this.getElementBBoxAndRotation(element);
+        let minX, minY, maxX, maxY;
+        if (elements.length === 1) {
+            minX = nx;
+            minY = ny;
+            maxX = nx + nw;
+            maxY = ny + nh;
+        } else {
+            let rotate = this.svgFactory.getRoot().createSVGTransform();
+            rotate.setRotate(angle, cx, cy);
+            let rm = rotate.matrix;
+            let tl = { x: nx, y: ny };
+            let tr = { x: nx + nw, y: ny };
+            let bl = { x: nx, y: ny + nh };
+            let br = { x: nx + nw, y: ny + nh };
+            const nbox = {};
+            nbox.tl = transformPoint(tl, rm);
+            nbox.tr = transformPoint(tr, rm);
+            nbox.bl = transformPoint(bl, rm);
+            nbox.br = transformPoint(br, rm);
+            minX = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x)));
+            minY = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y)));
+            maxX = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x)));
+            maxY = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y)));
+            for (element of elements) {
+                const boxAndRotation = this.getElementBBoxAndRotation(element);
+                nx = boxAndRotation.nx;
+                ny = boxAndRotation.ny;
+                nw = boxAndRotation.nw;
+                nh = boxAndRotation.nh;
+                angle = boxAndRotation.angle;
+                cx = boxAndRotation.cx;
+                cy = boxAndRotation.cy;
+                rotate = this.svgFactory.getRoot().createSVGTransform();
+                rotate.setRotate(angle, cx, cy);
+                rm = rotate.matrix;
+                tl = { x: nx, y: ny };
+                tr = { x: nx + nw, y: ny };
+                bl = { x: nx, y: ny + nh };
+                br = { x: nx + nw, y: ny + nh };
+                nbox.tl = transformPoint(tl, rm);
+                nbox.tr = transformPoint(tr, rm);
+                nbox.bl = transformPoint(bl, rm);
+                nbox.br = transformPoint(br, rm);
+                minX = Math.min(minX, Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))));
+                minY = Math.min(minY, Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))));
+                maxX = Math.max(maxX, Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))));
+                maxY = Math.max(maxY, Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y))));
+            }
+        }
+
+        const dstr = `M${minX},${minY}
+            L${maxX},${minY}
+            L${maxX},${maxY}
+            L${minX},${maxY} z`;
+        rect.setAttribute('d', dstr);
+        // todo it will be rotated after resize
+        const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
+        this.operatorPointsGroup.setAttribute('transform', xform);
+
+        // recalculate grip coordinates
+        this.operatorGripCoords = {
+            nw: [minX, minY],
+            ne: [maxX, minY],
+            sw: [minX, maxY],
+            se: [maxX, maxY],
+            n: [(minX + maxX) / 2, minY],
+            w: [minX, (minY + maxY) / 2],
+            e: [maxX, (minY + maxY) / 2],
+            s: [(minX + maxX) / 2, maxY]
+        };
+
+        Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
+            const grip = this.operatorGrips[dir];
+            grip.setAttribute('cx', coords[0]);
+            grip.setAttribute('cy', coords[1]);
+        });
+        this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
+        this.rotateGripConnector.setAttribute('y1', minY);
+        this.rotateGripConnector.setAttribute('x2', (minX + maxX) / 2);
+        this.rotateGripConnector.setAttribute('y2', minY - GRIP_RADIUS * 9.4 / this.scale);
+        this.rotateGrip.setAttribute('cx', (minX + maxX) / 2);
+        this.rotateGrip.setAttribute('cy', minY - GRIP_RADIUS * 9.4 / this.scale);
+    }
+
+    // todo merge into resize grips
+    resizeGripsOnElementResize(element) {
+        const rect = this.allSelectedElementsBox;
+
+        const { nx, ny, nw, nh, angle, cx, cy } = this.getElementBBoxAndRotation(element);
 
         const dstr = `M${nx},${ny}
             L${nx + nw},${ny}

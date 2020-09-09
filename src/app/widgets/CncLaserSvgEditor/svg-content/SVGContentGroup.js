@@ -272,12 +272,10 @@ class SVGContentGroup {
         // translate.setTranslate(center.x, center.y);
         // const transformList = element.transform.baseVal;
         // transformList.appendItem(translate);
-
-        console.log(element, modelGroupTransformation, translate);
     }
 
     setElementTransformList(element, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
-        console.log('set');
+        console.log('set', modelGroupTransformation);
         element.transform.baseVal.clear();
         const transformList = element.transform.baseVal;
         const elementsBBox = getBBox(element);
@@ -320,7 +318,6 @@ class SVGContentGroup {
         transformList.insertItemBefore(translateOrigin, 0);
 
         transformList.getItem(0).tag = 'translateBack';
-        console.log(element, modelGroupTransformation);
     }
 
     getSelectedElementsBBox() {
@@ -330,6 +327,15 @@ class SVGContentGroup {
 
     getSelectedElementsCenterPoint() {
         return this.operatorPoints.getCenterPoint();
+    }
+
+    translateSelectedElementsOnMouseDown() {
+        for (const elem of this.selectedElements) {
+            const transformList = getTransformList(elem);
+            const transform = this.svgContent.createSVGTransform();
+            transform.setTranslate(0, 0);
+            transformList.insertItemBefore(transform, 0);
+        }
     }
 
     translateSelectedElementsOnMouseMove(transform) {
@@ -344,21 +350,14 @@ class SVGContentGroup {
             const transformList = getTransformList(elem);
             const transform = this.svgContent.createSVGTransform();
             transform.setRotate(0, 0, 0);
-            transformList.appendItem(transform);
+            transformList.insertItemBefore(transform, 0);
         }
     }
 
     rotateSelectedElementsOnMouseMove(transform) {
         for (const elem of this.selectedElements) {
             const transformList = getTransformList(elem);
-            transformList.replaceItem(transform, transformList.numberOfItems - 1);
-            // if (!transformList.numberOfItems) {
-            //     transformList.replaceItem(transform, 0);
-            // } else {
-            //     // transformList.appendItem(transform);
-            //     transformList.replaceItem(transform, 1);
-            // }
-            // console.log(elem, transform, transformList[0], transformList[1], transformList[2], transformList[3], transformList);
+            transformList.replaceItem(transform, 0);
         }
     }
 
@@ -367,7 +366,19 @@ class SVGContentGroup {
         transformList.insertItemBefore(transform, 0);
     }
 
-    transformSelectorOnMouseMove(transform) { // change the new transform
+    translateSelectorOnMouseMove(transform) { // change the new transform
+        const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+        transformList.replaceItem(transform, 0);
+    }
+
+    rotateSelectorOnMouseDown() {
+        const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+        const transform = this.svgContent.createSVGTransform();
+        transform.setRotate(0, 0, 0);
+        transformList.insertItemBefore(transform, 0);
+    }
+
+    rotateSelectorOnMouseMove(transform) {
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
         transformList.replaceItem(transform, 0);
     }
