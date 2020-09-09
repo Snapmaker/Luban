@@ -129,24 +129,18 @@ class SVGContentGroup {
 
     clearSelection() {
         this.operatorPoints.showGrips(false);
-        for (const elem of this.selectedElements) {
-            elem.setAttribute('fill', '#e7f2fd');
-        }
         this.selectedElements = [];
     }
 
     addToSelection(elements) {
         for (const elem of elements) {
             if (!this.selectedElements.includes(elem)) {
-                elem.setAttribute('fill', '#8888FF');
                 this.selectedElements.push(elem);
             }
         }
         this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
         this.operatorPoints.resetTransformList();
-        // reset transformList of selectedBox
-        // this.resetSelection();
     }
 
     // after element transform
