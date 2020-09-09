@@ -86,6 +86,10 @@ function saveAsFile(browserWindow) {
     browserWindow.webContents.send('save-as-file');
 }
 
+function closeFile(browserWindow) {
+    browserWindow.webContents.send('close-file');
+}
+
 function save(browserWindow) {
     browserWindow.webContents.send('save');
 }
@@ -97,6 +101,14 @@ function getMenuTemplate(options) {
         {
             label: 'File',
             submenu: [
+                {
+                    id: 'new',
+                    label: 'New File',
+                    click: (menuItem, browserWindow) => {
+                        closeFile(browserWindow);
+                    }
+                },
+                { type: 'separator' },
                 {
                     label: 'Open File...',
                     click: (menuItem, browserWindow) => {

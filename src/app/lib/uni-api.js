@@ -121,7 +121,7 @@ const Window = {
         }
     },
 
-    setOpenedFile(filename) {
+    setOpenedFile(filename = 'new') {
         let title = this.initTitle;
         if (filename) {
             title = `${this.initTitle} / ${filename}`;
