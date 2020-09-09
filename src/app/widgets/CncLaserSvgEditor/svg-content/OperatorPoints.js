@@ -58,9 +58,7 @@ class OperatorPoints {
     initGroup() {
         if (this.selectedElementsBox) {
             for (const elemRect of this.selectedElementsBox) {
-                // todo remove this rect in group <g> instead
-                //this.operatorPointsGroup.remove(elemRect);
-                elemRect.setAttribute('stroke-width', 0);
+                elemRect.remove();
             }
         }
         this.selectedElementsBox = [];
@@ -201,9 +199,7 @@ class OperatorPoints {
 
     resizeGrips(elements) {
         for (const elemRect of this.selectedElementsBox) {
-            // todo remove this rect in group <g> instead
-            //this.operatorPointsGroup.remove(elemRect);
-            elemRect.setAttribute('stroke-width', 0);
+            elemRect.remove();
         }
         this.selectedElementsBox = [];
         if (!elements || elements.length === 0) {

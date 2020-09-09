@@ -495,14 +495,29 @@ class SvgModelGroup {
                 const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
                 const positionX = modelNewCenter.x;
                 const positionY = modelNewCenter.y;
-                // console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
+                console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
+
+                // <path> cannot use this
+                // because it has no xy
+                // if (svgModel.type !== 'path') {
+                //     model.updateAndRefresh({
+                //         transformation: {
+                //             positionX: positionX,
+                //             positionY: positionY,
+                //             rotationZ: rotationZ
+                //         }
+                //     });
+                // } else {
                 model.updateAndRefresh({
                     transformation: {
-                        positionX: positionX,
-                        positionY: positionY,
                         rotationZ: rotationZ
                     }
                 });
+                const transform = svg.createSVGTransform();
+                transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
+                const transformList = elem.transform.baseVal;
+                transformList.insertItemBefore(transform, 0);
+                svgModel.onUpdate();
             }
             // rotate operationGrips
             transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.angle + 180) % 360 - 180) * Math.PI / 180;
