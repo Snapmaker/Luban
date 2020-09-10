@@ -33,7 +33,7 @@ export const svgModelActions = {
 
     resetSelection: (headType, transformation) => (dispatch, getState) => {
         const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.resetSelection(transformation);
+        svgModelGroup && svgModelGroup.resetSelection(svgModelGroup.size, transformation);
     },
 
     emptySelectedModelArray: (headType) => (dispatch, getState) => {

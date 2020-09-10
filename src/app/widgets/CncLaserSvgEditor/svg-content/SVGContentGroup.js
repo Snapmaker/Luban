@@ -152,13 +152,13 @@ class SVGContentGroup {
     }
 
     // after element transform
-    resetSelection(transformation) {
+    resetSelection(size, transformation) {
         this.operatorPoints.resizeGrips(this.selectedElements);
-        this.setSelectorTransformList(transformation);
+        this.setSelectorTransformList(size, transformation);
     }
 
-    setSelectorTransformList(transformation) {
-        this.setElementTransformList(this.operatorPoints.operatorPointsGroup, transformation);
+    setSelectorTransformList(size, transformation) {
+        this.setElementTransformList(this.operatorPoints.operatorPointsGroup, size, transformation);
     }
 
     isElementOperator(elem) {
@@ -261,22 +261,8 @@ class SVGContentGroup {
         selectedElement.uniformScalingState = uniformScalingState;
     }
 
-    resetElementTransformList(element, modelGroupTransformation, dx, dy) {
-        this.setElementTransformList(element, modelGroupTransformation);
-
-        // const { positionX, positionY } = modelGroupTransformation;
-        // todo move to svgModelGroup, size need
-        // const center = { x: positionX, y: -positionY };
-        // const translate = `translate(${center.x},${center.y})`;
-        const translate = `translate(${dx},${dy})`;
-        element.setAttribute('transform', translate);
-        // const translate = this.svgContent.createSVGTransform();
-        // translate.setTranslate(center.x, center.y);
-        // const transformList = element.transform.baseVal;
-        // transformList.appendItem(translate);
-    }
-
-    setElementTransformList(element, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
+    setElementTransformList(element, size, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
+        // size = svgModelGroup.size
         element.transform.baseVal.clear();
         const transformList = element.transform.baseVal;
         const elementsBBox = getBBox(element);
@@ -296,7 +282,7 @@ class SVGContentGroup {
         scaleY = scaleY ?? 1;
         flip = flip ?? 0;
         // todo move to svgModelGroup, size need
-        const center = { x: 230 + positionX, y: 250 - positionY };
+        const center = { x: size.x + positionX, y: size.y - positionY };
 
         const translateBack = this.svgContent.createSVGTransform();
         // translateBack.setTranslate(center.x, center.y);

@@ -848,7 +848,7 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'select';
                 // todo do not use modelGroup here
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
-                this.svgContentGroup.resetSelection(transformation);
+                this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1218,7 +1218,7 @@ class SVGCanvas extends PureComponent {
             }
         }
         this.svgContentGroup.addToSelection(elements);
-        this.svgContentGroup.resetSelection(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
+        this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
     }
 
     selectOnly(elements) {

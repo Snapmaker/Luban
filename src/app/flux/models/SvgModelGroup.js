@@ -319,7 +319,7 @@ class SvgModelGroup {
             this.mode = 'select';
             // todo do not use modelGroup here
             const newTransformation = this.modelGroup.getSelectedModelTransformation();
-            this.svgContentGroup.resetSelection(newTransformation);
+            this.svgContentGroup.resetSelection(this.size, newTransformation);
         }
         if (transformation.rotationZ !== undefined) {
             // todo, copy from canvas mouse up
@@ -353,7 +353,7 @@ class SvgModelGroup {
                 }
             }
             this.svgContentGroup.addToSelection(elements);
-            this.svgContentGroup.resetSelection(this.modelGroup.getSelectedModelTransformation());
+            this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
         }
         if ((transformation.scaleX !== undefined || transformation.scaleY !== undefined) && elements.length === 1) {
             // todo, to fix uniform scale
@@ -374,7 +374,7 @@ class SvgModelGroup {
                     }
                 });
             }
-            this.svgContentGroup.resetSelection();
+            this.svgContentGroup.resetSelection(this.size);
         }
     }
 
@@ -672,9 +672,9 @@ class SvgModelGroup {
 
     resetSelection(transformation) {
         if (!transformation) {
-            this.svgContentGroup.resetSelection(this.modelGroup.getSelectedModelTransformation());
+            this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
         } else {
-            this.svgContentGroup.resetSelection(transformation);
+            this.svgContentGroup.resetSelection(this.size, transformation);
         }
     }
 }
