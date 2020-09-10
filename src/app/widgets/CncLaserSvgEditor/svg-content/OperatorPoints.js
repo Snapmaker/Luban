@@ -147,9 +147,6 @@ class OperatorPoints {
     }
 
     getCenterPoint() {
-        console.log('----getCenterPoint----', this.operatorGripCoords,
-            (this.operatorGripCoords.nw[0] + this.operatorGripCoords.se[0]) / 2,
-            (this.operatorGripCoords.nw[1] + this.operatorGripCoords.se[1]) / 2);
         return {
             x: (this.operatorGripCoords.nw[0] + this.operatorGripCoords.se[0]) / 2,
             y: (this.operatorGripCoords.nw[1] + this.operatorGripCoords.se[1]) / 2

@@ -11,7 +11,6 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
-        headType: PropTypes.string,
         modelGroup: PropTypes.object,
         selectedModelArray: PropTypes.array,
         sourceType: PropTypes.string,
@@ -113,9 +112,9 @@ class Transformation extends PureComponent {
 
     render() {
         const { size, selectedModelArray, sourceType } = this.props;
-        if (this.props.headType === 'laser') {
-            console.log('----render----', this.props.headType, selectedModelArray, this.props.transformation);
-        }
+        // if (this.props.headType === 'laser') {
+        //     console.log('----render----');
+        // }
         const { rotationZ = 0, width = 125, height = 125, scaleX, scaleY, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
@@ -188,7 +187,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width * Math.abs(scaleX), 1)}
+                                    value={toFixed(width * (scaleX ? Math.abs(scaleX) : 1), 1)}
                                     min={1}
                                     max={size.x}
                                     onChange={(value) => {
@@ -215,7 +214,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height * Math.abs(scaleY), 1)}
+                                    value={toFixed(height * (scaleY ? Math.abs(scaleY) : 1), 1)}
                                     min={1}
                                     max={size.y}
                                     onChange={(value) => {
