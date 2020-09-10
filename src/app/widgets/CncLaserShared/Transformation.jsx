@@ -49,38 +49,42 @@ class Transformation extends PureComponent {
         },
         // dont set width and height on transform
         onChangeWidth: (width) => {
-            const { selectedModelArray, modelGroup } = this.props;
-            if (selectedModelArray.length === 1) {
-                modelGroup.updateSelectedModelTransformation({ scaleX: width / selectedModelArray[0].transformation.width });
-                modelGroup.onModelAfterTransform();
-            }
+            this.props.updateSelectedModelTransformation({ scaleX: width / this.props.transformation.width });
+            // todo, clear
+            // const { selectedModelArray, modelGroup } = this.props;
+            // if (selectedModelArray.length === 1) {
+            //     modelGroup.updateSelectedModelTransformation({ scaleX: width / selectedModelArray[0].transformation.width });
+            //     modelGroup.onModelAfterTransform();
+            // }
             //selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
         },
         onChangeHeight: (height) => {
-            const { selectedModelArray, modelGroup } = this.props;
-            if (selectedModelArray.length === 1) {
-                modelGroup.updateSelectedModelTransformation({ scaleY: height / selectedModelArray[0].transformation.height });
-                modelGroup.onModelAfterTransform();
-            }
+            this.props.updateSelectedModelTransformation({ scaleY: height / this.props.transformation.height });
+            // todo, clear
+            // const { selectedModelArray, modelGroup } = this.props;
+            // if (selectedModelArray.length === 1) {
+            //     modelGroup.updateSelectedModelTransformation({ scaleY: height / selectedModelArray[0].transformation.height });
+            //     modelGroup.onModelAfterTransform();
+            // }
             //selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
         },
         onChangeRotationZ: (degree) => {
             const rotationZ = degree * Math.PI / 180;
-            const { modelGroup } = this.props;
-            modelGroup.updateSelectedModelTransformation({ rotationZ });
-            modelGroup.onModelAfterTransform();
+            this.props.updateSelectedModelTransformation({ rotationZ });
+            // const { modelGroup } = this.props;
+            // modelGroup.updateSelectedModelTransformation({ rotationZ });
+            // modelGroup.onModelAfterTransform();
             // this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
         },
         onChangePositionX: (positionX) => {
-            // console.log('bug x', positionX);
             this.props.updateSelectedModelTransformation({ positionX });
+            // todo, clear
             // const { modelGroup } = this.props;
             // modelGroup.updateSelectedModelTransformation({ positionX });
             // modelGroup.onModelAfterTransform();
             // this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
         },
         onChangePositionY: (positionY) => {
-            // console.log('bug y', positionY);
             this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (key) => {
@@ -112,7 +116,7 @@ class Transformation extends PureComponent {
         if (this.props.headType === 'laser') {
             console.log('----render----', this.props.headType, selectedModelArray, this.props.transformation);
         }
-        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
+        const { rotationZ = 0, width = 125, height = 125, scaleX, scaleY, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
@@ -184,7 +188,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width, 1)}
+                                    value={toFixed(width * Math.abs(scaleX), 1)}
                                     min={1}
                                     max={size.x}
                                     onChange={(value) => {
@@ -211,7 +215,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height, 1)}
+                                    value={toFixed(height * Math.abs(scaleY), 1)}
                                     min={1}
                                     max={size.y}
                                     onChange={(value) => {

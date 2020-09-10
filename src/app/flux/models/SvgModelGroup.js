@@ -324,13 +324,59 @@ class SvgModelGroup {
             this.svgContentGroup.resetSelection(newTransformation);
         }
         if (transformation.rotationZ !== undefined) {
-            return;
-        }
-        if ((transformation.width !== undefined || transformation.height !== undefined)) {
-            const bbox = coordGmSvgToModel(this.size, elements[0]);
-            if (!isZero(bbox.width) && !isZero(bbox.height)) {
-                console.log(bbox);
+            // todo, copy from canvas mouse up
+            // mouse up
+            const { x, y } = this.svgContentGroup.operatorPoints.getCenterPoint();
+
+            // todo, use rotationZ
+            let angle = -transformation.rotationZ * 180 / Math.PI;
+            const angleOld = -this.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
+            angle = (angle - angleOld + 540) % 360 - 180;
+            this.updateSelectedModelsByTransformation({
+                angle, cx: x, cy: y
+            });
+
+            // todo, just copy canvas
+            // select only(elements)
+            this.clearSelection();
+            this.svgContentGroup.clearSelection();
+            this.addSelectedSvgModelsByElements(elements);
+            const selectedSvgModels = this.getModelsByElements(elements);
+            for (const svgModel of selectedSvgModels) {
+                const model = svgModel.relatedModel;
+                const modelGroup = model && model.modelGroup;
+                if (modelGroup) {
+                    modelGroup.addSelectedModels([model]);
+                    modelGroup.updateSelectedModelTransformation({
+                        positionX: 0,
+                        positionY: 0
+                    });
+                    modelGroup.resetSelectedObjectScaleAndRotation();
+                }
             }
+            this.svgContentGroup.addToSelection(elements);
+            this.svgContentGroup.resetSelection(this.modelGroup.getSelectedModelTransformation());
+        }
+        if ((transformation.scaleX !== undefined || transformation.scaleY !== undefined) && elements.length === 1) {
+            // todo, to fix uniform scale
+            const element = elements[0];
+            const svgModel = this.getModelByElement(element);
+            const model = svgModel.relatedModel;
+            if (transformation.scaleX !== undefined) {
+                model.updateAndRefresh({
+                    transformation: {
+                        scaleX: transformation.scaleX
+                    }
+                });
+            }
+            if (transformation.scaleY !== undefined) {
+                model.updateAndRefresh({
+                    transformation: {
+                        scaleY: transformation.scaleY
+                    }
+                });
+            }
+            this.svgContentGroup.resetSelection();
         }
     }
 
@@ -542,11 +588,12 @@ class SvgModelGroup {
             }
             // translate operationGrips
             transformation.positionX = selectedModelsTransformation.positionX + deviation.dx;
-            transformation.positionY = selectedModelsTransformation.positionY + deviation.dy;
+            transformation.positionY = selectedModelsTransformation.positionY - deviation.dy;
         }
 
         // rotate after mouseup
         if (deviation.angle) {
+            console.log(deviation);
             // translate and rotate models
             for (const svgModel of selectedModels) {
                 const elem = svgModel.elem;
