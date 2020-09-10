@@ -18,7 +18,7 @@ export const svgModelActions = {
     updateSelectedTransformation: (headType, transformation) => (dispatch, getState) => {
         // eslint-disable-next-line no-unused-vars
         const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.updateTransformation(transformation);
+        svgModelGroup && svgModelGroup.updateSelectedElementsTransformation(transformation);
     },
 
     selectModel: (headType, model) => (dispatch, getState) => {

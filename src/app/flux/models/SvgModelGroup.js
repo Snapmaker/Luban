@@ -280,7 +280,63 @@ class SvgModelGroup {
         }
     }
 
+    // multi select
+    updateSelectedElementsTransformation(transformation) {
+        const elements = this.svgContentGroup.selectedElements;
+        if (elements.length === 0) {
+            return;
+        }
+        if (transformation.uniformScalingState !== undefined) {
+            if (elements.length === 1) {
+                // todo after multi select resize
+                this.modelGroup.selectedModelArray[0].updateTransformation({ uniformScalingState: transformation.uniformScalingState });
+            }
+        }
+        if (transformation.positionX !== undefined || transformation.positionY !== undefined) {
+            const originTransformation = this.modelGroup.getSelectedModelTransformation();
+            if (transformation.positionX === undefined) {
+                transformation.positionX = originTransformation.positionX;
+            }
+            if (transformation.positionY === undefined) {
+                transformation.positionY = originTransformation.positionY;
+            }
+            console.log('----beform move----', transformation, originTransformation);
+            // todo, just copy from canvas now
+            const dx = transformation.positionX - originTransformation.positionX;
+            const dy = -(transformation.positionY - originTransformation.positionY);
+
+            // mouse down
+            this.svgContentGroup.translateSelectedElementsOnMouseDown();
+            const transform = svg.createSVGTransform();
+            console.log(dx, dy);
+            transform.setTranslate(dx, dy);
+            this.svgContentGroup.translateSelectorOnMouseDown(transform);
+            // mouse move
+            this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
+            // mouse up
+            this.updateSelectedModelsByTransformation({
+                dx,
+                dy
+            });
+            this.mode = 'select';
+            // todo do not use modelGroup here
+            const newTransformation = this.modelGroup.getSelectedModelTransformation();
+            this.svgContentGroup.resetSelection(newTransformation);
+        }
+        if (transformation.rotationZ !== undefined) {
+            return;
+        }
+        if ((transformation.width !== undefined || transformation.height !== undefined)) {
+            const bbox = coordGmSvgToModel(this.size, elements[0]);
+            if (!isZero(bbox.width) && !isZero(bbox.height)) {
+                console.log(bbox);
+            }
+        }
+    }
+
+    // when single select
     updateTransformation(transformation, elem) {
+        console.log('----update, svg action----', transformation, elem);
         elem = elem || this.svgContentGroup.getSelected();
         if (!elem) {
             return;

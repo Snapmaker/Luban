@@ -98,6 +98,7 @@ class ModelGroup extends EventEmitter {
 
     // TODO: Unify method return type, it causes unnecessary calculations.
     getSelectedModelTransformation() {
+        // todo
         if (this.selectedModelArray.length === 1) {
             return this.selectedModelArray[0].transformation;
         }
@@ -437,7 +438,6 @@ class ModelGroup extends EventEmitter {
         }
         // TODO: why?
         this.selectedModelArray = [...this.selectedModelArray];
-        console.log('----model group----', this.selectedModelArray);
 
         let state;
         if (this.selectedModelArray.length > 0) {

@@ -372,8 +372,10 @@ export const actions = {
     },
 
     updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
-        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
+        // todo
+        // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
+        // todo
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation, changeFrom));
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {

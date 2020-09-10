@@ -11,6 +11,7 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
+        headType: PropTypes.string,
         modelGroup: PropTypes.object,
         selectedModelArray: PropTypes.array,
         sourceType: PropTypes.string,
@@ -26,7 +27,7 @@ class Transformation extends PureComponent {
             uniformScalingState: PropTypes.bool
         }),
 
-        // updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
         // updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         // onModelAfterTransform: PropTypes.func.isRequired,
@@ -71,16 +72,14 @@ class Transformation extends PureComponent {
             // this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
         },
         onChangePositionX: (positionX) => {
-            const { modelGroup } = this.props;
-            modelGroup.updateSelectedModelTransformation({ positionX });
-            modelGroup.onModelAfterTransform();
+            this.props.updateSelectedModelTransformation({ positionX });
+            // const { modelGroup } = this.props;
+            // modelGroup.updateSelectedModelTransformation({ positionX });
+            // modelGroup.onModelAfterTransform();
             // this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
         },
         onChangePositionY: (positionY) => {
-            const { modelGroup } = this.props;
-            modelGroup.updateSelectedModelTransformation({ positionY });
-            modelGroup.onModelAfterTransform();
-            // this.props.selectedModel.updateAndRefresh({ transformation: { positionY } });
+            this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (key) => {
             // single flip
@@ -108,6 +107,9 @@ class Transformation extends PureComponent {
 
     render() {
         const { size, selectedModelArray, sourceType } = this.props;
+        if (this.props.headType === 'laser') {
+            console.log('----render----', this.props.headType, selectedModelArray, this.props.transformation);
+        }
         const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = sourceType !== 'text';
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
@@ -283,6 +285,7 @@ const mapStateToProps = (state, props) => {
     // const { modelID, sourceType, visible } = selectedModel;
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const visible = (selectedModelArray.length === 1) ? selectedModelArray[0].visible : null;
+    // console.log('----begin render----', modelGroup.getSelectedModelTransformation());
     return {
         size: machine.size,
         selectedModelArray,

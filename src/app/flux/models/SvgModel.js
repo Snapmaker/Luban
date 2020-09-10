@@ -262,7 +262,6 @@ class SvgModel {
     refreshElemAttrs() {
         const elem = this.elem;
         const { config, transformation, uploadName } = this.relatedModel;
-        console.log('----refresh----', transformation);
         const href = `${DATA_PREFIX}/${uploadName}`;
         const { positionX, positionY, width, height } = transformation;
         for (const key of Object.keys(config)) {

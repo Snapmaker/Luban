@@ -64,7 +64,6 @@ class ObjectListBox extends PureComponent {
 
     render() {
         const { modelGroup, selectedModelArray } = this.props;
-        console.log('----obj list----', selectedModelArray);
         return (
             <div>
                 <div
@@ -73,7 +72,6 @@ class ObjectListBox extends PureComponent {
                     )}
                 >
                     {modelGroup.models.map((model) => {
-                        // console.log(model.modelID, selectedModelArray, selectedModelArray && selectedModelArray.includes(model));
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
                         const modelIcon = () => {
