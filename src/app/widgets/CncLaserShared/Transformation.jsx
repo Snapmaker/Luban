@@ -72,6 +72,7 @@ class Transformation extends PureComponent {
             // this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
         },
         onChangePositionX: (positionX) => {
+            // console.log('bug x', positionX);
             this.props.updateSelectedModelTransformation({ positionX });
             // const { modelGroup } = this.props;
             // modelGroup.updateSelectedModelTransformation({ positionX });
@@ -79,6 +80,7 @@ class Transformation extends PureComponent {
             // this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
         },
         onChangePositionY: (positionY) => {
+            // console.log('bug y', positionY);
             this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (key) => {

@@ -310,7 +310,6 @@ class SvgModelGroup {
             const transform = svg.createSVGTransform();
             console.log(dx, dy);
             transform.setTranslate(dx, dy);
-            this.svgContentGroup.translateSelectorOnMouseDown(transform);
             // mouse move
             this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
             // mouse up
@@ -321,6 +320,7 @@ class SvgModelGroup {
             this.mode = 'select';
             // todo do not use modelGroup here
             const newTransformation = this.modelGroup.getSelectedModelTransformation();
+            console.log(newTransformation);
             this.svgContentGroup.resetSelection(newTransformation);
         }
         if (transformation.rotationZ !== undefined) {
@@ -598,6 +598,7 @@ class SvgModelGroup {
             //
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
+        console.log(transformation);
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
     }
 
