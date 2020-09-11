@@ -141,6 +141,12 @@ class OperatorPoints {
         this.operatorPointsGroup.setAttribute('display', show ? 'inline' : 'none');
     }
 
+    showResizeGrips(show) {
+        for (const grip of this.operatorGrips) {
+            grip.setAttribute('display', show ? 'inline' : 'none');
+        }
+    }
+
     resetTransformList() {
         this.operatorPointsGroup.setAttribute('transform', 'translate(0,0)');
         this.operatorPointsGroup.transform.baseVal.clear();
@@ -203,7 +209,12 @@ class OperatorPoints {
         }
         this.selectedElementsBox = [];
         if (!elements || elements.length === 0) {
-            return;
+            return {
+                positionX: 0,
+                positionY: 0,
+                width: 0,
+                height: 0
+            };
         }
 
         const rect = this.allSelectedElementsBox;
@@ -306,16 +317,26 @@ class OperatorPoints {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('cx', coords[0]);
             grip.setAttribute('cy', coords[1]);
+            grip.setAttribute('display', ((elements.length === 1) ? 'inline' : 'none'));
         });
+
         this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y1', minY);
         this.rotateGripConnector.setAttribute('x2', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y2', minY - GRIP_RADIUS * 9.4 / this.scale);
         this.rotateGrip.setAttribute('cx', (minX + maxX) / 2);
         this.rotateGrip.setAttribute('cy', minY - GRIP_RADIUS * 9.4 / this.scale);
+
+        // todo, save the infomation
+        return {
+            positionX: (minX + maxX) / 2,
+            positionY: (minY + maxY) / 2,
+            width: maxX - minX,
+            height: maxY - minY
+        };
     }
 
-    // todo merge into resize grips
+    // todo, delete this method later
     resizeGripsOnElementResize(element) {
         const rect = this.allSelectedElementsBox;
 

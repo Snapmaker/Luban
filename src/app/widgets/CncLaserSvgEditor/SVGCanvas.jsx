@@ -640,7 +640,14 @@ class SVGCanvas extends PureComponent {
                     resizeTo: pt,
                     isUniformScaling: event.shiftKey
                 });
-                this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
+                // todo
+                const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
+                this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
+                    positionX: posAndSize.positionX - this.props.size,
+                    positionY: this.props.size - posAndSize.positionY,
+                    width: posAndSize.width,
+                    height: posAndSize.height
+                });
                 break;
             }
             case 'rotate': {
@@ -848,7 +855,13 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'select';
                 // todo do not use modelGroup here
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
-                this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
+                const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
+                this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
+                    positionX: posAndSize.positionX - this.props.size.x,
+                    positionY: this.props.size.y - posAndSize.positionY,
+                    width: posAndSize.width,
+                    height: posAndSize.height
+                });
                 return; // note that this is return
             }
             case 'panMove': {
@@ -1218,7 +1231,14 @@ class SVGCanvas extends PureComponent {
             }
         }
         this.svgContentGroup.addToSelection(elements);
-        this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
+        // todo
+        const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
+        this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.props.size.x,
+            positionY: this.props.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
     }
 
     selectOnly(elements) {

@@ -112,7 +112,10 @@ class ModelGroup extends EventEmitter {
                 uniformScalingState: this.selectedGroup.uniformScalingState,
                 rotationX: this.selectedGroup.rotation.x,
                 rotationY: this.selectedGroup.rotation.y,
-                rotationZ: this.selectedGroup.rotation.z
+                rotationZ: this.selectedGroup.rotation.z,
+                // todo, width and height use for 2d
+                width: this.selectedGroup.width,
+                height: this.selectedGroup.height
             };
         } else {
             return {};
@@ -753,7 +756,15 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedModelTransformation(transformation) {
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
+        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+
+        // todo, width and height use for 2d
+        if (width !== undefined) {
+            this.selectedGroup.width = width;
+        }
+        if (height !== undefined) {
+            this.selectedGroup.height = height;
+        }
 
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);

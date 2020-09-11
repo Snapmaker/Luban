@@ -146,15 +146,18 @@ class SVGContentGroup {
                 this.selectedElements.push(elem);
             }
         }
-        this.operatorPoints.resizeGrips(this.selectedElements);
+        const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
         this.operatorPoints.resetTransformList();
+        // todo
+        return posAndsize;
     }
 
     // after element transform
     resetSelection(size, transformation) {
-        this.operatorPoints.resizeGrips(this.selectedElements);
+        const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.setSelectorTransformList(size, transformation);
+        return posAndSize;
     }
 
     setSelectorTransformList(size, transformation) {
@@ -229,7 +232,8 @@ class SVGContentGroup {
 
     selectOnly(elems) {
         this.clearSelection();
-        elems && this.addToSelection(elems);
+        const posAndSize = elems && this.addToSelection(elems);
+        return posAndSize;
     }
 
     removeAllElements() {

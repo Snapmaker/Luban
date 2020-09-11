@@ -195,7 +195,14 @@ class SvgModelGroup {
                 preserveAspectRatio: 'none'
             }
         });
-        this.svgContentGroup.selectOnly([elem]);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([elem]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
         return {
             modelID: elem.getAttribute('id'),
             elem
@@ -223,13 +230,15 @@ class SvgModelGroup {
             positionX: 0,
             positionY: 0
         }, clone);
-        this.svgContentGroup.selectOnly([selected]);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([selected]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
         this.addModel(clone);
-    }
-
-    selectElementById(modelID) {
-        const elem = this.svgContentGroup.findSVGElement(modelID);
-        this.svgContentGroup.selectOnly([elem]);
     }
 
     deleteElement() {
@@ -319,7 +328,13 @@ class SvgModelGroup {
             this.mode = 'select';
             // todo do not use modelGroup here
             const newTransformation = this.modelGroup.getSelectedModelTransformation();
-            this.svgContentGroup.resetSelection(this.size, newTransformation);
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, newTransformation);
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
         }
         if (transformation.rotationZ !== undefined) {
             // todo, copy from canvas mouse up
@@ -353,7 +368,14 @@ class SvgModelGroup {
                 }
             }
             this.svgContentGroup.addToSelection(elements);
-            this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
         }
         if ((transformation.scaleX !== undefined || transformation.scaleY !== undefined) && elements.length === 1) {
             // todo, to fix uniform scale
@@ -374,7 +396,14 @@ class SvgModelGroup {
                     }
                 });
             }
-            this.svgContentGroup.resetSelection(this.size);
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size);
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
         }
     }
 
@@ -420,7 +449,14 @@ class SvgModelGroup {
         if (transformation.uniformScalingState !== undefined) {
             this.svgContentGroup.setSelectedElementUniformScalingState(transformation.uniformScalingState);
         }
-        this.svgContentGroup.selectOnly([elem]);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([elem]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
     }
 
     hideSelectedElement() {
@@ -656,7 +692,14 @@ class SvgModelGroup {
             const svgModel = model.relatedModels.svgModel;
             if (!this.selectedSvgModels.includes(svgModel)) {
                 this.selectedSvgModels.push(svgModel);
-                this.svgContentGroup.addToSelection([svgModel.elem]);
+                // todo
+                const posAndSize = this.svgContentGroup.addToSelection([svgModel.elem]);
+                this.modelGroup.updateSelectedModelTransformation({
+                    positionX: posAndSize.positionX - this.size.x,
+                    positionY: this.size.y - posAndSize.positionY,
+                    width: posAndSize.width,
+                    height: posAndSize.height
+                });
             }
         }
     }
@@ -672,9 +715,23 @@ class SvgModelGroup {
 
     resetSelection(transformation) {
         if (!transformation) {
-            this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
         } else {
-            this.svgContentGroup.resetSelection(this.size, transformation);
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
         }
     }
 }
