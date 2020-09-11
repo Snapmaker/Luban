@@ -35,8 +35,14 @@ class PrintingObjectListBox extends PureComponent {
             } else {
                 this.props.showSelectedModel();
             }
+        },
+        limitTheLengthOfDisplayName: (name) => {
+            let newName = name;
+            if (newName.length > 40) {
+                newName = `${newName.slice(0, 31)}...${newName.slice(-9)}`;
+            }
+            return newName;
         }
-
     };
 
     constructor(props) {
@@ -57,11 +63,9 @@ class PrintingObjectListBox extends PureComponent {
                         styles.objectListBox
                     )}
                 >
-                    {(modelGroup.models) && modelGroup.models.map((model, index) => {
-                        let modelName = path.basename(model.originalName, path.extname(model.originalName));
-                        if (index > 0 && model.modelName && model.modelName.match(/\(\d+/)) {
-                            modelName += model.modelName.match(/\(\d+/)[0].replace(/\(/, ' ');
-                        }
+                    {(modelGroup.models) && modelGroup.models.map((model) => {
+                        const modelName = path.basename(model.originalName, path.extname(model.originalName));
+                        const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
                         const modelIcon = () => {
                             return styles.iconShape;
                         };
@@ -92,7 +96,7 @@ class PrintingObjectListBox extends PureComponent {
                                                 )}
                                             />
                                             <span>
-                                                {modelName}
+                                                {displayModelName}
                                             </span>
                                         </Anchor>
                                         <button

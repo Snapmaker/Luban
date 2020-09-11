@@ -288,8 +288,8 @@ class Controls extends EventEmitter {
                 }
                 break;
             case STATE.TRANSFORM:
-                this.transformControl.onMouseUp();
                 this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+                this.transformControl.onMouseUp();
                 break;
             default:
                 break;
