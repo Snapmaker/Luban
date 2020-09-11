@@ -240,7 +240,7 @@ export const actions = {
 
         const { config } = modelDefaultConfigs;
 
-        const selectedModel = modelGroup.getSelectedModel();
+        const selectedModel = modelGroup.getSelectedModelArray().length === 1 && modelGroup.getSelectedModelArray()[0];
         const options = {
             headType: headType,
             uploadName: selectedModel.uploadName,
@@ -338,7 +338,7 @@ export const actions = {
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
 
-        const selectedModel = modelGroup.getSelectedModel();
+        const selectedModel = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray()[0];
         const options = {
             headType: headType,
             uploadName: selectedModel.uploadName,

@@ -123,7 +123,8 @@ class ModelGroup extends EventEmitter {
     }
 
     changeShowOrigin() {
-        return this.selectedModel && this.selectedModel.changeShowOrigin();
+        // todo
+        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].changeShowOrigin();
     }
 
     hideSelectedModel() {
@@ -694,11 +695,16 @@ class ModelGroup extends EventEmitter {
         return this.getStateAndUpdateBoundingBox();
     }
 
+    // todo, remove it
     getSelectedModel() {
-        if (this.selectedModel) {
-            return this.selectedModel;
+        if (this.selectedModelArray.length === 1) {
+            return this.selectedModelArray[0];
         }
+        // if (this.selectedModel) {
+        //     return this.selectedModel;
+        // }
 
+        // todo
         return this.MOCK_MODEL;
     }
 
@@ -707,7 +713,8 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedMode(mode, config, processImageName) {
-        this.selectedModel.processMode(mode, config, processImageName);
+        // todo
+        this.selectedModelArray.length === 1 && this.selectedModelArray[0].processMode(mode, config, processImageName);
         return this._getEmptyState();
     }
 
@@ -717,8 +724,9 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedSource(source) {
-        if (this.selectedModel) {
-            this.selectedModel.updateSource(source);
+        // todo
+        if (this.selectedModelArray.length === 1) {
+            this.selectedModelArray[0].updateSource(source);
         }
     }
 
@@ -838,7 +846,10 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedConfig(config, processImageName) {
-        this.selectedModel.updateConfig(config, processImageName);
+        // todo
+        if (this.selectedModelArray.length === 1) {
+            this.selectedModelArray[0].updateConfig(config, processImageName);
+        }
     }
 
     showAllModelsObj3D() {

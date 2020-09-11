@@ -25,7 +25,8 @@ class TextParameters extends PureComponent {
         }),
         uploadFont: PropTypes.func.isRequired,
         // updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        selectedModel: PropTypes.object.isRequired
+        // todo, all selectedModel use selectedModelArray[0] now
+        selectedModelArray: PropTypes.object.isRequired
     };
 
     state = {
@@ -48,9 +49,10 @@ class TextParameters extends PureComponent {
             this.props.uploadFont(file);
         },
         onChangeText: (event) => {
+            const model = this.props.selectedModelArray[0];
             const text = event.target.value;
-            this.props.selectedModel.relatedModels.svgModel.elem.textContent = text;
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
+            model.relatedModels.svgModel.elem.textContent = text;
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
 
 
             // this.props.updateSelectedModelTextConfig({ text });
@@ -60,14 +62,15 @@ class TextParameters extends PureComponent {
                 this.actions.onClickUpload();
                 return;
             }
+            const model = this.props.selectedModelArray[0];
             const font = option.value;
-            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-family', font);
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
-            // this.props.updateSelectedModelTextConfig({ 'font-family': font });
+            model.relatedModels.svgModel.elem.setAttribute('font-family', font);
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
         },
         onChangeSize: (size) => {
-            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-size', size);
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
+            const model = this.props.selectedModelArray[0];
+            model.relatedModels.svgModel.elem.setAttribute('font-size', size);
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
             // this.props.updateSelectedModelTextConfig({ size });
         } // ,
         // onChangeLineHeight: (lineHeight) => {
@@ -82,7 +85,8 @@ class TextParameters extends PureComponent {
     };
 
     getBaseUpdateData() {
-        const { width, height } = this.props.selectedModel.relatedModels.svgModel.elem.getBBox();
+        const model = this.props.selectedModelArray[0];
+        const { width, height } = model.relatedModels.svgModel.elem.getBBox();
         return {
             sourceWidth: width * 8,
             sourceHeight: height * 8,
@@ -277,10 +281,10 @@ const mapStateToProps = (state, props) => {
         value: font.fontFamily
     }));
     const { modelGroup } = state[headType];
-    const selectedModel = modelGroup.getSelectedModel();
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     return {
         fontOptions,
-        selectedModel
+        selectedModelArray
     };
 };
 
