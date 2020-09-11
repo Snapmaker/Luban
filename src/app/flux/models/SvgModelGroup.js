@@ -734,7 +734,7 @@ class SvgModelGroup {
     }
 
     resetSelection(transformation) {
-        if (!transformation) {
+        if (transformation === undefined) {
             // todo
             const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
             this.modelGroup.updateSelectedModelTransformation({

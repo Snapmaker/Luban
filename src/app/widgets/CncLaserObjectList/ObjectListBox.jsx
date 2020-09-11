@@ -141,6 +141,7 @@ const mapStateToProps = (state, ownProps) => {
     const { selectedModelArray } = modelGroup;
     const { headType } = ownProps;
     return {
+        models: modelGroup.models,
         headType,
         page,
         modelGroup,

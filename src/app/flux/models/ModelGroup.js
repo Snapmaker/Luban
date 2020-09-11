@@ -1041,6 +1041,8 @@ class ModelGroup extends EventEmitter {
 
         // add to group and select
         this.models.push(model);
+        // todo, use this to refresh obj list
+        this.models = [...this.models];
         this.object.add(model.meshObject);
         this.selectModelById(model.modelID);
 

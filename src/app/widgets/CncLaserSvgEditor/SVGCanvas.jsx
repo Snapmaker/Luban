@@ -936,6 +936,7 @@ class SVGCanvas extends PureComponent {
                 this.props.svgModelGroup.addModel(element);
                 // this.trigger(SVG_EVENT_ADD, element);
                 this.selectOnly([element]);
+                console.log(this.props.svgModelGroup);
             } else {
                 element.remove();
 

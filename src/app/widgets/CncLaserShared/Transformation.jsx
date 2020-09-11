@@ -250,28 +250,34 @@ class Transformation extends PureComponent {
                                     className={styles['description-text']}
                                     style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
                                 />
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide}
-                                    className={styles.icon_flip_vertically}
-                                    onClick={() => {
-                                        actions.onChangeFlip('scaleX');
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <span
-                                    className={styles['description-text']}
-                                    style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
-                                />
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide}
-                                    className={styles.icon_flip_horizontal}
-                                    onClick={() => {
-                                        actions.onChangeFlip('scaleY');
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
+                                {false && (
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide}
+                                        className={styles.icon_flip_vertically}
+                                        onClick={() => {
+                                            actions.onChangeFlip('scaleX');
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                )}
+                                {false && (
+                                    <span
+                                        className={styles['description-text']}
+                                        style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                    />
+                                )}
+                                {false && (
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide}
+                                        className={styles.icon_flip_horizontal}
+                                        onClick={() => {
+                                            actions.onChangeFlip('scaleY');
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                )}
                             </div>
                         </TipTrigger>
                     </React.Fragment>

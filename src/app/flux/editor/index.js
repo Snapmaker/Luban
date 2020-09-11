@@ -209,7 +209,6 @@ export const actions = {
     // TODO: rename to selectModel(headType, model, isMultiSelect = true)
     // TODO: method docs
     selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
-        // console.log('----bug select----', model, headType, shiftKey, dispatch, getState);
         const { modelGroup } = getState()[headType];
         if (!shiftKey) {
             // remove all selected model
