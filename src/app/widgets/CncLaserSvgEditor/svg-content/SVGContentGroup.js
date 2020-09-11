@@ -277,7 +277,7 @@ class SVGContentGroup {
         selectedElement.uniformScalingState = uniformScalingState;
     }
 
-    setElementTransformList(element, size, modelGroupTransformation) { // todo 暂时只用在框上，transformation数据暂时没错
+    setElementTransformList(element, size, modelGroupTransformation) { // todo, just use in operator, remove it later
         // size = svgModelGroup.size
         element.transform.baseVal.clear();
         const transformList = element.transform.baseVal;

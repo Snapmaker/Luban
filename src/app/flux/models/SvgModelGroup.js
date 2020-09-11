@@ -309,7 +309,6 @@ class SvgModelGroup {
             if (transformation.positionY === undefined) {
                 transformation.positionY = originTransformation.positionY;
             }
-            console.log('----beform move----', transformation, originTransformation);
             // todo, just copy from canvas now
             const dx = transformation.positionX - originTransformation.positionX;
             const dy = -(transformation.positionY - originTransformation.positionY);

@@ -797,7 +797,8 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
+        if (toolPathModelTaskInfo && this.visible) {
+        // if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo
