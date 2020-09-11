@@ -417,7 +417,7 @@ class SvgModelGroup {
                 }
             }
             // todo
-            const posAndSize = this.svgContentGroup.resetSelection(this.size);
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
             this.modelGroup.updateSelectedModelTransformation({
                 positionX: posAndSize.positionX - this.size.x,
                 positionY: this.size.y - posAndSize.positionY,
