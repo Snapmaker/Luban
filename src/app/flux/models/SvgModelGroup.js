@@ -383,18 +383,38 @@ class SvgModelGroup {
             const svgModel = this.getModelByElement(element);
             const model = svgModel.relatedModel;
             if (transformation.scaleX !== undefined) {
-                model.updateAndRefresh({
-                    transformation: {
-                        scaleX: transformation.scaleX
-                    }
-                });
+                if (model.transformation.uniformScalingState) {
+                    model.updateAndRefresh({
+                        transformation: {
+                            scaleX: transformation.scaleX,
+                            // todo, maybe use method to get model.transformation
+                            scaleY: model.transformation.scaleY * (transformation.scaleX / model.transformation.scaleX)
+                        }
+                    });
+                } else {
+                    model.updateAndRefresh({
+                        transformation: {
+                            scaleX: transformation.scaleX
+                        }
+                    });
+                }
             }
             if (transformation.scaleY !== undefined) {
-                model.updateAndRefresh({
-                    transformation: {
-                        scaleY: transformation.scaleY
-                    }
-                });
+                if (model.transformation.uniformScalingState) {
+                    model.updateAndRefresh({
+                        transformation: {
+                            scaleY: transformation.scaleY,
+                            // todo, maybe use method to get model.transformation
+                            scaleX: model.transformation.scaleX * (transformation.scaleY / model.transformation.scaleY)
+                        }
+                    });
+                } else {
+                    model.updateAndRefresh({
+                        transformation: {
+                            scaleY: transformation.scaleY
+                        }
+                    });
+                }
             }
             // todo
             const posAndSize = this.svgContentGroup.resetSelection(this.size);
