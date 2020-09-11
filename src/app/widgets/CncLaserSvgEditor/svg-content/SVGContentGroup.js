@@ -100,6 +100,18 @@ class SVGContentGroup {
         return this.selectedElements[0];
     }
 
+    getSelectedElements() {
+        return this.selectedElements;
+    }
+
+    deleteElements(elems) {
+        this.operatorPoints.showGrips(false);
+        for (const elem of elems) {
+            this.selectedElements = this.selectedElements.filter(v => v !== elem);
+            elem.remove();
+        }
+    }
+
     deleteElement(elem) {
         if (elem) {
             this.operatorPoints.showGrips(false);

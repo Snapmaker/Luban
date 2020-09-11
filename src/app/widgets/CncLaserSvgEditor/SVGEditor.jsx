@@ -118,7 +118,8 @@ class SVGEditor extends PureComponent {
             }
         });
         this.props.svgModelGroup.addModel(elem);
-        this.canvas.current.selectOnly([elem]);
+        // todo, select text after create
+        // this.canvas.current.selectOnly([elem]);
         this.setMode('select');
     }
 

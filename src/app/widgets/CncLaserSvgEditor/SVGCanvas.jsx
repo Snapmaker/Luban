@@ -933,10 +933,12 @@ class SVGCanvas extends PureComponent {
                 element.setAttribute('opacity', this.currentProperties.opacity);
 
                 cleanupAttributes(element);
+                this.clearSelection();
                 this.props.svgModelGroup.addModel(element);
                 // this.trigger(SVG_EVENT_ADD, element);
-                this.selectOnly([element]);
-                console.log(this.props.svgModelGroup);
+                // todo, select to the new model
+                // this.addToSelection([element]);
+                // console.log(this.props.svgModelGroup, element, this.props.svgModelGroup.getModelsByElements([element]));
             } else {
                 element.remove();
 

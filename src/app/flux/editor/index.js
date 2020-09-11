@@ -423,7 +423,7 @@ export const actions = {
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
-        svgModelGroup.deleteElement();
+        svgModelGroup.deleteSelectedElements();
         const modelState = modelGroup.removeSelectedModel();
         const toolPathModelState = toolPathModelGroup.removeSelectedToolPathModel();
 

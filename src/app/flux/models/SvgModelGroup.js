@@ -241,12 +241,12 @@ class SvgModelGroup {
         this.addModel(clone);
     }
 
-    deleteElement() {
-        const selected = this.svgContentGroup.getSelected();
-        if (!selected) {
+    deleteSelectedElements() {
+        const selectedElements = this.svgContentGroup.getSelectedElements();
+        if (!selectedElements) {
             return;
         }
-        this.svgContentGroup.deleteElement(selected);
+        this.svgContentGroup.deleteElements(selectedElements);
     }
 
     bringElementToFront() {
