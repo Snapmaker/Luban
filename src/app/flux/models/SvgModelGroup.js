@@ -406,6 +406,7 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
+        this.invokeModelTransformCallback();
     }
 
     // when single select
