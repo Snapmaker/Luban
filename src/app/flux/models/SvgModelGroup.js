@@ -681,6 +681,7 @@ class SvgModelGroup {
             //
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
+        this.invokeModelTransformCallback();
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
     }
 

@@ -816,6 +816,8 @@ class SVGCanvas extends PureComponent {
                     const model = this.props.svgModelGroup.getModelByElement(selected);
                     model.onUpdate();
                 }
+                // todo
+                this.props.svgModelGroup.updateSelectedModelsByTransformation({});
                 this.setMode('select');
                 break;
             case 'select': {
