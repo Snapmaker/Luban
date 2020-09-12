@@ -209,13 +209,14 @@ export const actions = {
     // TODO: rename to selectModel(headType, model, isMultiSelect = true)
     // TODO: method docs
     selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
         if (!shiftKey) {
             // remove all selected model
             modelGroup.emptySelectedModelArray();
             dispatch(svgModelActions.emptySelectedModelArray(headType));
         }
         dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+        toolPathModelGroup.selectToolPathModel(model.modelID);
         // todo, donot reset here
         dispatch(svgModelActions.resetSelection(headType));
         // todo multi select toopath model
@@ -507,7 +508,9 @@ export const actions = {
         transformation.positionX = posX;
         transformation.positionY = posY;
         transformation.rotationZ = 0;
-        model.updateAndRefresh({ transformation });
+        // todo
+        // model.updateAndRefresh({ transformation });
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
         // dispatch(actions.updateSelectedModelTransformation(headType, transformation));
         // dispatch(actions.onModelAfterTransform(headType));
     },

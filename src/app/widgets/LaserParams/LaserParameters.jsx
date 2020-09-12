@@ -322,7 +322,6 @@ const mapStateToProps = (state) => {
             flip: 0
         }
     });
-    console.log('----bug1----', toolPathModelGroup.getSelectedModel().gcodeConfig);
     const {
         mode,
         sourceType,

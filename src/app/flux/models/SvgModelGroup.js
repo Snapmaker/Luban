@@ -595,7 +595,7 @@ class SvgModelGroup {
         transformList.getItem(0).tag = 'translateBack';
     }
 
-    updateSelectedModelsByTransformation(deviation) {
+    updateSelectedModelsByTransformation(deviation) { // todo, just after move now
         // deviation: dx dy, angle cx cy, scaleX scaleY
         const selectedModels = this.selectedSvgModels;
         const selectedModelsTransformation = this.modelGroup.getSelectedModelTransformation();
