@@ -139,7 +139,7 @@ class OperatorPoints {
 
     showGrips(show) {
         this.operatorPointsGroup.setAttribute('display', show ? 'inline' : 'none');
-        this.showResizeAndRotateGrips(show);
+        this.showResizeAndRotateGripsAndBox(show);
     }
 
     showResizeGrips(show) {
@@ -154,9 +154,19 @@ class OperatorPoints {
         this.rotateGrip.setAttribute('display', show ? 'inline' : 'none');
     }
 
+    showBox(show) {
+        this.allSelectedElementsBox.setAttribute('display', show ? 'inline' : 'none');
+    }
+
     showResizeAndRotateGrips(show) {
         this.showResizeGrips(show);
         this.showRotateGrips(show);
+    }
+
+    showResizeAndRotateGripsAndBox(show) {
+        this.showResizeGrips(show);
+        this.showRotateGrips(show);
+        this.showBox(show);
     }
 
     resetTransformList() {

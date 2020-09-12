@@ -115,6 +115,8 @@ const textActionCreator = (canvas, $) => {
                 'stroke-width': 1
             });
             // cursor = canvas.svgContentGroup.selectorManager.selectorParentGroup.appendChild(cursor);
+            // todo
+            canvas.svgContentGroup.operatorPoints.operatorPointsGroup.appendChild(cursor);
         }
 
         if (!blinker) {
@@ -137,7 +139,7 @@ const textActionCreator = (canvas, $) => {
         const list = curtext.cloneNode().transform;
         if (list) {
             cursor.setAttribute('transform', 'translate(0,0)');
-            cursor.transform.baseVal.appendItem(list.baseVal.consolidate());
+            // cursor.transform.baseVal.appendItem(list.baseVal.consolidate());
         }
         if (selblock) { selblock.setAttribute('d', ''); }
     }
@@ -384,6 +386,8 @@ const textActionCreator = (canvas, $) => {
             allowDbl = false;
             canvas.mode = 'textedit';
             // selectorManager.requestSelector(curtext).showGrips(false);
+            // todo
+            canvas.svgContentGroup.operatorPoints.showResizeAndRotateGripsAndBox(false);
             // Make selector group accept clicks
             // /* const selector = */ selectorManager.requestSelector(curtext); // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
             // const sel = selector.selectorRect;
@@ -422,6 +426,16 @@ const textActionCreator = (canvas, $) => {
             if (cursor) { $(cursor).attr('visibility', 'hidden'); }
             $(curtext).css('cursor', 'move');
             // selectorManager.requestSelector(curtext).showGrips(true);
+            // todo, pack into svg content group
+            // console.log('----to select mode----', canvas.svgContentGroup.selectedElements[0]);
+            const posAndSize = canvas.svgContentGroup.operatorPoints.resizeGrips(canvas.svgContentGroup.selectedElements);
+            canvas.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.props.size,
+                positionY: this.props.size - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            }); // todo, not use model group here
+            canvas.svgContentGroup.operatorPoints.showGrips(true);
 
             // if (curtext && !curtext.textContent.length) {
             //     // No content, so delete

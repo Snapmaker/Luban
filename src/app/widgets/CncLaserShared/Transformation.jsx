@@ -52,7 +52,7 @@ class Transformation extends PureComponent {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
                         scaleX: width / this.props.transformation.width,
-                        scaleY: this.props.transformation.height * width / this.props.transformation.width
+                        scaleY: width / this.props.transformation.width
                     });
                 } else {
                     this.props.updateSelectedModelTransformation({ scaleX: width / this.props.transformation.width });
@@ -65,7 +65,7 @@ class Transformation extends PureComponent {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
                         scaleY: height / this.props.transformation.height,
-                        scaleX: this.props.transformation.width * height / this.props.transformation.height
+                        scaleX: height / this.props.transformation.height
                     });
                 } else {
                     this.props.updateSelectedModelTransformation({ scaleY: height / this.props.transformation.height });
@@ -102,7 +102,7 @@ class Transformation extends PureComponent {
         //     console.log('----render----');
         // }
         const { rotationZ = 0, width = 125, height = 125, scaleX, scaleY, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
-        const canResize = sourceType !== 'text';
+        const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
         return (
