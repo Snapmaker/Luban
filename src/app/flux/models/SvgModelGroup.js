@@ -334,6 +334,8 @@ class SvgModelGroup {
                 width: posAndSize.width,
                 height: posAndSize.height
             });
+
+            this.invokeModelTransformCallback();
         }
         if (transformation.rotationZ !== undefined) {
             // todo, copy from canvas mouse up
@@ -483,6 +485,9 @@ class SvgModelGroup {
         relatedModel.relatedModels.svgModel = model;
         model.relatedModel = relatedModel;
         model.refresh();
+
+        // A
+        // this.addModelToSVGElement(model);
     }
 
     addModel(elem) {
@@ -737,6 +742,15 @@ class SvgModelGroup {
         if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
             this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
         }
+    }
+
+    // TODO: This is temporary workaround for model processing
+    setModelTransformCallback(callback) {
+        this.modelTransformCallback = callback;
+    }
+
+    invokeModelTransformCallback() {
+        this.modelTransformCallback && this.modelTransformCallback();
     }
 }
 
