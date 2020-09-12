@@ -86,6 +86,7 @@ class ConfigRasterBW extends PureComponent {
 const mapStateToProps = (state) => {
     const { config } = state.laser;
     const { invert, bwThreshold } = config;
+    console.log('----bug 2----', config, state.laser);
     return {
         invert,
         bwThreshold

@@ -306,7 +306,22 @@ const mapStateToProps = (state) => {
     const { page, modelGroup, toolPathModelGroup, printOrder } = state.laser;
     const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
     const selectedModelArray = modelGroup.getSelectedModelArray();
-    const selectedModel = ((selectedModelArray && selectedModelArray.length > 0) ? selectedModelArray[0] : {});
+    const selectedModel = ((selectedModelArray && selectedModelArray.length > 0) ? selectedModelArray[0] : {
+        // modelGroup.mockModel
+        mock: true,
+        sourceType: '',
+        mode: '',
+        config: {},
+        visible: true,
+        transformation: {
+            rotationZ: 0,
+            width: 0,
+            height: 0,
+            positionX: 0,
+            positionY: 0,
+            flip: 0
+        }
+    });
     const {
         mode,
         sourceType,
@@ -315,7 +330,6 @@ const mapStateToProps = (state) => {
         config,
         visible
     } = selectedModel;
-    // console.log('----selectedmodel----', selectedModel, visible);
     return {
         page,
         printOrder,

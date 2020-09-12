@@ -256,6 +256,8 @@ class SvgModel {
         if (!transform) {
             this.elem.setAttribute('transform', 'translate(0,0)');
         }
+        // todo, error create a <undefined> elem
+        // console.log('----error----', this.modelGroup, transform, this.elem, this.elem.transform);
         return this.elem.transform.baseVal;
     }
 

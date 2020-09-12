@@ -429,9 +429,10 @@ const textActionCreator = (canvas, $) => {
             // todo, pack into svg content group
             // console.log('----to select mode----', canvas.svgContentGroup.selectedElements[0]);
             const posAndSize = canvas.svgContentGroup.operatorPoints.resizeGrips(canvas.svgContentGroup.selectedElements);
-            canvas.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
-                positionX: posAndSize.positionX - this.props.size,
-                positionY: this.props.size - posAndSize.positionY,
+            // todo
+            canvas.props.svgModelGroup.modelGroup.getSelectedModelArray()[0].updateTransformation({
+                positionX: posAndSize.positionX - canvas.props.size.x,
+                positionY: canvas.props.size.y - posAndSize.positionY,
                 width: posAndSize.width,
                 height: posAndSize.height
             }); // todo, not use model group here

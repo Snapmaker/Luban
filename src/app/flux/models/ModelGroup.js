@@ -147,7 +147,7 @@ class ModelGroup extends EventEmitter {
         const selectedArray = this.getSelectedModelArray();
         selectedArray.forEach((selected) => {
             // todo, not sure remove here
-            console.log('----delete models----');
+            // console.log('----delete models----');
             selected.meshObject.remove(selected.modelObject3D);
 
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
@@ -1085,6 +1085,7 @@ ModelGroup.prototype.MOCK_MODEL = {
     sourceType: '',
     mode: '',
     config: {},
+    visible: true,
     transformation: {
         rotationZ: 0,
         width: 0,

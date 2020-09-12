@@ -643,8 +643,8 @@ class SVGCanvas extends PureComponent {
                 // todo
                 const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
                 this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
-                    positionX: posAndSize.positionX - this.props.size,
-                    positionY: this.props.size - posAndSize.positionY,
+                    positionX: posAndSize.positionX - this.props.size.x,
+                    positionY: this.props.size.y - posAndSize.positionY,
                     width: posAndSize.width,
                     height: posAndSize.height
                 });

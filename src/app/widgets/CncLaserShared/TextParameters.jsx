@@ -26,7 +26,7 @@ class TextParameters extends PureComponent {
         uploadFont: PropTypes.func.isRequired,
         // updateSelectedModelTextConfig: PropTypes.func.isRequired,
         // todo, all selectedModel use selectedModelArray[0] now
-        selectedModelArray: PropTypes.object.isRequired
+        selectedModelArray: PropTypes.array.isRequired
     };
 
     state = {
