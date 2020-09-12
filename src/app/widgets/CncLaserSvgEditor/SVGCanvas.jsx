@@ -1229,7 +1229,9 @@ class SVGCanvas extends PureComponent {
             }
         }
         this.svgContentGroup.addToSelection(elements);
-        // todo
+
+        // Calculate position and size of selected model, set them to modelGroup.selectedGroup
+        // TODO: I don't know why it's here, all the calculations should be wrapped inside of selection of modelGroup. - parachute
         const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
         this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
             positionX: posAndSize.positionX - this.props.size.x,
