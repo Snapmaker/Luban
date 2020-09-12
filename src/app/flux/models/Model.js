@@ -96,7 +96,7 @@ class Model {
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-        this.showOrigin = true; // this.sourceType !== 'raster';
+        this.showOrigin = (this.sourceType !== 'raster');
         this.modelGroup = modelGroup;
     }
 
@@ -231,6 +231,7 @@ class Model {
         if (!this.processImageName) {
             return;
         }
+
         if (this.sourceType === 'raster') {
             const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
