@@ -943,7 +943,8 @@ class SVGCanvas extends PureComponent {
                 // this.addToSelection([element]);
                 // console.log(this.props.svgModelGroup, element, this.props.svgModelGroup.getModelsByElements([element]));
             } else {
-                element.remove();
+                // todo
+                // element.remove();
 
                 // in stead select another element or select nothing
                 const target = this.getMouseTarget(event);
