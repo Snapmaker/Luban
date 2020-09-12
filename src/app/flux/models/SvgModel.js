@@ -393,7 +393,7 @@ class SvgModel {
         };
         // reserve scale cause stroke-width scaled
         if (this.type === 'rect' || this.type === 'ellipse') {
-            attrs.config['stroke-width'] = 0.25 / Math.min(scaleX, scaleY);
+            attrs.config['stroke-width'] = 0.25 / Math.min(Math.abs(scaleX), Math.abs(scaleY));
         }
 
         // remap will reset all transforms
