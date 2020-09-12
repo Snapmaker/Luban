@@ -290,13 +290,14 @@ class SVGContentGroup {
             scaleY: 1,
             flip: 0
         }));
-        let { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        let { positionX, positionY, rotationZ, scaleX, scaleY } = transformation;
         positionX = positionX ?? 0;
         positionY = positionY ?? 0;
         rotationZ = rotationZ ?? 0;
         scaleX = scaleX ?? 1;
         scaleY = scaleY ?? 1;
-        flip = flip ?? 0;
+        // todo, flip instead of negative scale
+        // flip = flip ?? 0;
         // todo move to svgModelGroup, size need
         const center = { x: size.x + positionX, y: size.y - positionY };
 
@@ -312,7 +313,8 @@ class SVGContentGroup {
 
         const scale = this.svgContent.createSVGTransform();
         scale.tag = 'scale';
-        scale.setScale(scaleX * ((flip & 2) ? -1 : 1) / Math.abs(scaleX), scaleY * ((flip & 1) ? -1 : 1) / Math.abs(scaleY));
+        // scale.setScale(scaleX * ((flip & 2) ? -1 : 1) / Math.abs(scaleX), scaleY * ((flip & 1) ? -1 : 1) / Math.abs(scaleY));
+        scale.setScale(scaleX / scaleX, scaleY / scaleY);
         transformList.insertItemBefore(scale, 0);
 
         const translateOrigin = this.svgContent.createSVGTransform();

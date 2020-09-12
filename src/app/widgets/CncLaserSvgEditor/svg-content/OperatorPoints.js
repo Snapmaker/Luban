@@ -155,7 +155,6 @@ class OperatorPoints {
     }
 
     showResizeAndRotateGrips(show) {
-        console.log('----hide----');
         this.showResizeGrips(show);
         this.showRotateGrips(show);
     }
@@ -217,7 +216,6 @@ class OperatorPoints {
     }
 
     resizeGrips(elements) {
-        console.log('----resize----');
         for (const elemRect of this.selectedElementsBox) {
             elemRect.remove();
         }

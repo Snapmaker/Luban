@@ -11,7 +11,6 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object,
         selectedModelArray: PropTypes.array,
         sourceType: PropTypes.string,
         transformation: PropTypes.shape({
@@ -48,59 +47,46 @@ class Transformation extends PureComponent {
         },
         // dont set width and height on transform
         onChangeWidth: (width) => {
-            this.props.updateSelectedModelTransformation({ scaleX: width / this.props.transformation.width });
-            // todo, clear
-            // const { selectedModelArray, modelGroup } = this.props;
-            // if (selectedModelArray.length === 1) {
-            //     modelGroup.updateSelectedModelTransformation({ scaleX: width / selectedModelArray[0].transformation.width });
-            //     modelGroup.onModelAfterTransform();
-            // }
-            //selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                if (this.props.transformation.uniformScalingState) {
+                    this.props.updateSelectedModelTransformation({
+                        scaleX: width / this.props.transformation.width,
+                        scaleY: this.props.transformation.height * width / this.props.transformation.width
+                    });
+                } else {
+                    this.props.updateSelectedModelTransformation({ scaleX: width / this.props.transformation.width });
+                }
+            }
         },
         onChangeHeight: (height) => {
-            this.props.updateSelectedModelTransformation({ scaleY: height / this.props.transformation.height });
-            // todo, clear
-            // const { selectedModelArray, modelGroup } = this.props;
-            // if (selectedModelArray.length === 1) {
-            //     modelGroup.updateSelectedModelTransformation({ scaleY: height / selectedModelArray[0].transformation.height });
-            //     modelGroup.onModelAfterTransform();
-            // }
-            //selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                if (this.props.transformation.uniformScalingState) {
+                    this.props.updateSelectedModelTransformation({
+                        scaleY: height / this.props.transformation.height,
+                        scaleX: this.props.transformation.width * height / this.props.transformation.height
+                    });
+                } else {
+                    this.props.updateSelectedModelTransformation({ scaleY: height / this.props.transformation.height });
+                }
+            }
         },
         onChangeRotationZ: (degree) => {
             const rotationZ = degree * Math.PI / 180;
             this.props.updateSelectedModelTransformation({ rotationZ });
-            // const { modelGroup } = this.props;
-            // modelGroup.updateSelectedModelTransformation({ rotationZ });
-            // modelGroup.onModelAfterTransform();
-            // this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
         },
         onChangePositionX: (positionX) => {
             this.props.updateSelectedModelTransformation({ positionX });
-            // todo, clear
-            // const { modelGroup } = this.props;
-            // modelGroup.updateSelectedModelTransformation({ positionX });
-            // modelGroup.onModelAfterTransform();
-            // this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
         },
         onChangePositionY: (positionY) => {
             this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (key) => {
-            // single flip
-            // const { selectedModelArray, modelGroup } = this.props;
-            // if (selectedModelArray.length === 1) {
-            //     modelGroup.updateSelectedModelTransformation({ [key]: selectedModelArray[0].transformation[key] * -1 });
-            // }
-            // multi flip ^_^
-            const { modelGroup, transformation } = this.props;
-            modelGroup.updateSelectedModelTransformation({ [key]: (transformation[key] * -1) });
-            modelGroup.onModelAfterTransform();
-            // model.updateAndRefresh({
-            //     transformation: {
-            //         [key]: model.transformation[key] * -1
-            //     }
-            // });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                this.props.updateSelectedModelTransformation({ [key]: selectedModelArray[0].transformation[key] * -1 });
+            }
         },
         onChangeUniformScalingState: (uniformScalingState) => {
             this.props.updateSelectedModelUniformScalingState({ uniformScalingState });
