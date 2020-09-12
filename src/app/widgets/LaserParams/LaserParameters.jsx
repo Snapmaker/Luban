@@ -263,19 +263,19 @@ class LaserParameters extends PureComponent {
                         updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                     />
                 )}
-                {isProcess && isBW && (
+                {isProcess && isBW && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigRasterBW disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isGreyscale && (
+                {isProcess && isGreyscale && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigGreyscale disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isRasterVector && (
+                {isProcess && isRasterVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigRasterVector disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isSvgVector && (
+                {isProcess && isSvgVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigSvgVector disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isTextVector && (
+                {isProcess && isTextVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigSvgVector disabled={!selectedModelVisible} />
                 )}
 
