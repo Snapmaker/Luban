@@ -231,6 +231,7 @@ class OperatorPoints {
         }
         this.selectedElementsBox = [];
         if (!elements || elements.length === 0) {
+            this.showGrips(false);
             return {
                 positionX: 0,
                 positionY: 0,
