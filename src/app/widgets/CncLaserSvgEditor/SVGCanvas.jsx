@@ -320,9 +320,7 @@ class SVGCanvas extends PureComponent {
                 transform.setTranslate(0, 0);
                 this.svgContentGroup.translateSelectedElementsOnMouseDown();
                 this.svgContentGroup.translateSelectorOnMouseDown(transform);
-            }
-            // fall through
-            case 'select': {
+
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
@@ -343,7 +341,10 @@ class SVGCanvas extends PureComponent {
                 if (rightClick) {
                     draw.started = false;
                 }
-
+                break;
+            }
+            // fall through
+            case 'select': {
                 if (mouseTarget && mouseTarget !== this.svgContainer) {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                     && mouseTarget.id !== 'printable-area-group') {
