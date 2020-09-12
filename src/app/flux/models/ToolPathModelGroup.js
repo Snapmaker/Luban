@@ -8,6 +8,7 @@ class ToolPathModelGroup {
         this.object.visible = false;
 
         this.toolPathModels = [];
+        this.selectedToolPathModelArray = [];
         this.selectedToolPathModel = null;
 
         this._emptyState = {
@@ -30,6 +31,16 @@ class ToolPathModelGroup {
         };
     }
 
+    removeSelectedToolPathModels() {
+        for (const toolPathModel of this.selectedToolPathModelArray) {
+            this.toolPathModels = this.toolPathModels.filter(d => d !== toolPathModel);
+            this.object.remove(toolPathModel.toolPathObj3D);
+            toolPathModel.id = '';
+        }
+        this.selectedToolPathModelArray = [];
+        return this._emptyState;
+    }
+
     removeSelectedToolPathModel() {
         const selected = this.selectedToolPathModel;
         if (selected) {
@@ -44,11 +55,20 @@ class ToolPathModelGroup {
 
     removeAllModels() {
         this.selectedToolPathModel = null;
+        this.selectedToolPathModelArray = [];
         for (const model of this.toolPathModels) {
             this.object.remove(model.toolPathObj3D);
         }
         this.toolPathModels = [];
     }
+
+    // addToSelectToolPathModel(toolPathModels) {
+    //     for (const toolPathModel of toolPathModels) {
+    //         if (!this.selectedToolPathModel.include(toolPathModel)) {
+    //             this.selectedToolPathModel
+    //         }
+    //     }
+    // }
 
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);

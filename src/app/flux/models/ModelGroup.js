@@ -146,6 +146,10 @@ class ModelGroup extends EventEmitter {
     _removeSelectedModels() {
         const selectedArray = this.getSelectedModelArray();
         selectedArray.forEach((selected) => {
+            // todo, not sure remove here
+            console.log('----delete models----');
+            selected.meshObject.remove(selected.modelObject3D);
+
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             this.models = this.models.filter(model => model !== selected);
         });
@@ -154,6 +158,7 @@ class ModelGroup extends EventEmitter {
     /**
      * Remove selected models and reset selected state.
      */
+    // todo, remove mesh obj in 2d
     removeSelectedModel() {
         this._removeSelectedModels();
         this.unselectAllModels();
@@ -435,6 +440,7 @@ class ModelGroup extends EventEmitter {
     }
 
     addSelectedModels(modelArray) {
+        this.selectedGroup = new Group();
         for (const model of modelArray) {
             if (!this.selectedModelArray.includes(model)) {
                 this.selectedModelArray.push(model);
@@ -819,6 +825,8 @@ class ModelGroup extends EventEmitter {
         }
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
+
+        this.onDataChangedCallback();
     }
 
     // model transformation triggered by controls
@@ -1055,7 +1063,9 @@ class ModelGroup extends EventEmitter {
         // todo, use this to refresh obj list
         this.models = [...this.models];
         this.object.add(model.meshObject);
-        this.selectModelById(model.modelID);
+        if (model.sourceType === '3d') {
+            this.selectModelById(model.modelID);
+        }
 
         this.emit('add', model);
         model.setRelatedModels(relatedModels);

@@ -31,7 +31,14 @@ class ObjectListBox extends PureComponent {
 
     actions = {
         onClickModelNameBox: (model, event) => {
-            this.props.selectTargetModel(model, event.shiftKey);
+            let isMultiSelect = event.shiftKey;
+            if (this.props.selectedModelArray.length === 1 && this.props.selectedModelArray[0].visible === false) {
+                isMultiSelect = false;
+            }
+            if (this.props.selectedModelArray && this.props.selectedModelArray.length > 0 && model.visible === false) {
+                isMultiSelect = false;
+            }
+            this.props.selectTargetModel(model, isMultiSelect);
         },
 
         onClickModelHideBox: (model) => {

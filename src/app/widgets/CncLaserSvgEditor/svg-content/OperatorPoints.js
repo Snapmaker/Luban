@@ -139,12 +139,25 @@ class OperatorPoints {
 
     showGrips(show) {
         this.operatorPointsGroup.setAttribute('display', show ? 'inline' : 'none');
+        this.showResizeAndRotateGrips(show);
     }
 
     showResizeGrips(show) {
-        for (const grip of this.operatorGrips) {
+        Object.entries(this.operatorGripCoords).forEach(([dir]) => {
+            const grip = this.operatorGrips[dir];
             grip.setAttribute('display', show ? 'inline' : 'none');
-        }
+        });
+    }
+
+    showRotateGrips(show) {
+        this.rotateGripConnector.setAttribute('display', show ? 'inline' : 'none');
+        this.rotateGrip.setAttribute('display', show ? 'inline' : 'none');
+    }
+
+    showResizeAndRotateGrips(show) {
+        console.log('----hide----');
+        this.showResizeGrips(show);
+        this.showRotateGrips(show);
     }
 
     resetTransformList() {
@@ -204,6 +217,7 @@ class OperatorPoints {
     }
 
     resizeGrips(elements) {
+        console.log('----resize----');
         for (const elemRect of this.selectedElementsBox) {
             elemRect.remove();
         }
@@ -334,47 +348,6 @@ class OperatorPoints {
             width: maxX - minX,
             height: maxY - minY
         };
-    }
-
-    // todo, delete this method later
-    resizeGripsOnElementResize(element) {
-        const rect = this.allSelectedElementsBox;
-
-        const { nx, ny, nw, nh, angle, cx, cy } = this.getElementBBoxAndRotation(element);
-
-        const dstr = `M${nx},${ny}
-            L${nx + nw},${ny}
-            L${nx + nw},${ny + nh}
-            L${nx},${ny + nh} z`;
-
-        rect.setAttribute('d', dstr);
-
-        const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
-        this.operatorPointsGroup.setAttribute('transform', xform);
-
-        // recalculate grip coordinates
-        this.operatorGripCoords = {
-            nw: [nx, ny],
-            ne: [nx + nw, ny],
-            sw: [nx, ny + nh],
-            se: [nx + nw, ny + nh],
-            n: [nx + (nw) / 2, ny],
-            w: [nx, ny + (nh) / 2],
-            e: [nx + nw, ny + (nh) / 2],
-            s: [nx + (nw) / 2, ny + nh]
-        };
-
-        Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
-            const grip = this.operatorGrips[dir];
-            grip.setAttribute('cx', coords[0]);
-            grip.setAttribute('cy', coords[1]);
-        });
-        this.rotateGripConnector.setAttribute('x1', nx + nw / 2);
-        this.rotateGripConnector.setAttribute('y1', ny);
-        this.rotateGripConnector.setAttribute('x2', nx + nw / 2);
-        this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
-        this.rotateGrip.setAttribute('cx', nx + nw / 2);
-        this.rotateGrip.setAttribute('cy', ny - GRIP_RADIUS * 9.4 / this.scale);
     }
 }
 

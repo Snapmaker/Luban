@@ -218,9 +218,16 @@ export const actions = {
         dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
         // todo, donot reset here
         dispatch(svgModelActions.resetSelection(headType));
-
         // todo multi select toopath model
         dispatch(threejsModelActions.selectModel(headType, model));
+    },
+
+    // todo, select model by toolPathModel ??? meshObject ???
+    selectModelInProcess: (model, headType) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        console.log(modelGroup, toolPathModelGroup);
+        dispatch(svgModelActions.emptySelectedModelArray(headType));
+        // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
     },
 
     // TODO: Check usage of this method
@@ -517,7 +524,8 @@ export const actions = {
             const modelState = modelGroup.onModelAfterTransform();
 
             if (modelState) {
-                dispatch(svgModelActions.updateSelectedTransformation(headType, modelState.transformation));
+                // dispatch(svgModelActions.updateSelectedTransformation(headType, modelState.transformation));
+                dispatch(svgModelActions.updateSelectedTransformation(headType, modelGroup.getSelectedModelTransformation()));
                 dispatch(baseActions.updateState(headType, { modelState }));
                 dispatch(baseActions.updateTransformation(headType, modelState.transformation));
                 dispatch(actions.previewModel(headType));

@@ -752,6 +752,11 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
+        // todo, hide operator when model hide
+        const selectedModels = this.modelGroup.getSelectedModelArray();
+        if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
+            this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
+        }
     }
 }
 

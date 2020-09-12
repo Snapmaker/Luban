@@ -95,7 +95,9 @@ class Visualizer extends Component {
                 this.canvas.current.autoFocus();
             }
         },
-        onSelectModels: (model) => {
+        onSelectModels: (model) => { // this is a toolpath model? mesh object??
+            // todo
+            console.log('----on process select----', model);
             this.props.selectTargetModel(model);
         },
         onUnselectAllModels: () => {
@@ -457,7 +459,6 @@ const mapStateToProps = (state) => {
         page,
         size: machine.size,
         hasModel: modelGroup.hasModel(),
-        selectedModelID: modelGroup.getSelectedModel().modelID,
         svgModelGroup,
         modelGroup,
         toolPathModelGroup,
@@ -479,7 +480,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
-        selectTargetModel: (model) => dispatch(editorActions.selectTargetModel(model, 'laser')),
+        selectTargetModel: (model) => dispatch(editorActions.selectModelInProcess(model, 'laser')),
         unselectAllModels: () => dispatch(editorActions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),

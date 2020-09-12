@@ -250,7 +250,7 @@ class Transformation extends PureComponent {
                                     className={styles['description-text']}
                                     style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
                                 />
-                                {false && (
+                                {selectedModelArray.length === 1 && (
                                     <button
                                         type="button"
                                         disabled={!selectedNotHide}
@@ -261,13 +261,13 @@ class Transformation extends PureComponent {
                                         }}
                                     />
                                 )}
-                                {false && (
+                                {selectedModelArray.length === 1 && (
                                     <span
                                         className={styles['description-text']}
                                         style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
                                     />
                                 )}
-                                {false && (
+                                {selectedModelArray.length === 1 && (
                                     <button
                                         type="button"
                                         disabled={!selectedNotHide}

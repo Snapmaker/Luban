@@ -276,7 +276,7 @@ class SVGCanvas extends PureComponent {
             return this.svgContentGroup.selectorParentGroup;
         }
 
-        while (target && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
+        while (target && target.parentNode !== this.svgContentGroup.group && (target.parentNode && target.parentNode.nodeName !== 'svg')) {
             target = target.parentNode;
         }
         return target;
@@ -1219,18 +1219,12 @@ class SVGCanvas extends PureComponent {
     // TODO: DO NOT use attributes/methods of SvgModelGroup, ModelGroup, Model directly in Component!!!
     addToSelection(elements) {
         this.props.svgModelGroup.addSelectedSvgModelsByElements(elements);
-        const selectedSvgModels = this.props.svgModelGroup.getModelsByElements(elements);
-        for (const svgModel of selectedSvgModels) {
+        const svgModels = this.props.svgModelGroup.getModelsByElements(elements);
+        for (const svgModel of svgModels) {
             const model = svgModel.relatedModel;
             const modelGroup = model && model.modelGroup;
             if (modelGroup) {
                 modelGroup.addSelectedModels([model]);
-                // TODO: ???
-                modelGroup.updateSelectedModelTransformation({
-                    positionX: 0,
-                    positionY: 0
-                });
-                modelGroup.resetSelectedObjectScaleAndRotation();
             }
         }
         this.svgContentGroup.addToSelection(elements);
