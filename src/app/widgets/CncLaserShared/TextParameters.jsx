@@ -51,9 +51,10 @@ class TextParameters extends PureComponent {
         onChangeText: (event) => {
             const model = this.props.selectedModelArray[0];
             const text = event.target.value;
+            // todo, move to editor
             model.relatedModels.svgModel.elem.textContent = text;
             model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
-
+            model.relatedModels.svgModel.modelGroup.resetSelection();
 
             // this.props.updateSelectedModelTextConfig({ text });
         },
@@ -64,13 +65,17 @@ class TextParameters extends PureComponent {
             }
             const model = this.props.selectedModelArray[0];
             const font = option.value;
+            // todo, move to editor
             model.relatedModels.svgModel.elem.setAttribute('font-family', font);
             model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
+            model.relatedModels.svgModel.modelGroup.resetSelection();
         },
         onChangeSize: (size) => {
             const model = this.props.selectedModelArray[0];
+            // todo, move to editor
             model.relatedModels.svgModel.elem.setAttribute('font-size', size);
             model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
+            model.relatedModels.svgModel.modelGroup.resetSelection();
             // this.props.updateSelectedModelTextConfig({ size });
         } // ,
         // onChangeLineHeight: (lineHeight) => {
