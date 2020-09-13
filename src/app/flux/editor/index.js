@@ -192,21 +192,21 @@ export const actions = {
             },
             config: model.config
         };
-
+        console.log('----debug 1----');
         api.processImage(processOptions)
             .then((res) => {
                 const processImageName = res.body.filename;
                 if (!processImageName) {
                     return;
                 }
-
+                console.log('----debug 2----');
                 svgModelGroup.updateElementImage(processImageName);
                 // options.processImageName = processImageName;
 
                 // dispatch(svgModelActions.generateSvgModel(headType, options));
 
                 // dispatch(threejsModelActions.generateThreejsModel(headType, options));
-
+                console.log('----debug 3----');
                 dispatch(baseActions.resetCalculatedState(headType));
                 // dispatch(baseActions.updateState(headType, {
                 //     hasModel: true
@@ -218,6 +218,7 @@ export const actions = {
                 // TODO
                 console.error(err);
             });
+        console.log('----debug 4----');
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
