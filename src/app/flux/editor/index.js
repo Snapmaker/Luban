@@ -261,10 +261,16 @@ export const actions = {
 
     // todo, select model by toolPathModel ??? meshObject ???
     selectModelInProcess: (model, headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
-        console.log(modelGroup, toolPathModelGroup);
+        const { modelGroup } = getState()[headType];
+        // console.log(modelGroup, toolPathModelGroup);
+
+        modelGroup.emptySelectedModelArray();
         dispatch(svgModelActions.emptySelectedModelArray(headType));
         // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
+
+        if (model) {
+            dispatch(threejsModelActions.selectModel(headType, model));
+        }
     },
 
     // TODO: Check usage of this method

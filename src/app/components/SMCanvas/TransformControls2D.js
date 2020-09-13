@@ -118,12 +118,24 @@ class TransformControls2D extends Object3D {
 
     initFramePeripherals() {
         // dashed line frame
-        const frame = new Line(new Geometry(), new LineDashedMaterial({
+        const geometry = new Geometry();
+        // FIXME: preset vertices, or dynamic update will not work. (three.js bug?)
+        const points = [];
+        points.push(new Vector3(0, 0, 0));
+        points.push(new Vector3(0, 0, 0));
+        points.push(new Vector3(0, 0, 0));
+        points.push(new Vector3(0, 0, 0));
+        points.push(new Vector3(0, 0, 0));
+
+        geometry.vertices = points;
+
+        const material = new LineDashedMaterial({
             color: BLUE,
             dashSize: 2,
             gapSize: 1
-        }));
-        frame.computeLineDistances(); // ?
+        });
+        const frame = new Line(geometry, material);
+        // frame.computeLineDistances(); // ?
 
         this.framePeripheral = this.createPeripheral([
             ['frame', frame]
