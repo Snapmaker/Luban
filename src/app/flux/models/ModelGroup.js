@@ -578,11 +578,13 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
         this.selectedModelIDArray = [];
         this.selectedGroup.children.splice(0);
-        this.models.forEach((model) => {
-            model.isSelected = false;
-            model.meshObject.material = materialNormal;
-            this.object.add(model.meshObject);
-        });
+        if (this.headType === '3dp') {
+            this.models.forEach((model) => {
+                model.isSelected = false;
+                model.meshObject.material = materialNormal;
+                this.object.add(model.meshObject);
+            });
+        }
     }
 
     arrangeAllModels() {
