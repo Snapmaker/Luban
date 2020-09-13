@@ -95,8 +95,8 @@ class Visualizer extends Component {
                 this.canvas.current.autoFocus();
             }
         },
-        onSelectModels: (model) => {
-            this.props.selectModel(model);
+        onSelectModels: (intersect) => {
+            this.props.selectModel(intersect);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -521,7 +521,7 @@ const mapDispatchToProps = (dispatch) => {
         arrangeAllModels2D: () => dispatch(editorActions.arrangeAllModels2D('cnc')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
-        selectModel: (model) => dispatch(editorActions.selectModel('cnc', model)),
+        selectModel: (intersect) => dispatch(editorActions.selectModelInProcess('cnc', intersect)),
         unselectAllModels: () => dispatch(editorActions.unselectAllModels('cnc')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),

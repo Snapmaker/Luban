@@ -192,21 +192,18 @@ export const actions = {
             },
             config: model.config
         };
-        console.log('----debug 1----');
         api.processImage(processOptions)
             .then((res) => {
                 const processImageName = res.body.filename;
                 if (!processImageName) {
                     return;
                 }
-                console.log('----debug 2----');
                 svgModelGroup.updateElementImage(processImageName);
                 // options.processImageName = processImageName;
 
                 // dispatch(svgModelActions.generateSvgModel(headType, options));
 
                 // dispatch(threejsModelActions.generateThreejsModel(headType, options));
-                console.log('----debug 3----');
                 dispatch(baseActions.resetCalculatedState(headType));
                 // dispatch(baseActions.updateState(headType, {
                 //     hasModel: true
@@ -218,7 +215,6 @@ export const actions = {
                 // TODO
                 console.error(err);
             });
-        console.log('----debug 4----');
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
@@ -242,11 +238,10 @@ export const actions = {
     //     dispatch(actions.selectModelByID(headType, find.modelID));
     // },
 
-    // TODO: rename to selectModel(headType, model, isMultiSelect = true)
     // TODO: method docs
-    selectTargetModel: (model, headType, shiftKey) => (dispatch, getState) => {
+    selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        if (!shiftKey) {
+        if (!isMultiSelect) {
             // remove all selected model
             modelGroup.emptySelectedModelArray();
             dispatch(svgModelActions.emptySelectedModelArray(headType));
@@ -260,16 +255,22 @@ export const actions = {
     },
 
     // todo, select model by toolPathModel ??? meshObject ???
-    selectModelInProcess: (model, headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+    selectModelInProcess: (headType, intersect) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
         // console.log(modelGroup, toolPathModelGroup);
 
+        console.log(headType);
         modelGroup.emptySelectedModelArray();
         dispatch(svgModelActions.emptySelectedModelArray(headType));
         // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
 
-        if (model) {
-            dispatch(threejsModelActions.selectModel(headType, model));
+        if (intersect) {
+            const model = modelGroup.getSelectedModelByIntersect(intersect);
+            console.log(model.modelName);
+            if (model) {
+                dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+                toolPathModelGroup.selectToolPathModel(model.modelID);
+            }
         }
     },
 

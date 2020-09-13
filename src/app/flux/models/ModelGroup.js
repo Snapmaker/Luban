@@ -579,7 +579,7 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
         this.selectedModelIDArray = [];
         this.selectedGroup.children.splice(0);
-        if (this.headType === '3dp') {
+        if (this.headType === 'printing') {
             this.models.forEach((model) => {
                 model.isSelected = false;
                 model.meshObject.material = materialNormal;
@@ -1080,6 +1080,17 @@ class ModelGroup extends EventEmitter {
 
     modelChanged() {
         this.onDataChangedCallback();
+    }
+
+    // todo
+    getSelectedModelByIntersect(intersect) {
+        if (intersect) {
+            const model = this.models.find(d => d.meshObject === intersect.object);
+            if (model) {
+                return model;
+            }
+        }
+        return null;
     }
 }
 
