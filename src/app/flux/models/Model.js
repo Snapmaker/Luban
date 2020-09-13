@@ -252,7 +252,6 @@ class Model {
             this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
             this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
-
             this.meshObject.add(this.processObject3D);
             this.processObject3D.visible = !this.showOrigin;
         }
@@ -275,7 +274,8 @@ class Model {
             this.modelObject3D && (this.modelObject3D.visible = param);
             this.processObject3D && (this.processObject3D.visible = param);
         } else {
-            this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
+            // todo
+            this.modelObject3D && (this.modelObject3D.visible = param); // this.showOrigin);
             this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
         }
     }

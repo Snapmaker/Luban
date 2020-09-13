@@ -175,6 +175,7 @@ export const actions = {
         };
         const model = modelGroup.addModel(options);
         svgModelGroup.createFromModel(model);
+        svgModelGroup.clearSelection();
         svgModelGroup.addSelectedSvgModelsByModels([model]);
 
         // Process image right after created
@@ -449,7 +450,7 @@ export const actions = {
         }
 
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'raster') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text') {
             return;
         }
 
@@ -475,7 +476,7 @@ export const actions = {
                 if (!processImageName) {
                     return;
                 }
-
+                // todo
                 svgModelGroup.updateElementImage(processImageName);
 
                 toolPathModelGroup.updateSelectedNeedPreview(true);
@@ -911,13 +912,13 @@ export const actions = {
             toolPathModelGroup.showAllToolPathModelsObj3D();
             for (const model of modelGroup.getModels()) {
                 const toolPath = toolPathModelGroup.getToolPathModel(model.modelID);
-                // if (toolPath.needPreview) {
-                toolPath.updateVisible(false);
-                model.updateVisible(true);
-                // } else {
-                // toolPath.updateVisible(true);
-                // model.updateVisible(false);
-                // }
+                if (toolPath.needPreview) {
+                    toolPath.updateVisible(false);
+                    model.updateVisible(true);
+                } else {
+                    toolPath.updateVisible(true);
+                    model.updateVisible(false);
+                }
             }
             dispatch(actions.manualPreview(headType));
         }

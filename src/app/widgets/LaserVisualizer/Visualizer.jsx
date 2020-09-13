@@ -98,7 +98,7 @@ class Visualizer extends Component {
         },
         onSelectModels: (model) => { // this is a toolpath model? mesh object??
             // todo
-            console.log('----on process select----', model);
+            // console.log('----on process select----', model);
             this.props.selectTargetModel(model);
         },
         onUnselectAllModels: () => {
