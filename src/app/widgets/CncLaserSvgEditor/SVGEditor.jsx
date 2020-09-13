@@ -107,8 +107,8 @@ class SVGEditor extends PureComponent {
         const elem = this.props.svgModelGroup.svgContentGroup.addSVGElement({
             element: 'text',
             attr: {
-                x: 200,
-                y: 250,
+                x: this.props.size.x - 30.75,
+                y: this.props.size.y,
                 fill: '#000000',
                 'font-size': 12,
                 'font-family': 'Arial',
@@ -118,7 +118,8 @@ class SVGEditor extends PureComponent {
             }
         });
         this.props.svgModelGroup.addModel(elem);
-        this.canvas.current.selectOnly([elem]);
+        // todo, select text after create
+        // this.canvas.current.selectOnly([elem]);
         this.setMode('select');
     }
 

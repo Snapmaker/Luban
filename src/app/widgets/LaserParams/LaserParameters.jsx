@@ -38,7 +38,7 @@ class LaserParameters extends PureComponent {
         page: PropTypes.string.isRequired,
 
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
@@ -183,7 +183,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelID, selectedModelVisible, modelGroup, sourceType, mode,
+            selectedModelArray, selectedModelVisible, modelGroup, sourceType, mode,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
@@ -232,7 +232,7 @@ class LaserParameters extends PureComponent {
                 )}
                 {isEditor && (
                     <Transformation
-                        selectedModelID={selectedModelID}
+                        selectedModelArray={selectedModelArray}
                         selectedModelVisible={selectedModelVisible}
                         modelGroup={modelGroup}
                         sourceType={sourceType}
@@ -244,7 +244,7 @@ class LaserParameters extends PureComponent {
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
-                {isProcessMode && (
+                {isProcessMode && (selectedModelArray.length === 1) && (
                     <ImageProcessMode
                         disabled={!selectedModelVisible}
                         sourceType={sourceType}
@@ -255,7 +255,7 @@ class LaserParameters extends PureComponent {
                     />
                 )}
 
-                {isEditor && isTextVector && (
+                {isEditor && isTextVector && (selectedModelArray.length === 1) && (
                     <TextParameters
                         disabled={!selectedModelVisible}
                         headType={headType}
@@ -263,27 +263,23 @@ class LaserParameters extends PureComponent {
                         updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                     />
                 )}
-                {isProcess && isBW && (
+                {isProcess && isBW && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigRasterBW disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isGreyscale && (
+                {isProcess && isGreyscale && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigGreyscale disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isRasterVector && (
+                {isProcess && isRasterVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigRasterVector disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isSvgVector && (
+                {isProcess && isSvgVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigSvgVector disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isTextVector && (
-                    <GcodeConfigSvgVector disabled={!selectedModelVisible} />
-                )}
-
 
                 {isProcess && (
                     <GcodeParameters
                         selectedModelVisible={selectedModelVisible}
-                        selectedModelID={selectedModelID}
+                        selectedModelArray={selectedModelArray}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
                         updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
@@ -304,25 +300,41 @@ class LaserParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { page, modelGroup, toolPathModelGroup, printOrder } = state.laser;
-    const selectedModel = modelGroup.getSelectedModel();
     const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
-    const selectedModelID = selectedModel.modelID;
+    const selectedModelArray = modelGroup.getSelectedModelArray();
+    const selectedModel = ((selectedModelArray && selectedModelArray.length > 0) ? selectedModelArray[0] : {
+        // modelGroup.mockModel
+        mock: true,
+        sourceType: '',
+        mode: '',
+        config: {},
+        visible: true,
+        transformation: {
+            rotationZ: 0,
+            width: 0,
+            height: 0,
+            positionX: 0,
+            positionY: 0,
+            flip: 0
+        }
+    });
     const {
-        sourceType,
         mode,
+        sourceType,
         showOrigin,
         transformation,
-        config
+        config,
+        visible
     } = selectedModel;
     return {
         page,
         printOrder,
         transformation,
         gcodeConfig,
-        selectedModelID,
+        selectedModelArray,
         selectedModel,
         // todo, next version fix like selectedModelID
-        selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
+        selectedModelVisible: visible,
         modelGroup,
         sourceType,
         mode,

@@ -192,8 +192,14 @@ class ConfigGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
-    const { invert, contrast, brightness, whiteClip, algorithm } = config;
+    const { modelGroup } = state.laser;
+
+    // assume that only one model is selected
+    const selectedModels = modelGroup.getSelectedModelArray();
+    const model = selectedModels[0];
+
+    const { invert, contrast, brightness, whiteClip, algorithm } = model.config;
+
     return {
         invert,
         contrast,

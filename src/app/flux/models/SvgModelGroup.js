@@ -2,8 +2,7 @@
 import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
 import { DEFAULT_SCALE } from '../../constants/svg-constants';
-import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
-
+import { coordGmSvgToModel, getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
@@ -50,14 +49,16 @@ class SvgModelGroup {
 
     svgModels = [];
 
+    selectedSvgModels = [];
+
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
-        this.modelGroup.on('select', () => {
-            const selectedModel = this.modelGroup.getSelectedModel();
-            if (!selectedModel.modelID) return;
-            this.selectElementById(selectedModel.modelID);
-            this.showSelectedElement();
-        });
+        // this.modelGroup.on('select', () => {
+        //     const selectedModel = this.modelGroup.getSelectedModel();
+        //     if (!selectedModel.modelID) return;
+        //     this.selectElementById(selectedModel.modelID);
+        //     this.showSelectedElement();
+        // });
     }
 
     init(svgContentGroup, size) {
@@ -194,7 +195,14 @@ class SvgModelGroup {
                 preserveAspectRatio: 'none'
             }
         });
-        this.svgContentGroup.selectOnly(elem);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([elem]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
         return {
             modelID: elem.getAttribute('id'),
             elem
@@ -222,21 +230,23 @@ class SvgModelGroup {
             positionX: 0,
             positionY: 0
         }, clone);
-        this.svgContentGroup.selectOnly(selected);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([selected]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
         this.addModel(clone);
     }
 
-    selectElementById(modelID) {
-        const elem = this.svgContentGroup.findSVGElement(modelID);
-        this.svgContentGroup.selectOnly(elem);
-    }
-
-    deleteElement() {
-        const selected = this.svgContentGroup.getSelected();
-        if (!selected) {
+    deleteSelectedElements() {
+        const selectedElements = this.svgContentGroup.getSelectedElements();
+        if (!selectedElements) {
             return;
         }
-        this.svgContentGroup.deleteElement(selected);
+        this.svgContentGroup.deleteElements(selectedElements);
     }
 
     bringElementToFront() {
@@ -279,6 +289,127 @@ class SvgModelGroup {
         }
     }
 
+    // multi select
+    updateSelectedElementsTransformation(transformation) {
+        const elements = this.svgContentGroup.selectedElements;
+        if (elements.length === 0) {
+            return;
+        }
+        if (transformation.uniformScalingState !== undefined) {
+            if (elements.length === 1) {
+                // todo after multi select resize
+                this.modelGroup.selectedModelArray[0].updateTransformation({ uniformScalingState: transformation.uniformScalingState });
+            }
+        }
+        if (transformation.positionX !== undefined || transformation.positionY !== undefined) {
+            const originTransformation = this.modelGroup.getSelectedModelTransformation();
+            if (transformation.positionX === undefined) {
+                transformation.positionX = originTransformation.positionX;
+            }
+            if (transformation.positionY === undefined) {
+                transformation.positionY = originTransformation.positionY;
+            }
+            // todo, just copy from canvas now
+            const dx = transformation.positionX - originTransformation.positionX;
+            const dy = -(transformation.positionY - originTransformation.positionY);
+
+            // mouse down
+            this.svgContentGroup.translateSelectedElementsOnMouseDown();
+            const transform = svg.createSVGTransform();
+            transform.setTranslate(dx, dy);
+            // mouse move
+            this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
+            // mouse up
+            this.updateSelectedModelsByTransformation({
+                dx,
+                dy
+            });
+            this.mode = 'select';
+            // todo do not use modelGroup here
+            const newTransformation = this.modelGroup.getSelectedModelTransformation();
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, newTransformation);
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
+
+            this.invokeModelTransformCallback();
+        }
+        if (transformation.rotationZ !== undefined) {
+            // todo, copy from canvas mouse up
+            // mouse up
+            const { x, y } = this.svgContentGroup.operatorPoints.getCenterPoint();
+
+            // todo, use rotationZ
+            let angle = -transformation.rotationZ * 180 / Math.PI;
+            const angleOld = -this.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
+            angle = (angle - angleOld + 540) % 360 - 180;
+            this.updateSelectedModelsByTransformation({
+                angle, cx: x, cy: y
+            });
+
+            // todo, just copy canvas
+            // select only(elements)
+            this.clearSelection();
+            this.svgContentGroup.clearSelection();
+            this.addSelectedSvgModelsByElements(elements);
+            const selectedSvgModels = this.getModelsByElements(elements);
+            for (const svgModel of selectedSvgModels) {
+                const model = svgModel.relatedModel;
+                const modelGroup = model && model.modelGroup;
+                if (modelGroup) {
+                    modelGroup.addSelectedModels([model]);
+                    modelGroup.updateSelectedModelTransformation({
+                        positionX: 0,
+                        positionY: 0
+                    });
+                    modelGroup.resetSelectedObjectScaleAndRotation();
+                }
+            }
+            this.svgContentGroup.addToSelection(elements);
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
+        }
+        if ((transformation.scaleX !== undefined || transformation.scaleY !== undefined) && elements.length === 1) {
+            // todo, to fix uniform scale
+            const element = elements[0];
+            const svgModel = this.getModelByElement(element);
+            const model = svgModel.relatedModel;
+            if (transformation.scaleX !== undefined) {
+                model.updateAndRefresh({
+                    transformation: {
+                        scaleX: transformation.scaleX
+                    }
+                });
+            }
+            if (transformation.scaleY !== undefined) {
+                model.updateAndRefresh({
+                    transformation: {
+                        scaleY: transformation.scaleY
+                    }
+                });
+            }
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
+        }
+        this.invokeModelTransformCallback();
+    }
+
+    // when single select
     updateTransformation(transformation, elem) {
         elem = elem || this.svgContentGroup.getSelected();
         if (!elem) {
@@ -320,23 +451,28 @@ class SvgModelGroup {
         if (transformation.uniformScalingState !== undefined) {
             this.svgContentGroup.setSelectedElementUniformScalingState(transformation.uniformScalingState);
         }
-        this.svgContentGroup.selectOnly(elem);
+        // todo
+        const posAndSize = this.svgContentGroup.selectOnly([elem]);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
     }
 
     hideSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = false;
         selectedElement.setAttribute('display', 'none');
-        const selector = this.svgContentGroup.requestSelector(selectedElement);
-        selector.showGrips(false);
+        this.svgContentGroup.operatorPoints.showGrips(false);
     }
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = true;
         selectedElement.setAttribute('display', 'inherit');
-        const selector = this.svgContentGroup.requestSelector(selectedElement);
-        selector.showGrips(true);
+        this.svgContentGroup.operatorPoints.showGrips(true);
     }
 
     createFromModel(relatedModel) {
@@ -350,6 +486,9 @@ class SvgModelGroup {
         relatedModel.relatedModels.svgModel = model;
         model.relatedModel = relatedModel;
         model.refresh();
+
+        // A
+        // this.addModelToSVGElement(model);
     }
 
     addModel(elem) {
@@ -357,8 +496,6 @@ class SvgModelGroup {
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
         model.setParent(this.svgContentGroup.group);
-        const selector = this.svgContentGroup.requestSelector(elem);
-        selector.showGrips(true);
         const data = model.genModelConfig();
 
         const { modelID, content, width, height, transformation, config: elemConfig } = data;
@@ -400,16 +537,17 @@ class SvgModelGroup {
             .catch((err) => {
                 console.error(err);
             });
-        this.resizeSelector(elem);
     }
 
-    // only resize when element selected
-    resizeSelector(elem) {
-        if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
-            return;
+    resizeSelectorByElementsSelected(elements) {
+        for (const elem of elements) {
+            if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
+                return;
+            }
         }
-        const selector = this.svgContentGroup.requestSelector(elem);
-        selector.resize();
+        this.svgContentGroup.requestSelectorByElements(elements);
+        // const selector = this.svgContentGroup.requestSelectorByElements(elements);
+        // selector.resize();
     }
 
     getModelByElement(elem) {
@@ -419,6 +557,202 @@ class SvgModelGroup {
             }
         }
         return null;
+    }
+
+    getModelsByElements(elems) {
+        const models = [];
+        for (const model of this.svgModels) {
+            if (elems.includes(model.elem)) {
+                models.push(model);
+            }
+        }
+        return models;
+    }
+
+    // TODO: move out as a helper function.
+    setElementTransformToList(transformList, transformation) {
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        transformList.clear();
+        const size = this.size;
+        function pointModelToSvg({ x, y }) {
+            return { x: size.x + x, y: size.y - y };
+        }
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+        const center = pointModelToSvg({ x: positionX, y: positionY });
+
+        const translateOrigin = svg.createSVGTransform();
+        translateOrigin.tag = 'translateOrigin';
+        translateOrigin.setTranslate(-center.x, -center.y);
+        transformList.insertItemBefore(translateOrigin, 0);
+
+        const scale = svg.createSVGTransform();
+        scale.tag = 'scale';
+        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+        transformList.insertItemBefore(scale, 0);
+
+        const rotate = svg.createSVGTransform();
+        rotate.tag = 'rotate';
+        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+        transformList.insertItemBefore(rotate, 0);
+
+        const translateBack = svg.createSVGTransform();
+        translateBack.setTranslate(center.x, center.y);
+        transformList.insertItemBefore(translateBack, 0);
+        transformList.getItem(0).tag = 'translateBack';
+    }
+
+    updateSelectedModelsByTransformation(deviation) { // todo, just after move now
+        // deviation: dx dy, angle cx cy, scaleX scaleY
+        const selectedModels = this.selectedSvgModels;
+        const selectedModelsTransformation = this.modelGroup.getSelectedModelTransformation();
+        const transformation = {
+            positionX: selectedModelsTransformation.positionX,
+            positionY: selectedModelsTransformation.positionY,
+            rotationZ: selectedModelsTransformation.rotationZ,
+            scaleX: selectedModelsTransformation.scaleX,
+            scaleY: selectedModelsTransformation.scaleY
+        };
+
+        // comeback to transform before mouse down
+        // for (const svgModel of selectedModels) {
+        //     this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, svgModel.relatedModel.transformation);
+        // }
+
+        // translate after mouseup
+        if (deviation.dx || deviation.dy) {
+            // translate models
+            for (const svgModel of selectedModels) {
+                svgModel.onUpdate();
+            }
+            // translate operationGrips
+            transformation.positionX = selectedModelsTransformation.positionX + deviation.dx;
+            transformation.positionY = selectedModelsTransformation.positionY - deviation.dy;
+        }
+
+        // rotate after mouseup
+        if (deviation.angle) {
+            // translate and rotate models
+            for (const svgModel of selectedModels) {
+                const elem = svgModel.elem;
+                const rotateBox = svg.createSVGTransform();
+                rotateBox.setRotate(deviation.angle, deviation.cx, deviation.cy);
+                const startBbox = getBBox(elem);
+                const startCenter = svg.createSVGPoint();
+                startCenter.x = startBbox.x + startBbox.width / 2;
+                startCenter.y = startBbox.y + startBbox.height / 2;
+                const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                const model = svgModel.relatedModel;
+                const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.angle + 540) % 360 - 180) * Math.PI / 180;
+                const positionX = modelNewCenter.x;
+                const positionY = modelNewCenter.y;
+                // console.log('----rotation mouse up----', positionX, positionY, rotationZ, deviation.angle);
+
+                // <path> cannot use this
+                // because it has no xy
+                if (svgModel.type !== 'path') {
+                    model.updateAndRefresh({
+                        transformation: {
+                            positionX: positionX,
+                            positionY: positionY,
+                            rotationZ: rotationZ
+                        }
+                    });
+                } else {
+                    // TODO: sometimes cannot move right position
+                    model.updateAndRefresh({
+                        transformation: {
+                            rotationZ: rotationZ
+                        }
+                    });
+                    const transform = svg.createSVGTransform();
+                    transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
+                    const transformList = elem.transform.baseVal;
+                    transformList.insertItemBefore(transform, 0);
+                    svgModel.onUpdate();
+                }
+            }
+            // rotate operationGrips
+            transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.angle + 180) % 360 - 180) * Math.PI / 180;
+        }
+        if (deviation.scaleX) {
+            //
+        }
+        if (deviation.scaleY) {
+            //
+        }
+        this.modelGroup.updateSelectedModelTransformation(transformation);
+        this.invokeModelTransformCallback();
+        // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
+    }
+
+    clearSelection() {
+        this.selectedSvgModels = [];
+        this.modelGroup.emptySelectedModelArray();
+        this.svgContentGroup.clearSelection();
+    }
+
+    addSelectedSvgModelsByModels(models) {
+        this.modelGroup.addSelectedModels(models);
+        for (const model of models) {
+            const svgModel = model.relatedModels.svgModel;
+            if (!this.selectedSvgModels.includes(svgModel)) {
+                this.selectedSvgModels.push(svgModel);
+                // todo
+                const posAndSize = this.svgContentGroup.addToSelection([svgModel.elem]);
+                this.modelGroup.updateSelectedModelTransformation({
+                    positionX: posAndSize.positionX - this.size.x,
+                    positionY: this.size.y - posAndSize.positionY,
+                    width: posAndSize.width,
+                    height: posAndSize.height
+                });
+            }
+        }
+    }
+
+    addSelectedSvgModelsByElements(elements) {
+        for (const model of this.svgModels) {
+            if (elements.includes(model.elem)) {
+                this.selectedSvgModels.push(model);
+                // this.modelGroup.addSelectedModels([model.relatedModel]);
+            }
+        }
+    }
+
+    resetSelection(transformation) {
+        if (transformation === undefined) {
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
+        } else {
+            // todo
+            const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
+            this.modelGroup.updateSelectedModelTransformation({
+                positionX: posAndSize.positionX - this.size.x,
+                positionY: this.size.y - posAndSize.positionY,
+                width: posAndSize.width,
+                height: posAndSize.height
+            });
+        }
+        // todo, hide operator when model hide
+        const selectedModels = this.modelGroup.getSelectedModelArray();
+        if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
+            this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
+        }
+    }
+
+    // TODO: This is temporary workaround for model processing
+    setModelTransformCallback(callback) {
+        this.modelTransformCallback = callback;
+    }
+
+    invokeModelTransformCallback() {
+        this.modelTransformCallback && this.modelTransformCallback();
     }
 }
 

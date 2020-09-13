@@ -84,8 +84,14 @@ class ConfigRasterBW extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
-    const { invert, bwThreshold } = config;
+    const { modelGroup } = state.laser;
+
+    // assume that only one model is selected
+    const selectedModels = modelGroup.getSelectedModelArray();
+    const model = selectedModels[0];
+
+    const { invert, bwThreshold } = model.config;
+
     return {
         invert,
         bwThreshold

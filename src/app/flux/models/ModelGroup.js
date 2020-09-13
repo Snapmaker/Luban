@@ -96,7 +96,12 @@ class ModelGroup extends EventEmitter {
         return this.models.find(d => d.modelName === modelName);
     }
 
+    // TODO: Unify method return type, it causes unnecessary calculations.
     getSelectedModelTransformation() {
+        // todo
+        if (this.selectedModelArray.length === 1) {
+            return this.selectedModelArray[0].transformation;
+        }
         if (this.selectedModelArray.length > 0) {
             return {
                 positionX: this.selectedGroup.position.x,
@@ -107,7 +112,10 @@ class ModelGroup extends EventEmitter {
                 uniformScalingState: this.selectedGroup.uniformScalingState,
                 rotationX: this.selectedGroup.rotation.x,
                 rotationY: this.selectedGroup.rotation.y,
-                rotationZ: this.selectedGroup.rotation.z
+                rotationZ: this.selectedGroup.rotation.z,
+                // todo, width and height use for 2d
+                width: this.selectedGroup.width,
+                height: this.selectedGroup.height
             };
         } else {
             return {};
@@ -115,7 +123,8 @@ class ModelGroup extends EventEmitter {
     }
 
     changeShowOrigin() {
-        return this.selectedModel && this.selectedModel.changeShowOrigin();
+        // todo
+        return this.selectedModelArray.length === 1 && this.selectedModelArray[0].changeShowOrigin();
     }
 
     hideSelectedModel() {
@@ -137,6 +146,11 @@ class ModelGroup extends EventEmitter {
     _removeSelectedModels() {
         const selectedArray = this.getSelectedModelArray();
         selectedArray.forEach((selected) => {
+            // todo, not sure remove here
+            // console.log('----delete models----');
+            selected.meshObject.remove(selected.modelObject3D);
+            selected.meshObject.remove(selected.processObject3D);
+
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             this.models = this.models.filter(model => model !== selected);
         });
@@ -145,6 +159,7 @@ class ModelGroup extends EventEmitter {
     /**
      * Remove selected models and reset selected state.
      */
+    // todo, remove mesh obj in 2d
     removeSelectedModel() {
         this._removeSelectedModels();
         this.unselectAllModels();
@@ -425,6 +440,34 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    addSelectedModels(modelArray) {
+        this.selectedGroup = new Group();
+        for (const model of modelArray) {
+            if (!this.selectedModelArray.includes(model)) {
+                this.selectedModelArray.push(model);
+            }
+        }
+        // TODO: why?
+        this.selectedModelArray = [...this.selectedModelArray];
+
+        let state;
+        if (this.selectedModelArray.length > 0) {
+            const modelState = this.getState();
+            state = modelState;
+        } else {
+            state = this._getEmptyState();
+        }
+        this.onDataChangedCallback();
+
+        return state;
+    }
+
+    emptySelectedModelArray() {
+        this.selectedModelArray = [];
+        this.onDataChangedCallback();
+    }
+
+    // TODO: model or modelID, need rename this method and add docs
     // use for widget
     selectModelById(modelID, isMultiSelect = false) {
         const selectModel = this.models.find(d => d.modelID === modelID);
@@ -536,11 +579,13 @@ class ModelGroup extends EventEmitter {
         this.selectedModelArray = [];
         this.selectedModelIDArray = [];
         this.selectedGroup.children.splice(0);
-        this.models.forEach((model) => {
-            model.isSelected = false;
-            model.meshObject.material = materialNormal;
-            this.object.add(model.meshObject);
-        });
+        if (this.headType === 'printing') {
+            this.models.forEach((model) => {
+                model.isSelected = false;
+                model.meshObject.material = materialNormal;
+                this.object.add(model.meshObject);
+            });
+        }
     }
 
     arrangeAllModels() {
@@ -659,11 +704,16 @@ class ModelGroup extends EventEmitter {
         return this.getStateAndUpdateBoundingBox();
     }
 
+    // todo, remove it
     getSelectedModel() {
-        if (this.selectedModel) {
-            return this.selectedModel;
+        if (this.selectedModelArray.length === 1) {
+            return this.selectedModelArray[0];
         }
+        // if (this.selectedModel) {
+        //     return this.selectedModel;
+        // }
 
+        // todo
         return this.MOCK_MODEL;
     }
 
@@ -672,7 +722,8 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedMode(mode, config, processImageName) {
-        this.selectedModel.processMode(mode, config, processImageName);
+        // todo
+        this.selectedModelArray.length === 1 && this.selectedModelArray[0].processMode(mode, config, processImageName);
         return this._getEmptyState();
     }
 
@@ -682,8 +733,9 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedSource(source) {
-        if (this.selectedModel) {
-            this.selectedModel.updateSource(source);
+        // todo
+        if (this.selectedModelArray.length === 1) {
+            this.selectedModelArray[0].updateSource(source);
         }
     }
 
@@ -721,7 +773,15 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedModelTransformation(transformation) {
-        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
+        const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+
+        // todo, width and height use for 2d
+        if (width !== undefined) {
+            this.selectedGroup.width = width;
+        }
+        if (height !== undefined) {
+            this.selectedGroup.height = height;
+        }
 
         if (positionX !== undefined) {
             this.selectedGroup.position.setX(positionX);
@@ -768,6 +828,8 @@ class ModelGroup extends EventEmitter {
         }
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
+
+        this.onDataChangedCallback();
     }
 
     // model transformation triggered by controls
@@ -779,6 +841,9 @@ class ModelGroup extends EventEmitter {
                 selected.stickToPlate();
             }
             selected.computeBoundingBox();
+            if (selected.sourceType !== '3d') { // all 2d types, like svg, raster, so on
+                selected.updateAndRefresh(this.selectedGroup);
+            }
         });
         this._checkAnyModelOversteppedOrSelected();
         this.applySelectedObjectParentMatrix();
@@ -792,7 +857,10 @@ class ModelGroup extends EventEmitter {
     }
 
     updateSelectedConfig(config, processImageName) {
-        this.selectedModel.updateConfig(config, processImageName);
+        // todo
+        if (this.selectedModelArray.length === 1) {
+            this.selectedModelArray[0].updateConfig(config, processImageName);
+        }
     }
 
     showAllModelsObj3D() {
@@ -993,12 +1061,14 @@ class ModelGroup extends EventEmitter {
         }
         model.computeBoundingBox();
 
-
         // add to group and select
         this.models.push(model);
+        // todo, use this to refresh obj list
+        this.models = [...this.models];
         this.object.add(model.meshObject);
-        this.selectModelById(model.modelID);
-
+        if (model.sourceType === '3d') {
+            this.selectModelById(model.modelID);
+        }
 
         this.emit('add', model);
         model.setRelatedModels(relatedModels);
@@ -1011,6 +1081,17 @@ class ModelGroup extends EventEmitter {
     modelChanged() {
         this.onDataChangedCallback();
     }
+
+    // todo
+    getSelectedModelByIntersect(intersect) {
+        if (intersect) {
+            const model = this.models.find(d => d.meshObject === intersect.object);
+            if (model) {
+                return model;
+            }
+        }
+        return null;
+    }
 }
 
 ModelGroup.prototype.MOCK_MODEL = {
@@ -1018,6 +1099,7 @@ ModelGroup.prototype.MOCK_MODEL = {
     sourceType: '',
     mode: '',
     config: {},
+    visible: true,
     transformation: {
         rotationZ: 0,
         width: 0,

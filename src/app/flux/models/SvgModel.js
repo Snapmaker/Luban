@@ -256,6 +256,8 @@ class SvgModel {
         if (!transform) {
             this.elem.setAttribute('transform', 'translate(0,0)');
         }
+        // todo, error create a <undefined> elem
+        // console.log('----error----', this.modelGroup, transform, this.elem, this.elem.transform);
         return this.elem.transform.baseVal;
     }
 
@@ -310,11 +312,13 @@ class SvgModel {
                 break;
         }
 
-        this.setElementTransformToList(this.elemTransformList());
+        this.modelGroup.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
-    setElementTransformToList(transformList) {
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    // TODO: Remove this method!!!
+    setElementTransformToList(transformList, transformation) {
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
         const center = this.pointModelToSvg({ x: positionX, y: positionY });
 
         const translateOrigin = svg.createSVGTransform();
@@ -341,8 +345,6 @@ class SvgModel {
     refresh() {
         this.elemTransformList().clear();
         this.refreshElemAttrs();
-
-        this.modelGroup.resizeSelector(this.elem);
     }
 
     onUpdate() {
@@ -391,7 +393,7 @@ class SvgModel {
         };
         // reserve scale cause stroke-width scaled
         if (this.type === 'rect' || this.type === 'ellipse') {
-            attrs.config['stroke-width'] = 0.25 / Math.min(scaleX, scaleY);
+            attrs.config['stroke-width'] = 0.25 / Math.min(Math.abs(scaleX), Math.abs(scaleY));
         }
 
         // remap will reset all transforms
@@ -465,7 +467,7 @@ class SvgModel {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
-        this.setElementTransformToList(transformList);
+        this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
         function transformPoint(p, m) {

@@ -38,6 +38,7 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         svgModelGroup: PropTypes.object.isRequired,
@@ -54,7 +55,7 @@ class Visualizer extends Component {
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
-        selectModel: PropTypes.func.isRequired,
+        selectTargetModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
@@ -95,8 +96,10 @@ class Visualizer extends Component {
                 this.canvas.current.autoFocus();
             }
         },
-        onSelectModels: (model) => {
-            this.props.selectModel(model);
+        onSelectModels: (intersect) => { // this is a toolpath model? mesh object??
+            // todo
+            // console.log('----on process select----', model);
+            this.props.selectTargetModel(intersect);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -255,10 +258,11 @@ class Visualizer extends Component {
     };
 
     render() {
-        const isModelSelected = !!this.props.selectedModelID;
+        // const isModelSelected = !!this.props.selectedModelID;
+        const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
         // const hasModel = this.props.hasModel;
 
-        const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
 
@@ -335,25 +339,25 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.bringToFront
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Send to Back'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.sendToBack
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 items: [
                                     {
                                         type: 'item',
@@ -405,7 +409,7 @@ class Visualizer extends Component {
                             {
                                 type: 'subMenu',
                                 label: i18n._('Flip'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 items: [
                                     {
                                         type: 'item',
@@ -430,7 +434,7 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.deleteSelectedModel
                             }
                             // {
@@ -453,14 +457,15 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { page, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     return {
         page,
         size: machine.size,
         hasModel: modelGroup.hasModel(),
-        selectedModelID: modelGroup.getSelectedModel().modelID,
         svgModelGroup,
         modelGroup,
         toolPathModelGroup,
+        selectedModelArray,
         // model,
         backgroundGroup: background.group,
         renderingTimestamp,
@@ -479,7 +484,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
-        selectModel: (model) => dispatch(editorActions.selectModel('laser', model)),
+        selectTargetModel: (intersect) => dispatch(editorActions.selectModelInProcess('laser', intersect)),
         unselectAllModels: () => dispatch(editorActions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),

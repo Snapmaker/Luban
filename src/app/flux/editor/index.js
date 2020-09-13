@@ -54,7 +54,19 @@ export const actions = {
 
     ...baseActions,
 
-    init: () => () => {},
+    init: () => (dispatch, getState) => {
+        // TODO: temporary workaround for model image processing
+        const bindSVGModelGroup = (headType) => {
+            const { svgModelGroup } = getState()[headType];
+
+            svgModelGroup.setModelTransformCallback(() => {
+                dispatch(actions.processSelectedModel(headType));
+            });
+        };
+
+        bindSVGModelGroup('laser');
+        bindSVGModelGroup('cnc');
+    },
 
     uploadImage: (headType, file, mode, onError) => (dispatch) => {
         const formData = new FormData();
@@ -163,26 +175,46 @@ export const actions = {
         };
         const model = modelGroup.addModel(options);
         svgModelGroup.createFromModel(model);
+        svgModelGroup.clearSelection();
+        svgModelGroup.addSelectedSvgModelsByModels([model]);
 
+        // Process image right after created
+        const processOptions = {
+            headType: headType,
+            uploadName: model.uploadName,
+            sourceType: model.sourceType,
+            mode: model.mode,
+            transformation: {
+                width: model.transformation.width,
+                height: model.transformation.height,
+                rotationZ: 0,
+                flip: model.transformation.flip
+            },
+            config: model.config
+        };
+        api.processImage(processOptions)
+            .then((res) => {
+                const processImageName = res.body.filename;
+                if (!processImageName) {
+                    return;
+                }
+                svgModelGroup.updateElementImage(processImageName);
+                // options.processImageName = processImageName;
 
-        // console.log(options, 'before processImage');
-        // api.processImage(options)
-        //     .then((res) => {
-        //         options.processImageName = res.body.filename;
-        //         console.log(options, 'after processImage');
-        //         dispatch(svgModelActions.generateSvgModel(headType, options));
-        //         // dispatch(threejsModelActions.generateThreejsModel(headType, options));
+                // dispatch(svgModelActions.generateSvgModel(headType, options));
 
-        //         // dispatch(baseActions.resetCalculatedState(headType));
-        //         // dispatch(baseActions.updateState(headType, {
-        //         //     hasModel: true
-        //         // }));
+                // dispatch(threejsModelActions.generateThreejsModel(headType, options));
+                dispatch(baseActions.resetCalculatedState(headType));
+                // dispatch(baseActions.updateState(headType, {
+                //     hasModel: true
+                // }));
 
-        //         // dispatch(baseActions.render(headType));
-        //     })
-        //     .catch((err) => {
-        //         console.error(err);
-        //     });
+                dispatch(baseActions.render(headType));
+            })
+            .catch((err) => {
+                // TODO
+                console.error(err);
+            });
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
@@ -199,12 +231,49 @@ export const actions = {
             });
     },
 
-    selectModel: (headType, model) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
-        const find = modelGroup.getModels().find(v => v.meshObject === model);
-        dispatch(actions.selectModelByID(headType, find.modelID));
+    // TODO: Check usage of this method
+    // selectModel: (headType, model) => (dispatch, getState) => {
+    //     const { modelGroup } = getState()[headType];
+    //     const find = modelGroup.getModels().find(v => v.meshObject === model);
+    //     dispatch(actions.selectModelByID(headType, find.modelID));
+    // },
+
+    // TODO: method docs
+    selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        if (!isMultiSelect) {
+            // remove all selected model
+            modelGroup.emptySelectedModelArray();
+            dispatch(svgModelActions.emptySelectedModelArray(headType));
+        }
+        dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+        toolPathModelGroup.selectToolPathModel(model.modelID);
+        // todo, donot reset here
+        dispatch(svgModelActions.resetSelection(headType));
+        // todo multi select toopath model
+        dispatch(threejsModelActions.selectModel(headType, model));
     },
 
+    // todo, select model by toolPathModel ??? meshObject ???
+    selectModelInProcess: (headType, intersect) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        // console.log(modelGroup, toolPathModelGroup);
+
+        modelGroup.emptySelectedModelArray();
+        dispatch(svgModelActions.emptySelectedModelArray(headType));
+        // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
+
+        if (intersect) {
+            const model = modelGroup.getSelectedModelByIntersect(intersect);
+            if (model) {
+                dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+                toolPathModelGroup.selectToolPathModel(model.modelID);
+                dispatch(baseActions.render(headType));
+            }
+        }
+    },
+
+    // TODO: Check usage of this method
     selectModelByID: (headType, modelID) => (dispatch) => {
         dispatch(svgModelActions.selectModel(headType, modelID));
         dispatch(threejsModelActions.selectModel(headType, modelID));
@@ -217,11 +286,19 @@ export const actions = {
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+
+        const selectedModel = selectedModels[0];
+
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
-
-        const { config } = modelDefaultConfigs;
-
-        const selectedModel = modelGroup.getSelectedModel();
+        const config = {
+            ...modelDefaultConfigs.config,
+            ...selectedModel.getModeConfig(mode)
+        };
         const options = {
             headType: headType,
             uploadName: selectedModel.uploadName,
@@ -233,12 +310,8 @@ export const actions = {
                 rotationZ: 0,
                 flip: selectedModel.transformation.flip
             },
-            config: {
-                ...config,
-                ...selectedModel.getModeConfig(mode)
-            }
+            config: config
         };
-
 
         api.processImage(options)
             .then((res) => {
@@ -251,6 +324,7 @@ export const actions = {
 
                 const modelState = modelGroup.updateSelectedMode(mode, config, processImageName);
 
+                // TODO: what are we doing here?
                 let { gcodeConfig } = modelDefaultConfigs;
                 if (headType === 'cnc') {
                     const { toolDiameter, toolAngle } = getState().cnc.toolParams;
@@ -268,6 +342,10 @@ export const actions = {
                 }));
                 // dispatch(baseActions.recordSnapshot(headType));
                 dispatch(baseActions.render(headType));
+            })
+            .catch((e) => {
+                // TODO
+                console.error(e);
             });
     },
 
@@ -282,6 +360,7 @@ export const actions = {
         }));
     },
 
+    // TODO: unused function
     updateSelectedModelFlip: (headType, transformation) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup } = getState()[headType];
         const selectedModel = modelGroup.getSelectedModel();
@@ -319,7 +398,12 @@ export const actions = {
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
 
-        const selectedModel = modelGroup.getSelectedModel();
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+
+        const selectedModel = selectedModels[0];
         const options = {
             headType: headType,
             uploadName: selectedModel.uploadName,
@@ -343,9 +427,13 @@ export const actions = {
                 if (!processImageName) {
                     return;
                 }
+
                 svgModelGroup.updateElementImage(processImageName);
+
                 modelGroup.updateSelectedConfig(config, processImageName);
+
                 toolPathModelGroup.updateSelectedNeedPreview(true);
+
                 dispatch(baseActions.updateConfig(headType, config));
                 // dispatch(baseActions.recordSnapshot(headType));
                 dispatch(baseActions.resetCalculatedState(headType));
@@ -353,8 +441,56 @@ export const actions = {
     },
 
     updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
-        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
+        // todo
+        // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
+        // todo
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation, changeFrom));
+    },
+
+    // TODO: temporary workaround for model image processing
+    processSelectedModel: (headType) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text') {
+            return;
+        }
+
+        const options = {
+            headType: headType,
+            uploadName: selectedModel.uploadName,
+            sourceType: selectedModel.sourceType,
+            mode: selectedModel.mode,
+            transformation: {
+                width: selectedModel.transformation.width,
+                height: selectedModel.transformation.height,
+                rotationZ: 0,
+                flip: selectedModel.transformation.flip
+            },
+            config: {
+                ...selectedModel.config
+            }
+        };
+
+        api.processImage(options)
+            .then((res) => {
+                const processImageName = res.body.filename;
+                if (!processImageName) {
+                    return;
+                }
+                // todo
+                svgModelGroup.updateElementImage(processImageName);
+
+                toolPathModelGroup.updateSelectedNeedPreview(true);
+
+                // dispatch(baseActions.recordSnapshot(headType));
+                dispatch(baseActions.resetCalculatedState(headType));
+            });
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
@@ -402,9 +538,14 @@ export const actions = {
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
-        svgModelGroup.deleteElement();
+        svgModelGroup.deleteSelectedElements();
+        // todo
+        let toolPathModelState = null;
+        for (const model of modelGroup.getSelectedModelArray()) {
+            toolPathModelGroup.selectToolPathModel(model.modelID);
+            toolPathModelState = toolPathModelGroup.removeSelectedToolPathModel();
+        }
         const modelState = modelGroup.removeSelectedModel();
-        const toolPathModelState = toolPathModelGroup.removeSelectedToolPathModel();
 
         dispatch(baseActions.updateState(headType, {
             ...modelState,
@@ -474,7 +615,9 @@ export const actions = {
         transformation.positionX = posX;
         transformation.positionY = posY;
         transformation.rotationZ = 0;
-        model.updateAndRefresh({ transformation });
+        // todo
+        // model.updateAndRefresh({ transformation });
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
         // dispatch(actions.updateSelectedModelTransformation(headType, transformation));
         // dispatch(actions.onModelAfterTransform(headType));
     },
@@ -496,7 +639,8 @@ export const actions = {
             const modelState = modelGroup.onModelAfterTransform();
 
             if (modelState) {
-                dispatch(svgModelActions.updateSelectedTransformation(headType, modelState.transformation));
+                // dispatch(svgModelActions.updateSelectedTransformation(headType, modelState.transformation));
+                dispatch(svgModelActions.updateSelectedTransformation(headType, modelGroup.getSelectedModelTransformation()));
                 dispatch(baseActions.updateState(headType, { modelState }));
                 dispatch(baseActions.updateTransformation(headType, modelState.transformation));
                 dispatch(actions.previewModel(headType));
@@ -775,13 +919,13 @@ export const actions = {
             toolPathModelGroup.showAllToolPathModelsObj3D();
             for (const model of modelGroup.getModels()) {
                 const toolPath = toolPathModelGroup.getToolPathModel(model.modelID);
-                // if (toolPath.needPreview) {
-                toolPath.updateVisible(false);
-                model.updateVisible(true);
-                // } else {
-                // toolPath.updateVisible(true);
-                // model.updateVisible(false);
-            // }
+                if (toolPath.needPreview) {
+                    toolPath.updateVisible(false);
+                    model.updateVisible(true);
+                } else {
+                    toolPath.updateVisible(true);
+                    model.updateVisible(false);
+                }
             }
             dispatch(actions.manualPreview(headType));
         }

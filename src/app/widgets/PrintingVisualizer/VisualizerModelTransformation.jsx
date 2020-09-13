@@ -279,7 +279,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!disabled && transformMode === 'scale' && (
+                {!disabled && transformMode === 'scale' && selectedModelArray.length === 1 && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -380,6 +380,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
                                     }}
+
+
                                 />
                             </span>
                         </div>
