@@ -13,13 +13,7 @@ class ToolPathModelGroup {
 
         this._emptyState = {
             printOrder: 0,
-            // gcodeConfig: {}
-            // todo, set a default
-            gcodeConfig: {
-                optimizePath: true,
-                fillEnabled: true,
-                fillDensity: 0
-            }
+            gcodeConfig: {}
         };
         this.modelGroup = modelGroup;
         this.modelGroup.on('add', (model) => {

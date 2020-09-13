@@ -275,10 +275,6 @@ class LaserParameters extends PureComponent {
                 {isProcess && isSvgVector && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigSvgVector disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isTextVector && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigSvgVector disabled={!selectedModelVisible} />
-                )}
-
 
                 {isProcess && (
                     <GcodeParameters

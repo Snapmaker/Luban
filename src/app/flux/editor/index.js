@@ -268,6 +268,7 @@ export const actions = {
             if (model) {
                 dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
                 toolPathModelGroup.selectToolPathModel(model.modelID);
+                dispatch(baseActions.render(headType));
             }
         }
     },
