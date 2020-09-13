@@ -37,7 +37,7 @@ class Visualizer extends Component {
         // hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
@@ -47,7 +47,7 @@ class Visualizer extends Component {
 
         // func
         getEstimatedTime: PropTypes.func.isRequired,
-        getSelectedModel: PropTypes.func.isRequired,
+        // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
         sendSelectedModelToBack: PropTypes.func.isRequired,
         arrangeAllModels2D: PropTypes.func.isRequired,
@@ -186,9 +186,10 @@ class Visualizer extends Component {
 
         this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
-        const { selectedModelID } = nextProps;
-        if (selectedModelID !== this.props.selectedModelID) {
-            const selectedModel = this.props.getSelectedModel();
+        const { selectedModelArray } = nextProps;
+        // todo, selectedModelId nof found
+        if (selectedModelArray !== this.props.selectedModelArray) {
+            const selectedModel = selectedModelArray[0];
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
@@ -207,18 +208,20 @@ class Visualizer extends Component {
                     this.canvas.current.controls.detach();
                 }
             }
-        } else {
-            const selectedModel = this.props.getSelectedModel();
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                if (selectedModel.visible) {
-                    this.canvas.current.controls.attach(selectedModel.meshObject);
-                } else {
-                    this.canvas.current.controls.detach();
-                }
-            }
         }
+        // else {
+        //     const selectedModel = this.props.modelGroup.getSelectedModelArray()[0]; //getSelectedModel();
+        //     console.log(selectedModel);
+        //     if (!selectedModel) {
+        //         this.canvas.current.controls.detach();
+        //     } else {
+        //         if (selectedModel.visible) {
+        //             this.canvas.current.controls.attach(selectedModel.meshObject);
+        //         } else {
+        //             this.canvas.current.controls.detach();
+        //         }
+        //     }
+        // }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
