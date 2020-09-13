@@ -121,7 +121,6 @@ const mapStateToProps = (state) => {
     const { toolPathModelGroup } = state.laser;
     const toolPathModel = toolPathModelGroup.getSelectedModel();
     const { density, movementMode } = toolPathModel.gcodeConfig;
-    console.log(toolPathModel);
     return {
         density,
         movementMode

@@ -116,8 +116,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 const mapStateToProps = (state) => {
     const { toolPathModelGroup } = state.laser;
     const toolPathModel = toolPathModelGroup.getSelectedModel();
-    const { density, direction } = toolPathModel.gcodeConfig;
-    console.log(toolPathModel);
+    const { density, direction } = toolPathModel.getGcodeConfig();
     return {
         density,
         direction

@@ -259,14 +259,12 @@ export const actions = {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
         // console.log(modelGroup, toolPathModelGroup);
 
-        console.log(headType);
         modelGroup.emptySelectedModelArray();
         dispatch(svgModelActions.emptySelectedModelArray(headType));
         // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
 
         if (intersect) {
             const model = modelGroup.getSelectedModelByIntersect(intersect);
-            console.log(model.modelName);
             if (model) {
                 dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
                 toolPathModelGroup.selectToolPathModel(model.modelID);
