@@ -51,11 +51,12 @@ class Transformation extends PureComponent {
             if (selectedModelArray && selectedModelArray.length === 1) {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
+                        width,
                         scaleX: width / this.props.transformation.width,
                         scaleY: width / this.props.transformation.width
                     });
                 } else {
-                    this.props.updateSelectedModelTransformation({ scaleX: width / this.props.transformation.width });
+                    this.props.updateSelectedModelTransformation({ width, scaleX: width / this.props.transformation.width });
                 }
             }
         },
@@ -64,11 +65,12 @@ class Transformation extends PureComponent {
             if (selectedModelArray && selectedModelArray.length === 1) {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
+                        height,
                         scaleY: height / this.props.transformation.height,
                         scaleX: height / this.props.transformation.height
                     });
                 } else {
-                    this.props.updateSelectedModelTransformation({ scaleY: height / this.props.transformation.height });
+                    this.props.updateSelectedModelTransformation({ height, scaleY: height / this.props.transformation.height });
                 }
             }
         },
