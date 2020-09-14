@@ -36,7 +36,7 @@ class Visualizer extends Component {
 
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         svgModelGroup: PropTypes.object.isRequired,
@@ -46,7 +46,7 @@ class Visualizer extends Component {
 
         // func
         getEstimatedTime: PropTypes.func.isRequired,
-        getSelectedModel: PropTypes.func.isRequired,
+        // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
         sendSelectedModelToBack: PropTypes.func.isRequired,
         arrangeAllModels2D: PropTypes.func.isRequired,
@@ -180,10 +180,11 @@ class Visualizer extends Component {
         */
 
         this.canvas.current.updateTransformControl2D();
-        const { selectedModelID } = nextProps;
         // const { model } = nextProps;
-        if (selectedModelID !== this.props.selectedModelID) {
-            const selectedModel = this.props.getSelectedModel();
+        const { selectedModelArray } = nextProps;
+        // todo, selectedModelId nof found
+        if (selectedModelArray !== this.props.selectedModelArray) {
+            const selectedModel = selectedModelArray[0];
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
@@ -194,22 +195,10 @@ class Visualizer extends Component {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
                 // this.canvas.current.controls.attach(model);
-                // this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
+                // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
-                // todo, this hide flag will be packaged
                 if (meshObject && selectedModel.visible) {
                     this.canvas.current.controls.attach(meshObject);
-                } else {
-                    this.canvas.current.controls.detach();
-                }
-            }
-        } else {
-            const selectedModel = this.props.getSelectedModel();
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                if (selectedModel.visible) {
-                    this.canvas.current.controls.attach(selectedModel.meshObject);
                 } else {
                     this.canvas.current.controls.detach();
                 }

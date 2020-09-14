@@ -297,6 +297,7 @@ export const actions = {
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
         const config = {
             ...modelDefaultConfigs.config,
+            ...selectedModel.config,
             ...selectedModel.getModeConfig(mode)
         };
         const options = {
