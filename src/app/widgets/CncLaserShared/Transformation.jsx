@@ -52,11 +52,12 @@ class Transformation extends PureComponent {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
                         width,
-                        scaleX: width / this.props.transformation.width,
-                        scaleY: width / this.props.transformation.width
+                        height: this.props.transformation.height * width / this.props.transformation.width,
+                        scaleX: this.props.transformation.scaleX * width / this.props.transformation.width,
+                        scaleY: this.props.transformation.scaleY * width / this.props.transformation.width
                     });
                 } else {
-                    this.props.updateSelectedModelTransformation({ width, scaleX: width / this.props.transformation.width });
+                    this.props.updateSelectedModelTransformation({ width, scaleX: this.props.transformation.scaleX * width / this.props.transformation.width });
                 }
             }
         },
@@ -66,11 +67,12 @@ class Transformation extends PureComponent {
                 if (this.props.transformation.uniformScalingState) {
                     this.props.updateSelectedModelTransformation({
                         height,
-                        scaleY: height / this.props.transformation.height,
-                        scaleX: height / this.props.transformation.height
+                        width: this.props.transformation.width * height / this.props.transformation.height,
+                        scaleY: this.props.transformation.scaleY * height / this.props.transformation.height,
+                        scaleX: this.props.transformation.scaleX * height / this.props.transformation.height
                     });
                 } else {
-                    this.props.updateSelectedModelTransformation({ height, scaleY: height / this.props.transformation.height });
+                    this.props.updateSelectedModelTransformation({ height, scaleY: this.props.transformation.scaleY * height / this.props.transformation.height });
                 }
             }
         },
@@ -79,6 +81,9 @@ class Transformation extends PureComponent {
             this.props.updateSelectedModelTransformation({ rotationZ });
         },
         onChangePositionX: (positionX) => {
+            // if (positionX) {
+            //     return;
+            // }
             this.props.updateSelectedModelTransformation({ positionX });
         },
         onChangePositionY: (positionY) => {
@@ -100,10 +105,7 @@ class Transformation extends PureComponent {
 
     render() {
         const { size, selectedModelArray, sourceType } = this.props;
-        // if (this.props.headType === 'laser') {
-        //     console.log('----render----');
-        // }
-        const { rotationZ = 0, width = 125, height = 125, scaleX, scaleY, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
+        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
         const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
@@ -175,7 +177,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width * (scaleX ? Math.abs(scaleX) : 1), 1)}
+                                    value={toFixed(width, 1)}
                                     min={1}
                                     max={size.x}
                                     onChange={(value) => {
@@ -202,7 +204,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height * (scaleY ? Math.abs(scaleY) : 1), 1)}
+                                    value={toFixed(height, 1)}
                                     min={1}
                                     max={size.y}
                                     onChange={(value) => {
@@ -284,7 +286,6 @@ const mapStateToProps = (state, props) => {
     // const { modelID, sourceType, visible } = selectedModel;
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const visible = (selectedModelArray.length === 1) ? selectedModelArray[0].visible : null;
-    // console.log('----begin render----', modelGroup.getSelectedModelTransformation());
     return {
         size: machine.size,
         selectedModelArray,
