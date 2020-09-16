@@ -310,6 +310,7 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
+
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
@@ -863,6 +864,7 @@ class SVGCanvas extends PureComponent {
                     width: posAndSize.width,
                     height: posAndSize.height
                 });
+                this.mode = 'select';
                 return; // note that this is return
             }
             case 'panMove': {
