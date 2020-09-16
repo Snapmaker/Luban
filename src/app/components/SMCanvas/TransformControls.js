@@ -3,6 +3,7 @@ import {
     Float32BufferAttribute,
     Vector3,
     Euler,
+    Box3,
     Quaternion,
     Matrix4,
     Group,
@@ -78,8 +79,6 @@ class TransformControls extends Object3D {
     pointStart = new Vector3();
 
     pointEnd = new Vector3();
-
-    boundingBox = [];
 
     constructor(camera) {
         super();
@@ -420,7 +419,7 @@ class TransformControls extends Object3D {
         if (this.object.children.length === 0) {
             this.hideSelectedPeripherals();
             this.hideAllPeripherals();
-            this.boundingBox = [];
+            this.object.boundingBox = [];
         } else if (!this.object.shouldUpdateBoundingbox) {
             this.hideSelectedPeripherals();
         } else {
@@ -452,10 +451,10 @@ class TransformControls extends Object3D {
                 child.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
 
                 if (this.object.shouldUpdateBoundingbox) {
-                    if (!this.boundingBox[index]) {
+                    if (!this.object.boundingBox[index]) {
                         this.updateBoundingBox();
                     }
-                    const boundingBox = this.boundingBox[index];
+                    const boundingBox = this.object.boundingBox[index];
                     if (boundingBox && boundingBox.min && boundingBox.max) {
                         if (this.object.children.length === 1) {
                             minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
@@ -841,13 +840,14 @@ class TransformControls extends Object3D {
     }
 
     updateBoundingBox() {
+        this.object.shouldUpdateBoundingbox = true;
         this.object.children.forEach((child, index) => {
             if (child.geometry.boundingBox) {
                 const clone = child.geometry.clone();
                 if (this.object.children.length === 1) {
                     clone.applyMatrix(this.object.matrix);
                     clone.computeBoundingBox();
-                    this.boundingBox[index] = clone.boundingBox;
+                    this.object.boundingBox[index] = clone.boundingBox;
                 } else {
                     const parentClone = this.object.clone();
                     const newRotation = new Euler(
@@ -873,11 +873,11 @@ class TransformControls extends Object3D {
                         (minBoundingBox.y + maxBoundingBox.y) / 2,
                         (minBoundingBox.z + maxBoundingBox.z) / 2,
                     );
-                    const newBoundingBox = {
-                        min: new Vector3(minBoundingBox.x - centerPosition.x, minBoundingBox.y - centerPosition.y, minBoundingBox.z - centerPosition.z),
-                        max: new Vector3(maxBoundingBox.x - centerPosition.x, maxBoundingBox.y - centerPosition.y, maxBoundingBox.z - centerPosition.z)
-                    };
-                    this.boundingBox[index] = newBoundingBox;
+                    const newBoundingBox = new Box3(
+                        new Vector3(minBoundingBox.x - centerPosition.x, minBoundingBox.y - centerPosition.y, minBoundingBox.z - centerPosition.z),
+                        new Vector3(maxBoundingBox.x - centerPosition.x, maxBoundingBox.y - centerPosition.y, maxBoundingBox.z - centerPosition.z)
+                    );
+                    this.object.boundingBox[index] = newBoundingBox;
                 }
             }
         });

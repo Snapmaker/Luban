@@ -26,6 +26,7 @@ class ModelGroup extends EventEmitter {
 
         this.selectedGroup = new Group();
         this.selectedGroup.uniformScalingState = true;
+        this.selectedGroup.boundingBox = [];
         this.object.add(this.selectedGroup);
         this.selectedModelArray = [];
         this.clipboard = [];

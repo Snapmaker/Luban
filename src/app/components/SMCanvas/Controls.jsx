@@ -288,10 +288,10 @@ class Controls extends EventEmitter {
                 }
                 break;
             case STATE.TRANSFORM:
-                this.transformControl.onMouseUp();
                 if (this.sourceType === '3D') {
                     this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
                 }
+                this.transformControl.onMouseUp();
                 break;
             default:
                 break;
