@@ -93,7 +93,7 @@ export const actions = {
                         toolSnap: gcodeConfig.toolSnap
                     }));
                 }
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, null, config, gcodeConfig, caseTransformation));
+                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, null, { svgNodeName: 'image', ...config }, gcodeConfig, caseTransformation));
             })
             .catch((err) => {
                 onError && onError(err);
