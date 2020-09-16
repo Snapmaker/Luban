@@ -386,6 +386,7 @@ class SvgModelGroup {
             if (transformation.scaleX !== undefined) {
                 model.updateAndRefresh({
                     transformation: {
+                        width: transformation.width,
                         scaleX: transformation.scaleX
                     }
                 });
@@ -393,6 +394,7 @@ class SvgModelGroup {
             if (transformation.scaleY !== undefined) {
                 model.updateAndRefresh({
                     transformation: {
+                        height: transformation.height,
                         scaleY: transformation.scaleY
                     }
                 });

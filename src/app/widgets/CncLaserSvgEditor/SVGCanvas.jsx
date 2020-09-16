@@ -577,6 +577,8 @@ class SVGCanvas extends PureComponent {
             default:
                 break;
         }
+        console.log('after mouse down', this.mode, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().width,
+            this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().scaleX);
     };
 
     onMouseMove = (event) => {
@@ -854,7 +856,6 @@ class SVGCanvas extends PureComponent {
                     dx,
                     dy
                 });
-                this.mode = 'select';
                 // todo do not use modelGroup here
                 const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
                 const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
