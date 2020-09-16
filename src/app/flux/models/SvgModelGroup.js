@@ -334,8 +334,6 @@ class SvgModelGroup {
                 width: posAndSize.width,
                 height: posAndSize.height
             });
-
-            this.invokeModelTransformCallback();
         }
         if (transformation.rotationZ !== undefined) {
             // todo, copy from canvas mouse up
@@ -408,7 +406,7 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
-        this.invokeModelTransformCallback();
+        // this.invokeModelTransformCallback();
     }
 
     // when single select

@@ -285,10 +285,7 @@ class Model {
         return this.modeConfigs[mode];
     }
 
-    processMode(mode, config, processImageName) {
-        if (processImageName) {
-            this.processImageName = processImageName;
-        }
+    processMode(mode, config) {
         if (this.mode !== mode) {
             this.modeConfigs[this.mode] = {
                 config: {
@@ -304,7 +301,9 @@ class Model {
                     ...config
                 };
             }
+
             this.mode = mode;
+            this.processImageName = null;
         }
 
         this.generateProcessObject3D();
@@ -472,12 +471,19 @@ class Model {
         this.generateProcessObject3D();
     }
 
-    updateConfig(config, processImageName) {
+    updateConfig(config) {
         this.config = {
             ...this.config,
             ...config
         };
-        this.processMode(this.mode, this.config, processImageName);
+        this.processMode(this.mode, this.config);
+    }
+
+    updateProcessImageName(processImageName) {
+        // this.processMode(this.mode, this.config, processImageName);
+        this.processImageName = processImageName;
+
+        this.generateProcessObject3D();
     }
 
     computeBoundingBox() {

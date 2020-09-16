@@ -18,7 +18,8 @@ class ConfigGreyscale extends PureComponent {
         algorithm: PropTypes.string.isRequired,
         disabled: PropTypes.bool,
 
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        processSelectedModel: PropTypes.func.isRequired
     };
 
     state = {
@@ -61,7 +62,10 @@ class ConfigGreyscale extends PureComponent {
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={invert}
-                                    onChange={this.actions.onInverseBW}
+                                    onChange={() => {
+                                        this.actions.onInverseBW();
+                                        this.props.processSelectedModel();
+                                    }}
                                 />
                             </div>
                             <TipTrigger
@@ -76,7 +80,10 @@ class ConfigGreyscale extends PureComponent {
                                         value={contrast}
                                         min={0}
                                         max={100}
-                                        onChange={this.actions.onChangeContrast}
+                                        onChange={() => {
+                                            this.actions.onChangeContrast();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                     <Slider
                                         disabled={disabled}
@@ -85,6 +92,7 @@ class ConfigGreyscale extends PureComponent {
                                         min={0}
                                         max={100}
                                         onChange={this.actions.onChangeContrast}
+                                        onAfterChange={this.props.processSelectedModel}
                                     />
                                 </div>
                             </TipTrigger>
@@ -101,7 +109,10 @@ class ConfigGreyscale extends PureComponent {
                                         value={brightness}
                                         min={0}
                                         max={100}
-                                        onChange={this.actions.onChangeBrightness}
+                                        onChange={() => {
+                                            this.actions.onChangeBrightness();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                     <Slider
                                         disabled={disabled}
@@ -110,6 +121,7 @@ class ConfigGreyscale extends PureComponent {
                                         min={0}
                                         max={100}
                                         onChange={this.actions.onChangeBrightness}
+                                        onAfterChange={this.props.processSelectedModel}
                                     />
                                 </div>
                             </TipTrigger>
@@ -125,7 +137,10 @@ class ConfigGreyscale extends PureComponent {
                                         value={whiteClip}
                                         min={0}
                                         max={255}
-                                        onChange={this.actions.onChangeWhiteClip}
+                                        onChange={() => {
+                                            this.actions.onChangeWhiteClip();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                     <Slider
                                         disabled={disabled}
@@ -134,6 +149,7 @@ class ConfigGreyscale extends PureComponent {
                                         min={0}
                                         max={255}
                                         onChange={this.actions.onChangeWhiteClip}
+                                        onAfterChange={this.props.processSelectedModel}
                                     />
                                 </div>
                             </TipTrigger>
@@ -178,7 +194,10 @@ class ConfigGreyscale extends PureComponent {
                                         placeholder={i18n._('Choose algorithms')}
                                         searchable={false}
                                         value={algorithm}
-                                        onChange={this.actions.onChangeAlgorithm}
+                                        onChange={() => {
+                                            this.actions.onChangeAlgorithm();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -211,7 +230,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config))
+        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
+        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
     };
 };
 

@@ -748,9 +748,11 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray;
     }
 
-    updateSelectedMode(mode, config, processImageName) {
-        // todo
-        this.selectedModelArray.length === 1 && this.selectedModelArray[0].processMode(mode, config, processImageName);
+    updateSelectedMode(mode, config) {
+        if (this.selectedModelArray.length === 1) {
+            const selectedModel = this.selectedModelArray[0];
+            selectedModel.processMode(mode, config);
+        }
         return this._getEmptyState();
     }
 
@@ -883,10 +885,16 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    updateSelectedConfig(config, processImageName) {
-        // todo
+    updateSelectedConfig(config) {
         if (this.selectedModelArray.length === 1) {
-            this.selectedModelArray[0].updateConfig(config, processImageName);
+            this.selectedModelArray[0].updateConfig(config);
+        }
+    }
+
+    updateSelectedModelProcessImage(processImageName) {
+        if (this.selectedModelArray.length === 1) {
+            const selectedModel = this.selectedModelArray[0];
+            selectedModel.updateProcessImageName(processImageName);
         }
     }
 

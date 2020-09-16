@@ -179,42 +179,7 @@ export const actions = {
         svgModelGroup.addSelectedSvgModelsByModels([model]);
 
         // Process image right after created
-        const processOptions = {
-            headType: headType,
-            uploadName: model.uploadName,
-            sourceType: model.sourceType,
-            mode: model.mode,
-            transformation: {
-                width: model.transformation.width,
-                height: model.transformation.height,
-                rotationZ: 0,
-                flip: model.transformation.flip
-            },
-            config: model.config
-        };
-        api.processImage(processOptions)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
-                svgModelGroup.updateElementImage(processImageName);
-                // options.processImageName = processImageName;
-
-                // dispatch(svgModelActions.generateSvgModel(headType, options));
-
-                // dispatch(threejsModelActions.generateThreejsModel(headType, options));
-                dispatch(baseActions.resetCalculatedState(headType));
-                // dispatch(baseActions.updateState(headType, {
-                //     hasModel: true
-                // }));
-
-                dispatch(baseActions.render(headType));
-            })
-            .catch((err) => {
-                // TODO
-                console.error(err);
-            });
+        dispatch(actions.processSelectedModel(headType));
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
@@ -285,69 +250,43 @@ export const actions = {
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, toolPathModelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
         }
 
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
+
         const selectedModel = selectedModels[0];
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
+        // Set or replace image config
         const config = {
             ...modelDefaultConfigs.config,
-            ...selectedModel.config,
             ...selectedModel.getModeConfig(mode)
         };
-        const options = {
-            headType: headType,
-            uploadName: selectedModel.uploadName,
-            sourceType: sourceType,
-            mode: mode,
-            transformation: {
-                width: selectedModel.transformation.width,
-                height: selectedModel.transformation.height,
-                rotationZ: 0,
-                flip: selectedModel.transformation.flip
-            },
-            config: config
-        };
+        console.log('default config =', modelDefaultConfigs.config);
+        console.log('config =', config);
+        modelGroup.updateSelectedMode(mode, config);
 
-        api.processImage(options)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
+        // Set or replace G-code config of new mode
+        let { gcodeConfig } = modelDefaultConfigs;
+        if (headType === 'cnc') {
+            const { toolDiameter, toolAngle } = getState().cnc.toolParams;
+            gcodeConfig = {
+                ...gcodeConfig,
+                toolDiameter,
+                toolAngle
+            };
+        }
+        const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
+        dispatch(baseActions.updateState(headType, {
+            // ...modelState,
+            ...toolPathModelState
+        }));
 
-                svgModelGroup.updateElementImage(processImageName);
-
-                const modelState = modelGroup.updateSelectedMode(mode, config, processImageName);
-
-                // TODO: what are we doing here?
-                let { gcodeConfig } = modelDefaultConfigs;
-                if (headType === 'cnc') {
-                    const { toolDiameter, toolAngle } = getState().cnc.toolParams;
-                    gcodeConfig = {
-                        ...gcodeConfig,
-                        toolDiameter,
-                        toolAngle
-                    };
-                }
-                const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
-
-                dispatch(baseActions.updateState(headType, {
-                    ...modelState,
-                    ...toolPathModelState
-                }));
-                // dispatch(baseActions.recordSnapshot(headType));
-                dispatch(baseActions.render(headType));
-            })
-            .catch((e) => {
-                // TODO
-                console.error(e);
-            });
+        dispatch(actions.processSelectedModel(headType));
     },
 
     changeSelectedModelShowOrigin: (headType) => (dispatch, getState) => {
@@ -362,8 +301,9 @@ export const actions = {
     },
 
     // TODO: unused function
-    updateSelectedModelFlip: (headType, transformation) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup } = getState()[headType];
+    updateSelectedModelFlip: (headType, transformation) => (dispatch) => {
+        /*
+        const { modelGroup } = getState()[headType];
         const selectedModel = modelGroup.getSelectedModel();
         const options = {
             headType: headType,
@@ -378,26 +318,44 @@ export const actions = {
             },
             config: selectedModel.config
         };
+        */
 
         dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
 
+        console.log('x');
+        dispatch(actions.processSelectedModel(headType));
+
+        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
+
+        /*
         api.processImage(options)
             .then((res) => {
                 const processImageName = res.body.filename;
                 if (!processImageName) {
                     return;
                 }
+                // modelGroup.updateProcessImageName(processImageName);
                 svgModelGroup.updateElementImage(processImageName);
                 dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
             });
+        */
     },
     // updateSelectedModelUniformScalingState: (headType, transformation) => (dispatch) => {
     // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
     // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
     // },
 
+    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
+        // todo
+        // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
+        // todo
+        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation, changeFrom));
+
+        dispatch(actions.processSelectedModel(headType));
+    },
+
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -405,47 +363,15 @@ export const actions = {
         }
 
         const selectedModel = selectedModels[0];
-        const options = {
-            headType: headType,
-            uploadName: selectedModel.uploadName,
-            sourceType: selectedModel.sourceType,
-            mode: selectedModel.mode,
-            transformation: {
-                width: selectedModel.transformation.width,
-                height: selectedModel.transformation.height,
-                rotationZ: 0,
-                flip: selectedModel.transformation.flip
-            },
-            config: {
-                ...selectedModel.config,
-                ...config
-            }
+
+        const newConfig = {
+            ...selectedModel.config,
+            ...config
         };
 
-        api.processImage(options)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
+        modelGroup.updateSelectedConfig(newConfig);
 
-                svgModelGroup.updateElementImage(processImageName);
-
-                modelGroup.updateSelectedConfig(config, processImageName);
-
-                toolPathModelGroup.updateSelectedNeedPreview(true);
-
-                dispatch(baseActions.updateConfig(headType, config));
-                // dispatch(baseActions.recordSnapshot(headType));
-                dispatch(baseActions.resetCalculatedState(headType));
-            });
-    },
-
-    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
-        // todo
-        // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
-        // todo
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation, changeFrom));
+        // dispatch(actions.processSelectedModel(headType));
     },
 
     // TODO: temporary workaround for model image processing
@@ -473,9 +399,7 @@ export const actions = {
                 rotationZ: 0,
                 flip: selectedModel.transformation.flip
             },
-            config: {
-                ...selectedModel.config
-            }
+            config: selectedModel.config
         };
 
         api.processImage(options)
@@ -484,13 +408,20 @@ export const actions = {
                 if (!processImageName) {
                     return;
                 }
-                // todo
+
+                modelGroup.updateSelectedModelProcessImage(processImageName);
+
                 svgModelGroup.updateElementImage(processImageName);
 
                 toolPathModelGroup.updateSelectedNeedPreview(true);
 
                 // dispatch(baseActions.recordSnapshot(headType));
                 dispatch(baseActions.resetCalculatedState(headType));
+                dispatch(baseActions.render(headType));
+            })
+            .catch((e) => {
+                // TODO: use log
+                console.error(e);
             });
     },
 

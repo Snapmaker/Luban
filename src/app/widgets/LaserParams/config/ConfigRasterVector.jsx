@@ -15,7 +15,8 @@ class ConfigRasterVector extends PureComponent {
         turdSize: PropTypes.number,
         disabled: PropTypes.bool,
 
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        processSelectedModel: PropTypes.func.isRequired
     };
 
     state = {
@@ -56,7 +57,10 @@ class ConfigRasterVector extends PureComponent {
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={invert}
-                                        onChange={this.actions.onToggleInvert}
+                                        onChange={() => {
+                                            this.actions.onToggleInvert();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -72,7 +76,10 @@ class ConfigRasterVector extends PureComponent {
                                         value={vectorThreshold}
                                         min={0}
                                         max={20}
-                                        onChange={this.actions.changeVectorThreshold}
+                                        onChange={() => {
+                                            this.actions.changeVectorThreshold();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                     <Slider
                                         disabled={disabled}
@@ -82,6 +89,7 @@ class ConfigRasterVector extends PureComponent {
                                         max={255}
                                         step={1}
                                         onChange={this.actions.changeVectorThreshold}
+                                        onAfterChange={this.props.processSelectedModel}
                                     />
                                 </div>
                             </TipTrigger>
@@ -97,7 +105,10 @@ class ConfigRasterVector extends PureComponent {
                                         value={turdSize}
                                         min={0}
                                         max={10000}
-                                        onChange={this.actions.onChangeTurdSize}
+                                        onChange={() => {
+                                            this.actions.onChangeTurdSize();
+                                            this.props.processSelectedModel();
+                                        }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -127,7 +138,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config))
+        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
+        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
     };
 };
 
