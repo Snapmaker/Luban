@@ -577,8 +577,6 @@ class SVGCanvas extends PureComponent {
             default:
                 break;
         }
-        console.log('after mouse down', this.mode, this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().width,
-            this.props.svgModelGroup.modelGroup.getSelectedModelTransformation().scaleX);
     };
 
     onMouseMove = (event) => {
