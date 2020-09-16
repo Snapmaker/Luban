@@ -123,6 +123,24 @@ class ModelGroup extends EventEmitter {
         }
     }
 
+    getSelectedModelTransformationForPrinting() {
+        if (this.selectedModelArray.length > 0) {
+            return {
+                positionX: this.selectedGroup.position.x,
+                positionY: this.selectedGroup.position.y,
+                scaleX: this.selectedGroup.scale.x,
+                scaleY: this.selectedGroup.scale.y,
+                scaleZ: this.selectedGroup.scale.z,
+                uniformScalingState: this.selectedGroup.uniformScalingState,
+                rotationX: this.selectedGroup.rotation.x,
+                rotationY: this.selectedGroup.rotation.y,
+                rotationZ: this.selectedGroup.rotation.z
+            };
+        } else {
+            return {};
+        }
+    }
+
     changeShowOrigin() {
         // todo
         return this.selectedModelArray.length === 1 && this.selectedModelArray[0].changeShowOrigin();
@@ -488,7 +506,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(selectModel);
             }
         }
-        this.resetSelectedObjectScaleAndRotation();
+        this.resetSelectedObjectWhenMultiSelect();
         this.applySelectedObjectParentMatrix();
 
         this.onDataChangedCallback();
@@ -522,19 +540,23 @@ class ModelGroup extends EventEmitter {
                 }
             }
         }
-        this.resetSelectedObjectScaleAndRotation();
+        this.resetSelectedObjectWhenMultiSelect();
         this.applySelectedObjectParentMatrix();
         this.onDataChangedCallback();
         this.emit('select');
         return this.getStateAndUpdateBoundingBox();
     }
 
-    resetSelectedObjectScaleAndRotation() {
+    resetSelectedObjectWhenMultiSelect() {
         if (this.selectedGroup.children.length > 1) {
-            this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
-            this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
+            this.resetSelectedObjectScaleAndRotation();
             this.selectedGroup.uniformScalingState = true;
         }
+    }
+
+    resetSelectedObjectScaleAndRotation() {
+        this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
+        this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
     }
 
     addModelToSelectedGroup(model) {
@@ -565,7 +587,7 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.add(item.meshObject);
             this.selectedModelIDArray.push(item.modelID);
         });
-        this.resetSelectedObjectScaleAndRotation();
+        this.resetSelectedObjectWhenMultiSelect();
         this.applySelectedObjectParentMatrix();
         this.onDataChangedCallback();
 
@@ -590,9 +612,12 @@ class ModelGroup extends EventEmitter {
     }
 
     arrangeAllModels() {
+        this.removeSelectedObjectParentMatrix();
+        this.resetSelectedObjectScaleAndRotation();
         const models = this.getModels();
         for (const model of models) {
             this.object.remove(model.meshObject);
+            this.selectedGroup.remove(model.meshObject);
         }
         this.models.splice(0);
 
@@ -608,6 +633,7 @@ class ModelGroup extends EventEmitter {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
+        this.applySelectedObjectParentMatrix();
         return this.getStateAndUpdateBoundingBox();
     }
 

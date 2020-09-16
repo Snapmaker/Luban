@@ -21,28 +21,28 @@ const commandKeys = [
         preventDefault: true
     },
     {
-        keys: ['ctrl+a', 'mod+a'],
+        keys: ['mod+a'],
         cmd: 'SELECTALL',
         payload: {
         },
         preventDefault: true
     },
     {
-        keys: ['ctrl+c', 'mod+c'],
+        keys: ['mod+c'],
         cmd: 'COPY',
         payload: {
         },
         preventDefault: true
     },
     {
-        keys: ['ctrl+v', 'mod+v'],
+        keys: ['mod+v'],
         cmd: 'PASTE',
         payload: {
         },
         preventDefault: true
     },
     {
-        keys: ['ctrl+z', 'mod+z'],
+        keys: ['mod+z'],
         cmd: 'UNDO',
         payload: {
         },
