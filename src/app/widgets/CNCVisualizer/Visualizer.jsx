@@ -36,7 +36,8 @@ class Visualizer extends Component {
 
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        // selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         svgModelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
@@ -45,7 +46,7 @@ class Visualizer extends Component {
 
         // func
         getEstimatedTime: PropTypes.func.isRequired,
-        getSelectedModel: PropTypes.func.isRequired,
+        // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
         sendSelectedModelToBack: PropTypes.func.isRequired,
         arrangeAllModels2D: PropTypes.func.isRequired,
@@ -94,8 +95,8 @@ class Visualizer extends Component {
                 this.canvas.current.autoFocus();
             }
         },
-        onSelectModels: (model) => {
-            this.props.selectModel(model);
+        onSelectModels: (intersect) => {
+            this.props.selectModel(intersect);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -179,10 +180,11 @@ class Visualizer extends Component {
         */
 
         this.canvas.current.updateTransformControl2D();
-        const { selectedModelID } = nextProps;
         // const { model } = nextProps;
-        if (selectedModelID !== this.props.selectedModelID) {
-            const selectedModel = this.props.getSelectedModel();
+        const { selectedModelArray } = nextProps;
+        // todo, selectedModelId nof found
+        if (selectedModelArray !== this.props.selectedModelArray) {
+            const selectedModel = selectedModelArray[0];
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
@@ -193,22 +195,10 @@ class Visualizer extends Component {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
                 // this.canvas.current.controls.attach(model);
-                // this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
+                // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
-                // todo, this hide flag will be packaged
                 if (meshObject && selectedModel.visible) {
                     this.canvas.current.controls.attach(meshObject);
-                } else {
-                    this.canvas.current.controls.detach();
-                }
-            }
-        } else {
-            const selectedModel = this.props.getSelectedModel();
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                if (selectedModel.visible) {
-                    this.canvas.current.controls.attach(selectedModel.meshObject);
                 } else {
                     this.canvas.current.controls.detach();
                 }
@@ -275,7 +265,8 @@ class Visualizer extends Component {
     render() {
         // const actions = this.actions;
         // const isModelSelected = !!this.props.model;
-        const isModelSelected = !!this.props.selectedModelID;
+        // const isModelSelected = !!this.props.selectedModelID;
+        const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
         // eslint-disable-next-line no-unused-vars
         const hasModel = this.props.hasModel;
 
@@ -303,7 +294,7 @@ class Visualizer extends Component {
         }
         */
 
-        const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
 
@@ -375,25 +366,25 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.bringToFront
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Send to Back'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.sendToBack
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 items: [
                                     {
                                         type: 'item',
@@ -445,7 +436,7 @@ class Visualizer extends Component {
                             {
                                 type: 'subMenu',
                                 label: i18n._('Flip'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 items: [
                                     {
                                         type: 'item',
@@ -470,7 +461,7 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isOnlySelectedOneModel,
                                 onClick: this.actions.deleteSelectedModel
                             }
                             // {
@@ -491,6 +482,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { page, modelGroup, svgModelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     return {
         page,
@@ -499,6 +491,7 @@ const mapStateToProps = (state) => {
         modelGroup,
         svgModelGroup,
         toolPathModelGroup,
+        selectedModelArray,
         selectedModelID,
         hasModel,
         renderingTimestamp,
@@ -517,7 +510,7 @@ const mapDispatchToProps = (dispatch) => {
         arrangeAllModels2D: () => dispatch(editorActions.arrangeAllModels2D('cnc')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
-        selectModel: (model) => dispatch(editorActions.selectModel('cnc', model)),
+        selectModel: (intersect) => dispatch(editorActions.selectModelInProcess('cnc', intersect)),
         unselectAllModels: () => dispatch(editorActions.unselectAllModels('cnc')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),

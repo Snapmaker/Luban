@@ -133,6 +133,10 @@ class ToolPathModel {
     refresh() {
         this.updateNeedPreview(true);
     }
+
+    getGcodeConfig() {
+        return this.gcodeConfig;
+    }
 }
 
 export default ToolPathModel;

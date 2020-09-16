@@ -118,8 +118,9 @@ class GcodeConfigGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { gcodeConfig } = state.laser;
-    const { density, movementMode } = gcodeConfig;
+    const { toolPathModelGroup } = state.laser;
+    const toolPathModel = toolPathModelGroup.getSelectedModel();
+    const { density, movementMode } = toolPathModel.gcodeConfig;
     return {
         density,
         movementMode

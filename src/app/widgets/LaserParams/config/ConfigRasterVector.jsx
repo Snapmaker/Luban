@@ -110,8 +110,14 @@ class ConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
-    const { vectorThreshold, invert, turdSize } = config;
+    const { modelGroup } = state.laser;
+
+    // assume that only one model is selected
+    const selectedModels = modelGroup.getSelectedModelArray();
+    const model = selectedModels[0];
+
+    const { vectorThreshold, invert, turdSize } = model.config;
+
     return {
         vectorThreshold,
         invert,

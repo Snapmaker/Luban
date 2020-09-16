@@ -25,7 +25,8 @@ class TextParameters extends PureComponent {
         }),
         uploadFont: PropTypes.func.isRequired,
         // updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        selectedModel: PropTypes.object.isRequired
+        // todo, all selectedModel use selectedModelArray[0] now
+        selectedModelArray: PropTypes.array.isRequired
     };
 
     state = {
@@ -48,10 +49,12 @@ class TextParameters extends PureComponent {
             this.props.uploadFont(file);
         },
         onChangeText: (event) => {
+            const model = this.props.selectedModelArray[0];
             const text = event.target.value;
-            this.props.selectedModel.relatedModels.svgModel.elem.textContent = text;
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
-
+            // todo, move to editor
+            model.relatedModels.svgModel.elem.textContent = text;
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
+            model.relatedModels.svgModel.modelGroup.resetSelection();
 
             // this.props.updateSelectedModelTextConfig({ text });
         },
@@ -60,14 +63,19 @@ class TextParameters extends PureComponent {
                 this.actions.onClickUpload();
                 return;
             }
+            const model = this.props.selectedModelArray[0];
             const font = option.value;
-            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-family', font);
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
-            // this.props.updateSelectedModelTextConfig({ 'font-family': font });
+            // todo, move to editor
+            model.relatedModels.svgModel.elem.setAttribute('font-family', font);
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
+            model.relatedModels.svgModel.modelGroup.resetSelection();
         },
         onChangeSize: (size) => {
-            this.props.selectedModel.relatedModels.svgModel.elem.setAttribute('font-size', size);
-            this.props.selectedModel.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
+            const model = this.props.selectedModelArray[0];
+            // todo, move to editor
+            model.relatedModels.svgModel.elem.setAttribute('font-size', size);
+            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
+            model.relatedModels.svgModel.modelGroup.resetSelection();
             // this.props.updateSelectedModelTextConfig({ size });
         } // ,
         // onChangeLineHeight: (lineHeight) => {
@@ -82,7 +90,8 @@ class TextParameters extends PureComponent {
     };
 
     getBaseUpdateData() {
-        const { width, height } = this.props.selectedModel.relatedModels.svgModel.elem.getBBox();
+        const model = this.props.selectedModelArray[0];
+        const { width, height } = model.relatedModels.svgModel.elem.getBBox();
         return {
             sourceWidth: width * 8,
             sourceHeight: height * 8,
@@ -135,7 +144,7 @@ Start a new line manually according to your needs.')}
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Font')}
-                            content={i18n._('Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.')}
+                            content={i18n._('Select a font')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font')}</span>
@@ -277,10 +286,10 @@ const mapStateToProps = (state, props) => {
         value: font.fontFamily
     }));
     const { modelGroup } = state[headType];
-    const selectedModel = modelGroup.getSelectedModel();
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     return {
         fontOptions,
-        selectedModel
+        selectedModelArray
     };
 };
 

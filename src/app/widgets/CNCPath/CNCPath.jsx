@@ -36,7 +36,8 @@ class CNCPath extends PureComponent {
         page: PropTypes.string.isRequired,
 
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        // selectedModelID: PropTypes.string,
+        selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -179,8 +180,8 @@ class CNCPath extends PureComponent {
         const actions = this.actions;
         const { accept } = this.state;
         const {
-            page,
-            selectedModelID, selectedModelVisible, sourceType, mode,
+            page, selectedModelArray,
+            selectedModelVisible, sourceType, mode,
             showOrigin,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
@@ -190,7 +191,7 @@ class CNCPath extends PureComponent {
 
             selectedModel
         } = this.props;
-        const selectedNotHide = selectedModelID && selectedModelVisible;
+        const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
         const { width, height } = this.state.modalSetting;
 
@@ -199,7 +200,7 @@ class CNCPath extends PureComponent {
         const isTextVector = (sourceType === 'raster' && mode === 'vector' && config.svgNodeName === 'text');
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const isProcessMode = isEditor && sourceType === 'raster';
+        const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
         return (
             <React.Fragment>
                 <input
@@ -232,7 +233,7 @@ class CNCPath extends PureComponent {
 
                     />
                 )}
-                {selectedModelID && (
+                {selectedModelArray.length === 1 && (
                     <div className="sm-parameter-container">
                         {isProcessMode && (
                             <ImageProcessMode
@@ -275,7 +276,7 @@ class CNCPath extends PureComponent {
                 )}
                 {isProcess && (
                     <GcodeParameters
-                        selectedModelID={selectedModelID}
+                        selectedModelArray={selectedModelArray}
                         selectedModelVisible={selectedModelVisible}
                         printOrder={printOrder}
                         gcodeConfig={gcodeConfig}
@@ -295,6 +296,7 @@ class CNCPath extends PureComponent {
     }
 }
 
+// todo, selected model will be instead
 const mapStateToProps = (state) => {
     const { page, modelGroup, toolPathModelGroup, printOrder } = state.cnc;
     const selectedModel = modelGroup.getSelectedModel();
@@ -307,7 +309,9 @@ const mapStateToProps = (state) => {
         transformation,
         config
     } = selectedModel;
+    const selectedModelArray = modelGroup.getSelectedModelArray();
     return {
+        selectedModelArray,
         page,
         printOrder,
         transformation,

@@ -288,7 +288,9 @@ class Controls extends EventEmitter {
                 }
                 break;
             case STATE.TRANSFORM:
-                this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+                if (this.sourceType === '3D') {
+                    this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+                }
                 this.transformControl.onMouseUp();
                 break;
             default:
@@ -306,26 +308,40 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-     onClick = (event) => {
-         const mousePosition = this.getMouseCoord(event);
-         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
-         if (distance < 0.004 && this.selectableObjects.children) {
-             let allObjects = this.selectableObjects.children;
-             if (this.selectedGroup && this.selectedGroup.children) {
-                 allObjects = allObjects.concat(this.selectedGroup.children);
-             }
-             // Check if we select a new object
-             const coord = this.getMouseCoord(event);
-             this.ray.setFromCamera(coord, this.camera);
+    onClick = (event) => {
+        const mousePosition = this.getMouseCoord(event);
+        const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+        if (distance < 0.004 && this.selectableObjects.children) {
+            // TODO: selectable objects should not change when objects are selected
+            let allObjects = this.selectableObjects.children;
+            if (this.selectedGroup && this.selectedGroup.children) {
+                allObjects = allObjects.concat(this.selectedGroup.children);
+            }
 
-             const intersect = this.ray.intersectObjects(allObjects, false)[0];
-             const isMultiSelect = event.shiftKey;
-             this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
-             this.transformControl.attach(this.selectedGroup);
-             this.emit(EVENTS.UPDATE);
-             this.mouseDownPosition = null;
-         }
-     };
+            // Check if we select a new object
+            const coord = this.getMouseCoord(event);
+            this.ray.setFromCamera(coord, this.camera);
+
+
+            const intersect = this.ray.intersectObjects(allObjects, false)[0];
+
+            const isMultiSelect = event.shiftKey;
+            this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
+
+            if (this.sourceType === '3D') {
+                this.transformControl.attach(this.selectedGroup);
+            } else {
+                // FIXME: temporary solution
+                if (intersect) {
+                    this.transformControl.attach(intersect.object);
+                } else {
+                    this.transformControl.detach();
+                }
+            }
+            this.emit(EVENTS.UPDATE);
+            this.mouseDownPosition = null;
+        }
+    };
 
     onMouseWheel = (event) => {
         if (this.state !== STATE.NONE) {

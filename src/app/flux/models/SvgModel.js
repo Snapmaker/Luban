@@ -1,4 +1,4 @@
-import Canvg, { presets } from 'canvg';
+import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
@@ -221,23 +221,24 @@ class SvgModel {
     }
 
     async updateSource() {
-        const bbox = this.elem.getBBox();
-        const { width, height } = bbox;
+        const { width, height } = this.elem.getBBox();
+        const { scaleX, scaleY } = this.relatedModel.transformation;
         const uploadName = await this.uploadSourceFile();
-        this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * 8, sourceHeight: height * 8 });
+        this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * scaleX * 8, sourceHeight: height * scaleY * 8 });
     }
 
     async uploadSourceFile() {
-        const width = 100, height = 100;
         const { content } = this.genModelConfig();
         let blob, file;
         if (this.type === 'text') {
-            const canvas = new OffscreenCanvas(width, height);
+            const canvas = document.createElement('canvas');
+            document.body.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            const v = await Canvg.fromString(ctx, content, presets.offscreen());
+            const v = await Canvg.fromString(ctx, content);
             await v.render();
-            blob = await canvas.convertToBlob();
+            blob = await new Promise(resolve => canvas.toBlob(resolve));
             file = new File([blob], 'gen.png');
+            document.body.removeChild(canvas);
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
@@ -256,14 +257,16 @@ class SvgModel {
         if (!transform) {
             this.elem.setAttribute('transform', 'translate(0,0)');
         }
+        // todo, error create a <undefined> elem
+        // console.log('----error----', this.modelGroup, transform, this.elem, this.elem.transform);
         return this.elem.transform.baseVal;
     }
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, uploadName } = this.relatedModel;
+        const { config, transformation, uploadName, width, height } = this.relatedModel;
         const href = `${DATA_PREFIX}/${uploadName}`;
-        const { positionX, positionY, width, height } = transformation;
+        const { positionX, positionY } = transformation;
         for (const key of Object.keys(config)) {
             if (key === 'text') {
                 elem.textContent = config[key];
@@ -310,11 +313,13 @@ class SvgModel {
                 break;
         }
 
-        this.setElementTransformToList(this.elemTransformList());
+        this.modelGroup.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
     }
 
-    setElementTransformToList(transformList) {
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    // TODO: Remove this method!!!
+    setElementTransformToList(transformList, transformation) {
+        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
         const center = this.pointModelToSvg({ x: positionX, y: positionY });
 
         const translateOrigin = svg.createSVGTransform();
@@ -341,8 +346,6 @@ class SvgModel {
     refresh() {
         this.elemTransformList().clear();
         this.refreshElemAttrs();
-
-        this.modelGroup.resizeSelector(this.elem);
     }
 
     onUpdate() {
@@ -385,14 +388,10 @@ class SvgModel {
                 positionY: positionY,
                 scaleX,
                 scaleY,
-                width: width,
-                height: height
+                width: width * Math.abs(scaleX),
+                height: height * Math.abs(scaleY)
             }
         };
-        // reserve scale cause stroke-width scaled
-        if (this.type === 'rect' || this.type === 'ellipse') {
-            attrs.config['stroke-width'] = 0.25 / Math.min(scaleX, scaleY);
-        }
 
         // remap will reset all transforms
         if (this.type === 'path') {
@@ -402,9 +401,25 @@ class SvgModel {
             attrs.transformation.scaleY = 1;
             attrs.width *= Math.abs(scaleX);
             attrs.height *= Math.abs(scaleY);
-            attrs.transformation.width *= Math.abs(scaleX);
-            attrs.transformation.height *= Math.abs(scaleY);
             this.elem.setAttribute('d', d);
+            this.updateSource();
+        }
+        if (this.type === 'rect') {
+            attrs.transformation.scaleX = 1;
+            attrs.transformation.scaleY = 1;
+            attrs.width *= Math.abs(scaleX);
+            attrs.height *= Math.abs(scaleY);
+            this.elem.setAttribute('width', attrs.transformation.width);
+            this.elem.setAttribute('height', attrs.transformation.height);
+            this.updateSource();
+        }
+        if (this.type === 'ellipse') {
+            attrs.transformation.scaleX = 1;
+            attrs.transformation.scaleY = 1;
+            attrs.width *= Math.abs(scaleX);
+            attrs.height *= Math.abs(scaleY);
+            this.elem.setAttribute('rx', attrs.transformation.width / 2);
+            this.elem.setAttribute('ry', attrs.transformation.height / 2);
             this.updateSource();
         }
 
@@ -465,7 +480,7 @@ class SvgModel {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
-        this.setElementTransformToList(transformList);
+        this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
         function transformPoint(p, m) {
@@ -475,7 +490,8 @@ class SvgModel {
             return svgPoint.matrixTransform(m);
         }
 
-        const { positionX, positionY, width, height, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
+        const { width, height } = this.relatedModel;
+        const { positionX, positionY, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
         // ( x, y ) is the center of model on modelGroup
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
 

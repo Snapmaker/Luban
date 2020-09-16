@@ -96,7 +96,7 @@ class Model {
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-        this.showOrigin = true; // this.sourceType !== 'raster';
+        this.showOrigin = (this.sourceType !== 'raster');
         this.modelGroup = modelGroup;
     }
 
@@ -172,8 +172,6 @@ class Model {
         };
         // because of text sourcefile has been transformed
         if (this.config && this.config.svgNodeName !== 'text') {
-            taskInfo.transformation.width *= Math.abs(this.transformation.scaleX);
-            taskInfo.transformation.height *= Math.abs(this.transformation.scaleY);
             taskInfo.transformation.flip = 0;
             if (this.transformation.scaleX < 0) {
                 taskInfo.transformation.flip += 2;
@@ -231,6 +229,7 @@ class Model {
         if (!this.processImageName) {
             return;
         }
+
         if (this.sourceType === 'raster') {
             const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
@@ -250,7 +249,6 @@ class Model {
             }
             this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
             this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-
 
             this.meshObject.add(this.processObject3D);
             this.processObject3D.visible = !this.showOrigin;
@@ -274,7 +272,8 @@ class Model {
             this.modelObject3D && (this.modelObject3D.visible = param);
             this.processObject3D && (this.processObject3D.visible = param);
         } else {
-            this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
+            // todo
+            this.modelObject3D && (this.modelObject3D.visible = param); // this.showOrigin);
             this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
         }
     }
@@ -451,7 +450,6 @@ class Model {
             this.meshObject.scale.y = Math.abs(scaleY);
         }
         this.transformation = { ...this.transformation };
-
         return this.transformation;
     }
 
@@ -528,8 +526,8 @@ class Model {
             return;
         }
         this.computeBoundingBox();
-        this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
 
+        this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
     }
 
@@ -751,7 +749,8 @@ class Model {
         };
     }
 
-
+    // TODO: DO NOT call updateAndRefresh() from React Components!!!
+    //       What we need is a ViewModel for Model.
     async updateAndRefresh({ transformation, config, ...others }) {
         if (transformation) {
             this.updateTransformation(transformation);
@@ -797,7 +796,8 @@ class Model {
     async preview() {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
-        if (toolPathModelTaskInfo && this.visible) {
+        // if (toolPathModelTaskInfo && this.visible) {
+        if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo

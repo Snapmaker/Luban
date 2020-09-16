@@ -11,22 +11,21 @@ import styles from './styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
-        // selectedModelID: PropTypes.string,
-        // selectedModelVisible: PropTypes.bool,
-        selectedModel: PropTypes.object,
-        modelID: PropTypes.string,
-        sourceType: PropTypes.string.isRequired,
+        selectedModelArray: PropTypes.array,
+        sourceType: PropTypes.string,
         transformation: PropTypes.shape({
             rotationZ: PropTypes.number,
             width: PropTypes.number,
             height: PropTypes.number,
             positionX: PropTypes.number,
             positionY: PropTypes.number,
-            flip: PropTypes.number,
+            flip: PropTypes.number, // not used
+            scaleX: PropTypes.number, // not used
+            scaleY: PropTypes.number, // not used
             uniformScalingState: PropTypes.bool
         }),
 
-        // updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
         // updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         // onModelAfterTransform: PropTypes.func.isRequired,
@@ -48,43 +47,47 @@ class Transformation extends PureComponent {
         },
         // dont set width and height on transform
         onChangeWidth: (width) => {
-            const { selectedModel } = this.props;
-
-            if (selectedModel.modelID) {
-                selectedModel.updateAndRefresh({ transformation: { scaleX: width / selectedModel.transformation.width } });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                if (this.props.transformation.uniformScalingState) {
+                    this.props.updateSelectedModelTransformation({
+                        width,
+                        scaleX: width / this.props.transformation.width,
+                        scaleY: width / this.props.transformation.width
+                    });
+                } else {
+                    this.props.updateSelectedModelTransformation({ width, scaleX: width / this.props.transformation.width });
+                }
             }
         },
         onChangeHeight: (height) => {
-            const { selectedModel } = this.props;
-
-            if (selectedModel.modelID) {
-                selectedModel.updateAndRefresh({ transformation: { scaleY: height / selectedModel.transformation.height } });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                if (this.props.transformation.uniformScalingState) {
+                    this.props.updateSelectedModelTransformation({
+                        height,
+                        scaleY: height / this.props.transformation.height,
+                        scaleX: height / this.props.transformation.height
+                    });
+                } else {
+                    this.props.updateSelectedModelTransformation({ height, scaleY: height / this.props.transformation.height });
+                }
             }
         },
         onChangeRotationZ: (degree) => {
             const rotationZ = degree * Math.PI / 180;
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { rotationZ } });
-            }
+            this.props.updateSelectedModelTransformation({ rotationZ });
         },
         onChangePositionX: (positionX) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { positionX } });
-            }
+            this.props.updateSelectedModelTransformation({ positionX });
         },
         onChangePositionY: (positionY) => {
-            if (this.props.selectedModel.modelID) {
-                this.props.selectedModel.updateAndRefresh({ transformation: { positionY } });
-            }
+            this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (key) => {
-            const model = this.props.selectedModel;
-            if (model.modelID) {
-                model.updateAndRefresh({
-                    transformation: {
-                        [key]: model.transformation[key] * -1
-                    }
-                });
+            const selectedModelArray = this.props.selectedModelArray;
+            if (selectedModelArray && selectedModelArray.length === 1) {
+                this.props.updateSelectedModelTransformation({ [key]: selectedModelArray[0].transformation[key] * -1 });
             }
         },
         onChangeUniformScalingState: (uniformScalingState) => {
@@ -96,10 +99,13 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { size, selectedModel, sourceType } = this.props;
-        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, flip = 0, uniformScalingState = false } = this.props.transformation;
-        const canResize = sourceType !== 'text';
-        const selectedNotHide = selectedModel.modelID && selectedModel.visible;
+        const { size, selectedModelArray, sourceType } = this.props;
+        // if (this.props.headType === 'laser') {
+        //     console.log('----render----');
+        // }
+        const { rotationZ = 0, width = 125, height = 125, scaleX, scaleY, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
+        const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
+        const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
         return (
             <React.Fragment>
@@ -169,7 +175,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width, 1)}
+                                    value={toFixed(width * (scaleX ? Math.abs(scaleX) : 1), 1)}
                                     min={1}
                                     max={size.x}
                                     onChange={(value) => {
@@ -196,7 +202,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height, 1)}
+                                    value={toFixed(height * (scaleY ? Math.abs(scaleY) : 1), 1)}
                                     min={1}
                                     max={size.y}
                                     onChange={(value) => {
@@ -232,30 +238,34 @@ class Transformation extends PureComponent {
                                     className={styles['description-text']}
                                     style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
                                 />
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide}
-                                    className={styles.icon_flip_vertically}
-                                    style={(flip & 2) ? { backgroundColor: '#E7F2FD' } : null}
-                                    onClick={() => {
-                                        actions.onChangeFlip('scaleX');
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <span
-                                    className={styles['description-text']}
-                                    style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
-                                />
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide}
-                                    className={styles.icon_flip_horizontal}
-                                    style={(flip & 1) ? { backgroundColor: '#E7F2FD' } : null}
-                                    onClick={() => {
-                                        actions.onChangeFlip('scaleY');
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
+                                {selectedModelArray.length === 1 && (
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide}
+                                        className={styles.icon_flip_vertically}
+                                        onClick={() => {
+                                            actions.onChangeFlip('scaleX');
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                )}
+                                {selectedModelArray.length === 1 && (
+                                    <span
+                                        className={styles['description-text']}
+                                        style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                    />
+                                )}
+                                {selectedModelArray.length === 1 && (
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide}
+                                        className={styles.icon_flip_horizontal}
+                                        onClick={() => {
+                                            actions.onChangeFlip('scaleY');
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                )}
                             </div>
                         </TipTrigger>
                     </React.Fragment>
@@ -269,15 +279,19 @@ const mapStateToProps = (state, props) => {
     const { headType } = props;
     const machine = state.machine;
     const { modelGroup } = state[headType];
-    const selectedModel = modelGroup.getSelectedModel();
-    const { modelID, sourceType, visible, transformation } = selectedModel;
+    const transformation = modelGroup.getSelectedModelTransformation();
+    const selectedModelArray = modelGroup.getSelectedModelArray();
+    // const { modelID, sourceType, visible } = selectedModel;
+    const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
+    const visible = (selectedModelArray.length === 1) ? selectedModelArray[0].visible : null;
+    // console.log('----begin render----', modelGroup.getSelectedModelTransformation());
     return {
         size: machine.size,
-        selectedModel,
-        modelID,
+        selectedModelArray,
         sourceType,
         visible,
-        transformation
+        transformation,
+        modelGroup
     };
 };
 
