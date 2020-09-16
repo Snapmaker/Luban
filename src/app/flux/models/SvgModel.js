@@ -1,4 +1,4 @@
-import Canvg, { presets } from 'canvg';
+import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
@@ -228,16 +228,17 @@ class SvgModel {
     }
 
     async uploadSourceFile() {
-        const width = 100, height = 100;
         const { content } = this.genModelConfig();
         let blob, file;
         if (this.type === 'text') {
-            const canvas = new OffscreenCanvas(width, height);
+            const canvas = document.createElement('canvas');
+            document.body.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            const v = await Canvg.fromString(ctx, content, presets.offscreen());
+            const v = await Canvg.fromString(ctx, content);
             await v.render();
-            blob = await canvas.convertToBlob();
+            blob = await new Promise(resolve => canvas.toBlob(resolve));
             file = new File([blob], 'gen.png');
+            document.body.removeChild(canvas);
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
