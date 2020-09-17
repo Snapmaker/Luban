@@ -1,12 +1,16 @@
 import Jimp from 'jimp';
 import fs from 'fs';
 import path from 'path';
+import configure from '@jimp/custom';
+import newsprint from 'jimp-plugin-newsprint';
 import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from './svg-convert';
 import DataStorage from '../DataStorage';
 import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../shared/lib/DXFParser/Parser';
 import { svgInverse, svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
+
+configure({ plugins: [newsprint] }, Jimp);
 
 function bit(x) {
     if (x >= 128) {
@@ -183,7 +187,7 @@ async function processCNCGreyscale(modelInfo) {
     });
 }
 
-function processBW(modelInfo) {
+async function processBW(modelInfo) {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
@@ -192,52 +196,54 @@ function processBW(modelInfo) {
     const { density = 4 } = modelInfo.gcodeConfig || {};
 
     const outputFilename = pathWithRandomSuffix(uploadName);
-    return Jimp
-        .read(`${DataStorage.tmpDir}/${uploadName}`)
-        .then(img => new Promise(resolve => {
-            img
-                .greyscale()
-                .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
-                .resize(width * density, height * density)
-                .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
-                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    if (img.bitmap.data[idx + 3] === 0) {
-                        // transparent
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+
+    img
+        .greyscale()
+        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .resize(width * density, height * density)
+        .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
+        .newsprint('line', 10)
+        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+            if (img.bitmap.data[idx + 3] === 0) {
+                // transparent
+                for (let k = 0; k < 3; ++k) {
+                    img.bitmap.data[idx + k] = 255;
+                }
+            } else {
+                const value = img.bitmap.data[idx];
+                if (invert) {
+                    if (value <= bwThreshold) {
                         for (let k = 0; k < 3; ++k) {
                             img.bitmap.data[idx + k] = 255;
                         }
                     } else {
-                        const value = img.bitmap.data[idx];
-                        if (invert) {
-                            if (value <= bwThreshold) {
-                                for (let k = 0; k < 3; ++k) {
-                                    img.bitmap.data[idx + k] = 255;
-                                }
-                            } else {
-                                for (let k = 0; k < 3; ++k) {
-                                    img.bitmap.data[idx + k] = 0;
-                                }
-                            }
-                        } else {
-                            if (value <= bwThreshold) {
-                                for (let k = 0; k < 3; ++k) {
-                                    img.bitmap.data[idx + k] = 0;
-                                }
-                            } else {
-                                for (let k = 0; k < 3; ++k) {
-                                    img.bitmap.data[idx + k] = 255;
-                                }
-                            }
+                        for (let k = 0; k < 3; ++k) {
+                            img.bitmap.data[idx + k] = 0;
                         }
                     }
-                })
-                .background(0xffffffff)
-                .write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
-                    resolve({
-                        filename: outputFilename
-                    });
-                });
-        }));
+                } else {
+                    if (value <= bwThreshold) {
+                        for (let k = 0; k < 3; ++k) {
+                            img.bitmap.data[idx + k] = 0;
+                        }
+                    } else {
+                        for (let k = 0; k < 3; ++k) {
+                            img.bitmap.data[idx + k] = 255;
+                        }
+                    }
+                }
+            }
+        })
+        .background(0xffffffff);
+
+    return new Promise(resolve => {
+        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+            resolve({
+                filename: outputFilename
+            });
+        });
+    });
 }
 
 function processVector(modelInfo) {
