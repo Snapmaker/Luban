@@ -816,9 +816,12 @@ class SVGCanvas extends PureComponent {
                     const selected = this.svgContentGroup.selectedElements[0];
                     const model = this.props.svgModelGroup.getModelByElement(selected);
                     model.onUpdate();
+                    this.props.svgModelGroup.updateSelectedModelsByTransformation({});
+                    // todo, to fix model is not selected after resize
+                    this.selectOnly([selected]);
+                    this.mode = 'select';
+                    return;
                 }
-                // todo
-                this.props.svgModelGroup.updateSelectedModelsByTransformation({});
                 break;
             case 'select': {
                 element.remove();
