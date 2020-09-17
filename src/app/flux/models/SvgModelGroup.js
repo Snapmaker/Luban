@@ -406,7 +406,6 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
-        // this.invokeModelTransformCallback();
     }
 
     // when single select
@@ -682,7 +681,6 @@ class SvgModelGroup {
             //
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
-        this.invokeModelTransformCallback();
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
     }
 
@@ -719,41 +717,31 @@ class SvgModelGroup {
         }
     }
 
-    resetSelection(transformation) {
-        if (transformation === undefined) {
-            // todo
-            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
-            this.modelGroup.updateSelectedModelTransformation({
-                positionX: posAndSize.positionX - this.size.x,
-                positionY: this.size.y - posAndSize.positionY,
-                width: posAndSize.width,
-                height: posAndSize.height
-            });
-        } else {
-            // todo
-            const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
-            this.modelGroup.updateSelectedModelTransformation({
-                positionX: posAndSize.positionX - this.size.x,
-                positionY: this.size.y - posAndSize.positionY,
-                width: posAndSize.width,
-                height: posAndSize.height
-            });
-        }
-        // todo, hide operator when model hide
+    resetSelection(modelGroupTransformation) {
+        const transformation = ((modelGroupTransformation !== undefined) ? modelGroupTransformation : this.modelGroup.getSelectedModelTransformation());
+        const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
+
+        // hide operator when model hide
         const selectedModels = this.modelGroup.getSelectedModelArray();
         if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
             this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
         }
     }
 
-    // TODO: This is temporary workaround for model processing
+    // // TODO: This is temporary workaround for model processing
     setModelTransformCallback(callback) {
         this.modelTransformCallback = callback;
     }
 
-    invokeModelTransformCallback() {
-        this.modelTransformCallback && this.modelTransformCallback();
-    }
+    // invokeModelTransformCallback() {
+    //     this.modelTransformCallback && this.modelTransformCallback();
+    // }
 }
 
 export default SvgModelGroup;

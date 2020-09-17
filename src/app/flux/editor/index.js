@@ -53,7 +53,6 @@ export const CNC_LASER_STAGE = {
 export const actions = {
 
     ...baseActions,
-
     init: () => (dispatch, getState) => {
         // TODO: temporary workaround for model image processing
         const bindSVGModelGroup = (headType) => {

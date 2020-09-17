@@ -842,9 +842,7 @@ class SVGCanvas extends PureComponent {
 
                 // todo, save the rotation in transformation but no reselect
                 this.selectOnly(this.svgContentGroup.selectedElements);
-                // this.svgContentGroup.resetSelection();
-                // this.svgContentGroup.setSelectorTransformList(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
-                // this.svgContentGroup.operatorPoints.showGrips(true);
+                // this.svgContentGro
                 this.mode = 'select';
                 return;
             }
@@ -858,15 +856,8 @@ class SVGCanvas extends PureComponent {
                     dx,
                     dy
                 });
-                // todo do not use modelGroup here
-                const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
-                const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
-                this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
-                    positionX: posAndSize.positionX - this.props.size.x,
-                    positionY: this.props.size.y - posAndSize.positionY,
-                    width: posAndSize.width,
-                    height: posAndSize.height
-                });
+                this.props.svgModelGroup.resetSelection();
+
                 this.mode = 'select';
                 return; // note that this is return
             }
@@ -944,7 +935,6 @@ class SVGCanvas extends PureComponent {
                 // this.trigger(SVG_EVENT_ADD, element);
                 // todo, select to the new model
                 // this.addToSelection([element]);
-                // console.log(this.props.svgModelGroup, element, this.props.svgModelGroup.getModelsByElements([element]));
             } else {
                 // todo
                 // element.remove();
