@@ -76,8 +76,8 @@ class ConfigRasterVector extends PureComponent {
                                         value={vectorThreshold}
                                         min={0}
                                         max={20}
-                                        onChange={() => {
-                                            this.actions.changeVectorThreshold();
+                                        onChange={(value) => {
+                                            this.actions.changeVectorThreshold(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />
@@ -105,8 +105,8 @@ class ConfigRasterVector extends PureComponent {
                                         value={turdSize}
                                         min={0}
                                         max={10000}
-                                        onChange={() => {
-                                            this.actions.onChangeTurdSize();
+                                        onChange={(value) => {
+                                            this.actions.onChangeTurdSize(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />

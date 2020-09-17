@@ -265,8 +265,6 @@ export const actions = {
             ...modelDefaultConfigs.config,
             ...selectedModel.getModeConfig(mode)
         };
-        console.log('default config =', modelDefaultConfigs.config);
-        console.log('config =', config);
         modelGroup.updateSelectedMode(mode, config);
 
         // Set or replace G-code config of new mode
@@ -318,7 +316,9 @@ export const actions = {
 
         const selectedModel = selectedModels[0];
 
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, selectedModel.sourceType, selectedModel.mode);
         const newConfig = {
+            ...modelDefaultConfigs.config,
             ...selectedModel.config,
             ...config
         };

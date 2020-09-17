@@ -67,8 +67,8 @@ class ConfigRasterBW extends PureComponent {
                                     value={bwThreshold}
                                     min={0}
                                     max={255}
-                                    onChange={() => {
-                                        this.actions.onChangeBWThreshold();
+                                    onChange={(value) => {
+                                        this.actions.onChangeBWThreshold(value);
                                         this.props.processSelectedModel();
                                     }}
                                 />

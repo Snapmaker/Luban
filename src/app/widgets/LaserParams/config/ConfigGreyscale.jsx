@@ -80,8 +80,8 @@ class ConfigGreyscale extends PureComponent {
                                         value={contrast}
                                         min={0}
                                         max={100}
-                                        onChange={() => {
-                                            this.actions.onChangeContrast();
+                                        onChange={(value) => {
+                                            this.actions.onChangeContrast(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />
@@ -109,8 +109,8 @@ class ConfigGreyscale extends PureComponent {
                                         value={brightness}
                                         min={0}
                                         max={100}
-                                        onChange={() => {
-                                            this.actions.onChangeBrightness();
+                                        onChange={(value) => {
+                                            this.actions.onChangeBrightness(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />
@@ -137,8 +137,8 @@ class ConfigGreyscale extends PureComponent {
                                         value={whiteClip}
                                         min={0}
                                         max={255}
-                                        onChange={() => {
-                                            this.actions.onChangeWhiteClip();
+                                        onChange={(value) => {
+                                            this.actions.onChangeWhiteClip(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />
@@ -194,8 +194,8 @@ class ConfigGreyscale extends PureComponent {
                                         placeholder={i18n._('Choose algorithms')}
                                         searchable={false}
                                         value={algorithm}
-                                        onChange={() => {
-                                            this.actions.onChangeAlgorithm();
+                                        onChange={(value) => {
+                                            this.actions.onChangeAlgorithm(value);
                                             this.props.processSelectedModel();
                                         }}
                                     />
