@@ -26,7 +26,16 @@ function getSavedRecentFile() {
 function saveRecentFile(file) {
     const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
     const arr = getSavedRecentFile();
+
+    const index = arr.find(f => f.name === file.name);
+    if (index !== -1) {
+        arr.splice(index, 1);
+    }
     arr.push(file);
+
+    if (arr.length > 10) {
+        arr.splice(0, arr.length - 10);
+    }
     fs.writeFileSync(recentFileName, JSON.stringify(arr), 'utf-8');
 }
 
