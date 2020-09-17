@@ -299,51 +299,6 @@ export const actions = {
         }));
     },
 
-    // TODO: unused function
-    updateSelectedModelFlip: (headType, transformation) => (dispatch) => {
-        /*
-        const { modelGroup } = getState()[headType];
-        const selectedModel = modelGroup.getSelectedModel();
-        const options = {
-            headType: headType,
-            uploadName: selectedModel.uploadName,
-            sourceType: selectedModel.sourceType,
-            mode: selectedModel.mode,
-            transformation: {
-                width: selectedModel.transformation.width,
-                height: selectedModel.transformation.height,
-                rotationZ: 0,
-                flip: transformation.flip
-            },
-            config: selectedModel.config
-        };
-        */
-
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
-
-        console.log('x');
-        dispatch(actions.processSelectedModel(headType));
-
-        dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
-
-        /*
-        api.processImage(options)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
-                // modelGroup.updateProcessImageName(processImageName);
-                svgModelGroup.updateElementImage(processImageName);
-                dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
-            });
-        */
-    },
-    // updateSelectedModelUniformScalingState: (headType, transformation) => (dispatch) => {
-    // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation));
-    // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
-    // },
-
     updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
         // todo
         // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));

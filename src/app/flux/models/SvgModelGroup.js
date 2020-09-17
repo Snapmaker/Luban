@@ -406,6 +406,7 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
+        // this.invokeModelTransformCallback();
     }
 
     // when single select
@@ -682,6 +683,7 @@ class SvgModelGroup {
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
+        this.invokeModelTransformCallback();
     }
 
     clearSelection() {
@@ -739,9 +741,9 @@ class SvgModelGroup {
         this.modelTransformCallback = callback;
     }
 
-    // invokeModelTransformCallback() {
-    //     this.modelTransformCallback && this.modelTransformCallback();
-    // }
+    invokeModelTransformCallback() {
+        this.modelTransformCallback && this.modelTransformCallback();
+    }
 }
 
 export default SvgModelGroup;

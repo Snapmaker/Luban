@@ -51,7 +51,6 @@ class LaserParameters extends PureComponent {
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
-        updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
@@ -188,7 +187,7 @@ class LaserParameters extends PureComponent {
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
-            onModelAfterTransform, updateSelectedModelFlip, headType, updateSelectedModelUniformScalingState, transformation
+            onModelAfterTransform, headType, updateSelectedModelUniformScalingState, transformation
         } = this.props;
 
         const actions = this.actions;
@@ -240,7 +239,6 @@ class LaserParameters extends PureComponent {
                         headType={headType}
                         onModelAfterTransform={onModelAfterTransform}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
-                        updateSelectedModelFlip={updateSelectedModelFlip}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
@@ -349,7 +347,6 @@ const mapDispatchToProps = (dispatch) => {
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
-        updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('laser', config)),
