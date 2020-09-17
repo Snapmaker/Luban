@@ -32,14 +32,6 @@ class SVGContentGroup {
             getRoot: () => this.svgContent,
             scale: this.scale
         });
-        this.operatorPoints = new OperatorPoints({
-            getRoot: () => this.svgContent,
-            scale: this.scale
-        });
-        this.operatorPoints = new OperatorPoints({
-            getRoot: () => this.svgContent,
-            scale: this.scale
-        });
     }
 
     // for create new elem
@@ -160,7 +152,6 @@ class SVGContentGroup {
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.operatorPoints.showGrips(true);
-        this.operatorPoints.resetTransformList();
         // todo
         return posAndsize;
     }

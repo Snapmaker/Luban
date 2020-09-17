@@ -69,6 +69,7 @@ class OperatorPoints {
                 id: 'operator-points-group'
             }
         });
+        this.resetTransformList();
 
         this.svgFactory.getRoot().append(this.operatorPointsGroup);
         this.operatorPointsGroup.append(this.allSelectedElementsBox);
@@ -181,7 +182,7 @@ class OperatorPoints {
         };
     }
 
-    getElementBBoxAndRotation(element) {
+    _getElementBBoxAndRotation(element) {
         let offset = 0 / this.scale;
         if (element.getAttribute('stroke') !== 'none') {
             const strokeWidth = parseFloat(element.getAttribute('stroke-width')) || 0;
@@ -244,7 +245,7 @@ class OperatorPoints {
         // todo add each selected element box
 
         let element = elements[0];
-        let { nx, ny, nw, nh, angle, cx, cy } = this.getElementBBoxAndRotation(element);
+        let { nx, ny, nw, nh, angle, cx, cy } = this._getElementBBoxAndRotation(element);
         let minX, minY, maxX, maxY;
         if (elements.length === 1) {
             minX = nx;
@@ -270,7 +271,7 @@ class OperatorPoints {
             maxY = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y)));
 
             for (element of elements) {
-                const boxAndRotation = this.getElementBBoxAndRotation(element);
+                const boxAndRotation = this._getElementBBoxAndRotation(element);
                 nx = boxAndRotation.nx;
                 ny = boxAndRotation.ny;
                 nw = boxAndRotation.nw;
