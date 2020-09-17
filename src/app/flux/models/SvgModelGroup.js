@@ -406,7 +406,6 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
-        // this.invokeModelTransformCallback();
     }
 
     // when single select
@@ -741,9 +740,9 @@ class SvgModelGroup {
         this.modelTransformCallback = callback;
     }
 
-    invokeModelTransformCallback() {
-        this.modelTransformCallback && this.modelTransformCallback();
-    }
+    // invokeModelTransformCallback() {
+    //     this.modelTransformCallback && this.modelTransformCallback();
+    // }
 }
 
 export default SvgModelGroup;
