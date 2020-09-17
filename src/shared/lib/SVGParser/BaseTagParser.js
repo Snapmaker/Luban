@@ -63,8 +63,9 @@ class BaseTagParser {
         const d2 = Math.abs(((x2 - x4) * dy - (y2 - y4) * dx));
         const d3 = Math.abs(((x3 - x4) * dy - (y3 - y4) * dx));
 
-        if ((d2 + d3) ** 2 < 5.0 * this.tol * this.tol * (dx * dx + dy * dy)) {
+        if ((d2 + d3) ** 2 < this.tol * this.tol * (dx * dx + dy * dy)) {
             // added factor of 5.0 to match circle resolution
+            // remove factor of 5.0
             this.lineTo(x1234, y1234);
             return;
         }
@@ -94,8 +95,7 @@ class BaseTagParser {
         const dy = y3 - y1;
         const d = Math.abs(((x2 - x3) * dy - (y2 - y3) * dx));
 
-        if (d * d <= 5.0 * this.tol * this.tol * (dx * dx + dy * dy)) {
-            // added factor of 5.0 to match circle resolution
+        if (d * d <= this.tol * this.tol * (dx * dx + dy * dy)) {
             this.lineTo(x123, y123);
             return;
         }
