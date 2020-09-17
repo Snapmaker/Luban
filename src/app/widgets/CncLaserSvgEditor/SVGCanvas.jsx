@@ -325,18 +325,6 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
-                this.svgContentGroup.addSVGElement({
-                    element: 'rect',
-                    attr: {
-                        x,
-                        y,
-                        width: 0,
-                        height: 0,
-                        stroke,
-                        'stroke-width': strokeWidth,
-                        opacity: opacity / 2
-                    }
-                });
 
                 this.resizeMode = 'none';
                 if (rightClick) {

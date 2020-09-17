@@ -134,14 +134,20 @@ export const actions = {
                 toolAngle: toolParams.toolAngle
             }
             : modelDefaultConfigs.gcodeConfig;
-        const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
-            ? {
-                width: 40,
-                height: 40 * height / width
-            } : {
-                width: width,
-                height: height
-            };
+
+        // const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
+        //     ? {
+        //         width: 40,
+        //         height: 40 * height / width
+        //     } : {
+        //         width: width,
+        //         height: height
+        //     };
+        console.log('w&h', width, height);
+        const defaultTransformation = {
+            width: width,
+            height: height
+        };
         config = {
             ...defaultConfig,
             ...config
@@ -177,6 +183,17 @@ export const actions = {
         svgModelGroup.clearSelection();
         svgModelGroup.addSelectedSvgModelsByModels([model]);
 
+        console.log(model.relatedModels.svgModel.elem, model.modelObject3D, model.processObject3D);
+        // cnc image size limit
+        if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
+            console.log(model.transformation.width, model.transformation.scaleX);
+            svgModelGroup.updateSelectedElementsTransformation({
+                width: 40,
+                scaleX: 40 / model.transformation.width,
+                height: model.transformation.height * 40 / model.transformation.width,
+                scaleY: 1 * 40 / model.transformation.width
+            });
+        }
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
     },

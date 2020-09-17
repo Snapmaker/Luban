@@ -268,6 +268,7 @@ class Visualizer extends Component {
         const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
+        const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
 
         return (
             <div
@@ -342,25 +343,25 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.bringToFront
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Send to Back'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.sendToBack
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -412,7 +413,7 @@ class Visualizer extends Component {
                             {
                                 type: 'subMenu',
                                 label: i18n._('Flip'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -437,7 +438,7 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.deleteSelectedModel
                             }
                             // {
