@@ -477,7 +477,7 @@ class SvgModelGroup {
 
     createFromModel(relatedModel) {
         const { config } = relatedModel;
-        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName, attr: { id: relatedModel.modelID } });
+        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName || 'image', attr: { id: relatedModel.modelID } });
 
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
