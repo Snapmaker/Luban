@@ -177,6 +177,26 @@ export const actions = {
             config,
             gcodeConfig
         };
+
+        // todo, process dxf
+        // api.processImage(options)
+        //     .then((res) => {
+        //         options.processImageName = res.body.filename;
+        //
+        //         dispatch(svgModelActions.generateSvgModel(headType, options));
+        //         dispatch(threejsModelActions.generateThreejsModel(headType, options));
+        //
+        //         dispatch(baseActions.resetCalculatedState(headType));
+        //         dispatch(baseActions.updateState(headType, {
+        //             hasModel: true
+        //         }));
+        //
+        //         dispatch(baseActions.render(headType));
+        //     })
+        //     .catch((err) => {
+        //         console.error(err);
+        //     });
+
         const model = modelGroup.addModel(options);
         svgModelGroup.createFromModel(model);
         svgModelGroup.clearSelection();
@@ -235,7 +255,6 @@ export const actions = {
     // todo, select model by toolPathModel ??? meshObject ???
     selectModelInProcess: (headType, intersect) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        // console.log(modelGroup, toolPathModelGroup);
 
         modelGroup.emptySelectedModelArray();
         dispatch(svgModelActions.emptySelectedModelArray(headType));
@@ -352,7 +371,7 @@ export const actions = {
         }
 
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
             return;
         }
 

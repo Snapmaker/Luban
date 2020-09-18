@@ -192,7 +192,6 @@ class Model {
 
             const path = `${DATA_PREFIX}/${this.uploadName}`;
             new ThreeDxfLoader({ width: this.transformation.width }).load(path, (group) => {
-                console.log(group);
                 this.modelObject3D = group;
                 this.meshObject.add(this.modelObject3D);
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);

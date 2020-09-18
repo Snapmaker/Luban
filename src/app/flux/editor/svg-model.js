@@ -1,10 +1,10 @@
 export const svgModelActions = {
+    // use this function to generate dxf to svg
     generateSvgModel: (headType, options) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { svgModelGroup } = getState()[headType];
 
         const { modelID, sourceType, uploadName, processImageName, transformation } = options;
-
         const { elem } = svgModelGroup.addModelToSVGElement({
             modelID,
             limitSize: size,
