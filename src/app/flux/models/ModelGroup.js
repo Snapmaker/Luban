@@ -167,9 +167,11 @@ class ModelGroup extends EventEmitter {
         selectedArray.forEach((selected) => {
             // todo, not sure remove here
             // console.log('----delete models----');
-            selected.meshObject.remove(selected.modelObject3D);
-            selected.meshObject.remove(selected.processObject3D);
-
+            if (selected.sourceType !== '3d') {
+                selected.meshObject.remove(selected.modelObject3D);
+                selected.meshObject.remove(selected.processObject3D);
+                this.object.remove(selected.meshObject);
+            }
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             this.models = this.models.filter(model => model !== selected);
         });
