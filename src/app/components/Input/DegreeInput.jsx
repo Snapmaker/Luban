@@ -25,11 +25,12 @@ class DegreeInput extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         // Changes from outside also reflects on display
-        if (nextProps.value !== this.props.value) {
-            this.setState({
-                displayValue: nextProps.value.concat(this.props.suffix)
-            });
-        }
+        // todo, show the degree sign
+        // if (nextProps.value !== this.props.value) {
+        this.setState({
+            displayValue: nextProps.value
+        });
+        // }
     }
 
     onChange = (event) => {

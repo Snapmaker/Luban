@@ -98,8 +98,12 @@ class App extends PureComponent {
             if (currentHeadType) {
                 await this.props.save(currentHeadType, { message });
             }
-
-            for (const headType of [HEAD_3DP, HEAD_CNC, HEAD_LASER]) {
+            const AllType = [HEAD_3DP, HEAD_CNC, HEAD_LASER];
+            const index = AllType.indexOf(currentHeadType);
+            if (index !== -1) {
+                AllType.splice(index, 1);
+            }
+            for (const headType of AllType) {
                 if (!this.props.projectState[headType].unSaved) continue;
                 message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] });
                 this.props.history.push(`/${headType}`);

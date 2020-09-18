@@ -55,13 +55,13 @@ build_script:
   - ps: echo "$RELEASE"
   - ps: echo "$COMMIT_LOG"
   - ps: |
-      if ($env:platform -eq 'x64') {
+      if ($env:PLATFORM -eq 'x64' -and $env:APPVEYOR_REPO_TAG -eq 'true') {
         npm run build:win-x64
         Get-ChildItem output
         Copy-Item "output\${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-x64.exe"
       }
   - ps: |
-      if ($env:platform -eq 'x64') {
+      if ($env:PLATFORM -eq 'x64' -and $env:APPVEYOR_REPO_TAG -eq 'true') {
         npm run build:win-ia32
         Get-ChildItem output
         Copy-Item "output\${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-ia32.exe"

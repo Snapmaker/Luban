@@ -15,7 +15,8 @@ class ConfigRasterBW extends PureComponent {
         bwThreshold: PropTypes.number,
         disabled: PropTypes.bool,
 
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        processSelectedModel: PropTypes.func.isRequired
     };
 
     state = {
@@ -48,7 +49,10 @@ class ConfigRasterBW extends PureComponent {
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 checked={invert}
-                                onChange={this.actions.onInverseBW}
+                                onChange={() => {
+                                    this.actions.onInverseBW();
+                                    this.props.processSelectedModel();
+                                }}
                             />
                         </div>
                         <TipTrigger
@@ -63,7 +67,10 @@ class ConfigRasterBW extends PureComponent {
                                     value={bwThreshold}
                                     min={0}
                                     max={255}
-                                    onChange={this.actions.onChangeBWThreshold}
+                                    onChange={(value) => {
+                                        this.actions.onChangeBWThreshold(value);
+                                        this.props.processSelectedModel();
+                                    }}
                                 />
                                 <Slider
                                     disabled={disabled}
@@ -72,6 +79,7 @@ class ConfigRasterBW extends PureComponent {
                                     min={0}
                                     max={255}
                                     onChange={this.actions.onChangeBWThreshold}
+                                    onAfterChange={this.props.processSelectedModel}
                                 />
 
                             </div>
@@ -100,7 +108,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config))
+        updateSelectedModelConfig: (config) => dispatch(editorActions.updateSelectedModelConfig('laser', config)),
+        processSelectedModel: () => dispatch(editorActions.processSelectedModel('laser'))
     };
 };
 

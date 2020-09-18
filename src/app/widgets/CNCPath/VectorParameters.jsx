@@ -95,7 +95,6 @@ class VectorParameters extends PureComponent {
             fillDensity,
             enableTab, tabWidth, tabHeight, tabSpace
         } = this.props;
-
         return (
             <div>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
@@ -321,13 +320,14 @@ class VectorParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { gcodeConfig } = state.cnc;
+    const toolPathModelGroup = state.cnc.toolPathModelGroup;
+    const toolPathModel = toolPathModelGroup.getSelectedModel();
+    const { gcodeConfig } = toolPathModel;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         fillEnabled, fillDensity,
         enableTab, tabWidth, tabHeight, tabSpace
     } = gcodeConfig;
-
     return {
         size: machine.size,
         pathType,

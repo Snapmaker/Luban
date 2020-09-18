@@ -4,7 +4,7 @@ os:
 
 # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
 # Default: 9.4
-osx_image: xcode11.3  # macOS 10.14
+osx_image: xcode12u  # Xcode 12.0, macOS 10.15.5, JDK 14.0.1
 
 # Linux Ubuntu Precise
 sudo: required
@@ -31,10 +31,6 @@ before_install:
     - git --version
     - git config --global user.name "Travis CI"
     - git config --global user.email "travis@travis-ci.org"
-    - |
-        if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-            brew update;
-        fi
     - npm install -g npm@latest
     - npm --version
 

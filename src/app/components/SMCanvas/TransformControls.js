@@ -416,17 +416,17 @@ class TransformControls extends Object3D {
 
     // Will be called when rendering scene
     updateMatrixWorld(force) {
-        if (this.object.children.length === 0) {
+        if (this.object && this.object.children.length === 0) {
             this.hideSelectedPeripherals();
             this.hideAllPeripherals();
             this.object.boundingBox = [];
-        } else if (!this.object.shouldUpdateBoundingbox) {
+        } else if (this.object && !this.object.shouldUpdateBoundingbox) {
             this.hideSelectedPeripherals();
         } else {
             this.showSelectedPeripherals();
         }
 
-        if (this.object.children && this.object.children.length > 0) {
+        if (this.object && this.object.children && this.object.children.length > 0) {
             const cameraPosition = new Vector3();
             const cameraQuaternion = new Quaternion();
             const cameraScale = new Vector3();

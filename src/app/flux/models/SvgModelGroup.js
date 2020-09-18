@@ -218,6 +218,11 @@ class SvgModelGroup {
         selected.setAttribute('href', imagePath);
     }
 
+    updateSvgModelImage(svgModel, imageName) {
+        const imagePath = `${DATA_PREFIX}/${imageName}`;
+        svgModel.elem.setAttribute('href', imagePath);
+    }
+
     duplicateElement(modelID) {
         const selected = this.svgContentGroup.getSelected();
         if (!selected) {
@@ -334,8 +339,6 @@ class SvgModelGroup {
                 width: posAndSize.width,
                 height: posAndSize.height
             });
-
-            this.invokeModelTransformCallback();
         }
         if (transformation.rotationZ !== undefined) {
             // todo, copy from canvas mouse up
@@ -386,6 +389,7 @@ class SvgModelGroup {
             if (transformation.scaleX !== undefined) {
                 model.updateAndRefresh({
                     transformation: {
+                        width: transformation.width,
                         scaleX: transformation.scaleX
                     }
                 });
@@ -393,6 +397,7 @@ class SvgModelGroup {
             if (transformation.scaleY !== undefined) {
                 model.updateAndRefresh({
                     transformation: {
+                        height: transformation.height,
                         scaleY: transformation.scaleY
                     }
                 });
@@ -406,7 +411,7 @@ class SvgModelGroup {
                 height: posAndSize.height
             });
         }
-        this.invokeModelTransformCallback();
+        // this.invokeModelTransformCallback();
     }
 
     // when single select
@@ -477,7 +482,7 @@ class SvgModelGroup {
 
     createFromModel(relatedModel) {
         const { config } = relatedModel;
-        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName, attr: { id: relatedModel.modelID } });
+        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName || 'image', attr: { id: relatedModel.modelID } });
 
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
@@ -682,8 +687,8 @@ class SvgModelGroup {
             //
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
-        this.invokeModelTransformCallback();
         // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
+        this.invokeModelTransformCallback();
     }
 
     clearSelection() {
@@ -711,42 +716,37 @@ class SvgModelGroup {
     }
 
     addSelectedSvgModelsByElements(elements) {
-        for (const model of this.svgModels) {
-            if (elements.includes(model.elem)) {
-                this.selectedSvgModels.push(model);
-                // this.modelGroup.addSelectedModels([model.relatedModel]);
+        for (const svgModel of this.svgModels) {
+            if (elements.includes(svgModel.elem)) {
+                this.selectedSvgModels.push(svgModel);
+                // todo, not modelGroup here, use flux/editor
+                const model = svgModel.relatedModel;
+                const modelGroup = model && model.modelGroup;
+                if (modelGroup) {
+                    modelGroup.addSelectedModels([model]);
+                }
             }
         }
     }
 
-    resetSelection(transformation) {
-        if (transformation === undefined) {
-            // todo
-            const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
-            this.modelGroup.updateSelectedModelTransformation({
-                positionX: posAndSize.positionX - this.size.x,
-                positionY: this.size.y - posAndSize.positionY,
-                width: posAndSize.width,
-                height: posAndSize.height
-            });
-        } else {
-            // todo
-            const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
-            this.modelGroup.updateSelectedModelTransformation({
-                positionX: posAndSize.positionX - this.size.x,
-                positionY: this.size.y - posAndSize.positionY,
-                width: posAndSize.width,
-                height: posAndSize.height
-            });
-        }
-        // todo, hide operator when model hide
+    resetSelection(modelGroupTransformation) {
+        const transformation = ((modelGroupTransformation !== undefined) ? modelGroupTransformation : this.modelGroup.getSelectedModelTransformation());
+        const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
+
+        // hide operator when model hide
         const selectedModels = this.modelGroup.getSelectedModelArray();
         if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
             this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
         }
     }
 
-    // TODO: This is temporary workaround for model processing
+    // // TODO: This is temporary workaround for model processing
     setModelTransformCallback(callback) {
         this.modelTransformCallback = callback;
     }

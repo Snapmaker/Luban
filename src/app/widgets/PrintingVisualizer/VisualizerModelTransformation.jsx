@@ -17,7 +17,6 @@ class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
-        hasModel: PropTypes.bool.isRequired,
         transformMode: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             positionX: PropTypes.number,
@@ -123,7 +122,7 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, hasModel, transformMode, transformation } = this.props;
+        const { size, selectedModelArray, transformMode, transformation } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -133,7 +132,9 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateY = 0;
         let rotateZ = 0;
         let uniformScalingState = true;
-        const disabled = !(selectedModelArray.length > 0 && hasModel);
+        const disabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+            return model.visible === true;
+        }));
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));
             moveY = Number(toFixed(transformation.positionY, 1));
@@ -279,7 +280,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!disabled && transformMode === 'scale' && selectedModelArray.length === 1 && (
+                {!disabled && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -490,7 +491,7 @@ const mapStateToProps = (state) => {
     return {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
-        transformation: modelGroup.getSelectedModelTransformation(),
+        transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         hasModel,
         transformMode
     };

@@ -1,3 +1,4 @@
+import fontList from 'font-list';
 import fontManager from '../../lib/FontManager';
 
 
@@ -19,8 +20,6 @@ export const getPlatform = (req, res) => {
 
 export const getFonts = (req, res) => {
     // const fonts = fontManager.fonts
-
-    const fontList = require('font-list');
 
     fontList.getFonts()
         .then(fonts => {

@@ -84,7 +84,8 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
-        svgModelGroup: PropTypes.object
+        svgModelGroup: PropTypes.object,
+        onSelectModel: PropTypes.func
     };
 
     updateTime = 0;
@@ -310,6 +311,7 @@ class SVGCanvas extends PureComponent {
                 this.mode = 'rotate';
             }
         }
+
         if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
             this.mode = 'move';
         }
@@ -324,18 +326,6 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
-                this.svgContentGroup.addSVGElement({
-                    element: 'rect',
-                    attr: {
-                        x,
-                        y,
-                        width: 0,
-                        height: 0,
-                        stroke,
-                        'stroke-width': strokeWidth,
-                        opacity: opacity / 2
-                    }
-                });
 
                 this.resizeMode = 'none';
                 if (rightClick) {
@@ -815,9 +805,12 @@ class SVGCanvas extends PureComponent {
                     const selected = this.svgContentGroup.selectedElements[0];
                     const model = this.props.svgModelGroup.getModelByElement(selected);
                     model.onUpdate();
+                    this.props.svgModelGroup.updateSelectedModelsByTransformation({});
+                    // todo, to fix model is not selected after resize
+                    this.selectOnly([selected]);
+                    this.mode = 'select';
+                    return;
                 }
-                // todo
-                this.props.svgModelGroup.updateSelectedModelsByTransformation({});
                 break;
             case 'select': {
                 element.remove();
@@ -838,9 +831,7 @@ class SVGCanvas extends PureComponent {
 
                 // todo, save the rotation in transformation but no reselect
                 this.selectOnly(this.svgContentGroup.selectedElements);
-                // this.svgContentGroup.resetSelection();
-                // this.svgContentGroup.setSelectorTransformList(this.props.svgModelGroup.modelGroup.getSelectedModelTransformation());
-                // this.svgContentGroup.operatorPoints.showGrips(true);
+                // this.svgContentGro
                 this.mode = 'select';
                 return;
             }
@@ -854,16 +845,9 @@ class SVGCanvas extends PureComponent {
                     dx,
                     dy
                 });
+                this.props.svgModelGroup.resetSelection();
+
                 this.mode = 'select';
-                // todo do not use modelGroup here
-                const transformation = this.props.svgModelGroup.modelGroup.getSelectedModelTransformation();
-                const posAndSize = this.svgContentGroup.resetSelection(this.props.svgModelGroup.size, transformation);
-                this.props.svgModelGroup.modelGroup.updateSelectedModelTransformation({
-                    positionX: posAndSize.positionX - this.props.size.x,
-                    positionY: this.props.size.y - posAndSize.positionY,
-                    width: posAndSize.width,
-                    height: posAndSize.height
-                });
                 return; // note that this is return
             }
             case 'panMove': {
@@ -940,7 +924,6 @@ class SVGCanvas extends PureComponent {
                 // this.trigger(SVG_EVENT_ADD, element);
                 // todo, select to the new model
                 // this.addToSelection([element]);
-                // console.log(this.props.svgModelGroup, element, this.props.svgModelGroup.getModelsByElements([element]));
             } else {
                 // todo
                 // element.remove();
@@ -1221,15 +1204,7 @@ class SVGCanvas extends PureComponent {
 
     // TODO: DO NOT use attributes/methods of SvgModelGroup, ModelGroup, Model directly in Component!!!
     addToSelection(elements) {
-        this.props.svgModelGroup.addSelectedSvgModelsByElements(elements);
-        const svgModels = this.props.svgModelGroup.getModelsByElements(elements);
-        for (const svgModel of svgModels) {
-            const model = svgModel.relatedModel;
-            const modelGroup = model && model.modelGroup;
-            if (modelGroup) {
-                modelGroup.addSelectedModels([model]);
-            }
-        }
+        this.props.onSelectModel(elements);
         this.svgContentGroup.addToSelection(elements);
 
         // Calculate position and size of selected model, set them to modelGroup.selectedGroup

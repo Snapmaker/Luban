@@ -224,7 +224,7 @@ class SvgModel {
         const { width, height } = this.elem.getBBox();
         const { scaleX, scaleY } = this.relatedModel.transformation;
         const uploadName = await this.uploadSourceFile();
-        this.relatedModel.updateSource({ uploadName, width, height, sourceWidth: width * scaleX * 8, sourceHeight: height * scaleY * 8 });
+        this.relatedModel.updateSource({ uploadName, processImageName: uploadName, width, height, sourceWidth: width * scaleX * 8, sourceHeight: height * scaleY * 8 });
     }
 
     async uploadSourceFile() {

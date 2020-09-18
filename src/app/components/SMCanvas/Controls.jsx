@@ -309,6 +309,10 @@ class Controls extends EventEmitter {
      * @param event
      */
     onClick = (event) => {
+        // todo, to fix workspace not rotate
+        if (!this.selectedGroup) {
+            return;
+        }
         const mousePosition = this.getMouseCoord(event);
         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
         if (distance < 0.004 && this.selectableObjects.children) {

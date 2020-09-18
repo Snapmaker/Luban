@@ -10,7 +10,8 @@ class ReliefParameters extends PureComponent {
     static propTypes = {
         invert: PropTypes.bool,
         disabled: PropTypes.bool,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        processSelectedModel: PropTypes.func.isRequired
     };
 
     state = {
@@ -38,7 +39,10 @@ class ReliefParameters extends PureComponent {
                                 className="sm-parameter-row__checkbox"
                                 type="checkbox"
                                 defaultChecked={invert}
-                                onChange={this.actions.onToggleInvert}
+                                onChange={() => {
+                                    this.actions.onToggleInvert();
+                                    this.props.processSelectedModel();
+                                }}
                             />
                         </div>
                     </React.Fragment>
@@ -58,7 +62,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params))
+        updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),
+        processSelectedModel: () => dispatch(editorActions.processSelectedModel('cnc'))
     };
 };
 

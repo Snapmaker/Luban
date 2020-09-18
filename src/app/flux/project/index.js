@@ -167,7 +167,6 @@ export const actions = {
 
             if (idxClicked === 1) throw new Error('Cancel');
             if (idxClicked === 2) {
-                await dispatch(actions.clearSavedEnvironment(headType));
                 return;
             }
         }
@@ -179,7 +178,6 @@ export const actions = {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
         UniApi.File.save(openedFile.path, tmpFile);
-        await dispatch(actions.clearSavedEnvironment(headType));
     },
 
     open: (file, history) => async (dispatch) => {

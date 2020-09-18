@@ -59,7 +59,8 @@ class Visualizer extends Component {
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired
+        onModelAfterTransform: PropTypes.func.isRequired,
+        onSelectModel: PropTypes.func
     };
 
     contextMenuRef = React.createRef();
@@ -297,6 +298,7 @@ class Visualizer extends Component {
         const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
+        const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
 
         return (
             <div
@@ -318,6 +320,7 @@ class Visualizer extends Component {
                         svgModelGroup={this.props.svgModelGroup}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
+                        onSelectModel={this.props.onSelectModel}
                     />
                 </div>
                 <div
@@ -366,25 +369,25 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.bringToFront
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Send to Back'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.sendToBack
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -436,7 +439,7 @@ class Visualizer extends Component {
                             {
                                 type: 'subMenu',
                                 label: i18n._('Flip'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -461,7 +464,7 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isOnlySelectedOneModel,
+                                disabled: contextMednuDisabled,
                                 onClick: this.actions.deleteSelectedModel
                             }
                             // {
@@ -515,7 +518,8 @@ const mapDispatchToProps = (dispatch) => {
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),
         onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
+        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc')),
+        onSelectModel: (elements) => dispatch(editorActions.selectModelByElements('cnc', elements))
     };
 };
 

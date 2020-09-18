@@ -220,6 +220,7 @@ class Model {
             this.modelObject3D.visible = this.showOrigin;
         }
         this.updateTransformation(this.transformation);
+        this.modelGroup.modelChanged();
     }
 
     generateProcessObject3D() {
@@ -273,7 +274,7 @@ class Model {
             this.processObject3D && (this.processObject3D.visible = param);
         } else {
             // todo
-            this.modelObject3D && (this.modelObject3D.visible = param); // this.showOrigin);
+            this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
             this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
         }
     }
@@ -285,10 +286,7 @@ class Model {
         return this.modeConfigs[mode];
     }
 
-    processMode(mode, config, processImageName) {
-        if (processImageName) {
-            this.processImageName = processImageName;
-        }
+    processMode(mode, config) {
         if (this.mode !== mode) {
             this.modeConfigs[this.mode] = {
                 config: {
@@ -304,7 +302,9 @@ class Model {
                     ...config
                 };
             }
+
             this.mode = mode;
+            this.processImageName = null;
         }
 
         this.generateProcessObject3D();
@@ -456,7 +456,7 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, width, height } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, processImageName, width, height } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
@@ -464,6 +464,7 @@ class Model {
         this.height = height || this.height;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
+        this.processImageName = processImageName || this.processImageName;
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
@@ -472,12 +473,19 @@ class Model {
         this.generateProcessObject3D();
     }
 
-    updateConfig(config, processImageName) {
+    updateConfig(config) {
         this.config = {
             ...this.config,
             ...config
         };
-        this.processMode(this.mode, this.config, processImageName);
+        this.processMode(this.mode, this.config);
+    }
+
+    updateProcessImageName(processImageName) {
+        // this.processMode(this.mode, this.config, processImageName);
+        this.processImageName = processImageName;
+
+        this.generateProcessObject3D();
     }
 
     computeBoundingBox() {
