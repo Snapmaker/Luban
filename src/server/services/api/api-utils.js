@@ -1,5 +1,5 @@
-import fontManager from '../../lib/FontManager';
 import fontList from 'font-list';
+import fontManager from '../../lib/FontManager';
 
 
 // Get Host OS platform
