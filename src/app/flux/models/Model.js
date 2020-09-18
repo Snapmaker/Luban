@@ -198,6 +198,7 @@ class Model {
             });
         } else if (this.sourceType !== '3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
+            console.log('uploadpath', uploadPath);
             // const texture = new THREE.TextureLoader().load(uploadPath);
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -220,6 +221,8 @@ class Model {
             this.modelObject3D.visible = this.showOrigin;
         }
         this.updateTransformation(this.transformation);
+        this.modelGroup.modelChanged();
+        console.log(this.modelGroup);
     }
 
     generateProcessObject3D() {
@@ -273,8 +276,8 @@ class Model {
             this.processObject3D && (this.processObject3D.visible = param);
         } else {
             // todo
-            this.modelObject3D && (this.modelObject3D.visible = param); // this.showOrigin);
-            this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
+            this.modelObject3D && (this.modelObject3D.visible = false); //this.showOrigin);
+            this.processObject3D && (this.processObject3D.visible = true); //!this.showOrigin);
         }
     }
 
@@ -455,7 +458,7 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, width, height } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, processImageName, width, height } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
@@ -463,6 +466,7 @@ class Model {
         this.height = height || this.height;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
+        this.processImageName = processImageName || this.processImageName;
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
