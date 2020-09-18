@@ -115,9 +115,9 @@ class GcodeConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const modelGroup = state.laser.toolPathModelGroup;
-    const model = modelGroup.getSelectedModel();
-    const { gcodeConfig } = model;
+    const toolPathModelGroup = state.laser.toolPathModelGroup;
+    const toolPathModel = toolPathModelGroup.getSelectedModel();
+    const { gcodeConfig } = toolPathModel;
     const { optimizePath, fillEnabled, fillDensity } = gcodeConfig;
     return {
         optimizePath,

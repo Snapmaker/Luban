@@ -176,8 +176,9 @@ class ReliefGcodeParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { gcodeConfig } = state.cnc.toolPathModelGroup.getSelectedModel();
-
+    const toolPathModelGroup = state.cnc.toolPathModelGroup;
+    const toolPathModel = toolPathModelGroup.getSelectedModel();
+    const { gcodeConfig } = toolPathModel;
     const { targetDepth, stepDown, safetyHeight, stopHeight, density } = gcodeConfig;
     return {
         size: machine.size,
