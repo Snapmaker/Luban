@@ -413,10 +413,10 @@ export const actions = {
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { svgModelGroup } = getState()[headType];
-
-        const modelID = getCount();
-        svgModelGroup.duplicateElement(modelID);
+        const { modelGroup } = getState()[headType];
+        const { originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
+        dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
+            sourceType, config, gcodeConfig, transformation));
     },
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
