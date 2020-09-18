@@ -274,8 +274,8 @@ class Model {
             this.processObject3D && (this.processObject3D.visible = param);
         } else {
             // todo
-            this.modelObject3D && (this.modelObject3D.visible = false); //this.showOrigin);
-            this.processObject3D && (this.processObject3D.visible = true); //!this.showOrigin);
+            this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
+            this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
         }
     }
 
