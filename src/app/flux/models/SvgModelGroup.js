@@ -218,6 +218,11 @@ class SvgModelGroup {
         selected.setAttribute('href', imagePath);
     }
 
+    updateSvgModelImage(svgModel, imageName) {
+        const imagePath = `${DATA_PREFIX}/${imageName}`;
+        svgModel.elem.setAttribute('href', imagePath);
+    }
+
     duplicateElement(modelID) {
         const selected = this.svgContentGroup.getSelected();
         if (!selected) {

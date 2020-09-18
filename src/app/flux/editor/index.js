@@ -211,6 +211,7 @@ export const actions = {
                 scaleY: 1 * 40 / model.transformation.width
             });
         }
+
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
     },
@@ -363,7 +364,7 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, svgModelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -396,11 +397,17 @@ export const actions = {
                     return;
                 }
 
-                modelGroup.updateSelectedModelProcessImage(processImageName);
+                const svgModel = selectedModel.relatedModels.svgModel;
+                const toolPathModel = selectedModel.relatedModels.toolPathModel;
 
-                svgModelGroup.updateElementImage(processImageName);
+                // modelGroup.updateSelectedModelProcessImage(processImageName);
+                selectedModel.updateProcessImageName(processImageName);
 
-                toolPathModelGroup.updateSelectedNeedPreview(true);
+                // svgModelGroup.updateElementImage(processImageName);
+                svgModelGroup.updateSvgModelImage(svgModel, processImageName);
+
+                // toolPathModelGroup.updateSelectedNeedPreview(true);
+                toolPathModel.updateNeedPreview(true);
 
                 // dispatch(baseActions.recordSnapshot(headType));
                 dispatch(baseActions.resetCalculatedState(headType));
