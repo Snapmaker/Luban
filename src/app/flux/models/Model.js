@@ -198,7 +198,6 @@ class Model {
             });
         } else if (this.sourceType !== '3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
-            console.log('uploadpath', uploadPath);
             // const texture = new THREE.TextureLoader().load(uploadPath);
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -222,7 +221,6 @@ class Model {
         }
         this.updateTransformation(this.transformation);
         this.modelGroup.modelChanged();
-        console.log(this.modelGroup);
     }
 
     generateProcessObject3D() {
