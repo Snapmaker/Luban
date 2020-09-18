@@ -986,7 +986,6 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-
     recordSnapshot: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
         const cloneModels = modelGroup.cloneModels();
@@ -1019,6 +1018,16 @@ export const actions = {
         svgModelGroup.showSelectedElement();
         // svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
         dispatch(baseActions.render(headType));
+    },
+
+    selectModelByElements: (headType, elements) => (dispatch, getState) => {
+        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        // todo
+        svgModelGroup.addSelectedSvgModelsByElements(elements);
+
+        // select toolPathModel
+        const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
+        toolPathModelGroup.selectToolPathModel(model && model.modelID);
     }
 };
 

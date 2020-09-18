@@ -716,10 +716,15 @@ class SvgModelGroup {
     }
 
     addSelectedSvgModelsByElements(elements) {
-        for (const model of this.svgModels) {
-            if (elements.includes(model.elem)) {
-                this.selectedSvgModels.push(model);
-                // this.modelGroup.addSelectedModels([model.relatedModel]);
+        for (const svgModel of this.svgModels) {
+            if (elements.includes(svgModel.elem)) {
+                this.selectedSvgModels.push(svgModel);
+                // todo, not modelGroup here, use flux/editor
+                const model = svgModel.relatedModel;
+                const modelGroup = model && model.modelGroup;
+                if (modelGroup) {
+                    modelGroup.addSelectedModels([model]);
+                }
             }
         }
     }

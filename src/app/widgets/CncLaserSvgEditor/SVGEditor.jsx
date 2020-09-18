@@ -13,8 +13,8 @@ class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         svgModelGroup: PropTypes.object,
-        showContextMenu: PropTypes.func
-
+        showContextMenu: PropTypes.func,
+        onSelectModel: PropTypes.func
         // insertDefaultTextVector: PropTypes.func.isRequired
     };
 
@@ -145,6 +145,7 @@ class SVGEditor extends PureComponent {
                             svgModelGroup={this.props.svgModelGroup}
                             size={this.props.size}
                             ref={this.canvas}
+                            onSelectModel={this.props.onSelectModel}
                         />
                     </div>
                     <SvgTool

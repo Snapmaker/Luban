@@ -60,7 +60,8 @@ class Visualizer extends Component {
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired
+        onModelAfterTransform: PropTypes.func.isRequired,
+        onSelectModel: PropTypes.func
     };
 
     contextMenuRef = React.createRef();
@@ -293,6 +294,7 @@ class Visualizer extends Component {
                         svgModelGroup={this.props.svgModelGroup}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
+                        onSelectModel={this.props.onSelectModel}
                     />
                 </div>
                 <div
@@ -493,7 +495,8 @@ const mapDispatchToProps = (dispatch) => {
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
         onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
+        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser')),
+        onSelectModel: (elements) => dispatch(editorActions.selectModelByElements('laser', elements))
     };
 };
 

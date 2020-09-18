@@ -84,7 +84,8 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
-        svgModelGroup: PropTypes.object
+        svgModelGroup: PropTypes.object,
+        onSelectModel: PropTypes.func
     };
 
     updateTime = 0;
@@ -1203,15 +1204,7 @@ class SVGCanvas extends PureComponent {
 
     // TODO: DO NOT use attributes/methods of SvgModelGroup, ModelGroup, Model directly in Component!!!
     addToSelection(elements) {
-        this.props.svgModelGroup.addSelectedSvgModelsByElements(elements);
-        const svgModels = this.props.svgModelGroup.getModelsByElements(elements);
-        for (const svgModel of svgModels) {
-            const model = svgModel.relatedModel;
-            const modelGroup = model && model.modelGroup;
-            if (modelGroup) {
-                modelGroup.addSelectedModels([model]);
-            }
-        }
+        this.props.onSelectModel(elements);
         this.svgContentGroup.addToSelection(elements);
 
         // Calculate position and size of selected model, set them to modelGroup.selectedGroup
