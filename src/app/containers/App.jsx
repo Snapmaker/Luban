@@ -103,7 +103,11 @@ class App extends PureComponent {
                 if (!this.props.projectState[headType].unSaved) continue;
                 message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] });
                 this.props.history.push(`/${headType}`);
-                await this.props.save(headType, { message });
+                await new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(this.props.save(headType, { message }));
+                    }, 100);
+                });
             }
         },
         openProject: (file) => {
@@ -111,7 +115,11 @@ class App extends PureComponent {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             } else {
-                this.props.openProject(file, this.props.history);
+                try {
+                    this.props.openProject(file, this.props.history);
+                } catch (e) {
+                    console.log(e.message);
+                }
             }
         },
         initUniEvent: () => {
