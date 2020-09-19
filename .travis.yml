@@ -4,7 +4,8 @@ os:
 
 # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
 # Default: 9.4
-osx_image: xcode12u  # Xcode 12.0, macOS 10.15.5, JDK 14.0.1
+osx_image: xcode11.6  # Xcode 11.6, macOS 10.15.5, JDK 14.02
+# osx_image: xcode12u  # Xcode 12.0, macOS 10.15.5, JDK 14.0.1
 
 # Linux Ubuntu Precise
 sudo: required
