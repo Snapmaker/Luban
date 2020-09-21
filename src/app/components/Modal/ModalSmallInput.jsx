@@ -13,7 +13,7 @@ class ModalSmallInput extends PureComponent {
         title: PropTypes.string.isRequired,
         text: PropTypes.string,
         label: PropTypes.string,
-        inputText: PropTypes.string
+        inputtext: PropTypes.string
     };
 
     static defaultProps = {
@@ -21,12 +21,12 @@ class ModalSmallInput extends PureComponent {
     };
 
     state = {
-        inputText: ''
+        inputtext: this.props.inputtext
     };
 
     actions = {
         onInputChange: (event) => {
-            this.setState({ inputText: event.target.value });
+            this.setState({ inputtext: event.target.value });
         }
     };
 
@@ -37,7 +37,7 @@ class ModalSmallInput extends PureComponent {
         const label = this.props.label;
         const subtext = this.props.subtext;
         const title = this.props.title;
-        const inputText = this.state.inputText;
+        const inputtext = this.state.inputtext;
 
         return (
             <Modal
@@ -71,7 +71,7 @@ class ModalSmallInput extends PureComponent {
                     <div className="form-group">
                         {/* eslint-disable-next-line jsx-a11y/label-has-for */}
                         <label id="modal-small-input-label" htmlFor="modal-small-input">{label}</label>
-                        <input id="modal-small-input" type="text" className="form-control" value={inputText} onChange={this.actions.onInputChange} />
+                        <input id="modal-small-input" type="text" className="form-control" value={inputtext} onChange={this.actions.onInputChange} />
                     </div>
 
 
@@ -91,7 +91,7 @@ class ModalSmallInput extends PureComponent {
                         <button
                             type="button"
                             className="btn btn-primary"
-                            onClick={() => { onConfirm(inputText); }}
+                            onClick={() => { onConfirm(inputtext); }}
                         >
                             {i18n._('Confirm')}
                         </button>
