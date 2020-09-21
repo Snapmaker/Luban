@@ -203,7 +203,6 @@ async function processBW(modelInfo) {
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
-        .newsprint('line', 10)
         .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
             if (img.bitmap.data[idx + 3] === 0) {
                 // transparent
@@ -235,6 +234,34 @@ async function processBW(modelInfo) {
                 }
             }
         })
+        .background(0xffffffff);
+
+    return new Promise(resolve => {
+        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+            resolve({
+                filename: outputFilename
+            });
+        });
+    });
+}
+
+async function processNewsprint(modelInfo) {
+    const { uploadName } = modelInfo;
+    // rotation: degree and counter-clockwise
+    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
+
+    const { npType = 'line', npSize = 30, npAngle = 135 } = modelInfo.config;
+    const { density = 4 } = modelInfo.gcodeConfig || {};
+
+    const outputFilename = pathWithRandomSuffix(uploadName);
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+
+    img
+        .greyscale()
+        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .resize(width * density, height * density)
+        .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
+        .newsprint(npType, npSize, npAngle)
         .background(0xffffffff);
 
     return new Promise(resolve => {
@@ -294,6 +321,8 @@ function process(modelInfo) {
             return processBW(modelInfo);
         } else if (mode === 'vector') {
             return processVector(modelInfo);
+        } else if (mode === 'newsprint') {
+            return processNewsprint(modelInfo);
         } else {
             return Promise.resolve({
                 filename: ''
