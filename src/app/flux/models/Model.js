@@ -220,7 +220,6 @@ class Model {
             this.modelObject3D.visible = this.showOrigin;
         }
         this.updateTransformation(this.transformation);
-        this.modelGroup.modelChanged();
     }
 
     generateProcessObject3D() {
@@ -572,7 +571,7 @@ class Model {
             ...this,
             geometry: this.meshObject.geometry.clone(),
             material: this.meshObject.material.clone()
-        });
+        }, this.modelGroup);
         // clone.modelID = this.modelID;
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
