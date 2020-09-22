@@ -139,7 +139,7 @@ export const actions = {
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
-        const openedFile = UniApi.File.saveAs(targetFile, tmpFile);
+        const openedFile = await UniApi.File.saveAs(targetFile, tmpFile);
         if (openedFile) {
             openedFile && UniApi.Window.setOpenedFile(openedFile.name);
             dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile }));
@@ -154,7 +154,7 @@ export const actions = {
         if (!unSaved) return;
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {
-            const idxClicked = UniApi.Dialog.showMessageBox({
+            const idxClicked = await UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
                 defaultId: 2,
@@ -181,6 +181,7 @@ export const actions = {
     },
 
     open: (file, history) => async (dispatch) => {
+        // file: { path, name }
         const [, tail] = file.name.split('.');
 
         if (tail.substring(0, 4) === 'snap') {
