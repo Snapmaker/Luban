@@ -4,11 +4,6 @@
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
-  "contributors": [
-    "David Chen <whimsycwd@snapmaker.com>",
-    "parachvte <ryan@snapmaker.com>",
-    "walker <walker@snapmaker.com>"
-  ],
   "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
     "luban": "bin/cli"
@@ -115,7 +110,8 @@
       "category": "Utility",
       "maintainer": "parachvte <ryan@snapmaker.com>",
       "target": [
-        "deb"
+        "deb",
+        "rpm"
       ]
     },
     "publish": []

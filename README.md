@@ -51,7 +51,17 @@ Or you can clone this repository, then follow the instructions in "**Development
 
 ## Development
 
-### Setup development environment
+### Setup development environment (Ubuntu)
+
+Install dependencies for Linux builds. `binutils` is used for .deb builds, `rpm` is used for .rpm builds.
+
+```Bash
+> sudo apt install libgconf-2-4
+> sudo apt install binutils
+> sudo apt install rpm
+```
+
+### Setup Node.js environment
 
 - Install Node.js 10 (or higher). You can use
 [NVM (Node Version Manager)](https://github.com/nvm-sh/nvm) to install and manage multiple Node.js 
