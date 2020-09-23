@@ -482,7 +482,10 @@ class SvgModelGroup {
 
     createFromModel(relatedModel) {
         const { config } = relatedModel;
-        const elem = this.svgContentGroup.addSVGElement({ element: config.svgNodeName || 'image', attr: { id: relatedModel.modelID } });
+        const elem = this.svgContentGroup.addSVGElement({
+            element: config.svgNodeName || 'image',
+            attr: { id: relatedModel.modelID }
+        });
 
         const model = new SvgModel(elem, this);
         this.svgModels.push(model);
@@ -579,9 +582,11 @@ class SvgModelGroup {
         // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
         transformList.clear();
         const size = this.size;
+
         function pointModelToSvg({ x, y }) {
             return { x: size.x + x, y: size.y - y };
         }
+
         const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
         const center = pointModelToSvg({ x: positionX, y: positionY });
 

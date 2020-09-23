@@ -224,7 +224,14 @@ class SvgModel {
         const { width, height } = this.elem.getBBox();
         const { scaleX, scaleY } = this.relatedModel.transformation;
         const uploadName = await this.uploadSourceFile();
-        this.relatedModel.updateSource({ uploadName, processImageName: uploadName, width, height, sourceWidth: width * scaleX * 8, sourceHeight: height * scaleY * 8 });
+        this.relatedModel.updateSource({
+            uploadName,
+            processImageName: uploadName,
+            width,
+            height,
+            sourceWidth: width * scaleX * 8,
+            sourceHeight: height * scaleY * 8
+        });
     }
 
     async uploadSourceFile() {
@@ -295,7 +302,7 @@ class SvgModel {
             //     changes.d = elem.getAttribute('d');
             //     break;
             case 'rect':
-            case 'image':
+            case 'image': {
                 elem.setAttribute('x', x - width / 2);
                 elem.setAttribute('y', y - height / 2);
                 elem.setAttribute('width', width);
@@ -304,6 +311,7 @@ class SvgModel {
                     elem.setAttribute('href', href);
                 }
                 break;
+            }
             case 'text': {
                 const diffY = elem.getAttribute('y') - elem.getBBox().y;
                 elem.setAttribute('x', x - width / 2);
@@ -353,7 +361,9 @@ class SvgModel {
     onUpdate() {
         const transform = this.elemTransform();
         if (!transform) return;
-        const { bbox: { width, height, x, y }, scaleX, scaleY, translateX, translateY, rotationAngle } = transform;
+
+        const { width, height } = this.relatedModel;
+        const { bbox: { x, y }, scaleX, scaleY, translateX, translateY, rotationAngle } = transform;
 
         if (rotationAngle) {
             this.relatedModel.updateAndRefresh({ transformation: { rotationZ: -rotationAngle / 180 * Math.PI } });
@@ -485,6 +495,7 @@ class SvgModel {
         this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
+
         function transformPoint(p, m) {
             const svgPoint = svg.createSVGPoint();
             svgPoint.x = p.x;
