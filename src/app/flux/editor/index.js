@@ -420,7 +420,9 @@ export const actions = {
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { page, modelGroup } = getState()[headType];
+        if (page === PAGE_PROCESS) return;
+
         const { originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, gcodeConfig, transformation));
@@ -463,7 +465,10 @@ export const actions = {
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { page, modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+
+        if (page === PAGE_PROCESS) return;
+
         svgModelGroup.deleteSelectedElements();
         // todo
         let toolPathModelState = null;
