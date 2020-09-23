@@ -300,7 +300,9 @@ class SvgModel {
                 elem.setAttribute('y', y - height / 2);
                 elem.setAttribute('width', width);
                 elem.setAttribute('height', height);
-                elem.setAttribute('href', href);
+                if (!elem.getAttribute('href')) {
+                    elem.setAttribute('href', href);
+                }
                 break;
             case 'text': {
                 const diffY = elem.getAttribute('y') - elem.getBBox().y;
