@@ -60,7 +60,7 @@ class QuickAccessToolbar extends PureComponent {
                     </Nav.Item>
                 )}
                 <Nav.Item>
-                    <Nav.Link href="https://snapmaker.zendesk.com/hc/en-us" target="_blank" rel="noopener noreferrer">
+                    <Nav.Link href="https://support.snapmaker.com/hc/en-us" target="_blank" rel="noopener noreferrer">
                         {i18n._('User Manual & FAQ')}
                     </Nav.Link>
                 </Nav.Item>
