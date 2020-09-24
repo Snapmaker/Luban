@@ -135,18 +135,16 @@ export const actions = {
             }
             : modelDefaultConfigs.gcodeConfig;
 
-        // const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
-        //     ? {
-        //         width: 40,
-        //         height: 40 * height / width
-        //     } : {
-        //         width: width,
-        //         height: height
-        //     };
-        const defaultTransformation = {
-            width: width,
-            height: height
-        };
+        // cnc size limit
+        const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
+            ? {
+                width: 40,
+                height: 40 * sourceHeight / sourceWidth
+            } : {
+                width: width,
+                height: height
+            };
+
         config = {
             ...defaultConfig,
             ...config
@@ -201,16 +199,6 @@ export const actions = {
         svgModelGroup.createFromModel(model);
         svgModelGroup.clearSelection();
         svgModelGroup.addSelectedSvgModelsByModels([model]);
-
-        // cnc image size limit
-        if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
-            svgModelGroup.updateSelectedElementsTransformation({
-                width: 40,
-                scaleX: 40 / model.transformation.width,
-                height: model.transformation.height * 40 / model.transformation.width,
-                scaleY: 1 * 40 / model.transformation.width
-            });
-        }
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
@@ -420,7 +408,9 @@ export const actions = {
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { page, modelGroup } = getState()[headType];
+        if (page === PAGE_PROCESS) return;
+
         const { originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, gcodeConfig, transformation));
@@ -463,7 +453,10 @@ export const actions = {
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { page, modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+
+        if (page === PAGE_PROCESS) return;
+
         svgModelGroup.deleteSelectedElements();
         // todo
         let toolPathModelState = null;

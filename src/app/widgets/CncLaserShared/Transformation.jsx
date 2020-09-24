@@ -193,7 +193,7 @@ class Transformation extends PureComponent {
                                 </span>
                                 <button
                                     type="button"
-                                    disabled={!selectedNotHide}
+                                    disabled={!selectedNotHide || sourceType === 'raster'}
                                     className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
                                     style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '10px', marginRight: '5px' }}
                                     onClick={() => {
