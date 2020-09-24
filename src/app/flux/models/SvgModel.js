@@ -229,8 +229,8 @@ class SvgModel {
             processImageName: uploadName,
             width,
             height,
-            sourceWidth: width * scaleX * 8,
-            sourceHeight: height * scaleY * 8
+            sourceWidth: width * Math.abs(scaleX) * 8,
+            sourceHeight: height * Math.abs(scaleY) * 8
         });
     }
 
