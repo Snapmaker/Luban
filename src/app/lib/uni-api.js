@@ -46,18 +46,20 @@ const File = {
             fs.copyFileSync(tmpFile, targetFile);
         }
     },
-    saveAs(targetFile, tmpFile) {
+    async saveAs(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');
             const { app, dialog } = window.require('electron').remote;
             tmpFile = app.getPath('userData') + tmpFile;
-            targetFile = dialog.showSaveDialog({
+            const saveDialogReturnValue = await dialog.showSaveDialog({
                 title: targetFile,
                 filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
             });
+            targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('select file canceled');
 
             const file = { path: targetFile, name: path.basename(targetFile) };
+
             fs.copyFileSync(tmpFile, targetFile);
             const menu = window.require('electron').remote.require('./electron-app/Menu');
             menu.addRecentFile(file);
