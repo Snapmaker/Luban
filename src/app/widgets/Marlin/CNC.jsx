@@ -40,16 +40,16 @@ class Printing extends PureComponent {
                         <span className="sm-parameter-row__label-lg">{i18n._('Tool Head')}</span>
                         <button
                             type="button"
-                            className={!headStatus ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
+                            className={headStatus ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
                             style={{
                                 float: 'right'
                             }}
                             onClick={this.actions.onClickToolHead}
                         >
-                            {headStatus && <i className="fa fa-toggle-off" />}
-                            {!headStatus && <i className="fa fa-toggle-on" />}
+                            {!headStatus && <i className="fa fa-toggle-off" />}
+                            {headStatus && <i className="fa fa-toggle-on" />}
                             <span className="space" />
-                            {!headStatus ? i18n._('Open') : i18n._('Close')}
+                            {headStatus ? i18n._('On') : i18n._('Off')}
                         </button>
                     </div>
                 </div>

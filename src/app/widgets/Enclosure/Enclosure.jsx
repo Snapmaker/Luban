@@ -166,34 +166,34 @@ class Enclosure extends PureComponent {
                         <span className="sm-parameter-row__label-lg">{i18n._('LED Strip')}</span>
                         <button
                             type="button"
-                            className={!led ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
+                            className={led ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
                             style={{
                                 float: 'right'
                             }}
                             onClick={this.actions.onHandleLed}
                             disabled={(connectionType === 'serial' && !isLedReady) || !isConnected}
                         >
-                            {!!led && <i className="fa fa-toggle-off" />}
-                            {!led && <i className="fa fa-toggle-on" />}
+                            {!led && <i className="fa fa-toggle-off" />}
+                            {!!led && <i className="fa fa-toggle-on" />}
                             <span className="space" />
-                            {!led ? i18n._('On') : i18n._('Off')}
+                            {led ? i18n._('On') : i18n._('Off')}
                         </button>
                     </div>
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label-lg">{i18n._('Cooling Fan')}</span>
                         <button
                             type="button"
-                            className={!fan ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
+                            className={fan ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
                             style={{
                                 float: 'right'
                             }}
                             onClick={this.actions.onHandleCoolingFans}
                             disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
                         >
-                            {!!fan && <i className="fa fa-toggle-off" />}
-                            {!fan && <i className="fa fa-toggle-on" />}
+                            {!fan && <i className="fa fa-toggle-off" />}
+                            {!!fan && <i className="fa fa-toggle-on" />}
                             <span className="space" />
-                            {!fan ? i18n._('On') : i18n._('Off')}
+                            {fan ? i18n._('On') : i18n._('Off')}
                         </button>
                     </div>
                     { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
