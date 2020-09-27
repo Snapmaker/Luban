@@ -26,6 +26,9 @@ class ReliefGcodeParameters extends PureComponent {
     };
 
     actions = {
+        onToggleExpand: () => {
+            this.setState(state => ({ expanded: !state.expanded }));
+        },
         onChangeTargetDepth: (targetDepth) => {
             if (targetDepth > this.props.size.z) {
                 return;
