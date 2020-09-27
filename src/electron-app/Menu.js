@@ -1,8 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs from 'fs';
-import { app, shell, globalShortcut, Menu, dialog, MenuItem } from 'electron';
-import { getMainWindow } from './window';
+import { app, shell, Menu, dialog, MenuItem } from 'electron';
 import DataStorage from '../DataStorage';
 
 
@@ -19,7 +18,9 @@ function getSavedRecentFile() {
         const arr = JSON.parse(content);
         if (!(arr instanceof Array)) return [];
         return arr;
-    } catch (e) { return []; }
+    } catch (e) {
+        return [];
+    }
 }
 
 function saveRecentFile(file) {
@@ -39,12 +40,14 @@ export function addRecentFile(file, isSave = true) {
         click: (menuItem, browserWindow) => {
             // eslint-disable-next-line no-use-before-define
             openFile(browserWindow, file);
-        } });
+        }
+    });
 
     itemRecentFiles.submenu.insert(0, item);
     Menu.setApplicationMenu(menu);
     if (isSave) saveRecentFile(file);
 }
+
 function recoverRecentFiles() {
     const arr = getSavedRecentFile();
     for (const file of arr) {
@@ -53,7 +56,7 @@ function recoverRecentFiles() {
 }
 
 function onClickPreferences(browserWindow) {
-    const window = browserWindow || getMainWindow();
+    const window = browserWindow;
 
     const url = window.webContents.getURL();
     const urlInstance = new URL(url);
@@ -61,15 +64,17 @@ function onClickPreferences(browserWindow) {
     window.webContents.loadURL(`${urlInstance.origin}/#/settings`);
 }
 
-function openFile(browserWindow, file) {
+async function openFile(browserWindow, file) {
     if (!file) {
-        const filePaths = dialog.showOpenDialog(
+        const openDialogReturnValue = await dialog.showOpenDialog(
             {
                 title: 'Snapmaker Luban',
                 filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
             }
         );
+        const filePaths = openDialogReturnValue.filePaths;
         if (!filePaths) return;
+
         browserWindow.webContents.focus();
         file = { path: filePaths[0], name: path.basename(filePaths[0]) };
         addRecentFile(file);
@@ -86,7 +91,7 @@ function save(browserWindow) {
 }
 
 function getMenuTemplate(options) {
-    const { address, port } = { ...options };
+    const { url } = options;
 
     const template = [
         {
@@ -94,9 +99,8 @@ function getMenuTemplate(options) {
             submenu: [
                 {
                     label: 'Open File...',
-                    click: (menuItem, browserWindow, event) => {
+                    click: (menuItem, browserWindow) => {
                         openFile(browserWindow);
-                        console.log(event);
                     }
                 },
                 {
@@ -144,7 +148,6 @@ function getMenuTemplate(options) {
                 {
                     label: 'View In Browser',
                     click: () => {
-                        const url = `http://${address}:${port}`;
                         shell.openExternal(url);
                     }
                 },
@@ -195,11 +198,27 @@ function getMenuTemplate(options) {
     return template;
 }
 
-export default function registerMenu(options) {
-    const template = getMenuTemplate(options);
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
-    recoverRecentFiles();
-    // Bind Menu defined shortcuts
-    globalShortcut.register('CommandOrControl+,', onClickPreferences);
+/**
+ * MenuBuilder
+ *
+ * Build application menu.
+ */
+export default class MenuBuilder {
+    mainWindow = null;
+
+    options = Object.create(null);
+
+    constructor(mainWindow, options) {
+        this.mainWindow = mainWindow;
+        this.options = options;
+    }
+
+    buildMenu() {
+        const template = getMenuTemplate(this.options);
+
+        const menu = Menu.buildFromTemplate(template);
+        Menu.setApplicationMenu(menu);
+
+        recoverRecentFiles();
+    }
 }
