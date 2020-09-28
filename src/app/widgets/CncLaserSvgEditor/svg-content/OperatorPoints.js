@@ -117,6 +117,7 @@ class OperatorPoints {
 
         this.operatorPointsGroup.append(this.rotateGripConnector);
         this.operatorPointsGroup.append(this.rotateGrip);
+        this.showGrips(false);
     }
 
     updateScale(scale) { // just change the engineer scale
