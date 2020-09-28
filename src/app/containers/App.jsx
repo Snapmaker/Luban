@@ -114,6 +114,13 @@ class App extends PureComponent {
                 });
             }
         },
+        closeFile: async () => {
+            const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            const message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
+            if (currentHeadType) {
+                await this.props.saveAndClose(currentHeadType, { message });
+            }
+        },
         openProject: (file) => {
             if (!file) {
                 this.fileInput.current.value = null;
@@ -139,6 +146,9 @@ class App extends PureComponent {
             UniApi.Event.on('save-and-close', async () => {
                 await this.actions.saveAll();
                 UniApi.Window.call('destroy');
+            });
+            UniApi.Event.on('close-file', async () => {
+                await this.actions.closeFile();
             });
         }
 
@@ -353,6 +363,7 @@ const mapDispatchToProps = (dispatch) => {
         quitRecovery: (headType) => dispatch(projectActions.quitRecovery(headType)),
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
+        saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (headType, history) => dispatch(projectActions.open(headType, history))
     };
 };

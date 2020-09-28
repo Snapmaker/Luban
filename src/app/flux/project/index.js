@@ -212,6 +212,28 @@ export const actions = {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }
+    },
+
+    saveAndClose: (headType, opts) => async (dispatch, getState) => {
+        let modActions = null;
+        let modState = null;
+        if (headType === HEAD_CNC || headType === HEAD_LASER) {
+            modActions = editorActions;
+            modState = getState()[headType];
+        }
+        if (headType === HEAD_3DP) {
+            modActions = printingActions;
+            modState = getState().printing;
+        }
+        if (modState.modelGroup.hasModel()) {
+            await dispatch(actions.save(headType, opts));
+            await dispatch(actions.updateState({ openedFile: undefined }));
+        }
+        await dispatch(modActions.init(headType));
+        modState.modelGroup.removeAllModels();
+        modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
+        modState.svgModelGroup && modState.svgModelGroup.svgContentGroup.removeAllElements();
+        UniApi.Window.setOpenedFile();
     }
 
 };
