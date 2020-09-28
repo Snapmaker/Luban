@@ -1,16 +1,19 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import Store from 'electron-store';
 import { configureWindow } from './electron-app/window';
-import MenuBuilder from './electron-app/menu';
+import MenuBuilder from './electron-app/Menu';
 import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
 
 
 const config = new Store();
+
+let serverData = null;
 let mainWindow = null;
+let mainWindowOptions = null;
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -24,12 +27,39 @@ function getBrowserWindowOptions() {
     };
 
     // { x, y, width, height }
-    const windowBounds = config.get('winBounds');
+    const lastOptions = config.get('winBounds');
 
-    return Object.assign({}, defaultOptions, windowBounds);
+    // Get display that most closely intersects the provided bounds.
+    const display = screen.getDisplayMatching(lastOptions);
+
+    let windowOptions = {};
+    if (display.id === lastOptions.id) {
+        // use last time options when using the same display
+        windowOptions = {
+            ...windowOptions,
+            ...lastOptions
+        };
+    } else {
+        // or center the window when using other display
+        const workArea = display.workArea;
+
+        // calculate window size
+        const width = Math.min(lastOptions.width, workArea.width);
+        const height = Math.min(lastOptions.height, workArea.height);
+        const x = workArea.x + (workArea.width - width) / 2;
+        const y = workArea.y + (workArea.height - height) / 2;
+
+        windowOptions = {
+            id: display.id,
+            x,
+            y,
+            width,
+            height
+        };
+    }
+
+    return Object.assign({}, defaultOptions, windowOptions);
 }
-
-const combinedOptions = getBrowserWindowOptions();
 
 
 const createWindow = async () => {
@@ -40,11 +70,18 @@ const createWindow = async () => {
         console.error('Error: ', err);
     }
 
-    const data = await launchServer();
+    if (!serverData) {
+        // only start server once
+        // TODO: start server on the outermost
+        serverData = await launchServer();
+    }
 
-    const { address, port } = { ...data };
-    const window = new BrowserWindow(combinedOptions);
+    const { address, port } = { ...serverData };
+    const windowOptions = getBrowserWindowOptions();
+    const window = new BrowserWindow(windowOptions);
+
     mainWindow = window;
+    mainWindowOptions = windowOptions;
 
     configureWindow(window);
 
@@ -62,8 +99,16 @@ const createWindow = async () => {
 
     window.on('close', (e) => {
         e.preventDefault();
-        config.set('winBounds', window.getBounds());
+        const options = {
+            id: mainWindowOptions.id,
+            ...window.getBounds()
+        };
+
+        config.set('winBounds', options);
         window.webContents.send('save-and-close');
+
+        mainWindow = null;
+        mainWindowOptions = null;
     });
 
 
@@ -80,6 +125,16 @@ if (process.arch === 'x64') {
 }
 
 app.commandLine.appendSwitch('ignore-gpu-blacklist');
+
+
+/**
+ * On macOS, re-create a window when dock icon clicked.
+ */
+app.on('activate', async () => {
+    if (mainWindow === null) {
+        await createWindow();
+    }
+});
 
 /**
  * Emitted when all windows have been closed.
@@ -102,15 +157,6 @@ app.on('will-quit', () => {
 });
 
 /**
- * On macOS, re-create a window when dock icon clicked.
- */
-app.on('activate', async () => {
-    if (mainWindow === null) {
-        await createWindow();
-    }
-});
-
-/**
- *
+ * when ready
  */
 app.whenReady().then(createWindow);
