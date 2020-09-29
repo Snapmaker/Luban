@@ -2,14 +2,13 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
-// import log from '../../lib/log';
 import styles from './styles.styl';
 
 
 class DegreeInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        value: PropTypes.string.isRequired,
+        value: PropTypes.number.isRequired,
         defaultValue: PropTypes.string,
         onChange: PropTypes.func,
         suffix: PropTypes.string
@@ -17,55 +16,47 @@ class DegreeInput extends PureComponent {
 
     constructor(props) {
         super(props);
-
         this.state = {
-            isFocus: false,
-            displayValue: props.value.concat(props.suffix)
+            isEdit: false,
+            value: props.value
         };
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            displayValue: nextProps.value
+            value: nextProps.value.toString()
         });
     }
 
     onChange = (event) => {
         this.setState({
-            displayValue: event.target.value
+            value: event.target.value
         });
     };
 
     onBlur = (event) => {
+        const { onChange } = this.props;
+        onChange && onChange(this.getStanderValue(event.target.value));
         this.setState({
-            isFocus: false
+            isEdit: false
         });
-        this.onAfterChangeWrapper(event.target.value);
     };
 
     onKeyUp = (event) => {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
-            this.onAfterChangeWrapper(event.target.value);
+            const { onChange } = this.props;
+            onChange && onChange(this.getStanderValue(event.target.value));
         }
     };
 
-    onFocus = (event) => {
+    onFocus = () => {
         this.setState({
-            isFocus: true
+            isEdit: true
         });
-        const v = event.target.value;
-        const suffix = this.props.suffix;
-        if (v.substr(v.length - suffix.length, suffix.length) === suffix) {
-            this.setState({
-                displayValue: v.substr(0, v.length - 1)
-            });
-        }
     }
 
-    onAfterChangeWrapper(value) {
-        const { onChange } = this.props;
-
+    getStanderValue(value) {
         let numericValue = parseFloat(value) % 360;
         if (numericValue > 180) {
             numericValue -= 360;
@@ -76,21 +67,9 @@ class DegreeInput extends PureComponent {
         // If value is invalid, use defaultValue
         if (Number.isNaN(numericValue)) {
             const absentValue = this.getAbsentValue();
-            onChange(absentValue);
-            this.setState({
-                displayValue: absentValue.toString().concat(this.props.suffix)
-            });
-            return;
+            return absentValue;
         }
-        this.setState({
-            displayValue: numericValue.toString().concat(this.props.suffix)
-        });
-
-        onChange && onChange(numericValue);
-    }
-
-    getValue = () => {
-        return (!this.state.isFocus ? (this.state.displayValue.concat(this.props.suffix)) : this.state.displayValue);
+        return numericValue;
     }
 
     getAbsentValue() {
@@ -103,13 +82,15 @@ class DegreeInput extends PureComponent {
 
     render() {
         const { className = '', ...rest } = this.props;
+        const { value, isEdit } = this.state;
+        const displayValue = isEdit ? value : value.toString().concat(this.props.suffix);
 
         return (
             <input
                 {...rest}
                 suffix={this.props.suffix}
                 type="text"
-                value={this.getValue()}
+                value={displayValue}
                 className={classNames(styles.input, className)}
                 onChange={this.onChange}
                 onBlur={this.onBlur}

@@ -229,7 +229,7 @@ class Transformation extends PureComponent {
                                 <DegreeInput
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide}
-                                    value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1).toString() : '0'}
+                                    value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1) : 0}
                                     suffix="°"
                                     onChange={(value) => {
                                         actions.onChangeRotationZ(value);
