@@ -195,7 +195,7 @@ class LaserParameters extends PureComponent {
 
         const isEditor = this.props.page === PAGE_EDITOR;
         const isProcess = this.props.page === PAGE_PROCESS;
-        const isBW = (sourceType === 'raster' && mode === 'bw');
+        const isBW = (sourceType === 'raster' && (mode === 'bw' || mode === 'newsprint'));
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');

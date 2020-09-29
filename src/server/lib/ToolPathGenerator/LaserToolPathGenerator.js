@@ -34,7 +34,7 @@ class LaserToolPathGenerator extends EventEmitter {
         fakeGcodes.push('G90');
         fakeGcodes.push('G21');
         let workingGcode = '';
-        if (mode === 'bw' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
+        if (mode === 'bw' || mode === 'newsprint' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
             workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
         } else if (mode === 'greyscale') {
             workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);

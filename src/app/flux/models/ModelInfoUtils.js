@@ -33,7 +33,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (!['3d', 'raster', 'svg', 'dxf', 'text'].includes(sourceType)) {
         return false;
     }
-    if (!['bw', 'greyscale', 'vector', 'trace', 'text'].includes(mode)) {
+    if (!['bw', 'greyscale', 'vector', 'trace', 'text', 'newsprint'].includes(mode)) {
         return false;
     }
     return true;
@@ -43,7 +43,8 @@ const generateLaserDefaults = (mode, sourceType) => {
     let config = null;
     let gcodeConfig = null;
     switch (mode) {
-        case 'bw': {
+        case 'bw':
+        case 'newsprint': {
             config = {
                 invert: false,
                 bwThreshold: 168
@@ -130,7 +131,7 @@ const generateLaserDefaults = (mode, sourceType) => {
             multiPasses: 2,
             multiPassDepth: 1
         };
-    } else if (mode === 'bw') {
+    } else if (mode === 'bw' || mode === 'newsprint') {
         gcodeConfig = {
             direction: 'Horizontal',
             density: DEFAULT_FILL_DENSITY,

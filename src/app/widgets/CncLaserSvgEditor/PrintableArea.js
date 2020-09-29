@@ -80,6 +80,7 @@ class PrintableArea {
             });
             if (i !== 0) {
                 label.innerHTML = -i * 10;
+                label.style.cursor = 'default';
             }
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
