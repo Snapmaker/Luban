@@ -19,18 +19,15 @@ class DegreeInput extends PureComponent {
         super(props);
 
         this.state = {
+            isFocus: false,
             displayValue: props.value.concat(props.suffix)
         };
     }
 
     componentWillReceiveProps(nextProps) {
-        // Changes from outside also reflects on display
-        // todo, show the degree sign
-        // if (nextProps.value !== this.props.value) {
         this.setState({
             displayValue: nextProps.value
         });
-        // }
     }
 
     onChange = (event) => {
@@ -40,6 +37,9 @@ class DegreeInput extends PureComponent {
     };
 
     onBlur = (event) => {
+        this.setState({
+            isFocus: false
+        });
         this.onAfterChangeWrapper(event.target.value);
     };
 
@@ -51,6 +51,9 @@ class DegreeInput extends PureComponent {
     };
 
     onFocus = (event) => {
+        this.setState({
+            isFocus: true
+        });
         const v = event.target.value;
         const suffix = this.props.suffix;
         if (v.substr(v.length - suffix.length, suffix.length) === suffix) {
@@ -86,6 +89,10 @@ class DegreeInput extends PureComponent {
         onChange && onChange(numericValue);
     }
 
+    getValue = () => {
+        return (!this.state.isFocus ? (this.state.displayValue.concat(this.props.suffix)) : this.state.displayValue);
+    }
+
     getAbsentValue() {
         if (this.props.defaultValue !== undefined) {
             return this.props.defaultValue;
@@ -102,7 +109,7 @@ class DegreeInput extends PureComponent {
                 {...rest}
                 suffix={this.props.suffix}
                 type="text"
-                value={this.state.displayValue}
+                value={this.getValue()}
                 className={classNames(styles.input, className)}
                 onChange={this.onChange}
                 onBlur={this.onBlur}
