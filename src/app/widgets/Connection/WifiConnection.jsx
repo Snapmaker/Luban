@@ -8,7 +8,6 @@ import { map, includes } from 'lodash';
 
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
-import Space from '../../components/Space';
 import {
     ABSENT_OBJECT,
     CONNECTION_STATUS_CONNECTED,
@@ -412,8 +411,6 @@ class WifiConnection extends PureComponent {
                                 onClick={this.actions.openServer}
                                 disabled={isOpen}
                             >
-                                <i className="fa fa-toggle-off" />
-                                <span className="space" />
                                 {i18n._('Connect')}
                             </button>
                         )}
@@ -423,8 +420,6 @@ class WifiConnection extends PureComponent {
                                 className="sm-btn-small sm-btn-danger"
                                 onClick={this.actions.closeServer}
                             >
-                                <i className="fa fa-toggle-on" />
-                                <Space width={4} />
                                 {i18n._('Disconnect')}
                             </button>
                         )}
