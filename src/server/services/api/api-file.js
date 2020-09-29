@@ -300,10 +300,16 @@ export const recoverProjectFile = async (req, res) => {
 
     const config = JSON.parse(content);
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
-        fs.copyFileSync(`${DataStorage.tmpDir}/${config.defaultMaterialId}`, `${DataStorage.configDir}/${config.defaultMaterialId}.def.json`);
+        const fname = `${DataStorage.tmpDir}/${config.defaultMaterialId}.def.json`;
+        if (fs.existsSync(fname)) {
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${config.defaultMaterialId}.def.json`);
+        }
     }
     if (config.defaultQualityId && /^quality.([0-9_]+)$/.test(config.defaultQualityId)) {
-        fs.copyFileSync(`${DataStorage.tmpDir}/${config.defaultQualityId}`, `${DataStorage.configDir}/${config.defaultQualityId}.def.json`);
+        const fname = `${DataStorage.tmpDir}/${config.defaultQualityId}.def.json`;
+        if (fs.existsSync(fname)) {
+            fs.copyFileSync(fname, `${DataStorage.configDir}/${config.defaultQualityId}.def.json`);
+        }
     }
 
     res.send({ content });
