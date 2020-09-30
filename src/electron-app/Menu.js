@@ -113,6 +113,7 @@ function getMenuTemplate(options) {
                 {
                     id: 'new',
                     label: 'New File',
+                    accelerator: 'CmdOrCtrl+N',
                     click: (menuItem, browserWindow) => {
                         closeFile(browserWindow);
                     }
@@ -120,6 +121,7 @@ function getMenuTemplate(options) {
                 { type: 'separator' },
                 {
                     label: 'Open File...',
+                    accelerator: 'CmdOrCtrl+O',
                     click: (menuItem, browserWindow) => {
                         openFile(browserWindow);
                     }

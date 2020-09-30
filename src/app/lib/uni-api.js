@@ -98,6 +98,7 @@ const Dialog = {
  * Window control in electron
  */
 const Window = {
+    // TODO window have to be refactor
     window: null,
     initTitle: '',
 

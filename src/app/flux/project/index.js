@@ -166,6 +166,7 @@ export const actions = {
             });
 
             if (idxClicked === 1) throw new Error('Cancel');
+            // bug: console.log('idxClicked', idxClicked);
             if (idxClicked === 2) {
                 return;
             }

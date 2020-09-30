@@ -1,7 +1,8 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import Store from 'electron-store';
+import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder from './electron-app/Menu';
 import launchServer from './server-cli';
@@ -63,6 +64,7 @@ function getBrowserWindowOptions() {
 
 
 const createWindow = async () => {
+    console.log('before createWindow');
     try {
         // TODO: move to server
         DataStorage.init();
@@ -116,6 +118,14 @@ const createWindow = async () => {
     const menuBuilder = new MenuBuilder(window, { url });
     menuBuilder.buildMenu();
 
+    // the "open file or folder" dialog can also be triggered from the React app
+    ipcMain.on('openFile', () => {
+        console.log('inside ipcMain');
+        const newProjectFile = config.get('projectFile');
+        mainWindow.webContents.send('open-file', newProjectFile);
+        config.set('projectFile', null);
+    });
+
     // TODO: Setup AppUpdater
 };
 
@@ -133,6 +143,30 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
 app.on('activate', async () => {
     if (mainWindow === null) {
         await createWindow();
+    }
+});
+
+/**
+ * Listening to the open file event (when the user open a file through the menu bar,
+ *
+ * or through the OS by double click or similar)
+ */
+app.on('open-file', (event, projectFile) => {
+    let newProjectFile;
+    if (typeof projectFile === 'string') {
+        newProjectFile = {
+            path: projectFile,
+            name: path.basename(projectFile)
+        };
+    }
+    console.log('window', projectFile, process.argv, String(process.argv[0]));
+    event.preventDefault();
+    // if the app is ready and initialized, we open this file
+    if (mainWindow && newProjectFile) {
+        mainWindow.webContents.send('open-file', newProjectFile);
+    } else {
+        console.log('inside else', mainWindow, newProjectFile);
+        config.set('projectFile', newProjectFile);
     }
 });
 

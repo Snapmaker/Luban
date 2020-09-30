@@ -133,6 +133,11 @@ class App extends PureComponent {
                 }
             }
         },
+        initFileOpen: () => {
+            const { ipcRenderer } = window.require('electron');
+            console.log('initFileOpen');
+            ipcRenderer.send('openFile');
+        },
         initUniEvent: () => {
             UniApi.Event.on('open-file', (event, file) => {
                 this.actions.openProject(file);
@@ -224,6 +229,7 @@ class App extends PureComponent {
 
         UniApi.Window.initWindow();
         this.actions.initUniEvent();
+        this.actions.initFileOpen();
     }
 
     componentWillReceiveProps(nextProps) {
