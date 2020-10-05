@@ -174,13 +174,14 @@ function svgToSegments(svg, options = {}) {
         const color = 1; // only black & white, use 1 to mark canvas as painted
         const width = Math.round(options.width * options.fillDensity);
         const height = Math.round(options.height * options.fillDensity);
-
-        const canvas = new Array(width);
-        for (let i = 0; i < width; i++) {
-            canvas[i] = new Uint8Array(height);
-        }
+        let out = [];
 
         for (const shape of svg.shapes) {
+            const canvas = new Array(width);
+            for (let i = 0; i < width; i++) {
+                canvas[i] = new Uint8Array(height);
+            }
+
             if (!shape.visibility) {
                 continue;
             }
@@ -210,9 +211,11 @@ function svgToSegments(svg, options = {}) {
                 }
                 fillShape(canvas, width, height, newShape, color);
             }
+
+            out = [...out, ...canvasToSegments(canvas, width, height, options.fillDensity)];
         }
 
-        return canvasToSegments(canvas, width, height, options.fillDensity);
+        return out;
     }
 }
 
