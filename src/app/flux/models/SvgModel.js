@@ -1,16 +1,10 @@
 import Canvg from 'canvg';
-import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils';
+import { coordGmSvgToModel } from '../../ui/SVGEditor/element-utils';
 
-import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
-import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
+import { remapElement } from '../../ui/SVGEditor/element-recalculate';
+import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import { DATA_PREFIX } from '../../constants';
-
-import {
-// matrixMultiply,
-// transformListToTransform
-
-} from '../../widgets/CncLaserSvgEditor/element-transform';
 
 import api from '../../api';
 

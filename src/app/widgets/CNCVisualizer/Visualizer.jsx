@@ -17,7 +17,7 @@ import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import { PAGE_EDITOR } from '../../constants';
-import SVGEditor from '../CncLaserSvgEditor';
+import SVGEditor from '../../ui/SVGEditor';
 
 
 function humanReadableTime(t) {

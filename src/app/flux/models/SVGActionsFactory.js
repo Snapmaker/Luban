@@ -2,10 +2,10 @@
 // import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
 // import { DEFAULT_SCALE } from '../../constants/svg-constants';
-import { coordGmSvgToModel, getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
+import { coordGmSvgToModel, getBBox } from '../../ui/SVGEditor/element-utils';
 
-// import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
-import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
+// import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
+import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
@@ -743,7 +743,7 @@ class SVGActionsFactory {
      * @param {string} content
      */
     createText(content) {
-        const element = this.svgContentGroup.addSVGElement({
+        return this.svgContentGroup.addSVGElement({
             element: 'text',
             attr: {
                 x: this.size.x - 30,
@@ -756,8 +756,6 @@ class SVGActionsFactory {
                 textContent: content
             }
         });
-
-        return element;
     }
 }
 

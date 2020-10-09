@@ -35,6 +35,7 @@ const textActionCreator = (canvas, $) => {
 
     // const selectorManager = canvas.svgContentGroup.selectorManager;
     const rootSctm = canvas.svgContentGroup.getScreenCTM().inverse();
+
     /**
      *
      * @param {Float} xIn
@@ -97,7 +98,9 @@ const textActionCreator = (canvas, $) => {
             if (empty) {
                 index = 0;
             } else {
-                if (textinput.selectionEnd !== textinput.selectionStart) { return; }
+                if (textinput.selectionEnd !== textinput.selectionStart) {
+                    return;
+                }
                 index = textinput.selectionEnd;
             }
         }
@@ -141,7 +144,9 @@ const textActionCreator = (canvas, $) => {
             cursor.setAttribute('transform', 'translate(0,0)');
             // cursor.transform.baseVal.appendItem(list.baseVal.consolidate());
         }
-        if (selblock) { selblock.setAttribute('d', ''); }
+        if (selblock) {
+            selblock.setAttribute('d', '');
+        }
     }
 
     /**
@@ -208,11 +213,13 @@ const textActionCreator = (canvas, $) => {
             pt = pt.matrixTransform(list.baseVal.consolidate().matrix.inverse());
         }
         // No content, so return 0
-        if (chardata.length === 1) { return 0; }
+        if (chardata.length === 1) {
+            return 0;
+        }
         // Determine if cursor should be on left or right of character
         let charpos = curtext.getCharNumAtPosition(pt);
         if (charpos < 0) {
-        // Out of text range, look at mouse coords
+            // Out of text range, look at mouse coords
             charpos = chardata.length - 2;
             if (mouseX <= chardata[0].x) {
                 charpos = 0;
@@ -279,7 +286,9 @@ const textActionCreator = (canvas, $) => {
      * @returns {void}
      */
     function selectWord(evt) {
-        if (!allowDbl || !curtext) { return; }
+        if (!allowDbl || !curtext) {
+            return;
+        }
 
         const ept = transformPoint(evt.pageX, evt.pageY, rootSctm),
             mouseX = ept.x * canvas.scale,
@@ -299,32 +308,33 @@ const textActionCreator = (canvas, $) => {
             $(evt.target).unbind('click', selectAll);
         }, 300);
     }
+
     const textActions = {
         /**
-      * @param {Element} target
-      * @param {Float} x
-      * @param {Float} y
-      * @returns {void}
-      */
+         * @param {Element} target
+         * @param {Float} x
+         * @param {Float} y
+         * @returns {void}
+         */
         select(target, x, y) {
             curtext = target;
             textActions.toEditMode(x, y);
         },
         /**
-      * @param {Element} elem
-      * @returns {void}
-      */
+         * @param {Element} elem
+         * @returns {void}
+         */
         start(elem) {
             curtext = elem;
             textActions.toEditMode();
         },
         /**
-      * @param {external:MouseEvent} evt
-      * @param {Element} mouseTarget
-      * @param {Float} startX
-      * @param {Float} startY
-      * @returns {void}
-      */
+         * @param {external:MouseEvent} evt
+         * @param {Element} mouseTarget
+         * @param {Float} startX
+         * @param {Float} startY
+         * @returns {void}
+         */
         mouseDown(evt, mouseTarget, startX, startY) {
             // const pt = screenToPt(startX, startY);
             textinput.focus();
@@ -335,20 +345,20 @@ const textActionCreator = (canvas, $) => {
             // TODO: Find way to block native selection
         },
         /**
-      * @param {Float} mouseX
-      * @param {Float} mouseY
-      * @returns {void}
-      */
+         * @param {Float} mouseX
+         * @param {Float} mouseY
+         * @returns {void}
+         */
         mouseMove(mouseX, mouseY) {
             // const pt = screenToPt(mouseX, mouseY);
             setEndSelectionFromPoint(mouseX, mouseY);
         },
         /**
-      * @param {external:MouseEvent} evt
-      * @param {Float} mouseX
-      * @param {Float} mouseY
-      * @returns {void}
-      */
+         * @param {external:MouseEvent} evt
+         * @param {Float} mouseX
+         * @param {Float} mouseY
+         * @returns {void}
+         */
         mouseUp(evt, mouseX, mouseY) {
             // const pt = screenToPt(mouseX, mouseY);
 
@@ -361,10 +371,10 @@ const textActionCreator = (canvas, $) => {
             // }
             if (
                 evt.target !== curtext
-          && mouseX < lastX + 2
-          && mouseX > lastX - 2
-          && mouseY < lastY + 2
-          && mouseY > lastY - 2
+                && mouseX < lastX + 2
+                && mouseX > lastX - 2
+                && mouseY < lastY + 2
+                && mouseY > lastY - 2
             ) {
                 textActions.toSelectMode(true);
             } else {
@@ -372,16 +382,16 @@ const textActionCreator = (canvas, $) => {
             }
         },
         /**
-      * @function
-      * @param {Integer} index
-      * @returns {void}
-      */
+         * @function
+         * @param {Integer} index
+         * @returns {void}
+         */
         setCursor,
         /**
-      * @param {Float} x
-      * @param {Float} y
-      * @returns {void}
-      */
+         * @param {Float} x
+         * @param {Float} y
+         * @returns {void}
+         */
         toEditMode(x, y) {
             allowDbl = false;
             canvas.mode = 'textedit';
@@ -414,16 +424,20 @@ const textActionCreator = (canvas, $) => {
             }, 300);
         },
         /**
-          * @param {boolean|Element} selectElem
-          * @fires module:svgcanvas.SvgCanvas#event:selected
-          * @returns {void}
-          */
+         * @param {boolean|Element} selectElem
+         * @fires module:svgcanvas.SvgCanvas#event:selected
+         * @returns {void}
+         */
         toSelectMode() {
             canvas.mode = 'select';
             clearInterval(blinker);
             blinker = null;
-            if (selblock) { $(selblock).attr('display', 'none'); }
-            if (cursor) { $(cursor).attr('visibility', 'hidden'); }
+            if (selblock) {
+                $(selblock).attr('display', 'none');
+            }
+            if (cursor) {
+                $(cursor).attr('visibility', 'hidden');
+            }
             $(curtext).css('cursor', 'move');
             // selectorManager.requestSelector(curtext).showGrips(true);
             // todo, pack into svg content group
@@ -452,9 +466,9 @@ const textActionCreator = (canvas, $) => {
             // }
         },
         /**
-      * @param {Element} elem
-      * @returns {void}
-      */
+         * @param {Element} elem
+         * @returns {void}
+         */
         setInputElem(input) {
             textinput = input;
             $(textinput).bind('keyup input', (e) => {
@@ -468,19 +482,21 @@ const textActionCreator = (canvas, $) => {
             $(textinput).blur(hideCursor);
         },
         /**
-      * @returns {void}
-      */
+         * @returns {void}
+         */
         clear() {
             if (canvas.mode === 'textedit') {
                 textActions.toSelectMode();
             }
         },
         /**
-      * @param {Element} inputElem Not in use
-      * @returns {void}
-      */
+         * @param {Element} inputElem Not in use
+         * @returns {void}
+         */
         init() {
-            if (!curtext) { return; }
+            if (!curtext) {
+                return;
+            }
             let i, end;
             // if (supportsEditableText()) {
             //   curtext.select();

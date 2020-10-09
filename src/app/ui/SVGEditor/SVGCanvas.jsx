@@ -19,15 +19,12 @@ import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import { DATA_PREFIX } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
+import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import {
-    DEFAULT_SCALE,
-    SCALE_RATE, SVG_EVENT_CONTEXTMENU,
-    // SVG_EVENT_ADD,
-    SVG_EVENT_MODE,
-    // SVG_EVENT_MOVE,
-    // SVG_EVENT_SELECT,
-    DEFAULT_FILL_COLOR
-} from '../../constants/svg-constants';
+    DEFAULT_FILL_COLOR, SCALE_RATE,
+    SVG_EVENT_CONTEXTMENU,
+    SVG_EVENT_MODE
+} from './constants';
 import { library } from './lib/ext-shapes';
 import textActionCreator from './text-actions';
 
@@ -949,9 +946,6 @@ class SVGCanvas extends PureComponent {
                 cleanupAttributes(element);
 
                 this.props.onCreateElement(element);
-
-                // FIXME: what am i?
-                // this.trigger(SVG_EVENT_ADD, element);
 
                 // TODO: select model newly created
                 // this.addToSelection([element]);

@@ -18,7 +18,7 @@ import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import { PAGE_EDITOR } from '../../constants';
 // eslint-disable-next-line no-unused-vars
-import SVGEditor from '../CncLaserSvgEditor';
+import SVGEditor from '../../ui/SVGEditor';
 
 
 function humanReadableTime(t) {

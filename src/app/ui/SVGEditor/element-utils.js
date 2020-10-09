@@ -2,7 +2,7 @@
 import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
 import { getRotationAngle, getScale } from './element-transform';
-import { DEFAULT_FILL_COLOR } from '../../constants/svg-constants';
+import { DEFAULT_FILL_COLOR } from './constants';
 
 
 // eslint-disable-next-line no-unused-vars
