@@ -1,43 +1,23 @@
 export const svgModelActions = {
-    // use this function to generate dxf to svg
-    generateSvgModel: (headType, options) => (dispatch, getState) => {
-        const { size } = getState().machine;
-        const { svgModelGroup } = getState()[headType];
-
-        const { modelID, sourceType, uploadName, processImageName, transformation } = options;
-        const { elem } = svgModelGroup.addModelToSVGElement({
-            modelID,
-            limitSize: size,
-            uploadName: sourceType !== 'raster' && sourceType !== 'dxf' ? uploadName : processImageName,
-            transformation
-        });
-        svgModelGroup.addModel(elem);
-    },
-
     // eslint-disable-next-line no-unused-vars
     updateSelectedTransformation: (headType, transformation) => (dispatch, getState) => {
         // eslint-disable-next-line no-unused-vars
-        const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.updateSelectedElementsTransformation(transformation);
+        const { SVGActions } = getState()[headType];
+        SVGActions && SVGActions.updateSelectedElementsTransformation(transformation);
     },
 
     selectModel: (headType, model) => (dispatch, getState) => {
-        const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.addSelectedSvgModelsByModels([model]);
+        const { SVGActions } = getState()[headType];
+        SVGActions && SVGActions.addSelectedSvgModelsByModels([model]);
     },
 
     addSelectedSvgModels: (headType, models) => (dispatch, getState) => {
-        const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.addSelectedSvgModelsByModels(models);
+        const { SVGActions } = getState()[headType];
+        SVGActions && SVGActions.addSelectedSvgModelsByModels(models);
     },
 
     resetSelection: (headType, transformation) => (dispatch, getState) => {
-        const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.resetSelection(transformation);
-    },
-
-    emptySelectedModelArray: (headType) => (dispatch, getState) => {
-        const { svgModelGroup } = getState()[headType];
-        svgModelGroup && svgModelGroup.clearSelection();
+        const { SVGActions } = getState()[headType];
+        SVGActions && SVGActions.resetSelection(transformation);
     }
 };

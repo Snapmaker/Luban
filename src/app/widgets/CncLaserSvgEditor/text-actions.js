@@ -430,7 +430,7 @@ const textActionCreator = (canvas, $) => {
             // console.log('----to select mode----', canvas.svgContentGroup.selectedElements[0]);
             const posAndSize = canvas.svgContentGroup.operatorPoints.resizeGrips(canvas.svgContentGroup.selectedElements);
             // todo
-            canvas.props.svgModelGroup.modelGroup.getSelectedModelArray()[0].updateTransformation({
+            canvas.props.SVGActions.modelGroup.getSelectedModelArray()[0].updateTransformation({
                 positionX: posAndSize.positionX - canvas.props.size.x,
                 positionY: canvas.props.size.y - posAndSize.positionY,
                 width: posAndSize.width,
@@ -459,7 +459,7 @@ const textActionCreator = (canvas, $) => {
             textinput = input;
             $(textinput).bind('keyup input', (e) => {
                 const text = e.target.value;
-                const svgModel = canvas.props.svgModelGroup.getModelByElement(curtext);
+                const svgModel = canvas.props.SVGActions.getModelByElement(curtext);
                 svgModel.relatedModel.updateAndRefresh({ config: { text } });
                 textActions.init();
                 textActions.setCursor();

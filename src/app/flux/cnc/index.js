@@ -1,5 +1,5 @@
 import ModelGroup from '../models/ModelGroup';
-import SvgModelGroup from '../models/SvgModelGroup';
+import SVGActionsFactory from '../models/SVGActionsFactory';
 import ToolPathModelGroup from '../models/ToolPathModelGroup';
 import { controller } from '../../lib/controller';
 import {
@@ -24,7 +24,7 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
     toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
-    svgModelGroup: new SvgModelGroup(initModelGroup),
+    SVGActions: new SVGActionsFactory(initModelGroup),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,

@@ -1,10 +1,10 @@
 // import EventEmitter from 'events';
-import _ from 'lodash';
+// import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
-import { DEFAULT_SCALE } from '../../constants/svg-constants';
+// import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import { coordGmSvgToModel, getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 
-import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
+// import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
 import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
@@ -29,6 +29,7 @@ const coordGmModelToSvg = (size, transformation) => {
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 
+/*
 const elementToString = (element, scale = 1) => {
     let res = `<${element.tagName}`;
     const needScaleAttributes = ['width', 'height', 'x', 'y', 'cx', 'cy', 'rx', 'ry'];
@@ -42,9 +43,10 @@ const elementToString = (element, scale = 1) => {
     res += `>${element.innerHTML}</${element.tagName}>`;
     return res;
 };
+*/
 
 
-class SvgModelGroup {
+class SVGActionsFactory {
     // event = new EventEmitter();
 
     svgModels = [];
@@ -83,86 +85,9 @@ class SvgModelGroup {
         }
     }
 
-    // emit(key, ...args) {
-    //     switch (key) {
-    //         case SVG_EVENT_ADD:
-    //             this.event.emit(key, this.svgToModel(args[0]));
-    //             break;
-    //         case SVG_EVENT_MOVE: {
-    //             this.event.emit(key, this.svgToTransformation(args[0]));
-    //             break;
-    //         }
-    //         case SVG_EVENT_SELECT:
-    //             this.event.emit(key, {
-    //                 modelID: args[0] !== null ? args[0].getAttribute('id') : null
-    //             });
-    //             break;
-    //         default:
-    //             this.event.emit(key, ...args);
-    //             break;
-    //     }
-    // }
-
-    // on(key, func) {
-    //     this.event.on(key, func);
-    // }
-
-    svgToTransformation(elem) {
-        const { width, height, positionX, positionY, rotationZ, scaleX, scaleY } = coordGmSvgToModel(this.size, elem);
-
-        const config = {
-
-            transformation: {
-                positionX: positionX,
-                positionY: positionY,
-                rotationZ: rotationZ,
-                scaleX,
-                scaleY,
-                width: width,
-                height: height
-            }
-        };
-
-        return config;
-    }
-
-    svgToModel(elem) {
-        const { x, y, width, height, positionX, positionY } = coordGmSvgToModel(this.size, elem);
-
-        const clone = elem.cloneNode(true);
-
-        const scale = svg.createSVGTransform();
-        scale.setScale(8, 8);
-
-        remapElement(clone, scale.matrix);
-
-        const content = `<svg x="0" y="0" width="${width * DEFAULT_SCALE}" height="${height * DEFAULT_SCALE}" `
-            + `viewBox="${x * DEFAULT_SCALE} ${y * DEFAULT_SCALE} ${width * DEFAULT_SCALE} ${height * DEFAULT_SCALE}" `
-            + `xmlns="http://www.w3.org/2000/svg">${elementToString(clone)}</svg>`;
-        const model = {
-            modelID: elem.getAttribute('id'),
-            content: content,
-            width: width,
-            height: height,
-            transformation: {
-                positionX: positionX,
-                positionY: positionY
-            }
-        };
-
-        return model;
-    }
-
-    clearImageBackground() {
-        const backgroundGroup = this.svgContentGroup.backgroundGroup;
-        while (backgroundGroup.firstChild) {
-            backgroundGroup.removeChild(backgroundGroup.lastChild);
-        }
-    }
-
-    addImageBackgroundToSVG(model) {
-        const { x, y, width, height } = coordGmModelToSvg(this.size, model.transformation);
-        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
+    addImageBackgroundToSVG(options) {
+        const { x, y, width, height } = coordGmModelToSvg(this.size, options.transformation);
+        const uploadPath = `${DATA_PREFIX}/${options.uploadName}`;
         const elem = this.svgContentGroup.addSVGBackgroundElement({
             element: 'image',
             attr: {
@@ -171,7 +96,7 @@ class SvgModelGroup {
                 width: width,
                 height: height,
                 href: uploadPath,
-                id: model.modelID,
+                id: options.modelID,
                 preserveAspectRatio: 'none'
             }
         });
@@ -221,29 +146,6 @@ class SvgModelGroup {
     updateSvgModelImage(svgModel, imageName) {
         const imagePath = `${DATA_PREFIX}/${imageName}`;
         svgModel.elem.setAttribute('href', imagePath);
-    }
-
-    duplicateElement(modelID) {
-        const selected = this.svgContentGroup.getSelected();
-        if (!selected) {
-            return;
-        }
-        const clone = selected.cloneNode(true);
-        clone.setAttribute('id', modelID);
-        this.svgContentGroup.group.append(clone);
-        this.updateTransformation({
-            positionX: 0,
-            positionY: 0
-        }, clone);
-        // todo
-        const posAndSize = this.svgContentGroup.selectOnly([selected]);
-        this.modelGroup.updateSelectedModelTransformation({
-            positionX: posAndSize.positionX - this.size.x,
-            positionY: this.size.y - posAndSize.positionY,
-            width: posAndSize.width,
-            height: posAndSize.height
-        });
-        this.addModel(clone);
     }
 
     deleteSelectedElements() {
@@ -356,8 +258,7 @@ class SvgModelGroup {
             // todo, just copy canvas
             // select only(elements)
             this.clearSelection();
-            this.svgContentGroup.clearSelection();
-            this.addSelectedSvgModelsByElements(elements);
+            this.selectElements(elements);
             const selectedSvgModels = this.getModelsByElements(elements);
             for (const svgModel of selectedSvgModels) {
                 const model = svgModel.relatedModel;
@@ -497,54 +398,6 @@ class SvgModelGroup {
 
         // A
         // this.addModelToSVGElement(model);
-    }
-
-    addModel(elem) {
-        const headType = this.modelGroup.headType;
-        const model = new SvgModel(elem, this);
-        this.svgModels.push(model);
-        model.setParent(this.svgContentGroup.group);
-        const data = model.genModelConfig();
-
-        const { modelID, content, width, height, transformation, config: elemConfig } = data;
-        const blob = new Blob([content], { type: 'image/svg+xml' });
-        const file = new File([blob], `${modelID}.svg`);
-
-        const formData = new FormData();
-        formData.append('image', file);
-
-        api.uploadImage(formData)
-            .then((res) => {
-                const { originalName, uploadName } = res.body;
-                const sourceType = model.type === 'text' ? 'raster' : 'svg';
-                const mode = headType === 'cnc' ? 'greyscale' : 'bw';
-
-                let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
-
-                config = { ...config, ...elemConfig };
-                gcodeConfig = { ...gcodeConfig };
-                const options = {
-                    modelID,
-                    limitSize: this.size,
-                    headType,
-                    sourceType,
-                    mode,
-                    originalName,
-                    uploadName,
-                    sourceWidth: res.body.width,
-                    width,
-                    sourceHeight: res.body.height,
-                    height,
-                    transformation,
-                    config,
-                    gcodeConfig
-                };
-
-                this.modelGroup.addModel(options, { svgModel: model });
-            })
-            .catch((err) => {
-                console.error(err);
-            });
     }
 
     resizeSelectorByElementsSelected(elements) {
@@ -696,12 +549,6 @@ class SvgModelGroup {
         this.invokeModelTransformCallback();
     }
 
-    clearSelection() {
-        this.selectedSvgModels = [];
-        this.modelGroup.emptySelectedModelArray();
-        this.svgContentGroup.clearSelection();
-    }
-
     addSelectedSvgModelsByModels(models) {
         this.modelGroup.addSelectedModels(models);
         for (const model of models) {
@@ -720,20 +567,6 @@ class SvgModelGroup {
         }
     }
 
-    addSelectedSvgModelsByElements(elements) {
-        for (const svgModel of this.svgModels) {
-            if (elements.includes(svgModel.elem)) {
-                this.selectedSvgModels.push(svgModel);
-                // todo, not modelGroup here, use flux/editor
-                const model = svgModel.relatedModel;
-                const modelGroup = model && model.modelGroup;
-                if (modelGroup) {
-                    modelGroup.addSelectedModels([model]);
-                }
-            }
-        }
-    }
-
     resetSelection(modelGroupTransformation) {
         const transformation = ((modelGroupTransformation !== undefined) ? modelGroupTransformation : this.modelGroup.getSelectedModelTransformation());
         const posAndSize = this.svgContentGroup.resetSelection(this.size, transformation);
@@ -748,6 +581,7 @@ class SvgModelGroup {
         const selectedModels = this.modelGroup.getSelectedModelArray();
         if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
             this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
+            // this.svgContentGroup.showGrips(false);
         }
     }
 
@@ -759,6 +593,172 @@ class SvgModelGroup {
     invokeModelTransformCallback() {
         this.modelTransformCallback && this.modelTransformCallback();
     }
+
+    /**
+     * Create model (SVGModel, Model, etc) from element.
+     *
+     * @returns {Promise<void>}
+     */
+    async createModelFromElement(element) {
+        const headType = this.modelGroup.headType;
+        const model = new SvgModel(element, this);
+        this.svgModels.push(model);
+        model.setParent(this.svgContentGroup.group);
+        const data = model.genModelConfig();
+
+        const { modelID, content, width, height, transformation, config: elemConfig } = data;
+        const blob = new Blob([content], { type: 'image/svg+xml' });
+        const file = new File([blob], `${modelID}.svg`);
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await api.uploadImage(formData);
+
+            const { originalName, uploadName } = res.body;
+            const sourceType = model.type === 'text' ? 'raster' : 'svg';
+            const mode = headType === 'cnc' ? 'greyscale' : 'bw';
+
+            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
+
+            config = { ...config, ...elemConfig };
+            gcodeConfig = { ...gcodeConfig };
+            const options = {
+                modelID,
+                limitSize: this.size,
+                headType,
+                sourceType,
+                mode,
+                originalName,
+                uploadName,
+                sourceWidth: res.body.width,
+                width,
+                sourceHeight: res.body.height,
+                height,
+                transformation,
+                config,
+                gcodeConfig
+            };
+
+            this.modelGroup.addModel(options, { svgModel: model });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    /**
+     * Select elements.
+     *
+     * @param elements
+     */
+    selectElements(elements) {
+        this.svgContentGroup.addToSelection(elements);
+
+        for (const svgModel of this.svgModels) {
+            if (elements.includes(svgModel.elem)) {
+                this.selectedSvgModels.push(svgModel);
+                // todo, not modelGroup here, use flux/editor
+                const model = svgModel.relatedModel;
+                const modelGroup = model && model.modelGroup;
+                if (modelGroup) {
+                    modelGroup.addSelectedModels([model]);
+                }
+            }
+        }
+
+        // Calculate position and size of selected model, set them to modelGroup.selectedGroup
+        const posAndSize = this.svgContentGroup.resetSelection(this.size, this.modelGroup.getSelectedModelTransformation());
+
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
+    }
+
+    /**
+     * Clear selection of elements.
+     */
+    clearSelection() {
+        this.svgContentGroup.clearSelection();
+
+        this.selectedSvgModels = [];
+
+        // FIXME: this will call render eventually.
+        this.modelGroup.emptySelectedModelArray();
+    }
+
+    /**
+     * Resize element.
+     */
+    resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
+        const svgModel = this.getModelByElement(element);
+
+        svgModel.elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling });
+
+        const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
+        this.modelGroup.updateSelectedModelTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
+    }
+
+    /**
+     * Resize element.
+     */
+    afterResizeElement(element) {
+        const svgModel = this.getModelByElement(element);
+        svgModel.onUpdate();
+
+        this.updateSelectedModelsByTransformation({});
+    }
+
+    /**
+     * Move element.
+     */
+    moveElement(element, { dx, dy }) {
+        this.updateSelectedModelsByTransformation({
+            dx,
+            dy
+        });
+        this.resetSelection();
+    }
+
+    /**
+     * Rotate element.
+     */
+    rotateElement(element, { angle, cx, cy }) {
+        this.updateSelectedModelsByTransformation({
+            angle, cx, cy
+        });
+    }
+
+    /**
+     * Create text.
+     *
+     * @param {string} content
+     */
+    createText(content) {
+        const element = this.svgContentGroup.addSVGElement({
+            element: 'text',
+            attr: {
+                x: this.size.x - 30,
+                y: this.size.y,
+                fill: '#000000',
+                'font-size': 12,
+                'font-family': 'Arial',
+                'stroke-width': 0.25,
+                opacity: 1,
+                textContent: content
+            }
+        });
+
+        return element;
+    }
 }
 
-export default SvgModelGroup;
+export default SVGActionsFactory;

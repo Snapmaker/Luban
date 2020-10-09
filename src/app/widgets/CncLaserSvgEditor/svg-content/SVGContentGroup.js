@@ -139,6 +139,9 @@ class SVGContentGroup {
         return element;
     }
 
+    /**
+     * Clear selection of elements.
+     */
     clearSelection() {
         this.operatorPoints.showGrips(false);
         this.selectedElements = [];
@@ -239,6 +242,9 @@ class SVGContentGroup {
         return posAndSize;
     }
 
+    /**
+     * Remove all elements from group.
+     */
     removeAllElements() {
         while (this.group.firstChild) {
             this.deleteElement(this.group.lastChild);

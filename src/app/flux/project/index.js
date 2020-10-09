@@ -120,7 +120,7 @@ export const actions = {
         modState.modelGroup.removeAllModels();
 
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
-        modState.svgModelGroup && modState.svgModelGroup.svgContentGroup.removeAllElements();
+        modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         const { models, ...restState } = envObj;
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = models[k];
@@ -232,7 +232,7 @@ export const actions = {
         await dispatch(modActions.init(headType));
         modState.modelGroup.removeAllModels();
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
-        modState.svgModelGroup && modState.svgModelGroup.svgContentGroup.removeAllElements();
+        modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
     }
 

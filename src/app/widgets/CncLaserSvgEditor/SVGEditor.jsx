@@ -7,15 +7,28 @@ import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
 import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
 
+
 // import { createSVGElement } from './element-utils';
 
 class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        svgModelGroup: PropTypes.object,
+        SVGActions: PropTypes.object.isRequired,
+
+        initContentGroup: PropTypes.func.isRequired,
         showContextMenu: PropTypes.func,
-        onSelectModel: PropTypes.func
         // insertDefaultTextVector: PropTypes.func.isRequired
+
+        // editor actions
+        onCreateElement: PropTypes.func.isRequired,
+        onSelectElements: PropTypes.func.isRequired,
+        onClearSelection: PropTypes.func.isRequired,
+        onResizeElement: PropTypes.func.isRequired,
+        onAfterResizeElement: PropTypes.func.isRequired,
+        onMoveElement: PropTypes.func.isRequired,
+        onRotateElement: PropTypes.func.isRequired,
+
+        createText: PropTypes.func.isRequired
     };
 
     canvas = React.createRef();
@@ -61,13 +74,12 @@ class SVGEditor extends PureComponent {
     componentDidMount() {
         this.canvas.current.on(SVG_EVENT_SELECT, (selectedElements) => {
             const elem = selectedElements.length === 1 ? selectedElements[0] : null;
-            this.props.svgModelGroup.emit(SVG_EVENT_SELECT, elem);
+            this.props.SVGActions.emit(SVG_EVENT_SELECT, elem);
         });
 
         // this.canvas.current.on(SVG_EVENT_ADD, (elem) => {
         //     console.log('aa', elem);
         //     // this.props.svgModelGroup.emit(SVG_EVENT_ADD, elem);
-        //     this.props.svgModelGroup.addModel('laser', elem);
         // });
 
         // this.canvas.current.on(SVG_EVENT_MOVE, (elem) => {
@@ -85,7 +97,9 @@ class SVGEditor extends PureComponent {
             this.props.showContextMenu(event);
         });
 
-        this.props.svgModelGroup.init(this.canvas.current.svgContentGroup, this.props.size);
+        this.props.SVGActions.init(this.canvas.current.svgContentGroup, this.props.size);
+
+        this.props.initContentGroup(this.canvas.current.svgContentGroup);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -93,10 +107,10 @@ class SVGEditor extends PureComponent {
         //     this.canvas.current.loadSVGString(nextProps.import.content);
         // }
         if (nextProps.size !== this.props.size) {
-            this.props.svgModelGroup.updateSize(nextProps.size);
+            console.log('receive size', nextProps.size, this.props.size);
+            this.props.SVGActions.updateSize(nextProps.size);
         }
     }
-
 
     setMode(mode, extShape) {
         // this.mode = mode;
@@ -104,24 +118,13 @@ class SVGEditor extends PureComponent {
     }
 
     insertDefaultTextVector = () => {
-        const elem = this.props.svgModelGroup.svgContentGroup.addSVGElement({
-            element: 'text',
-            attr: {
-                x: this.props.svgModelGroup.size.x - 30,
-                y: this.props.svgModelGroup.size.y,
-                fill: '#000000',
-                'font-size': 12,
-                'font-family': 'Arial',
-                'stroke-width': 0.25,
-                opacity: 1,
-                textContent: 'Snapmaker'
-            }
-        });
-        this.props.svgModelGroup.addModel(elem);
+        const element = this.props.createText('Snapmaker');
+        this.props.onCreateElement(element);
+
         // todo, select text after create
         // this.canvas.current.selectOnly([elem]);
         this.setMode('select');
-    }
+    };
 
     zoomIn() {
         this.canvas.current.zoomIn();
@@ -142,10 +145,16 @@ class SVGEditor extends PureComponent {
                     <div className={styles['view-space']}>
                         <SVGCanvas
                             className={styles['svg-content']}
-                            svgModelGroup={this.props.svgModelGroup}
+                            SVGActions={this.props.SVGActions}
                             size={this.props.size}
                             ref={this.canvas}
-                            onSelectModel={this.props.onSelectModel}
+                            onCreateElement={this.props.onCreateElement}
+                            onSelectElements={this.props.onSelectElements}
+                            onClearSelection={this.props.onClearSelection}
+                            onResizeElement={this.props.onResizeElement}
+                            onAfterResizeElement={this.props.onAfterResizeElement}
+                            onMoveElement={this.props.onMoveElement}
+                            onRotateElement={this.props.onRotateElement}
                         />
                     </div>
                     <SvgTool

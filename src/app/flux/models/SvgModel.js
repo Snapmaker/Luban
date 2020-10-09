@@ -493,6 +493,7 @@ class SvgModel {
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
         this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
+
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
 
