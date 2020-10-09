@@ -24,11 +24,9 @@ class DegreeInput extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('next props', this.state.isKeyUp, this.state.displayValue);
         this.setState({
-            displayValue: this.state.isKeyUp ? nextProps.value.toString() : nextProps.value.toString().concat(this.props.suffix),
-            value: nextProps.value,
-            isKeyUp: false
+            displayValue: nextProps.value.toString().concat(this.props.suffix),
+            value: nextProps.value
         });
     }
 
@@ -42,7 +40,7 @@ class DegreeInput extends PureComponent {
 
     onBlur = (event) => {
         const { onChange } = this.props;
-        onChange && onChange(this.getStandarValue(event.target.value));
+        onChange && onChange(this.getStandardValue(event.target.value));
         this.setState({
             // isEdit: false,
             displayValue: this.state.value.toString().concat(this.props.suffix)
@@ -53,11 +51,11 @@ class DegreeInput extends PureComponent {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
             const { onChange } = this.props;
-            onChange && onChange(this.getStandarValue(event.target.value));
+            const standardValue = this.getStandardValue(event.target.value);
+            onChange && onChange(standardValue);
             this.setState({
                 // isEdit: false,
-                isKeyUp: true,
-                displayValue: this.state.value.toString()
+                displayValue: standardValue.toString()
             });
         }
     };
@@ -69,7 +67,7 @@ class DegreeInput extends PureComponent {
         });
     }
 
-    getStandarValue(value) {
+    getStandardValue(value) {
         let numericValue = parseFloat(value) % 360;
         if (numericValue > 180) {
             numericValue -= 360;
