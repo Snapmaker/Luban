@@ -34,6 +34,7 @@ function getBrowserWindowOptions() {
     const display = screen.getDisplayMatching(lastOptions);
 
     let windowOptions = {};
+    console.log('display', display, lastOptions);
     if (display.id === lastOptions.id) {
         // use last time options when using the same display
         windowOptions = {
@@ -84,7 +85,7 @@ const createWindow = async () => {
 
     mainWindow = window;
     mainWindowOptions = windowOptions;
-
+    console.log('mainWindowOptions', mainWindowOptions);
     configureWindow(window);
 
     const url = `http://${address}:${port}`;
@@ -101,6 +102,7 @@ const createWindow = async () => {
 
     window.on('close', (e) => {
         e.preventDefault();
+        console.log('close', mainWindowOptions);
         const options = {
             id: mainWindowOptions.id,
             ...window.getBounds()
@@ -120,8 +122,8 @@ const createWindow = async () => {
 
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.on('openFile', () => {
-        console.log('inside ipcMain');
         const newProjectFile = config.get('projectFile');
+        console.log('inside ipcMain', newProjectFile);
         mainWindow.webContents.send('open-file', newProjectFile);
         config.set('projectFile', null);
     });
@@ -158,8 +160,14 @@ app.on('open-file', (event, projectFile) => {
             path: projectFile,
             name: path.basename(projectFile)
         };
+    } else {
+        const projectFileOnWindow = String(process.argv[0]);
+        newProjectFile = {
+            path: projectFileOnWindow,
+            name: path.basename(projectFileOnWindow)
+        };
     }
-    console.log('window', projectFile, process.argv, String(process.argv[0]));
+    console.log('window', projectFile, newProjectFile, process.argv, String(process.argv[0]));
     event.preventDefault();
     // if the app is ready and initialized, we open this file
     if (mainWindow && newProjectFile) {

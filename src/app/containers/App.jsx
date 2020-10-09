@@ -135,7 +135,6 @@ class App extends PureComponent {
         },
         initFileOpen: () => {
             const { ipcRenderer } = window.require('electron');
-            console.log('initFileOpen');
             ipcRenderer.send('openFile');
         },
         initUniEvent: () => {
