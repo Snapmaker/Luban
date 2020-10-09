@@ -175,6 +175,10 @@ function svgToSegments(svg, options = {}) {
         const width = Math.round(options.width * options.fillDensity);
         const height = Math.round(options.height * options.fillDensity);
         let out = [];
+        const accumulatorCanvas = new Array(width);
+        for (let i = 0; i < width; i++) {
+            accumulatorCanvas[i] = new Uint8Array(height);
+        }
 
         for (const shape of svg.shapes) {
             const canvas = new Array(width);
@@ -211,7 +215,14 @@ function svgToSegments(svg, options = {}) {
                 }
                 fillShape(canvas, width, height, newShape, color);
             }
-
+            canvas.map((row, rowIndex) => row.map((value, columnIndex) => {
+                if (value && !accumulatorCanvas[rowIndex][columnIndex]) {
+                    accumulatorCanvas[rowIndex][columnIndex] = value;
+                    return value;
+                } else {
+                    return 0; // prevent the same canvas section being painted twice
+                }
+            }));
             out = [...out, ...canvasToSegments(canvas, width, height, options.fillDensity)];
         }
 
