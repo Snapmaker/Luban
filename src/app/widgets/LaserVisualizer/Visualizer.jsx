@@ -57,7 +57,6 @@ class Visualizer extends Component {
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectTargetModel: PropTypes.func.isRequired,
-        unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
@@ -111,9 +110,6 @@ class Visualizer extends Component {
             // todo
             // console.log('----on process select----', model);
             this.props.selectTargetModel(intersect);
-        },
-        onUnselectAllModels: () => {
-            this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
@@ -332,7 +328,6 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
-                        onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
@@ -511,7 +506,6 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectTargetModel: (intersect) => dispatch(editorActions.selectModelInProcess('laser', intersect)),
-        unselectAllModels: () => dispatch(editorActions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 

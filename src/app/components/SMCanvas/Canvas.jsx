@@ -33,7 +33,6 @@ class Canvas extends Component {
         cameraUp: PropTypes.object,
         // callback
         onSelectModels: PropTypes.func,
-        onUnselectAllModels: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
 
@@ -68,7 +67,6 @@ class Canvas extends Component {
 
         // callback
         this.onSelectModels = this.props.onSelectModels || noop;
-        this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
@@ -162,9 +160,6 @@ class Canvas extends Component {
             this.onSelectModels(intersect, isMultiSelect);
         });
 
-        this.controls.on(EVENTS.UNSELECT_OBJECT, () => {
-            this.onUnselectAllModels();
-        });
         this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
             if (this.props.showContextMenu && this.props.canOperateModel) {
                 this.props.showContextMenu(e);

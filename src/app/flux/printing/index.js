@@ -838,18 +838,6 @@ export const actions = {
         dispatch(actions.updateState(modelState));
     },
 
-    unselectAllModels: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.selectModelById(null);
-        dispatch(actions.updateState(
-            {
-                // model,
-                selectedModelIDArray: []
-            }
-        ));
-    },
-
-
     hideSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.hideSelectedModel();

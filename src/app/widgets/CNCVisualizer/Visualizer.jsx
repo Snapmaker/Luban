@@ -56,7 +56,6 @@ class Visualizer extends Component {
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
-        unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
@@ -108,9 +107,6 @@ class Visualizer extends Component {
         },
         onSelectModels: (intersect) => {
             this.props.selectModel(intersect);
-        },
-        onUnselectAllModels: () => {
-            this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
@@ -357,7 +353,6 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
-                        onUnselectAllModels={this.actions.onUnselectAllModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
@@ -534,7 +529,6 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModel: (intersect) => dispatch(editorActions.selectModelInProcess('cnc', intersect)),
-        unselectAllModels: () => dispatch(editorActions.unselectAllModels('cnc')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),
 
