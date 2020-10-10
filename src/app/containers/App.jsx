@@ -134,8 +134,7 @@ class App extends PureComponent {
             }
         },
         initFileOpen: () => {
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('openFile');
+            UniApi.File.openProjectFile();
         },
         initUniEvent: () => {
             UniApi.Event.on('open-file', (event, file) => {

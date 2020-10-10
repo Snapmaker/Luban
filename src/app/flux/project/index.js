@@ -154,7 +154,7 @@ export const actions = {
         if (!unSaved) return;
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {
-            const idxClicked = await UniApi.Dialog.showMessageBox({
+            const result = await UniApi.Dialog.showMessageBox({
                 ...dialogOptions,
                 type: 'warning',
                 defaultId: 2,
@@ -164,9 +164,8 @@ export const actions = {
                     i18n._('Don\'t Save')
                 ]
             });
-
+            const idxClicked = result && result.response;
             if (idxClicked === 1) throw new Error('Cancel');
-            console.log('idxClicked', idxClicked);
             if (idxClicked === 2) {
                 return;
             }
@@ -209,7 +208,7 @@ export const actions = {
             setTimeout(() => {
                 dispatch(actions.updateState(headType, { unSaved: false }));
             }, 2000);
-        } else {
+        } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }

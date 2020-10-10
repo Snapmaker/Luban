@@ -34,7 +34,6 @@ function getBrowserWindowOptions() {
     const display = screen.getDisplayMatching(lastOptions);
 
     let windowOptions = {};
-    console.log('display', display, lastOptions);
     if (display.id === lastOptions.id) {
         // use last time options when using the same display
         windowOptions = {
@@ -63,9 +62,25 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowOptions);
 }
 
+// for Windows
+// https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+} else if (process.platform === 'win32') {
+    const projectFileOnWindow = String(process.argv[process.argv.length - 1]);
+    const newProjectFile = {
+        path: projectFileOnWindow,
+        name: path.basename(projectFileOnWindow)
+    };
+    if (mainWindow) {
+        mainWindow.webContents.send('open-file', newProjectFile);
+    } else {
+        config.set('projectFile', newProjectFile);
+    }
+}
 
 const createWindow = async () => {
-    console.log('before createWindow');
     try {
         // TODO: move to server
         DataStorage.init();
@@ -85,7 +100,6 @@ const createWindow = async () => {
 
     mainWindow = window;
     mainWindowOptions = windowOptions;
-    console.log('mainWindowOptions', mainWindowOptions);
     configureWindow(window);
 
     const url = `http://${address}:${port}`;
@@ -102,7 +116,6 @@ const createWindow = async () => {
 
     window.on('close', (e) => {
         e.preventDefault();
-        console.log('close', mainWindowOptions);
         const options = {
             id: mainWindowOptions.id,
             ...window.getBounds()
@@ -112,7 +125,6 @@ const createWindow = async () => {
         window.webContents.send('save-and-close');
 
         mainWindow = null;
-        mainWindowOptions = null;
     });
 
 
@@ -123,7 +135,6 @@ const createWindow = async () => {
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.on('openFile', () => {
         const newProjectFile = config.get('projectFile');
-        console.log('inside ipcMain', newProjectFile);
         mainWindow.webContents.send('open-file', newProjectFile);
         config.set('projectFile', null);
     });
@@ -149,9 +160,9 @@ app.on('activate', async () => {
 });
 
 /**
- * Listening to the open file event (when the user open a file through the menu bar,
+ * Only for MacOS
  *
- * or through the OS by double click or similar)
+ * Listening to the open file event (when through the OS by double click or similar)
  */
 app.on('open-file', (event, projectFile) => {
     let newProjectFile;
@@ -160,20 +171,12 @@ app.on('open-file', (event, projectFile) => {
             path: projectFile,
             name: path.basename(projectFile)
         };
-    } else {
-        const projectFileOnWindow = String(process.argv[0]);
-        newProjectFile = {
-            path: projectFileOnWindow,
-            name: path.basename(projectFileOnWindow)
-        };
     }
-    console.log('window', projectFile, newProjectFile, process.argv, String(process.argv[0]));
     event.preventDefault();
     // if the app is ready and initialized, we open this file
     if (mainWindow && newProjectFile) {
         mainWindow.webContents.send('open-file', newProjectFile);
     } else {
-        console.log('inside else', mainWindow, newProjectFile);
         config.set('projectFile', newProjectFile);
     }
 });
@@ -198,7 +201,24 @@ app.on('will-quit', () => {
     DataStorage.clear();
 });
 
+// for Windows
+app.on('second-instance', (event, commandLine) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (event && process.platform === 'win32') {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+            const projectFilePath = commandLine[commandLine.length - 1];
+            const newProjectFile = {
+                path: projectFilePath,
+                name: path.basename(projectFilePath)
+            };
+            mainWindow.webContents.send('open-file', newProjectFile);
+        }
+    }
+});
+
 /**
- * when ready
- */
+* when ready
+*/
 app.whenReady().then(createWindow);
