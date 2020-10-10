@@ -33,13 +33,15 @@ class ToolPath {
     g92offset = {
         x: 0,
         y: 0,
-        z: 0
+        z: 0,
+        b: 0
     };
 
     position = {
         x: 0,
         y: 0,
         z: 0,
+        b: 0,
         e: 0,
         type: TYPE_CODES.UNKNOWN
     };
@@ -96,7 +98,13 @@ class ToolPath {
 
         gcodeType: 'end',
 
-        layerHeight: 0.001
+        layerHeight: 0.001,
+
+        headerType: '',
+
+        isRotate: false,
+
+        diameter: 0
     };
 
     offsetG92 = (pos) => {
@@ -104,6 +112,7 @@ class ToolPath {
             x: pos.x + this.g92offset.x,
             y: pos.y + this.g92offset.y,
             z: pos.z + this.g92offset.z,
+            b: pos.b + this.g92offset.b,
             type: pos.type
         };
     };
@@ -147,8 +156,34 @@ class ToolPath {
             this.fn.addHeader({ headerStart: true });
         },
 
-        ';renderMethod': (params) => {
-            this.fn.addHeader({ renderMethod: params.trim() });
+        ';renderMethod': (param) => {
+            if (param !== undefined && param !== null) {
+                this.fn.addHeader({ renderMethod: param });
+            }
+        },
+
+        ';header_type': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.headerType = param;
+            }
+        },
+
+        ';is_rotate': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.isRotate = param;
+            }
+        },
+
+        ';diameter': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.diameter = param;
+            }
+        },
+
+        ';is_cw': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.isCW = param;
+            }
         }
     };
 
@@ -162,22 +197,24 @@ class ToolPath {
             const v1 = {
                 x: this.position.x,
                 y: this.position.y,
-                z: this.position.z
+                z: this.position.z,
+                b: this.position.b
             };
             const v2 = {
                 x: this.translateX(params.X),
                 y: this.translateY(params.Y),
                 z: this.translateZ(params.Z),
+                b: this.translateB(params.B, this.modal.isCW),
                 type: this.translateType(params.E)
             };
-            const targetPosition = { x: v2.x, y: v2.y, z: v2.z, e: params.E };
+            const targetPosition = { x: v2.x, y: v2.y, z: v2.z, b: v2.b, e: params.E };
 
             // if (v1.x !== v2.x || v1.y !== v2.y || v1.z !== v2.z) {
             this.offsetAddLine(v1, v2);
             // }
 
             // Update position
-            this.setPosition(targetPosition.x, targetPosition.y, targetPosition.z, targetPosition.e);
+            this.setPosition(targetPosition.x, targetPosition.y, targetPosition.z, targetPosition.b, targetPosition.e);
         },
         // G1: Linear Move
         // Usage
@@ -201,22 +238,24 @@ class ToolPath {
             const v1 = {
                 x: this.position.x,
                 y: this.position.y,
-                z: this.position.z
+                z: this.position.z,
+                b: this.position.b
             };
             const v2 = {
                 x: this.translateX(params.X),
                 y: this.translateY(params.Y),
                 z: this.translateZ(params.Z),
+                b: this.translateB(params.B, this.modal.isCW),
                 type: this.translateType(params.E)
             };
-            const targetPosition = { x: v2.x, y: v2.y, z: v2.z, e: params.E };
+            const targetPosition = { x: v2.x, y: v2.y, z: v2.z, b: v2.b, e: params.E };
 
             // if (v1.x !== v2.x || v1.y !== v2.y || v1.z !== v2.z) {
             this.offsetAddLine(v1, v2);
             // }
 
             // Update position
-            this.setPosition(targetPosition.x, targetPosition.y, targetPosition.z, targetPosition.e);
+            this.setPosition(targetPosition.x, targetPosition.y, targetPosition.z, targetPosition.b, targetPosition.e);
         },
         // G2 & G3: Controlled Arc Move
         // Usage
@@ -774,16 +813,18 @@ class ToolPath {
 
     setPosition(...pos) {
         if (typeof pos[0] === 'object') {
-            const { x, y, z, e } = { ...pos[0] };
+            const { x, y, z, b, e } = { ...pos[0] };
             this.position.x = (typeof x === 'number') ? x : this.position.x;
             this.position.y = (typeof y === 'number') ? y : this.position.y;
             this.position.z = (typeof z === 'number') ? z : this.position.z;
+            this.position.b = (typeof b === 'number') ? b : this.position.b;
             this.position.e = (typeof e === 'number') ? e : this.position.e;
         } else {
-            const [x, y, z, e] = pos;
+            const [x, y, z, b, e] = pos;
             this.position.x = (typeof x === 'number') ? x : this.position.x;
             this.position.y = (typeof y === 'number') ? y : this.position.y;
             this.position.z = (typeof z === 'number') ? z : this.position.z;
+            this.position.b = (typeof z === 'number') ? b : this.position.b;
             this.position.e = (typeof e === 'number') ? e : this.position.e;
         }
     }
@@ -822,6 +863,19 @@ class ToolPath {
             relative = this.isRelativeDistance();
         }
         return translatePosition(this.position.z, z, !!relative);
+    }
+
+    translateB(b, isCW, relative) {
+        if (b !== undefined) {
+            b = this.isImperialUnits() ? in2mm(b) : b;
+        }
+        if (isCW) {
+            b = -b;
+        }
+        if (relative === undefined) {
+            relative = this.isRelativeDistance();
+        }
+        return translatePosition(this.position.b, b, !!relative);
     }
 
     translateI(i) {

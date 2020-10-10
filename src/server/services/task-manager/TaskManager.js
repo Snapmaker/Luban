@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import logger from '../../lib/logger';
 import { generateToolPath } from './generateToolPath';
 import { generateGcode } from './generateGcode';
+import { generateViewPath } from './generateViewPath';
 
 const log = logger('service:TaskManager');
 
@@ -13,8 +14,32 @@ const TASK_STATUS_FAILED = 'failed';
 const TASK_STATUS_COMPLETED = 'completed';
 
 export const TASK_TYPE_GENERATE_TOOLPATH = 'generateToolPath';
+export const TASK_TYPE_GENERATE_VIEWPATH = 'generateViewPath';
 export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
 
+export class Task {
+    constructor(taskId, socket, data, taskType, headType) {
+        this.taskId = taskId;
+        this.socket = socket;
+        this.data = data;
+        this.taskType = taskType;
+        this.headType = headType;
+        this.taskStatus = TASK_STATUS_IDLE; // idle, previewing, previewed, deprecated
+        this.failedCount = 0;
+        this.finishTime = 0;
+    }
+
+    equal(task) {
+        return task && task.taskId === this.taskId && task.taskType === this.taskType;
+    }
+
+    getData() {
+        return {
+            ...this,
+            socket: null
+        };
+    }
+}
 
 class TaskManager extends EventEmitter {
     constructor() {
@@ -34,7 +59,6 @@ class TaskManager extends EventEmitter {
         return false;
     }
 
-    // TODO: use another to do CPU intense workload.
     async schedule() {
         if (this.status === 'running') {
             log.info('Scheduling task Missed');
@@ -60,36 +84,39 @@ class TaskManager extends EventEmitter {
 
             // log.debug(taskSelected);
 
-            if (taskSelected.taskType === 'generateToolPath') {
-                await this.generateToolPathTaskHandle(taskSelected);
-            } else if (taskSelected.taskType === 'generateGcode') {
-                await this.generateGcodeTaskHandle(taskSelected);
-            } else {
-                taskSelected.taskStatus = TASK_STATUS_DEPRECATED;
-            }
+            await this.taskHandle(taskSelected);
         }
 
         this.status = 'idle';
     }
 
-    async generateToolPathTaskHandle(taskSelected) {
+    async taskHandle(taskSelected) {
         try {
             let currentProgress = 0;
-            const res = await generateToolPath(taskSelected.data, (p) => {
+            const onProgress = (p) => {
                 if (p - currentProgress > 0.05) {
                     currentProgress = p;
-                    taskSelected.socket.emit('taskProgress:generateGcode', {
+                    taskSelected.socket.emit(`taskProgress:${taskSelected.taskType}`, {
                         progress: p,
                         headType: taskSelected.headType
                     });
                 }
-            });
+            };
+            if (taskSelected.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
+                const res = await generateToolPath(taskSelected.data, onProgress);
+                taskSelected.filename = res.filename;
+            } else if (taskSelected.taskType === TASK_TYPE_GENERATE_GCODE) {
+                const res = await generateGcode(taskSelected.data, onProgress);
+                taskSelected.gcodeFile = res.gcodeFile;
+            } else if (taskSelected.taskType === TASK_TYPE_GENERATE_VIEWPATH) {
+                const res = await generateViewPath(taskSelected.data, onProgress);
+                taskSelected.viewPathFile = res.viewPathFile;
+            }
 
-            taskSelected.filename = res.filename;
             if (taskSelected.taskStatus !== TASK_STATUS_DEPRECATED) {
                 taskSelected.taskStatus = TASK_STATUS_COMPLETED;
                 taskSelected.finishTime = new Date().getTime();
-                taskSelected.socket.emit('taskCompleted:generateToolPath', this.getTaskData(taskSelected));
+                taskSelected.socket.emit(`taskCompleted:${taskSelected.taskType}`, taskSelected.getData());
             }
         } catch (e) {
             log.error(e);
@@ -100,76 +127,28 @@ class TaskManager extends EventEmitter {
                 taskSelected.taskStatus = TASK_STATUS_FAILED;
                 taskSelected.finishTime = new Date().getTime();
 
-                taskSelected.socket.emit('taskCompleted:generateToolPath', this.getTaskData(taskSelected));
+                taskSelected.socket.emit(`taskCompleted:${taskSelected.taskType}`, taskSelected.getData());
             }
         }
     }
 
-    async generateGcodeTaskHandle(taskSelected) {
-        try {
-            let currentProgress = 0;
-            const res = await generateGcode(taskSelected.data, (p) => {
-                if (p - currentProgress > 0.05) {
-                    currentProgress = p;
-                    taskSelected.socket.emit('taskProgress:generateGcode', {
-                        progress: p,
-                        headType: taskSelected.headType
-                    });
-                }
-            });
-
-            taskSelected.gcodeFile = res.gcodeFile;
-            if (taskSelected.taskStatus !== TASK_STATUS_DEPRECATED) {
-                taskSelected.taskStatus = TASK_STATUS_COMPLETED;
-                taskSelected.finishTime = new Date().getTime();
-
-                taskSelected.socket.emit('taskCompleted:generateGcode', this.getTaskData(taskSelected));
-            }
-        } catch (e) {
-            log.error(e);
-            this.status = TASK_STATUS_IDLE;
-
-            taskSelected.failedCount += 1;
-            if (taskSelected.failedCount === MAX_TRY_COUNT) {
-                taskSelected.taskStatus = TASK_STATUS_FAILED;
-                taskSelected.finishTime = new Date().getTime();
-
-                taskSelected.socket.emit('taskCompleted:generateGcode', this.getTaskData(taskSelected));
-            }
-        }
-    }
-
-    addTask(socket, data, taskId, headType, taskType) {
-        const task = {};
-        task.socket = socket;
-        task.taskId = taskId;
-        task.taskType = taskType;
-        task.headType = headType;
-        task.data = data;
-        task.taskStatus = TASK_STATUS_IDLE; // idle, previewing, previewed, deprecated
-        task.failedCount = 0;
-        task.finishTime = 0;
-        // const { uploadName } = modelInfo;
-        this.tasks.forEach(e => {
-            if (e.taskId === taskId && e.taskType === taskType) {
-                e.taskStatus = TASK_STATUS_DEPRECATED;
+    addTask(task) {
+        this.tasks.forEach(t => {
+            if (t.equal(task)) {
+                t.taskStatus = TASK_STATUS_DEPRECATED;
             }
         });
         this.tasks.push(task);
 
+        this.cleanTasks();
+    }
+
+    cleanTasks() {
         const now = new Date().getTime();
         this.tasks = this.tasks.filter(t => {
-            // Keep only unfinished tasks or recent (10 min) finished tasks
             return t.taskStatus !== TASK_STATUS_DEPRECATED
                 && (t.finishTime === 0 || t.finishTime > now - 60 * 10);
         });
-    }
-
-    getTaskData(task) {
-        return {
-            ...task,
-            socket: null
-        };
     }
 }
 

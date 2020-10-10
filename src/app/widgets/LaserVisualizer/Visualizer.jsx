@@ -33,6 +33,7 @@ class Visualizer extends Component {
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
+        materials: PropTypes.object,
 
         // hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
@@ -135,8 +136,8 @@ class Visualizer extends Component {
     constructor(props) {
         super(props);
 
-        const size = props.size;
-        this.printableArea = new PrintablePlate(size);
+        const { size, materials } = props;
+        this.printableArea = new PrintablePlate(size, materials);
     }
 
     // hideContextMenu = () => {
@@ -145,7 +146,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
-        this.canvas.current.disable3D();
+        // this.canvas.current.disable3D();
 
         window.addEventListener(
             'hashchange',
@@ -160,9 +161,10 @@ class Visualizer extends Component {
 
     componentWillReceiveProps(nextProps) {
         const { renderingTimestamp } = nextProps;
-        if (!isEqual(nextProps.size, this.props.size)) {
-            const size = nextProps.size;
-            this.printableArea.updateSize(size);
+
+        if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.materials, this.props.materials)) {
+            const { size, materials } = nextProps;
+            this.printableArea.updateSize(size, materials);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
         }
 
@@ -291,6 +293,7 @@ class Visualizer extends Component {
                     <CncLaserSvgEditor
                         ref={this.svgCanvas}
                         size={this.props.size}
+                        materials={this.props.materials}
                         svgModelGroup={this.props.svgModelGroup}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
@@ -458,16 +461,20 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
+    const { size } = state.machine;
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
+
+    const { materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
+
     return {
         page,
-        size: machine.size,
+        size,
+        materials,
         hasModel: modelGroup.hasModel(),
+        selectedModelID,
         svgModelGroup,
         modelGroup,
         toolPathModelGroup,

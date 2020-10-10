@@ -1,14 +1,9 @@
 import Jimp from 'jimp';
-import fs from 'fs';
-import path from 'path';
 import configure from '@jimp/custom';
 import newsprint from 'jimp-plugin-newsprint';
-import { pathWithRandomSuffix } from './random-utils';
-import { convertRasterToSvg } from './svg-convert';
-import DataStorage from '../DataStorage';
-import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../shared/lib/DXFParser/Parser';
-import { svgInverse, svgToString } from '../../shared/lib/SVGParser/SvgToString';
-
+import { pathWithRandomSuffix } from '../random-utils';
+import { convertRasterToSvg } from '../svg-convert';
+import DataStorage from '../../DataStorage';
 
 configure({ plugins: [newsprint] }, Jimp);
 
@@ -69,9 +64,10 @@ const algorithms = {
     ]
 };
 
-async function processLaserGreyscale(modelInfo) {
+export const processLaserGreyscale = async (modelInfo) => {
     const { uploadName } = modelInfo;
-    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
+    const { rotationZ = 0, flip = 0 } = modelInfo.transformation;
+    const { width, height } = modelInfo.transformation;
 
     const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -155,9 +151,9 @@ async function processLaserGreyscale(modelInfo) {
             });
         });
     });
-}
+};
 
-async function processCNCGreyscale(modelInfo) {
+export const processCNCGreyscale = async (modelInfo) => {
     const { uploadName } = modelInfo;
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
@@ -185,9 +181,9 @@ async function processCNCGreyscale(modelInfo) {
             });
         });
     });
-}
+};
 
-async function processBW(modelInfo) {
+export const processBW = async (modelInfo) => {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
@@ -243,9 +239,9 @@ async function processBW(modelInfo) {
             });
         });
     });
-}
+};
 
-async function processNewsprint(modelInfo) {
+export const processNewsprint = async (modelInfo) => {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
@@ -271,9 +267,9 @@ async function processNewsprint(modelInfo) {
             });
         });
     });
-}
+};
 
-function processVector(modelInfo) {
+export const processVector = (modelInfo) => {
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
     const { flip = 0 } = modelInfo.transformation;
@@ -285,56 +281,56 @@ function processVector(modelInfo) {
         flip: flip
     };
     return convertRasterToSvg(options);
-}
+};
 
-function processDxf(modelInfo) {
-    return new Promise(async (resolve) => {
-        const { uploadName } = modelInfo;
+// function processDxf(modelInfo) {
+//     return new Promise(async (resolve) => {
+//         const { uploadName } = modelInfo;
+//
+//         let outputFilename = pathWithRandomSuffix(uploadName);
+//         outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
+//
+//         const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
+//         const svg = dxfToSvg(result.svg);
+//         updateDxfBoundingBox(svg);
+//         svgInverse(svg, 2);
+//
+//         fs.writeFile(`${DataStorage.tmpDir}/${outputFilename}`, svgToString(svg), 'utf8', () => {
+//             resolve({
+//                 filename: outputFilename
+//             });
+//         });
+//     });
+// }
 
-        let outputFilename = pathWithRandomSuffix(uploadName);
-        outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
 
-        const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
-        const svg = dxfToSvg(result.svg);
-        updateDxfBoundingBox(svg);
-        svgInverse(svg, 2);
-
-        fs.writeFile(`${DataStorage.tmpDir}/${outputFilename}`, svgToString(svg), 'utf8', () => {
-            resolve({
-                filename: outputFilename
-            });
-        });
-    });
-}
-
-
-function process(modelInfo) {
-    const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === 'raster') {
-        if (mode === 'greyscale') {
-            if (headType === 'laser') {
-                return processLaserGreyscale(modelInfo);
-            } else {
-                return processCNCGreyscale(modelInfo);
-            }
-        } else if (mode === 'bw') {
-            return processBW(modelInfo);
-        } else if (mode === 'vector') {
-            return processVector(modelInfo);
-        } else if (mode === 'newsprint') {
-            return processNewsprint(modelInfo);
-        } else {
-            return Promise.resolve({
-                filename: ''
-            });
-        }
-    } else if (sourceType === 'dxf') {
-        return processDxf(modelInfo);
-    } else {
-        return Promise.resolve({
-            filename: ''
-        });
-    }
-}
-
-export default process;
+// function process(modelInfo) {
+//     const { headType, sourceType, mode } = modelInfo;
+//     if (sourceType === 'raster') {
+//         if (mode === 'greyscale') {
+//             if (headType === 'laser') {
+//                 return processLaserGreyscale(modelInfo);
+//             } else {
+//                 return processCNCGreyscale(modelInfo);
+//             }
+//         } else if (mode === 'bw') {
+//             return processBW(modelInfo);
+//         } else if (mode === 'vector') {
+//             return processVector(modelInfo);
+//         } else if (mode === 'newsprint') {
+//             return processNewsprint(modelInfo);
+//         } else {
+//             return Promise.resolve({
+//                 filename: ''
+//             });
+//         }
+//     } else if (sourceType === 'dxf') {
+//         return processDxf(modelInfo);
+//     } else {
+//         return Promise.resolve({
+//             filename: ''
+//         });
+//     }
+// }
+//
+// export default process;

@@ -8,7 +8,7 @@ export const svgModelActions = {
         const { elem } = svgModelGroup.addModelToSVGElement({
             modelID,
             limitSize: size,
-            uploadName: sourceType !== 'raster' && sourceType !== 'dxf' ? uploadName : processImageName,
+            uploadName: sourceType !== 'raster' && sourceType !== 'dxf' && sourceType !== 'image3d' ? uploadName : processImageName,
             transformation
         });
         svgModelGroup.addModel(elem);

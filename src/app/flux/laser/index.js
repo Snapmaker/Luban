@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
+import { DATA_PREFIX, MACHINE_SERIES, PAGE_EDITOR } from '../../constants';
 import { controller } from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
 import SvgModelGroup from '../models/SvgModelGroup';
@@ -19,6 +19,17 @@ const initModelGroup = new ModelGroup('laser');
 const INITIAL_STATE = {
 
     page: PAGE_EDITOR,
+
+    materials: {
+        isRotate: false,
+        diameter: 24,
+        length: MACHINE_SERIES.ORIGINAL.setting.size.y,
+        fixtureLength: 20,
+        isCW: true,
+        x: 0,
+        y: 0,
+        z: 0
+    },
 
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,

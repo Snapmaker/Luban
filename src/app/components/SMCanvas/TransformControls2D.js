@@ -7,7 +7,7 @@ import {
     Line, Mesh
 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { isZero } from '../../lib/utils';
+import { isZero } from '../../../shared/lib/utils';
 
 
 const EVENTS = {

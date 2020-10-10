@@ -3,7 +3,7 @@ import { coordGmSvgToModel } from '../../widgets/CncLaserSvgEditor/element-utils
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
-import { DEFAULT_SCALE } from '../../constants/svg-constants';
+import { DEFAULT_SCALE } from '../../constants/svg';
 import { DATA_PREFIX } from '../../constants';
 
 import {

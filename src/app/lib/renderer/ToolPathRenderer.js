@@ -32,31 +32,43 @@ const motionColor = {
 };
 
 class ToolPathRenderer {
-    render(toolPath) {
-        const { headType, mode, movementMode, data } = toolPath;
+    constructor(toolPath) {
+        this.toolPath = toolPath;
+    }
+
+    render() {
+        const { headType, mode, movementMode, data, isRotate } = this.toolPath;
 
         // now only support cnc&laser
         if (!['cnc', 'laser'].includes(headType)) {
             return null;
         }
+        let obj;
         if (headType === 'laser') {
             if (mode === 'greyscale' && movementMode === 'greyscale-dot') {
-                return this.parseToPoints(data);
+                obj = this.parseToPoints(data);
             } else {
-                return this.parseToLine(data);
+                obj = this.parseToLine(data, isRotate);
             }
         } else {
-            return this.parseToLine(data);
+            obj = this.parseToLine(data, isRotate);
         }
+        obj.position.set(isRotate ? 0 : this.toolPath.positionX, this.toolPath.positionY, 0);
+        if (this.toolPath.rotationB) {
+            obj.rotation.y = this.toolPath.rotationB / 180 * Math.PI;
+        }
+        obj.scale.set(1, 1, 1);
+        return obj;
     }
 
-    parseToLine(data) {
+    parseToLine(data, isRotate) {
         const positions = [];
         const gCodes = [];
 
         let state = {
             G: 0,
             X: 0,
+            B: 0,
             Y: 0,
             Z: 0
         };
@@ -72,25 +84,39 @@ class ToolPathRenderer {
             item.X !== undefined && (newState.X = item.X);
             item.Y !== undefined && (newState.Y = item.Y);
             item.Z !== undefined && (newState.Z = item.Z);
+            item.B !== undefined && (newState.B = item.B);
 
-            // end of path, close it
-            if (state.G === 1 && newState.G === 0) {
-                positions.push(state.X);
-                positions.push(state.Y);
-                positions.push(state.Z);
+            if ((state.G === 1) && (newState.G === 0)) {
+                const res = this.calculateXYZ({
+                    X: state.X,
+                    Y: state.Y,
+                    Z: state.Z,
+                    B: state.B
+                }, isRotate);
+                positions.push(res.X);
+                positions.push(res.Y);
+                positions.push(res.Z);
                 gCodes.push(newState.G);
             }
 
             if (state.G !== newState.G
                 || state.X !== newState.X
                 || state.Y !== newState.Y
-                || state.Z !== newState.Z) {
-                positions.push(newState.X);
-                positions.push(newState.Y);
-                positions.push(newState.Z);
-                if (state.G === 0 && newState.G === 1) {
-                    gCodes.push(0);
-                } else {
+                || state.Z !== newState.Z
+                || state.B !== newState.B) {
+                const segCount = Math.max(Math.ceil(Math.abs(state.B - newState.B) / 5), 1);
+
+                for (let j = 1; j <= segCount; j++) {
+                    const res = this.calculateXYZ({
+                        X: state.X + (newState.X - state.X) / segCount * j,
+                        Y: state.Y + (newState.Y - state.Y) / segCount * j,
+                        Z: state.Z + (newState.Z - state.Z) / segCount * j,
+                        B: state.B + (newState.B - state.B) / segCount * j
+                    }, isRotate);
+
+                    positions.push(res.X);
+                    positions.push(res.Y);
+                    positions.push(res.Z);
                     gCodes.push(newState.G);
                 }
                 state = newState;
@@ -124,6 +150,7 @@ class ToolPathRenderer {
             G: 0,
             X: 0,
             Y: 0,
+            B: 0,
             Z: 0
         };
         for (let i = 0; i < data.length; i++) {
@@ -133,13 +160,16 @@ class ToolPathRenderer {
             item.X !== undefined && (newState.X = item.X);
             item.Y !== undefined && (newState.Y = item.Y);
             item.Z !== undefined && (newState.Z = item.Z);
+            item.B !== undefined && (newState.B = item.B);
 
             if (state.G !== newState.G
                 || state.X !== newState.X
                 || state.Y !== newState.Y
-                || state.Z !== newState.Z) {
+                || state.Z !== newState.Z
+                || state.B !== newState.B) {
                 state = newState;
-                geometry.vertices.push(new THREE.Vector3(state.X, state.Y, state.Z));
+                const res = this.calculateXYZ(state);
+                geometry.vertices.push(new THREE.Vector3(res.X, res.Y, res.Z));
                 if (state.G === 0) {
                     geometry.colors.push(motionColor.G0);
                 } else if (state.G === 1) {
@@ -150,6 +180,20 @@ class ToolPathRenderer {
             }
         }
         return new THREE.Points(geometry, material);
+    }
+
+    calculateXYZ(state) {
+        const { headType, isRotate = false, diameter } = this.toolPath;
+        if (isRotate) {
+            const z = headType === 'cnc' ? state.Z : diameter / 2;
+            return {
+                X: z * Math.sin(state.B / 180 * Math.PI) + state.X * Math.cos(state.B / 180 * Math.PI),
+                Y: state.Y,
+                Z: z * Math.cos(state.B / 180 * Math.PI) - state.X * Math.sin(state.B / 180 * Math.PI)
+            };
+        } else {
+            return state;
+        }
     }
 }
 

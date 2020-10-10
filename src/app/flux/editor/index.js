@@ -11,8 +11,10 @@ import {
 import { threejsModelActions } from './threejs-model';
 import { svgModelActions } from './svg-model';
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, PROCESS_MODE_VECTOR } from '../../constants';
+
 import { controller } from '../../lib/controller';
+import { round } from '../../../shared/lib/utils';
 
 const getCount = (() => {
     let count = 0;
@@ -30,6 +32,8 @@ const getSourceType = (fileName) => {
         sourceType = 'svg';
     } else if (extname === '.dxf') {
         sourceType = 'dxf';
+    } else if (extname === '.stl') {
+        sourceType = 'image3d';
     } else {
         sourceType = 'raster';
     }
@@ -47,7 +51,10 @@ export const CNC_LASER_STAGE = {
     RE_PREVIEW: 7,
     GENERATING_GCODE: 8,
     GENERATE_GCODE_SUCCESS: 9,
-    GENERATE_GCODE_FAILED: 10
+    GENERATE_GCODE_FAILED: 10,
+    GENERATING_VIEWPATH: 11,
+    GENERATE_VIEWPATH_SUCCESS: 12,
+    GENERATE_VIEWPATH_FAILED: 13
 };
 
 export const actions = {
@@ -67,9 +74,11 @@ export const actions = {
         bindSVGModelGroup('cnc');
     },
 
-    uploadImage: (headType, file, mode, onError) => (dispatch) => {
+    uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
+        const { materials } = getState()[headType];
         const formData = new FormData();
         formData.append('image', file);
+        formData.append('isRotate', materials.isRotate);
 
         api.uploadImage(formData)
             .then((res) => {
@@ -101,7 +110,7 @@ export const actions = {
 
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { toolParams, modelGroup, svgModelGroup } = getState()[headType];
+        const { materials, toolParams, modelGroup, svgModelGroup } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -131,7 +140,8 @@ export const actions = {
             ? {
                 ...modelDefaultConfigs.gcodeConfig,
                 toolDiameter: toolParams.toolDiameter,
-                toolAngle: toolParams.toolAngle
+                toolAngle: toolParams.toolAngle,
+                toolShaftDiameter: toolParams.toolShaftDiameter
             }
             : modelDefaultConfigs.gcodeConfig;
 
@@ -173,7 +183,8 @@ export const actions = {
             height,
             transformation,
             config,
-            gcodeConfig
+            gcodeConfig,
+            isRotate: materials.isRotate
         };
 
         // todo, process dxf
@@ -292,11 +303,12 @@ export const actions = {
         // Set or replace G-code config of new mode
         let { gcodeConfig } = modelDefaultConfigs;
         if (headType === 'cnc') {
-            const { toolDiameter, toolAngle } = getState().cnc.toolParams;
+            const { toolDiameter, toolAngle, toolShaftDiameter } = getState().cnc.toolParams;
             gcodeConfig = {
                 ...gcodeConfig,
                 toolDiameter,
-                toolAngle
+                toolAngle,
+                toolShaftDiameter
             };
         }
         const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
@@ -352,7 +364,8 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup } = getState()[headType];
+        const { size } = getState().machine;
+        const { materials, modelGroup, svgModelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -360,7 +373,7 @@ export const actions = {
         }
 
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
             return;
         }
 
@@ -375,7 +388,11 @@ export const actions = {
                 rotationZ: 0,
                 flip: selectedModel.transformation.flip
             },
-            config: selectedModel.config
+
+            config: {
+                ...selectedModel.config
+            },
+            isRotate: materials.isRotate
         };
 
         api.processImage(options)
@@ -385,8 +402,26 @@ export const actions = {
                     return;
                 }
 
+                const { width, height } = res.body;
+
                 const svgModel = selectedModel.relatedModels.svgModel;
                 const toolPathModel = selectedModel.relatedModels.toolPathModel;
+
+                if (width && height && width !== selectedModel.sourceWidth && height !== selectedModel.sourceHeight) {
+                    const { sourceWidth, sourceHeight } = sizeModelByMachineSize(size, width / 8, height / 8);
+                    const modelOptions = {
+                        sourceWidth: sourceWidth,
+                        sourceHeight: sourceHeight,
+                        width: width / 8,
+                        height: height / 8,
+                        transformation: {
+                            width: width / 8 * selectedModel.transformation.scaleX,
+                            height: height / 8 * selectedModel.transformation.scaleY
+                        }
+                    };
+                    selectedModel.updateAndRefresh(modelOptions);
+                    selectedModel.relatedModels.svgModel.modelGroup.resetSelection();
+                }
 
                 // modelGroup.updateSelectedModelProcessImage(processImageName);
                 selectedModel.updateProcessImageName(processImageName);
@@ -620,6 +655,10 @@ export const actions = {
         if (page === PAGE_EDITOR) {
             return;
         }
+
+        const { materials } = getState()[headType];
+        const { isRotate = false, diameter = 0, isCW = true } = materials || {};
+
         if (isProcess || autoPreviewEnabled) {
             const modelState = modelGroup.getSelectedModel()
                 .getTaskInfo();
@@ -628,7 +667,10 @@ export const actions = {
                 if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && toolPathModelTaskInfo.visible) {
                     const taskInfo = {
                         ...modelState,
-                        ...toolPathModelTaskInfo
+                        ...toolPathModelTaskInfo,
+                        isRotate: isRotate,
+                        diameter: diameter,
+                        isCW: isCW
                     };
                     controller.commitToolPathTask({
                         taskId: taskInfo.modelID,
@@ -645,16 +687,43 @@ export const actions = {
     },
 
     manualPreview: (headType, isProcess) => async (dispatch, getState) => {
-        const { page, modelGroup, autoPreviewEnabled } = getState()[headType];
+        const { page, modelGroup, autoPreviewEnabled, toolPathModelGroup } = getState()[headType];
 
         if (page === PAGE_EDITOR) {
             return;
         }
+
+        const { materials } = getState()[headType];
+        const { isRotate = false, diameter = 0, isCW = true } = materials || {};
+
         if (isProcess || autoPreviewEnabled) {
             for (const model of modelGroup.getModels()) {
                 await model.preview();
+                const modelTaskInfo = model.getTaskInfo();
+                const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
+                if (toolPathModelTaskInfo && toolPathModelTaskInfo.needPreview && !toolPathModelTaskInfo.hideFlag) {
+                    const taskInfo = {
+                        ...modelTaskInfo,
+                        ...toolPathModelTaskInfo,
+                        isRotate: isRotate,
+                        diameter: diameter,
+                        isCW: isCW
+                    };
+                    controller.commitToolPathTask({
+                        taskId: taskInfo.modelID,
+                        headType: headType,
+                        data: taskInfo
+                    });
+                    dispatch(baseActions.updateState(headType, {
+                        stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+                        progress: 0
+                    }));
+                }
             }
         }
+
+        toolPathModelGroup.showToolPathObjs();
+        dispatch(baseActions.render(headType));
     },
 
     changeModelVisualizer: (headType, modelID, isProcess) => (dispatch, getState) => {
@@ -668,6 +737,7 @@ export const actions = {
             } else {
                 model.updateVisible(true);
                 toolPathModel.updateVisible(false);
+                toolPathModelGroup.hideViewPaths();
             }
         }
     },
@@ -811,6 +881,26 @@ export const actions = {
         }));
     },
 
+
+    onReceiveViewPathTaskResult: (headType, taskResult) => async (dispatch, getState) => {
+        const { size } = getState().machine;
+        const { toolPathModelGroup, materials } = getState()[headType];
+        const { isRotate } = materials;
+
+        if (taskResult.taskStatus === 'failed') {
+            dispatch(baseActions.updateState(headType, {
+                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
+                progress: 1
+            }));
+            return;
+        }
+        const { viewPathFile } = taskResult;
+        toolPathModelGroup.receiveViewPathTaskResult(viewPathFile, isRotate ? materials : size).then(() => {
+            dispatch(baseActions.render(headType));
+        });
+    },
+
+
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         if (type === 'selected') {
@@ -841,6 +931,7 @@ export const actions = {
                 if (toolPath.needPreview) {
                     toolPath.updateVisible(false);
                     model.updateVisible(true);
+                    toolPathModelGroup.hideViewPaths();
                 } else {
                     toolPath.updateVisible(true);
                     model.updateVisible(false);
@@ -849,6 +940,48 @@ export const actions = {
             dispatch(actions.manualPreview(headType));
         }
         dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Generate View Path.
+     *
+     * @param headType
+     * @param thumbnail G-code thumbnail should be included in G-code header.
+     * @returns {Function}
+     */
+    generateViewPath: (headType) => (dispatch, getState) => {
+        const modelInfos = [];
+        const { modelGroup, toolPathModelGroup, materials } = getState()[headType];
+        const { isRotate } = materials;
+
+        const { diameter = 0 } = materials || {};
+
+        for (const model of modelGroup.getModels()) {
+            if (model.hideFlag || (isRotate && model.mode === PROCESS_MODE_VECTOR)) continue;
+            const modelTaskInfo = model.getTaskInfo();
+            const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
+            if (toolPathModelTaskInfo) {
+                const taskInfo = {
+                    ...modelTaskInfo,
+                    ...toolPathModelTaskInfo,
+                    isRotate: isRotate,
+                    diameter: diameter
+                };
+                modelInfos.push(taskInfo);
+            }
+        }
+        if (modelInfos.length === 0) {
+            return;
+        }
+        controller.commitViewPathTask({
+            taskId: uuid.v4(),
+            headType: headType,
+            data: modelInfos
+        });
+        dispatch(baseActions.updateState(headType, {
+            stage: CNC_LASER_STAGE.GENERATING_GCODE,
+            progress: 0
+        }));
     },
 
     /**
@@ -1021,6 +1154,28 @@ export const actions = {
         // select toolPathModel
         const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
         toolPathModelGroup.selectToolPathModel(model && model.modelID);
+    },
+
+    updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
+        const { materials } = getState()[headType];
+        const allMaterials = {
+            ...materials,
+            ...newMaterials
+        };
+
+        if (allMaterials.isRotate) {
+            allMaterials.x = round(allMaterials.diameter * Math.PI, 2);
+            allMaterials.y = allMaterials.length;
+        } else {
+            allMaterials.x = 0;
+            allMaterials.y = 0;
+        }
+        dispatch(baseActions.updateState(headType, {
+            materials: {
+                ...allMaterials
+            }
+        }));
+        dispatch(actions.processSelectedModel(headType));
     }
 };
 

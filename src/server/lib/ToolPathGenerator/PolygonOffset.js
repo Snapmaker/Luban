@@ -66,12 +66,48 @@ class PolygonOffset {
     _arcSegments = 5;
 
     constructor(vertices) {
-        if (!isArray(vertices) || !isArray(vertices[0]) || typeof vertices[0][0] !== 'number') {
-            throw new Error('Cannot construct PolygonOffset because vertices is error');
+        if (vertices) {
+            if (!isArray(vertices) || !isArray(vertices[0]) || typeof vertices[0][0] !== 'number') {
+                throw new Error('Cannot construct PolygonOffset because vertices is error');
+            }
+            this.vertices = this._preProcessVertices(vertices);
+            this._orientRings(this.vertices);
+            this._processContour();
         }
-        this.vertices = this._preProcessVertices(vertices);
-        this._orientRings(this.vertices);
-        this._processContour();
+    }
+
+    union(poly1, poly2) {
+        const result = martinez.union(poly1, poly2);
+        for (let i = 0; i < result.length; i++) {
+            const polys = result[i];
+            for (let j = 0; j < polys.length; j++) {
+                this._orientRings(polys[j], j % 2 === 0);
+            }
+        }
+        return result;
+    }
+
+    ext(dist) {
+        if (!dist || dist < 0) {
+            throw new Error('Cannot apply negative margin to the line');
+        }
+        if (dist === 0) {
+            return this.vertices;
+        }
+        this._setDistance(dist);
+        if (this.vertices.length === 1) {
+            return this._orientRings([this.offsetPoint()]);
+        } else {
+            const lines = this.offsetLines();
+            const result = lines[0];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                for (const lineElement of line) {
+                    result.push(lineElement);
+                }
+            }
+            return result;
+        }
     }
 
     offset(dist) {
@@ -82,7 +118,7 @@ class PolygonOffset {
         }
     }
 
-    margin(dist) {
+    margin(dist, order) {
         if (!dist || dist < 0) {
             throw new Error('Cannot apply negative margin to the line');
         }
@@ -98,11 +134,11 @@ class PolygonOffset {
             if (this.vertices.length > 1 && equals(this.vertices[0], this.vertices[this.vertices.length - 1])) {
                 union = martinez.union([[this.vertices]], union);
             }
-            return this._orientRings(union[0]);
+            return this._orientRings(union[0], order);
         }
     }
 
-    padding(dist) {
+    padding(dist, order) {
         if (!dist || dist < 0) {
             throw new Error('Cannot apply negative padding to the line');
         }
@@ -117,7 +153,7 @@ class PolygonOffset {
 
         const union = this.offsetLines(this._distance);
         const diff = martinez.diff(this.margin(dist), union);
-        return this._orientRings(diff[0]);
+        return this._orientRings(diff[0], order);
     }
 
     _setDistance(dist) {
@@ -135,7 +171,7 @@ class PolygonOffset {
         return newVertices;
     }
 
-    _orientRings(vertices) {
+    _orientRings(vertices, order = true) {
         if (!isArray(vertices) || vertices.length === 0 || !isArray(vertices[0])) {
             return [[]];
         }
@@ -149,12 +185,18 @@ class PolygonOffset {
                 area += pt1[0] * pt2[1];
                 area -= pt2[0] * pt1[1];
             }
-            if (area > 0) {
-                ring.reverse();
+            if (order) {
+                if (area > 0) {
+                    ring.reverse();
+                }
+            } else {
+                if (area < 0) {
+                    ring.reverse();
+                }
             }
         } else {
             for (let i = 0; i < vertices.length; i++) {
-                this._orientRings(vertices[i]);
+                this._orientRings(vertices[i], order);
             }
         }
 
@@ -173,12 +215,26 @@ class PolygonOffset {
     }
 
     offsetLines() {
-        let union;
+        const unions = [];
         for (let i = 0, len = this.vertices.length - 1; i < len; i++) {
             const segment = this._ensureLastPoint(this._offsetSegment(this.vertices[i], this.vertices[i + 1], this._edges[i], this._distance));
-            union = union ? martinez.union(union, [[segment]]) : [[segment]];
+            unions.push([[segment]]);
         }
-        return union;
+        return PolygonOffset.recursiveUnion(unions);
+    }
+
+
+    static recursiveUnion(array) {
+        if (array.length === 1) {
+            return array[0];
+        }
+        const len = Math.ceil(array.length / 2);
+        const newArr = [];
+        for (let i = 0; i < len; i++) {
+            const union = martinez.union(array[i], array[array.length - 1 - i]);
+            newArr.push(union);
+        }
+        return this.recursiveUnion(newArr);
     }
 
     offsetPoint() {

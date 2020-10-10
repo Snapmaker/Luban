@@ -1,14 +1,8 @@
 import _ from 'lodash';
+import { isEqual, isZero } from '../../../shared/lib/utils';
 
-const EPSILON = 1e-6;
-
-const isEqual = (x, y) => {
-    return Math.abs(x - y) < EPSILON;
-};
-
-const isZero = (x) => {
-    return Math.abs(x) < EPSILON;
-};
+// Temporarily prevent the rotation axis motor from losing steps
+const MAX_B_SPEED = 2700;
 
 class ToolPath {
     constructor(options = {}) {
@@ -17,12 +11,14 @@ class ToolPath {
             max: {
                 x: null,
                 y: null,
-                z: 0
+                z: 0,
+                b: null
             },
             min: {
                 x: null,
                 y: null,
-                z: 0
+                z: 0,
+                b: null
             }
         };
         this.estimatedTime = 0;
@@ -67,7 +63,24 @@ class ToolPath {
         return null;
     }
 
+    setMove0F(f) {
+        const moveRate = this.setMoveRate(f);
+        if (moveRate) {
+            this.commands.push({ 'G': 0, F: moveRate });
+        }
+    }
+
+    setMove1F(f) {
+        const rapidMoveRate = this.setRapidMoveRate(f);
+        if (rapidMoveRate) {
+            this.commands.push({ 'G': 1, F: rapidMoveRate });
+        }
+    }
+
     move0XYZ(x, y, z, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, y - this.state.Y, z - this.state.Z, f);
+        }
         const moveRate = this.setMoveRate(f);
         let commandObj;
         if (this.isRotate) {
@@ -80,6 +93,9 @@ class ToolPath {
     }
 
     move0XY(x, y, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, y - this.state.Y, 0, f);
+        }
         const moveRate = this.setMoveRate(f);
         let commandObj;
         if (this.isRotate) {
@@ -99,6 +115,21 @@ class ToolPath {
         this.setCommand(commandObj);
     }
 
+    move1X(x, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, 0, 0, f);
+        }
+        const rapidMoveRate = this.setRapidMoveRate(f);
+        let commandObj;
+        if (this.isRotate) {
+            commandObj = rapidMoveRate ? { 'G': 1, B: this.toB(x), F: rapidMoveRate } : { 'G': 1, B: this.toB(x) };
+        } else {
+            commandObj = rapidMoveRate ? { 'G': 1, X: x, F: rapidMoveRate } : { 'G': 1, X: x };
+        }
+
+        this.setCommand(commandObj);
+    }
+
     move1Y(y, f) {
         const rapidMoveRate = this.setRapidMoveRate(f);
         let commandObj;
@@ -112,6 +143,9 @@ class ToolPath {
     }
 
     move1XY(x, y, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, y - this.state.Y, 0, f);
+        }
         const rapidMoveRate = this.setRapidMoveRate(f);
         let commandObj;
         if (this.isRotate) {
@@ -122,6 +156,22 @@ class ToolPath {
 
         this.setCommand(commandObj);
     }
+
+    move1XZ(x, z, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, 0, z - this.state.Z, f);
+        }
+        const rapidMoveRate = this.setRapidMoveRate(f);
+        let commandObj;
+        if (this.isRotate) {
+            commandObj = rapidMoveRate ? { 'G': 1, B: this.toB(x), Z: z, F: rapidMoveRate } : { 'G': 1, B: this.toB(x), Z: z };
+        } else {
+            commandObj = rapidMoveRate ? { 'G': 1, X: x, Z: z, F: rapidMoveRate } : { 'G': 1, X: x, Z: z };
+        }
+
+        this.setCommand(commandObj);
+    }
+
 
     move1YZ(y, z, f) {
         const rapidMoveRate = this.setRapidMoveRate(f);
@@ -137,6 +187,9 @@ class ToolPath {
 
 
     move1XYZ(x, y, z, f) {
+        if (this.isRotate) {
+            f = this.toRotateF(x - this.state.X, y - this.state.Y, z - this.state.Z, f);
+        }
         const rapidMoveRate = this.setRapidMoveRate(f);
         let commandObj;
         if (this.isRotate) {
@@ -167,14 +220,34 @@ class ToolPath {
         this.commands.push({ G: 0, Z: safetyHeight, F: 400 });
     }
 
+    setN() {
+        this.commands.push({ 'N': ' ' });
+    }
+
+    setComment(comment) {
+        this.commands.push({ 'C': comment });
+    }
+
     toB(x) {
-        const d = this.state.Z || this.radius;
-        const b = x * (d / this.radius) / (2 * d * Math.PI) * 360;
+        const b = x / this.radius / (2 * Math.PI) * 360;
         return Math.round(b * 100) / 100;
     }
 
-    spindleOn() {
-        this.commands.push({ M: 3, P: 100 });
+    toRotateF(db = 0, dy = 0, dz = 0, f) {
+        if (db === 0 || this.radius === 0) {
+            return f;
+        }
+        if (dy === 0 && dz === 0) {
+            return Math.round(f * 360 / Math.PI / this.radius / 2);
+        }
+        const s = db * db + dy * dy + dz * dz;
+        const ns = (db * 2 * Math.PI * this.radius / 360) * (db * 2 * Math.PI * this.radius / 360) + dy * dy + dz * dz;
+        const nf = Math.round(Math.sqrt(s / ns) * f);
+        return Math.max(nf, MAX_B_SPEED);
+    }
+
+    spindleOn(options = {}) {
+        this.commands.push({ M: 3, ...options });
     }
 
     spindleOff() {
@@ -203,7 +276,12 @@ class ToolPath {
             }
         } else {
             if (commandObj.G === 4) {
-                this.estimatedTime += commandObj.S;
+                if (commandObj.S) {
+                    this.estimatedTime += commandObj.S;
+                }
+                if (commandObj.P) {
+                    this.estimatedTime += commandObj.P / 1000;
+                }
             }
             this.commands.push(commandObj);
             this.setDirection(null);
@@ -238,6 +316,19 @@ class ToolPath {
                     boundingBox.max.y = commandObj.Y;
                 } else {
                     boundingBox.max.y = Math.max(boundingBox.max.y, commandObj.Y);
+                }
+            }
+
+            if (commandObj.B !== undefined) {
+                if (boundingBox.min.b === null) {
+                    boundingBox.min.b = commandObj.B;
+                } else {
+                    boundingBox.min.b = Math.min(boundingBox.min.b, commandObj.B);
+                }
+                if (boundingBox.max.b === null) {
+                    boundingBox.max.b = commandObj.B;
+                } else {
+                    boundingBox.max.b = Math.max(boundingBox.max.b, commandObj.B);
                 }
             }
         }

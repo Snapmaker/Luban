@@ -5,13 +5,13 @@ import map from 'lodash/map';
 import styles from './index.styl';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
-import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_SELECT } from '../../constants/svg-constants';
 
-// import { createSVGElement } from './element-utils';
+import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE, SVG_EVENT_SELECT } from '../../constants/svg';
 
 class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
+        materials: PropTypes.object,
         svgModelGroup: PropTypes.object,
         showContextMenu: PropTypes.func,
         onSelectModel: PropTypes.func
@@ -144,6 +144,7 @@ class SVGEditor extends PureComponent {
                             className={styles['svg-content']}
                             svgModelGroup={this.props.svgModelGroup}
                             size={this.props.size}
+                            materials={this.props.materials}
                             ref={this.canvas}
                             onSelectModel={this.props.onSelectModel}
                         />

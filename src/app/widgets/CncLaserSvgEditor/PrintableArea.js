@@ -1,6 +1,7 @@
 import uuid from 'uuid';
 import { createSVGElement } from './element-utils';
 import { EPSILON } from '../../constants';
+import { isEqual } from '../../../shared/lib/utils';
 
 class PrintableArea {
     constructor(svgFactory) {
@@ -8,6 +9,9 @@ class PrintableArea {
         this.svgFactory = svgFactory;
         this.size = {
             ...svgFactory.size
+        };
+        this.materials = {
+            ...svgFactory.materials
         };
         this.scale = svgFactory.scale;
         this.printableAreaGroup = createSVGElement({
@@ -20,26 +24,34 @@ class PrintableArea {
         this.svgFactory.getRoot().append(this.printableAreaGroup);
         this._setGridLine();
         this._setCoordinateAxes();
+        this._setMaterialsRect();
     }
 
     updateScale(state) {
-        const { size, scale } = state;
+        const { size, materials, scale } = state;
         if (Math.abs(this.scale - scale) > EPSILON) {
             this.scale = scale;
             for (const child of this.printableAreaGroup.childNodes) {
-                child.setAttribute('stroke-width', 1 / scale);
+                if (child.getAttribute('stroke-width') !== '0') {
+                    child.setAttribute('stroke-width', 1 / scale);
+                }
             }
         }
-        if (size && (Math.abs(this.size.x - size.x) > EPSILON
-            || Math.abs(this.size.y - size.y) > EPSILON)) {
+        const sizeChange = size && (!isEqual(this.size.x, size.x) || !isEqual(this.size.y, size.y));
+        const materialsChange = materials && (!isEqual(this.materials.x, materials.x) || !isEqual(this.materials.y, materials.y));
+        if (sizeChange || materialsChange) {
             this.size = {
                 ...size
+            };
+            this.materials = {
+                ...materials
             };
             while (this.printableAreaGroup.firstChild) {
                 this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
             }
             this._setGridLine();
             this._setCoordinateAxes();
+            this._setMaterialsRect();
         }
     }
 
@@ -186,6 +198,42 @@ class PrintableArea {
             }
         });
         this.printableAreaGroup.append(origin);
+    }
+
+    _setMaterialsRect() {
+        const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        if (!x || !y) {
+            return;
+        }
+        const editableArea = createSVGElement({
+            element: 'rect',
+            attr: {
+                x: this.size.x - x / 2,
+                y: this.size.y - y - 0.1,
+                width: x,
+                height: y,
+                fill: '#FFFFFF',
+                stroke: '#000',
+                'stroke-width': 1 / this.scale,
+                opacity: 1
+            }
+        });
+        // eslint-disable-next-line no-unused-vars
+        const nonEditableArea = createSVGElement({
+            element: 'rect',
+            attr: {
+                x: this.size.x - x / 2,
+                y: this.size.y - y,
+                width: x,
+                height: Math.min(fixtureLength, y),
+                fill: '#ffec58',
+                stroke: '#000',
+                'stroke-width': 1 / this.scale,
+                opacity: 1
+            }
+        });
+        this.printableAreaGroup.append(editableArea);
+        this.printableAreaGroup.append(nonEditableArea);
     }
 }
 

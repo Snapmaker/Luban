@@ -5,6 +5,7 @@ import DataStorage from '../../DataStorage';
 import { GcodeGenerator } from '../../lib/GcodeGenerator';
 import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import { isNull } from '../../../shared/lib/utils';
 
 const log = logger('service:TaskManager');
 
@@ -43,6 +44,36 @@ const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail) => {
     });
 };
 
+const checkoutBoundingBoxIsNull = (boundingBox) => {
+    if (!boundingBox) {
+        return;
+    }
+    if (isNull(boundingBox.max.x)) {
+        boundingBox.max.x = 0;
+    }
+    if (isNull(boundingBox.min.x)) {
+        boundingBox.min.x = 0;
+    }
+    if (isNull(boundingBox.max.y)) {
+        boundingBox.max.y = 0;
+    }
+    if (isNull(boundingBox.min.y)) {
+        boundingBox.min.y = 0;
+    }
+    if (isNull(boundingBox.max.z)) {
+        boundingBox.max.z = 0;
+    }
+    if (isNull(boundingBox.min.z)) {
+        boundingBox.min.z = 0;
+    }
+    if (isNull(boundingBox.max.b)) {
+        boundingBox.max.b = 0;
+    }
+    if (isNull(boundingBox.min.b)) {
+        boundingBox.min.b = 0;
+    }
+};
+
 export const generateGcode = (modelInfos, onProgress) => {
     if (!modelInfos && !_.isArray(modelInfos) && modelInfos.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
@@ -66,6 +97,10 @@ export const generateGcode = (modelInfos, onProgress) => {
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
     const writeStream = fs.createWriteStream(outputFilePathTmp, 'utf-8');
+
+    let isRotate;
+    let diameter;
+    let isCW;
 
     for (let i = 0; i < modelInfos.length; i++) {
         const modelInfo = modelInfos[i];
@@ -102,6 +137,10 @@ export const generateGcode = (modelInfos, onProgress) => {
             estimatedTime *= gcodeConfig.multiPasses;
         }
 
+        isRotate = toolPathObj.isRotate;
+        diameter = toolPathObj.diameter;
+        isCW = toolPathObj.isCW;
+
         if (boundingBox === null) {
             boundingBox = toolPathObj.boundingBox;
         } else {
@@ -110,6 +149,8 @@ export const generateGcode = (modelInfos, onProgress) => {
             boundingBox.min.x = Math.min(boundingBox.min.x, toolPathObj.boundingBox.min.x);
             boundingBox.min.y = Math.min(boundingBox.min.y, toolPathObj.boundingBox.min.y);
         }
+
+        checkoutBoundingBoxIsNull(boundingBox);
 
         onProgress((i + 1) / modelInfos.length);
     }
@@ -121,19 +162,23 @@ export const generateGcode = (modelInfos, onProgress) => {
 
     let headerStart = ';Header Start\n'
         + `;header_type: ${headType}\n`
-        + `;thumbnail: ${thumbnail}\n`
         + `;renderMethod: ${renderMethod}\n`
         + ';file_total_lines: fileTotalLines\n'
         + `;estimated_time(s): ${estimatedTime}\n`
+        + `;is_rotate: ${isRotate}\n`
+        + `;diameter: ${diameter}\n`
+        + `;is_cw: ${isCW}\n`
         + `;max_x(mm): ${boundingBox.max.x}\n`
         + `;max_y(mm): ${boundingBox.max.y}\n`
         + `;max_z(mm): ${boundingBox.max.z}\n`
+        + `;max_b(mm): ${boundingBox.max.b}\n`
         + `;min_x(mm): ${boundingBox.min.x}\n`
         + `;min_y(mm): ${boundingBox.min.y}\n`
-        + `;min_z(mm): ${boundingBox.min.z}\n`
+        + `;min_b(mm): ${boundingBox.min.b}\n`
         + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
         + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
         + `;power(%): ${power}\n`
+        + `;thumbnail: ${thumbnail}\n`
         + ';Header End\n'
         + '\n';
 

@@ -1,15 +1,16 @@
 // import EventEmitter from 'events';
 import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
-import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import { coordGmSvgToModel, getBBox } from '../../widgets/CncLaserSvgEditor/element-utils';
 
 import { remapElement } from '../../widgets/CncLaserSvgEditor/element-recalculate';
 import { NS } from '../../widgets/CncLaserSvgEditor/lib/namespaces';
-import { isZero } from '../../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../../api';
+import { DEFAULT_SCALE } from '../../constants/svg';
+
+import { isZero } from '../../../shared/lib/utils';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars

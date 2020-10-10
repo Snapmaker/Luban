@@ -52,7 +52,11 @@ class ToolParameters extends PureComponent {
             };
             const config = map[tool];
             this.setState({ tool: tool });
-            this.props.changeToolParams({ toolDiameter: config.diameter, toolAngle: config.angle });
+            this.props.changeToolParams({
+                toolDiameter: config.diameter,
+                toolAngle: config.angle,
+                toolShaftDiameter: config.shaftDiameter
+            });
             this.props.updateToolSnap(tool);
         },
         onChangeToolDiameter: (toolDiameter) => {
@@ -60,6 +64,9 @@ class ToolParameters extends PureComponent {
         },
         onChangeToolAngle: (toolAngle) => {
             this.props.changeToolParams({ toolAngle: toolAngle });
+        },
+        onChangeToolShaftDiameter: (toolShaftDiameter) => {
+            this.props.changeToolParams({ toolShaftDiameter });
         }
     };
 
@@ -137,9 +144,9 @@ class ToolParameters extends PureComponent {
                                 </p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 0.1 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
-                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 1.5 mm</li>
                                 </ul>
                             </div>
                         )}
@@ -182,6 +189,34 @@ class ToolParameters extends PureComponent {
                                 onChange={actions.onChangeToolAngle}
                             />
                             <span className="sm-parameter-row__input-unit">°</span>
+                        </div>
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Shaft Diameter')}
+                        content={(
+                            <div>
+                                <p>{i18n._('Enter the diameter of the widest part of the shank.')}
+                                </p>
+                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
+                                <ul>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                </ul>
+                            </div>
+                        )}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Shaft Diameter')}</span>
+                            <Input
+                                className="sm-parameter-row__input"
+                                value={state.toolShaftDiameter}
+                                min={0.1}
+                                max={10}
+                                step={0.1}
+                                onChange={actions.onChangeToolShaftDiameter}
+                            />
+                            <span className="sm-parameter-row__input-unit">mm</span>
                         </div>
                     </TipTrigger>
                 </OptionalDropdown>

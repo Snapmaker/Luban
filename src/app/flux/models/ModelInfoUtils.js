@@ -1,4 +1,12 @@
-import { ABSENT_VALUE } from '../../constants';
+import {
+    ABSENT_VALUE,
+    PROCESS_MODE_BW,
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_VECTOR, SOURCE_TYPE_DXF,
+    SOURCE_TYPE_IMAGE3D,
+    SOURCE_TYPE_RASTER,
+    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT
+} from '../../constants';
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 4;
@@ -30,7 +38,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (headType !== 'laser' && headType !== 'cnc' && headType !== '3dp') {
         return false;
     }
-    if (!['3d', 'raster', 'svg', 'dxf', 'text'].includes(sourceType)) {
+    if (!['3d', 'raster', 'svg', 'dxf', 'text', 'image3d'].includes(sourceType)) {
         return false;
     }
     if (!['bw', 'greyscale', 'vector', 'trace', 'text', 'newsprint'].includes(mode)) {
@@ -43,7 +51,7 @@ const generateLaserDefaults = (mode, sourceType) => {
     let config = null;
     let gcodeConfig = null;
     switch (mode) {
-        case 'bw':
+        case PROCESS_MODE_BW:
         case 'newsprint': {
             config = {
                 invert: false,
@@ -51,7 +59,7 @@ const generateLaserDefaults = (mode, sourceType) => {
             };
             break;
         }
-        case 'greyscale': {
+        case PROCESS_MODE_GREYSCALE: {
             config = {
                 invert: false,
                 contrast: 50,
@@ -62,9 +70,9 @@ const generateLaserDefaults = (mode, sourceType) => {
             };
             break;
         }
-        case 'vector': {
+        case PROCESS_MODE_VECTOR: {
             switch (sourceType) {
-                case 'raster': {
+                case SOURCE_TYPE_RASTER: {
                     config = {
                         vectorThreshold: 128,
                         invert: false,
@@ -72,16 +80,20 @@ const generateLaserDefaults = (mode, sourceType) => {
                     };
                     break;
                 }
-                case 'svg': {
+                case SOURCE_TYPE_SVG: {
                     config = {
                         'stroke-width': '0.25'
                     };
                     break;
                 }
-                case 'dxf': {
+                case SOURCE_TYPE_DXF: {
                     config = {
 
                     };
+                    break;
+                }
+                case SOURCE_TYPE_TEXT: {
+                    config = { ...DEFAULT_TEXT_CONFIG };
                     break;
                 }
                 default:
@@ -90,25 +102,6 @@ const generateLaserDefaults = (mode, sourceType) => {
             }
             break;
         }
-        case 'trace': {
-            config = {
-                optimizePath: false,
-                fillEnabled: DEFAULT_FILL_ENABLED,
-                fillDensity: DEFAULT_FILL_DENSITY
-            };
-            break;
-        }
-        case 'text':
-            config = {
-                ...DEFAULT_TEXT_CONFIG,
-                invert: false,
-                contrast: 50,
-                brightness: 50,
-                whiteClip: 255,
-                bwThreshold: 168,
-                algorithm: 'Atkinson'
-            };
-            break;
         default:
             config = {};
             break;
@@ -186,9 +179,23 @@ const generateCNCDefaults = (mode, sourceType) => {
     let gcodeConfig = null;
     switch (mode) {
         case 'greyscale':
-            config = {
-                invert: true
-            };
+            switch (sourceType) {
+                case SOURCE_TYPE_IMAGE3D:
+                    config = {
+                        plane: 'XY',
+                        minGray: 0,
+                        maxGray: 255,
+                        sliceDensity: 5,
+                        extensionX: 0,
+                        extensionY: 0
+                    };
+                    break;
+                default:
+                    config = {
+                        invert: false
+                    };
+                    break;
+            }
             break;
         case 'vector':
             switch (sourceType) {
@@ -235,26 +242,49 @@ const generateCNCDefaults = (mode, sourceType) => {
     }
 
     if (mode === 'greyscale') {
-        gcodeConfig = {
-            // Default movement mode is greyscale-line
-            // greyscale-line: workSpeed: 500, dwellTime: null
-            // greyscale-dot: workSpeed: null, dwellTime: 42
-            toolDiameter: 3.175, // tool diameter (in mm)
-            toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-            targetDepth: 2.0,
-            stepDown: 0.5,
-            safetyHeight: 1.0,
-            stopHeight: 10,
-            density: 5,
-            jogSpeed: 3000,
-            workSpeed: 600,
-            plungeSpeed: 600,
-            dwellTime: ABSENT_VALUE
-        };
+        if (sourceType === SOURCE_TYPE_IMAGE3D) {
+            gcodeConfig = {
+                // Default movement mode is greyscale-line
+                // greyscale-line: workSpeed: 500, dwellTime: null
+                // greyscale-dot: workSpeed: null, dwellTime: 42
+                toolDiameter: 0.1, // tool diameter (in mm)
+                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
+                toolShaftDiameter: 3.175,
+                targetDepth: 2.0,
+                stepDown: 0.5,
+                safetyHeight: 1.0,
+                stopHeight: 10,
+                density: 5,
+                jogSpeed: 3000,
+                workSpeed: 300,
+                plungeSpeed: 300,
+                dwellTime: ABSENT_VALUE,
+                isModel: true
+            };
+        } else {
+            gcodeConfig = {
+                // Default movement mode is greyscale-line
+                // greyscale-line: workSpeed: 500, dwellTime: null
+                // greyscale-dot: workSpeed: null, dwellTime: 42
+                toolDiameter: 0.1, // tool diameter (in mm)
+                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
+                toolShaftDiameter: 3.175,
+                targetDepth: 2.0,
+                stepDown: 0.5,
+                safetyHeight: 1.0,
+                stopHeight: 10,
+                density: 5,
+                jogSpeed: 3000,
+                workSpeed: 300,
+                plungeSpeed: 300,
+                dwellTime: ABSENT_VALUE
+            };
+        }
     } else {
         gcodeConfig = {
-            toolDiameter: 3.175, // tool diameter (in mm)
+            toolDiameter: 0.1, // tool diameter (in mm)
             toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
+            toolShaftDiameter: 3.175, // tool angle (in degree, defaults to 30° for V-Bit)
             optimizePath: false,
             fillEnabled: DEFAULT_FILL_ENABLED,
             fillDensity: DEFAULT_FILL_DENSITY,
@@ -269,8 +299,8 @@ const generateCNCDefaults = (mode, sourceType) => {
             tabSpace: 24,
             anchor: 'Center',
             jogSpeed: 3000,
-            workSpeed: 600,
-            plungeSpeed: 600,
+            workSpeed: 300,
+            plungeSpeed: 300,
             dwellTime: ABSENT_VALUE
         };
     }

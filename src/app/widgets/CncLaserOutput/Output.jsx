@@ -19,6 +19,7 @@ class Output extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
+        headType: PropTypes.string.isRequired,
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -32,6 +33,7 @@ class Output extends PureComponent {
         workflowState: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
         generateGcode: PropTypes.func.isRequired,
+        generateViewPath: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
@@ -88,6 +90,9 @@ class Output extends PureComponent {
             } else {
                 this.props.manualPreview();
             }
+        },
+        onPreview: () => {
+            this.props.generateViewPath();
         }
     };
 
@@ -111,9 +116,11 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel } = this.props;
+        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel, headType } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
+        const isCNC = headType === 'cnc';
+        console.log('isCNC', isCNC);
 
         return (
             <div>
@@ -125,7 +132,7 @@ class Output extends PureComponent {
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {isProcess ? i18n._('Preview') : i18n._('Process')}
+                        {isProcess ? i18n._('ToolPath') : i18n._('Process')}
                     </button>
                     {isProcess && (
                         <div>
@@ -144,6 +151,17 @@ class Output extends PureComponent {
                                     />
                                 </div>
                             </TipTrigger>
+                            {isCNC && (
+                                <button
+                                    type="button"
+                                    className="sm-btn-large sm-btn-default"
+                                    disabled={!hasModel || !isAllModelsPreviewed || isGcodeGenerating}
+                                    onClick={this.actions.onPreview}
+                                    style={{ display: 'block', width: '100%' }}
+                                >
+                                    {i18n._('Preview')}
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
@@ -194,6 +212,7 @@ const mapStateToProps = (state, ownProps) => {
 
     return {
         page,
+        headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
         toolPathModelGroup,
@@ -215,7 +234,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         manualPreview: () => dispatch(editorActions.manualPreview(headType, true)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview(headType, value)),
-        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state))
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state)),
+        generateViewPath: () => dispatch(editorActions.generateViewPath(headType))
     };
 };
 

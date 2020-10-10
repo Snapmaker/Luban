@@ -1,11 +1,21 @@
-import { Group } from 'three';
+import * as THREE from 'three';
+
 import uuid from 'uuid';
 import ToolPathModel from './ToolPathModel';
+import { DATA_PREFIX } from '../../constants';
+import { ViewPathRenderer } from '../../lib/renderer/ViewPathRenderer';
 
 class ToolPathModelGroup {
     constructor(modelGroup) {
-        this.object = new Group();
+        this.object = new THREE.Group();
         this.object.visible = false;
+
+        this.toolPathObjs = new THREE.Group();
+        this.viewPathObjs = new THREE.Group();
+        this.viewPathObjs.visible = false;
+
+        this.object.add(this.toolPathObjs);
+        this.object.add(this.viewPathObjs);
 
         this.toolPathModels = [];
         this.selectedToolPathModelArray = [];
@@ -20,6 +30,8 @@ class ToolPathModelGroup {
             const toolPathModel = this.addModel(model);
             model.setRelatedModels({ toolPathModel });
         });
+
+        this.viewPathObj = null;
     }
 
     getState(toolPathModel) {
@@ -46,7 +58,7 @@ class ToolPathModelGroup {
         if (selected) {
             this.selectedToolPathModel = null;
             this.toolPathModels = this.toolPathModels.filter(d => d !== selected);
-            this.object.remove(selected.toolPathObj3D);
+            this.toolPathObjs.remove(selected.toolPathObj3D);
             selected.id = '';
             return this._emptyState;
         }
@@ -57,7 +69,7 @@ class ToolPathModelGroup {
         this.selectedToolPathModel = null;
         this.selectedToolPathModelArray = [];
         for (const model of this.toolPathModels) {
-            this.object.remove(model.toolPathObj3D);
+            this.toolPathObjs.remove(model.toolPathObj3D);
         }
         this.toolPathModels = [];
     }
@@ -188,22 +200,62 @@ class ToolPathModelGroup {
         return this.toolPathModels.find(d => d.id === id);
     }
 
+    hideViewPaths() {
+        this.viewPathObjs.visible = false;
+    }
+
+    showToolPathObjs() {
+        this.toolPathObjs.visible = true;
+        this.viewPathObjs.visible = false;
+    }
+
     async receiveTaskResult(data, filename) {
         const toolPathModel = this.toolPathModels.find(d => d.id === data.id);
         if (toolPathModel) {
-            toolPathModel.toolPathObj3D && this.object.remove(toolPathModel.toolPathObj3D);
+            toolPathModel.toolPathObj3D && this.toolPathObjs.remove(toolPathModel.toolPathObj3D);
             const toolPathObj3D = await toolPathModel.loadToolPath(filename);
             if (!toolPathObj3D) {
                 return null;
             }
             if (toolPathModel.id === data.id) {
                 toolPathModel.updateNeedPreview(false);
-                this.object.add(toolPathModel.toolPathObj3D);
+                // this._generateTestSvgRotateModel();
+
+                this.toolPathObjs.add(toolPathModel.toolPathObj3D);
+
+                this.toolPathObjs.visible = true;
+                this.viewPathObjs.visible = false;
 
                 return this.getState(toolPathModel);
             }
         }
         return null;
+    }
+
+    receiveViewPathTaskResult(viewPathFile, size) {
+        const toolPathFilePath = `${DATA_PREFIX}/${viewPathFile}`;
+        return new Promise((resolve, reject) => {
+            new THREE.FileLoader().load(
+                toolPathFilePath,
+                async (data) => {
+                    this.viewPathObj && (this.viewPathObjs.remove(this.viewPathObj));
+
+                    const viewPathObj = JSON.parse(data);
+                    this.viewPathObj = await new ViewPathRenderer().render(viewPathObj, size);
+
+                    this.viewPathObjs.add(this.viewPathObj);
+
+                    this.viewPathObjs.visible = true;
+                    this.toolPathObjs.visible = false;
+
+                    resolve();
+                },
+                null,
+                (err) => {
+                    reject(err);
+                }
+            );
+        });
     }
 
     duplicateSelectedModel(modelID) {
@@ -215,7 +267,7 @@ class ToolPathModelGroup {
 
     undoRedo(toolPathModels) {
         for (const toolPathModel of this.toolPathModels) {
-            this.object.remove(toolPathModel.toolPathObj3D);
+            this.toolPathObjs.remove(toolPathModel.toolPathObj3D);
             toolPathModel.updateNeedPreview(true);
         }
         this.toolPathModels.splice(0);

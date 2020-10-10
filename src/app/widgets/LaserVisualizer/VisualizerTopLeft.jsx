@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import { actions as editorActions } from '../../flux/editor';
 import i18n from '../../lib/i18n';
 import { PAGE_EDITOR } from '../../constants';
-import api from '../../api';
 import modal from '../../lib/modal';
 
 class VisualizerTopLeft extends PureComponent {
@@ -35,29 +34,16 @@ class VisualizerTopLeft extends PureComponent {
             }
 
             this.props.togglePage(PAGE_EDITOR);
-            if (uploadMode === 'trace') {
-                const formData = new FormData();
-                formData.append('image', file);
-                api.uploadImage(formData)
-                    .then(async (res) => {
-                        this.actions.updateOptions({
-                            originalName: res.body.originalName,
-                            uploadName: res.body.uploadName,
-                            width: res.body.width,
-                            height: res.body.height
-                        });
-                    });
-            } else {
-                if (uploadMode === 'greyscale') {
-                    this.props.setAutoPreview(false);
-                }
-                this.props.uploadImage(file, uploadMode, () => {
-                    modal({
-                        title: i18n._('Parse Error'),
-                        body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
-                    });
-                });
+
+            if (uploadMode === 'greyscale') {
+                this.props.setAutoPreview(false);
             }
+            this.props.uploadImage(file, uploadMode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
         },
         onClickToUpload: () => {
             this.fileInput.current.value = null;

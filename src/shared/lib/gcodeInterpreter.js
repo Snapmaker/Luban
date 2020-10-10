@@ -1,4 +1,5 @@
 /* eslint no-continue: 0 */
+import _ from 'lodash';
 import {
     parseStream,
     parseFile,
@@ -26,6 +27,31 @@ const fromPairs = (pairs) => {
     }
 
     return result;
+};
+
+const trimArgs = (args) => {
+    try {
+        if (args === null || args === undefined) {
+            return null;
+        }
+        if (typeof args !== 'string') {
+            return args;
+        }
+        args = args.trim();
+        if (args === 'null' || args === 'undefined') {
+            return null;
+        }
+        if (args === 'true' || args === 'false') {
+            return args === 'true';
+        }
+        if (!_.isNaN(parseFloat(args))) {
+            return parseFloat(args);
+        }
+        return args;
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
 };
 
 const partitionWordsByGroup = (words = []) => {
@@ -100,7 +126,7 @@ const interpret = (self, data) => {
             args = fromPairs(words);
         } else if (letter[0] === ';') {
             cmd = letter;
-            args = code;
+            args = trimArgs(code);
         }
 
         if (!cmd) {

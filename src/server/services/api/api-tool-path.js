@@ -6,7 +6,7 @@ import SVGParser from '../../../shared/lib/SVGParser';
 import {
     CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
 } from '../../lib/ToolPathGenerator';
-import processImage from '../../lib/image-process';
+import { editorProcess } from '../../lib/editor/process';
 import DataStorage from '../../DataStorage';
 
 const log = logger('api.toolPath');
@@ -27,7 +27,7 @@ export const generate = async (req, res) => {
             || (sourceType === 'text' && mode === 'vector')) {
             modelPath = `${DataStorage.tmpDir}/${uploadName}`;
         } else {
-            const result = await processImage(modelInfo);
+            const result = await editorProcess(modelInfo);
             modelPath = `${DataStorage.tmpDir}/${result.filename}`;
         }
 

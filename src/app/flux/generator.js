@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import GcodeGenerator from '../widgets/GcodeGenerator';
-import ToolPathRenderer from '../widgets/ToolPathRenderer';
+import ToolPathRenderer from '../lib/renderer/ToolPathRenderer';
 
 const generateGcodeStr = (toolPathObj, gcodeConfig) => {
     const gcodeGenerator = new GcodeGenerator();
@@ -58,12 +58,8 @@ const generateImageObject3D = (imageSrc, width, height, anchor) => {
 };
 
 const generateToolPathObject3D = (toolPath) => {
-    const toolPathRenderer = new ToolPathRenderer();
-    const object3D = toolPathRenderer.render(toolPath);
-
-    object3D.position.set(toolPath.positionX, toolPath.positionY, 0);
-    object3D.scale.set(1, 1, 1);
-    return object3D;
+    const toolPathRenderer = new ToolPathRenderer(toolPath);
+    return toolPathRenderer.render();
 };
 
 export { generateGcodeStr, generateToolPathObject3D, generateImageObject3D };
