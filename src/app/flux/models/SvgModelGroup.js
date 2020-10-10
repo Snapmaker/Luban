@@ -517,7 +517,7 @@ class SvgModelGroup {
             .then((res) => {
                 const { originalName, uploadName } = res.body;
                 const sourceType = model.type === 'text' ? 'raster' : 'svg';
-                const mode = 'vector';
+                const mode = headType === 'cnc' ? 'greyscale' : 'bw';
 
                 let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
 

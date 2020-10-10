@@ -199,7 +199,7 @@ class LaserParameters extends PureComponent {
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
-        const isTextVector = (sourceType === 'raster' && mode === 'vector' && config.svgNodeName === 'text');
+        const isTextVector = (config.svgNodeName === 'text');
         const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
 
         return (
