@@ -19,8 +19,8 @@ import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import { DATA_PREFIX } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
-import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import {
+    DEFAULT_SCALE,
     DEFAULT_FILL_COLOR, SCALE_RATE,
     SVG_EVENT_CONTEXTMENU,
     SVG_EVENT_MODE

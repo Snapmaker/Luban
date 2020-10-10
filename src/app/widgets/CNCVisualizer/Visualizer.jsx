@@ -523,7 +523,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        initContentGroup: () => dispatch(editorActions.initContentGroup('cnc')),
+        initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('cnc', svgContentGroup)),
+
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('cnc')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('cnc')),

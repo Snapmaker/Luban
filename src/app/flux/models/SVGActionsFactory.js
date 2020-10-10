@@ -1,7 +1,6 @@
 // import EventEmitter from 'events';
 // import _ from 'lodash';
 import { DATA_PREFIX } from '../../constants';
-// import { DEFAULT_SCALE } from '../../constants/svg-constants';
 import { coordGmSvgToModel, getBBox } from '../../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
@@ -61,27 +60,33 @@ class SVGActionsFactory {
         //     this.selectElementById(selectedModel.modelID);
         //     this.showSelectedElement();
         // });
+
+        this.size = {};
+        this.svgContentGroup = null;
     }
 
-    init(svgContentGroup, size) {
+    init(svgContentGroup) {
         this.svgContentGroup = svgContentGroup;
-        this.size = size;
     }
 
     updateSize(size) {
         const data = [];
-        for (const node of this.svgContentGroup.getChildNodes()) {
-            const transform = coordGmSvgToModel(this.size, node);
-            data.push([node, transform]);
+        if (this.svgContentGroup) {
+            for (const node of this.svgContentGroup.getChildNodes()) {
+                const transform = coordGmSvgToModel(this.size, node);
+                data.push([node, transform]);
+            }
         }
         this.size = {
             ...size
         };
-        for (const datum of data) {
-            this.updateTransformation({
-                positionX: datum[1].positionX,
-                positionY: datum[1].positionY
-            }, datum[0]);
+        if (this.svgContentGroup) {
+            for (const datum of data) {
+                this.updateTransformation({
+                    positionX: datum[1].positionX,
+                    positionY: datum[1].positionY
+                }, datum[0]);
+            }
         }
     }
 

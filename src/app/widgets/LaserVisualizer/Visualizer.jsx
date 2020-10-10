@@ -500,7 +500,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        initContentGroup: () => dispatch(editorActions.initContentGroup('laser')),
+        initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
 
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('laser', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('laser')),

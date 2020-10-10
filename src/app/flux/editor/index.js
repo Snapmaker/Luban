@@ -68,13 +68,21 @@ export const actions = {
         bindSVGActions('cnc');
     },
 
+    onSizeUpdated: (headType, size) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.updateSize(size);
+    },
+
     /**
      * Save content group in state.
      */
-    initContentGroup: (headType, svgContentGroup) => (dispatch) => {
-        // const state = getState()[headType];
+    initContentGroup: (headType, svgContentGroup) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
 
         dispatch(baseActions.updateState(headType, { contentGroup: svgContentGroup }));
+
+        SVGActions.init(svgContentGroup);
     },
 
     /**
@@ -1110,7 +1118,7 @@ export const actions = {
     createText: (headType, content) => async (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        await SVGActions.createText(content);
+        return SVGActions.createText(content);
     }
 };
 

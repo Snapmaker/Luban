@@ -147,9 +147,9 @@ class LaserParameters extends PureComponent {
                 });
             }
         },
-        onClickInsertText: () => {
+        onClickInsertText: async () => {
             this.props.togglePage(PAGE_EDITOR);
-            this.props.insertDefaultTextVector();
+            await this.props.insertDefaultTextVector();
         },
         updateOptions: (options) => {
             this.setState({

@@ -51,16 +51,8 @@ class SVGEditor extends PureComponent {
             this.props.showContextMenu(event);
         });
 
-        this.props.SVGActions.init(this.canvas.current.svgContentGroup, this.props.size);
-
+        // Init, Setup SVGContentGroup
         this.props.initContentGroup(this.canvas.current.svgContentGroup);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.size !== this.props.size) {
-            console.log('receive size', nextProps.size, this.props.size);
-            this.props.SVGActions.updateSize(nextProps.size);
-        }
     }
 
     setMode(mode, extShape) {
@@ -68,8 +60,8 @@ class SVGEditor extends PureComponent {
         this.canvas.current.setMode(mode, extShape);
     }
 
-    insertDefaultTextVector = () => {
-        const element = this.props.createText('Snapmaker');
+    insertDefaultTextVector = async () => {
+        const element = await this.props.createText('Snapmaker');
         this.props.onCreateElement(element);
 
         // todo, select text after create

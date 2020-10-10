@@ -3,7 +3,7 @@ import { coordGmSvgToModel } from '../../ui/SVGEditor/element-utils';
 
 import { remapElement } from '../../ui/SVGEditor/element-recalculate';
 import { NS } from '../../ui/SVGEditor/lib/namespaces';
-import { DEFAULT_SCALE } from '../../constants/svg-constants';
+import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 import { DATA_PREFIX } from '../../constants';
 
 import api from '../../api';
@@ -277,6 +277,7 @@ class SvgModel {
         }
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
+
         switch (this.type) {
             case 'circle':
                 elem.setAttribute('cx', x);
