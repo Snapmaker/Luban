@@ -82,7 +82,6 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
-        SVGActions: PropTypes.object.isRequired,
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
@@ -400,6 +399,7 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
+                draw.startAngle = this.svgContentGroup.getElementAngel();
 
                 draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
@@ -652,15 +652,9 @@ class SVGCanvas extends PureComponent {
                 const bbox = draw.bbox;
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;
+                const angleOld = draw.startAngle;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-
-                // TODO: @bbaa77770 Get old angle from SVG Element
-                // const selectedElement = this.svgContentGroup.selectedElements[0];
-                // selectedElement.transform.baseVal;
-
-                // todo, do not use modelGroup here
-                const angleOld = -this.props.SVGActions.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
 
                 angle = (angle - angleOld + 540) % 360 - 180;
                 // rotate box
@@ -851,12 +845,10 @@ class SVGCanvas extends PureComponent {
                 const bbox = draw.bbox;
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;
+                const angleOld = draw.startAngle;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-                // todo, do not use modelGroup here
 
-                // TODO: @bbaa77770 Get old angle from SVG Element
-                const angleOld = -this.props.SVGActions.modelGroup.getSelectedModelTransformation().rotationZ * 180 / Math.PI;
                 angle = (angle - angleOld + 540) % 360 - 180;
 
                 this.props.onRotateElement(null, { angle, cx, cy });
@@ -950,9 +942,6 @@ class SVGCanvas extends PureComponent {
                 // TODO: select model newly created
                 // this.addToSelection([element]);
             } else {
-                // todo
-                // element.remove();
-
                 // in stead select another element or select nothing
                 const target = this.getMouseTarget(event);
                 if (target && target !== this.svgContainer) {

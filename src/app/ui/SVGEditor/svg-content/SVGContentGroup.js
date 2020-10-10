@@ -405,6 +405,30 @@ class SVGContentGroup {
             transformList.replaceItem(rotate, idx);
         }
     }
+
+    getElementAngel(element) { // get angleOld for elements rotation
+        if (!element) {
+            if (this.selectedElements.length !== 1) {
+                //TODO: for multi-rotate, angleOld maybe not 0
+                return 0;
+            }
+            element = this.selectedElements[0];
+        }
+        const transformList = getTransformList(element);
+        const findIndex = (list, type) => {
+            for (let k = 0; k < list.length; k++) {
+                if (list.getItem(k).type === type) {
+                    return k;
+                }
+            }
+            return -1;
+        };
+        const idx = findIndex(transformList, 4);
+        if (idx === -1) {
+            return 0;
+        }
+        return transformList[idx].angle;
+    }
 }
 
 export default SVGContentGroup;
