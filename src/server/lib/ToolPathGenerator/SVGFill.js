@@ -215,14 +215,16 @@ function svgToSegments(svg, options = {}) {
                 }
                 fillShape(canvas, width, height, newShape, color);
             }
-            canvas.map((row, rowIndex) => row.map((value, columnIndex) => {
-                if (value && !accumulatorCanvas[rowIndex][columnIndex]) {
-                    accumulatorCanvas[rowIndex][columnIndex] = value;
-                    return value;
-                } else {
-                    return 0; // prevent the same canvas section being painted twice
+            for (const [row, rowIndex] of canvas.entries()) {
+                for (const [value, columnIndex] of row.entries()) {
+                    if (accumulatorCanvas[rowIndex][columnIndex]) {
+                        canvas[rowIndex][columnIndex] = 0;
+                    }
+                    if (value) {
+                        accumulatorCanvas[rowIndex][columnIndex] = value;
+                    }
                 }
-            }));
+            }
             out = [...out, ...canvasToSegments(canvas, width, height, options.fillDensity)];
         }
 
