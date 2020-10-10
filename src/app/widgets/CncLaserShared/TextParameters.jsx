@@ -3,13 +3,10 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-// import { IconAlignLeft, IconAlignCenter, IconAlignRight } from 'snapmaker-react-icon';
-// import styles from './styles.styl';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions as textActions } from '../../flux/text';
 
 
 class TextParameters extends PureComponent {
@@ -23,10 +20,8 @@ class TextParameters extends PureComponent {
             lineHeight: PropTypes.number,
             alignment: PropTypes.string
         }),
-        uploadFont: PropTypes.func.isRequired,
-        // updateSelectedModelTextConfig: PropTypes.func.isRequired,
-        // todo, all selectedModel use selectedModelArray[0] now
-        selectedModelArray: PropTypes.array.isRequired
+
+        modifyText: PropTypes.func.isRequired
     };
 
     state = {
@@ -45,68 +40,29 @@ class TextParameters extends PureComponent {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-            this.props.uploadFont(file);
-        },
         onSelectAllText: () => {
             this.textArea.current.select();
         },
         onChangeText: (event) => {
-            const model = this.props.selectedModelArray[0];
             const text = event.target.value;
-            // todo, move to editor
-            model.relatedModels.svgModel.elem.textContent = text;
-            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { text } });
-            model.relatedModels.svgModel.modelGroup.resetSelection();
 
-            // this.props.updateSelectedModelTextConfig({ text });
+            this.props.modifyText(null, { text });
         },
         onChangeFont: (option) => {
+            // Upload font (TODO: not used?)
             if (option.value === 'AddFonts') {
                 this.actions.onClickUpload();
                 return;
             }
-            const model = this.props.selectedModelArray[0];
+
             const font = option.value;
-            // todo, move to editor
-            model.relatedModels.svgModel.elem.setAttribute('font-family', font);
-            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-family': font } });
-            model.relatedModels.svgModel.modelGroup.resetSelection();
+
+            this.props.modifyText(null, { fontFamily: font });
         },
         onChangeSize: (size) => {
-            const model = this.props.selectedModelArray[0];
-            // todo, move to editor
-            model.relatedModels.svgModel.elem.setAttribute('font-size', size);
-            model.updateAndRefresh({ ...this.getBaseUpdateData(), config: { 'font-size': size } });
-            model.relatedModels.svgModel.modelGroup.resetSelection();
-            // this.props.updateSelectedModelTextConfig({ size });
-        } // ,
-        // onChangeLineHeight: (lineHeight) => {
-        //     this.props.selectedModel.updateAndRefresh({ lineHeight });
-        //     // this.props.updateSelectedModelTextConfig({ lineHeight });
-        // },
-        // onChangeAlignment: (option) => {
-        //     const alignment = option.value;
-        //     this.props.selectedModel.updateAndRefresh({ alignment });
-        //     // this.props.updateSelectedModelTextConfig({ alignment });
-        // }
+            this.props.modifyText(null, { fontSize: size });
+        }
     };
-
-    getBaseUpdateData() {
-        const model = this.props.selectedModelArray[0];
-        const { width, height } = model.relatedModels.svgModel.elem.getBBox();
-        return {
-            sourceWidth: width * 8,
-            sourceHeight: height * 8,
-            width,
-            height,
-            transformation: {
-                width,
-                height
-            }
-        };
-    }
 
     render() {
         const { config, fontOptions, disabled } = this.props;
@@ -154,32 +110,6 @@ Start a new line manually according to your needs.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Font')}</span>
-                                {/* <input
-                                    disabled={disabled}
-                                    ref={this.fileInput}
-                                    type="file"
-                                    accept=".woff, .ttf, .otf"
-                                    style={{ display: 'none' }}
-                                    multiple={false}
-                                    onChange={actions.onChangeFile}
-                                />
-                                <button
-                                    disabled={disabled}
-                                    type="button"
-                                    style={{
-                                        display: 'inline-block',
-                                        width: '15%',
-                                        float: 'right',
-                                        padding: '5px 6px',
-                                        marginLeft: '4px',
-                                        height: '30px'
-                                    }}
-                                    className="sm-btn-small sm-btn-default"
-                                    title={i18n._('Upload')}
-                                    onClick={actions.onClickUpload}
-                                >
-                                    <i className="fa fa-upload" />
-                                </button> */}
                                 <Select
                                     disabled={disabled}
                                     className="sm-parameter-row__font-select"
@@ -284,25 +214,15 @@ Start a new line manually according to your needs.')}
     }
 }
 
-const mapStateToProps = (state, props) => {
-    const { headType } = props;
+const mapStateToProps = (state) => {
     const { fonts } = state.text;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
-    const { modelGroup } = state[headType];
-    const selectedModelArray = modelGroup.getSelectedModelArray();
     return {
-        fontOptions,
-        selectedModelArray
+        fontOptions
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        uploadFont: (file) => dispatch(textActions.uploadFont(file))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(TextParameters);
+export default connect(mapStateToProps)(TextParameters);

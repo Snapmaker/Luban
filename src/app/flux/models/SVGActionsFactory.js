@@ -762,6 +762,61 @@ class SVGActionsFactory {
             }
         });
     }
+
+    /**
+     * Modify text element.
+     *
+     * Note: lineHeight and Alignment are not supported in current version.
+     *
+     * @param element
+     * @param options
+     *        - text: new text content
+     *        - fontFamily
+     *        - fontSize
+     */
+    modifyText(element, options) {
+        // only support single selected text element
+        if (!element && this.selectedSvgModels.length > 1) return;
+
+        const svgModel = element ? this.getModelByElement(element) : this.selectedSvgModels[0];
+        const model = svgModel.relatedModel;
+
+
+        const config = {};
+
+        if (options.text !== undefined) {
+            svgModel.elem.textContent = options.text;
+
+            config.text = options.text;
+        }
+
+        if (options.fontFamily !== undefined) {
+            svgModel.elem.setAttribute('font-family', options.fontFamily);
+
+            config['font-family'] = options.fontFamily;
+        }
+
+        if (options.fontSize !== undefined) {
+            svgModel.elem.setAttribute('font-size', options.fontSize);
+
+            config['font-size'] = options.fontSize;
+        }
+
+        // Update model
+        const { width, height } = svgModel.elem.getBBox();
+        const baseUpdateData = {
+            sourceWidth: width * 8,
+            sourceHeight: height * 8,
+            width,
+            height,
+            transformation: {
+                width,
+                height
+            }
+        };
+        model.updateAndRefresh({ ...baseUpdateData, config });
+        this.resetSelection();
+    }
 }
 
 export default SVGActionsFactory;

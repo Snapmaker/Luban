@@ -599,6 +599,8 @@ export const actions = {
         }
     },
 
+    // UNUSED, replaced by modifyText
+    /*
     updateSelectedModelTextConfig: (headType, newConfig) => (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathModelGroup, config } = getState()[headType];
         newConfig = {
@@ -645,6 +647,7 @@ export const actions = {
                 dispatch(baseActions.render(headType));
             });
     },
+    */
 
     previewModel: (headType, isProcess) => (dispatch, getState) => {
         const { page, modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
@@ -1113,12 +1116,21 @@ export const actions = {
     },
 
     /**
-     * Create text element.
+     * Create text element (but not its corresponding model).
      */
     createText: (headType, content) => async (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         return SVGActions.createText(content);
+    },
+
+    /**
+     * Modify text element.
+     */
+    modifyText: (headType, element, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.modifyText(element, options);
     }
 };
 

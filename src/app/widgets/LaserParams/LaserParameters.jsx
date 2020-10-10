@@ -48,6 +48,8 @@ class LaserParameters extends PureComponent {
         transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
+        headType: PropTypes.string,
+
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
@@ -55,12 +57,13 @@ class LaserParameters extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         togglePage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
-        headType: PropTypes.string
+
+        // operator functions
+        modifyText: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -185,9 +188,10 @@ class LaserParameters extends PureComponent {
             selectedModelArray, selectedModelVisible, modelGroup, sourceType, mode,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
+            printOrder, updateSelectedModelPrintOrder, config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
-            onModelAfterTransform, headType, updateSelectedModelUniformScalingState, transformation
+            onModelAfterTransform, headType, updateSelectedModelUniformScalingState, transformation,
+            modifyText
         } = this.props;
 
         const actions = this.actions;
@@ -258,7 +262,7 @@ class LaserParameters extends PureComponent {
                         disabled={!selectedModelVisible}
                         headType={headType}
                         config={config}
-                        updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                        modifyText={modifyText}
                     />
                 )}
                 {isProcess && isBW && (selectedModelArray && selectedModelArray.length === 1) && (
@@ -349,12 +353,13 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
-        updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('laser', config)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
         onModelAfterTransform: () => {},
-        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value))
+        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
+
+        modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options))
     };
 };
 
