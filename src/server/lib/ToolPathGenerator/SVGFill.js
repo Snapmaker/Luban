@@ -215,8 +215,8 @@ function svgToSegments(svg, options = {}) {
                 }
                 fillShape(canvas, width, height, newShape, color);
             }
-            for (const [row, rowIndex] of canvas.entries()) {
-                for (const [value, columnIndex] of row.entries()) {
+            for (const [rowIndex, row] of canvas.entries()) {
+                for (const [columnIndex, value] of row.entries()) {
                     if (accumulatorCanvas[rowIndex][columnIndex]) {
                         canvas[rowIndex][columnIndex] = 0;
                     }
