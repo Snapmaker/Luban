@@ -8,41 +8,47 @@ import styles from './styles.styl';
 class DegreeInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        disabled: PropTypes.bool,
+        disabled: PropTypes.bool.isRequired,
         value: PropTypes.number.isRequired,
-        defaultValue: PropTypes.string,
-        onChange: PropTypes.func,
+        onChange: PropTypes.func.isRequired,
         suffix: PropTypes.string
     };
+
+    static defaultProps = {
+        suffix: '°'
+    };
+
+    ref = React.createRef();
 
     constructor(props) {
         super(props);
         this.state = {
-            value: props.value,
-            displayValue: props.value.toString().concat(this.props.suffix)
+            value: props.value.toString().concat(this.props.suffix)
         };
     }
 
     componentWillReceiveProps(nextProps) {
-        if (this.state.isEdit || nextProps.value !== this.state.value) {
+        if (nextProps.value !== this.state.value) {
             this.setState({
-                displayValue: nextProps.value.toString().concat(this.props.suffix),
-                value: nextProps.value,
-                isEdit: false
+                value: nextProps.value.toString().concat(this.props.suffix)
             });
         }
     }
 
     onChangeInputValue = (event) => {
         this.setState({
-            isEdit: true,
-            displayValue: event.target.value
+            value: event.target.value
         });
     };
 
     onBlur = (event) => {
         const { onChange } = this.props;
         const standardValue = this.getStandardValue(event.target.value);
+
+        this.setState({
+            value: standardValue.toString().concat(this.props.suffix)
+        });
+
         onChange && onChange(standardValue);
     };
 
@@ -51,16 +57,23 @@ class DegreeInput extends PureComponent {
         if (event.keyCode === 13) {
             const { onChange } = this.props;
             const standardValue = this.getStandardValue(event.target.value);
+
+            this.setState({
+                value: standardValue.toString().concat(this.props.suffix)
+            });
+
             onChange && onChange(standardValue);
+
+            this.ref.current.blur();
         }
     };
 
     onFocus = () => {
+        const standardValue = this.getStandardValue(this.state.value);
         this.setState({
-            isEdit: true,
-            displayValue: this.state.value.toString()
+            value: standardValue
         });
-    }
+    };
 
     getStandardValue(value) {
         let numericValue = parseFloat(value) % 360;
@@ -72,30 +85,21 @@ class DegreeInput extends PureComponent {
         }
         // If value is invalid, use defaultValue
         if (Number.isNaN(numericValue)) {
-            const absentValue = this.getAbsentValue();
-            return absentValue;
+            return 0;
         }
         return numericValue;
     }
 
-    getAbsentValue() {
-        if (this.props.defaultValue !== undefined) {
-            return this.props.defaultValue;
-        } else {
-            return 0;
-        }
-    }
-
     render() {
         const { className = '', ...rest } = this.props;
-        const { displayValue } = this.state;
+        const { value } = this.state;
 
         return (
             <input
                 {...rest}
-                suffix={this.props.suffix}
+                ref={this.ref}
                 type="text"
-                value={displayValue}
+                value={value}
                 className={classNames(styles.input, className)}
                 onChange={this.onChangeInputValue}
                 onBlur={this.onBlur}
