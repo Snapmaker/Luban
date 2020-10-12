@@ -41,15 +41,18 @@ class WifiConnection extends PureComponent {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         connectionStatus: PropTypes.string.isRequired,
+        manualIp: PropTypes.string,
 
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
+        updateLocalStorageServer: PropTypes.func.isRequired,
+        updateLocalStorageManualIp: PropTypes.func.isRequired,
         setServer: PropTypes.func.isRequired
     };
 
     state = {
-        server: ABSENT_OBJECT,
+        server: this.props.server,
         showConnectionMessage: false,
         connectionMessage: {
             text: '',
@@ -82,6 +85,7 @@ class WifiConnection extends PureComponent {
                 this.setState({
                     server: find
                 });
+                this.props.updateLocalStorageServer(find);
             }
         },
         setServer: (server) => {
@@ -196,10 +200,12 @@ class WifiConnection extends PureComponent {
                     label: i18n._('IP') ? `${i18n._('IP')}:` : '',
                     img: IMAGE_WIFI_WAITING,
                     showCloseButton: true,
+                    inputtext: this.props.manualIp,
                     onCancel: this.actions.onCloseManualWiFi,
                     onConfirm: (text) => {
                         this.actions.onCloseManualWiFi();
                         const server = new Server('Manual', text);
+                        this.props.updateLocalStorageManualIp(text);
                         this.props.setServer(server);
                         this.props.openServer();
                     }
@@ -219,19 +225,9 @@ class WifiConnection extends PureComponent {
     componentDidMount() {
         // Discover servers when mounted
         setTimeout(() => this.props.discoverServers());
-
-        // Auto set server when first launch
-        if (this.props.server === ABSENT_OBJECT && this.props.servers.length) {
-            this.autoSetServer(this.props.servers);
-        }
     }
 
     componentWillReceiveProps(nextProps) {
-        // Simply compare 2 arrays
-        if (nextProps.servers !== this.props.servers) {
-            this.autoSetServer(nextProps.servers);
-        }
-
         if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
             if (this.props.connectionStatus !== CONNECTION_STATUS_CONNECTING && nextProps.connectionStatus === CONNECTION_STATUS_CONNECTING) {
                 this.actions.showWifiConnecting();
@@ -444,6 +440,7 @@ class WifiConnection extends PureComponent {
                         text={manualWiFi.text}
                         title={manualWiFi.title}
                         label={manualWiFi.label}
+                        inputtext={manualWiFi.inputtext}
                         onClose={this.actions.onCloseManualWiFi}
                         onCancel={manualWiFi.onCancel}
                         onConfirm={manualWiFi.onConfirm}
@@ -458,10 +455,11 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType } = machine;
+    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, manualIp } = machine;
 
     return {
         headType,
+        manualIp,
         servers,
         discovering,
         server,
@@ -477,7 +475,9 @@ const mapDispatchToProps = (dispatch) => ({
     discoverServers: () => dispatch(machineActions.discoverServers()),
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
-    setServer: (server) => dispatch(machineActions.setServer(server))
+    setServer: (server) => dispatch(machineActions.setServer(server)),
+    updateLocalStorageServer: (server) => dispatch(machineActions.updateServer(server)),
+    updateLocalStorageManualIp: (server) => dispatch(machineActions.updateManualIp(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

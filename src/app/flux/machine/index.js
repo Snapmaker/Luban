@@ -50,6 +50,7 @@ const INITIAL_STATE = {
 
     // Servers
     server: ABSENT_OBJECT,
+    manualIp: '',
     serverToken: '',
     servers: [],
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
@@ -130,6 +131,8 @@ export const actions = {
 
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
+        const machineServer = JSON.parse(machineStore.get('server')) || '';
+        const manualIp = machineStore.get('manualIp') || '';
         const serverToken = machineStore.get('server.token') || '';
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
@@ -142,11 +145,13 @@ export const actions = {
         }
 
         dispatch(actions.updateState({
+            server: machineServer,
             series: series,
             size: seriesInfo ? seriesInfo.setting.size : size,
             laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
             serverToken: serverToken,
             port: machinePort,
+            manualIp: manualIp,
             connectionType: connectionType,
             connectionTimeout: connectionTimeout
         }));
@@ -360,7 +365,14 @@ export const actions = {
             dispatch(printingActions.init());
         }
     },
-
+    updateManualIp: (manualIp) => (dispatch) => {
+        dispatch(actions.updateState({ manualIp: manualIp }));
+        machineStore.set('manualIp', manualIp);
+    },
+    updateServer: (server) => (dispatch) => {
+        dispatch(actions.updateState({ server: server }));
+        machineStore.set('server', JSON.stringify(server));
+    },
     updatePort: (port) => (dispatch) => {
         dispatch(actions.updateState({ port: port }));
         machineStore.set('port', port);
