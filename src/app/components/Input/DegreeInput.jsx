@@ -8,16 +8,16 @@ import styles from './styles.styl';
 class DegreeInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
+        disabled: PropTypes.bool,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.string,
-        onChange: PropTypes.func,
+        changeModelValue: PropTypes.func,
         suffix: PropTypes.string
     };
 
     constructor(props) {
         super(props);
         this.state = {
-            // isEdit: false,
             value: props.value,
             displayValue: props.value.toString().concat(this.props.suffix)
         };
@@ -32,17 +32,15 @@ class DegreeInput extends PureComponent {
 
     onChange = (event) => {
         this.setState({
-            // isEdit: true,
-            value: event.target.value,
-            displayValue: event.target.value.toString()
+            value: this.getStandardValue(event.target.value),
+            displayValue: event.target.value
         });
     };
 
     onBlur = (event) => {
-        const { onChange } = this.props;
-        onChange && onChange(this.getStandardValue(event.target.value));
+        const { changeModelValue } = this.props;
+        changeModelValue && changeModelValue(this.getStandardValue(event.target.value));
         this.setState({
-            // isEdit: false,
             displayValue: this.state.value.toString().concat(this.props.suffix)
         });
     };
@@ -50,11 +48,10 @@ class DegreeInput extends PureComponent {
     onKeyUp = (event) => {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
-            const { onChange } = this.props;
+            const { changeModelValue } = this.props;
             const standardValue = this.getStandardValue(event.target.value);
-            onChange && onChange(standardValue);
+            changeModelValue && changeModelValue(standardValue);
             this.setState({
-                // isEdit: false,
                 displayValue: standardValue.toString()
             });
         }
@@ -62,7 +59,6 @@ class DegreeInput extends PureComponent {
 
     onFocus = () => {
         this.setState({
-            // isEdit: true,
             displayValue: this.state.value.toString()
         });
     }
@@ -92,12 +88,12 @@ class DegreeInput extends PureComponent {
     }
 
     render() {
-        const { className = '', ...rest } = this.props;
+        const { className = '', disabled = false } = this.props;
         const { displayValue } = this.state;
 
         return (
             <input
-                {...rest}
+                disabled={disabled}
                 suffix={this.props.suffix}
                 type="text"
                 value={displayValue}
