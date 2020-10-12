@@ -24,7 +24,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/workspace') === 0 }
                         )}
                     >
-                        <Link to="/workspace" title={i18n._('Workspace')}>
+                        <Link to="/workspace" title={i18n._('Workspace')} draggable="false">
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -41,7 +41,7 @@ const Sidebar = (props) => {
                                 { [styles.active]: pathname.indexOf('/3dp') === 0 }
                             )}
                         >
-                            <Link to="/3dp" title={i18n._('3D Printing G-code Generator')}>
+                            <Link to="/3dp" title={i18n._('3D Printing G-code Generator')} draggable="false">
                                 <i
                                     className={classNames(
                                         styles.icon,
@@ -59,7 +59,7 @@ const Sidebar = (props) => {
                                 { [styles.active]: pathname.indexOf('/laser') === 0 }
                             )}
                         >
-                            <Link to="/laser" title={i18n._('Laser G-code Generator')}>
+                            <Link to="/laser" title={i18n._('Laser G-code Generator')} draggable="false">
                                 <i
                                     className={classNames(
                                         styles.icon,
@@ -77,7 +77,7 @@ const Sidebar = (props) => {
                                 { [styles.active]: pathname.indexOf('/cnc') === 0 }
                             )}
                         >
-                            <Link to="/cnc" title={i18n._('CNC G-code Generator')}>
+                            <Link to="/cnc" title={i18n._('CNC G-code Generator')} draggable="false">
                                 <i
                                     className={classNames(
                                         styles.icon,
@@ -97,7 +97,7 @@ const Sidebar = (props) => {
                             display: 'none'
                         }}
                     >
-                        <Link to="/developTools" title={i18n._('DevelopTools')}>
+                        <Link to="/developTools" title={i18n._('DevelopTools')} draggable="false">
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -115,7 +115,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/caselibrary') === 0 }
                         )}
                     >
-                        <Link to="/caselibrary" title={i18n._('Case Library')}>
+                        <Link to="/caselibrary" title={i18n._('Case Library')} draggable="false">
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -131,7 +131,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/settings') === 0 }
                         )}
                     >
-                        <Link to="/settings" title={i18n._('Settings')}>
+                        <Link to="/settings" title={i18n._('Settings')} draggable="false">
                             <i
                                 className={classNames(
                                     styles.icon,

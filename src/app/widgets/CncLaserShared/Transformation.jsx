@@ -111,7 +111,7 @@ class Transformation extends PureComponent {
         const actions = this.actions;
         return (
             <React.Fragment>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand} draggable="false">
                     <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Transformation')}</span>
                     <span className={classNames(

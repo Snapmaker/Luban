@@ -38,7 +38,7 @@ class ImageProcessMode extends PureComponent {
 
         return (
             <React.Fragment>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand} draggable="false">
                     <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Process Mode')}</span>
                     <span className={classNames(
@@ -61,6 +61,7 @@ class ImageProcessMode extends PureComponent {
                             >
                                 <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
                                     <Anchor
+                                        draggable="false"
                                         className={styles['laser-mode__btn']}
                                         onClick={() => actions.changeSelectedModelMode('greyscale')}
                                     >

@@ -66,49 +66,48 @@ class Cnc extends Component {
 
         return (
             <div style={style}>
-                <Dropzone
-                    disabled={state.isDraggingWidget}
-                    accept={ACCEPT}
-                    dragEnterMsg={i18n._('Drop an image file here.')}
-                    onDropAccepted={this.actions.onDropAccepted}
-                    onDropRejected={this.actions.onDropRejected}
-                >
-                    <div className={styles['cnc-table']}>
-                        <div className={styles['cnc-table-row']}>
+                <div className={styles['cnc-table']}>
+                    <div className={styles['cnc-table-row']}>
+                        <Dropzone
+                            disabled={state.isDraggingWidget}
+                            accept={ACCEPT}
+                            dragEnterMsg={i18n._('Drop an image file here.')}
+                            onDropAccepted={this.actions.onDropAccepted}
+                            onDropRejected={this.actions.onDropRejected}
+                        >
                             <div className={styles['view-space']}>
                                 <CNCVisualizer />
                             </div>
-
-                            <form className={styles['control-bar']} noValidate>
-                                <Sortable
-                                    options={{
-                                        animation: 150,
-                                        delay: 0,
-                                        group: {
-                                            name: 'cnc-control'
-                                        },
-                                        handle: '.sortable-handle',
-                                        filter: '.sortable-filter',
-                                        chosenClass: 'sortable-chosen',
-                                        ghostClass: 'sortable-ghost',
-                                        dataIdAttr: 'data-widget-id',
-                                        onStart: this.actions.onDragWidgetStart,
-                                        onEnd: this.actions.onDragWidgetEnd
-                                    }}
-                                    onChange={this.actions.onChangeWidgetOrder}
-                                >
-                                    {widgets.map(widget => {
-                                        return (
-                                            <div data-widget-id={widget} key={widget}>
-                                                <Widget widgetId={widget} headType="cnc" />
-                                            </div>
-                                        );
-                                    })}
-                                </Sortable>
-                            </form>
-                        </div>
+                        </Dropzone>
+                        <form className={styles['control-bar']} noValidate>
+                            <Sortable
+                                options={{
+                                    animation: 150,
+                                    delay: 0,
+                                    group: {
+                                        name: 'cnc-control'
+                                    },
+                                    handle: '.sortable-handle',
+                                    filter: '.sortable-filter',
+                                    chosenClass: 'sortable-chosen',
+                                    ghostClass: 'sortable-ghost',
+                                    dataIdAttr: 'data-widget-id',
+                                    onStart: this.actions.onDragWidgetStart,
+                                    onEnd: this.actions.onDragWidgetEnd
+                                }}
+                                onChange={this.actions.onChangeWidgetOrder}
+                            >
+                                {widgets.map(widget => {
+                                    return (
+                                        <div data-widget-id={widget} key={widget}>
+                                            <Widget widgetId={widget} headType="cnc" />
+                                        </div>
+                                    );
+                                })}
+                            </Sortable>
+                        </form>
                     </div>
-                </Dropzone>
+                </div>
             </div>
         );
     }

@@ -7,20 +7,18 @@ import styles from './styles.styl';
 import { actions as editorActions } from '../../flux/editor';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
-import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
 
 class ObjectListBox extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
         selectTargetModel: PropTypes.func.isRequired,
-        minimized: PropTypes.bool.isRequired,
         hideSelectedModel: PropTypes.func.isRequired,
         showSelectedModel: PropTypes.func.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
-        toolPathModelGroup: PropTypes.object.isRequired,
+        // toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired
     };
 
@@ -100,7 +98,7 @@ class ObjectListBox extends PureComponent {
                                 title={i18n._('Object')}
                                 content={model.modelName}
                             >
-                                <div onContextMenu={this.showContextMenu}>
+                                <div>
                                     <div
                                         className={classNames(
                                             styles['object-list-item'],
@@ -112,6 +110,7 @@ class ObjectListBox extends PureComponent {
                                                 styles.name,
                                                 styles.bt
                                             )}
+                                            draggable="false"
                                             onClick={(event) => this.actions.onClickModelNameBox(model, event)}
                                         >
                                             <span
@@ -137,12 +136,6 @@ class ObjectListBox extends PureComponent {
                         );
                     })}
                 </div>
-                <Thumbnail
-                    ref={this.thumbnail}
-                    modelGroup={this.props.modelGroup}
-                    toolPathModelGroup={this.props.toolPathModelGroup}
-                    minimized={this.props.minimized}
-                />
             </div>
         );
     }

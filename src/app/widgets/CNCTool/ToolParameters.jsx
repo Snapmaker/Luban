@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import { noop, includes } from 'lodash';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
@@ -15,7 +15,6 @@ import {
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
-import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { actions as cncActions } from '../../flux/cnc';
@@ -41,7 +40,7 @@ class ToolParameters extends PureComponent {
 
     actions = {
         onChangeTool: (tool) => {
-            if (!_.includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_CUSTOM], tool)) {
+            if (!includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_CUSTOM], tool)) {
                 return;
             }
             const map = {
@@ -84,42 +83,54 @@ class ToolParameters extends PureComponent {
             <React.Fragment>
                 <div className={styles['select-tools']}>
                     <div className={styles['select-tool']}>
-                        <Anchor
+                        <div
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_V_BIT })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_V_BIT)}
+                            onKeyDown={noop}
+                            role="button"
+                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-v-bit-88x88.png"
                                 role="presentation"
+                                draggable="false"
                                 alt="V-Bit"
                             />
-                        </Anchor>
+                        </div>
                         <span className={styles.selectToolText}>{i18n._('Carving V-Bit')}</span>
                     </div>
                     <div className={styles['select-tool']}>
-                        <Anchor
+                        <div
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_FLAT_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_FLAT_END_MILL)}
+                            onKeyDown={noop}
+                            role="button"
+                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-flat-end-mill-88x88.png"
                                 role="presentation"
                                 alt="Flat End Mill"
+                                draggable="false"
                             />
-                        </Anchor>
+                        </div>
                         <span className={styles.selectToolText}>{i18n._('Flat End Mill')}</span>
                     </div>
                     <div className={styles['select-tool']}>
-                        <Anchor
+                        <div
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_BALL_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_BALL_END_MILL)}
+                            onKeyDown={noop}
+                            role="button"
+                            tabIndex={0}
                         >
                             <img
                                 src="images/cnc/cnc-tool-ball-end-mill-88x88.png"
                                 role="presentation"
                                 alt="Ball End Mill"
+                                draggable="false"
                             />
-                        </Anchor>
+                        </div>
                         <span className={styles['select-tool-text']}>{i18n._('Ball End Mill')}</span>
                     </div>
                 </div>

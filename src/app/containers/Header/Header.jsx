@@ -18,12 +18,14 @@ const Logo = memo(() => (
     <Anchor
         className="navbar-brand"
         href="/#/workspace"
+        draggable='false'
         title={`${settings.name} ${settings.version}`}
         style={{ position: 'relative' }}
     >
         <img
             src="images/snapmaker-logo.png"
             role="presentation"
+            draggable='false'
             alt="snapmaker logo"
             style={{ margin: '-5px auto auto 3px' }}
         />
@@ -132,25 +134,30 @@ class Header extends PureComponent {
                     </Nav>
                     <Nav className="justify-content-end">
                         <QuickAccessToolbar state={this.state} actions={this.actions} />
-                        <NavDropdown title={i18n._('More')} alignRight>
+                        <NavDropdown title={i18n._('More')} alignRight draggable="false">
                             <NavDropdown.Item
                                 href="https://store.snapmaker.com"
                                 target="_blank"
+                                draggable="false"
                             >
                                 {i18n._('Store')}
                             </NavDropdown.Item>
                             <NavDropdown.Item
                                 href="https://snapmaker.com/download"
                                 target="_blank"
+                                draggable="false"
                             >
                                 {i18n._('Downloads')}
                             </NavDropdown.Item>
                         </NavDropdown>
                         <Nav.Item>
-                            <Nav.Link href="https://www.myminifactory.com" target="_blank" rel="noopener noreferrer">
+                            <Nav.Link href="https://www.myminifactory.com"
+                                draggable="false"
+                                target="_blank" rel="noopener noreferrer">
                                 <img
                                     width="20"
                                     height="20"
+                                    draggable="false"
                                     src="/images/myminifactory-logo-64x64.png"
                                     alt="Go to MyMiniFactory to find printable objects."
                                 />
