@@ -46,6 +46,12 @@ const File = {
             fs.copyFileSync(tmpFile, targetFile);
         }
     },
+    openProjectFile() {
+        if (isElectron()) {
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('openFile');
+        }
+    },
     async saveAs(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');
@@ -98,6 +104,7 @@ const Dialog = {
  * Window control in electron
  */
 const Window = {
+    // TODO window have to be refactor
     window: null,
     initTitle: '',
 

@@ -1,7 +1,8 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import Store from 'electron-store';
+import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder from './electron-app/Menu';
 import launchServer from './server-cli';
@@ -61,6 +62,27 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowOptions);
 }
 
+// https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+    return;
+}
+
+// Open the project file when the app is not started on the windows platform
+if (process.platform === 'win32') {
+    // 'projectFileOnWindow' represents the directory of project files
+    const projectFileOnWindow = String(process.argv[process.argv.length - 1]);
+    const newProjectFile = {
+        path: projectFileOnWindow,
+        name: path.basename(projectFileOnWindow)
+    };
+    if (mainWindow) {
+        mainWindow.webContents.send('open-file', newProjectFile);
+    } else {
+        config.set('projectFile', newProjectFile);
+    }
+}
 
 const createWindow = async () => {
     try {
@@ -82,7 +104,6 @@ const createWindow = async () => {
 
     mainWindow = window;
     mainWindowOptions = windowOptions;
-
     configureWindow(window);
 
     const url = `http://${address}:${port}`;
@@ -108,13 +129,19 @@ const createWindow = async () => {
         window.webContents.send('save-and-close');
 
         mainWindow = null;
-        mainWindowOptions = null;
     });
 
 
     // Setup menu
     const menuBuilder = new MenuBuilder(window, { url });
     menuBuilder.buildMenu();
+
+    // the "open file or folder" dialog can also be triggered from the React app
+    ipcMain.on('openFile', () => {
+        const newProjectFile = config.get('projectFile');
+        mainWindow.webContents.send('open-file', newProjectFile);
+        config.set('projectFile', null);
+    });
 
     // TODO: Setup AppUpdater
 };
@@ -133,6 +160,28 @@ app.commandLine.appendSwitch('ignore-gpu-blacklist');
 app.on('activate', async () => {
     if (mainWindow === null) {
         await createWindow();
+    }
+});
+
+/**
+ * Only for MacOS
+ *
+ * Listening to the open file event (when through the OS by double click or similar)
+ */
+app.on('open-file', (event, projectFile) => {
+    let newProjectFile;
+    if (typeof projectFile === 'string') {
+        newProjectFile = {
+            path: projectFile,
+            name: path.basename(projectFile)
+        };
+    }
+    event.preventDefault();
+    // if the app is ready and initialized, we open this file
+    if (mainWindow && newProjectFile) {
+        mainWindow.webContents.send('open-file', newProjectFile);
+    } else {
+        config.set('projectFile', newProjectFile);
     }
 });
 
@@ -156,7 +205,24 @@ app.on('will-quit', () => {
     DataStorage.clear();
 });
 
+// Open the project file when the app is started on the windows platform
+app.on('second-instance', (event, commandLine) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (event && process.platform === 'win32') {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+            const projectFilePath = commandLine[commandLine.length - 1];
+            const newProjectFile = {
+                path: projectFilePath,
+                name: path.basename(projectFilePath)
+            };
+            mainWindow.webContents.send('open-file', newProjectFile);
+        }
+    }
+});
+
 /**
- * when ready
- */
+* when ready
+*/
 app.whenReady().then(createWindow);

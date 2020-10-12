@@ -133,6 +133,9 @@ class App extends PureComponent {
                 }
             }
         },
+        initFileOpen: () => {
+            UniApi.File.openProjectFile();
+        },
         initUniEvent: () => {
             UniApi.Event.on('open-file', (event, file) => {
                 this.actions.openProject(file);
@@ -224,6 +227,7 @@ class App extends PureComponent {
 
         UniApi.Window.initWindow();
         this.actions.initUniEvent();
+        this.actions.initFileOpen();
     }
 
     componentWillReceiveProps(nextProps) {

@@ -63,6 +63,17 @@
       "output": "output",
       "app": "dist/Snapmakerjs"
     },
+    "fileAssociations": [
+      {
+        "ext": [
+          "snap3dp",
+          "snapcnc",
+          "snaplzr"
+        ],
+        "name": "Project files",
+        "role": "Viewer"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
