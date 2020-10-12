@@ -1,6 +1,6 @@
-import ModelGroup from '../models/ModelGroup';
-import SVGActionsFactory from '../models/SVGActionsFactory';
-import ToolPathModelGroup from '../models/ToolPathModelGroup';
+import ModelGroup from '../../models/ModelGroup';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathModelGroup from '../../models/ToolPathModelGroup';
 import { controller } from '../../lib/controller';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,

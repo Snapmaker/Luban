@@ -1,14 +1,14 @@
 // import EventEmitter from 'events';
 // import _ from 'lodash';
-import { DATA_PREFIX } from '../../constants';
-import { coordGmSvgToModel, getBBox } from '../../ui/SVGEditor/element-utils';
+import { DATA_PREFIX } from '../constants';
+import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
-import { NS } from '../../ui/SVGEditor/lib/namespaces';
-import { isZero } from '../../lib/utils';
+import { NS } from '../ui/SVGEditor/lib/namespaces';
+import { isZero } from '../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
-import api from '../../api';
+import api from '../api';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars

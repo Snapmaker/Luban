@@ -1,12 +1,12 @@
 import Canvg from 'canvg';
-import { coordGmSvgToModel } from '../../ui/SVGEditor/element-utils';
+import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
-import { remapElement } from '../../ui/SVGEditor/element-recalculate';
-import { NS } from '../../ui/SVGEditor/lib/namespaces';
-import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
-import { DATA_PREFIX } from '../../constants';
+import { remapElement } from '../ui/SVGEditor/element-recalculate';
+import { NS } from '../ui/SVGEditor/lib/namespaces';
+import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
+import { DATA_PREFIX } from '../constants';
 
-import api from '../../api';
+import api from '../api';
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 

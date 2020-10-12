@@ -6,7 +6,7 @@ import {
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
     sizeModelByMachineSize
-} from '../models/ModelInfoUtils';
+} from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';

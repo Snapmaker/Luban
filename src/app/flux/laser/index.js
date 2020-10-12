@@ -2,9 +2,9 @@ import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
 import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
 import { controller } from '../../lib/controller';
-import ModelGroup from '../models/ModelGroup';
-import SVGActionsFactory from '../models/SVGActionsFactory';
-import ToolPathModelGroup from '../models/ToolPathModelGroup';
+import ModelGroup from '../../models/ModelGroup';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathModelGroup from '../../models/ToolPathModelGroup';
 
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,

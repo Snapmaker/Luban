@@ -1,11 +1,11 @@
 import uuid from 'uuid';
 import * as THREE from 'three';
 
-import ThreeDxfLoader from '../../lib/threejs/ThreeDxfLoader';
-import { controller } from '../../lib/controller';
-import { DATA_PREFIX } from '../../constants';
+import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
+import { controller } from '../lib/controller';
+import { DATA_PREFIX } from '../constants';
 
-import ThreeUtils from '../../components/three-extensions/ThreeUtils';
+import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 
 const EVENTS = {
