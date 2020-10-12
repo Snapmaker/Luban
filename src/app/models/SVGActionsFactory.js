@@ -64,6 +64,10 @@ class SVGActionsFactory {
         this.size = {
             ...size
         };
+
+        for (const svgModel of this.svgModels) {
+            svgModel.updateSize(this.size);
+        }
         if (this.svgContentGroup) {
             for (const datum of data) {
                 this.updateTransformation({
@@ -219,10 +223,11 @@ class SVGActionsFactory {
             // select only(elements)
             this.clearSelection();
             this.selectElements(elements);
+
             const selectedSvgModels = this.getModelsByElements(elements);
             for (const svgModel of selectedSvgModels) {
                 const model = svgModel.relatedModel;
-                const modelGroup = model && model.modelGroup;
+                const modelGroup = this.modelGroup;
                 if (modelGroup) {
                     modelGroup.addSelectedModels([model]);
                     modelGroup.updateSelectedModelTransformation({
@@ -348,7 +353,7 @@ class SVGActionsFactory {
             attr: { id: relatedModel.modelID }
         });
 
-        const svgModel = new SvgModel(elem, this);
+        const svgModel = new SvgModel(elem, this.size);
         this.svgModels.push(svgModel);
         svgModel.setParent(this.svgContentGroup.group);
 
@@ -377,38 +382,7 @@ class SVGActionsFactory {
     }
 
     // TODO: move out as a helper function.
-    setElementTransformToList(transformList, transformation) {
-        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
-        transformList.clear();
-        const size = this.size;
 
-        function pointModelToSvg({ x, y }) {
-            return { x: size.x + x, y: size.y - y };
-        }
-
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
-        const center = pointModelToSvg({ x: positionX, y: positionY });
-
-        const translateOrigin = svg.createSVGTransform();
-        translateOrigin.tag = 'translateOrigin';
-        translateOrigin.setTranslate(-center.x, -center.y);
-        transformList.insertItemBefore(translateOrigin, 0);
-
-        const scale = svg.createSVGTransform();
-        scale.tag = 'scale';
-        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
-        transformList.insertItemBefore(scale, 0);
-
-        const rotate = svg.createSVGTransform();
-        rotate.tag = 'rotate';
-        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
-        transformList.insertItemBefore(rotate, 0);
-
-        const translateBack = svg.createSVGTransform();
-        translateBack.setTranslate(center.x, center.y);
-        transformList.insertItemBefore(translateBack, 0);
-        transformList.getItem(0).tag = 'translateBack';
-    }
 
     updateSelectedModelsByTransformation(deviation) { // todo, just after move now
         // deviation: dx dy, angle cx cy, scaleX scaleY
@@ -548,7 +522,7 @@ class SVGActionsFactory {
      */
     async createModelFromElement(element) {
         const headType = this.modelGroup.headType;
-        const svgModel = new SvgModel(element, this);
+        const svgModel = new SvgModel(element, this.size);
         this.svgModels.push(svgModel);
         svgModel.setParent(this.svgContentGroup.group);
         const data = svgModel.genModelConfig();
@@ -607,7 +581,7 @@ class SVGActionsFactory {
                 this.selectedSvgModels.push(svgModel);
                 // todo, not modelGroup here, use flux/editor
                 const model = svgModel.relatedModel;
-                const modelGroup = model && model.modelGroup;
+                const modelGroup = this.modelGroup;
                 if (modelGroup) {
                     modelGroup.addSelectedModels([model]);
                 }

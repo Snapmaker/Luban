@@ -131,13 +131,45 @@ const remapPath = (elem, remap, scaleW, scaleH) => {
     return d;
 };
 
+function setElementTransformToList(transformList, transformation, size) {
+    // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    transformList.clear();
+
+    function pointModelToSvg({ x, y }) {
+        return { x: size.x + x, y: size.y - y };
+    }
+
+    const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+    const center = pointModelToSvg({ x: positionX, y: positionY });
+
+    const translateOrigin = svg.createSVGTransform();
+    translateOrigin.tag = 'translateOrigin';
+    translateOrigin.setTranslate(-center.x, -center.y);
+    transformList.insertItemBefore(translateOrigin, 0);
+
+    const scale = svg.createSVGTransform();
+    scale.tag = 'scale';
+    scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+    transformList.insertItemBefore(scale, 0);
+
+    const rotate = svg.createSVGTransform();
+    rotate.tag = 'rotate';
+    rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
+    transformList.insertItemBefore(rotate, 0);
+
+    const translateBack = svg.createSVGTransform();
+    translateBack.setTranslate(center.x, center.y);
+    transformList.insertItemBefore(translateBack, 0);
+    transformList.getItem(0).tag = 'translateBack';
+}
+
 class SvgModel {
     // SvgModel is View Model, need related to Model object
-    relatedModel = null
+    relatedModel = null;
 
-    constructor(elem, modelGroup) {
+    constructor(elem, size) {
         this.elem = elem;
-        this.modelGroup = modelGroup;
+        this.size = size;
     }
 
     get type() {
@@ -158,9 +190,19 @@ class SvgModel {
         this.parent && this.parent.append(this.elem);
     }
 
+    /**
+     * Update canvas size to correct calculation of element positions.
+     *
+     * @param {Object} size - { x, y } size of canvas
+     */
+    updateSize(size) {
+        console.log('update size', size);
+        this.size = size;
+    }
+
     genModelConfig() {
         const elem = this.elem;
-        const coord = coordGmSvgToModel(this.modelGroup.size, elem);
+        const coord = coordGmSvgToModel(this.size, elem);
         // const fontSize = elem.getAttribute('font-size') * 8;
 
         // eslint-disable-next-line prefer-const
@@ -318,34 +360,7 @@ class SvgModel {
                 break;
         }
 
-        this.modelGroup.setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation);
-    }
-
-    // TODO: Remove this method!!!
-    setElementTransformToList(transformList, transformation) {
-        // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
-        const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
-        const center = this.pointModelToSvg({ x: positionX, y: positionY });
-
-        const translateOrigin = svg.createSVGTransform();
-        translateOrigin.tag = 'translateOrigin';
-        translateOrigin.setTranslate(-center.x, -center.y);
-        transformList.insertItemBefore(translateOrigin, 0);
-
-        const scale = svg.createSVGTransform();
-        scale.tag = 'scale';
-        scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
-        transformList.insertItemBefore(scale, 0);
-
-        const rotate = svg.createSVGTransform();
-        rotate.tag = 'rotate';
-        rotate.setRotate(-rotationZ / Math.PI * 180, 0, 0);
-        transformList.insertItemBefore(rotate, 0);
-
-        const translateBack = svg.createSVGTransform();
-        translateBack.setTranslate(center.x, center.y);
-        transformList.insertItemBefore(translateBack, 0);
-        transformList.getItem(0).tag = 'translateBack';
+        setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation, this.size);
     }
 
     refresh() {
@@ -487,7 +502,7 @@ class SvgModel {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
         transformList.clear();
-        this.modelGroup.setElementTransformToList(transformList, this.relatedModel.transformation);
+        setElementTransformToList(transformList, this.relatedModel.transformation, this.size);
 
         const matrix = transformList.consolidate().matrix;
         const matrixInverse = matrix.inverse();
@@ -555,11 +570,11 @@ class SvgModel {
     }
 
     pointModelToSvg({ x, y }) {
-        return { x: this.modelGroup.size.x + x, y: this.modelGroup.size.y - y };
+        return { x: this.size.x + x, y: this.size.y - y };
     }
 
     pointSvgToModel({ x, y }) {
-        return { x: -this.modelGroup.size.x + x, y: this.modelGroup.size.y - y };
+        return { x: -this.size.x + x, y: this.size.y - y };
     }
 }
 
