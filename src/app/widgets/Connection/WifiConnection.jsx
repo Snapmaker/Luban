@@ -47,8 +47,8 @@ class WifiConnection extends PureComponent {
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
-        updateServer: PropTypes.func.isRequired,
-        updateManualIp: PropTypes.func.isRequired,
+        updateLocalStorageServer: PropTypes.func.isRequired,
+        updateLocalStorageManualIp: PropTypes.func.isRequired,
         setServer: PropTypes.func.isRequired
     };
 
@@ -86,7 +86,7 @@ class WifiConnection extends PureComponent {
                 this.setState({
                     server: find
                 });
-                this.props.updateServer(find);
+                this.props.updateLocalStorageServer(find);
             }
         },
         setServer: (server) => {
@@ -206,7 +206,7 @@ class WifiConnection extends PureComponent {
                     onConfirm: (text) => {
                         this.actions.onCloseManualWiFi();
                         const server = new Server('Manual', text);
-                        this.props.updateManualIp(text);
+                        this.props.updateLocalStorageManualIp(text);
                         this.props.setServer(server);
                         this.props.openServer();
                     }
@@ -481,8 +481,8 @@ const mapDispatchToProps = (dispatch) => ({
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
     setServer: (server) => dispatch(machineActions.setServer(server)),
-    updateServer: (server) => dispatch(machineActions.updateServer(server)),
-    updateManualIp: (server) => dispatch(machineActions.updateManualIp(server))
+    updateLocalStorageServer: (server) => dispatch(machineActions.updateServer(server)),
+    updateLocalStorageManualIp: (server) => dispatch(machineActions.updateManualIp(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);
