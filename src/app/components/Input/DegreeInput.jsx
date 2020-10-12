@@ -24,24 +24,25 @@ class DegreeInput extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.value) {
+        if (this.state.isEdit || nextProps.value !== this.state.value) {
             this.setState({
                 displayValue: nextProps.value.toString().concat(this.props.suffix),
-                value: nextProps.value
+                value: nextProps.value,
+                isEdit: false
             });
         }
     }
 
     onChangeInputValue = (event) => {
         this.setState({
-            value: this.getStandardValue(event.target.value),
+            isEdit: true,
             displayValue: event.target.value
         });
     };
 
-    onBlur = () => {
+    onBlur = (event) => {
         const { onChange } = this.props;
-        const standardValue = this.state.value;
+        const standardValue = this.getStandardValue(event.target.value);
         onChange && onChange(standardValue);
     };
 
@@ -49,13 +50,14 @@ class DegreeInput extends PureComponent {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
             const { onChange } = this.props;
-            const standardValue = this.state.value;
+            const standardValue = this.getStandardValue(event.target.value);
             onChange && onChange(standardValue);
         }
     };
 
     onFocus = () => {
         this.setState({
+            isEdit: true,
             displayValue: this.state.value.toString()
         });
     }
@@ -85,12 +87,12 @@ class DegreeInput extends PureComponent {
     }
 
     render() {
-        const { className = '', disabled = false } = this.props;
+        const { className = '', ...rest } = this.props;
         const { displayValue } = this.state;
 
         return (
             <input
-                disabled={disabled}
+                {...rest}
                 suffix={this.props.suffix}
                 type="text"
                 value={displayValue}
