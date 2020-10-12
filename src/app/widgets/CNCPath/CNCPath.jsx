@@ -196,7 +196,7 @@ class CNCPath extends PureComponent {
 
         const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
-        const isTextVector = (sourceType === 'raster' && mode === 'vector' && config.svgNodeName === 'text');
+        const isTextVector = (config.svgNodeName === 'text');
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
         const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
