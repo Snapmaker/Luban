@@ -62,12 +62,16 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowOptions);
 }
 
-// for Windows
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
     app.quit();
-} else if (process.platform === 'win32') {
+    return;
+}
+
+// Open the project file when the app is not started on the windows platform
+if (process.platform === 'win32') {
+    // 'projectFileOnWindow' represents the directory of project files
     const projectFileOnWindow = String(process.argv[process.argv.length - 1]);
     const newProjectFile = {
         path: projectFileOnWindow,
@@ -201,7 +205,7 @@ app.on('will-quit', () => {
     DataStorage.clear();
 });
 
-// for Windows
+// Open the project file when the app is started on the windows platform
 app.on('second-instance', (event, commandLine) => {
     // Someone tried to run a second instance, we should focus our window.
     if (event && process.platform === 'win32') {
