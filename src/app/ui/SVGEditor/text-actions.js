@@ -473,7 +473,7 @@ const textActionCreator = (canvas, $) => {
             textinput = input;
             $(textinput).bind('keyup input', (e) => {
                 const text = e.target.value;
-                const svgModel = canvas.props.SVGActions.getModelByElement(curtext);
+                const svgModel = canvas.props.SVGActions.getSVGModelByElement(curtext);
                 svgModel.relatedModel.updateAndRefresh({ config: { text } });
                 textActions.init();
                 textActions.setCursor();

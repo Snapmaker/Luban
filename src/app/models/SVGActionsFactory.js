@@ -28,22 +28,6 @@ const coordGmModelToSvg = (size, transformation) => {
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 
-/*
-const elementToString = (element, scale = 1) => {
-    let res = `<${element.tagName}`;
-    const needScaleAttributes = ['width', 'height', 'x', 'y', 'cx', 'cy', 'rx', 'ry'];
-    for (const attribute of element.attributes) {
-        if (_.includes(needScaleAttributes, attribute.name)) {
-            res += ` ${attribute.name}="${attribute.value * scale}" `;
-        } else {
-            res += ` ${attribute.name}="${attribute.value}" `;
-        }
-    }
-    res += `>${element.innerHTML}</${element.tagName}>`;
-    return res;
-};
-*/
-
 
 class SVGActionsFactory {
     // event = new EventEmitter();
@@ -107,35 +91,6 @@ class SVGActionsFactory {
         });
         return {
             modelID: elem.getAttribute('id')
-        };
-    }
-
-    addModelToSVGElement(model) {
-        const { x, y, width, height } = coordGmModelToSvg(this.size, model.transformation);
-        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
-        const elem = this.svgContentGroup.addSVGElement({
-            element: 'image',
-            attr: {
-                x: x,
-                y: y,
-                width: width,
-                height: height,
-                href: uploadPath,
-                id: model.modelID,
-                preserveAspectRatio: 'none'
-            }
-        });
-        // todo
-        const posAndSize = this.svgContentGroup.selectOnly([elem]);
-        this.modelGroup.updateSelectedModelTransformation({
-            positionX: posAndSize.positionX - this.size.x,
-            positionY: this.size.y - posAndSize.positionY,
-            width: posAndSize.width,
-            height: posAndSize.height
-        });
-        return {
-            modelID: elem.getAttribute('id'),
-            elem
         };
     }
 
@@ -290,7 +245,7 @@ class SVGActionsFactory {
         if ((transformation.scaleX !== undefined || transformation.scaleY !== undefined) && elements.length === 1) {
             // todo, to fix uniform scale
             const element = elements[0];
-            const svgModel = this.getModelByElement(element);
+            const svgModel = this.getSVGModelByElement(element);
             const model = svgModel.relatedModel;
             if (transformation.scaleX !== undefined) {
                 model.updateAndRefresh({
@@ -393,46 +348,32 @@ class SVGActionsFactory {
             attr: { id: relatedModel.modelID }
         });
 
-        const model = new SvgModel(elem, this);
-        this.svgModels.push(model);
-        model.setParent(this.svgContentGroup.group);
+        const svgModel = new SvgModel(elem, this);
+        this.svgModels.push(svgModel);
+        svgModel.setParent(this.svgContentGroup.group);
 
-        relatedModel.relatedModels.svgModel = model;
-        model.relatedModel = relatedModel;
-        model.refresh();
-
-        // A
-        // this.addModelToSVGElement(model);
+        relatedModel.relatedModels.svgModel = svgModel;
+        svgModel.relatedModel = relatedModel;
+        svgModel.refresh();
     }
 
-    resizeSelectorByElementsSelected(elements) {
-        for (const elem of elements) {
-            if (!this.svgContentGroup.selectedElements.find(i => i === elem)) {
-                return;
-            }
-        }
-        this.svgContentGroup.requestSelectorByElements(elements);
-        // const selector = this.svgContentGroup.requestSelectorByElements(elements);
-        // selector.resize();
-    }
-
-    getModelByElement(elem) {
-        for (const model of this.svgModels) {
-            if (model.elem === elem) {
-                return model;
+    getSVGModelByElement(elem) {
+        for (const svgModel of this.svgModels) {
+            if (svgModel.elem === elem) {
+                return svgModel;
             }
         }
         return null;
     }
 
     getModelsByElements(elems) {
-        const models = [];
-        for (const model of this.svgModels) {
-            if (elems.includes(model.elem)) {
-                models.push(model);
+        const svgModels = [];
+        for (const svgModel of this.svgModels) {
+            if (elems.includes(svgModel.elem)) {
+                svgModels.push(svgModel);
             }
         }
-        return models;
+        return svgModels;
     }
 
     // TODO: move out as a helper function.
@@ -556,6 +497,7 @@ class SVGActionsFactory {
 
     addSelectedSvgModelsByModels(models) {
         this.modelGroup.addSelectedModels(models);
+
         for (const model of models) {
             const svgModel = model.relatedModels.svgModel;
             if (!this.selectedSvgModels.includes(svgModel)) {
@@ -606,10 +548,10 @@ class SVGActionsFactory {
      */
     async createModelFromElement(element) {
         const headType = this.modelGroup.headType;
-        const model = new SvgModel(element, this);
-        this.svgModels.push(model);
-        model.setParent(this.svgContentGroup.group);
-        const data = model.genModelConfig();
+        const svgModel = new SvgModel(element, this);
+        this.svgModels.push(svgModel);
+        svgModel.setParent(this.svgContentGroup.group);
+        const data = svgModel.genModelConfig();
 
         const { modelID, content, width, height, transformation, config: elemConfig } = data;
         const blob = new Blob([content], { type: 'image/svg+xml' });
@@ -622,7 +564,7 @@ class SVGActionsFactory {
             const res = await api.uploadImage(formData);
 
             const { originalName, uploadName } = res.body;
-            const sourceType = model.type === 'text' ? 'raster' : 'svg';
+            const sourceType = svgModel.type === 'text' ? 'raster' : 'svg';
             const mode = headType === 'cnc' ? 'greyscale' : 'bw';
 
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
@@ -646,7 +588,7 @@ class SVGActionsFactory {
                 gcodeConfig
             };
 
-            this.modelGroup.addModel(options, { svgModel: model });
+            this.modelGroup.addModel(options, { svgModel: svgModel });
         } catch (e) {
             console.error(e);
         }
@@ -699,7 +641,7 @@ class SVGActionsFactory {
      * Resize element.
      */
     resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
-        const svgModel = this.getModelByElement(element);
+        const svgModel = this.getSVGModelByElement(element);
 
         svgModel.elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling });
 
@@ -716,7 +658,7 @@ class SVGActionsFactory {
      * Resize element.
      */
     afterResizeElement(element) {
-        const svgModel = this.getModelByElement(element);
+        const svgModel = this.getSVGModelByElement(element);
         svgModel.onUpdate();
 
         this.updateSelectedModelsByTransformation({});
@@ -778,7 +720,7 @@ class SVGActionsFactory {
         // only support single selected text element
         if (!element && this.selectedSvgModels.length > 1) return;
 
-        const svgModel = element ? this.getModelByElement(element) : this.selectedSvgModels[0];
+        const svgModel = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
         const model = svgModel.relatedModel;
 
 
