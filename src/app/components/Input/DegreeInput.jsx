@@ -11,7 +11,7 @@ class DegreeInput extends PureComponent {
         disabled: PropTypes.bool,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.string,
-        changeModelValue: PropTypes.func,
+        onChange: PropTypes.func,
         suffix: PropTypes.string
     };
 
@@ -24,36 +24,33 @@ class DegreeInput extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        this.setState({
-            displayValue: nextProps.value.toString().concat(this.props.suffix),
-            value: nextProps.value
-        });
+        if (nextProps.value) {
+            this.setState({
+                displayValue: nextProps.value.toString().concat(this.props.suffix),
+                value: nextProps.value
+            });
+        }
     }
 
-    onChange = (event) => {
+    onChangeInputValue = (event) => {
         this.setState({
             value: this.getStandardValue(event.target.value),
             displayValue: event.target.value
         });
     };
 
-    onBlur = (event) => {
-        const { changeModelValue } = this.props;
-        changeModelValue && changeModelValue(this.getStandardValue(event.target.value));
-        this.setState({
-            displayValue: this.state.value.toString().concat(this.props.suffix)
-        });
+    onBlur = () => {
+        const { onChange } = this.props;
+        const standardValue = this.state.value;
+        onChange && onChange(standardValue);
     };
 
     onKeyUp = (event) => {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
-            const { changeModelValue } = this.props;
-            const standardValue = this.getStandardValue(event.target.value);
-            changeModelValue && changeModelValue(standardValue);
-            this.setState({
-                displayValue: standardValue.toString()
-            });
+            const { onChange } = this.props;
+            const standardValue = this.state.value;
+            onChange && onChange(standardValue);
         }
     };
 
@@ -98,7 +95,7 @@ class DegreeInput extends PureComponent {
                 type="text"
                 value={displayValue}
                 className={classNames(styles.input, className)}
-                onChange={this.onChange}
+                onChange={this.onChangeInputValue}
                 onBlur={this.onBlur}
                 onKeyUp={this.onKeyUp}
                 onFocus={this.onFocus}

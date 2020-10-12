@@ -231,7 +231,7 @@ class Transformation extends PureComponent {
                                     disabled={!selectedNotHide}
                                     value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1) : 0}
                                     suffix="°"
-                                    changeModelValue={(value) => {
+                                    onChange={(value) => {
                                         actions.onChangeRotationZ(value);
                                         actions.onModelAfterTransform();
                                     }}
