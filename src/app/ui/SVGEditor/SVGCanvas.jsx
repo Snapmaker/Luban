@@ -144,7 +144,7 @@ class SVGCanvas extends PureComponent {
 
     setupTextActions() {
         this.textActions = textActionCreator(
-            this, jQuery
+            this, this.setMode, jQuery
         );
         this.textActions.setInputElem(this.input.current);
     }
@@ -258,7 +258,7 @@ class SVGCanvas extends PureComponent {
             jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
 
-        if (!includes(['select', 'panMove'], this.mode)) {
+        if (!includes(['select', 'panMove', 'textedit'], this.mode)) {
             this.clearSelection();
         }
 
@@ -294,6 +294,7 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseDown = (event) => {
+        console.log(this.mode);
         event.preventDefault();
 
         const rightClick = event.button === 2;

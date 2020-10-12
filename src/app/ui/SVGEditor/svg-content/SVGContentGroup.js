@@ -97,7 +97,7 @@ class SVGContentGroup {
     }
 
     deleteElements(elems) {
-        this.operatorPoints.showGrips(false);
+        this.showSelectorGrips(false);
         for (const elem of elems) {
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
             elem.remove();
@@ -106,7 +106,7 @@ class SVGContentGroup {
 
     deleteElement(elem) {
         if (elem) {
-            this.operatorPoints.showGrips(false);
+            this.showSelectorGrips(false);
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
             elem.remove();
         }
@@ -143,7 +143,7 @@ class SVGContentGroup {
      * Clear selection of elements.
      */
     clearSelection() {
-        this.operatorPoints.showGrips(false);
+        this.showSelectorGrips(false);
         this.selectedElements = [];
     }
 
@@ -154,7 +154,7 @@ class SVGContentGroup {
             }
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
-        this.operatorPoints.showGrips(true);
+        this.showSelectorGrips(true);
         // todo
         return posAndsize;
     }
@@ -428,6 +428,18 @@ class SVGContentGroup {
             return 0;
         }
         return transformList[idx].angle;
+    }
+
+    showSelectorGrips(show) {
+        this.operatorPoints.showGrips(show);
+    }
+
+    showSelectorResizeAndRotateGripsAndBox(show) {
+        this.operatorPoints.showResizeAndRotateGripsAndBox(show);
+    }
+
+    showSelectorResizeAndRotateGrips(show) {
+        this.operatorPoints.showResizeAndRotateGrips(show);
     }
 }
 

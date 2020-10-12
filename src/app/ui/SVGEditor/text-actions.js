@@ -16,7 +16,7 @@ const getMatrix = (elem) => {
     return transformListToTransform(tlist).matrix;
 };
 
-const textActionCreator = (canvas, $) => {
+const textActionCreator = (canvas, setMode, $) => {
     /* eslint-enable jsdoc/require-property */
     let curtext;
     let textinput;
@@ -28,12 +28,14 @@ const textActionCreator = (canvas, $) => {
     let matrix;
     let lastX, lastY;
     let allowDbl;
+
+    const setCanvasMode = setMode;
+
     const svgroot = canvas.svgContent;
     const getElem = (id) => {
         return svgroot.querySelector(`#${id}`);
     };
 
-    // const selectorManager = canvas.svgContentGroup.selectorManager;
     const rootSctm = canvas.svgContentGroup.getScreenCTM().inverse();
 
     /**
@@ -394,10 +396,12 @@ const textActionCreator = (canvas, $) => {
          */
         toEditMode(x, y) {
             allowDbl = false;
-            canvas.mode = 'textedit';
-            // selectorManager.requestSelector(curtext).showGrips(false);
-            // todo
-            canvas.svgContentGroup.operatorPoints.showResizeAndRotateGripsAndBox(false);
+            // TODO: remove this, move to canvas
+            setCanvasMode('textedit');
+
+            // not use showGrip(false) because cursor will be hide
+            canvas.svgContentGroup.showSelectorResizeAndRotateGripsAndBox(false);
+
             // Make selector group accept clicks
             // /* const selector = */ selectorManager.requestSelector(curtext); // Do we need this? Has side effect of setting lock, so keeping for now, but next line wasn't being used
             // const sel = selector.selectorRect;
@@ -429,7 +433,9 @@ const textActionCreator = (canvas, $) => {
          * @returns {void}
          */
         toSelectMode() {
-            canvas.mode = 'select';
+            //TODO: remove this, move to svgCanvas
+            setCanvasMode('select');
+
             clearInterval(blinker);
             blinker = null;
             if (selblock) {
@@ -439,18 +445,15 @@ const textActionCreator = (canvas, $) => {
                 $(cursor).attr('visibility', 'hidden');
             }
             $(curtext).css('cursor', 'move');
-            // selectorManager.requestSelector(curtext).showGrips(true);
             // todo, pack into svg content group
-            // console.log('----to select mode----', canvas.svgContentGroup.selectedElements[0]);
             const posAndSize = canvas.svgContentGroup.operatorPoints.resizeGrips(canvas.svgContentGroup.selectedElements);
-            // todo
-            canvas.props.SVGActions.modelGroup.getSelectedModelArray()[0].updateTransformation({
+            canvas.props.updateTextTransformationAfterEdit({
                 positionX: posAndSize.positionX - canvas.props.size.x,
                 positionY: canvas.props.size.y - posAndSize.positionY,
                 width: posAndSize.width,
                 height: posAndSize.height
             }); // todo, not use model group here
-            canvas.svgContentGroup.operatorPoints.showGrips(true);
+            canvas.svgContentGroup.showSelectorGrips(true);
 
             // if (curtext && !curtext.textContent.length) {
             //     // No content, so delete
@@ -471,6 +474,7 @@ const textActionCreator = (canvas, $) => {
          */
         setInputElem(input) {
             textinput = input;
+            console.log('setInputElem', input);
             $(textinput).bind('keyup input', (e) => {
                 const text = e.target.value;
                 const svgModel = canvas.props.SVGActions.getSVGModelByElement(curtext);
@@ -481,14 +485,15 @@ const textActionCreator = (canvas, $) => {
 
             $(textinput).blur(hideCursor);
         },
-        /**
-         * @returns {void}
-         */
-        clear() {
-            if (canvas.mode === 'textedit') {
-                textActions.toSelectMode();
-            }
-        },
+        // TODO: not used?
+        // /**
+        //  * @returns {void}
+        //  */
+        // clear() {
+        //     if (canvas.mode === 'textedit') {
+        //         textActions.toSelectMode();
+        //     }
+        // },
         /**
          * @param {Element} inputElem Not in use
          * @returns {void}
@@ -498,16 +503,6 @@ const textActionCreator = (canvas, $) => {
                 return;
             }
             let i, end;
-            // if (supportsEditableText()) {
-            //   curtext.select();
-            //   return;
-            // }
-
-            // if (!curtext.parentNode) {
-            //     // Result of the ffClone, need to get correct element
-            //     curtext = selectedElements[0];
-            //     selectorManager.requestSelector(curtext).showGrips(false);
-            // }
 
             const str = curtext.textContent;
             const len = str.length;

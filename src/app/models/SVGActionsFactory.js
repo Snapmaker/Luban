@@ -38,12 +38,6 @@ class SVGActionsFactory {
 
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
-        // this.modelGroup.on('select', () => {
-        //     const selectedModel = this.modelGroup.getSelectedModel();
-        //     if (!selectedModel.modelID) return;
-        //     this.selectElementById(selectedModel.modelID);
-        //     this.showSelectedElement();
-        // });
 
         this.size = {};
         this.svgContentGroup = null;
@@ -336,14 +330,14 @@ class SVGActionsFactory {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = false;
         selectedElement.setAttribute('display', 'none');
-        this.svgContentGroup.operatorPoints.showGrips(false);
+        this.svgContentGroup.showSelectorGrips(false);
     }
 
     showSelectedElement() {
         const selectedElement = this.svgContentGroup.getSelected();
         selectedElement.visible = true;
         selectedElement.setAttribute('display', 'inherit');
-        this.svgContentGroup.operatorPoints.showGrips(true);
+        this.svgContentGroup.showSelectorGrips(true);
     }
 
     createFromModel(relatedModel) {
@@ -465,7 +459,6 @@ class SVGActionsFactory {
             //
         }
         this.modelGroup.updateSelectedModelTransformation(transformation);
-        // this.setElementTransformToList(this.svgContentGroup.operatorPoints.operatorPointsGroup.transform.baseVal, transformation);
         this.invokeModelTransformCallback();
     }
 
@@ -501,8 +494,7 @@ class SVGActionsFactory {
         // hide operator when model hide
         const selectedModels = this.modelGroup.getSelectedModelArray();
         if (selectedModels && selectedModels.length === 1 && !selectedModels[0].visible) {
-            this.svgContentGroup.operatorPoints.showResizeAndRotateGrips(false);
-            // this.svgContentGroup.showGrips(false);
+            this.svgContentGroup.showSelectorResizeAndRotateGrips(false);
         }
     }
 

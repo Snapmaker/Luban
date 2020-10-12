@@ -70,7 +70,8 @@ class Visualizer extends Component {
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
-        createText: PropTypes.func.isRequired
+        createText: PropTypes.func.isRequired,
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -309,6 +310,7 @@ class Visualizer extends Component {
                         onMoveElement={this.props.onMoveElement}
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
+                        updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                     />
                 </div>
                 <div
@@ -518,6 +520,8 @@ const mapDispatchToProps = (dispatch) => {
         onRotateElement: (element, options) => dispatch(editorActions.rotateElement('laser', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),
+
+        updateTextTransformationAfterEdit: (transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', transformation)),
 
         onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))

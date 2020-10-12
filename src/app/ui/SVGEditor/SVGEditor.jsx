@@ -24,6 +24,7 @@ class SVGEditor extends PureComponent {
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired,
 
         createText: PropTypes.func.isRequired
     };
@@ -98,6 +99,7 @@ class SVGEditor extends PureComponent {
                             onAfterResizeElement={this.props.onAfterResizeElement}
                             onMoveElement={this.props.onMoveElement}
                             onRotateElement={this.props.onRotateElement}
+                            updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                         />
                     </div>
                     <SvgTool

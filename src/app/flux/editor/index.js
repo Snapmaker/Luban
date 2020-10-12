@@ -1135,6 +1135,24 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.modifyText(element, options);
+    },
+
+    /**
+     * Update Seelcted Model Transformation.
+     */
+    updateModelTransformationByElement: (headType, transformation, element) => (dispatch, getState) => {
+        let model;
+        if (!element) {
+            const { modelGroup } = getState()[headType];
+            if (modelGroup.getSelectedModelArray.length !== 1) {
+                return;
+            }
+            model = modelGroup.getSelectedModelArray()[0];
+        } else {
+            const { SVGActions } = getState()[headType];
+            model = SVGActions.getModelByElement(element).relatedModel;
+        }
+        model.updateTransformation(transformation);
     }
 };
 
