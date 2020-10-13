@@ -1,6 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 import _ from 'lodash';
 import request from 'superagent';
+import logger from 'universal-logger';
 import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
@@ -137,12 +138,16 @@ export const actions = {
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-        let machineServer = '';
 
-        if (typeof machineStore.get('server') !== 'string') {
-            machineServer = machineStore.get('server');
-        } else {
-            machineServer = JSON.parse(machineStore.get('server'));
+        try {
+            if (typeof machineStore.get('server') === 'string') {
+                const machineServer = JSON.parse(machineStore.get('server'));
+                dispatch(actions.updateState({
+                    server: machineServer
+                }));
+            }
+        } catch (e) {
+            logger.info(e);
         }
 
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
@@ -151,7 +156,6 @@ export const actions = {
         }
 
         dispatch(actions.updateState({
-            server: machineServer,
             series: series,
             size: seriesInfo ? seriesInfo.setting.size : size,
             laserSize: seriesInfo ? seriesInfo.setting.laserSize : laserSize,
