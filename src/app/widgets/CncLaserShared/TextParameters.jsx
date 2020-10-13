@@ -35,6 +35,7 @@ class TextParameters extends PureComponent {
 
     fileInput = React.createRef();
 
+    textArea = React.createRef();
 
     actions = {
         onToggleExpand: () => {
@@ -47,6 +48,9 @@ class TextParameters extends PureComponent {
         onChangeFile: (event) => {
             const file = event.target.files[0];
             this.props.uploadFont(file);
+        },
+        onSelectAllText: () => {
+            this.textArea.current.select();
         },
         onChangeText: (event) => {
             const model = this.props.selectedModelArray[0];
@@ -133,7 +137,9 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row" style={{ height: '68px' }}>
                                 <span className="sm-parameter-row__label">{i18n._('Text')}</span>
                                 <textarea
+                                    ref={this.textArea}
                                     disabled={disabled}
+                                    onFocus={actions.onSelectAllText}
                                     style={{ width: '202px', float: 'right', resize: 'none' }}
                                     className="form-control"
                                     rows="3"

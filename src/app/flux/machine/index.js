@@ -131,13 +131,19 @@ export const actions = {
 
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
-        const machineServer = JSON.parse(machineStore.get('server')) || '';
         const manualIp = machineStore.get('manualIp') || '';
         const serverToken = machineStore.get('server.token') || '';
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+        let machineServer = '';
+
+        if (typeof machineStore.get('server') !== 'string') {
+            machineServer = machineStore.get('server');
+        } else {
+            machineServer = JSON.parse(machineStore.get('server'));
+        }
 
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
             seriesInfo.setting.size = size;
