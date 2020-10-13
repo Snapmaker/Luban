@@ -66,7 +66,7 @@ function getBrowserWindowOptions() {
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
     app.quit();
-    return;
+    process.exit(0);
 }
 
 // Open the project file when the app is not started on the windows platform
