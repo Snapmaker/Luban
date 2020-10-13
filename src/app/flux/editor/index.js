@@ -1138,7 +1138,9 @@ export const actions = {
     },
 
     /**
-     * Update Seelcted Model Transformation.
+     * Update Selected Model Transformation.
+     *
+     * TODO: Rename.
      */
     updateModelTransformationByElement: (headType, transformation, element) => (dispatch, getState) => {
         let model;

@@ -40,14 +40,14 @@ const DEFAULT_TRANSFORMATION = {
 
 // class Model extends THREE.Mesh {
 class Model {
-    modeConfigs = {}
+    modeConfigs = {};
 
-    relatedModels = {}
+    relatedModels = {};
 
     constructor(modelInfo, modelGroup) {
         const {
             modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName, modelName
+            transformation, processImageName
         } = modelInfo;
 
         this.limitSize = limitSize;
@@ -58,11 +58,7 @@ class Model {
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = modelID;
-        this.modelName = (modelName !== undefined ? modelName : this.createNewModelName(modelGroup, {
-            'sourceType': sourceType,
-            'mode': mode,
-            'originalName': originalName
-        }));
+        this.modelName = 'unnamed';
 
         this.visible = true;
         this.headType = headType;
@@ -110,42 +106,6 @@ class Model {
 
     updateModelName(newName) {
         this.modelName = newName;
-    }
-
-    createNewModelName(modelGroup, model) {
-        if (model === undefined) {
-            model = this.getTaskInfo();
-        }
-        let baseName = '';
-        if (model.sourceType === '3d') {
-            baseName = '3DModel';
-        } else {
-            if (model.sourceType === 'text') {
-                baseName = 'Text';
-            } else if (model.mode !== 'vector') {
-                baseName = model.originalName;
-                // todo, it may named when upload, but not when create model
-            } else {
-                baseName = 'Shape';
-            }
-        }
-        let count = 1;
-        let name = '';
-        while (1) {
-            if (baseName === 'Text' || baseName === 'Shape') {
-                name = `${baseName} ${count.toString()}`;
-            } else {
-                if (count === 1) {
-                    name = baseName;
-                } else {
-                    name = `${baseName}(${count.toString()})`;
-                }
-            }
-            if (!modelGroup || !modelGroup.getModelByModelName(name)) {
-                return name;
-            }
-            count++;
-        }
     }
 
     getTaskInfo() {
@@ -566,18 +526,21 @@ class Model {
         }
     }
 
-    clone() {
+    /**
+     * Note that you need to give cloned Model a new model name.
+     *
+     * @returns {Model}
+     */
+    clone(modelGroup) {
         const clone = new Model({
             ...this,
             geometry: this.meshObject.geometry.clone(),
             material: this.meshObject.material.clone()
-        }, this.modelGroup);
-        // clone.modelID = this.modelID;
+        }, modelGroup);
+
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
-        // this.updateMatrix();
-        // clone.setMatrix(this.mesh.Object.matrix);
         this.meshObject.updateMatrix();
         clone.setMatrix(this.meshObject.matrix);
 
@@ -756,8 +719,6 @@ class Model {
         };
     }
 
-    // TODO: DO NOT call updateAndRefresh() from React Components!!!
-    //       What we need is a ViewModel for Model.
     async updateAndRefresh({ transformation, config, ...others }) {
         if (transformation) {
             this.updateTransformation(transformation);

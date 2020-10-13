@@ -383,7 +383,7 @@ class ModelGroup extends EventEmitter {
         }
         this.models.splice(0);
         for (const model of models) {
-            const newModel = model.clone();
+            const newModel = model.clone(this);
             newModel.meshObject.addEventListener('update', this.onModelUpdate);
             newModel.computeBoundingBox();
             this.models.push(newModel);
@@ -649,11 +649,11 @@ class ModelGroup extends EventEmitter {
         this.unselectAllModels();
 
         modelsToCopy.forEach((model) => {
-            const newModel = model.clone();
+            const newModel = model.clone(this);
 
             if (model.sourceType === '3d') {
                 newModel.stickToPlate();
-                newModel.modelName = newModel.createNewModelName(this);
+                newModel.modelName = this._createNewModelName(newModel.getTaskInfo());
                 newModel.meshObject.position.x = 0;
                 newModel.meshObject.position.y = 0;
                 const point = this._computeAvailableXY(newModel);
@@ -688,7 +688,7 @@ class ModelGroup extends EventEmitter {
     copy() {
         this.removeSelectedObjectParentMatrix();
 
-        this.clipboard = this.selectedModelArray.map(model => model.clone());
+        this.clipboard = this.selectedModelArray.map(model => model.clone(this));
 
         this.applySelectedObjectParentMatrix();
     }
@@ -708,11 +708,11 @@ class ModelGroup extends EventEmitter {
         // paste objects from clipboard
         // TODO: paste all objects from clipboard without losing their relative positions
         modelsToCopy.forEach((model) => {
-            const newModel = model.clone();
+            const newModel = model.clone(this);
 
             if (newModel.sourceType === '3d') {
                 newModel.stickToPlate();
-                newModel.modelName = newModel.createNewModelName(this);
+                newModel.modelName = this._createNewModelName(newModel.getTaskInfo());
                 newModel.meshObject.position.x = 0;
                 newModel.meshObject.position.y = 0;
                 const point = this._computeAvailableXY(newModel);
@@ -1084,8 +1084,46 @@ class ModelGroup extends EventEmitter {
     }
 
 
+    /**
+     * Create model.
+     *
+     * Also:
+     *      - create model 3D Object
+     *      - stickToPlate (3D)
+     *      - auto select created model
+     *
+     * TODO: Refactor on options to make it clearer.
+     *
+     * @param modelInfo - information needed to create new model.
+     *      options = {
+     *            modelID,
+     *            limitSize: this.size,
+     *            headType,
+     *            sourceType,
+     *            mode,
+     *            originalName,
+     *            uploadName,
+     *            sourceWidth: res.body.width,
+     *            width,
+     *            sourceHeight: res.body.height,
+     *            height,
+     *            transformation,
+     *            config,
+     *            gcodeConfig
+     *        };
+     *
+     * @param relatedModels
+     * @returns {Model}
+     */
     addModel(modelInfo, relatedModels = {}) {
         const model = new Model(modelInfo, this);
+
+        model.modelName = this._createNewModelName({
+            'sourceType': modelInfo.sourceType,
+            'mode': modelInfo.mode,
+            'originalName': modelInfo.originalName
+        });
+
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
         model.processMode(modelInfo.mode, modelInfo.config);
@@ -1128,6 +1166,45 @@ class ModelGroup extends EventEmitter {
             }
         }
         return null;
+    }
+
+    /**
+     * Create a new name for model.
+     *
+     * Remember to call this after every Model creation and clone.
+     */
+    _createNewModelName(options) {
+        let baseName = '';
+        if (options.sourceType === '3d') {
+            baseName = '3DModel';
+        } else {
+            if (options.sourceType === 'text') {
+                baseName = 'Text';
+            } else if (options.mode !== 'vector') {
+                baseName = options.originalName;
+                // todo, it may named when upload, but not when create model
+            } else {
+                baseName = 'Shape';
+            }
+        }
+
+        let count = 1;
+        let name = '';
+        while (1) {
+            if (baseName === 'Text' || baseName === 'Shape') {
+                name = `${baseName} ${count.toString()}`;
+            } else {
+                if (count === 1) {
+                    name = baseName;
+                } else {
+                    name = `${baseName} (${count.toString()})`;
+                }
+            }
+            if (!this.getModelByModelName(name)) {
+                return name;
+            }
+            count++;
+        }
     }
 }
 

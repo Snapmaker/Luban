@@ -34,7 +34,6 @@ class Visualizer extends Component {
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
 
-        // hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
