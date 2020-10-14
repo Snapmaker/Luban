@@ -1142,19 +1142,22 @@ export const actions = {
      *
      * TODO: Rename.
      */
-    updateModelTransformationByElement: (headType, transformation, element) => (dispatch, getState) => {
-        let model;
+    updateModelTransformationByElement: (headType, element, transformation) => (dispatch, getState) => {
+        let model, svgModel;
         if (!element) {
             const { modelGroup } = getState()[headType];
             if (modelGroup.getSelectedModelArray.length !== 1) {
                 return;
             }
             model = modelGroup.getSelectedModelArray()[0];
+            svgModel = model.relatedModel.svgModel;
         } else {
             const { SVGActions } = getState()[headType];
-            model = SVGActions.getModelByElement(element).relatedModel;
+            svgModel = SVGActions.getModelsByElements([element])[0];
+            model = svgModel.relatedModel;
         }
         model.updateTransformation(transformation);
+        svgModel.onUpdate();
     }
 };
 

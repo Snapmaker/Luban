@@ -26,7 +26,7 @@ import {
     SVG_EVENT_MODE
 } from './constants';
 import { library } from './lib/ext-shapes';
-import textActionCreator from './text-actions';
+import TextAction from './TextActions';
 
 
 const STEP_COUNT = 10;
@@ -88,7 +88,9 @@ class SVGCanvas extends PureComponent {
         onResizeElement: PropTypes.func.isRequired,
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired
+        onRotateElement: PropTypes.func.isRequired,
+        // TODO: remove it, to flux (for textActions)
+        SVGActions: PropTypes.element
     };
 
     updateTime = 0;
@@ -143,8 +145,8 @@ class SVGCanvas extends PureComponent {
     }
 
     setupTextActions() {
-        this.textActions = textActionCreator(
-            this, this.setMode, jQuery
+        this.textActions = new TextAction(
+            this.svgContentGroup, this.scale, jQuery, this.props.SVGActions
         );
         this.textActions.setInputElem(this.input.current);
     }
@@ -294,7 +296,6 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseDown = (event) => {
-        console.log(this.mode);
         event.preventDefault();
 
         const rightClick = event.button === 2;
@@ -824,7 +825,11 @@ class SVGCanvas extends PureComponent {
             }
 
             case 'textedit': {
-                this.textActions.mouseUp(event, x, y);
+                // set cursor success
+                const success = this.textActions.mouseUp(event, x, y);
+                if (!success) {
+                    this.setMode('select');
+                }
                 return;
             }
 
@@ -964,6 +969,7 @@ class SVGCanvas extends PureComponent {
             const matrix = this.svgContentGroup.getScreenCTM().inverse();
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
             this.textActions.select(mouseTarget, pt.x, pt.y);
+            this.setMode('textedit');
         }
     };
 

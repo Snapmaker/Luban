@@ -441,6 +441,10 @@ class SVGContentGroup {
     showSelectorResizeAndRotateGrips(show) {
         this.operatorPoints.showResizeAndRotateGrips(show);
     }
+
+    appendTextCursor(cursor) {
+        this.operatorPoints.operatorPointsGroup.appendChild(cursor);
+    }
 }
 
 export default SVGContentGroup;

@@ -517,6 +517,18 @@ class SVGActionsFactory {
         }
     }
 
+    resetSelectionNotResetList(elements) {
+        const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(elements);
+        const svgModel = this.getModelsByElements(elements)[0];
+        const model = svgModel.relatedModel;
+        model.updateTransformation({
+            positionX: posAndSize.positionX - this.size.x,
+            positionY: this.size.y - posAndSize.positionY,
+            width: posAndSize.width,
+            height: posAndSize.height
+        });
+    }
+
     // // TODO: This is temporary workaround for model processing
     setModelTransformCallback(callback) {
         this.modelTransformCallback = callback;
