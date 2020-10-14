@@ -790,7 +790,7 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.updateSelectedModelTransformation(transformation);
+        modelGroup.updateSelectedGroupTransformation(transformation);
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },

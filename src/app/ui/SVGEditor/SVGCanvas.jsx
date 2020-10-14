@@ -1066,7 +1066,6 @@ class SVGCanvas extends PureComponent {
         this.svgContainer.setAttribute('height', height);
         size = size || this.props.size;
 
-        // this.svgContainer.setAttribute('transform', `scale(${this.state.transform.scale.x}, ${this.state.transform.scale.y})`);
 
         const viewBoxWidth = size.x * 2;
         const viewBoxHeight = size.y * 2;

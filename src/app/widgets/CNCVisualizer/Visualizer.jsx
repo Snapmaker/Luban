@@ -1,3 +1,4 @@
+import noop from 'lodash/noop';
 import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
@@ -58,8 +59,8 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired,
+        // onModelTransform: PropTypes.func.isRequired,
+        // onModelAfterTransform: PropTypes.func.isRequired,
 
         // editor actions
         onCreateElement: PropTypes.func.isRequired,
@@ -109,12 +110,14 @@ class Visualizer extends Component {
         onSelectModels: (intersect) => {
             this.props.selectModel(intersect);
         },
+        /*
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
         },
+        */
         // context menu
         bringToFront: () => {
             this.props.bringSelectedModelToFront();
@@ -355,8 +358,8 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
-                        onModelAfterTransform={this.actions.onModelAfterTransform}
-                        onModelTransform={this.actions.onModelTransform}
+                        onModelAfterTransform={noop}
+                        onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         transformSourceType="2D"
                     />
@@ -544,10 +547,10 @@ const mapDispatchToProps = (dispatch) => {
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
 
-        updateTextTransformationAfterEdit: (transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', transformation)),
+        updateTextTransformationAfterEdit: (transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', transformation))
 
-        onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
+        // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
+        // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
     };
 };
 

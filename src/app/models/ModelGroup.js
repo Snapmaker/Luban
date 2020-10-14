@@ -803,7 +803,7 @@ class ModelGroup extends EventEmitter {
         };
     }
 
-    updateSelectedModelTransformation(transformation) {
+    updateSelectedGroupTransformation(transformation) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
 
         // todo, width and height use for 2d
@@ -864,6 +864,7 @@ class ModelGroup extends EventEmitter {
     }
 
     // model transformation triggered by controls
+    // Note: the function is only useful for 3D object operations on Canvas
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         this.removeSelectedObjectParentMatrix();
@@ -872,9 +873,9 @@ class ModelGroup extends EventEmitter {
                 selected.stickToPlate();
             }
             selected.computeBoundingBox();
-            if (selected.sourceType !== '3d') { // all 2d types, like svg, raster, so on
-                selected.updateAndRefresh(this.selectedGroup);
-            }
+            // if (selected.sourceType !== '3d') { // all 2d types, like svg, raster, so on
+            //     selected.updateAndRefresh(this.selectedGroup);
+            // }
         });
         this._checkAnyModelOversteppedOrSelected();
         this.applySelectedObjectParentMatrix();

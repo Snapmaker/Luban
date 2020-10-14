@@ -498,6 +498,21 @@ class SvgModel {
         return transform;
     }
 
+    /**
+     *
+     * @param resizeDir
+     *      nw: null,
+     *        n: null,
+     *        ne: null,
+     *        e: null,
+     *        se: null,
+     *        s: null,
+     *        sw: null,
+     *        w: null
+     * @param resizeFrom
+     * @param resizeTo
+     * @param isUniformScaling
+     */
     elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;

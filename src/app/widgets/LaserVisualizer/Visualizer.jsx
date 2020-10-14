@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import noop from 'lodash/noop';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -58,8 +59,8 @@ class Visualizer extends Component {
         selectTargetModel: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired,
+        // onModelTransform: PropTypes.func.isRequired,
+        // onModelAfterTransform: PropTypes.func.isRequired,
 
         // editor actions
         onCreateElement: PropTypes.func.isRequired,
@@ -111,12 +112,14 @@ class Visualizer extends Component {
             // console.log('----on process select----', model);
             this.props.selectTargetModel(intersect);
         },
+        /*
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
         },
+        */
         // context menu
         bringToFront: () => {
             this.props.bringSelectedModelToFront();
@@ -275,7 +278,7 @@ class Visualizer extends Component {
         const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
-        const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
+        const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
 
         return (
             <div
@@ -329,8 +332,8 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
-                        onModelAfterTransform={this.actions.onModelAfterTransform}
-                        onModelTransform={this.actions.onModelTransform}
+                        onModelAfterTransform={noop}
+                        onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         transformSourceType="2D"
                     />
@@ -359,25 +362,25 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Bring to Front'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 onClick: this.actions.bringToFront
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Send to Back'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 onClick: this.actions.sendToBack
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Reference Position'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -429,7 +432,7 @@ class Visualizer extends Component {
                             {
                                 type: 'subMenu',
                                 label: i18n._('Flip'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 items: [
                                     {
                                         type: 'item',
@@ -454,7 +457,7 @@ class Visualizer extends Component {
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: contextMednuDisabled,
+                                disabled: contextMenuDisabled,
                                 onClick: this.actions.deleteSelectedModel
                             }
                             // {
@@ -520,10 +523,10 @@ const mapDispatchToProps = (dispatch) => {
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),
 
-        updateTextTransformationAfterEdit: (transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', transformation)),
+        updateTextTransformationAfterEdit: (transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', transformation))
 
-        onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
+        // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
+        // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
     };
 };
 
