@@ -1,11 +1,8 @@
 import React, { PureComponent } from 'react';
-import path from 'path';
 import { connect } from 'react-redux';
-import * as THREE from 'three';
 import PropTypes from 'prop-types';
 
 import Space from '../../components/Space';
-import { actions as printingActions } from '../../flux/printing';
 
 
 /**
@@ -15,45 +12,14 @@ import { actions as printingActions } from '../../flux/printing';
 class VisualizerInfo extends PureComponent {
     static propTypes = {
         // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
+        selectedModelBBoxDes: PropTypes.string,
         displayedType: PropTypes.string.isRequired,
         printTime: PropTypes.number.isRequired,
         filamentLength: PropTypes.number.isRequired,
         filamentWeight: PropTypes.number.isRequired,
-        boundingBox: PropTypes.object.isRequired,
-
-        getSelectedModelOriginalName: PropTypes.func.isRequired
+        selectedGroup: PropTypes.object
     };
 
-    /*
-    getSelectedModelPathDes() {
-        const { model } = this.props;
-        if (model) {
-            return path.basename(model.modelName);
-        }
-        return '';
-    }
-    */
-
-    getSelectedModelPathDes() {
-        const { selectedModelID } = this.props;
-        if (selectedModelID) {
-            const originalName = this.props.getSelectedModelOriginalName();
-            return path.basename(originalName);
-        }
-        return '';
-    }
-
-    getSelectedModelBBoxDes() {
-        const { selectedModelID, boundingBox } = this.props;
-        if (selectedModelID) {
-            const whd = new THREE.Vector3(0, 0, 0);
-            boundingBox.getSize(whd);
-            // width-depth-height
-            return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
-        }
-        return '';
-    }
 
     getFilamentDes() {
         const { filamentLength, filamentWeight } = this.props;
@@ -73,8 +39,9 @@ class VisualizerInfo extends PureComponent {
         return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
     }
 
+
     render() {
-        const { selectedModelID, displayedType } = this.props;
+        const { selectedGroup, displayedType, selectedModelBBoxDes } = this.props;
         if (displayedType === 'gcode') {
             const filamentDes = this.getFilamentDes();
             const printTimeDes = this.getPrintTimeDes();
@@ -92,18 +59,12 @@ class VisualizerInfo extends PureComponent {
                     </p>
                 </React.Fragment>
             );
-        } else if (selectedModelID) {
-            const selectedModelPathDes = this.getSelectedModelPathDes();
-            const selectedModelBoxDes = this.getSelectedModelBBoxDes();
+        } else if (selectedGroup.children.length > 0) {
             return (
                 <React.Fragment>
                     <p>
                         <span />
-                        {selectedModelPathDes}
-                    </p>
-                    <p>
-                        <span />
-                        {selectedModelBoxDes}
+                        {selectedModelBBoxDes}
                     </p>
                 </React.Fragment>
             );
@@ -115,20 +76,15 @@ class VisualizerInfo extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { selectedModelID, displayedType, printTime, filamentLength, filamentWeight, boundingBox } = printing;
-
+    const { modelGroup, displayedType, printTime, filamentLength, filamentWeight } = printing;
     return {
-        selectedModelID,
+        selectedGroup: modelGroup.selectedGroup,
         displayedType,
         printTime,
         filamentLength,
         filamentWeight,
-        boundingBox
+        selectedModelBBoxDes: modelGroup.getSelectedModelBBoxDes()
     };
 };
 
-const mapDispatchToProps = (dispatch) => ({
-    getSelectedModelOriginalName: () => dispatch(printingActions.getSelectedModelOriginalName())
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(VisualizerInfo);
+export default connect(mapStateToProps)(VisualizerInfo);

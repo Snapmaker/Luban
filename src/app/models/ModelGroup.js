@@ -1,6 +1,6 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 // import { Vector3, Group, MeshPhongMaterial } from 'three';
-import { Vector3, Group, MeshPhongMaterial, Matrix4, Euler } from 'three';
+import { Vector3, Group, MeshPhongMaterial, Matrix4, Euler, Box3, Quaternion } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -138,6 +138,48 @@ class ModelGroup extends EventEmitter {
             };
         } else {
             return {};
+        }
+    }
+
+    // Calculate selectedGroup's BBox in modelGroup
+    getSelectedModelBBoxDes() {
+        const selectedGroup = this.selectedGroup;
+        const boundingBoxArray = this.selectedGroup.boundingBox;
+        if (selectedGroup.children.length > 0 && boundingBoxArray.length > 0 && selectedGroup.shouldUpdateBoundingbox) {
+            const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+            const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            selectedGroup.children.forEach((child, index) => {
+                const boundingBox = boundingBoxArray[index];
+                const objectChildrenPosition = new Vector3();
+                const objectChildrenScale = new Vector3();
+                const objectChildrenQuaternion = new Quaternion();
+                // object
+                child.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
+
+                if (selectedGroup.children.length === 1) {
+                    minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
+                    minObjectBoundingBox.y = Math.min(boundingBox.min.y, minObjectBoundingBox.y);
+                    minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
+
+                    maxObjectBoundingBox.x = Math.max(boundingBox.max.x, maxObjectBoundingBox.x);
+                    maxObjectBoundingBox.y = Math.max(boundingBox.max.y, maxObjectBoundingBox.y);
+                    maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
+                } else {
+                    minObjectBoundingBox.x = Math.min(boundingBox.min.x + objectChildrenPosition.x - selectedGroup.position.x, minObjectBoundingBox.x);
+                    minObjectBoundingBox.y = Math.min(boundingBox.min.y + objectChildrenPosition.y - selectedGroup.position.y, minObjectBoundingBox.y);
+                    minObjectBoundingBox.z = Math.min(0, minObjectBoundingBox.z);
+
+                    maxObjectBoundingBox.x = Math.max(boundingBox.max.x + objectChildrenPosition.x - selectedGroup.position.x, maxObjectBoundingBox.x);
+                    maxObjectBoundingBox.y = Math.max(boundingBox.max.y + objectChildrenPosition.y - selectedGroup.position.y, maxObjectBoundingBox.y);
+                    maxObjectBoundingBox.z = Math.max(boundingBox.max.z - boundingBox.min.z, maxObjectBoundingBox.z);
+                }
+            });
+            const whd = new Vector3(0, 0, 0);
+            new Box3(minObjectBoundingBox, maxObjectBoundingBox).getSize(whd);
+            // width-depth-height
+            return `${whd.x.toFixed(1)} x ${whd.y.toFixed(1)} x ${whd.z.toFixed(1)} mm`;
+        } else {
+            return '';
         }
     }
 
