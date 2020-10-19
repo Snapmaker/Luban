@@ -254,7 +254,7 @@ class CNCPath extends PureComponent {
                                 modifyText={modifyText}
                             />
                         )}
-                        {isProcess && (isSvgVector || isTextVector) && (
+                        {isProcess && (isSvgVector) && (
                             <VectorParameters
                                 disabled={!selectedModelVisible}
                             />
