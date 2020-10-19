@@ -1,3 +1,4 @@
+import noop from 'lodash/noop';
 import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
@@ -17,7 +18,7 @@ import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import { PAGE_EDITOR } from '../../constants';
-import CncLaserSvgEditor from '../CncLaserSvgEditor';
+import SVGEditor from '../../ui/SVGEditor';
 
 
 function humanReadableTime(t) {
@@ -39,12 +40,13 @@ class Visualizer extends Component {
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
-        svgModelGroup: PropTypes.object.isRequired,
+        SVGActions: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        initContentGroup: PropTypes.func.isRequired,
         getEstimatedTime: PropTypes.func.isRequired,
         // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
@@ -55,12 +57,21 @@ class Visualizer extends Component {
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
-        unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired,
-        onSelectModel: PropTypes.func
+        // onModelTransform: PropTypes.func.isRequired,
+        // onModelAfterTransform: PropTypes.func.isRequired,
+
+        // editor actions
+        onCreateElement: PropTypes.func.isRequired,
+        onSelectElements: PropTypes.func.isRequired,
+        onClearSelection: PropTypes.func.isRequired,
+        onResizeElement: PropTypes.func.isRequired,
+        onAfterResizeElement: PropTypes.func.isRequired,
+        onMoveElement: PropTypes.func.isRequired,
+        onRotateElement: PropTypes.func.isRequired,
+        createText: PropTypes.func.isRequired,
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -99,15 +110,14 @@ class Visualizer extends Component {
         onSelectModels: (intersect) => {
             this.props.selectModel(intersect);
         },
-        onUnselectAllModels: () => {
-            this.props.unselectAllModels();
-        },
+        /*
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
         },
+        */
         // context menu
         bringToFront: () => {
             this.props.bringSelectedModelToFront();
@@ -314,13 +324,22 @@ class Visualizer extends Component {
                     visibility: isEditor ? 'visible' : 'hidden'
                 }}
                 >
-                    <CncLaserSvgEditor
+                    <SVGEditor
                         ref={this.svgCanvas}
                         size={this.props.size}
-                        svgModelGroup={this.props.svgModelGroup}
+                        initContentGroup={this.props.initContentGroup}
+                        SVGActions={this.props.SVGActions}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
-                        onSelectModel={this.props.onSelectModel}
+                        onCreateElement={this.props.onCreateElement}
+                        onSelectElements={this.props.onSelectElements}
+                        onClearSelection={this.props.onClearSelection}
+                        onResizeElement={this.props.onResizeElement}
+                        onAfterResizeElement={this.props.onAfterResizeElement}
+                        onMoveElement={this.props.onMoveElement}
+                        onRotateElement={this.props.onRotateElement}
+                        createText={this.props.createText}
+                        updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                     />
                 </div>
                 <div
@@ -339,9 +358,8 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z, 300))}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         onSelectModels={this.actions.onSelectModels}
-                        onUnselectAllModels={this.actions.onUnselectAllModels}
-                        onModelAfterTransform={this.actions.onModelAfterTransform}
-                        onModelTransform={this.actions.onModelTransform}
+                        onModelAfterTransform={noop}
+                        onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         transformSourceType="2D"
                     />
@@ -484,7 +502,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, modelGroup, svgModelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
+    const { page, modelGroup, SVGActions, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     return {
@@ -492,7 +510,7 @@ const mapStateToProps = (state) => {
         size: machine.size,
         // model,
         modelGroup,
-        svgModelGroup,
+        SVGActions,
         toolPathModelGroup,
         selectedModelArray,
         selectedModelID,
@@ -505,6 +523,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('cnc', svgContentGroup)),
+
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('cnc')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('cnc')),
@@ -514,12 +534,23 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModel: (intersect) => dispatch(editorActions.selectModelInProcess('cnc', intersect)),
-        unselectAllModels: () => dispatch(editorActions.unselectAllModels('cnc')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),
-        onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
-        onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc')),
-        onSelectModel: (elements) => dispatch(editorActions.selectModelByElements('cnc', elements))
+
+        onCreateElement: (element) => dispatch(editorActions.createModelFromElement('cnc', element)),
+        onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),
+        onClearSelection: () => dispatch(editorActions.clearSelection('cnc')),
+        onResizeElement: (element, options) => dispatch(editorActions.resizeElement('cnc', element, options)),
+        onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('cnc', element)),
+        onMoveElement: (element, options) => dispatch(editorActions.moveElement('cnc', element, options)),
+        onRotateElement: (element, options) => dispatch(editorActions.rotateElement('cnc', element, options)),
+
+        createText: (text) => dispatch(editorActions.createText('cnc', text)),
+
+        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation))
+
+        // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
+        // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
     };
 };
 

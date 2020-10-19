@@ -1,4 +1,4 @@
-import { ABSENT_VALUE } from '../../constants';
+import { ABSENT_VALUE } from '../constants';
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 4;

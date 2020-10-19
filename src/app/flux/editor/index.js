@@ -6,10 +6,8 @@ import {
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
     sizeModelByMachineSize
-} from '../models/ModelInfoUtils';
+} from '../../models/ModelInfoUtils';
 
-import { threejsModelActions } from './threejs-model';
-import { svgModelActions } from './svg-model';
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import { controller } from '../../lib/controller';
@@ -53,20 +51,72 @@ export const CNC_LASER_STAGE = {
 export const actions = {
 
     ...baseActions,
+
     init: () => (dispatch, getState) => {
         // TODO: temporary workaround for model image processing
-        const bindSVGModelGroup = (headType) => {
-            const { svgModelGroup } = getState()[headType];
+        const bindSVGActions = (headType) => {
+            const { SVGActions } = getState()[headType];
 
-            svgModelGroup.setModelTransformCallback(() => {
+            SVGActions.setModelTransformCallback(() => {
                 dispatch(actions.processSelectedModel(headType));
             });
         };
 
-        bindSVGModelGroup('laser');
-        bindSVGModelGroup('cnc');
+        bindSVGActions('laser');
+        bindSVGActions('cnc');
     },
 
+    onSizeUpdated: (headType, size) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.updateSize(size);
+    },
+
+    /**
+     * Save content group in state.
+     */
+    initContentGroup: (headType, svgContentGroup) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        dispatch(baseActions.updateState(headType, { contentGroup: svgContentGroup }));
+
+        SVGActions.init(svgContentGroup);
+    },
+
+    /**
+     * Clear background image from editor.
+     */
+    clearBackgroundImage: (headType) => (dispatch, getState) => {
+        const { contentGroup } = getState()[headType];
+
+        const backgroundGroup = contentGroup.backgroundGroup;
+        while (backgroundGroup.firstChild) {
+            backgroundGroup.removeChild(backgroundGroup.lastChild);
+        }
+    },
+
+    /**
+     * Generate Mold
+     *
+     * @param {Object} options - of { originalName, uploadName, width, height }
+     * @returns {Function}
+     */
+
+    // TODO: continue refactoring afterwards
+    /*
+    generateMoldFromImage: (headType, options) => (dispatch, getState) => {
+        let { sourceType = null } = options; // svg, dxf, raster
+
+        sourceType = sourceType || getSourceType(sourceType);
+    },
+    */
+
+    /**
+     * Upload image in editor, or drag image into editor to upload.
+     *
+     * 1. Upload image to backend
+     * 2. Create Mold from image information
+     */
     uploadImage: (headType, file, mode, onError) => (dispatch) => {
         const formData = new FormData();
         formData.append('image', file);
@@ -75,6 +125,7 @@ export const actions = {
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
                 dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
+                // dispatch(actions.generateMoldFromImage(headType, { originalName, uploadName, width, height }));
             })
             .catch((err) => {
                 onError && onError(err);
@@ -101,7 +152,7 @@ export const actions = {
 
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { toolParams, modelGroup, svgModelGroup } = getState()[headType];
+        const { toolParams, modelGroup, SVGActions } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -176,29 +227,10 @@ export const actions = {
             gcodeConfig
         };
 
-        // todo, process dxf
-        // api.processImage(options)
-        //     .then((res) => {
-        //         options.processImageName = res.body.filename;
-        //
-        //         dispatch(svgModelActions.generateSvgModel(headType, options));
-        //         dispatch(threejsModelActions.generateThreejsModel(headType, options));
-        //
-        //         dispatch(baseActions.resetCalculatedState(headType));
-        //         dispatch(baseActions.updateState(headType, {
-        //             hasModel: true
-        //         }));
-        //
-        //         dispatch(baseActions.render(headType));
-        //     })
-        //     .catch((err) => {
-        //         console.error(err);
-        //     });
-
         const model = modelGroup.addModel(options);
-        svgModelGroup.createFromModel(model);
-        svgModelGroup.clearSelection();
-        svgModelGroup.addSelectedSvgModelsByModels([model]);
+        SVGActions.createFromModel(model);
+        SVGActions.clearSelection();
+        SVGActions.addSelectedSvgModelsByModels([model]);
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
@@ -218,56 +250,46 @@ export const actions = {
             });
     },
 
-    // TODO: Check usage of this method
-    // selectModel: (headType, model) => (dispatch, getState) => {
-    //     const { modelGroup } = getState()[headType];
-    //     const find = modelGroup.getModels().find(v => v.meshObject === model);
-    //     dispatch(actions.selectModelByID(headType, find.modelID));
-    // },
-
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
         if (!isMultiSelect) {
             // remove all selected model
-            modelGroup.emptySelectedModelArray();
-            dispatch(svgModelActions.emptySelectedModelArray(headType));
+            dispatch(actions.clearSelection(headType));
         }
-        dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+
+        SVGActions.addSelectedSvgModelsByModels([model]);
+
         toolPathModelGroup.selectToolPathModel(model.modelID);
         // todo, donot reset here
-        dispatch(svgModelActions.resetSelection(headType));
-        // todo multi select toopath model
-        dispatch(threejsModelActions.selectModel(headType, model));
+        SVGActions.resetSelection();
+
+        const selectedModelState = modelGroup.state;
+        // todo, multi select tool path model
+        const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
+
+        const state = {
+            ...selectedModelState,
+            ...toolPathModelState
+        };
+        dispatch(baseActions.updateState(headType, state));
     },
 
     // todo, select model by toolPathModel ??? meshObject ???
     selectModelInProcess: (headType, intersect) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        const { SVGActions, modelGroup, toolPathModelGroup } = getState()[headType];
 
-        modelGroup.emptySelectedModelArray();
-        dispatch(svgModelActions.emptySelectedModelArray(headType));
-        // dispatch(svgModelActions.addSelectedSvgModels(headType, []));
+        dispatch(actions.clearSelection(headType));
 
         if (intersect) {
             const model = modelGroup.getSelectedModelByIntersect(intersect);
             if (model) {
-                dispatch(svgModelActions.addSelectedSvgModels(headType, [model]));
+                SVGActions.addSelectedSvgModelsByModels([model]);
+
                 toolPathModelGroup.selectToolPathModel(model.modelID);
                 dispatch(baseActions.render(headType));
             }
         }
-    },
-
-    // TODO: Check usage of this method
-    selectModelByID: (headType, modelID) => (dispatch) => {
-        dispatch(svgModelActions.selectModel(headType, modelID));
-        dispatch(threejsModelActions.selectModel(headType, modelID));
-    },
-
-    unselectAllModels: (headType) => (dispatch) => {
-        dispatch(svgModelActions.selectModel(headType, null));
-        dispatch(threejsModelActions.selectModel(headType, null));
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
@@ -309,9 +331,9 @@ export const actions = {
     },
 
     changeSelectedModelShowOrigin: (headType) => (dispatch, getState) => {
-        const { svgModelGroup, modelGroup } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
         const res = modelGroup.changeShowOrigin();
-        svgModelGroup.updateElementImage(res.showImageName);
+        SVGActions.updateElementImage(res.showImageName);
 
         dispatch(baseActions.updateState(headType, {
             showOrigin: res.showOrigin,
@@ -319,11 +341,24 @@ export const actions = {
         }));
     },
 
-    updateSelectedModelTransformation: (headType, transformation, changeFrom) => (dispatch) => {
-        // todo
-        // dispatch(threejsModelActions.updateSelectedModelTransformation(headType, transformation, changeFrom));
-        // todo
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation, changeFrom));
+    /**
+     *
+     * @param headType
+     * @param transformation
+     *        - positionX
+     *        - positionY
+     *        - positionZ?
+     *        - scaleX
+     *        - scaleY
+     *        - rotateZ
+     *        - width
+     *        - height
+     *        - uniformScalingState
+     * @returns {Function}
+     */
+    updateSelectedModelTransformation: (headType, transformation) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.updateSelectedElementsTransformation(transformation);
 
         dispatch(actions.processSelectedModel(headType));
     },
@@ -352,7 +387,7 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -391,8 +426,8 @@ export const actions = {
                 // modelGroup.updateSelectedModelProcessImage(processImageName);
                 selectedModel.updateProcessImageName(processImageName);
 
-                // svgModelGroup.updateElementImage(processImageName);
-                svgModelGroup.updateSvgModelImage(svgModel, processImageName);
+                // SVGActions.updateElementImage(processImageName);
+                SVGActions.updateSvgModelImage(svgModel, processImageName);
 
                 // toolPathModelGroup.updateSelectedNeedPreview(true);
                 toolPathModel.updateNeedPreview(true);
@@ -449,15 +484,14 @@ export const actions = {
         // transformation.flip = flip;
         // transformation.svgflip = svgflip;
         // dispatch(actions.updateSelectedModelFlip(headType, transformation));
-        // dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { page, modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { page, modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
 
         if (page === PAGE_PROCESS) return;
 
-        svgModelGroup.deleteSelectedElements();
+        SVGActions.deleteSelectedElements();
         // todo
         let toolPathModelState = null;
         for (const model of modelGroup.getSelectedModelArray()) {
@@ -485,6 +519,8 @@ export const actions = {
         // const transformation = model.modelInfo.transformation;
         const model = getState()[headType].modelGroup.getSelectedModel();
         if (!model) return;
+
+        const { SVGActions } = getState()[headType];
 
         const { transformation } = model;
         let posX = 0;
@@ -534,11 +570,8 @@ export const actions = {
         transformation.positionX = posX;
         transformation.positionY = posY;
         transformation.rotationZ = 0;
-        // todo
-        // model.updateAndRefresh({ transformation });
-        dispatch(svgModelActions.updateSelectedTransformation(headType, transformation));
-        // dispatch(actions.updateSelectedModelTransformation(headType, transformation));
-        // dispatch(actions.onModelAfterTransform(headType));
+
+        SVGActions.updateSelectedElementsTransformation(transformation);
     },
 
     onModelTransform: (headType) => (dispatch, getState) => {
@@ -553,13 +586,15 @@ export const actions = {
     },
 
     onModelAfterTransform: (headType) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, SVGActions } = getState()[headType];
         if (modelGroup) {
             const modelState = modelGroup.onModelAfterTransform();
 
             if (modelState) {
-                // dispatch(svgModelActions.updateSelectedTransformation(headType, modelState.transformation));
-                dispatch(svgModelActions.updateSelectedTransformation(headType, modelGroup.getSelectedModelTransformation()));
+                // dispatch(svgModelActions.updateSelectedTransformation(headType, modelGroup.getSelectedModelTransformation()));
+                const transformation = modelGroup.getSelectedModelTransformation();
+                SVGActions.updateSelectedElementsTransformation(transformation);
+
                 dispatch(baseActions.updateState(headType, { modelState }));
                 dispatch(baseActions.updateTransformation(headType, modelState.transformation));
                 dispatch(actions.previewModel(headType));
@@ -568,8 +603,10 @@ export const actions = {
         }
     },
 
+    // UNUSED, replaced by modifyText
+    /*
     updateSelectedModelTextConfig: (headType, newConfig) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup, config } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathModelGroup, config } = getState()[headType];
         newConfig = {
             ...config,
             ...newConfig
@@ -597,8 +634,8 @@ export const actions = {
                     height: selectedModel.transformation.height / selectedModel.height * textSize.height
                 };
 
-                svgModelGroup.updateElementImage(uploadName);
-                svgModelGroup.updateTransformation(transformation);
+                SVGActions.updateElementImage(uploadName);
+                SVGActions.updateTransformation(transformation);
                 modelGroup.updateSelectedSource(source);
                 modelGroup.updateSelectedModelTransformation(transformation);
                 modelGroup.updateSelectedConfig(newConfig);
@@ -614,6 +651,7 @@ export const actions = {
                 dispatch(baseActions.render(headType));
             });
     },
+    */
 
     previewModel: (headType, isProcess) => (dispatch, getState) => {
         const { page, modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
@@ -904,14 +942,14 @@ export const actions = {
     },
 
     bringSelectedModelToFront: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup } = getState()[headType];
-        svgModelGroup.bringElementToFront();
+        const { modelGroup, SVGActions } = getState()[headType];
+        SVGActions.bringElementToFront();
         modelGroup.bringSelectedModelToFront();
     },
 
     sendSelectedModelToBack: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup } = getState()[headType];
-        svgModelGroup.sendElementToBack();
+        const { modelGroup, SVGActions } = getState()[headType];
+        SVGActions.sendElementToBack();
         modelGroup.sendSelectedModelToBack();
     },
 
@@ -997,30 +1035,129 @@ export const actions = {
     },
 
     hideSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
         modelGroup.hideSelectedModel();
         toolPathModelGroup.hideSelectedModel();
-        svgModelGroup.hideSelectedElement();
+        SVGActions.hideSelectedElement();
         dispatch(baseActions.render(headType));
     },
 
     showSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
         modelGroup.showSelectedModel();
         toolPathModelGroup.showSelectedModel();
-        svgModelGroup.showSelectedElement();
-        // svgModelGroup.updateTransformation(modelGroup.getSelectedModel().transformation);
+        SVGActions.showSelectedElement();
+        // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
         dispatch(baseActions.render(headType));
     },
 
-    selectModelByElements: (headType, elements) => (dispatch, getState) => {
-        const { modelGroup, svgModelGroup, toolPathModelGroup } = getState()[headType];
-        // todo
-        svgModelGroup.addSelectedSvgModelsByElements(elements);
+    /**
+     * Create model from element.
+     */
+    createModelFromElement: (headType, element) => async (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
 
-        // select toolPathModel
-        const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
-        toolPathModelGroup.selectToolPathModel(model && model.modelID);
+        await SVGActions.createModelFromElement(element);
+    },
+
+    /**
+     * Select models.
+     */
+    selectElements: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.selectElements(elements);
+
+        // select first toolPathModel by default
+        // const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
+        // toolPathModelGroup.selectToolPathModel(model && model.modelID);
+    },
+
+    /**
+     * Clear selection of models.
+     */
+    clearSelection: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.clearSelection();
+    },
+
+    /**
+     * Resize element.
+     */
+    resizeElement: (headType, element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling });
+    },
+
+    // TODO: ...
+    /**
+     * Resize element.
+     */
+    afterResizeElement: (headType, element) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.afterResizeElement(element);
+    },
+
+    /**
+     * Move element.
+     */
+    moveElement: (headType, element, { dx, dy }) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElement(element, { dx, dy });
+    },
+
+    /**
+     * Rotate element.
+     */
+    rotateElement: (headType, element, { angle, cx, cy }) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElement(element, { angle, cx, cy });
+    },
+
+    /**
+     * Create text element (but not its corresponding model).
+     */
+    createText: (headType, content) => async (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        return SVGActions.createText(content);
+    },
+
+    /**
+     * Modify text element.
+     */
+    modifyText: (headType, element, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.modifyText(element, options);
+    },
+
+    /**
+     * Update Selected Model Transformation.
+     *
+     * TODO: Rename.
+     */
+    updateModelTransformationByElement: (headType, element, transformation) => (dispatch, getState) => {
+        let model, svgModel;
+        if (!element) {
+            const { modelGroup } = getState()[headType];
+            if (modelGroup.getSelectedModelArray.length !== 1) {
+                return;
+            }
+            model = modelGroup.getSelectedModelArray()[0];
+            svgModel = model.relatedModel.svgModel;
+        } else {
+            const { SVGActions } = getState()[headType];
+            svgModel = SVGActions.getModelsByElements([element])[0];
+            model = svgModel.relatedModel;
+        }
+        model.updateTransformation(transformation);
+        svgModel.onUpdate();
     }
 };
 

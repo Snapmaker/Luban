@@ -85,12 +85,14 @@ class ToolPathModelGroup {
         return this.getState(this.selectedToolPathModel);
     }
 
+    /*
     generateToolPathModel(modelInfo) {
         const toolPathModel = new ToolPathModel(modelInfo);
         this.addToolPathModel(toolPathModel);
         this.selectedToolPathModel = toolPathModel;
         return this.getState(toolPathModel);
     }
+    */
 
     addToolPathModel(toolPathModel) {
         if (toolPathModel) {

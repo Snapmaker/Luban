@@ -4,12 +4,13 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 
 const TipTrigger = (props) => {
-    const { placement = 'left', title, content, children, ...rest } = props;
+    const { placement = 'left', title = '', content, children, ...rest } = props;
 
     const getOverlay = () => {
         return (
-            <Popover id={`tip-popover-${title}`} title={title}>
-                {content}
+            <Popover id={`tip-popover-${title}`}>
+                <Popover.Title>{title}</Popover.Title>
+                <Popover.Content>{content}</Popover.Content>
             </Popover>
         );
     };

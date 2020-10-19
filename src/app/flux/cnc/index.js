@@ -1,6 +1,6 @@
-import ModelGroup from '../models/ModelGroup';
-import SvgModelGroup from '../models/SvgModelGroup';
-import ToolPathModelGroup from '../models/ToolPathModelGroup';
+import ModelGroup from '../../models/ModelGroup';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathModelGroup from '../../models/ToolPathModelGroup';
 import { controller } from '../../lib/controller';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
@@ -24,7 +24,7 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
     toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
-    svgModelGroup: new SvgModelGroup(initModelGroup),
+    SVGActions: new SVGActionsFactory(initModelGroup),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,

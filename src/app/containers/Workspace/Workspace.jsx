@@ -10,7 +10,6 @@ import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
-// import * as widgetManager from './WidgetManager';
 import DefaultWidgets from './DefaultWidgets';
 import PrimaryWidgets from './PrimaryWidgets';
 import SecondaryWidgets from './SecondaryWidgets';

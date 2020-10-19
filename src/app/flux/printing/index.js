@@ -11,7 +11,7 @@ import { timestamp, pathWithRandomSuffix } from '../../../shared/lib/random-util
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
-import ModelGroup from '../models/ModelGroup';
+import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
@@ -790,7 +790,7 @@ export const actions = {
 
     updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.updateSelectedModelTransformation(transformation);
+        modelGroup.updateSelectedGroupTransformation(transformation);
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -837,18 +837,6 @@ export const actions = {
         const modelState = modelGroup.selectAllModels();
         dispatch(actions.updateState(modelState));
     },
-
-    unselectAllModels: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.selectModelById(null);
-        dispatch(actions.updateState(
-            {
-                // model,
-                selectedModelIDArray: []
-            }
-        ));
-    },
-
 
     hideSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

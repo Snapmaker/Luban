@@ -25,7 +25,7 @@ export const EVENTS = {
     UPDATE: 'update',
     CONTEXT_MENU: 'contextmenu',
     SELECT_OBJECTS: 'object:select',
-    UNSELECT_OBJECT: 'object:unselect',
+    // UNSELECT_OBJECT: 'object:unselect',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
 };

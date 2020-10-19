@@ -2,9 +2,9 @@ import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
 import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
 import { controller } from '../../lib/controller';
-import ModelGroup from '../models/ModelGroup';
-import SvgModelGroup from '../models/SvgModelGroup';
-import ToolPathModelGroup from '../models/ToolPathModelGroup';
+import ModelGroup from '../../models/ModelGroup';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathModelGroup from '../../models/ToolPathModelGroup';
 
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
@@ -25,7 +25,7 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
     toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
-    svgModelGroup: new SvgModelGroup(initModelGroup),
+    SVGActions: new SVGActionsFactory(initModelGroup),
 
     isAllModelsPreviewed: false,
     isGcodeGenerating: false,
@@ -122,9 +122,9 @@ export const actions = {
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const state = getState().laser;
-        const { svgModelGroup } = state;
+        const { SVGActions } = state;
 
-        svgModelGroup.addImageBackgroundToSVG({
+        SVGActions.addImageBackgroundToSVG({
             modelID: 'image-background',
             uploadName: filename,
             transformation: {
@@ -160,8 +160,8 @@ export const actions = {
 
     removeBackgroundImage: () => (dispatch, getState) => {
         const state = getState().laser;
-        const { svgModelGroup } = state;
-        svgModelGroup.clearImageBackground();
+        dispatch(editorActions.clearBackgroundImage('laser'));
+
         const { group } = state.background;
         group.remove(...group.children);
         dispatch(actions.setBackgroundEnabled(false));

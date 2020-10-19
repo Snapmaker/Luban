@@ -145,6 +145,10 @@ function transformListToTransform(transformList, start, end) {
 // - element
 
 function getTransformList(elem) {
+    const transform = elem.transform;
+    if (!transform) {
+        elem.setAttribute('transform', 'translate(0,0)');
+    }
     return elem.transform.baseVal;
 }
 

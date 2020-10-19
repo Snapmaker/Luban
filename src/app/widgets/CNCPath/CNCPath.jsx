@@ -6,7 +6,6 @@ import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import i18n from '../../lib/i18n';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import TextParameters from '../CncLaserShared/TextParameters';
-// import Appearance from '../CncLaserShared/Appearance';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import VectorParameters from './VectorParameters';
@@ -46,6 +45,9 @@ class CNCPath extends PureComponent {
         // transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
+        selectedModel: PropTypes.object,
+
+        // functions
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
@@ -53,13 +55,13 @@ class CNCPath extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired,
 
         togglePage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
-        selectedModel: PropTypes.object
 
+        // operator functions
+        modifyText: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -184,11 +186,11 @@ class CNCPath extends PureComponent {
             showOrigin,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
+            printOrder, updateSelectedModelPrintOrder, config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
             updateSelectedModelUniformScalingState,
-
-            selectedModel
+            selectedModel,
+            modifyText
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
@@ -249,17 +251,9 @@ class CNCPath extends PureComponent {
                                 config={config}
                                 headType="cnc"
                                 selectedModel={selectedModel}
-                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                                modifyText={modifyText}
                             />
                         )}
-                        {/* {isEditor && isSvgElement && (
-                            <Appearance
-                                disabled={selectedModelVisible}
-                                config={config}
-                                selectedModel={selectedModel}
-                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
-                            />
-                        )} */}
                         {isProcess && (isSvgVector || isTextVector) && (
                             <VectorParameters
                                 disabled={!selectedModelVisible}
@@ -336,10 +330,11 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('cnc')),
-        updateSelectedModelTextConfig: (config) => dispatch(editorActions.updateSelectedModelTextConfig('cnc', config)),
         onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc')),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode))
+        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode)),
+
+        modifyText: (element, options) => dispatch(editorActions.modifyText('cnc', element, options))
     };
 };
 

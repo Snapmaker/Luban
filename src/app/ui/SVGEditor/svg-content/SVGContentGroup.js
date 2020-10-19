@@ -97,7 +97,7 @@ class SVGContentGroup {
     }
 
     deleteElements(elems) {
-        this.operatorPoints.showGrips(false);
+        this.showSelectorGrips(false);
         for (const elem of elems) {
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
             elem.remove();
@@ -106,7 +106,7 @@ class SVGContentGroup {
 
     deleteElement(elem) {
         if (elem) {
-            this.operatorPoints.showGrips(false);
+            this.showSelectorGrips(false);
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
             elem.remove();
         }
@@ -139,8 +139,11 @@ class SVGContentGroup {
         return element;
     }
 
+    /**
+     * Clear selection of elements.
+     */
     clearSelection() {
-        this.operatorPoints.showGrips(false);
+        this.showSelectorGrips(false);
         this.selectedElements = [];
     }
 
@@ -151,7 +154,7 @@ class SVGContentGroup {
             }
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
-        this.operatorPoints.showGrips(true);
+        this.showSelectorGrips(true);
         // todo
         return posAndsize;
     }
@@ -239,6 +242,9 @@ class SVGContentGroup {
         return posAndSize;
     }
 
+    /**
+     * Remove all elements from group.
+     */
     removeAllElements() {
         while (this.group.firstChild) {
             this.deleteElement(this.group.lastChild);
@@ -398,6 +404,46 @@ class SVGContentGroup {
             if (idx === -1) idx = transformList.numberOfItems - 1;
             transformList.replaceItem(rotate, idx);
         }
+    }
+
+    getElementAngel(element) { // get angleOld for elements rotation
+        if (!element) {
+            if (this.selectedElements.length !== 1) {
+                //TODO: for multi-rotate, angleOld maybe not 0
+                return 0;
+            }
+            element = this.selectedElements[0];
+        }
+        const transformList = getTransformList(element);
+        const findIndex = (list, type) => {
+            for (let k = 0; k < list.length; k++) {
+                if (list.getItem(k).type === type) {
+                    return k;
+                }
+            }
+            return -1;
+        };
+        const idx = findIndex(transformList, 4);
+        if (idx === -1) {
+            return 0;
+        }
+        return transformList[idx].angle;
+    }
+
+    showSelectorGrips(show) {
+        this.operatorPoints.showGrips(show);
+    }
+
+    showSelectorResizeAndRotateGripsAndBox(show) {
+        this.operatorPoints.showResizeAndRotateGripsAndBox(show);
+    }
+
+    showSelectorResizeAndRotateGrips(show) {
+        this.operatorPoints.showResizeAndRotateGrips(show);
+    }
+
+    appendTextCursor(cursor) {
+        this.operatorPoints.operatorPointsGroup.appendChild(cursor);
     }
 }
 

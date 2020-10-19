@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import uuid from 'uuid';
-import { generateToolPathObject3D } from '../generator';
-import { DATA_PREFIX } from '../../constants';
+import { generateToolPathObject3D } from '../flux/generator';
+import { DATA_PREFIX } from '../constants';
 
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',

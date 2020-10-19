@@ -21,6 +21,7 @@ import { machineStore } from '../../store/local-storage';
 import { Server } from './Server';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
+import { actions as editorActions } from '../editor';
 import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
@@ -168,6 +169,9 @@ export const actions = {
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
         // setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);
+
+        dispatch(editorActions.onSizeUpdated('laser', seriesInfo ? seriesInfo.setting.size : size));
+        dispatch(editorActions.onSizeUpdated('cnc', seriesInfo ? seriesInfo.setting.size : size));
 
         // Register event listeners
         const controllerEvents = {
@@ -405,6 +409,9 @@ export const actions = {
         dispatch(actions.updateState({ size: { ...size } }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
+
+        dispatch(editorActions.onSizeUpdated('laser', size));
+        dispatch(editorActions.onSizeUpdated('cnc', size));
     },
     updateLaserSize: (laserSize) => (dispatch) => {
         if (!laserSize) {
