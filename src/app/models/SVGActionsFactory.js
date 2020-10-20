@@ -428,7 +428,7 @@ class SVGActionsFactory {
             // }
 
             // rotate operationGrips
-            transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.angle + 180) % 360 - 180) * Math.PI / 180;
+            transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 180) % 360 - 180) * Math.PI / 180;
 
             // Reselect all SVG Elements to make a new selection
             // TODO: Refactor this.
