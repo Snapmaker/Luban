@@ -209,7 +209,7 @@ export const actions = {
                 stage: PRINTING_STAGE.SLICE_SUCCEED,
                 progress: 1
             }));
-            dispatch(actions.unselectAllModels());
+            modelGroup.unselectAllModels();
             dispatch(actions.loadGcode(gcodeFilename));
         });
         controller.on('slice:progress', (progress) => {
