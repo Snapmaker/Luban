@@ -958,7 +958,6 @@ class SVGCanvas extends PureComponent {
                 this.setMode('select');
             }
         }
-        this.setMode('select');
     };
 
     onDblClick = (evt) => {
