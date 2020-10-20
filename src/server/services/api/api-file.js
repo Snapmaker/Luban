@@ -9,7 +9,10 @@ import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import parseGcodeHeader from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
-
+import { packFirmware } from '../../lib/firmware-build';
+import {
+    ERR_INTERNAL_SERVER_ERROR
+} from '../../constants';
 
 const log = logger('api:file');
 
@@ -35,12 +38,14 @@ const cpFileToTmp = async (file, uploadName) => {
 export const set = async (req, res) => {
     let { uploadName } = req.body;
     const file = req.files.file;
+    console.log('set', req.files, req.body);
 
     if (file) { // post blob file in web
         const originalName = path.basename(file.name);
         if (!uploadName) {
             uploadName = pathWithRandomSuffix(originalName);
         }
+
         const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
         mv(file.path, uploadPath, (err) => {
@@ -58,6 +63,28 @@ export const set = async (req, res) => {
         const ret = await cpFileToTmp(JSON.parse(req.body.file));
         res.send(ret);
         res.end();
+    }
+};
+
+export const buildFirmwareFile = (req, res) => {
+    const { binFiles } = req.body;
+    const files = req.files;
+    console.log('binFiles, moduleFile', req.body, typeof binFiles, binFiles);
+    if (files.mainFile || files.moduleFile) {
+        const options = {
+            mainPath: files.mainFile.path,
+            modulePath: files.moduleFile.path
+        };
+        packFirmware(options)
+            .then((result) => {
+                console.log('result', result);
+            })
+            .catch((err) => {
+                res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                    msg: 'Unable to build package',
+                    error: String(err)
+                });
+            });
     }
 };
 

@@ -588,6 +588,7 @@ export const actions = {
         formData.append('file', file);
         const uploadName = pathWithRandomSuffix(file.name);
         formData.append('uploadName', uploadName);
+        console.log('uploadModel', formData, file);
         const res = await api.uploadFile(formData);
 
         const { originalName } = res.body;

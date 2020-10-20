@@ -275,7 +275,8 @@ class App extends PureComponent {
             '/caselibrary',
             '/settings/general',
             '/settings/machine',
-            '/settings/config'
+            '/settings/config',
+            '/settings/firmware'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
