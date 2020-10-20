@@ -153,7 +153,6 @@ class SVGCanvas extends PureComponent {
         }
 
         if (nextProps.target !== this.target) {
-            console.log('target = ', nextProps.target, this.target);
             this.offsetX = -nextProps.target.x;
             this.offsetY = nextProps.target.y;
 

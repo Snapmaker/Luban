@@ -453,8 +453,6 @@ class Controls extends EventEmitter {
             }
 
             this.sphericalDelta.set(0, 0, 0);
-            this.onScale();
-            this.scale = 1;
         }
 
         // pan
@@ -467,6 +465,12 @@ class Controls extends EventEmitter {
         this.camera.position.copy(this.target).add(this.offset);
         this.camera.lookAt(this.target);
 
+        // need to update scale after camera position setted,
+        // because of camera position used to calculate current scale
+        if (this.scale !== 1) {
+            this.onScale();
+            this.scale = 1;
+        }
         // using small-angle approximation cos(x/2) = 1 - x^2 / 8
         if (this.lastPosition.distanceToSquared(this.camera.position) > EPS
             || 8 * (1 - this.lastQuaternion.dot(this.camera.quaternion)) > EPS) {
