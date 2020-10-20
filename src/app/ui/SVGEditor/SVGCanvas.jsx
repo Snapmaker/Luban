@@ -148,6 +148,7 @@ class SVGCanvas extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.scale !== this.lastScale) {
+            // Updates from outsider
             this.lastScale = nextProps.scale;
             this.updateCanvas();
         }
@@ -171,6 +172,7 @@ class SVGCanvas extends PureComponent {
 
     set scale(val) {
         this.lastScale = val / DEFAULT_SCALE * ZOOM_RATE;
+        // Notify scale updates, this method should be named `onScaleUpdated`
         this.props.updateScale(this.lastScale);
     }
 
