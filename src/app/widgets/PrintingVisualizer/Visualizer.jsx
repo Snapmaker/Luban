@@ -253,6 +253,8 @@ class Visualizer extends PureComponent {
                     <Canvas
                         ref={this.canvas}
                         size={size}
+                        scale={1}
+                        target={null}
                         modelGroup={modelGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2)}

@@ -92,15 +92,17 @@ class SVGCanvas extends PureComponent {
         onRotateElement: PropTypes.func.isRequired,
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
+        scale: PropTypes.number.isRequired,
         target: PropTypes.object,
-        scale: PropTypes.number,
-        updateTarget: PropTypes.func,
-        updateScale: PropTypes.func
+        updateScale: PropTypes.func.isRequired,
+        updateTarget: PropTypes.func.isRequired
     };
 
     updateTime = 0;
 
     // scale = DEFAULT_SCALE;
+
+    target = null;
 
     offsetX = 0;
 
@@ -151,6 +153,7 @@ class SVGCanvas extends PureComponent {
         }
 
         if (nextProps.target !== this.target) {
+            console.log('target = ', nextProps.target, this.target);
             this.offsetX = -nextProps.target.x;
             this.offsetY = nextProps.target.y;
 

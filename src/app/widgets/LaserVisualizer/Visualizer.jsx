@@ -36,7 +36,7 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
 
         size: PropTypes.object.isRequired,
-        scale: PropTypes.number,
+        scale: PropTypes.number.isRequired,
         target: PropTypes.object,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
@@ -494,8 +494,8 @@ const mapStateToProps = (state) => {
     return {
         page,
         size: machine.size,
-        target,
         scale,
+        target,
         hasModel: modelGroup.hasModel(),
         SVGActions,
         modelGroup,

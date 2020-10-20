@@ -59,6 +59,8 @@ class Canvas extends Component {
 
     initialTarget = new Vector3();
 
+    lastTarget = null;
+
     constructor(props) {
         super(props);
 
@@ -114,6 +116,7 @@ class Canvas extends Component {
             this.controls.updateCamera();
         }
         if (nextProps.target !== this.lastTarget) {
+            console.log('Canvas target = ', nextProps.target, this.lastTarget);
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();

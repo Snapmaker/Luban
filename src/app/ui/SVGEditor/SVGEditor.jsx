@@ -11,6 +11,11 @@ class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
+        scale: PropTypes.number.isRequired,
+        target: PropTypes.object,
+
+        updateScale: PropTypes.func.isRequired,
+        updateTarget: PropTypes.func.isRequired,
 
         initContentGroup: PropTypes.func.isRequired,
         showContextMenu: PropTypes.func,
@@ -91,6 +96,10 @@ class SVGEditor extends PureComponent {
                             className={styles['svg-content']}
                             SVGActions={this.props.SVGActions}
                             size={this.props.size}
+                            scale={this.props.scale}
+                            target={this.props.target}
+                            updateScale={this.props.updateScale}
+                            updateTarget={this.props.updateTarget}
                             ref={this.canvas}
                             onCreateElement={this.props.onCreateElement}
                             onSelectElements={this.props.onSelectElements}

@@ -677,6 +677,8 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
+                        scale={1}
+                        target={null}
                         modelGroup={this.visualizerGroup}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.size.z * 2, 300))}
