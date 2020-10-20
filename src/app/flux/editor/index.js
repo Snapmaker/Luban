@@ -361,6 +361,7 @@ export const actions = {
         SVGActions.updateSelectedElementsTransformation(transformation);
 
         dispatch(actions.processSelectedModel(headType));
+        dispatch(actions.resetProcessState(headType));
     },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
@@ -449,6 +450,7 @@ export const actions = {
         const { originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, gcodeConfig, transformation));
+        dispatch(actions.resetProcessState(headType));
     },
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
@@ -476,7 +478,7 @@ export const actions = {
                 }
             });
         }
-
+        dispatch(actions.resetProcessState(headType));
 
         // const flip = transformation.flip;
         // const svgflip = 0;
@@ -1052,12 +1054,29 @@ export const actions = {
     },
 
     /**
+     * Reset process state after model changes
+     */
+    resetProcessState: (headType) => (dispatch, getState) => {
+        const { isAllModelsPreviewed } = getState()[headType];
+        if (isAllModelsPreviewed) {
+            dispatch(baseActions.updateState(headType, {
+                isAllModelsPreviewed: false
+            }));
+        }
+        dispatch(baseActions.updateState(headType, {
+            gcodeFile: null
+        }));
+    },
+
+    /**
      * Create model from element.
      */
     createModelFromElement: (headType, element) => async (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         await SVGActions.createModelFromElement(element);
+
+        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1099,6 +1118,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.afterResizeElement(element);
+        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1108,6 +1128,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.moveElement(element, { dx, dy });
+        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1117,6 +1138,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.rotateElement(element, { angle, cx, cy });
+        dispatch(actions.resetProcessState(headType));
     },
 
     /**
