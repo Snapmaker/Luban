@@ -36,6 +36,8 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
 
         size: PropTypes.object.isRequired,
+        scale: PropTypes.number.isRequired,
+        target: PropTypes.object,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
@@ -47,6 +49,8 @@ class Visualizer extends Component {
 
         // func
         initContentGroup: PropTypes.func.isRequired,
+        updateTarget: PropTypes.func,
+        updateScale: PropTypes.func,
         getEstimatedTime: PropTypes.func.isRequired,
         // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
@@ -101,11 +105,8 @@ class Visualizer extends Component {
             }
         },
         autoFocus: () => {
-            if (this.props.page === PAGE_EDITOR) {
-                this.svgCanvas.current.autoFocus();
-            } else {
-                this.canvas.current.autoFocus();
-            }
+            this.props.updateScale(1);
+            this.props.updateTarget({ x: 0, y: 0 });
         },
         onSelectModels: (intersect) => { // this is a toolpath model? mesh object??
             // todo
@@ -172,7 +173,7 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, 300), new THREE.Vector3());
         }
 
         /*
@@ -301,6 +302,10 @@ class Visualizer extends Component {
                         ref={this.svgCanvas}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
+                        scale={this.props.scale}
+                        target={this.props.target}
+                        updateTarget={this.props.updateTarget}
+                        updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
@@ -335,6 +340,10 @@ class Visualizer extends Component {
                         onModelAfterTransform={noop}
                         onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
+                        scale={this.props.scale}
+                        target={this.props.target}
+                        updateTarget={this.props.updateTarget}
+                        updateScale={this.props.updateScale}
                         transformSourceType="2D"
                     />
                 </div>
@@ -479,11 +488,14 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, modelGroup, SVGActions, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
+    const { page, modelGroup, SVGActions, toolPathModelGroup, renderingTimestamp, stage, progress, scale, target } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
+
     return {
         page,
         size: machine.size,
+        scale,
+        target,
         hasModel: modelGroup.hasModel(),
         SVGActions,
         modelGroup,
@@ -500,7 +512,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
-
+        updateTarget: (target) => dispatch(editorActions.updateState('laser', { target })),
+        updateScale: (scale) => dispatch(editorActions.updateState('laser', { scale })),
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('laser', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('laser')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('laser')),

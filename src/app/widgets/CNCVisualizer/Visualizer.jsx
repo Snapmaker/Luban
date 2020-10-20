@@ -36,6 +36,8 @@ class Visualizer extends Component {
         hasModel: PropTypes.bool.isRequired,
 
         size: PropTypes.object.isRequired,
+        scale: PropTypes.number,
+        target: PropTypes.object,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
@@ -47,6 +49,9 @@ class Visualizer extends Component {
 
         // func
         initContentGroup: PropTypes.func.isRequired,
+        updateTarget: PropTypes.func,
+        updateScale: PropTypes.func,
+
         getEstimatedTime: PropTypes.func.isRequired,
         // getSelectedModel: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
@@ -101,11 +106,9 @@ class Visualizer extends Component {
             }
         },
         autoFocus: () => {
-            if (this.props.page === PAGE_EDITOR) {
-                this.svgCanvas.current.autoFocus();
-            } else {
-                this.canvas.current.autoFocus();
-            }
+            this.canvas.current.setCameraOnTop();
+            this.props.updateScale(1);
+            this.props.updateTarget({ x: 0, y: 0 });
         },
         onSelectModels: (intersect) => {
             this.props.selectModel(intersect);
@@ -167,7 +170,7 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, 300), new THREE.Vector3());
         }
 
         // TODO: find better way
@@ -328,6 +331,10 @@ class Visualizer extends Component {
                         ref={this.svgCanvas}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
+                        scale={this.props.scale}
+                        target={this.props.target}
+                        updateTarget={this.props.updateTarget}
+                        updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
                         insertDefaultTextVector={this.props.insertDefaultTextVector}
                         showContextMenu={this.showContextMenu}
@@ -361,6 +368,10 @@ class Visualizer extends Component {
                         onModelAfterTransform={noop}
                         onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
+                        scale={this.props.scale}
+                        target={this.props.target}
+                        updateTarget={this.props.updateTarget}
+                        updateScale={this.props.updateScale}
                         transformSourceType="2D"
                     />
                 </div>
@@ -502,12 +513,14 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { page, modelGroup, SVGActions, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress } = state.cnc;
+    const { page, modelGroup, SVGActions, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress, scale, target } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     return {
         page,
         size: machine.size,
+        scale,
+        target,
         // model,
         modelGroup,
         SVGActions,
@@ -524,7 +537,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('cnc', svgContentGroup)),
-
+        updateTarget: (target) => dispatch(editorActions.updateState('cnc', { target })),
+        updateScale: (scale) => dispatch(editorActions.updateState('cnc', { scale })),
         getEstimatedTime: (type) => dispatch(editorActions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(editorActions.getSelectedModel('cnc')),
         bringSelectedModelToFront: () => dispatch(editorActions.bringSelectedModelToFront('cnc')),

@@ -48,6 +48,7 @@ class App extends PureComponent {
 
         machineInfo: PropTypes.object.isRequired,
 
+        setShouldShowCncWarning: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
         developToolsInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
@@ -70,13 +71,13 @@ class App extends PureComponent {
 
     state = {
         platform: 'unknown',
-        recoveringProject: false,
-        shouldShowCncWarning: true
+        recoveringProject: false
     };
 
     actions = {
         onChangeShouldShowWarning: (event) => {
-            this.setState({ shouldShowCncWarning: !event.target.checked });
+            this.props.setShouldShowCncWarning(!event.target.checked);
+            // this.setState({ shouldShowCncWarning: !event.target.checked });
         },
         saveAsFile: () => {
             const headType = getCurrentHeadType(this.props.location.pathname);
@@ -170,7 +171,7 @@ class App extends PureComponent {
             this.logPageView();
 
             // show warning when open CNC tab for the first time
-            if (this.state.shouldShowCncWarning && location.pathname === '/cnc') {
+            if (this.props.machineInfo.shouldShowCncWarning && location.pathname === '/cnc') {
                 modal({
                     title: i18n._('Warning'),
                     body: (
@@ -193,11 +194,14 @@ class App extends PureComponent {
                     footer: (
                         <div style={{ display: 'inline-block', marginRight: '8px' }}>
                             <input
+                                id="footer-input"
                                 type="checkbox"
                                 defaultChecked={false}
                                 onChange={actions.onChangeShouldShowWarning}
                             />
-                            <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
+                            {/* eslint-disable-next-line jsx-a11y/label-has-for */}
+                            <label id="footer-input-label" htmlFor="footer-input" style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again')}</label>
+
                         </div>
                     )
                 });
@@ -337,6 +341,7 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+
     const projectState = state.project;
     return {
         machineInfo,
@@ -355,6 +360,9 @@ const mapDispatchToProps = (dispatch) => {
         printingInit: () => dispatch(printingActions.init()),
         textInit: () => dispatch(textActions.init()),
         initRecoverService: () => dispatch(projectActions.initRecoverService()),
+        setShouldShowCncWarning: (value) => {
+            dispatch(machineActions.setShouldShowCncWarning(value));
+        },
         functionsInit: () => {
             dispatch(editorActions.initSelectedModelListener('laser'));
             dispatch(editorActions.initSelectedModelListener('cnc'));

@@ -31,6 +31,7 @@ import TextAction from './TextActions';
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
+const ZOOM_RATE = 2.15;
 
 const visElems = 'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use'.split(',');
 
@@ -90,12 +91,18 @@ class SVGCanvas extends PureComponent {
         onMoveElement: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         // TODO: remove it, to flux (for textActions)
-        SVGActions: PropTypes.element
+        SVGActions: PropTypes.object,
+        scale: PropTypes.number.isRequired,
+        target: PropTypes.object,
+        updateScale: PropTypes.func.isRequired,
+        updateTarget: PropTypes.func.isRequired
     };
 
     updateTime = 0;
 
-    scale = DEFAULT_SCALE;
+    // scale = DEFAULT_SCALE;
+
+    target = null;
 
     offsetX = 0;
 
@@ -136,13 +143,39 @@ class SVGCanvas extends PureComponent {
         this.setupPrintableArea();
         this.onResize();
         this.setupTextActions();
+        window.addEventListener('resize', this.onResize, false);
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.scale !== this.lastScale) {
+            // Updates from outsider
+            this.lastScale = nextProps.scale;
+            this.updateCanvas();
+        }
+
+        if (nextProps.target !== this.target) {
+            this.offsetX = -nextProps.target.x;
+            this.offsetY = nextProps.target.y;
+
+            this.updateCanvas();
+        }
+
         if (nextProps.size !== this.props.size) {
             this.updateCanvas(nextProps.size);
         }
     }
+
+
+    get scale() {
+        return (this.lastScale || this.props.scale) * DEFAULT_SCALE / ZOOM_RATE;
+    }
+
+    set scale(val) {
+        this.lastScale = val / DEFAULT_SCALE * ZOOM_RATE;
+        // Notify scale updates, this method should be named `onScaleUpdated`
+        this.props.updateScale(this.lastScale);
+    }
+
 
     setupTextActions() {
         this.textActions = new TextAction(
@@ -674,6 +707,7 @@ class SVGCanvas extends PureComponent {
                 const panPoint = transformPoint({ x: event.pageX, y: event.pageY }, draw.matrix);
                 this.offsetX = draw.offsetX + panPoint.x - draw.startX;
                 this.offsetY = draw.offsetY + panPoint.y - draw.startY;
+                this.target = { x: -this.offsetX, y: this.offsetY };
                 this.updateCanvas();
                 draw.moved = true;
 
@@ -869,6 +903,7 @@ class SVGCanvas extends PureComponent {
                 if (!draw.moved) {
                     this.onContextmenu(event);
                 }
+                this.props.updateTarget(this.target);
                 this.setMode(draw.mode);
                 return;
             }
@@ -1067,6 +1102,7 @@ class SVGCanvas extends PureComponent {
         const width = $container.width();
         const height = $container.height();
 
+        const ratio = Math.min(width, height) / 900;
         this.svgContainer.setAttribute('width', width);
         this.svgContainer.setAttribute('height', height);
         size = size || this.props.size;
@@ -1075,8 +1111,8 @@ class SVGCanvas extends PureComponent {
         const viewBoxWidth = size.x * 2;
         const viewBoxHeight = size.y * 2;
 
-        const svgWidth = viewBoxWidth * this.scale;
-        const svgHeight = viewBoxHeight * this.scale;
+        const svgWidth = size.x * 2 * this.scale * ratio;
+        const svgHeight = size.y * 2 * this.scale * ratio;
 
         const x = (width - svgWidth) / 2 + this.offsetX * this.scale;
         const y = (height - svgHeight) / 2 + this.offsetY * this.scale;
@@ -1100,6 +1136,7 @@ class SVGCanvas extends PureComponent {
         this.printableArea.updateScale({ size: size, scale: this.scale });
         this.svgContentGroup.updateScale(this.scale);
     };
+
 
     // TODO: need refactor and be moved out to a separate module
     smoothPolylineIntoPath(element) {

@@ -88,13 +88,15 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan) {
         super();
 
         this.sourceType = sourceType;
         this.camera = camera;
         this.group = group;
         this.domElement = (domElement !== undefined) ? domElement : document;
+        this.onScale = onScale;
+        this.onPan = onPan;
 
         this.initTransformControls();
 
@@ -174,6 +176,10 @@ class Controls extends EventEmitter {
 
         this.panLeft(distance * deltaX / elem.clientHeight, this.camera.matrix);
         this.panUp(distance * deltaY / elem.clientHeight, this.camera.matrix);
+    }
+
+    setScale(scale) {
+        this.scale = scale;
     }
 
     dollyIn = () => {
@@ -285,6 +291,8 @@ class Controls extends EventEmitter {
                 if (!this.panMoved) { // Right click to open context menu
                     // Note that the event is mouse up, not really contextmenu
                     this.emit(EVENTS.CONTEXT_MENU, event);
+                } else {
+                    this.onPan();
                 }
                 break;
             case STATE.TRANSFORM:
@@ -445,17 +453,24 @@ class Controls extends EventEmitter {
             }
 
             this.sphericalDelta.set(0, 0, 0);
-            this.scale = 1;
         }
 
         // pan
-        this.target.add(this.panOffset);
-        this.panOffset.set(0, 0, 0);
+        if (this.panOffset.x || this.panOffset.y) {
+            this.target.add(this.panOffset);
+            this.panOffset.set(0, 0, 0);
+        }
 
         // re-position camera
         this.camera.position.copy(this.target).add(this.offset);
         this.camera.lookAt(this.target);
 
+        // need to update scale after camera position setted,
+        // because of camera position used to calculate current scale
+        if (this.scale !== 1) {
+            this.onScale();
+            this.scale = 1;
+        }
         // using small-angle approximation cos(x/2) = 1 - x^2 / 8
         if (this.lastPosition.distanceToSquared(this.camera.position) > EPS
             || 8 * (1 - this.lastQuaternion.dot(this.camera.quaternion)) > EPS) {
