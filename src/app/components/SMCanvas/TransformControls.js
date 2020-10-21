@@ -454,6 +454,7 @@ class TransformControls extends Object3D {
                     if (!this.object.boundingBox[index]) {
                         this.updateBoundingBox();
                     }
+                    // Calculate selectedGroup's BBox in Canvas
                     const boundingBox = this.object.boundingBox[index];
                     if (boundingBox && boundingBox.min && boundingBox.max) {
                         if (this.object.children.length === 1) {
@@ -836,13 +837,13 @@ class TransformControls extends Object3D {
     onMouseUp() {
         this.updateBoundingBox();
         this.dragging = false;
-        this.object.shouldUpdateBoundingbox = true;
     }
 
+    // Calculate the bbox of each model in the selectedGroup
     updateBoundingBox() {
-        this.object.shouldUpdateBoundingbox = true;
         this.object.children.forEach((child, index) => {
-            if (child.geometry.boundingBox) {
+            // cannot get 'child.geometry.boundingBox', have to use 'child.geometry'
+            if (child.geometry) {
                 const clone = child.geometry.clone();
                 if (this.object.children.length === 1) {
                     clone.applyMatrix(this.object.matrix);
@@ -881,6 +882,7 @@ class TransformControls extends Object3D {
                 }
             }
         });
+        this.object.shouldUpdateBoundingbox = true;
     }
 }
 
