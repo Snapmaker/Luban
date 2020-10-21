@@ -32,7 +32,7 @@ function getBrowserWindowOptions() {
     const lastOptions = config.get('winBounds');
 
     // Get display that most closely intersects the provided bounds.
-    const display = screen.getDisplayMatching(lastOptions);
+    const display = lastOptions ? screen.getDisplayMatching(lastOptions) : screen.getPrimaryDisplay();
 
     let windowOptions = {};
     if (display.id === lastOptions.id) {
