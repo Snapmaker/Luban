@@ -49,6 +49,13 @@ class ObjectListBox extends PureComponent {
             } else {
                 this.props.showSelectedModel(model);
             }
+        },
+        limitTheLengthOfDisplayName: (name) => {
+            let newName = name;
+            if (newName.length > 34) {
+                newName = `${newName.slice(0, 25)}...${newName.slice(-9)}`;
+            }
+            return newName;
         }
     };
 
@@ -81,6 +88,7 @@ class ObjectListBox extends PureComponent {
                     {modelGroup.models.map((model) => {
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
+                        const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
                         const modelIcon = () => {
                             if (taskInfo.sourceType === 'text') { return styles.iconText; }
                             if (taskInfo.mode !== 'vector') { return styles.iconPic; }
@@ -114,7 +122,7 @@ class ObjectListBox extends PureComponent {
                                                     modelIcon()
                                                 )}
                                             />
-                                            {modelName}
+                                            {displayModelName}
                                         </Anchor>
                                         <button
                                             type="button"
