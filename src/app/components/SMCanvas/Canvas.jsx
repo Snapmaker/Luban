@@ -109,13 +109,13 @@ class Canvas extends Component {
 
     // just for laser and cnc, dont set scale prop for 3dp
     componentWillReceiveProps(nextProps) {
-        if (nextProps.scale !== this.lastScale) {
+        if (nextProps.scale && nextProps.scale !== this.lastScale) {
             const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
             this.controls.setScale(currentScale / nextProps.scale);
             this.lastScale = nextProps.scale;
             this.controls.updateCamera();
         }
-        if (nextProps.target !== this.lastTarget) {
+        if (nextProps.target && nextProps.target !== this.lastTarget) {
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
@@ -131,6 +131,9 @@ class Canvas extends Component {
     }
 
     onScale = () => {
+        if (typeof this.props.updateScale !== 'function') {
+            return;
+        }
         const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
         if (Math.abs(currentScale - this.lastScale) > EPS) {
             this.lastScale = currentScale;
@@ -139,6 +142,9 @@ class Canvas extends Component {
     };
 
     onChangeTarget = () => {
+        if (typeof this.props.updateTarget !== 'function') {
+            return;
+        }
         const { x, y } = this.controls.target;
         this.lastTarget = { x, y };
         this.props.updateTarget(this.lastTarget);
