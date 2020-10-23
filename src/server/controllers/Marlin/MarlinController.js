@@ -445,6 +445,17 @@ class MarlinController {
                 this.writeln('M1010 S2');
             }, 1000);
         });
+        this.controller.on('emergencyStop', () => {
+            log.error('emergencyStop lallalala');
+            // this.emitAll('serialport:emergencyStop');// 前端断开
+            this.close(() => {
+                // Remove controller from store
+                store.unset(`controllers["${port}/${dataSource}"]`);
+
+                // Destroy controller
+                // controller.destroy();
+            });
+        });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input

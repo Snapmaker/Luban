@@ -183,6 +183,7 @@ export const actions = {
         const controllerEvents = {
             // 'Marlin:state': (state) => {
             'Marlin:state': (options) => {
+                // TODO: serialPort
                 const { state } = options;
                 const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule } = state;
 
@@ -208,6 +209,8 @@ export const actions = {
                         }
                     }));
                 }
+
+                // console.log('serial', machineState, state);
 
                 dispatch(actions.updateState({
                     headStatus: headStatus,
@@ -269,7 +272,8 @@ export const actions = {
                     ports,
                     isOpen: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTING,
-                    connectionType: CONNECTION_TYPE_SERIAL
+                    connectionType: CONNECTION_TYPE_SERIAL,
+                    isEmergencyStop: null
                 }));
             },
             'serialport:connected': (data) => {
@@ -298,6 +302,7 @@ export const actions = {
                         ports,
                         isOpen: false,
                         isConnected: false,
+                        // isEmergencyStop: true,
                         connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 } else {
@@ -307,9 +312,43 @@ export const actions = {
                         ports,
                         isOpen: false,
                         isConnected: false,
+                        // isEmergencyStop: true,
                         connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 }
+                dispatch(actions.updateState({
+                    workPosition: {
+                        x: '0.000',
+                        y: '0.000',
+                        z: '0.000',
+                        a: '0.000'
+                    },
+
+                    originOffset: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }
+                }));
+                dispatch(workspaceActions.unloadGcode());
+            },
+            'serialport:emergencyStop': (options) => {
+                console.log('isEmergencyStop');
+                const { port } = options;
+                const state = getState().machine;
+                const ports = [...state.ports];
+                const portIndex = ports.indexOf(port);
+                if (portIndex !== -1) {
+                    ports.splice(portIndex, 1);
+                }
+                dispatch(actions.updateState({
+                    port: '',
+                    ports,
+                    isOpen: false,
+                    isConnected: false,
+                    connectionStatus: CONNECTION_STATUS_IDLE,
+                    isEmergencyStop: true
+                }));
                 dispatch(actions.updateState({
                     workPosition: {
                         x: '0.000',
@@ -588,6 +627,7 @@ export const actions = {
                 }
             });
             server.on('http:status', (result) => {
+                // TODO: wifi
                 const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
                 const {
                     status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
@@ -598,8 +638,40 @@ export const actions = {
                     heatedBedTemperature,
                     doorSwitchCount,
                     isEnclosureDoorOpen,
-                    heatedBedTargetTemperature
+                    heatedBedTargetTemperature,
+                    isEmergencyStop
                 } = result.data;
+                console.log('wifi data', result.data, isEmergencyStop);
+
+                if (isEmergencyStop) {
+                    dispatch(actions.updateState({
+                        port: '',
+                        ports: [],
+                        isOpen: false,
+                        isConnected: false,
+                        connectionStatus: CONNECTION_STATUS_IDLE,
+                        isEmergencyStop: true
+                    }));
+                    dispatch(actions.updateState({
+                        workPosition: {
+                            x: '0.000',
+                            y: '0.000',
+                            z: '0.000',
+                            a: '0.000'
+                        },
+
+                        originOffset: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        }
+                    }));
+                    dispatch(workspaceActions.unloadGcode());
+                    server.close(() => {
+                        dispatch(actions.uploadCloseServerState());
+                    });
+                    return;
+                }
                 dispatch(actions.updateState({
                     workflowStatus: status,
                     laserFocalLength: laserFocalLength,
@@ -610,7 +682,8 @@ export const actions = {
                     heatedBedTemperature: heatedBedTemperature,
                     isEnclosureDoorOpen: isEnclosureDoorOpen,
                     doorSwitchCount: doorSwitchCount,
-                    heatedBedTargetTemperature: heatedBedTargetTemperature
+                    heatedBedTargetTemperature: heatedBedTargetTemperature,
+                    isEmergencyStop: isEmergencyStop
                 }));
                 if (workPosition.x !== x
                     || workPosition.y !== y

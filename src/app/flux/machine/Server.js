@@ -67,7 +67,8 @@ export class Server extends events.EventEmitter {
                 finishTime: 0,
                 elapsedTime: 0,
                 remainingTime: 0
-            }
+            },
+            isEmergencyStop: null
         };
     }
 
@@ -211,6 +212,7 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.heatedBedTargetTemperature) && (this.state.heatedBedTargetTemperature = data.heatedBedTargetTemperature);
                 isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
                 isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
+                isNotNull(data.isEmergencyStop) && (this.state.isEmergencyStop = data.isEmergencyStop);
 
 
                 this._updateGcodePrintingInfo(data);
@@ -459,7 +461,8 @@ export class Server extends events.EventEmitter {
             nozzleTargetTemperature: this.state.nozzleTargetTemperature,
             heatedBedTemperature: this.state.heatedBedTemperature,
             heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
-            gcodePrintingInfo: this.state.gcodePrintingInfo
+            gcodePrintingInfo: this.state.gcodePrintingInfo,
+            isEmergencyStop: this.state.isEmergencyStop
         };
     };
 

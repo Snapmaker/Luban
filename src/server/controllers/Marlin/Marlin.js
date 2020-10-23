@@ -143,6 +143,20 @@ class MarlinReplyParserEmergencyStop {
     }
 }
 
+class MarlinReplyParserEmergencyStopButton {
+    static parse(line) {
+        const r = line.match(/emergency stop state, please restart the machine/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserEmergencyStopButton,
+            payload: {
+                releaseDate: r[1]
+            }
+        };
+    }
+}
 
 class MarlinReplyParserReleaseDate {
     static parse(line) {
@@ -522,6 +536,9 @@ class MarlinLineParser {
             // cnc emergency stop when enclosure open
             MarlinReplyParserEmergencyStop,
 
+            // emergency stop button
+            MarlinReplyParserEmergencyStopButton,
+
             // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
@@ -755,6 +772,8 @@ class Marlin extends events.EventEmitter {
             this.emit('start', payload);
         } else if (type === MarlinReplyParserEmergencyStop) {
             this.emit('cnc:stop', payload);
+        } else if (type === MarlinReplyParserEmergencyStopButton) {
+            this.emit('emergencyStop', payload);
         } else if (type === MarlinParserOriginOffset) {
             this.setState({
                 originOffset: {

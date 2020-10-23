@@ -18,7 +18,7 @@ import {
     PROTOCOL_TEXT, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_WIFI_WARNING
+    WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_UNKNOWN, IMAGE_WIFI_ERROR, IMAGE_WIFI_WARNING, IMAGE_EMERGENCY_STOP
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
@@ -37,6 +37,7 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import i18n from '../../lib/i18n';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ProgressBar from '../../components/ProgressBar';
+// import modal from '../../lib/modal';
 
 
 class Visualizer extends Component {
@@ -45,6 +46,8 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         isEnclosureDoorOpen: PropTypes.bool,
         doorSwitchCount: PropTypes.number,
+        isEmergencyStop: PropTypes.bool,
+
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
         gcodeFile: PropTypes.object,
@@ -122,7 +125,8 @@ class Visualizer extends Component {
             sent: 0,
             received: 0
         },
-        showEnclosureDoorWarn: false
+        showEnclosureDoorWarn: false,
+        isEmergencyStop: false
     };
 
     controllerEvents = {
@@ -447,7 +451,8 @@ class Visualizer extends Component {
         },
         closeModal: () => {
             this.setState({
-                showEnclosureDoorWarn: false
+                showEnclosureDoorWarn: false,
+                isEmergencyStop: false
             });
         }
     };
@@ -526,6 +531,21 @@ class Visualizer extends Component {
             this.setState({
                 showEnclosureDoorWarn: true
             });
+        }
+        if (nextProps.isEmergencyStop !== this.props.isEmergencyStop && nextProps.isEmergencyStop) {
+            this.setState({
+                isEmergencyStop: true
+            });
+            // modal({
+            //     title: i18n._('Emergency Stop'),
+            //     body: (
+            //         <div>
+            //             <title> Emergency Stop </title>
+            //             {i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
+            //
+            //         </div>
+            //     )
+            // });
         }
     }
 
@@ -650,6 +670,7 @@ class Visualizer extends Component {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
+        // console.log('workspace visualizer: isEmergencyStop', isEmergencyStop);
 
         return (
             <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
@@ -691,6 +712,15 @@ class Visualizer extends Component {
                     />
                 </div>
 
+                {(state.isEmergencyStop) && (
+                    <ModalSmall
+                        title={i18n._('Emergency Stop')}
+                        text={i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
+                        // subtext={i18n._('xx')}
+                        img={IMAGE_EMERGENCY_STOP}
+                        onClose={this.actions.closeModal}
+                    />
+                )}
                 {(state.showEnclosureDoorWarn) && (
                     <ModalSmall
                         title={i18n._('Enclosure Door Open')}
@@ -711,6 +741,7 @@ const mapStateToProps = (state) => {
     return {
         size: machine.size,
         doorSwitchCount: machine.doorSwitchCount,
+        isEmergencyStop: machine.isEmergencyStop,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         headType: machine.headType,
         workflowStatus: machine.workflowStatus,
