@@ -28,6 +28,8 @@ class ReliefParameters extends PureComponent {
     render() {
         const { invert, disabled } = this.props;
 
+        console.log('invert', invert);
+
         return (
             <div>
                 {this.state.expanded && (
@@ -53,8 +55,17 @@ class ReliefParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.cnc;
-    const { invert } = config;
+    const { modelGroup } = state.cnc;
+
+    const selectedModels = modelGroup.getSelectedModelArray();
+
+    let invert = false;
+
+    if (selectedModels.length === 1) {
+        const model = selectedModels[0];
+        invert = model.config.invert;
+    }
+
     return {
         invert
     };

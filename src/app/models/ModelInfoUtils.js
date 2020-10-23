@@ -185,11 +185,12 @@ const generateCNCDefaults = (mode, sourceType) => {
     let config = null;
     let gcodeConfig = null;
     switch (mode) {
-        case 'greyscale':
+        case 'greyscale': {
             config = {
-                invert: true
+                invert: false
             };
             break;
+        }
         case 'vector':
             switch (sourceType) {
                 case 'raster': {
