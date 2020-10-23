@@ -27,6 +27,7 @@ import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
 import MachineSelectModal from '../../modals/modal-machine-select';
+import setting from '../../config/settings';
 
 
 const INITIAL_STATE = {
@@ -152,9 +153,14 @@ export const actions = {
         }
 
         // Load CNC security warning
-        let shouldShowCncWarning = machineStore.get('settings.shouldShowCncWarning');
-        if (shouldShowCncWarning === undefined) {
-            shouldShowCncWarning = INITIAL_STATE.shouldShowCncWarning;
+        const savedData = machineStore.get('settings.shouldShowCncWarning');
+        let shouldShowCncWarning = INITIAL_STATE.shouldShowCncWarning;
+        if (savedData && typeof savedData === 'string') {
+            const currentVersion = setting.version;
+            const [version, value] = savedData.split('|');
+            if (version === currentVersion && value === 'false') {
+                shouldShowCncWarning = false;
+            }
         }
 
         if (seriesInfo === MACHINE_SERIES.CUSTOM) {
@@ -791,7 +797,8 @@ export const actions = {
         }));
     },
     setShouldShowCncWarning: (value) => (dispatch) => {
-        machineStore.set('settings.shouldShowCncWarning', value);
+        const version = setting.version;
+        machineStore.set('settings.shouldShowCncWarning', `${version}|${value}`);
         dispatch(actions.updateState({
             shouldShowCncWarning: value
         }));
