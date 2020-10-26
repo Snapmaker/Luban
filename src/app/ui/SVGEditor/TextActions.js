@@ -42,7 +42,7 @@ class TextActions {
 
         this.jQuery = jQuery;
 
-        this.scale = scale;
+        // this.scale = scale;
 
         this.cursor = document.createElementNS(NS.SVG, 'line');
         setAttributes(this.cursor, {
@@ -55,6 +55,10 @@ class TextActions {
         this.svgroot = svgContentGroup.svgContent;
 
         this.rootSctm = svgContentGroup.getScreenCTM().inverse();
+    }
+
+    get scale() {
+        return this.SVGActions.scale;
     }
 
     /**
