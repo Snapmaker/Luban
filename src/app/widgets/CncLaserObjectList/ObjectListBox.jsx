@@ -52,8 +52,8 @@ class ObjectListBox extends PureComponent {
         },
         limitTheLengthOfDisplayName: (name) => {
             let newName = name;
-            if (newName.length > 34) {
-                newName = `${newName.slice(0, 25)}...${newName.slice(-9)}`;
+            if (newName.length > 36) {
+                newName = `${newName.slice(0, 27)}...${newName.slice(-9)}`;
             }
             return newName;
         }
@@ -80,32 +80,30 @@ class ObjectListBox extends PureComponent {
         const { modelGroup, selectedModelArray } = this.props;
         return (
             <div>
-                <div
-                    className={classNames(
-                        styles.objectListBox
-                    )}
-                >
+                <div className={styles['object-list-box']}>
                     {modelGroup.models.map((model) => {
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
                         const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
                         const modelIcon = () => {
-                            if (taskInfo.sourceType === 'text') { return styles.iconText; }
-                            if (taskInfo.mode !== 'vector') { return styles.iconPic; }
+                            if (taskInfo.sourceType === 'text') {
+                                return styles.iconText;
+                            }
+                            if (taskInfo.mode !== 'vector') {
+                                return styles.iconPic;
+                            }
                             return styles.iconShape;
                         };
                         return (
                             <TipTrigger
                                 key={model.modelName}
-                                title={i18n._('object list')}
+                                title={i18n._('Object')}
                                 content={model.modelName}
                             >
-                                <div
-                                    onContextMenu={this.showContextMenu}
-                                >
+                                <div onContextMenu={this.showContextMenu}>
                                     <div
                                         className={classNames(
-                                            styles.bgr,
+                                            styles['object-list-item'],
                                             selectedModelArray && selectedModelArray.includes(model) ? styles.selected : null,
                                         )}
                                     >

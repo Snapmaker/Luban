@@ -14,9 +14,9 @@ class SvgTool extends PureComponent {
     };
 
     state = {
-        showExtShape: false,
-        extShape: null
-    }
+        showExtShape: false
+        // extShape: null
+    };
 
     actions = {
         onClickInsertText: () => {
@@ -25,8 +25,8 @@ class SvgTool extends PureComponent {
 
         setMode: (mode, ext) => {
             this.setState({
-                showExtShape: false,
-                extShape: ext
+                showExtShape: false
+                // extShape: ext
             });
             this.props.setMode(mode, ext);
         },
@@ -40,7 +40,8 @@ class SvgTool extends PureComponent {
 
     render() {
         const { mode } = this.props;
-        const { showExtShape, extShape } = this.state;
+        const { showExtShape /*, extShape */ } = this.state;
+
         return (
             <React.Fragment>
                 <div className={classNames(styles['visualizer-center'])}>
@@ -76,6 +77,7 @@ class SvgTool extends PureComponent {
                         >
                             <i className={styles['btn-text']} />
                         </Anchor>
+                        {/*
                         <Anchor
                             componentClass="button"
                             className={classNames(styles['btn-center'],
@@ -84,6 +86,7 @@ class SvgTool extends PureComponent {
                         >
                             <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
                         </Anchor>
+                        */}
                     </div>
                     {showExtShape && (
                         <div className={classNames(styles['center-ext'])}>

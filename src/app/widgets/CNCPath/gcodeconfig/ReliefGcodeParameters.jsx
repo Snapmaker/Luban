@@ -88,7 +88,7 @@ class ReliefGcodeParameters extends PureComponent {
                                         step={0.1}
                                         onChange={this.actions.onChangeTargetDepth}
                                     />
-                                    <span className="sm-parameter-row__input-unit">dot/mm</span>
+                                    <span className="sm-parameter-row__input-unit">mm</span>
                                 </div>
                             </TipTrigger>
 
