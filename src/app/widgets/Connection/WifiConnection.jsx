@@ -36,6 +36,7 @@ class WifiConnection extends PureComponent {
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
+        serverAddress: PropTypes.string,
         workflowStatus: PropTypes.string.isRequired,
         isOpen: PropTypes.bool.isRequired,
         isConnected: PropTypes.bool.isRequired,
@@ -46,7 +47,6 @@ class WifiConnection extends PureComponent {
         discoverServers: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
-        updateLocalStorageServer: PropTypes.func.isRequired,
         updateLocalStorageManualIp: PropTypes.func.isRequired,
         setServer: PropTypes.func.isRequired
     };
@@ -85,7 +85,6 @@ class WifiConnection extends PureComponent {
                 this.setState({
                     server: find
                 });
-                this.props.updateLocalStorageServer(find);
             }
         },
         setServer: (server) => {
@@ -228,6 +227,11 @@ class WifiConnection extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
+        // Simply compare 2 arrays
+        if (nextProps.servers !== this.props.servers) {
+            this.autoSetServer(nextProps.servers);
+        }
+
         if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
             if (this.props.connectionStatus !== CONNECTION_STATUS_CONNECTING && nextProps.connectionStatus === CONNECTION_STATUS_CONNECTING) {
                 this.actions.showWifiConnecting();
@@ -249,9 +253,13 @@ class WifiConnection extends PureComponent {
      * @param servers list of server objects
      */
     autoSetServer(servers) {
-        const { server } = this.props;
-
-        const find = servers.find(v => v.name === server.name && v.address === server.address);
+        const { server, serverAddress } = this.props;
+        let find;
+        if (serverAddress) {
+            find = servers.find(v => v.address === serverAddress);
+        } else {
+            find = servers.find(v => v.name === server.name && v.address === server.address);
+        }
         if (find) {
             this.setState({
                 server: find
@@ -286,6 +294,8 @@ class WifiConnection extends PureComponent {
         let display = '';
         if (server !== ABSENT_OBJECT) {
             display = `${server.name} (${server.address})`;
+        } else {
+            display = i18n._('No machines detected.');
         }
         return (
             <div title={display} style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
@@ -455,13 +465,14 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { headType, servers, discovering, server, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, manualIp } = machine;
+    const { headType, servers, discovering, server, serverAddress, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, manualIp } = machine;
 
     return {
         headType,
         manualIp,
         servers,
         discovering,
+        serverAddress,
         server,
         workflowStatus,
         isOpen,
@@ -476,7 +487,6 @@ const mapDispatchToProps = (dispatch) => ({
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
     setServer: (server) => dispatch(machineActions.setServer(server)),
-    updateLocalStorageServer: (server) => dispatch(machineActions.updateServer(server)),
     updateLocalStorageManualIp: (server) => dispatch(machineActions.updateManualIp(server))
 });
 

@@ -1,7 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import _ from 'lodash';
 import request from 'superagent';
-import logger from 'universal-logger';
 import {
     ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
@@ -135,22 +134,13 @@ export const actions = {
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
         const manualIp = machineStore.get('manualIp') || '';
+        const serverAddress = machineStore.get('server.address') || '';
         const serverToken = machineStore.get('server.token') || '';
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
 
-        try {
-            if (typeof machineStore.get('server') === 'string') {
-                const machineServer = JSON.parse(machineStore.get('server'));
-                dispatch(actions.updateState({
-                    server: machineServer
-                }));
-            }
-        } catch (e) {
-            logger.info(e);
-        }
 
         // Load CNC security warning
         const savedData = machineStore.get('settings.shouldShowCncWarning');
@@ -175,6 +165,7 @@ export const actions = {
             serverToken: serverToken,
             port: machinePort,
             manualIp: manualIp,
+            serverAddress: serverAddress,
             connectionType: connectionType,
             connectionTimeout: connectionTimeout,
             shouldShowCncWarning
@@ -396,9 +387,9 @@ export const actions = {
         dispatch(actions.updateState({ manualIp: manualIp }));
         machineStore.set('manualIp', manualIp);
     },
-    updateServer: (server) => (dispatch) => {
-        dispatch(actions.updateState({ server: server }));
-        machineStore.set('server', JSON.stringify(server));
+    updateServerAddress: (serverAddress) => (dispatch) => {
+        dispatch(actions.updateState({ serverAddress: serverAddress }));
+        machineStore.set('server.address', serverAddress);
     },
     updatePort: (port) => (dispatch) => {
         dispatch(actions.updateState({ port: port }));
@@ -528,6 +519,7 @@ export const actions = {
                 return;
             }
             const { token } = data;
+            dispatch(actions.updateServerAddress(server.address));
             dispatch(actions.updateServerToken(token));
             dispatch(actions.updateState({
                 isOpen: true,
