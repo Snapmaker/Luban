@@ -211,7 +211,7 @@ class SvgModel {
         height *= scaleY;
 
         const scale = svg.createSVGTransform();
-        scale.setScale(8, 8);
+        scale.setScale(DEFAULT_SCALE, DEFAULT_SCALE);
 
         const clone = elem.cloneNode(true);
         clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
@@ -265,8 +265,8 @@ class SvgModel {
             processImageName: uploadName,
             width,
             height,
-            sourceWidth: width * Math.abs(scaleX) * 8,
-            sourceHeight: height * Math.abs(scaleY) * 8
+            sourceWidth: width * Math.abs(scaleX) * DEFAULT_SCALE,
+            sourceHeight: height * Math.abs(scaleY) * DEFAULT_SCALE
         });
     }
 
