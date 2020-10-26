@@ -75,7 +75,7 @@ class ConfigRasterVector extends PureComponent {
                                         className="sm-parameter-row__slider-input"
                                         value={vectorThreshold}
                                         min={0}
-                                        max={20}
+                                        max={255}
                                         onChange={(value) => {
                                             this.actions.changeVectorThreshold(value);
                                             this.props.processSelectedModel();
