@@ -5,9 +5,9 @@ import Normalizer from './Normalizer';
 import ToolPath from '../ToolPath';
 
 // eslint-disable-next-line no-unused-vars
-const OVERLAP_RATE = 0.75;
+// const OVERLAP_RATE = 0.75;
 // eslint-disable-next-line no-unused-vars
-const TOOL_H = 0.1;
+// const TOOL_H = 0.1;
 const MAX_DENSITY = 20;
 
 export default class CncReliefToolPathGenerator extends EventEmitter {
@@ -15,8 +15,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         super();
         // const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
         const { config, transformation, gcodeConfig } = modelInfo;
-        const { jogSpeed, workSpeed, plungeSpeed, toolDiameter, toolAngle, targetDepth,
-            stepDown, safetyHeight, stopHeight, density, isRotate, radius } = gcodeConfig;
+        const {
+            jogSpeed, workSpeed, plungeSpeed, toolDiameter, toolAngle, targetDepth,
+            stepDown, safetyHeight, stopHeight, density, isRotate, radius
+        } = gcodeConfig;
 
         const { invert } = config;
 
@@ -52,7 +54,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let data = null;
         return Jimp
             .read(this.modelPath)
-            .then(img => {
+            .then(async img => {
                 if (this.invert) {
                     img.invert();
                 }
@@ -62,8 +64,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 img
                     .greyscale()
                     .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
-                    .rotate(-this.rotationZ * 180 / Math.PI)
-                    .background(0xffffffff);
+                    .rotate(-this.rotationZ * 180 / Math.PI);
+
 
                 // targetWidth&targetHeight will be changed after rotated
                 this.targetWidth = Math.round(this.targetWidth * img.bitmap.width / width);
@@ -80,10 +82,12 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     }
                 }
 
+
                 let smooth = false;
                 while (!smooth) {
                     smooth = !this.upSmooth(data);
                 }
+
                 // const fakeGcode = this.genGCode(data);
                 // return new GcodeParser().parseGcodeToToolPathObj(fakeGcode, this.modelInfo);
                 return this.parseImageToToolPathObj(data);
@@ -103,9 +107,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
     calc(grey) {
         // return (color / 255 * this.targetDepth - 1 / this.density / this.toolSlope) * 255 / this.targetDepth;
-        return grey - 255 / (this.targetDepth * this.density * this.toolSlope);
+        return grey + 255 / (this.targetDepth * this.density * this.toolSlope);
     }
 
+    // TODO: Note that with white to be cut, this function is actually downSmooth
     upSmooth = (data) => {
         const width = data.length;
         const height = data[0].length;
@@ -115,7 +120,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         const dy = [-1, 0, 1, -1, 1, -1, 0, 1];
         for (let i = 0; i < width; i++) {
             for (let j = 0; j < height; j++) {
-                let allowedDepth = 0;
+                let allowedDepth = 255;
                 if (depthOffsetRatio < 255) {
                     for (let k = 0; k < 8; k++) {
                         const i2 = i + dx[k];
@@ -123,11 +128,11 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         if (i2 < 0 || i2 > width - 1 || j2 < 0 || j2 > height - 1) {
                             continue;
                         }
-                        allowedDepth = Math.max(allowedDepth, data[i2][j2]);
+                        allowedDepth = Math.min(allowedDepth, data[i2][j2]);
                     }
                     allowedDepth = this.calc(allowedDepth);
                 }
-                if (data[i][j] < allowedDepth) {
+                if (data[i][j] > allowedDepth) {
                     data[i][j] = allowedDepth;
                     updated = true;
                 }
@@ -179,6 +184,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         for (let i = 0; i < data.length; i++) {
             zMin[i] = 0;
             for (let j = 0; j < data[i].length; j++) {
+                // cut out white color
                 const z = this.initialZ + Math.round(-data[i][j] * this.targetDepth / 255 * 100) / 100;
                 data[i][j] = z;
                 zMin[i] = Math.min(zMin[i], z);

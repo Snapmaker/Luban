@@ -68,15 +68,12 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName, config } = modelInfo;
     // const originFilename = uploadName;
     let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+
     if (config.svgNodeName === 'text') {
         const { width, height, flip = 0 } = modelInfo.transformation;
 
-        const { invert } = modelInfo.config;
         const { density = 4 } = modelInfo.gcodeConfig || {};
         const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
-        if (invert) {
-            img.invert();
-        }
 
         img
             .greyscale()
@@ -84,6 +81,20 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
             .resize(width * density, height * density)
             // .rotate(-rotationZ * 180 / Math.PI)
             .background(0xffffffff);
+
+        // Turn transparent to white.
+        img
+            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, index) => {
+                if (img.bitmap.data[index + 3] === 0) {
+                    img.bitmap.data[index] = 255;
+                    img.bitmap.data[index + 1] = 255;
+                    img.bitmap.data[index + 2] = 255;
+                    img.bitmap.data[index + 3] = 255;
+                }
+            });
+
+        // text to be engraved, so invert to turn black to white.
+        img.invert();
 
         const result = await new Promise(resolve => {
             const outputFilename = pathWithRandomSuffix(uploadName);
@@ -95,7 +106,6 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
         });
         modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
-
 
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;

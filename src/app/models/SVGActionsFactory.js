@@ -9,6 +9,7 @@ import { isZero } from '../lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';
+import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -735,8 +736,8 @@ class SVGActionsFactory {
         // Update model
         const { width, height } = svgModel.elem.getBBox();
         const baseUpdateData = {
-            sourceWidth: width * 8,
-            sourceHeight: height * 8,
+            sourceWidth: width * DEFAULT_SCALE,
+            sourceHeight: height * DEFAULT_SCALE,
             width,
             height,
             transformation: {
