@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import Jimp from 'jimp';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
@@ -68,7 +69,30 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     // const originFilename = uploadName;
     let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     if (config.svgNodeName === 'text') {
-        const result = await processImage(modelInfo);
+        const { width, height, flip = 0 } = modelInfo.transformation;
+
+        const { invert } = modelInfo.config;
+        const { density = 4 } = modelInfo.gcodeConfig || {};
+        const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+        if (invert) {
+            img.invert();
+        }
+
+        img
+            .greyscale()
+            .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+            .resize(width * density, height * density)
+            // .rotate(-rotationZ * 180 / Math.PI)
+            .background(0xffffffff);
+
+        const result = await new Promise(resolve => {
+            const outputFilename = pathWithRandomSuffix(uploadName);
+            img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
+                resolve({
+                    filename: outputFilename
+                });
+            });
+        });
         modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
 
