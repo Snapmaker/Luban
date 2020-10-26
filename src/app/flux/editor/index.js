@@ -11,6 +11,7 @@ import {
 import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import { controller } from '../../lib/controller';
+import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 
 const getCount = (() => {
     let count = 0;
@@ -157,7 +158,7 @@ export const actions = {
         sourceType = sourceType || getSourceType(originalName);
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height } = sizeModelByMachineSize(size, sourceWidth / 8, sourceHeight / 8);
+        let { width, height } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
         if (sourceType === 'text') {
             const textSize = computeTransformationSizeForTextVector(
                 DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, {
@@ -187,14 +188,15 @@ export const actions = {
             : modelDefaultConfigs.gcodeConfig;
 
         // cnc size limit
-        const defaultTransformation = `${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale'
-            ? {
-                width: 40,
-                height: 40 * sourceHeight / sourceWidth
-            } : {
-                width: width,
-                height: height
-            };
+        if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
+            width = 40;
+            height = 40 * sourceHeight / sourceWidth;
+        }
+        const defaultTransformation = {
+            width: width,
+            height: height
+        };
+
 
         config = {
             ...defaultConfig,
