@@ -252,6 +252,8 @@ async function processNewsprint(modelInfo) {
 
     const { npType = 'line', npSize = 30, npAngle = 135 } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
+    const whiteClip = 255;
+    const invert = false;
 
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
@@ -261,6 +263,24 @@ async function processNewsprint(modelInfo) {
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
+        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+            const data = img.bitmap.data;
+
+            if (data[idx + 3] === 0) {
+                data[idx] = 255;
+            } else {
+                if (invert) {
+                    data[idx] = 255 - data[idx];
+                    if (data[idx] < 255 - whiteClip) {
+                        data[idx] = 0;
+                    }
+                } else {
+                    if (data[idx] >= whiteClip) {
+                        data[idx] = 255;
+                    }
+                }
+            }
+        })
         .newsprint(npType, npSize, npAngle)
         .background(0xffffffff);
 

@@ -230,8 +230,8 @@ export const actions = {
             await dispatch(actions.updateState({ openedFile: undefined }));
         }
         await dispatch(modActions.init(headType));
-        modState.modelGroup.removeAllModels();
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
+        modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
     }
