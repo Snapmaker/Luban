@@ -3,7 +3,6 @@ import Select from 'react-select';
 import { connect } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
-import request from 'superagent';
 import FileSaver from 'file-saver';
 
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
@@ -11,9 +10,9 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing';
 import { actions as workspaceActions } from '../../flux/workspace';
+import { actions as projectActions } from '../../flux/project';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
-import { DATA_PREFIX } from '../../constants';
 
 
 class Output extends PureComponent {
@@ -31,6 +30,7 @@ class Output extends PureComponent {
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
+        exportFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired
     };
 
@@ -80,13 +80,7 @@ class Output extends PureComponent {
 
             const { gcodeFile } = this.props;
             const filename = path.basename(gcodeFile.name);
-            const gcodeFilePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
-            request.get(gcodeFilePath).end((err, res) => {
-                const data = res.text;
-                const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
-                const savedFilename = filename;
-                FileSaver.saveAs(blob, savedFilename, true);
-            });
+            this.props.exportFile(filename);
         },
         onChangeExportModelFormat: (option) => {
             this.setState({
@@ -232,7 +226,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         generateGcode: (thumbnail) => dispatch(printingActions.generateGcode(thumbnail)),
-        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file))
+        renderGcodeFile: (file) => dispatch(workspaceActions.renderGcodeFile(file)),
+        exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile))
     };
 };
 

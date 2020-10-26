@@ -1,11 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import FileSaver from 'file-saver';
-import request from 'superagent';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as editorActions } from '../../flux/editor';
-import { DATA_PREFIX, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { actions as projectActions } from '../../flux/project';
+import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -36,6 +35,7 @@ class Output extends PureComponent {
         manualPreview: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         updateWidgetState: PropTypes.func.isRequired,
+        exportFile: PropTypes.func.isRequired,
         togglePage: PropTypes.func.isRequired
     };
 
@@ -68,13 +68,7 @@ class Output extends PureComponent {
             if (gcodeFile === null) {
                 return;
             }
-
-            const gcodePath = `${DATA_PREFIX}/${gcodeFile.uploadName}`;
-            request.get(gcodePath).end((err, res) => {
-                const gcodeStr = res.text;
-                const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-                FileSaver.saveAs(blob, gcodeFile.name, true);
-            });
+            this.props.exportFile(gcodeFile.uploadName);
         },
         onToggleAutoPreview: (value) => {
             this.props.setAutoPreview(value);
@@ -215,6 +209,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         manualPreview: () => dispatch(editorActions.manualPreview(headType, true)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview(headType, value)),
+        exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
         updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state))
     };
 };

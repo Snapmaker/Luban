@@ -52,6 +52,7 @@ const File = {
             ipcRenderer.send('openFile');
         }
     },
+    // export file for project file
     async saveAs(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');
@@ -69,6 +70,36 @@ const File = {
             fs.copyFileSync(tmpFile, targetFile);
             const menu = window.require('electron').remote.require('./electron-app/Menu');
             menu.addRecentFile(file);
+
+            return file;
+        } else {
+            request
+                .get(`/data${tmpFile}`)
+                .responseType('blob')
+                .end((err, res) => {
+                    FileSaver.saveAs(res.body, targetFile, true);
+                });
+            return null;
+        }
+    },
+
+    // export file for 3dp/laser/cnc
+    async exportAs(targetFile, tmpFile) {
+        if (isElectron()) {
+            const fs = window.require('fs');
+            const { app, dialog } = window.require('electron').remote;
+            tmpFile = app.getPath('userData') + tmpFile;
+            const saveDialogReturnValue = await dialog.showSaveDialog({
+                title: targetFile,
+                defaultPath: targetFile,
+                filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
+            });
+            targetFile = saveDialogReturnValue.filePath;
+            if (!targetFile) throw new Error('export file canceled');
+
+            const file = { path: targetFile, name: path.basename(targetFile) };
+
+            fs.copyFileSync(tmpFile, targetFile);
 
             return file;
         } else {
