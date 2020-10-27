@@ -61,6 +61,7 @@ after_success:
             sudo spctl --status;
             travis_wait 60 npm run build:mac-x64;
             ls -al output output/*;
+            cp -af "output/latest-mac.yml" "releases/latest-mac.yml";
             cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg" "releases/${RELEASE}-mac-x64.dmg";
             ls -al releases/*;
         fi

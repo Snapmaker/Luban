@@ -2,7 +2,7 @@
   "name": "snapmaker-luban",
   "version": "3.9.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
-  "homepage": "https://github.com/whimsycwd/Snapmakerjs",
+  "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:whimsycwd/Snapmakerjs.git"
+    "url": "git@github.com:Snapmaker/Luban.git"
   },
   "license": "AGPL-3.0-or-later",
   "engines": {
@@ -63,6 +63,12 @@
       "output": "output",
       "app": "dist/Snapmakerjs"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "url": ""
+      }
+    ],
     "fileAssociations": [
       {
         "ext": [
@@ -124,8 +130,7 @@
         "deb",
         "rpm"
       ]
-    },
-    "publish": []
+    }
   },
   "keywords": [
     "Snapmaker",
