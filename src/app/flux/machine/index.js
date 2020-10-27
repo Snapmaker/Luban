@@ -580,7 +580,14 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { series, headType, status, isHomed } = result.data;
+                const { series, headType, status, isHomed, isEmergencyStop } = result.data;
+                console.log('confirm', result.data, isEmergencyStop);
+                if (isEmergencyStop) {
+                    dispatch(actions.updateState({
+                        isEmergencyStop
+                    }));
+                    return;
+                }
                 dispatch(actions.updateState({
                     workflowStatus: status,
                     isConnected: true,
