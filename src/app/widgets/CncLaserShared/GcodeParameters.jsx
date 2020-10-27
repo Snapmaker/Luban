@@ -86,8 +86,8 @@ class GcodeParameters extends PureComponent {
         const actions = this.actions;
         const {
             jogSpeed = 0, workSpeed = 0, dwellTime = 0, plungeSpeed = 0,
-            fixedPowerEnabled = false, fixedPower = 0,
-            multiPassEnabled = false, multiPasses = 0, multiPassDepth = 0
+            fixedPowerEnabled, fixedPower = 0,
+            multiPassEnabled, multiPasses = 0, multiPassDepth = 0
         } = this.props.gcodeConfig;
         // todo
         const disabled = !(selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible);
@@ -211,7 +211,7 @@ class GcodeParameters extends PureComponent {
                                 </div>
                             </TipTrigger>
                         )}
-                        {multiPassEnabled !== null && (
+                        {multiPassEnabled !== undefined && (
                             <OptionalDropdown
                                 style={{ marginTop: '10px', marginBottom: '10px' }}
                                 title={i18n._('Multi-pass')}
@@ -257,7 +257,7 @@ class GcodeParameters extends PureComponent {
                                 </TipTrigger>
                             </OptionalDropdown>
                         )}
-                        {fixedPowerEnabled !== null && (
+                        {fixedPowerEnabled !== undefined && (
                             <OptionalDropdown
                                 style={{ marginTop: '10px' }}
                                 title={i18n._('Fixed Power')}

@@ -391,6 +391,7 @@ class SVGActionsFactory {
                 startCenter.y = startBbox.y + startBbox.height / 2;
 
                 const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+                // why model new center?
                 const modelNewCenter = svgModel.pointSvgToModel(endCenter);
 
                 const model = svgModel.relatedModel;
