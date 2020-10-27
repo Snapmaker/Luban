@@ -74,6 +74,8 @@ test: off
 artifacts:
   # pushing all *.exe files in a directory
   - path: releases\*.exe
+  # pushing the latest.yml file for automatic updates
+  - path: releases\latest.yml
 
 # Publishing artifacts to GitHub Releases
 # https://www.appveyor.com/docs/deployment/github
