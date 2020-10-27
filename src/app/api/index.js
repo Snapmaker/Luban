@@ -300,7 +300,6 @@ export default {
     uploadFile,
     uploadCaseFile,
     uploadGcodeFile,
-
     uploadUpdateFile,
     buildFirmwareFile,
     saveEnv,

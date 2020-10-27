@@ -1,34 +1,30 @@
 @import '../form';
 
-#file-upload-button
-    display: none
-.learn-more {
-    color: #0060AC;
-    font-size: 14px;
-
-    > * {
-        vertical-align: middle;
+.firmware {
+    padding-left: 0;
+    list-style: none;
+    .wrapper{
+        margin-top: 20px;
+        .label-text{
+          min-width: 115px;
+          display:inline-block;
+        }
+        .module-input{
+            margin-left: 30px;
+        }
+        .main-input{
+            margin-left: 30px;
+        }
+        .version-input{
+            width: auto;
+            margin-left: 30px;
+        }
     }
 }
-
-.label {
-    display: inline-block;
-    color: #0060AC;
-    border: 1px solid rgba(0, 0, 0, .1);
-    border-radius: 3px;
-    border-color: #8daed9;
-    padding: 4px 8px;
+.build-button{
+    margin-top: 30px;
 }
-
-.about-container
-    margin-top: 0
-    align-items: center
-
-    .product-logo
-        width: 200px
-
-    .about-productName
-        font-size: 18px
-
-    .about-product-description
-        margin-bottom: 10px
+.warning-notes{
+    margin-top: 10px;
+    color: #e12846;
+}

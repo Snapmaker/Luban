@@ -38,14 +38,12 @@ const cpFileToTmp = async (file, uploadName) => {
 export const set = async (req, res) => {
     let { uploadName } = req.body;
     const file = req.files.file;
-    console.log('set', req.files, req.body);
 
     if (file) { // post blob file in web
         const originalName = path.basename(file.name);
         if (!uploadName) {
             uploadName = pathWithRandomSuffix(originalName);
         }
-
         const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
         mv(file.path, uploadPath, (err) => {
@@ -67,17 +65,20 @@ export const set = async (req, res) => {
 };
 
 export const buildFirmwareFile = (req, res) => {
-    const { binFiles } = req.body;
     const files = req.files;
-    console.log('binFiles, moduleFile', req.body, typeof binFiles, binFiles);
     if (files.mainFile || files.moduleFile) {
-        const options = {
-            mainPath: files.mainFile.path,
-            modulePath: files.moduleFile.path
-        };
+        const options = {};
+        if (files.mainFile) {
+            options.mainPath = files.mainFile.path;
+        }
+        if (files.moduleFile) {
+            options.modulePath = files.moduleFile.path;
+        }
+        options.buildVersion = req.body.buildVersion;
         packFirmware(options)
             .then((result) => {
-                console.log('result', result);
+                res.send(result);
+                res.end();
             })
             .catch((err) => {
                 res.status(ERR_INTERNAL_SERVER_ERROR).send({

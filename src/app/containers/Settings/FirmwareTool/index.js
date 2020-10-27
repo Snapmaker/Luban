@@ -1,3 +1,3 @@
-import Firmware from './Firmware';
+import FirmwareTool from './FirmwareTool';
 
-export default Firmware;
+export default FirmwareTool;
