@@ -446,9 +446,9 @@ class MarlinController {
             }, 1000);
         });
         this.controller.on('emergencyStop', () => {
-            log.error('emergencyStop lallalala');
-            // this.emitAll('serialport:emergencyStop');// 前端断开
-            this.close(() => {
+            const d1 = new Date();
+            log.error('test emergencyStop', d1.getTime());
+            this.emergencyStop(() => {
                 // Remove controller from store
                 store.unset(`controllers["${port}/${dataSource}"]`);
 
@@ -859,6 +859,40 @@ class MarlinController {
         // this.emitAll('serialport:close', { port });
         // store.unset(`controllers["${port}"]`);
         this.emitAll('serialport:close', { port });
+        store.unset(`controllers["${port}/${dataSource}"]`);
+
+        if (this.isOpen()) {
+            this.serialport.removeListener('close', this.serialportListener.close);
+            this.serialport.removeListener('error', this.serialportListener.error);
+            this.serialport.close((err) => {
+                if (err) {
+                    log.error(`Error closing serial port "${port}/${dataSource}":`, err);
+                }
+            });
+        }
+
+        this.destroy();
+    }
+
+    emergencyStop() {
+        const { port, dataSource } = this.options;
+
+        if (this.handler) {
+            clearInterval(this.handler);
+        }
+
+        // Assertion check
+        if (!this.serialport) {
+            log.error(`Serial port "${port}/${dataSource}" is not available`);
+            return;
+        }
+
+        // Stop status query
+        this.ready = false;
+
+        const d2 = new Date();
+        log.error('----2----', d2.getTime());
+        this.emitAll('serialport:emergencyStop', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {

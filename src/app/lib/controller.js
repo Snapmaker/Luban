@@ -41,6 +41,7 @@ class SerialPortClient {
         'serialport:open': [],
         'serialport:connected': [],
         'serialport:close': [],
+        'serialport:emergencyStop': [],
         'serialport:read': [],
         'serialport:write': [],
 

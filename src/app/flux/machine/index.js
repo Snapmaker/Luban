@@ -288,6 +288,7 @@ export const actions = {
                 dispatch(workspaceActions.loadGcode());
             },
             'serialport:close': (options) => {
+                console.log('serialport:close');
                 const { port } = options;
                 const state = getState().machine;
                 const ports = [...state.ports];
@@ -333,7 +334,7 @@ export const actions = {
                 dispatch(workspaceActions.unloadGcode());
             },
             'serialport:emergencyStop': (options) => {
-                console.log('isEmergencyStop');
+                console.log('serialport:isEmergencyStop');
                 const { port } = options;
                 const state = getState().machine;
                 const ports = [...state.ports];
