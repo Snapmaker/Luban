@@ -100,7 +100,7 @@ class ImageProcessMode extends PureComponent {
                                     >
                                         <i className={styles['laser-mode__icon-newsprint']} />
                                     </Anchor>
-                                    <span className={styles['laser-mode__text']}>{i18n._('NEWSPRINT')}</span>
+                                    <span className={styles['laser-mode__text']}>{i18n._('HALFTONE')}</span>
                                 </div>
                             </div>
                         </div>

@@ -434,12 +434,12 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
-                draw.startAngle = this.svgContentGroup.getElementAngel();
+                draw.startAngle = this.svgContentGroup.getElementAngel(); // FIXME: angle
 
                 draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
-                const transform = this.svgContainer.createSVGTransform();
-                transform.setTranslate(0, 0);
+                // const transform = this.svgContainer.createSVGTransform();
+                // transform.setTranslate(0, 0);
                 this.svgContentGroup.rotateSelectedElementsOnMouseDown();
                 this.svgContentGroup.rotateSelectorOnMouseDown();
                 // const transformList = getTransformList(selected);
@@ -687,6 +687,11 @@ class SVGCanvas extends PureComponent {
                 const bbox = draw.bbox;
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;
+
+                // angleOld = angle rotate
+                // angle0 = angle to X axis (right, positive)
+                // angle1 = angle to Y axis (up, negative)
+                // angle2 = new angle rotate
                 const angleOld = draw.startAngle;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;
@@ -885,6 +890,11 @@ class SVGCanvas extends PureComponent {
                 const bbox = draw.bbox;
                 const cx = bbox.x + bbox.width / 2;
                 const cy = bbox.y + bbox.height / 2;
+
+                // angleOld = angle rotate
+                // angle0 = angle to X axis (right, positive)
+                // angle1 = angle to Y axis (up, negative)
+                // angle2 = new angle rotate
                 const angleOld = draw.startAngle;
                 let angle = Math.atan2(y - cy, x - cx);
                 angle = (angle / Math.PI * 180 + 270) % 360 - 180;

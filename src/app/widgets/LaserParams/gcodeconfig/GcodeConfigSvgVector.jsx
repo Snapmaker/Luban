@@ -14,8 +14,8 @@ import { actions } from '../../../flux/editor';
 class GcodeConfigSvgVector extends PureComponent {
     static propTypes = {
         optimizePath: PropTypes.bool,
-        fillEnabled: PropTypes.bool.isRequired,
-        fillDensity: PropTypes.number.isRequired,
+        fillEnabled: PropTypes.bool,
+        fillDensity: PropTypes.number,
         disabled: PropTypes.bool,
 
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired

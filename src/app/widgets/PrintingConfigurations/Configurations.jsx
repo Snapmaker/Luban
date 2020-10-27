@@ -33,6 +33,7 @@ const OFFICIAL_CONFIG_KEYS = [
 function isDefinitionEditable(definition) {
     return !definition.metadata.readonly;
 }
+
 function isOfficialDefinition(definition) {
     return includes(['quality.fast_print',
         'quality.normal_quality',
@@ -47,6 +48,7 @@ class Configurations extends PureComponent {
         isAdvised: PropTypes.bool.isRequired,
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
+
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
@@ -66,11 +68,11 @@ class Configurations extends PureComponent {
         notificationMessage: '',
         showOfficialConfigDetails: true,
 
-
         // rename custom config
         newName: null,
         isRenaming: false,
 
+        selectedDefinition: null,
 
         customConfigGroup: [
             {
@@ -177,6 +179,10 @@ class Configurations extends PureComponent {
             });
         },
         onSelectOfficialDefinition: (definition) => {
+            this.setState({
+                isRenaming: false,
+                selectedDefinition: definition
+            });
             this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
@@ -188,7 +194,8 @@ class Configurations extends PureComponent {
         },
         onSelectCustomDefinition: (definition) => {
             this.setState({
-                isRenaming: false
+                isRenaming: false,
+                selectedDefinition: definition
             });
             // this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
@@ -288,16 +295,22 @@ class Configurations extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.qualityDefinitions.length > 0) {
-            const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-            if (!qualityDefinition) {
-                this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
+        // selected quality ID changed
+        if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
+            if (this.state.selectedDefinition === null) {
+                const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+                if (!qualityDefinition) {
+                    // definition no found, select first official definition
+                    this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
+                } else {
+                    this.actions.onSelectCustomDefinition(qualityDefinition);
+                }
             }
         }
     }
 
     render() {
-        const { isAdvised, defaultQualityId, qualityDefinitions } = this.props;
+        const { isAdvised, qualityDefinitions } = this.props;
         const state = this.state;
         const actions = this.actions;
 
@@ -307,8 +320,7 @@ class Configurations extends PureComponent {
 
 
         const isOfficialTab = isAdvised;
-        const qualityDefinition = qualityDefinitions.find(d => d.definitionId === defaultQualityId)
-            || qualityDefinitions[0];
+        const qualityDefinition = this.state.selectedDefinition;
 
         const customDefinitionOptions = qualityDefinitions.map(d => ({
             label: d.name,

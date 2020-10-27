@@ -39,7 +39,7 @@ class PageControl extends Component {
                         onClick={() => {
                             this.props.togglePage(from, PAGE_EDITOR);
                         }}
-                    >{i18n._('Editor')}
+                    >{i18n._('Edit')}
                     </button>
                     <button
                         type="button"

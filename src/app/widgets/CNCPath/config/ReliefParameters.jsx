@@ -28,8 +28,6 @@ class ReliefParameters extends PureComponent {
     render() {
         const { invert, disabled } = this.props;
 
-        console.log('invert', invert);
-
         return (
             <div>
                 {this.state.expanded && (

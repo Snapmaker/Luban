@@ -347,6 +347,7 @@ class SVGContentGroup {
         }
     }
 
+    // [T][R][S][T] -> [R][T][R][S][T]
     rotateSelectedElementsOnMouseDown() {
         for (const elem of this.selectedElements) {
             const transformList = getTransformList(elem);
