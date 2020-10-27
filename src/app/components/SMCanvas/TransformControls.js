@@ -837,6 +837,8 @@ class TransformControls extends Object3D {
     onMouseUp() {
         this.updateBoundingBox();
         this.dragging = false;
+
+        this.dispatchEvent(EVENTS.UPDATE);
     }
 
     // Calculate the bbox of each model in the selectedGroup
