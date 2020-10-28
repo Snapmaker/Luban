@@ -446,8 +446,6 @@ class MarlinController {
             }, 1000);
         });
         this.controller.on('emergencyStop', () => {
-            const d1 = new Date();
-            log.error('test emergencyStop', d1.getTime());
             this.emergencyStop(() => {
                 // Remove controller from store
                 store.unset(`controllers["${port}/${dataSource}"]`);
@@ -890,8 +888,6 @@ class MarlinController {
         // Stop status query
         this.ready = false;
 
-        const d2 = new Date();
-        log.error('----2----', d2.getTime());
         this.emitAll('serialport:emergencyStop', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 

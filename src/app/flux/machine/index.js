@@ -210,8 +210,6 @@ export const actions = {
                     }));
                 }
 
-                // console.log('serial', machineState, state);
-
                 dispatch(actions.updateState({
                     headStatus: headStatus,
                     laserPower: headPower,
@@ -288,7 +286,6 @@ export const actions = {
                 dispatch(workspaceActions.loadGcode());
             },
             'serialport:close': (options) => {
-                console.log('serialport:close');
                 const { port } = options;
                 const state = getState().machine;
                 const ports = [...state.ports];
@@ -334,7 +331,6 @@ export const actions = {
                 dispatch(workspaceActions.unloadGcode());
             },
             'serialport:emergencyStop': (options) => {
-                console.log('serialport:isEmergencyStop');
                 const { port } = options;
                 const state = getState().machine;
                 const ports = [...state.ports];
@@ -581,7 +577,6 @@ export const actions = {
 
             server.once('http:confirm', (result) => {
                 const { series, headType, status, isHomed, isEmergencyStop } = result.data;
-                console.log('confirm', result.data, isEmergencyStop);
                 if (isEmergencyStop) {
                     dispatch(actions.updateState({
                         isEmergencyStop
@@ -649,7 +644,6 @@ export const actions = {
                     heatedBedTargetTemperature,
                     isEmergencyStop
                 } = result.data;
-                console.log('wifi data', result.data, isEmergencyStop);
 
                 if (isEmergencyStop) {
                     dispatch(actions.updateState({
