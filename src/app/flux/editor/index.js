@@ -12,6 +12,7 @@ import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTex
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
+// import { actions as widgetActions } from '../widget';
 
 const getCount = (() => {
     let count = 0;
@@ -1183,6 +1184,17 @@ export const actions = {
         model.updateTransformation(transformation);
         svgModel.onUpdate();
     }
+
+    // /**
+    //  * TEST
+    //  * Set widgets state for laser
+    //  */
+    // setLaserWidgetsState: (headType) => (dispatch, getState) => {
+    //     const { modelGroup } = getState()[headType];
+    //     if (!modelGroup.getSelectedModelArray()) {
+    //         dispatch(widgetActions.updateWidgetState
+    //     }
+    // }
 };
 
 export default function reducer() {

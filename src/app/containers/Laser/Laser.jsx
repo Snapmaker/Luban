@@ -116,7 +116,8 @@ class Laser extends Component {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget.laser.default.widgets;
+    const { modelGroup } = state.laser;
+    const widgets = (modelGroup.getSelectedModelArray().length > 0) ? widget.laser.default.widgets : widget.laser.unselected.widgets;
     return {
         widgets
     };
