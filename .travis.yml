@@ -63,6 +63,7 @@ after_success:
             ls -al output output/*;
             cp -af "output/latest-mac.yml" "releases/latest-mac.yml";
             cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg" "releases/${RELEASE}-mac-x64.dmg";
+            cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}-mac.zip" "releases/${RELEASE}-mac.zip";
             ls -al releases/*;
         fi
     - |
