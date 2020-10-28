@@ -32,24 +32,37 @@ function getBrowserWindowOptions() {
     const lastOptions = config.get('winBounds');
 
     // Get display that most closely intersects the provided bounds.
-    const display = lastOptions ? screen.getDisplayMatching(lastOptions) : screen.getPrimaryDisplay();
-
     let windowOptions = {};
-    if (lastOptions && display.id === lastOptions.id) {
-        // use last time options when using the same display
-        windowOptions = {
-            ...windowOptions,
-            ...lastOptions
-        };
-    } else {
-        // or center the window when using other display
-        const workArea = display.workArea;
+    if (lastOptions) {
+        const display = screen.getDisplayMatching(lastOptions);
 
-        // calculate window size
-        const width = Math.min(lastOptions.width, workArea.width);
-        const height = Math.min(lastOptions.height, workArea.height);
-        const x = workArea.x + (workArea.width - width) / 2;
-        const y = workArea.y + (workArea.height - height) / 2;
+        if (display.id === lastOptions.id) {
+            // use last time options when using the same display
+            windowOptions = {
+                ...windowOptions,
+                ...lastOptions
+            };
+        } else {
+            // or center the window when using other display
+            const workArea = display.workArea;
+
+            // calculate window size
+            const width = Math.max(Math.min(lastOptions.width, workArea.width), 360);
+            const height = Math.max(Math.min(lastOptions.height, workArea.height), 240);
+            const x = workArea.x + (workArea.width - width) / 2;
+            const y = workArea.y + (workArea.height - height) / 2;
+
+            windowOptions = {
+                id: display.id,
+                x,
+                y,
+                width,
+                height
+            };
+        }
+    } else {
+        const display = screen.getPrimaryDisplay();
+        const { x, y, width, height } = display.workArea;
 
         windowOptions = {
             id: display.id,
@@ -226,6 +239,6 @@ app.on('second-instance', (event, commandLine) => {
 });
 
 /**
-* when ready
-*/
+ * when ready
+ */
 app.whenReady().then(createWindow);
