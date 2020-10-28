@@ -251,7 +251,7 @@ class MachineSettings extends PureComponent {
                 </div>
                 <p className={styles['form-title']}>{i18n._('Connection')}</p>
                 <div className={styles['form-group']}>
-                    <span>{i18n._('Time Out')}</span>
+                    <span>{i18n._('Timeout')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <Select
                             clearable={false}

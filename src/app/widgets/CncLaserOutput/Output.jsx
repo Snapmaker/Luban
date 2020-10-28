@@ -163,7 +163,7 @@ class Output extends PureComponent {
                                 disabled={!hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
-                                {i18n._('Export G-code to file')}
+                                {i18n._('Export G-code to File')}
                             </button>
                         </div>
                     )}

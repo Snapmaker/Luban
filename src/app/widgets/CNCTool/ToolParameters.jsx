@@ -96,8 +96,8 @@ class ToolParameters extends PureComponent {
                                 draggable="false"
                                 alt="V-Bit"
                             />
-                        </div>
-                        <span className={styles.selectToolText}>{i18n._('Carving V-Bit')}</span>
+                        </Anchor>
+                        <span className={styles.selectToolText}>{i18n._('Carving V-bit')}</span>
                     </div>
                     <div className={styles['select-tool']}>
                         <div
@@ -148,7 +148,7 @@ class ToolParameters extends PureComponent {
                                 </p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Carving V-bit')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
                                 </ul>
@@ -175,7 +175,7 @@ class ToolParameters extends PureComponent {
                                 <p>{i18n._('Enter the angle of the blade.')}</p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-Bit')}</b>: 30°</li>
+                                    <li><b>{i18n._('Carving V-bit')}</b>: 30°</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
                                 </ul>

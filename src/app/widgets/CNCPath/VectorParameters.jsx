@@ -111,7 +111,7 @@ class VectorParameters extends PureComponent {
                 {this.state.expanded && (
                     <React.Fragment>
                         <TipTrigger
-                            title={i18n._('Carve Path')}
+                            title={i18n._('Carving Path')}
                             content={(
                                 <div>
                                     <p>{i18n._('Select a carve path:')}</p>

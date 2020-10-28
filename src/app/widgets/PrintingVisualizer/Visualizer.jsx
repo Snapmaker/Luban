@@ -312,7 +312,7 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'item',
-                                label: i18n._('Clear Build Plate'),
+                                label: i18n._('Clear Heated Bed'),
                                 disabled: !hasModel || !isModelDisplayed,
                                 onClick: this.actions.clearBuildPlate
                             },
