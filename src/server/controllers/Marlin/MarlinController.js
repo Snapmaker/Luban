@@ -446,13 +446,7 @@ class MarlinController {
             }, 1000);
         });
         this.controller.on('emergencyStop', () => {
-            this.emergencyStop(() => {
-                // Remove controller from store
-                store.unset(`controllers["${port}/${dataSource}"]`);
-
-                // Destroy controller
-                // controller.destroy();
-            });
+            this.emergencyStop();
         });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -888,7 +882,6 @@ class MarlinController {
         // Stop status query
         this.ready = false;
 
-        this.emitAll('serialport:emergencyStop', { port });
         store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
@@ -900,6 +893,8 @@ class MarlinController {
                 }
             });
         }
+
+        this.emitAll('serialport:emergencyStop', { port });
 
         this.destroy();
     }

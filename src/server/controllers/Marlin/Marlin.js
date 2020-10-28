@@ -127,7 +127,7 @@ class MarlinReplyParserFocusHeight {
     }
 }
 
-
+//  Enclosure STOP
 class MarlinReplyParserEmergencyStop {
     static parse(line) {
         const r = line.match(/;Locked UART/);
@@ -143,9 +143,10 @@ class MarlinReplyParserEmergencyStop {
     }
 }
 
+// Emergency STOP Button
 class MarlinReplyParserEmergencyStopButton {
     static parse(line) {
-        const r = line.match(/emergency stop state, please restart the machine/);
+        const r = line.match(/^emergency stop state(.+)$/);
         if (!r) {
             return null;
         }

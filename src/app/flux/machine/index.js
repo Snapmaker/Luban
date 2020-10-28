@@ -271,7 +271,7 @@ export const actions = {
                     isOpen: true,
                     connectionStatus: CONNECTION_STATUS_CONNECTING,
                     connectionType: CONNECTION_TYPE_SERIAL,
-                    isEmergencyStop: null
+                    isEmergencyStopped: false
                 }));
             },
             'serialport:connected': (data) => {
@@ -300,7 +300,6 @@ export const actions = {
                         ports,
                         isOpen: false,
                         isConnected: false,
-                        // isEmergencyStop: true,
                         connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 } else {
@@ -310,7 +309,6 @@ export const actions = {
                         ports,
                         isOpen: false,
                         isConnected: false,
-                        // isEmergencyStop: true,
                         connectionStatus: CONNECTION_STATUS_IDLE
                     }));
                 }
@@ -344,7 +342,7 @@ export const actions = {
                     isOpen: false,
                     isConnected: false,
                     connectionStatus: CONNECTION_STATUS_IDLE,
-                    isEmergencyStop: true
+                    isEmergencyStopped: true
                 }));
                 dispatch(actions.updateState({
                     workPosition: {
@@ -576,10 +574,10 @@ export const actions = {
             server.removeAllListeners('http:close');
 
             server.once('http:confirm', (result) => {
-                const { series, headType, status, isHomed, isEmergencyStop } = result.data;
-                if (isEmergencyStop) {
+                const { series, headType, status, isHomed, isEmergencyStopped } = result.data;
+                if (isEmergencyStopped) {
                     dispatch(actions.updateState({
-                        isEmergencyStop
+                        isEmergencyStopped
                     }));
                     return;
                 }
@@ -630,7 +628,6 @@ export const actions = {
                 }
             });
             server.on('http:status', (result) => {
-                // TODO: wifi
                 const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
                 const {
                     status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
@@ -642,17 +639,17 @@ export const actions = {
                     doorSwitchCount,
                     isEnclosureDoorOpen,
                     heatedBedTargetTemperature,
-                    isEmergencyStop
+                    isEmergencyStopped
                 } = result.data;
 
-                if (isEmergencyStop) {
+                if (isEmergencyStopped) {
                     dispatch(actions.updateState({
                         port: '',
                         ports: [],
                         isOpen: false,
                         isConnected: false,
                         connectionStatus: CONNECTION_STATUS_IDLE,
-                        isEmergencyStop: true
+                        isEmergencyStopped: true
                     }));
                     dispatch(actions.updateState({
                         workPosition: {
@@ -685,7 +682,7 @@ export const actions = {
                     isEnclosureDoorOpen: isEnclosureDoorOpen,
                     doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
-                    isEmergencyStop: isEmergencyStop
+                    isEmergencyStopped: isEmergencyStopped
                 }));
                 if (workPosition.x !== x
                     || workPosition.y !== y

@@ -46,7 +46,7 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         isEnclosureDoorOpen: PropTypes.bool,
         doorSwitchCount: PropTypes.number,
-        isEmergencyStop: PropTypes.bool,
+        isEmergencyStopped: PropTypes.bool,
 
         uploadState: PropTypes.string.isRequired,
         headType: PropTypes.string,
@@ -126,7 +126,7 @@ class Visualizer extends Component {
             received: 0
         },
         showEnclosureDoorWarn: false,
-        isEmergencyStop: false
+        isEmergencyStopped: false
     };
 
     controllerEvents = {
@@ -452,7 +452,7 @@ class Visualizer extends Component {
         closeModal: () => {
             this.setState({
                 showEnclosureDoorWarn: false,
-                isEmergencyStop: false
+                isEmergencyStopped: false
             });
         }
     };
@@ -532,9 +532,9 @@ class Visualizer extends Component {
                 showEnclosureDoorWarn: true
             });
         }
-        if (nextProps.isEmergencyStop !== this.props.isEmergencyStop && nextProps.isEmergencyStop) {
+        if (nextProps.isEmergencyStopped !== this.props.isEmergencyStopped && nextProps.isEmergencyStopped) {
             this.setState({
-                isEmergencyStop: true
+                isEmergencyStopped: true
             });
             // modal({
             //     title: i18n._('Emergency Stop'),
@@ -670,7 +670,6 @@ class Visualizer extends Component {
         const state = this.state;
         const notice = this.notice();
         const { gcodeFile } = this.props;
-        // console.log('workspace visualizer: isEmergencyStop', isEmergencyStop);
 
         return (
             <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
@@ -712,7 +711,7 @@ class Visualizer extends Component {
                     />
                 </div>
 
-                {(state.isEmergencyStop) && (
+                {(state.isEmergencyStopped) && (
                     <ModalSmall
                         title={i18n._('Emergency Stop')}
                         text={i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
@@ -741,7 +740,7 @@ const mapStateToProps = (state) => {
     return {
         size: machine.size,
         doorSwitchCount: machine.doorSwitchCount,
-        isEmergencyStop: machine.isEmergencyStop,
+        isEmergencyStopped: machine.isEmergencyStopped,
         isEnclosureDoorOpen: machine.isEnclosureDoorOpen,
         headType: machine.headType,
         workflowStatus: machine.workflowStatus,
