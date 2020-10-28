@@ -35,7 +35,7 @@ function getBrowserWindowOptions() {
     const display = lastOptions ? screen.getDisplayMatching(lastOptions) : screen.getPrimaryDisplay();
 
     let windowOptions = {};
-    if (display.id === lastOptions.id) {
+    if (lastOptions && display.id === lastOptions.id) {
         // use last time options when using the same display
         windowOptions = {
             ...windowOptions,

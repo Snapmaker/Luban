@@ -1,8 +1,8 @@
 {
   "name": "snapmaker-luban",
-  "version": "3.10.0",
+  "version": "3.10.1",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
-  "homepage": "https://github.com/whimsycwd/Snapmakerjs",
+  "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "contributors": [
     "David Chen <whimsycwd@snapmaker.com>",
@@ -12,7 +12,7 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "git@github.com:whimsycwd/Snapmakerjs.git"
+    "url": "git@github.com:Snapmaker/Luban.git"
   },
   "main": "main.js",
   "dependencies": {
