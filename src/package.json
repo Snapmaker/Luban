@@ -30,6 +30,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~3.1.0",
     "electron-store": "~5.1.1",
+    "electron-updater": "^4.3.5",
     "ensure-array": "~1.0.0",
     "errorhandler": "~1.5.0",
     "esprima": "~4.0.1",

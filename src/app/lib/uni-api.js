@@ -16,6 +16,45 @@ const Event = {
 };
 
 /**
+ *  Update control in electron
+ */
+const Update = {
+    checkForUpdate(shouldCheckForUpdate) {
+        console.log('Update checkForUpdate', shouldCheckForUpdate);
+        if (isElectron()) {
+            const { ipcRenderer } = window.require('electron');
+            console.log('UniApi Update', shouldCheckForUpdate);
+            if (shouldCheckForUpdate) {
+                ipcRenderer.send('checkForUpdate');
+            }
+        }
+    },
+    downloadUpdate() {
+        if (isElectron()) {
+            const { remote, ipcRenderer } = window.require('electron');
+            const { dialog } = remote;
+
+            const dialogOpts = {
+                type: 'info',
+                buttons: ['Later', 'Now'],
+                title: 'Application Update',
+                detail: 'A new version has been detected. Should i download it and install now?'
+            };
+
+            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+                if (returnValue.response === 0) {
+                    ipcRenderer.send('isDownloadNow');
+                    return true;
+                } else {
+                    console.log('download canceled');
+                    return false;
+                }
+            });
+        }
+    }
+};
+
+/**
  * Menu Control in electron
  */
 const Menu = {
@@ -50,6 +89,7 @@ const File = {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('openFile');
+            ipcRenderer.send('checkForUpdate');
         }
     },
     /**
@@ -175,6 +215,7 @@ const Window = {
 };
 
 export default {
+    Update,
     Event,
     Menu,
     File,

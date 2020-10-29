@@ -1,7 +1,9 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
+// import fs from 'fs';
 import { isNull } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
@@ -76,6 +78,69 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowOptions);
 }
 
+function sendUpdateMessage(text) {
+    mainWindow.webContents.send('message', text);
+}
+
+// handle update issue
+function updateHandle() {
+    // before update , delete file last download
+    // /Users/jiantao/Library/Application\ Support/Caches/snapmaker-luban-updater/pending
+    // const updaterCacheDirName = 'snapmaker-luban-updater';
+    // const updatePendingPath = path.join(autoUpdater.app.baseCachePath, updaterCacheDirName, 'pending');
+    // fs.emptyDir(updatePendingPath);
+    const message = {
+        error: 'update error',
+        checking: 'updating...',
+        updateAva: 'fetch new version and downloading...',
+        updateNotAva: 'do not to update'
+    };
+    // autoDownload
+    autoUpdater.autoDownload = false;
+
+    ipcMain.on('isDownloadNow', () => {
+        autoUpdater.downloadUpdate().then(res => {
+            console.log(`${res}download success`);
+        });
+    });
+
+    autoUpdater.on('error', () => {
+        sendUpdateMessage(message.error);
+    });
+    autoUpdater.on('checking-for-update', () => {
+        sendUpdateMessage(message.checking);
+    });
+    autoUpdater.on('update-available', (event, releaseNotes) => {
+        sendUpdateMessage(message.updateAva);
+        console.log('update-available', this, autoUpdater, event, releaseNotes);
+        mainWindow.webContents.send('updateAvailable');
+    });
+    autoUpdater.on('update-not-available', () => {
+        sendUpdateMessage(message.updateNotAva);
+    });
+
+    autoUpdater.on('download-progress', (progressObj) => {
+        console.log('progressObj', progressObj);
+        mainWindow.setProgressBar(progressObj.percent / 100);
+        // mainWindow.webContents.send('downloadProgress', progressObj);
+    });
+    autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+        // ipcMain.on('isUpdateNow', (e, arg) => {
+        //     // some code here to handle event
+        // console.log('isUpdateNow', event, releaseNotes, releaseName, e, arg);
+        //     autoUpdater.quitAndInstall();
+        // });
+        // mainWindow.webContents.send('isUpdateNow');
+        console.log('update-downloaded', event, releaseNotes, releaseName);
+        autoUpdater.quitAndInstall();
+    });
+
+
+    ipcMain.on('checkForUpdate', () => {
+        autoUpdater.checkForUpdates();
+    });
+}
+
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -120,13 +185,14 @@ const createWindow = async () => {
     mainWindowOptions = windowOptions;
     configureWindow(window);
 
-    const url = `http://${address}:${port}`;
+    const loadUrl = `http://${address}:${port}`;
 
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
     const session = window.webContents.session;
     session.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(url))
+        .then(() => window.loadURL(loadUrl))
         .then(() => {
             window.show();
             window.focus();
@@ -147,7 +213,7 @@ const createWindow = async () => {
 
 
     // Setup menu
-    const menuBuilder = new MenuBuilder(window, { url });
+    const menuBuilder = new MenuBuilder(window, { url: loadUrl });
     menuBuilder.buildMenu();
 
     // the "open file or folder" dialog can also be triggered from the React app
@@ -159,7 +225,11 @@ const createWindow = async () => {
         }
     });
 
+    // https://s3-us-west-2.amazonaws.com/snapmaker.com/download/luban/snapmaker-luban-3.9.0-mac-x64.dmg
+    // https://github.com/Snapmaker/Luban/releases/download/v3.9.0/snapmaker-luban-3.9.0-mac-x64.dmg
+
     // TODO: Setup AppUpdater
+    updateHandle();
 };
 
 // Allow max 4G memory usage
