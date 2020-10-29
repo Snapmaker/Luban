@@ -557,6 +557,9 @@ export const actions = {
         if (isOpen) {
             return;
         }
+        dispatch(actions.updateState({
+            isEmergencyStopped: false
+        }));
         server.open(serverToken, (err, data, text) => {
             if (err) {
                 callback && callback(err, data, text);

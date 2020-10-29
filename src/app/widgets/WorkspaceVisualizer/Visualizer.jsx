@@ -536,16 +536,6 @@ class Visualizer extends Component {
             this.setState({
                 isEmergencyStopped: true
             });
-            // modal({
-            //     title: i18n._('Emergency Stop'),
-            //     body: (
-            //         <div>
-            //             <title> Emergency Stop </title>
-            //             {i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
-            //
-            //         </div>
-            //     )
-            // });
         }
     }
 
