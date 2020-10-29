@@ -23,31 +23,64 @@ const Update = {
         console.log('Update checkForUpdate', shouldCheckForUpdate);
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
-            console.log('UniApi Update', shouldCheckForUpdate);
             if (shouldCheckForUpdate) {
                 ipcRenderer.send('checkForUpdate');
             }
         }
     },
-    downloadUpdate() {
+    downloadUpdate(downloadInfo) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
             const { dialog } = remote;
+            console.log('downloadInfo', downloadInfo);
+            const { releaseNotes, releaseName } = downloadInfo;
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['Later', 'Now'],
-                title: 'Application Update',
-                detail: 'A new version has been detected. Should i download it and install now?'
+                buttons: ['Download now', 'Later'],
+                title: `新的 Luban ${releaseName} 已经发布 !`,
+                message: releaseNotes,
+                detail: 'A new version has been detected. Should i download it now?'
             };
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
                 if (returnValue.response === 0) {
                     ipcRenderer.send('isDownloadNow');
-                    return true;
                 } else {
                     console.log('download canceled');
-                    return false;
+                }
+            });
+        }
+    },
+    haveStartedDownload() {
+        if (isElectron()) {
+            const { remote } = window.require('electron');
+            const { dialog } = remote;
+
+            const dialogOpts = {
+                type: 'info',
+                buttons: ['OK'],
+                detail: 'A latest version has been downloaded.'
+            };
+            dialog.showMessageBox(dialogOpts);
+        }
+    },
+    isUpdateNow(downloadInfo) {
+        if (isElectron()) {
+            const { remote, ipcRenderer } = window.require('electron');
+            const { dialog } = remote;
+            const { releaseName } = downloadInfo;
+
+            const dialogOpts = {
+                type: 'info',
+                buttons: ['Yes', 'No'],
+                title: `Luban ${releaseName} has been downloaded.`,
+                detail: 'Do you want to exit the program to install now?'
+            };
+
+            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+                if (returnValue.response === 0) {
+                    ipcRenderer.send('isUpdateNow');
                 }
             });
         }
@@ -89,7 +122,6 @@ const File = {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('openFile');
-            ipcRenderer.send('checkForUpdate');
         }
     },
     /**

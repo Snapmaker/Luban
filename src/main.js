@@ -99,40 +99,36 @@ function updateHandle() {
     autoUpdater.autoDownload = false;
 
     ipcMain.on('isDownloadNow', () => {
-        autoUpdater.downloadUpdate().then(res => {
-            console.log(`${res}download success`);
+        mainWindow.webContents.send('isStartDownload');
+        autoUpdater.downloadUpdate().then((res) => {
+            console.log('downloadUpdate', res);
         });
     });
 
-    autoUpdater.on('error', () => {
-        sendUpdateMessage(message.error);
+    autoUpdater.on('error', (err) => {
+        sendUpdateMessage(message.error, err);
     });
     autoUpdater.on('checking-for-update', () => {
         sendUpdateMessage(message.checking);
     });
-    autoUpdater.on('update-available', (event, releaseNotes) => {
+    autoUpdater.on('update-available', (downloadInfo) => {
+        console.log('update-available', downloadInfo);
         sendUpdateMessage(message.updateAva);
-        console.log('update-available', this, autoUpdater, event, releaseNotes);
-        mainWindow.webContents.send('updateAvailable');
+        mainWindow.webContents.send('updateAvailable', downloadInfo);
     });
     autoUpdater.on('update-not-available', () => {
         sendUpdateMessage(message.updateNotAva);
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
-        console.log('progressObj', progressObj);
         mainWindow.setProgressBar(progressObj.percent / 100);
-        // mainWindow.webContents.send('downloadProgress', progressObj);
     });
-    autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-        // ipcMain.on('isUpdateNow', (e, arg) => {
-        //     // some code here to handle event
-        // console.log('isUpdateNow', event, releaseNotes, releaseName, e, arg);
-        //     autoUpdater.quitAndInstall();
-        // });
-        // mainWindow.webContents.send('isUpdateNow');
-        console.log('update-downloaded', event, releaseNotes, releaseName);
-        autoUpdater.quitAndInstall();
+    autoUpdater.on('update-downloaded', (downloadInfo) => {
+        ipcMain.on('isUpdateNow', () => {
+            // some code here to handle event
+            autoUpdater.quitAndInstall();
+        });
+        mainWindow.webContents.send('isUpdateNow', downloadInfo);
     });
 
 

@@ -65,6 +65,7 @@ class App extends PureComponent {
         quitRecovery: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
+        updateStartDownload: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         checkForUpdateOnce: PropTypes.bool.isRequired
     };
@@ -140,6 +141,10 @@ class App extends PureComponent {
             console.log('action checkForUpdate');
             UniApi.Update.checkForUpdate(shouldCheckForUpdate);
         },
+        haveStartedDownload: () => {
+            console.log('action haveStartedDownload');
+            UniApi.Update.haveStartedDownload();
+        },
         initFileOpen: () => {
             UniApi.File.openProjectFile();
         },
@@ -147,16 +152,16 @@ class App extends PureComponent {
             UniApi.Event.on('open-file', (event, file) => {
                 this.actions.openProject(file);
             });
-            UniApi.Event.on('message', (event, text) => {
-                console.log('message', text);
+            UniApi.Event.on('isStartDownload', () => {
+                this.props.updateStartDownload(true);
             });
-            UniApi.Event.on('updateAvailable', () => {
-                UniApi.Update.downloadUpdate();
+            UniApi.Event.on('updateAvailable', (downloadInfo) => {
+                UniApi.Update.downloadUpdate(downloadInfo);
             });
-            // UniApi.Event.on('downloadProgress', (event, progressObj) => {
-            //     console.log('downloadProgress', progressObj.percent);
-            //     this.props.updateDownloadProgress(progressObj.percent);
-            // });
+            UniApi.Event.on('isUpdateNow', (downloadInfo) => {
+                UniApi.Update.isUpdateNow(downloadInfo);
+                this.props.updateStartDownload(false);
+            });
             UniApi.Event.on('save-as-file', (event, file) => {
                 this.actions.saveAsFile(file);
             });
@@ -250,7 +255,9 @@ class App extends PureComponent {
         this.actions.initFileOpen();
         // auto update
         console.log('this.props.shouldCheckForUpdate', this.props.machineInfo, this.props.shouldCheckForUpdate);
-        this.actions.checkForUpdate(this.props.shouldCheckForUpdate);
+        setTimeout(() => {
+            this.actions.checkForUpdate(this.props.shouldCheckForUpdate);
+        }, 200);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -260,11 +267,9 @@ class App extends PureComponent {
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
         }
-        if (nextProps.shouldCheckForUpdate === true) {
-            this.actions.checkForUpdate(this.props.shouldCheckForUpdate);
-        }
-        if (nextProps.checkForUpdateOnce === true) {
-            console.log('222');
+        if (nextProps.checkForUpdateOnce && nextProps.isStartDownload) {
+            this.actions.haveStartedDownload();
+        } else if (nextProps.checkForUpdateOnce) {
             this.actions.checkForUpdate(true);
             setTimeout(() => {
                 this.props.updateCheckForUpdateOnce(false);
@@ -386,6 +391,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
         updateCheckForUpdateOnce: (checkForUpdateOnce) => dispatch(machineActions.updateCheckForUpdateOnce(checkForUpdateOnce)),
+        updateStartDownload: (isStartDownload) => dispatch(machineActions.updateStartDownload(isStartDownload)),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
         workspaceInit: () => dispatch(workspaceActions.init()),

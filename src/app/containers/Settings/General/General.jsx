@@ -115,24 +115,26 @@ class General extends PureComponent {
                                 <option value="ja">日本語</option>
                                 <option value="zh-cn">中文 (简体)</option>
                             </select>
-                            <span className={styles['update-title']}>{i18n._('Updates version ')}</span>
-                            <div>
+                            <div className={styles['autoupdate-wrapper']}>
+                                <p className={styles['update-title']}>{i18n._('Software Update')}</p>
                                 <button
                                     type="button"
                                     className="btn btn-outline-secondary"
                                     onClick={() => this.props.updateCheckForUpdateOnce(true)}
                                 >
-                                    {i18n._('check for updates')}
+                                    {i18n._('Check for update')}
                                 </button>
-                                <input
-                                    type="checkbox"
-                                    className={styles['autoupdate-checkbox']}
-                                    checked={shouldCheckForUpdate}
-                                    onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
-                                />
-                                <span className={styles['autoupdate-text']}>
-                                    {i18n._('auto check for updates')}
-                                </span>
+                                <div className={styles['autoupdate-auto']}>
+                                    <input
+                                        type="checkbox"
+                                        className={styles['autoupdate-checkbox']}
+                                        checked={shouldCheckForUpdate}
+                                        onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
+                                    />
+                                    <span className={styles['autoupdate-text']}>
+                                        {i18n._('Automatically check for update')}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
