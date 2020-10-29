@@ -295,15 +295,20 @@ class Configurations extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        // selected quality ID changed
-        if (nextProps.defaultQualityId !== this.props.defaultQualityId) {
-            if (this.state.selectedDefinition === null) {
-                const qualityDefinition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-                if (!qualityDefinition) {
+        // selected quality ID or definitions changed
+        if (nextProps.defaultQualityId !== this.props.defaultQualityId || nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
+            if (this.state.selectedDefinition === null || nextProps.defaultQualityId !== this.props.defaultQualityId) {
+                let definition = null;
+
+                if (nextProps.qualityDefinitions.length > 0) {
+                    definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
+                }
+
+                if (!definition) {
                     // definition no found, select first official definition
                     this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
                 } else {
-                    this.actions.onSelectCustomDefinition(qualityDefinition);
+                    this.actions.onSelectCustomDefinition(definition);
                 }
             }
         }
