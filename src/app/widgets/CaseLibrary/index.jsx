@@ -90,8 +90,8 @@ class CaseLibrary extends PureComponent {
                 }
                 this.props.updateDefaultAdvised(false);
 
-                this.props.updateDefaultQualityId(newDefinition.definitionId);
                 this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
+                this.props.updateDefaultQualityId(newDefinition.definitionId);
                 this.props.updateActiveDefinition(newDefinition);
             }
         },
