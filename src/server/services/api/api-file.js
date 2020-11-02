@@ -63,7 +63,12 @@ export const set = async (req, res) => {
         res.end();
     }
 };
-
+/**
+ * Compile the firmware file and export a firmware that Luban can use
+ * @param mainFile File
+ * @param moduleFile  File
+ * @param buildVersion string
+ */
 export const buildFirmwareFile = (req, res) => {
     const files = req.files;
     if (files.mainFile || files.moduleFile) {

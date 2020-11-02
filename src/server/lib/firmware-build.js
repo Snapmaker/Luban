@@ -7,13 +7,14 @@ async function firmwareAction(isMainController, filePath, version) {
         let destFilename = '';
         const date = new Date();
         const month = date.getMonth() === 0 ? 12 : date.getMonth() + 1;
-        const dateString = `${date.getFullYear()}${month}${date.getDate()}`;
+        const day = String(date.getDate()).length === 1 ? `0${date.getDate()}` : date.getDate();
+        const dateString = `${date.getFullYear()}${month}${day}`;
         if (isMainController) {
             destFilename = `SM2_MC_APP_V${version}_${dateString}.bin`;
         } else {
             destFilename = `SM2_EM_APP_V${version}_${dateString}.bin`;
         }
-        // Improve 'fullVersion' and 'packFullVersion' to the same !!!
+        // TODO Improve 'fullVersion' and 'packFullVersion' to the same !!!
         const fullVersion = `Snapmaker2_V${version}_${dateString}`;
         let packFullVersion = `Snapmaker_V${version}_${dateString}`;
         if (packFullVersion.length < 32) {
@@ -121,7 +122,6 @@ function packAll(filePathAndName) {
         return Buffer.concat([headBuffer, moduleMcBuffer], headBuffer.length + moduleMcBuffer.length);
     }
 
-    // const destDir = path.dirname(filePathAndName[0].newFilePath);
     const destName = filePathAndName[0].fullVersion;
     let fullVersion = destName;
     if (fullVersion.length < 32) {

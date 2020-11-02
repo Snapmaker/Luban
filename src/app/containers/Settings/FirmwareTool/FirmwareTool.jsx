@@ -85,7 +85,7 @@ class FirmwareTool extends PureComponent {
                         />
                     </li>
                     <li className={styles.wrapper}>
-                        <span className={styles.labelText}>{i18n._('Addon Firmware')}</span>
+                        <span className={styles.labelText}>{i18n._('Module Firmware')}</span>
                         <input
                             ref={this.moduleInput}
                             className={styles.moduleInput}
