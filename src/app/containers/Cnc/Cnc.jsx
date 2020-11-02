@@ -114,8 +114,7 @@ class Cnc extends Component {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const { modelGroup } = state.cnc;
-    const widgets = (modelGroup.getSelectedModelArray().length > 0) ? widget.cnc.default.widgets : widget.cnc.unselected.widgets;
+    const widgets = widget.cnc.default.widgets;
     return {
         widgets
     };
