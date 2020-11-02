@@ -52,6 +52,12 @@ const File = {
             ipcRenderer.send('openFile');
         }
     },
+    /**
+     * Export file to local directory.
+     * TODO: Change `tmpFile` definition.
+     *
+     * @param tmpFile - temporary file path, e.g. "/Tmp/xxx.stl"
+     */
     // export file for project file
     async saveAs(targetFile, tmpFile) {
         if (isElectron()) {
