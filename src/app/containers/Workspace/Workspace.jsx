@@ -48,6 +48,8 @@ class Workspace extends PureComponent {
 
     state = {
         connected: controller.connected,
+        havePrimaryWidget: this.props.showPrimaryContainer,
+        haveSecondaryWidget: this.props.showSecondaryContainer,
         isDraggingWidget: false
     };
 
@@ -176,7 +178,9 @@ class Workspace extends PureComponent {
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.props;
         this.props.updateTabContainer('left', { show: !showPrimaryContainer });
-
+        this.setState({
+            havePrimaryWidget: !showPrimaryContainer
+        });
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
@@ -184,6 +188,9 @@ class Workspace extends PureComponent {
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.props;
         this.props.updateTabContainer('right', { show: !showSecondaryContainer });
+        this.setState({
+            haveSecondaryWidget: !showSecondaryContainer
+        });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -218,6 +225,8 @@ class Workspace extends PureComponent {
         const actions = { ...this.actions };
         const {
             connected,
+            havePrimaryWidget,
+            haveSecondaryWidget,
             isDraggingWidget
         } = this.state;
         const hidePrimaryContainer = !showPrimaryContainer;
@@ -289,7 +298,8 @@ class Workspace extends PureComponent {
                             disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                             accept={ACCEPT}
                             dragEnterMsg={i18n._('Drop a G-code file here.')}
-                            havePrimaryWidget={!false}
+                            havePrimaryWidget={havePrimaryWidget}
+                            haveSecondaryWidget={haveSecondaryWidget}
                             onDropAccepted={actions.onDropAccepted}
                             onDropRejected={actions.onDropRejected}
                         >
