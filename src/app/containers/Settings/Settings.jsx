@@ -11,6 +11,7 @@ import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
 import storeManager from '../../store/local-storage';
 import General from './General';
+import FirmwareTool from './FirmwareTool';
 import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
@@ -42,6 +43,12 @@ class Settings extends PureComponent {
             path: 'config',
             title: i18n._('Config'),
             component: (props) => <Workspace {...props} />
+        },
+        {
+            id: 'firmware',
+            path: 'firmware',
+            title: i18n._('Firmware Tool'),
+            component: (props) => <FirmwareTool {...props} />
         }
     ];
 
@@ -117,7 +124,9 @@ class Settings extends PureComponent {
             }
         },
         // About
-        about: {}
+        about: {},
+        // Firmware
+        firmware: {}
     };
 
     getInitialState() {
@@ -142,6 +151,9 @@ class Settings extends PureComponent {
                     latest: settings.version,
                     lastUpdate: ''
                 }
+            },
+            // Firmware
+            firmware: {
             }
         };
     }

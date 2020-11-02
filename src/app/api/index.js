@@ -59,6 +59,7 @@ const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').sen
 const uploadCaseFile = defaultAPIFactory((formData) => request.post('/api/file/uploadCaseFile').send(formData));
 const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
 const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
+const buildFirmwareFile = defaultAPIFactory((formData) => request.post('/api/file/buildFirmwareFile').send(formData));
 const saveEnv = defaultAPIFactory((data) => request.post('/api/file/saveEnv').send(data));
 const getEnv = defaultAPIFactory((data) => request.post('/api/file/getEnv').send(data));
 const recoverEnv = defaultAPIFactory((data) => request.post('/api/file/recoverEnv').send(data));
@@ -300,6 +301,7 @@ export default {
     uploadCaseFile,
     uploadGcodeFile,
     uploadUpdateFile,
+    buildFirmwareFile,
     saveEnv,
     getEnv,
     recoverEnv,

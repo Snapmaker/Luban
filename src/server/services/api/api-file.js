@@ -9,7 +9,10 @@ import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
 import parseGcodeHeader from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
-
+import { packFirmware } from '../../lib/firmware-build';
+import {
+    ERR_INTERNAL_SERVER_ERROR
+} from '../../constants';
 
 const log = logger('api:file');
 
@@ -58,6 +61,36 @@ export const set = async (req, res) => {
         const ret = await cpFileToTmp(JSON.parse(req.body.file));
         res.send(ret);
         res.end();
+    }
+};
+/**
+ * Compile the firmware file and export a firmware that Luban can use
+ * @param {File} req.files.mainFile
+ * @param {File} req.files.moduleFile
+ * @param {string} req.body.buildVersion
+ */
+export const buildFirmwareFile = (req, res) => {
+    const files = req.files;
+    if (files.mainFile || files.moduleFile) {
+        const options = {};
+        if (files.mainFile) {
+            options.mainPath = files.mainFile.path;
+        }
+        if (files.moduleFile) {
+            options.modulePath = files.moduleFile.path;
+        }
+        options.buildVersion = req.body.buildVersion;
+        packFirmware(options)
+            .then((result) => {
+                res.send(result);
+                res.end();
+            })
+            .catch((err) => {
+                res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                    msg: 'Unable to build package',
+                    error: String(err)
+                });
+            });
     }
 };
 
