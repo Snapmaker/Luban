@@ -5,7 +5,7 @@
     top: $navbar-height;
     bottom: 0;
     left: $sidebar-width;
-    right: 0;
+    right: $controls-width;
     z-index: 100;
     background-color: rgba(255, 255, 255, .5);
     border: 4px dashed #286090;
@@ -15,6 +15,13 @@
     &.hidden {
         display: none;
     }
+    &.havePrimaryWidget {
+        left: 424px;
+    }
+    &.haveNotSecondaryWidget {
+        right: 0;
+    }
+
 
     .text-block {
         position: absolute;

@@ -17,6 +17,7 @@ const OptionalDropdown = (props) => {
                         <Anchor
                             onClick={onClick}
                             disabled={disabled}
+                            draggable="false"
                         >
                             <i className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])} />
                             <span>{title}</span>

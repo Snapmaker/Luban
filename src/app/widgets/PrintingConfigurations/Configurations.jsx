@@ -399,6 +399,7 @@ class Configurations extends PureComponent {
                 {isOfficialTab && (
                     <div style={{ marginTop: '12px', marginBottom: '6px' }}>
                         <OptionalDropdown
+                            draggable="false"
                             title={i18n._('Show Details')}
                             hidden={!state.showOfficialConfigDetails}
                             onClick={() => {

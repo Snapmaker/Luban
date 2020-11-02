@@ -60,12 +60,22 @@ class QuickAccessToolbar extends PureComponent {
                     </Nav.Item>
                 )}
                 <Nav.Item>
-                    <Nav.Link href="https://support.snapmaker.com/hc/en-us" target="_blank" rel="noopener noreferrer">
+                    <Nav.Link
+                        href="https://support.snapmaker.com/hc/en-us"
+                        target="_blank"
+                        draggable="false"
+                        rel="noopener noreferrer"
+                    >
                         {i18n._('User Manual & FAQ')}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                    <Nav.Link href="https://forum.snapmaker.com/c/snapmaker-luban" target="_blank" rel="noopener noreferrer">
+                    <Nav.Link
+                        href="https://forum.snapmaker.com/c/snapmaker-luban"
+                        target="_blank"
+                        draggable="false"
+                        rel="noopener noreferrer"
+                    >
                         {i18n._('Forum')}
                     </Nav.Link>
                 </Nav.Item>

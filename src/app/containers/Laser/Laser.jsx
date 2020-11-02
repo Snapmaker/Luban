@@ -66,50 +66,50 @@ class Laser extends Component {
 
         return (
             <div style={style}>
-                <Dropzone
-                    disabled={state.isDraggingWidget}
-                    accept={ACCEPT}
-                    dragEnterMsg={i18n._('Drop an image file here.')}
-                    onDropAccepted={this.actions.onDropAccepted}
-                    onDropRejected={this.actions.onDropRejected}
-                >
-                    <div className={styles['laser-table']}>
-                        <div className={styles['laser-table-row']}>
+                <div className={styles['laser-table']}>
+                    <div className={styles['laser-table-row']}>
+                        <Dropzone
+                            disabled={state.isDraggingWidget}
+                            accept={ACCEPT}
+                            dragEnterMsg={i18n._('Drop an image file here.')}
+                            onDropAccepted={this.actions.onDropAccepted}
+                            onDropRejected={this.actions.onDropRejected}
+                        >
                             <div className={styles['view-space']}>
                                 <LaserVisualizer
                                     widgetId="laserVisualizer"
                                 />
                             </div>
-                            <form className={styles['control-bar']} noValidate>
-                                <Sortable
-                                    options={{
-                                        animation: 150,
-                                        delay: 0,
-                                        group: {
-                                            name: 'laser-control'
-                                        },
-                                        handle: '.sortable-handle',
-                                        filter: '.sortable-filter',
-                                        chosenClass: 'sortable-chosen',
-                                        ghostClass: 'sortable-ghost',
-                                        dataIdAttr: 'data-widget-id',
-                                        onStart: this.actions.onDragWidgetStart,
-                                        onEnd: this.actions.onDragWidgetEnd
-                                    }}
-                                    onChange={this.onChangeWidgetOrder}
-                                >
-                                    {widgets.map(widget => {
-                                        return (
-                                            <div data-widget-id={widget} key={widget}>
-                                                <Widget widgetId={widget} headType="laser" />
-                                            </div>
-                                        );
-                                    })}
-                                </Sortable>
-                            </form>
-                        </div>
+                        </Dropzone>
+                        <form className={styles['control-bar']} noValidate>
+                            <Sortable
+                                options={{
+                                    animation: 150,
+                                    delay: 0,
+                                    group: {
+                                        name: 'laser-control'
+                                    },
+                                    handle: '.sortable-handle',
+                                    filter: '.sortable-filter',
+                                    chosenClass: 'sortable-chosen',
+                                    ghostClass: 'sortable-ghost',
+                                    dataIdAttr: 'data-widget-id',
+                                    onStart: this.actions.onDragWidgetStart,
+                                    onEnd: this.actions.onDragWidgetEnd
+                                }}
+                                onChange={this.onChangeWidgetOrder}
+                            >
+                                {widgets.map(widget => {
+                                    return (
+                                        <div data-widget-id={widget} key={widget}>
+                                            <Widget widgetId={widget} headType="laser" />
+                                        </div>
+                                    );
+                                })}
+                            </Sortable>
+                        </form>
                     </div>
-                </Dropzone>
+                </div>
             </div>
         );
     }

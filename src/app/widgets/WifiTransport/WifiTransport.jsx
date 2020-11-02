@@ -294,6 +294,7 @@ class WifiTransport extends PureComponent {
                                     <div className={styles['gcode-file-img']}>
                                         <img
                                             src={gcodeFile.thumbnail}
+                                            draggable="false"
                                             alt=""
                                         />
                                     </div>
