@@ -136,6 +136,11 @@ export const actions = {
         dispatch(actions.clearSavedEnvironment(headType));
     },
 
+    exportFile: (targetFile) => async () => {
+        const tmpFile = `/Tmp/${targetFile}`;
+        await UniApi.File.exportAs(targetFile, tmpFile);
+    },
+
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
