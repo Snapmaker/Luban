@@ -33,7 +33,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (!['3d', 'raster', 'svg', 'dxf', 'text'].includes(sourceType)) {
         return false;
     }
-    if (!['bw', 'greyscale', 'vector', 'trace', 'text', 'newsprint'].includes(mode)) {
+    if (!['bw', 'greyscale', 'vector', 'trace', 'text', 'halftone'].includes(mode)) {
         return false;
     }
     return true;
@@ -43,11 +43,21 @@ const generateLaserDefaults = (mode, sourceType) => {
     let config = null;
     let gcodeConfig = null;
     switch (mode) {
-        case 'bw':
-        case 'newsprint': {
+        case 'bw': {
             config = {
                 invert: false,
                 bwThreshold: 168
+            };
+            break;
+        }
+        case 'halftone': {
+            config = {
+                invert: false,
+                threshold: 255, // turn pixel to white
+                bwThreshold: 168, // used by toolpath generator
+                npType: 'line',
+                npSize: 30,
+                npAngle: 135
             };
             break;
         }
@@ -131,7 +141,7 @@ const generateLaserDefaults = (mode, sourceType) => {
             multiPasses: 2,
             multiPassDepth: 1
         };
-    } else if (mode === 'bw' || mode === 'newsprint') {
+    } else if (mode === 'bw' || mode === 'halftone') {
         gcodeConfig = {
             direction: 'Horizontal',
             density: DEFAULT_FILL_DENSITY,

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Jimp from 'jimp';
+import Jimp from '../../lib/jimp';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
@@ -83,15 +83,7 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
             .background(0xffffffff);
 
         // Turn transparent to white.
-        img
-            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, index) => {
-                if (img.bitmap.data[index + 3] === 0) {
-                    img.bitmap.data[index] = 255;
-                    img.bitmap.data[index + 1] = 255;
-                    img.bitmap.data[index + 2] = 255;
-                    img.bitmap.data[index + 3] = 255;
-                }
-            });
+        img.alphaToWhite();
 
         // text to be engraved, so invert to turn black to white.
         img.invert();
