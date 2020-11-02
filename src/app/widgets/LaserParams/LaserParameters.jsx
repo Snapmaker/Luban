@@ -50,6 +50,8 @@ class LaserParameters extends PureComponent {
         printOrder: PropTypes.number.isRequired,
         headType: PropTypes.string,
 
+        setDisplay: PropTypes.func.isRequired,
+
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
@@ -180,6 +182,24 @@ class LaserParameters extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Configurations'));
+    }
+
+    componentDidMount() {
+        const { modelGroup } = this.props;
+        if (modelGroup.getSelectedModelArray().length > 0) {
+            this.props.setDisplay(true);
+        } else {
+            this.props.setDisplay(false);
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const { modelGroup } = nextProps;
+        if (modelGroup.getSelectedModelArray().length > 0) {
+            this.props.setDisplay(true);
+        } else {
+            this.props.setDisplay(false);
+        }
     }
 
     render() {

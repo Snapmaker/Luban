@@ -34,8 +34,7 @@ class CNCPath extends PureComponent {
 
         page: PropTypes.string.isRequired,
 
-        // model: PropTypes.object,
-        // selectedModelID: PropTypes.string,
+        modelGroup: PropTypes.object,
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
@@ -48,6 +47,8 @@ class CNCPath extends PureComponent {
         selectedModel: PropTypes.object,
 
         // functions
+        setDisplay: PropTypes.func.isRequired,
+
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
@@ -175,6 +176,24 @@ class CNCPath extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Configurations'));
+    }
+
+    componentDidMount() {
+        const { modelGroup } = this.props;
+        if (modelGroup.getSelectedModelArray().length > 0) {
+            this.props.setDisplay(true);
+        } else {
+            this.props.setDisplay(false);
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const { modelGroup } = nextProps;
+        if (modelGroup.getSelectedModelArray().length > 0) {
+            this.props.setDisplay(true);
+        } else {
+            this.props.setDisplay(false);
+        }
     }
 
     render() {
