@@ -37,17 +37,15 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['Download now', 'Later'],
-                title: `新的 Luban ${releaseName} 已经发布 !`,
-                message: releaseNotes,
+                buttons: ['Later', 'Download now'],
+                title: `A new version of Snapmaker Luban ${releaseName} has been released!`,
+                message: releaseNotes.replace(/<p>/, '').replace(/<\/p>/, ''),
                 detail: 'A new version has been detected. Should i download it now?'
             };
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
-                if (returnValue.response === 0) {
+                if (returnValue.response === 1) {
                     ipcRenderer.send('isDownloadNow');
-                } else {
-                    console.log('download canceled');
                 }
             });
         }
@@ -73,13 +71,13 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['Yes', 'No'],
+                buttons: ['No', 'Yes'],
                 title: `Luban ${releaseName} has been downloaded.`,
                 detail: 'Do you want to exit the program to install now?'
             };
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
-                if (returnValue.response === 0) {
+                if (returnValue.response === 1) {
                     ipcRenderer.send('isUpdateNow');
                 }
             });

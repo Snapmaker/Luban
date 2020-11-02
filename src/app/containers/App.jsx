@@ -67,6 +67,7 @@ class App extends PureComponent {
         openProject: PropTypes.func.isRequired,
         updateStartDownload: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
+        isStartDownload: PropTypes.bool.isRequired,
         checkForUpdateOnce: PropTypes.bool.isRequired
     };
 
@@ -153,12 +154,14 @@ class App extends PureComponent {
                 this.actions.openProject(file);
             });
             UniApi.Event.on('isStartDownload', () => {
+                console.log('props, updateStartDownload');
                 this.props.updateStartDownload(true);
             });
-            UniApi.Event.on('updateAvailable', (downloadInfo) => {
+            UniApi.Event.on('updateAvailable', (event, downloadInfo) => {
+                console.log('updateAvailable', downloadInfo);
                 UniApi.Update.downloadUpdate(downloadInfo);
             });
-            UniApi.Event.on('isUpdateNow', (downloadInfo) => {
+            UniApi.Event.on('isUpdateNow', (event, downloadInfo) => {
                 UniApi.Update.isUpdateNow(downloadInfo);
                 this.props.updateStartDownload(false);
             });
@@ -267,6 +270,7 @@ class App extends PureComponent {
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
         }
+        console.log('isStartDownload', nextProps.checkForUpdateOnce, nextProps.isStartDownload, this.props.isStartDownload);
         if (nextProps.checkForUpdateOnce && nextProps.isStartDownload) {
             this.actions.haveStartedDownload();
         } else if (nextProps.checkForUpdateOnce) {
@@ -376,12 +380,13 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
-    const { shouldCheckForUpdate, checkForUpdateOnce } = machineInfo;
+    const { shouldCheckForUpdate, checkForUpdateOnce, isStartDownload } = machineInfo;
 
     const projectState = state.project;
     return {
         machineInfo,
         shouldCheckForUpdate,
+        isStartDownload,
         checkForUpdateOnce,
         projectState
     };

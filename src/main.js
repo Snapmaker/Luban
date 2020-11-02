@@ -3,7 +3,6 @@ import 'regenerator-runtime/runtime';
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
-// import fs from 'fs';
 import { isNull } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
@@ -95,13 +94,17 @@ function updateHandle() {
         updateAva: 'fetch new version and downloading...',
         updateNotAva: 'do not to update'
     };
-    // autoDownload
+    // // autoDownload
+    // https://github.com/Snapmaker/Luban/releases/download/v3.10.3/snapmaker-luban-3.10.3-win-x64.exe
+    // const url = `https://github.com/Snapmaker/Luban/releases/download/${app.getVersion()}/platformDef`;
+    // autoUpdater.setFeedURL({ url });
+
     autoUpdater.autoDownload = false;
 
     ipcMain.on('isDownloadNow', () => {
         mainWindow.webContents.send('isStartDownload');
         autoUpdater.downloadUpdate().then((res) => {
-            console.log('downloadUpdate', res);
+            console.log('downloadUpdate path', res);
         });
     });
 
