@@ -67,6 +67,9 @@
                 "grid": "Grid",
                 "zigzag": "Zig Zag"
             }
+        },
+        "support_wall_count": {
+            "default_value": 0
         }
     }
 }

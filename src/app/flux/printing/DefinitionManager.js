@@ -141,6 +141,9 @@ class DefinitionManager {
                 : supportLineWidth * 100 / supportInfillRate * supportPatternRate;
             definition.settings.support_initial_layer_line_distance.default_value = definition.settings.support_line_distance.default_value;
         }
+        if (settings.support_pattern) {
+            settings.support_wall_count = settings.support_pattern.default_value === 'grid' ? { default_value: 1 } : { default_value: 0 };
+        }
         // if (settings.support_z_distance) {
         //     const supportZDistance = settings.support_z_distance.default_value;
         //     definition.settings.support_top_distance.default_value = supportZDistance;
