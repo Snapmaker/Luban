@@ -7,7 +7,7 @@ import styles from '../CncLaserShared/styles.styl';
 import ConfigRasterBW from './config/ConfigRasterBW';
 import ConfigGreyscale from './config/ConfigGreyscale';
 import ConfigRasterVector from './config/ConfigRasterVector';
-import ConfigNewsprint from './config/ConfigNewsprint';
+import ConfigHalftone from './config/ConfigHalftone';
 
 class ImageProcessMode extends PureComponent {
     static propTypes = {
@@ -40,7 +40,7 @@ class ImageProcessMode extends PureComponent {
         const isBW = (sourceType === 'raster' && mode === 'bw');
         const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
         const isRasterVector = (sourceType === 'raster' && mode === 'vector');
-        const isNewsprint = (sourceType === 'raster' && mode === 'newsprint');
+        const isHalftone = (sourceType === 'raster' && mode === 'halftone');
 
         return (
             <React.Fragment>
@@ -95,13 +95,13 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                                 </div>
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'newsprint' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'halftone' })}>
                                     <Anchor
                                         disabled={disabled}
                                         className={styles['laser-mode__btn']}
-                                        onClick={() => actions.changeSelectedModelMode('newsprint')}
+                                        onClick={() => actions.changeSelectedModelMode('halftone')}
                                     >
-                                        <i className={styles['laser-mode__icon-newsprint']} />
+                                        <i className={styles['laser-mode__icon-halftone']} />
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('HALFTONE')}</span>
                                 </div>
@@ -120,7 +120,7 @@ class ImageProcessMode extends PureComponent {
                         {isBW && <ConfigRasterBW disabled={disabled} />}
                         {isGreyscale && <ConfigGreyscale disabled={disabled} />}
                         {isRasterVector && <ConfigRasterVector disabled={disabled} />}
-                        {isNewsprint && <ConfigNewsprint disabled={disabled} />}
+                        {isHalftone && <ConfigHalftone disabled={disabled} />}
                     </React.Fragment>
                 )}
             </React.Fragment>

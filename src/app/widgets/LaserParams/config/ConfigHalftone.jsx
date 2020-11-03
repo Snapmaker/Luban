@@ -10,13 +10,15 @@ import { NumberInput } from '../../../components/Input';
 import { actions as editorActions } from '../../../flux/editor';
 
 
-class ConfigNewsprint extends PureComponent {
+class ConfigHalftone extends PureComponent {
     static propTypes = {
         disabled: PropTypes.bool,
 
         npType: PropTypes.string,
         npSize: PropTypes.number,
         npAngle: PropTypes.number,
+        threshold: PropTypes.number,
+
         processSelectedModel: PropTypes.func.isRequired,
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
@@ -38,12 +40,14 @@ class ConfigNewsprint extends PureComponent {
             npAngle %= 180;
             if (npAngle < 0) npAngle += 180;
             this.props.updateSelectedModelConfig({ npAngle });
+        },
+        onChangeBWThreshold: (threshold) => {
+            this.props.updateSelectedModelConfig({ threshold });
         }
     };
 
     render() {
-        const { disabled, npType = 'line', npSize = 30, npAngle = 135 } = this.props;
-
+        const { disabled, npType, npSize, npAngle, threshold } = this.props;
         return (
             <div>
                 {this.state.expanded && (
@@ -76,8 +80,8 @@ class ConfigNewsprint extends PureComponent {
 
                         </div>
                         <TipTrigger
-                            title={i18n._('Newsprint')}
-                            content={i18n._('')}
+                            title={i18n._('Size')}
+                            content={i18n._('Set halftone size')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Size')}</span>
@@ -105,8 +109,8 @@ class ConfigNewsprint extends PureComponent {
                             </div>
                         </TipTrigger>
                         <TipTrigger
-                            title={i18n._('Newsprint')}
-                            content={i18n._('')}
+                            title={i18n._('Angle')}
+                            content={i18n._('Set halfton rotation angle')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Angle')}</span>
@@ -133,6 +137,35 @@ class ConfigNewsprint extends PureComponent {
 
                             </div>
                         </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Threshold')}
+                            content={i18n._('Color over threshold will turn to white')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Threshold')}</span>
+                                <NumberInput
+                                    disabled={disabled}
+                                    className="sm-parameter-row__slider-input"
+                                    value={threshold}
+                                    min={0}
+                                    max={255}
+                                    onChange={(value) => {
+                                        this.actions.onChangeBWThreshold(value);
+                                        this.props.processSelectedModel();
+                                    }}
+                                />
+                                <Slider
+                                    disabled={disabled}
+                                    className="sm-parameter-row__slider"
+                                    value={threshold}
+                                    min={0}
+                                    max={255}
+                                    onChange={this.actions.onChangeBWThreshold}
+                                    onAfterChange={this.props.processSelectedModel}
+                                />
+
+                            </div>
+                        </TipTrigger>
                     </React.Fragment>
                 )}
             </div>
@@ -147,12 +180,13 @@ const mapStateToProps = (state) => {
     const selectedModels = modelGroup.getSelectedModelArray();
     const model = selectedModels[0];
 
-    const { npType, npSize, npAngle } = model.config;
+    const { npType, npSize, npAngle, threshold } = model.config;
 
     return {
         npType,
         npSize,
-        npAngle
+        npAngle,
+        threshold
     };
 };
 
@@ -163,4 +197,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigNewsprint);
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigHalftone);

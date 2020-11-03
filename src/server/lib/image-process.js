@@ -1,16 +1,15 @@
-import Jimp from 'jimp';
+
 import fs from 'fs';
 import path from 'path';
-import configure from '@jimp/custom';
-import newsprint from 'jimp-plugin-newsprint';
+
+import Jimp from './jimp';
+
 import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from './svg-convert';
 import DataStorage from '../DataStorage';
 import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../shared/lib/DXFParser/Parser';
 import { svgInverse, svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
-
-configure({ plugins: [newsprint] }, Jimp);
 
 function bit(x) {
     if (x >= 128) {
@@ -91,6 +90,9 @@ async function processLaserGreyscale(modelInfo) {
     }
 
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    if (invert) {
+        img.invert();
+    }
 
     img
         .background(0xffffffff)
@@ -100,26 +102,9 @@ async function processLaserGreyscale(modelInfo) {
         .greyscale()
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
-        .rotate(-rotationZ * 180 / Math.PI)
-        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-            const data = img.bitmap.data;
-
-            if (data[idx + 3] === 0) {
-                data[idx] = 255;
-            } else {
-                if (invert) {
-                    data[idx] = 255 - data[idx];
-                    if (data[idx] < 255 - whiteClip) {
-                        data[idx] = 0;
-                    }
-                } else {
-                    if (data[idx] >= whiteClip) {
-                        data[idx] = 255;
-                    }
-                }
-            }
-        });
-
+        .rotate(-rotationZ * 180 / Math.PI) // should we do this on generating toolpath?
+        .threshold({ max: whiteClip })
+        .alphaToWhite(); // apply this after rotate AND invert, to avoid black gcode area
     // serpentine path
     for (let y = 0; y < img.bitmap.height; y++) {
         const reverse = (y & 1) === 1;
@@ -202,39 +187,14 @@ async function processBW(modelInfo) {
         .greyscale()
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
-        .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
-        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-            if (img.bitmap.data[idx + 3] === 0) {
-                // transparent
-                for (let k = 0; k < 3; ++k) {
-                    img.bitmap.data[idx + k] = 255;
-                }
-            } else {
-                const value = img.bitmap.data[idx];
-                if (invert) {
-                    if (value <= bwThreshold) {
-                        for (let k = 0; k < 3; ++k) {
-                            img.bitmap.data[idx + k] = 255;
-                        }
-                    } else {
-                        for (let k = 0; k < 3; ++k) {
-                            img.bitmap.data[idx + k] = 0;
-                        }
-                    }
-                } else {
-                    if (value <= bwThreshold) {
-                        for (let k = 0; k < 3; ++k) {
-                            img.bitmap.data[idx + k] = 0;
-                        }
-                    } else {
-                        for (let k = 0; k < 3; ++k) {
-                            img.bitmap.data[idx + k] = 255;
-                        }
-                    }
-                }
-            }
-        })
-        .background(0xffffffff);
+        .rotate(-rotationZ * 180 / Math.PI); // rotate: unit is degree and clockwise
+
+    if (invert) {
+        img.invert();
+    }
+    img.bw(bwThreshold)
+        .background(0xffffffff)
+        .alphaToWhite();
 
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
@@ -245,16 +205,13 @@ async function processBW(modelInfo) {
     });
 }
 
-async function processNewsprint(modelInfo) {
+async function processHalftone(modelInfo) {
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
-    const { npType = 'line', npSize = 30, npAngle = 135 } = modelInfo.config;
+    const { npType, npSize, npAngle, threshold } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
-    const whiteClip = 255;
-    const invert = false;
-
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
 
@@ -263,26 +220,10 @@ async function processNewsprint(modelInfo) {
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
-        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-            const data = img.bitmap.data;
-
-            if (data[idx + 3] === 0) {
-                data[idx] = 255;
-            } else {
-                if (invert) {
-                    data[idx] = 255 - data[idx];
-                    if (data[idx] < 255 - whiteClip) {
-                        data[idx] = 0;
-                    }
-                } else {
-                    if (data[idx] >= whiteClip) {
-                        data[idx] = 255;
-                    }
-                }
-            }
-        })
-        .newsprint(npType, npSize, npAngle)
-        .background(0xffffffff);
+        .threshold({ max: threshold })
+        .halftone(npType, npSize, npAngle)
+        .background(0xffffffff)
+        .alphaToWhite();
 
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
@@ -341,8 +282,8 @@ function process(modelInfo) {
             return processBW(modelInfo);
         } else if (mode === 'vector') {
             return processVector(modelInfo);
-        } else if (mode === 'newsprint') {
-            return processNewsprint(modelInfo);
+        } else if (mode === 'halftone') {
+            return processHalftone(modelInfo);
         } else {
             return Promise.resolve({
                 filename: ''
