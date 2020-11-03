@@ -181,7 +181,6 @@ class MarlinReplyParserZAxisModule {
         if (!r) {
             return null;
         }
-        console.log('echo: M1025 Z-Axis', r[1]);
         return {
             type: MarlinReplyParserZAxisModule,
             payload: {
@@ -341,8 +340,6 @@ class MarlinLineParserResultEcho {
     // echo:
     static parse(line) {
         const r = line.match(/^echo:\s*(.+)$/i);
-        console.log('echo: r=', r);
-        console.log('line=', line);
         if (!r) {
             return null;
         }
