@@ -73,6 +73,8 @@ const INITIAL_STATE = {
     enclosureFan: 0,
     enclosureOnline: false,
 
+    zAxisModule: null,
+
     isEnclosureDoorOpen: false,
     doorSwitchCount: 0,
 
@@ -182,7 +184,7 @@ export const actions = {
             // 'Marlin:state': (state) => {
             'Marlin:state': (options) => {
                 const { state } = options;
-                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed } = state;
+                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule } = state;
 
                 const machineState = getState().machine;
 
@@ -215,12 +217,12 @@ export const actions = {
                     nozzleTargetTemperature: parseFloat(temperature.tTarget),
                     heatedBedTemperature: parseFloat(temperature.b),
                     heatedBedTargetTemperature: parseFloat(temperature.bTarget),
-                    isHomed: isHomed
+                    isHomed: isHomed,
+                    zAxisModule: zAxisModule
                 }));
             },
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0 } = options.settings;
-
                 dispatch(actions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,
@@ -477,6 +479,14 @@ export const actions = {
     },
     setEnclosureState: (doorDetection) => () => {
         controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+    },
+    // for z-axis extension module
+    getZAxisModuleState: () => () => {
+        // TODO: waiting for query interface
+        // controller.writeln('M503', { source: 'query' });
+    },
+    setZAxisModuleState: (moduleId) => () => {
+        controller.writeln(`M1025 M${moduleId}`, { source: 'query' });
     },
     updateConnectionTimeout: (time) => (dispatch) => {
         machineStore.set('connection.timeout', time);

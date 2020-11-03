@@ -196,7 +196,6 @@ class SvgModel {
      * @param {Object} size - { x, y } size of canvas
      */
     updateSize(size) {
-        console.log('update size', size);
         this.size = size;
     }
 

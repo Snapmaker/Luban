@@ -175,6 +175,21 @@ class MarlinReplyParserToolHead {
     }
 }
 
+class MarlinReplyParserZAxisModule {
+    static parse(line) {
+        const r = line.match(/M1025 X[0-9.]+ Y[0-9.]+ Z([0-9.]+)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserZAxisModule,
+            payload: {
+                zAxisModuleLength: r[1]
+            }
+        };
+    }
+}
+
 class MarlinReplyParserEnclosure {
     static parse(line) {
         const r = line.match(/^Enclosure: (On|Off)$/);
@@ -520,6 +535,8 @@ class MarlinLineParser {
             MarlinReplyParserReleaseDate,
             // M1006
             MarlinReplyParserToolHead,
+            // M1025
+            MarlinReplyParserZAxisModule,
             // M1010
             MarlinReplyParserEnclosure,
             MarlinReplyParserEnclosureOnline,
@@ -627,6 +644,7 @@ class Marlin extends events.EventEmitter {
             y: 0,
             z: 0
         },
+        zAxisModule: 0, // 0: standard module, 1: extension module
         hexModeEnabled: false,
         isScreenProtocol: false
     };
@@ -687,6 +705,12 @@ class Marlin extends events.EventEmitter {
                 this.setState({ headType: payload.headType });
             }
             this.emit('headType', payload);
+        } else if (type === MarlinReplyParserZAxisModule) {
+            // 1: 221.00, 0: 128.00
+            const zAxisModule = (payload.zAxisModuleLength > 200 ? 1 : 0);
+            if (this.settings.zAxisModule !== zAxisModule) {
+                this.setState({ zAxisModule: zAxisModule });
+            }
         } else if (type === MarlinReplyParserFocusHeight) {
             if (this.state.zFocus !== payload.zFocus) {
                 this.setState({ zFocus: payload.zFocus });

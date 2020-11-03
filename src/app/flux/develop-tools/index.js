@@ -208,7 +208,13 @@ export const actions = {
         // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
         screenController.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
     },
-
+    // for z-axis extension module
+    getZAxisModuleState: () => () => {
+        screenController.writeln('M503', { source: 'query' });
+    },
+    setZAxisModuleState: (moduleId) => () => {
+        screenController.writeln(`M1025 M${moduleId}`, { source: 'query' });
+    },
     // Server
     discoverServers: () => (dispatch, getState) => {
         dispatch(actions.updateState({ discovering: true }));
