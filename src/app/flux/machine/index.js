@@ -286,79 +286,10 @@ export const actions = {
                 dispatch(workspaceActions.loadGcode());
             },
             'serialport:close': (options) => {
-                const { port } = options;
-                const state = getState().machine;
-                const ports = [...state.ports];
-                const portIndex = ports.indexOf(port);
-                if (portIndex !== -1) {
-                    ports.splice(portIndex, 1);
-                }
-                if (!isEmpty(ports)) {
-                    // this.port = ports[0];
-                    dispatch(actions.updateState({
-                        port: ports[0],
-                        ports,
-                        isOpen: false,
-                        isConnected: false,
-                        connectionStatus: CONNECTION_STATUS_IDLE
-                    }));
-                } else {
-                    // this.port = '';
-                    dispatch(actions.updateState({
-                        port: '',
-                        ports,
-                        isOpen: false,
-                        isConnected: false,
-                        connectionStatus: CONNECTION_STATUS_IDLE
-                    }));
-                }
-                dispatch(actions.updateState({
-                    workPosition: {
-                        x: '0.000',
-                        y: '0.000',
-                        z: '0.000',
-                        a: '0.000'
-                    },
-
-                    originOffset: {
-                        x: 0,
-                        y: 0,
-                        z: 0
-                    }
-                }));
-                dispatch(workspaceActions.unloadGcode());
+                dispatch(actions.close(options));
             },
             'serialport:emergencyStop': (options) => {
-                const { port } = options;
-                const state = getState().machine;
-                const ports = [...state.ports];
-                const portIndex = ports.indexOf(port);
-                if (portIndex !== -1) {
-                    ports.splice(portIndex, 1);
-                }
-                dispatch(actions.updateState({
-                    port: '',
-                    ports,
-                    isOpen: false,
-                    isConnected: false,
-                    connectionStatus: CONNECTION_STATUS_IDLE,
-                    isEmergencyStopped: true
-                }));
-                dispatch(actions.updateState({
-                    workPosition: {
-                        x: '0.000',
-                        y: '0.000',
-                        z: '0.000',
-                        a: '0.000'
-                    },
-
-                    originOffset: {
-                        x: 0,
-                        y: 0,
-                        z: 0
-                    }
-                }));
-                dispatch(workspaceActions.unloadGcode());
+                dispatch(actions.close(options, true));
             },
             'workflow:state': (options) => {
                 const { workflowState } = options;
@@ -646,29 +577,7 @@ export const actions = {
                 } = result.data;
 
                 if (isEmergencyStopped) {
-                    dispatch(actions.updateState({
-                        port: '',
-                        ports: [],
-                        isOpen: false,
-                        isConnected: false,
-                        connectionStatus: CONNECTION_STATUS_IDLE,
-                        isEmergencyStopped: true
-                    }));
-                    dispatch(actions.updateState({
-                        workPosition: {
-                            x: '0.000',
-                            y: '0.000',
-                            z: '0.000',
-                            a: '0.000'
-                        },
-
-                        originOffset: {
-                            x: 0,
-                            y: 0,
-                            z: 0
-                        }
-                    }));
-                    dispatch(workspaceActions.unloadGcode());
+                    dispatch(actions.close(null, true));
                     server.close(() => {
                         dispatch(actions.uploadCloseServerState());
                     });
@@ -879,6 +788,52 @@ export const actions = {
         dispatch(actions.updateState({
             shouldShowCncWarning: value
         }));
+    },
+
+    close: (options, isEmergencyStopped) => (dispatch, getState) => {
+        const { port } = options;
+        const state = getState().machine;
+        const ports = [...state.ports];
+        const portIndex = ports.indexOf(port);
+        if (portIndex !== -1) {
+            ports.splice(portIndex, 1);
+        }
+        if (!isEmpty(ports)) {
+            // this.port = ports[0];
+            dispatch(actions.updateState({
+                port: ports[0],
+                ports,
+                isOpen: false,
+                isConnected: false,
+                isEmergencyStopped: isEmergencyStopped ?? false,
+                connectionStatus: CONNECTION_STATUS_IDLE
+            }));
+        } else {
+            // this.port = '';
+            dispatch(actions.updateState({
+                port: '',
+                ports,
+                isOpen: false,
+                isConnected: false,
+                isEmergencyStopped: isEmergencyStopped ?? false,
+                connectionStatus: CONNECTION_STATUS_IDLE
+            }));
+        }
+        dispatch(actions.updateState({
+            workPosition: {
+                x: '0.000',
+                y: '0.000',
+                z: '0.000',
+                a: '0.000'
+            },
+
+            originOffset: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        }));
+        dispatch(workspaceActions.unloadGcode());
     }
 };
 
