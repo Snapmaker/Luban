@@ -445,6 +445,9 @@ class MarlinController {
                 this.writeln('M1010 S2');
             }, 1000);
         });
+        this.controller.on('emergencyStop', () => {
+            this.emergencyStop();
+        });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
@@ -859,6 +862,39 @@ class MarlinController {
                 }
             });
         }
+
+        this.destroy();
+    }
+
+    emergencyStop() {
+        const { port, dataSource } = this.options;
+
+        if (this.handler) {
+            clearInterval(this.handler);
+        }
+
+        // Assertion check
+        if (!this.serialport) {
+            log.error(`Serial port "${port}/${dataSource}" is not available`);
+            return;
+        }
+
+        // Stop status query
+        this.ready = false;
+
+        store.unset(`controllers["${port}/${dataSource}"]`);
+
+        if (this.isOpen()) {
+            this.serialport.removeListener('close', this.serialportListener.close);
+            this.serialport.removeListener('error', this.serialportListener.error);
+            this.serialport.close((err) => {
+                if (err) {
+                    log.error(`Error closing serial port "${port}/${dataSource}":`, err);
+                }
+            });
+        }
+
+        this.emitAll('serialport:emergencyStop', { port });
 
         this.destroy();
     }
