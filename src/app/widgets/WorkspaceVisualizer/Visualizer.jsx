@@ -451,7 +451,9 @@ class Visualizer extends Component {
         },
         closeModal: () => {
             this.setState({
+                // enclosure door warning
                 showEnclosureDoorWarn: false,
+                // emergency stop
                 isEmergencyStopped: false
             });
         }
@@ -523,6 +525,7 @@ class Visualizer extends Component {
             const position = new THREE.Vector3(target.x, target.y, width * 2);
             this.canvas.current.setCamera(position, target);
         }
+        // open the enclosureDoorOpened modal
         if (nextProps.isEnclosureDoorOpen !== this.props.isEnclosureDoorOpen) {
             this.setState({
                 showEnclosureDoorWarn: nextProps.isEnclosureDoorOpen
@@ -532,6 +535,7 @@ class Visualizer extends Component {
                 showEnclosureDoorWarn: true
             });
         }
+        // open the emergencyStopped warning modal
         if (nextProps.isEmergencyStopped !== this.props.isEmergencyStopped && nextProps.isEmergencyStopped) {
             this.setState({
                 isEmergencyStopped: true

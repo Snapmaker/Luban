@@ -146,6 +146,7 @@ class MarlinReplyParserEmergencyStop {
 // Emergency STOP Button
 class MarlinReplyParserEmergencyStopButton {
     static parse(line) {
+        // line message: 'emergency stop state'
         const r = line.match(/^emergency stop state(.+)$/);
         if (!r) {
             return null;
