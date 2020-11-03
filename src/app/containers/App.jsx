@@ -139,31 +139,29 @@ class App extends PureComponent {
             }
         },
         checkForUpdate: (shouldCheckForUpdate) => {
-            console.log('action checkForUpdate');
             UniApi.Update.checkForUpdate(shouldCheckForUpdate);
         },
         haveStartedDownload: () => {
-            console.log('action haveStartedDownload');
             UniApi.Update.haveStartedDownload();
+            console.log('haveStartedDownload');
+            this.props.updateCheckForUpdateOnce(false);
         },
         initFileOpen: () => {
             UniApi.File.openProjectFile();
         },
         initUniEvent: () => {
-            UniApi.Event.on('open-file', (event, file) => {
-                this.actions.openProject(file);
-            });
             UniApi.Event.on('isStartDownload', () => {
-                console.log('props, updateStartDownload');
                 this.props.updateStartDownload(true);
             });
-            UniApi.Event.on('updateAvailable', (event, downloadInfo) => {
-                console.log('updateAvailable', downloadInfo);
-                UniApi.Update.downloadUpdate(downloadInfo);
+            UniApi.Event.on('updateAvailable', (event, downloadInfo, oldVersionn) => {
+                UniApi.Update.downloadUpdate(downloadInfo, oldVersionn);
             });
             UniApi.Event.on('isUpdateNow', (event, downloadInfo) => {
                 UniApi.Update.isUpdateNow(downloadInfo);
                 this.props.updateStartDownload(false);
+            });
+            UniApi.Event.on('open-file', (event, file) => {
+                this.actions.openProject(file);
             });
             UniApi.Event.on('save-as-file', (event, file) => {
                 this.actions.saveAsFile(file);
@@ -257,7 +255,6 @@ class App extends PureComponent {
         this.actions.initUniEvent();
         this.actions.initFileOpen();
         // auto update
-        console.log('this.props.shouldCheckForUpdate', this.props.machineInfo, this.props.shouldCheckForUpdate);
         setTimeout(() => {
             this.actions.checkForUpdate(this.props.shouldCheckForUpdate);
         }, 200);
@@ -270,14 +267,11 @@ class App extends PureComponent {
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
         }
-        console.log('isStartDownload', nextProps.checkForUpdateOnce, nextProps.isStartDownload, this.props.isStartDownload);
         if (nextProps.checkForUpdateOnce && nextProps.isStartDownload) {
             this.actions.haveStartedDownload();
         } else if (nextProps.checkForUpdateOnce) {
             this.actions.checkForUpdate(true);
-            setTimeout(() => {
-                this.props.updateCheckForUpdateOnce(false);
-            }, 200);
+            this.props.updateCheckForUpdateOnce(false);
         }
 
         if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {

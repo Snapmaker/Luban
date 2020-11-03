@@ -118,7 +118,7 @@ const INITIAL_STATE = {
     connectionTimeout: 3000,
 
     // autoUpdate
-    shouldCheckForUpdate: false,
+    shouldCheckForUpdate: true,
     isStartDownload: false,
     checkForUpdateOnce: false
 };
@@ -141,15 +141,20 @@ export const actions = {
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
         const machinePort = machineStore.get('port') || '';
         const manualIp = machineStore.get('manualIp') || '';
-        const shouldCheckForUpdate = machineStore.get('shouldCheckForUpdate') || false;
-        console.log('machineStore', machineStore, shouldCheckForUpdate, typeof shouldCheckForUpdate);
         const serverAddress = machineStore.get('server.address') || '';
         const serverToken = machineStore.get('server.token') || '';
         const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-
+        // let shouldCheckForUpdate;
+        console.log('machineStore', machineStore.get('shouldCheckForUpdate'));
+        if (machineStore.get('shouldCheckForUpdate') === false) {
+            const shouldCheckForUpdate = false;
+            dispatch(actions.updateState({
+                shouldCheckForUpdate: shouldCheckForUpdate
+            }));
+        }
 
         // Load CNC security warning
         const savedData = machineStore.get('settings.shouldShowCncWarning');
@@ -177,7 +182,6 @@ export const actions = {
             serverAddress: serverAddress,
             connectionType: connectionType,
             connectionTimeout: connectionTimeout,
-            shouldCheckForUpdate: shouldCheckForUpdate,
             shouldShowCncWarning
         }));
 
@@ -332,11 +336,9 @@ export const actions = {
         dispatch(actions.updateState({
             checkForUpdateOnce: checkForUpdateOnce
         }));
-        console.log('updateCheckForUpdateOnce', checkForUpdateOnce);
     },
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(actions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
-        console.log('updateShouldCheckForUpdate', shouldCheckForUpdate);
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
     },
     updateStartDownload: (isStartDownload) => (dispatch) => {

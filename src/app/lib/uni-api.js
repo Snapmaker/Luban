@@ -2,7 +2,7 @@ import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
 import path from 'path';
-
+import i18n from './i18n';
 /**
  * Event Listener in electron
  */
@@ -20,7 +20,6 @@ const Event = {
  */
 const Update = {
     checkForUpdate(shouldCheckForUpdate) {
-        console.log('Update checkForUpdate', shouldCheckForUpdate);
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             if (shouldCheckForUpdate) {
@@ -28,19 +27,20 @@ const Update = {
             }
         }
     },
-    downloadUpdate(downloadInfo) {
+    downloadUpdate(downloadInfo, oldVersionn) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
             const { dialog } = remote;
-            console.log('downloadInfo', downloadInfo);
-            const { releaseNotes, releaseName } = downloadInfo;
+            const { releaseName } = downloadInfo;
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['Later', 'Download now'],
-                title: `A new version of Snapmaker Luban ${releaseName} has been released!`,
-                message: releaseNotes.replace(/<p>/, '').replace(/<\/p>/, ''),
-                detail: 'A new version has been detected. Should i download it now?'
+                buttons: [i18n._('Later'), i18n._('Download now')],
+                defaultId: 1,
+                title: i18n._('Update Snapmaker Luban'),
+                message: i18n._(`Snapmaker Luban ${releaseName} Update`),
+                detail: i18n._(`Current version : ${oldVersionn}`)
+                // detail: 'A new version has been detected. Should i download it now?'
             };
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
@@ -57,8 +57,9 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['OK'],
-                detail: 'A latest version has been downloaded.'
+                title: i18n._('Update Snapmaker Luban'),
+                buttons: [i18n._('OK')],
+                detail: i18n._('The latest version is currently being downloaded.')
             };
             dialog.showMessageBox(dialogOpts);
         }
@@ -71,9 +72,10 @@ const Update = {
 
             const dialogOpts = {
                 type: 'info',
-                buttons: ['No', 'Yes'],
-                title: `Luban ${releaseName} has been downloaded.`,
-                detail: 'Do you want to exit the program to install now?'
+                buttons: [i18n._('No'), i18n._('Yes')],
+                defaultId: 1,
+                title: i18n._(`Luban ${releaseName} has been downloaded.`),
+                detail: i18n._('Do you want to exit the program to install now?')
             };
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {

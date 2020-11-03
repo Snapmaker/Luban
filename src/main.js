@@ -83,30 +83,16 @@ function sendUpdateMessage(text) {
 
 // handle update issue
 function updateHandle() {
-    // before update , delete file last download
-    // /Users/jiantao/Library/Application\ Support/Caches/snapmaker-luban-updater/pending
-    // const updaterCacheDirName = 'snapmaker-luban-updater';
-    // const updatePendingPath = path.join(autoUpdater.app.baseCachePath, updaterCacheDirName, 'pending');
-    // fs.emptyDir(updatePendingPath);
     const message = {
         error: 'update error',
         checking: 'updating...',
         updateAva: 'fetch new version and downloading...',
         updateNotAva: 'do not to update'
     };
-    // // autoDownload
-    // https://github.com/Snapmaker/Luban/releases/download/v3.10.3/snapmaker-luban-3.10.3-win-x64.exe
-    // const url = `https://github.com/Snapmaker/Luban/releases/download/${app.getVersion()}/platformDef`;
-    // autoUpdater.setFeedURL({ url });
 
     autoUpdater.autoDownload = false;
-
-    ipcMain.on('isDownloadNow', () => {
-        mainWindow.webContents.send('isStartDownload');
-        autoUpdater.downloadUpdate().then((res) => {
-            console.log('downloadUpdate path', res);
-        });
-    });
+    // Whether to automatically install a downloaded update on app quit
+    autoUpdater.autoInstallOnAppQuit = false;
 
     autoUpdater.on('error', (err) => {
         sendUpdateMessage(message.error, err);
@@ -115,9 +101,8 @@ function updateHandle() {
         sendUpdateMessage(message.checking);
     });
     autoUpdater.on('update-available', (downloadInfo) => {
-        console.log('update-available', downloadInfo);
         sendUpdateMessage(message.updateAva);
-        mainWindow.webContents.send('updateAvailable', downloadInfo);
+        mainWindow.webContents.send('updateAvailable', downloadInfo, app.getVersion());
     });
     autoUpdater.on('update-not-available', () => {
         sendUpdateMessage(message.updateNotAva);
@@ -134,6 +119,11 @@ function updateHandle() {
         mainWindow.webContents.send('isUpdateNow', downloadInfo);
     });
 
+
+    ipcMain.on('isDownloadNow', () => {
+        mainWindow.webContents.send('isStartDownload');
+        autoUpdater.downloadUpdate();
+    });
 
     ipcMain.on('checkForUpdate', () => {
         autoUpdater.checkForUpdates();
@@ -180,6 +170,7 @@ const createWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
 
+
     mainWindow = window;
     mainWindowOptions = windowOptions;
     configureWindow(window);
@@ -224,8 +215,6 @@ const createWindow = async () => {
         }
     });
 
-    // https://s3-us-west-2.amazonaws.com/snapmaker.com/download/luban/snapmaker-luban-3.9.0-mac-x64.dmg
-    // https://github.com/Snapmaker/Luban/releases/download/v3.9.0/snapmaker-luban-3.9.0-mac-x64.dmg
 
     // TODO: Setup AppUpdater
     updateHandle();
