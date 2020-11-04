@@ -143,7 +143,6 @@ class App extends PureComponent {
         },
         haveStartedDownload: () => {
             UniApi.Update.haveStartedDownload();
-            console.log('haveStartedDownload');
             this.props.updateCheckForUpdateOnce(false);
         },
         initFileOpen: () => {

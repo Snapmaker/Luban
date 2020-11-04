@@ -147,8 +147,6 @@ export const actions = {
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-        // let shouldCheckForUpdate;
-        console.log('machineStore', machineStore.get('shouldCheckForUpdate'));
         if (machineStore.get('shouldCheckForUpdate') === false) {
             const shouldCheckForUpdate = false;
             dispatch(actions.updateState({
@@ -337,12 +335,12 @@ export const actions = {
             checkForUpdateOnce: checkForUpdateOnce
         }));
     },
+    updateStartDownload: (isStartDownload) => (dispatch) => {
+        dispatch(actions.updateState({ isStartDownload: isStartDownload }));
+    },
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(actions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
         machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
-    },
-    updateStartDownload: (isStartDownload) => (dispatch) => {
-        dispatch(actions.updateState({ isStartDownload: isStartDownload }));
     },
     updateMachineState: (state) => (dispatch) => {
         const { series, headType, canReselectMachine } = state;

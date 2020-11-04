@@ -215,8 +215,6 @@ const createWindow = async () => {
         }
     });
 
-
-    // TODO: Setup AppUpdater
     updateHandle();
 };
 

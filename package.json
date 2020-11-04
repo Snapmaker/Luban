@@ -116,6 +116,7 @@
       "target": [
         "nsis"
       ],
+      "verifyUpdateCodeSignature": false,
       "icon": "build/electron/snapmaker-luban.ico"
     },
     "nsis": {
