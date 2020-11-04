@@ -118,9 +118,12 @@ const INITIAL_STATE = {
     connectionTimeout: 3000,
 
     // autoUpdate
+    // Whether to check for available updates when the software is opened
     shouldCheckForUpdate: true,
+    // Whether an update is being downloaded
     isStartDownload: false,
-    checkForUpdateOnce: false
+    // Whether to check for available updates immediately
+    checkForUpdateImmediately: false
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -330,9 +333,9 @@ export const actions = {
             });
     },
 
-    updateCheckForUpdateOnce: (checkForUpdateOnce) => (dispatch) => {
+    updateCheckForUpdateImmediately: (checkForUpdateImmediately) => (dispatch) => {
         dispatch(actions.updateState({
-            checkForUpdateOnce: checkForUpdateOnce
+            checkForUpdateImmediately: checkForUpdateImmediately
         }));
     },
     updateStartDownload: (isStartDownload) => (dispatch) => {

@@ -46,7 +46,7 @@ class General extends PureComponent {
         state: PropTypes.object,
         stateChanged: PropTypes.bool,
         shouldCheckForUpdate: PropTypes.bool,
-        updateCheckForUpdateOnce: PropTypes.func.isRequired,
+        updateCheckForUpdateImmediately: PropTypes.func.isRequired,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
         actions: PropTypes.object
     };
@@ -120,7 +120,7 @@ class General extends PureComponent {
                                 <button
                                     type="button"
                                     className="btn btn-outline-secondary"
-                                    onClick={() => this.props.updateCheckForUpdateOnce(true)}
+                                    onClick={() => this.props.updateCheckForUpdateImmediately(true)}
                                 >
                                     {i18n._('Check for update')}
                                 </button>
@@ -180,7 +180,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    updateCheckForUpdateOnce: (checkForUpdateOnce) => dispatch(machineActions.updateCheckForUpdateOnce(checkForUpdateOnce)),
+    updateCheckForUpdateImmediately: (checkForUpdateImmediately) => dispatch(machineActions.updateCheckForUpdateImmediately(checkForUpdateImmediately)),
     updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate))
 });
 export default connect(mapStateToProps, mapDispatchToProps)(General);

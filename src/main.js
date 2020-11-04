@@ -89,28 +89,31 @@ function updateHandle() {
         updateAva: 'fetch new version and downloading...',
         updateNotAva: 'do not to update'
     };
-
+    // Official document: https://www.electron.build/auto-update.html
     autoUpdater.autoDownload = false;
-    // Whether to automatically install a downloaded update on app quit
+    // Whether to automatically install a downloaded update on app quit. Applicable only on Windows and Linux.
     autoUpdater.autoInstallOnAppQuit = false;
 
     autoUpdater.on('error', (err) => {
         sendUpdateMessage(message.error, err);
     });
+    // Emitted when checking if an update has started.
     autoUpdater.on('checking-for-update', () => {
         sendUpdateMessage(message.checking);
     });
+    // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
         mainWindow.webContents.send('updateAvailable', downloadInfo, app.getVersion());
     });
+    // Emitted when there is no available update.
     autoUpdater.on('update-not-available', () => {
         sendUpdateMessage(message.updateNotAva);
     });
-
     autoUpdater.on('download-progress', (progressObj) => {
         mainWindow.setProgressBar(progressObj.percent / 100);
     });
+    // downloadInfo — for generic and github providers
     autoUpdater.on('update-downloaded', (downloadInfo) => {
         ipcMain.on('isUpdateNow', () => {
             // some code here to handle event
@@ -118,13 +121,12 @@ function updateHandle() {
         });
         mainWindow.webContents.send('isUpdateNow', downloadInfo);
     });
-
-
+    // Emitted when the user agrees to download
     ipcMain.on('isDownloadNow', () => {
         mainWindow.webContents.send('isStartDownload');
         autoUpdater.downloadUpdate();
     });
-
+    // Emitted when is ready to check for update
     ipcMain.on('checkForUpdate', () => {
         autoUpdater.checkForUpdates();
     });

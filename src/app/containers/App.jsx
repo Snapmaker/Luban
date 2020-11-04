@@ -66,9 +66,10 @@ class App extends PureComponent {
         saveAsFile: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
         updateStartDownload: PropTypes.func.isRequired,
+        updateCheckForUpdateImmediately: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         isStartDownload: PropTypes.bool.isRequired,
-        checkForUpdateOnce: PropTypes.bool.isRequired
+        checkForUpdateImmediately: PropTypes.bool.isRequired
     };
 
     fileInput = React.createRef();
@@ -143,7 +144,7 @@ class App extends PureComponent {
         },
         haveStartedDownload: () => {
             UniApi.Update.haveStartedDownload();
-            this.props.updateCheckForUpdateOnce(false);
+            this.props.updateCheckForUpdateImmediately(false);
         },
         initFileOpen: () => {
             UniApi.File.openProjectFile();
@@ -266,11 +267,11 @@ class App extends PureComponent {
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
         }
-        if (nextProps.checkForUpdateOnce && nextProps.isStartDownload) {
+        if (nextProps.checkForUpdateImmediately && nextProps.isStartDownload) {
             this.actions.haveStartedDownload();
-        } else if (nextProps.checkForUpdateOnce) {
+        } else if (nextProps.checkForUpdateImmediately) {
             this.actions.checkForUpdate(true);
-            this.props.updateCheckForUpdateOnce(false);
+            this.props.updateCheckForUpdateImmediately(false);
         }
 
         if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
@@ -373,14 +374,14 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
-    const { shouldCheckForUpdate, checkForUpdateOnce, isStartDownload } = machineInfo;
+    const { shouldCheckForUpdate, checkForUpdateImmediately, isStartDownload } = machineInfo;
 
     const projectState = state.project;
     return {
         machineInfo,
         shouldCheckForUpdate,
         isStartDownload,
-        checkForUpdateOnce,
+        checkForUpdateImmediately,
         projectState
     };
 };
@@ -388,7 +389,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
-        updateCheckForUpdateOnce: (checkForUpdateOnce) => dispatch(machineActions.updateCheckForUpdateOnce(checkForUpdateOnce)),
+        updateCheckForUpdateImmediately: (checkForUpdateImmediately) => dispatch(machineActions.updateCheckForUpdateImmediately(checkForUpdateImmediately)),
         updateStartDownload: (isStartDownload) => dispatch(machineActions.updateStartDownload(isStartDownload)),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
