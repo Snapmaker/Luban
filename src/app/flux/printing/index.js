@@ -163,7 +163,6 @@ export const actions = {
         const { series } = getState().machine;
         await definitionManager.init(series);
 
-
         dispatch(actions.updateState({
             materialDefinitions: definitionManager.materialDefinitions,
             qualityDefinitions: definitionManager.qualityDefinitions,

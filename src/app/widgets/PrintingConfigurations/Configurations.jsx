@@ -136,7 +136,7 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: i18n._('Adhesion'),
+                name: i18n._('Heated Bed Adhesion Type'),
                 expanded: false,
                 fields: [
                     'adhesion_type',

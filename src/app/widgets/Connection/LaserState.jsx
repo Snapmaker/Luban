@@ -17,7 +17,7 @@ class LaserState extends PureComponent {
             <div className="container-fluid px-0">
                 <div className="row">
                     <div className="col-sm-6">
-                        <div className={styles['color-grey-color']}>{i18n._('Laser Focus')}</div>
+                        <div className={styles['color-grey-color']}>{i18n._('Laser Height')}</div>
                         <div>
                             {laserFocalLength !== null ? `${laserFocalLength.toFixed(3)} mm` : i18n._('Unknown')}
                         </div>
