@@ -96,7 +96,7 @@ class ToolParameters extends PureComponent {
                                 draggable="false"
                                 alt="V-Bit"
                             />
-                        </Anchor>
+                        </div>
                         <span className={styles.selectToolText}>{i18n._('Carving V-bit')}</span>
                     </div>
                     <div className={styles['select-tool']}>
@@ -134,6 +134,7 @@ class ToolParameters extends PureComponent {
                         <span className={styles['select-tool-text']}>{i18n._('Ball End Mill')}</span>
                     </div>
                 </div>
+
                 <OptionalDropdown
                     title={i18n._('Use Other Bit')}
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
