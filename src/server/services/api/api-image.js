@@ -32,7 +32,7 @@ export const set = (req, res) => {
             });
         },
         async (next) => {
-            if (path.extname(uploadName) === '.svg') {
+            if (path.extname(uploadName).toLowerCase() === '.svg') {
                 const svgParser = new SVGParser();
                 const svg = await svgParser.parseFile(uploadPath);
 
@@ -44,7 +44,7 @@ export const set = (req, res) => {
                 });
 
                 next();
-            } else if (path.extname(uploadName) === '.dxf') {
+            } else if (path.extname(uploadName).toLowerCase() === '.dxf') {
                 const result = await parseDxf(uploadPath);
                 const { width, height } = result;
 
