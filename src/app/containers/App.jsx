@@ -65,11 +65,8 @@ class App extends PureComponent {
         quitRecovery: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
-        updateStartDownload: PropTypes.func.isRequired,
-        updateCheckForUpdateImmediately: PropTypes.func.isRequired,
-        shouldCheckForUpdate: PropTypes.bool.isRequired,
-        isStartDownload: PropTypes.bool.isRequired,
-        checkForUpdateImmediately: PropTypes.bool.isRequired
+        updateIsDownloading: PropTypes.func.isRequired,
+        shouldCheckForUpdate: PropTypes.bool.isRequired
     };
 
     fileInput = React.createRef();
@@ -139,26 +136,19 @@ class App extends PureComponent {
                 }
             }
         },
-        checkForUpdate: (shouldCheckForUpdate) => {
-            UniApi.Update.checkForUpdate(shouldCheckForUpdate);
-        },
-        haveStartedDownload: () => {
-            UniApi.Update.haveStartedDownload();
-            this.props.updateCheckForUpdateImmediately(false);
-        },
         initFileOpen: () => {
             UniApi.File.openProjectFile();
         },
         initUniEvent: () => {
-            UniApi.Event.on('isStartDownload', () => {
-                this.props.updateStartDownload(true);
+            UniApi.Event.on('download-has-started', () => {
+                this.props.updateIsDownloading(true);
             });
-            UniApi.Event.on('updateAvailable', (event, downloadInfo, oldVersionn) => {
+            UniApi.Event.on('update-available', (event, downloadInfo, oldVersionn) => {
                 UniApi.Update.downloadUpdate(downloadInfo, oldVersionn);
             });
-            UniApi.Event.on('isUpdateNow', (event, downloadInfo) => {
+            UniApi.Event.on('is-update-now', (event, downloadInfo) => {
                 UniApi.Update.isUpdateNow(downloadInfo);
-                this.props.updateStartDownload(false);
+                this.props.updateIsDownloading(false);
             });
             UniApi.Event.on('open-file', (event, file) => {
                 this.actions.openProject(file);
@@ -256,7 +246,9 @@ class App extends PureComponent {
         this.actions.initFileOpen();
         // auto update
         setTimeout(() => {
-            this.actions.checkForUpdate(this.props.shouldCheckForUpdate);
+            if (this.props.shouldCheckForUpdate) {
+                UniApi.Update.checkForUpdate();
+            }
         }, 200);
     }
 
@@ -266,12 +258,6 @@ class App extends PureComponent {
         if (nextProps.location.pathname !== this.props.location.pathname) {
             UniApi.Menu.setItemEnabled('save-as', !!headType);
             UniApi.Menu.setItemEnabled('save', !!headType);
-        }
-        if (nextProps.checkForUpdateImmediately && nextProps.isStartDownload) {
-            this.actions.haveStartedDownload();
-        } else if (nextProps.checkForUpdateImmediately) {
-            this.actions.checkForUpdate(true);
-            this.props.updateCheckForUpdateImmediately(false);
         }
 
         if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
@@ -374,14 +360,12 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
-    const { shouldCheckForUpdate, checkForUpdateImmediately, isStartDownload } = machineInfo;
+    const { shouldCheckForUpdate } = machineInfo;
 
     const projectState = state.project;
     return {
         machineInfo,
         shouldCheckForUpdate,
-        isStartDownload,
-        checkForUpdateImmediately,
         projectState
     };
 };
@@ -389,8 +373,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
-        updateCheckForUpdateImmediately: (checkForUpdateImmediately) => dispatch(machineActions.updateCheckForUpdateImmediately(checkForUpdateImmediately)),
-        updateStartDownload: (isStartDownload) => dispatch(machineActions.updateStartDownload(isStartDownload)),
+        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
         workspaceInit: () => dispatch(workspaceActions.init()),

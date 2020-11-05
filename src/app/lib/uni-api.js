@@ -19,12 +19,10 @@ const Event = {
  *  Update control in electron
  */
 const Update = {
-    checkForUpdate(shouldCheckForUpdate) {
+    checkForUpdate() {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
-            if (shouldCheckForUpdate) {
-                ipcRenderer.send('checkForUpdate');
-            }
+            ipcRenderer.send('checkForUpdate');
         }
     },
     downloadUpdate(downloadInfo, oldVersionn) {
@@ -45,12 +43,12 @@ const Update = {
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
-                    ipcRenderer.send('isDownloadNow');
+                    ipcRenderer.send('startingDownloadUpdate');
                 }
             });
         }
     },
-    haveStartedDownload() {
+    downloadHasStarted() {
         if (isElectron()) {
             const { remote } = window.require('electron');
             const { dialog } = remote;

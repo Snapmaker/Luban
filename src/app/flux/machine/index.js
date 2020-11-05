@@ -121,9 +121,7 @@ const INITIAL_STATE = {
     // Whether to check for available updates when the software is opened
     shouldCheckForUpdate: true,
     // Whether an update is being downloaded
-    isStartDownload: false,
-    // Whether to check for available updates immediately
-    checkForUpdateImmediately: false
+    isDownloading: false
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -333,13 +331,8 @@ export const actions = {
             });
     },
 
-    updateCheckForUpdateImmediately: (checkForUpdateImmediately) => (dispatch) => {
-        dispatch(actions.updateState({
-            checkForUpdateImmediately: checkForUpdateImmediately
-        }));
-    },
-    updateStartDownload: (isStartDownload) => (dispatch) => {
-        dispatch(actions.updateState({ isStartDownload: isStartDownload }));
+    updateIsDownloading: (isDownloading) => (dispatch) => {
+        dispatch(actions.updateState({ isDownloading: isDownloading }));
     },
     updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
         dispatch(actions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));

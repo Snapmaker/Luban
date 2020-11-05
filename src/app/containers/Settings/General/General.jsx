@@ -9,6 +9,7 @@ import i18n from '../../../lib/i18n';
 import Anchor from '../../../components/Anchor';
 import Space from '../../../components/Space';
 import styles from './index.styl';
+import UniApi from '../../../lib/uni-api';
 import { actions as machineActions } from '../../../flux/machine';
 
 const About = () => {
@@ -46,7 +47,7 @@ class General extends PureComponent {
         state: PropTypes.object,
         stateChanged: PropTypes.bool,
         shouldCheckForUpdate: PropTypes.bool,
-        updateCheckForUpdateImmediately: PropTypes.func.isRequired,
+        isDownloading: PropTypes.bool,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
         actions: PropTypes.object
     };
@@ -66,6 +67,16 @@ class General extends PureComponent {
             actions.save();
         }
     };
+
+    actions = {
+        handleCheckForUpdate: () => {
+            if (this.props.isDownloading) {
+                UniApi.Update.downloadHasStarted();
+            } else {
+                UniApi.Update.checkForUpdate();
+            }
+        }
+    }
 
     componentDidMount() {
         const { actions } = this.props;
@@ -120,7 +131,7 @@ class General extends PureComponent {
                                 <button
                                     type="button"
                                     className="btn btn-outline-secondary"
-                                    onClick={() => this.props.updateCheckForUpdateImmediately(true)}
+                                    onClick={this.actions.handleCheckForUpdate}
                                 >
                                     {i18n._('Check for update')}
                                 </button>
@@ -172,15 +183,15 @@ class General extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { shouldCheckForUpdate } = machine;
+    const { shouldCheckForUpdate, isDownloading } = machine;
 
     return {
-        shouldCheckForUpdate
+        shouldCheckForUpdate,
+        isDownloading
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    updateCheckForUpdateImmediately: (checkForUpdateImmediately) => dispatch(machineActions.updateCheckForUpdateImmediately(checkForUpdateImmediately)),
     updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate))
 });
 export default connect(mapStateToProps, mapDispatchToProps)(General);

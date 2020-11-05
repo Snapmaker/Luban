@@ -104,7 +104,7 @@ function updateHandle() {
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
-        mainWindow.webContents.send('updateAvailable', downloadInfo, app.getVersion());
+        mainWindow.webContents.send('update-available', downloadInfo, app.getVersion());
     });
     // Emitted when there is no available update.
     autoUpdater.on('update-not-available', () => {
@@ -119,11 +119,11 @@ function updateHandle() {
             // some code here to handle event
             autoUpdater.quitAndInstall();
         });
-        mainWindow.webContents.send('isUpdateNow', downloadInfo);
+        mainWindow.webContents.send('is-update-now', downloadInfo);
     });
     // Emitted when the user agrees to download
-    ipcMain.on('isDownloadNow', () => {
-        mainWindow.webContents.send('isStartDownload');
+    ipcMain.on('startingDownloadUpdate', () => {
+        mainWindow.webContents.send('download-has-started');
         autoUpdater.downloadUpdate();
     });
     // Emitted when is ready to check for update
