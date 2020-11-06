@@ -152,7 +152,7 @@ export const actions = {
         ));
     },
 
-    init: () => async (dispatch, getState) => {
+    initSize: () => async (dispatch, getState) => {
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
@@ -162,7 +162,6 @@ export const actions = {
 
         const { series } = getState().machine;
         await definitionManager.init(series);
-
 
         dispatch(actions.updateState({
             materialDefinitions: definitionManager.materialDefinitions,
@@ -176,7 +175,6 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -185,6 +183,13 @@ export const actions = {
 
         // Re-position model group
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
+
+    init: () => async (dispatch, getState) => {
+        await dispatch(actions.initSize());
+
+        const printingState = getState().printing;
+        const { modelGroup, gcodeLineGroup } = printingState;
 
         // generate gcode event
         controller.on('slice:started', () => {
@@ -284,7 +289,7 @@ export const actions = {
                 }
                 case 'progress': {
                     const state = getState().printing;
-                    if (value - state.progress > 0.01 || value > 1 - EPSILON) {
+                    if (Math.abs(value - state.progress) > 0.01 || value > 1 - EPSILON) {
                         dispatch(actions.updateState({ progress: value }));
                     }
                     break;

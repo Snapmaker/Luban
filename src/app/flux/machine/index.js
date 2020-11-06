@@ -382,7 +382,7 @@ export const actions = {
             seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
             seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
-            dispatch(printingActions.init());
+            dispatch(printingActions.initSize());
         }
     },
     updateManualIp: (manualIp) => (dispatch) => {
