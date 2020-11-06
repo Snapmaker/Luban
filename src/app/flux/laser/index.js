@@ -93,6 +93,11 @@ export const actions = {
                     dispatch(editorActions.onReceiveGcodeTaskResult('laser', taskResult));
                 }
             },
+            'taskCompleted:processImage': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(editorActions.onReceiveProcessImageTaskResult('laser', taskResult));
+                }
+            },
             'taskProgress:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'laser') {
                     dispatch(editorActions.updateState('laser', {
@@ -105,6 +110,14 @@ export const actions = {
                 if (taskResult.headType === 'laser') {
                     dispatch(editorActions.updateState('laser', {
                         stage: CNC_LASER_STAGE.GENERATING_GCODE,
+                        progress: taskResult.progress
+                    }));
+                }
+            },
+            'taskProgress:processImage': (taskResult) => {
+                if (taskResult.headType === 'laser') {
+                    dispatch(editorActions.updateState('laser', {
+                        stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
                         progress: taskResult.progress
                     }));
                 }

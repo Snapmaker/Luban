@@ -42,6 +42,7 @@ function startServices(server) {
     // task manager
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
     socketServer.registerEvent('taskCommit:generateGcode', TaskManager.addGenerateGcodeTask);
+    socketServer.registerEvent('taskCommit:processImage', TaskManager.addProcessImageTask);
 
     socketServer.start(server);
 

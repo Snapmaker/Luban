@@ -65,8 +65,10 @@ class SerialPortClient {
         // Async tasks
         'taskProgress:generateToolPath': [],
         'taskProgress:generateGcode': [],
+        'taskProgress:processImage': [],
         'taskCompleted:generateToolPath': [],
-        'taskCompleted:generateGcode': []
+        'taskCompleted:generateGcode': [],
+        'taskCompleted:processImage': []
     };
 
     dataSource = '';
@@ -238,6 +240,10 @@ class SerialPortClient {
 
     commitGcodeTask(task) {
         socketController.emit('taskCommit:generateGcode', task);
+    }
+
+    commitProcessImage(task) {
+        socketController.emit('taskCommit:processImage', task);
     }
 
     // command(cmd, ...args) {

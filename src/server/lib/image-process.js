@@ -68,7 +68,8 @@ const algorithms = {
     ]
 };
 
-async function processLaserGreyscale(modelInfo) {
+async function processLaserGreyscale(modelInfo, onProgress) {
+    onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
@@ -88,12 +89,12 @@ async function processLaserGreyscale(modelInfo) {
             break;
         }
     }
-
+    onProgress && onProgress(0.4);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
+    onProgress && onProgress(0.6);
     if (invert) {
         img.invert();
     }
-
     img
         .background(0xffffffff)
         .brightness((brightness - 50.0) / 50)
@@ -106,6 +107,7 @@ async function processLaserGreyscale(modelInfo) {
         .threshold({ max: whiteClip })
         .alphaToWhite(); // apply this after rotate AND invert, to avoid black gcode area
     // serpentine path
+    onProgress && onProgress(0.8);
     for (let y = 0; y < img.bitmap.height; y++) {
         const reverse = (y & 1) === 1;
 
@@ -132,7 +134,7 @@ async function processLaserGreyscale(modelInfo) {
             }
         }
     }
-
+    onProgress && onProgress(1);
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
@@ -142,7 +144,8 @@ async function processLaserGreyscale(modelInfo) {
     });
 }
 
-async function processCNCGreyscale(modelInfo) {
+async function processCNCGreyscale(modelInfo, onProgress) {
+    onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
 
@@ -155,14 +158,14 @@ async function processCNCGreyscale(modelInfo) {
     if (invert) {
         img.invert();
     }
-
+    onProgress && onProgress(0.6);
     img
         .greyscale()
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI)
         .background(0xffffffff);
-
+    onProgress && onProgress(1);
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
@@ -172,7 +175,8 @@ async function processCNCGreyscale(modelInfo) {
     });
 }
 
-async function processBW(modelInfo) {
+async function processBW(modelInfo, onProgress) {
+    onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
@@ -183,12 +187,14 @@ async function processBW(modelInfo) {
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
 
+    onProgress && onProgress(0.5);
     img
         .greyscale()
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI); // rotate: unit is degree and clockwise
 
+    onProgress && onProgress(0.8);
     if (invert) {
         img.invert();
     }
@@ -196,6 +202,7 @@ async function processBW(modelInfo) {
         .background(0xffffffff)
         .alphaToWhite();
 
+    onProgress && onProgress(1);
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
@@ -205,7 +212,8 @@ async function processBW(modelInfo) {
     });
 }
 
-async function processHalftone(modelInfo) {
+async function processHalftone(modelInfo, onProgress) {
+    onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
@@ -214,7 +222,7 @@ async function processHalftone(modelInfo) {
     const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
     const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
-
+    onProgress && onProgress(0.6);
     img
         .greyscale()
         .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
@@ -224,7 +232,7 @@ async function processHalftone(modelInfo) {
         .halftone(npType, npSize, npAngle)
         .background(0xffffffff)
         .alphaToWhite();
-
+    onProgress && onProgress(1);
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
@@ -240,7 +248,8 @@ async function processHalftone(modelInfo) {
  * @param modelInfo
  * @returns {Promise<any>}
  */
-function processVector(modelInfo) {
+function processVector(modelInfo, onProgress) {
+    onProgress && onProgress(0.2);
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
     const options = {
@@ -249,10 +258,13 @@ function processVector(modelInfo) {
         invert: invert,
         turdSize: turdSize
     };
+    //todo: add onProgress in this return function
     return convertRasterToSvg(options);
 }
 
-function processDxf(modelInfo) {
+function processDxf(modelInfo, onProgress) {
+    //todo: add onProgress in this return function
+    onProgress && onProgress(0.2);
     return new Promise(async (resolve) => {
         const { uploadName } = modelInfo;
 
@@ -273,29 +285,29 @@ function processDxf(modelInfo) {
 }
 
 
-function process(modelInfo) {
+function process(modelInfo, onProgress) {
     const { headType, sourceType, mode } = modelInfo;
     if (sourceType === 'raster') {
         if (mode === 'greyscale') {
             if (headType === 'laser') {
-                return processLaserGreyscale(modelInfo);
+                return processLaserGreyscale(modelInfo, onProgress);
             } else {
-                return processCNCGreyscale(modelInfo);
+                return processCNCGreyscale(modelInfo, onProgress);
             }
         } else if (mode === 'bw') {
-            return processBW(modelInfo);
+            return processBW(modelInfo, onProgress);
         } else if (mode === 'vector') {
             // Note that vector is not flipped
-            return processVector(modelInfo);
+            return processVector(modelInfo, onProgress);
         } else if (mode === 'halftone') {
-            return processHalftone(modelInfo);
+            return processHalftone(modelInfo, onProgress);
         } else {
             return Promise.resolve({
                 filename: ''
             });
         }
     } else if (sourceType === 'dxf') {
-        return processDxf(modelInfo);
+        return processDxf(modelInfo, onProgress);
     } else {
         return Promise.resolve({
             filename: ''

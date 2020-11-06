@@ -603,7 +603,6 @@ export const actions = {
             progress: 0
         }));
 
-
         const formData = new FormData();
         formData.append('file', file);
         const uploadName = pathWithRandomSuffix(file.name);

@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import logger from '../../lib/logger';
+import { processImage } from './processImage';
 import { generateToolPath } from './generateToolPath';
 import { generateGcode } from './generateGcode';
 
@@ -14,6 +15,7 @@ const TASK_STATUS_COMPLETED = 'completed';
 
 export const TASK_TYPE_GENERATE_TOOLPATH = 'generateToolPath';
 export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
+export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
 
 
 class TaskManager extends EventEmitter {
@@ -64,6 +66,8 @@ class TaskManager extends EventEmitter {
                 await this.generateToolPathTaskHandle(taskSelected);
             } else if (taskSelected.taskType === 'generateGcode') {
                 await this.generateGcodeTaskHandle(taskSelected);
+            } else if (taskSelected.taskType === 'processImage') {
+                await this.processImageTaskHandle(taskSelected);
             } else {
                 taskSelected.taskStatus = TASK_STATUS_DEPRECATED;
             }
@@ -135,6 +139,38 @@ class TaskManager extends EventEmitter {
                 taskSelected.finishTime = new Date().getTime();
 
                 taskSelected.socket.emit('taskCompleted:generateGcode', this.getTaskData(taskSelected));
+            }
+        }
+    }
+
+    async processImageTaskHandle(taskSelected) {
+        try {
+            let currentProgress = 0;
+            const res = await processImage(taskSelected.data, (p) => {
+                if (p - currentProgress > 0.05) {
+                    currentProgress = p;
+                    taskSelected.socket.emit('taskProgress:processImage', {
+                        progress: p,
+                        headType: taskSelected.headType
+                    });
+                }
+            });
+
+            taskSelected.filename = res.filename;
+            if (taskSelected.taskStatus !== TASK_STATUS_DEPRECATED) {
+                taskSelected.taskStatus = TASK_STATUS_COMPLETED;
+                taskSelected.finishTime = new Date().getTime();
+                taskSelected.socket.emit('taskCompleted:processImage', this.getTaskData(taskSelected));
+            }
+        } catch (e) {
+            log.error(e);
+            this.status = TASK_STATUS_IDLE;
+            taskSelected.failedCount += 1;
+            if (taskSelected.failedCount === MAX_TRY_COUNT) {
+                taskSelected.taskStatus = TASK_STATUS_FAILED;
+                taskSelected.finishTime = new Date().getTime();
+
+                taskSelected.socket.emit('taskCompleted:processImage', this.getTaskData(taskSelected));
             }
         }
     }
