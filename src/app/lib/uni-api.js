@@ -2,7 +2,7 @@ import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
 import path from 'path';
-
+import i18n from './i18n';
 /**
  * Event Listener in electron
  */
@@ -11,6 +11,76 @@ const Event = {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.on(eventName, callback);
+        }
+    }
+};
+
+/**
+ *  Update control in electron
+ */
+const Update = {
+    checkForUpdate() {
+        if (isElectron()) {
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('checkForUpdate');
+        }
+    },
+    downloadUpdate(downloadInfo, oldVersionn) {
+        if (isElectron()) {
+            const { remote, ipcRenderer } = window.require('electron');
+            const { dialog } = remote;
+            const { releaseName } = downloadInfo;
+
+            const dialogOpts = {
+                type: 'info',
+                buttons: [i18n._('Later'), i18n._('Download now')],
+                defaultId: 1,
+                title: i18n._('Update Snapmaker Luban'),
+                message: i18n._(`Snapmaker Luban ${releaseName} Update`),
+                detail: i18n._(`Current version : ${oldVersionn}`)
+                // detail: 'A new version has been detected. Should i download it now?'
+            };
+
+            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+                if (returnValue.response === 1) {
+                    ipcRenderer.send('startingDownloadUpdate');
+                }
+            });
+        }
+    },
+    downloadHasStarted() {
+        if (isElectron()) {
+            const { remote } = window.require('electron');
+            const { dialog } = remote;
+
+            const dialogOpts = {
+                type: 'info',
+                title: i18n._('Update Snapmaker Luban'),
+                buttons: [i18n._('OK')],
+                detail: i18n._('The latest version is currently being downloaded.')
+            };
+            dialog.showMessageBox(dialogOpts);
+        }
+    },
+    isReplacingAppNow(downloadInfo) {
+        if (isElectron()) {
+            const { remote, ipcRenderer } = window.require('electron');
+            const { dialog } = remote;
+            const { releaseName } = downloadInfo;
+
+            const dialogOpts = {
+                type: 'info',
+                buttons: [i18n._('No'), i18n._('Yes')],
+                defaultId: 1,
+                title: i18n._(`Luban ${releaseName} has been downloaded.`),
+                detail: i18n._('Do you want to exit the program to install now?')
+            };
+
+            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+                if (returnValue.response === 1) {
+                    ipcRenderer.send('replaceAppNow');
+                }
+            });
         }
     }
 };
@@ -175,6 +245,7 @@ const Window = {
 };
 
 export default {
+    Update,
     Event,
     Menu,
     File,

@@ -64,7 +64,9 @@ class App extends PureComponent {
         onRecovery: PropTypes.func.isRequired,
         quitRecovery: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
-        openProject: PropTypes.func.isRequired
+        openProject: PropTypes.func.isRequired,
+        updateIsDownloading: PropTypes.func.isRequired,
+        shouldCheckForUpdate: PropTypes.bool.isRequired
     };
 
     fileInput = React.createRef();
@@ -138,6 +140,16 @@ class App extends PureComponent {
             UniApi.File.openProjectFile();
         },
         initUniEvent: () => {
+            UniApi.Event.on('download-has-started', () => {
+                this.props.updateIsDownloading(true);
+            });
+            UniApi.Event.on('update-available', (event, downloadInfo, oldVersionn) => {
+                UniApi.Update.downloadUpdate(downloadInfo, oldVersionn);
+            });
+            UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
+                UniApi.Update.isReplacingAppNow(downloadInfo);
+                this.props.updateIsDownloading(false);
+            });
             UniApi.Event.on('open-file', (event, file) => {
                 this.actions.openProject(file);
             });
@@ -232,6 +244,12 @@ class App extends PureComponent {
         UniApi.Window.initWindow();
         this.actions.initUniEvent();
         this.actions.initFileOpen();
+        // auto update
+        setTimeout(() => {
+            if (this.props.shouldCheckForUpdate) {
+                UniApi.Update.checkForUpdate();
+            }
+        }, 200);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -342,10 +360,12 @@ class App extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+    const { shouldCheckForUpdate } = machineInfo;
 
     const projectState = state.project;
     return {
         machineInfo,
+        shouldCheckForUpdate,
         projectState
     };
 };
@@ -353,6 +373,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
+        updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
         workspaceInit: () => dispatch(workspaceActions.init()),

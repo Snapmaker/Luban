@@ -1,6 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import { isNull } from 'lodash';
 import path from 'path';
@@ -76,6 +77,61 @@ function getBrowserWindowOptions() {
     return Object.assign({}, defaultOptions, windowOptions);
 }
 
+function sendUpdateMessage(text) {
+    mainWindow.webContents.send('message', text);
+}
+
+// handle update issue
+function updateHandle() {
+    const message = {
+        error: 'update error',
+        checking: 'updating...',
+        updateAva: 'fetch new version and downloading...',
+        updateNotAva: 'do not to update'
+    };
+    // Official document: https://www.electron.build/auto-update.html
+    autoUpdater.autoDownload = false;
+    // Whether to automatically install a downloaded update on app quit. Applicable only on Windows and Linux.
+    autoUpdater.autoInstallOnAppQuit = false;
+
+    autoUpdater.on('error', (err) => {
+        sendUpdateMessage(message.error, err);
+    });
+    // Emitted when checking if an update has started.
+    autoUpdater.on('checking-for-update', () => {
+        sendUpdateMessage(message.checking);
+    });
+    // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
+    autoUpdater.on('update-available', (downloadInfo) => {
+        sendUpdateMessage(message.updateAva);
+        mainWindow.webContents.send('update-available', downloadInfo, app.getVersion());
+    });
+    // Emitted when there is no available update.
+    autoUpdater.on('update-not-available', () => {
+        sendUpdateMessage(message.updateNotAva);
+    });
+    autoUpdater.on('download-progress', (progressObj) => {
+        mainWindow.setProgressBar(progressObj.percent / 100);
+    });
+    // downloadInfo — for generic and github providers
+    autoUpdater.on('update-downloaded', (downloadInfo) => {
+        ipcMain.on('replaceAppNow', () => {
+            // some code here to handle event
+            autoUpdater.quitAndInstall();
+        });
+        mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
+    });
+    // Emitted when the user agrees to download
+    ipcMain.on('startingDownloadUpdate', () => {
+        mainWindow.webContents.send('download-has-started');
+        autoUpdater.downloadUpdate();
+    });
+    // Emitted when is ready to check for update
+    ipcMain.on('checkForUpdate', () => {
+        autoUpdater.checkForUpdates();
+    });
+}
+
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -116,17 +172,19 @@ const createWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
 
+
     mainWindow = window;
     mainWindowOptions = windowOptions;
     configureWindow(window);
 
-    const url = `http://${address}:${port}`;
+    const loadUrl = `http://${address}:${port}`;
 
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+
     const session = window.webContents.session;
     session.setProxy({ proxyRules: 'direct://' })
-        .then(() => window.loadURL(url))
+        .then(() => window.loadURL(loadUrl))
         .then(() => {
             window.show();
             window.focus();
@@ -147,7 +205,7 @@ const createWindow = async () => {
 
 
     // Setup menu
-    const menuBuilder = new MenuBuilder(window, { url });
+    const menuBuilder = new MenuBuilder(window, { url: loadUrl });
     menuBuilder.buildMenu();
 
     // the "open file or folder" dialog can also be triggered from the React app
@@ -159,7 +217,7 @@ const createWindow = async () => {
         }
     });
 
-    // TODO: Setup AppUpdater
+    updateHandle();
 };
 
 // Allow max 4G memory usage

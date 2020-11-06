@@ -115,7 +115,13 @@ const INITIAL_STATE = {
         remainingTime: 0
     },
     shouldShowCncWarning: true,
-    connectionTimeout: 3000
+    connectionTimeout: 3000,
+
+    // autoUpdate
+    // Whether to check for available updates when the software is opened
+    shouldCheckForUpdate: true,
+    // Whether an update is being downloaded
+    isDownloading: false
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -142,7 +148,12 @@ export const actions = {
         const connectionTimeout = machineStore.get('connection.timeout') || INITIAL_STATE.connectionTimeout;
 
         const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
-
+        if (machineStore.get('shouldCheckForUpdate') === false) {
+            const shouldCheckForUpdate = false;
+            dispatch(actions.updateState({
+                shouldCheckForUpdate: shouldCheckForUpdate
+            }));
+        }
 
         // Load CNC security warning
         const savedData = machineStore.get('settings.shouldShowCncWarning');
@@ -320,6 +331,13 @@ export const actions = {
             });
     },
 
+    updateIsDownloading: (isDownloading) => (dispatch) => {
+        dispatch(actions.updateState({ isDownloading: isDownloading }));
+    },
+    updateShouldCheckForUpdate: (shouldCheckForUpdate) => (dispatch) => {
+        dispatch(actions.updateState({ shouldCheckForUpdate: shouldCheckForUpdate }));
+        machineStore.set('shouldCheckForUpdate', shouldCheckForUpdate);
+    },
     updateMachineState: (state) => (dispatch) => {
         const { series, headType, canReselectMachine } = state;
         headType && dispatch(actions.updateState({
