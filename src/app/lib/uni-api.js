@@ -62,7 +62,7 @@ const Update = {
             dialog.showMessageBox(dialogOpts);
         }
     },
-    isUpdateNow(downloadInfo) {
+    isReplacingAppNow(downloadInfo) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
             const { dialog } = remote;
@@ -78,7 +78,7 @@ const Update = {
 
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
-                    ipcRenderer.send('isUpdateNow');
+                    ipcRenderer.send('replaceAppNow');
                 }
             });
         }

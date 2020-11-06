@@ -146,8 +146,8 @@ class App extends PureComponent {
             UniApi.Event.on('update-available', (event, downloadInfo, oldVersionn) => {
                 UniApi.Update.downloadUpdate(downloadInfo, oldVersionn);
             });
-            UniApi.Event.on('is-update-now', (event, downloadInfo) => {
-                UniApi.Update.isUpdateNow(downloadInfo);
+            UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
+                UniApi.Update.isReplacingAppNow(downloadInfo);
                 this.props.updateIsDownloading(false);
             });
             UniApi.Event.on('open-file', (event, file) => {

@@ -115,11 +115,11 @@ function updateHandle() {
     });
     // downloadInfo — for generic and github providers
     autoUpdater.on('update-downloaded', (downloadInfo) => {
-        ipcMain.on('isUpdateNow', () => {
+        ipcMain.on('replaceAppNow', () => {
             // some code here to handle event
             autoUpdater.quitAndInstall();
         });
-        mainWindow.webContents.send('is-update-now', downloadInfo);
+        mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
     });
     // Emitted when the user agrees to download
     ipcMain.on('startingDownloadUpdate', () => {
