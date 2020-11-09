@@ -193,6 +193,7 @@ export const actions = {
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
 
+        // TODO: not yet to clear old events before regist
         // generate gcode event
         controller.on('slice:started', () => {
             dispatch(actions.updateState({
