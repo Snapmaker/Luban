@@ -431,26 +431,6 @@ class SVGActionsFactory {
 
             // rotate operationGrips
             transformation.rotationZ = ((transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 180) % 360 - 180) * Math.PI / 180;
-
-            // Reselect all SVG Elements to make a new selection
-            // TODO: Refactor this.
-            this.clearSelection();
-            this.selectElements(elements);
-
-            const selectedSvgModels = this.getModelsByElements(elements);
-            for (const svgModel of selectedSvgModels) {
-                const model = svgModel.relatedModel;
-                const modelGroup = this.modelGroup;
-                if (modelGroup) {
-                    modelGroup.addSelectedModels([model]);
-                    modelGroup.updateSelectedGroupTransformation({
-                        positionX: 0,
-                        positionY: 0
-                    });
-                    modelGroup.resetSelectedObjectScaleAndRotation();
-                }
-            }
-            this.svgContentGroup.addToSelection(elements);
         }
 
         if (deviation.scaleX !== undefined || deviation.scaleY !== undefined) {

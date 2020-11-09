@@ -161,13 +161,13 @@ class SVGContentGroup {
 
     // after element transform
     resetSelection(size, transformation) {
+        // Resize grip of each selected element, and get their whole position and size
         const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
-        this.setSelectorTransformList(size, transformation);
-        return posAndSize;
-    }
 
-    setSelectorTransformList(size, transformation) {
-        this.setElementTransformList(this.operatorPoints.operatorPointsGroup, size, transformation);
+        // Update operator points
+        this.setSelectorTransformList(size, transformation);
+
+        return posAndSize;
     }
 
     isElementOperator(elem) {
@@ -274,52 +274,61 @@ class SVGContentGroup {
         selectedElement.uniformScalingState = uniformScalingState;
     }
 
-    setElementTransformList(element, size, modelGroupTransformation) { // todo, just use in operator, remove it later
-        // size = svgModelGroup.size
-        element.transform.baseVal.clear();
-        const transformList = element.transform.baseVal;
-        const elementsBBox = getBBox(element);
-        const transformation = (modelGroupTransformation !== undefined ? modelGroupTransformation : ({
-            positionX: elementsBBox.x + elementsBBox.width / 2,
-            positionY: elementsBBox.y + elementsBBox.height / 2,
-            rotationZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            flip: 0
-        }));
-        let { positionX, positionY, rotationZ, scaleX, scaleY } = transformation;
-        positionX = positionX ?? 0;
-        positionY = positionY ?? 0;
-        rotationZ = rotationZ ?? 0;
-        scaleX = scaleX ?? 1;
-        scaleY = scaleY ?? 1;
+    /**
+     * Set element transform list from (size, modelGroupTransformation).
+     *
+     * TODO: refactor this function.
+     */
+    setSelectorTransformList(size, transformation) {
+        const selector = this.operatorPoints.operatorPointsGroup;
+
+        selector.transform.baseVal.clear();
+        const transformList = selector.transform.baseVal;
+
+        // let { positionX, positionY, rotationZ, scaleX, scaleY } = transformation;
+        const { positionX = 0, positionY = 0, rotationZ = 0 } = transformation;
+        // rotationZ = rotationZ ?? 0;
+        // scaleX = scaleX ?? 1;
+        // scaleY = scaleY ?? 1;
         // todo, flip instead of negative scale
         // flip = flip ?? 0;
         // todo move to svgModelGroup, size need
         const center = { x: size.x + positionX, y: size.y - positionY };
 
+        // [T]
         const translateBack = this.svgContent.createSVGTransform();
         // translateBack.setTranslate(center.x, center.y);
+        translateBack.tag = 'translateBack';
         translateBack.setTranslate(0, 0);
         transformList.insertItemBefore(translateBack, 0);
 
-        const rotate = this.svgContent.createSVGTransform();
-        rotate.tag = 'rotate';
-        rotate.setRotate(-rotationZ / Math.PI * 180, center.x, center.y);
-        transformList.insertItemBefore(rotate, 0);
+        // [R][T]
+        if (this.selectedElements.length === 1) {
+            const rotate = this.svgContent.createSVGTransform();
+            rotate.tag = 'rotate';
+            rotate.setRotate(-rotationZ / Math.PI * 180, center.x, center.y);
+            transformList.insertItemBefore(rotate, 0);
+        } else {
+            // TODO: Rotate the selector as well
+            const rotate = this.svgContent.createSVGTransform();
+            rotate.tag = 'rotate';
+            rotate.setRotate(0, center.x, center.y);
+            transformList.insertItemBefore(rotate, 0);
+        }
 
+        // [S][R][T]
         const scale = this.svgContent.createSVGTransform();
         scale.tag = 'scale';
         // scale.setScale(scaleX * ((flip & 2) ? -1 : 1) / Math.abs(scaleX), scaleY * ((flip & 1) ? -1 : 1) / Math.abs(scaleY));
-        scale.setScale(scaleX / scaleX, scaleY / scaleY);
+        // scale.setScale(scaleX / scaleX, scaleY / scaleY);
+        scale.setScale(1, 1);
         transformList.insertItemBefore(scale, 0);
 
+        // [T][S][R][T]
         const translateOrigin = this.svgContent.createSVGTransform();
         translateOrigin.tag = 'translateOrigin';
         translateOrigin.setTranslate(0, 0);
         transformList.insertItemBefore(translateOrigin, 0);
-
-        transformList.getItem(0).tag = 'translateBack';
     }
 
     getSelectedElementsBBox() {
