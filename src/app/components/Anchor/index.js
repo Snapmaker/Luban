@@ -1,3 +1,3 @@
-import Anchor from '@trendmicro/react-anchor';
+import AnchorUndraggable from './AnchorUndraggable';
 
-export default Anchor;
+export default AnchorUndraggable;
