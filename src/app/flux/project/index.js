@@ -220,21 +220,26 @@ export const actions = {
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {
-        let modActions = null;
         let modState = null;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            modActions = editorActions;
             modState = getState()[headType];
         }
         if (headType === HEAD_3DP) {
-            modActions = printingActions;
             modState = getState().printing;
         }
+
         if (modState.modelGroup.hasModel()) {
             await dispatch(actions.save(headType, opts));
             await dispatch(actions.updateState({ openedFile: undefined }));
         }
-        await dispatch(modActions.init(headType));
+
+        if (headType === HEAD_CNC || headType === HEAD_LASER) {
+            await dispatch(editorActions.init(headType));
+        }
+        if (headType === HEAD_3DP) {
+            await dispatch(printingActions.initSize());
+        }
+
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();

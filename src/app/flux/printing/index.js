@@ -153,6 +153,8 @@ export const actions = {
     },
 
     initSize: () => async (dispatch, getState) => {
+        // also used in actions.saveAndClose of project/index.js
+
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
@@ -191,6 +193,7 @@ export const actions = {
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
 
+        // TODO: not yet to clear old events before regist
         // generate gcode event
         controller.on('slice:started', () => {
             dispatch(actions.updateState({

@@ -80,6 +80,7 @@ export const actions = {
 
         dispatch(editorActions.init('cnc'));
 
+        // TODO: not yet to clear old events before regist
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
