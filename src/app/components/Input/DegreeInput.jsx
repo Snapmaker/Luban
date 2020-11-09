@@ -20,17 +20,23 @@ class DegreeInput extends PureComponent {
 
     ref = React.createRef();
 
+    state = {
+        // the value is a string being displayed in <input> label
+        value: ''
+    };
+
     constructor(props) {
         super(props);
         this.state = {
-            value: props.value.toString().concat(this.props.suffix)
+            value: this.getNumberWithSuffix(props.value)
         };
     }
 
     componentWillReceiveProps(nextProps) {
+        // new value passed in
         if (nextProps.value !== this.state.value) {
             this.setState({
-                value: nextProps.value.toString().concat(this.props.suffix)
+                value: this.getNumberWithSuffix(nextProps.value)
             });
         }
     }
@@ -41,12 +47,25 @@ class DegreeInput extends PureComponent {
         });
     };
 
+    onFocus = () => {
+        // Remove suffix from displayed value
+        const standardValue = this.getStandardValue(this.state.value);
+
+        this.setState({
+            value: standardValue
+        });
+    };
+
+    /**
+     *
+     * @param event
+     */
     onBlur = (event) => {
         const { onChange } = this.props;
         const standardValue = this.getStandardValue(event.target.value);
 
         this.setState({
-            value: standardValue.toString().concat(this.props.suffix)
+            value: this.getNumberWithSuffix(standardValue)
         });
 
         onChange && onChange(standardValue);
@@ -55,25 +74,20 @@ class DegreeInput extends PureComponent {
     onKeyUp = (event) => {
         // Pressed carriage return (CR or '\r')
         if (event.keyCode === 13) {
-            const { onChange } = this.props;
-            const standardValue = this.getStandardValue(event.target.value);
-
-            this.setState({
-                value: standardValue.toString().concat(this.props.suffix)
-            });
-
-            onChange && onChange(standardValue);
-
+            // trigger onBlur manually
             this.ref.current.blur();
         }
     };
 
-    onFocus = () => {
-        const standardValue = this.getStandardValue(this.state.value);
-        this.setState({
-            value: standardValue
-        });
-    };
+    /**
+     * Return number + suffix, to be displayed in input label.
+     *
+     * @param {Number} num
+     * @returns {string}
+     */
+    getNumberWithSuffix(num) {
+        return num.toString() + this.props.suffix;
+    }
 
     getStandardValue(value) {
         let numericValue = parseFloat(value) % 360;
