@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "3.11.0-alpha.1",
+  "version": "3.11.0-alpha.3",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
