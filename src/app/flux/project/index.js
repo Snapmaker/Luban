@@ -234,7 +234,11 @@ export const actions = {
             await dispatch(actions.save(headType, opts));
             await dispatch(actions.updateState({ openedFile: undefined }));
         }
-        await dispatch(modActions.init(headType));
+        if (headType === HEAD_3DP) {
+            await dispatch(modActions.initSize(headType));
+        } else {
+            await dispatch(modActions.init(headType));
+        }
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();

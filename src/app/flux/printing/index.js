@@ -153,6 +153,8 @@ export const actions = {
     },
 
     initSize: () => async (dispatch, getState) => {
+        // also used in actions.saveAndClose of project/index.js
+
         // state
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
