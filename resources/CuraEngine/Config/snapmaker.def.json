@@ -33,8 +33,8 @@
         },
         "machine_heated_bed": {
             "default_value": true,
-            "label": "Has Heated Heated Bed",
-            "description": "Whether the machine has a heated heated bed present."
+            "label": "Has Heated Bed",
+            "description": "Whether the machine has a heated bed present."
         },
         "machine_nozzle_size": {
             "default_value": 0.4
@@ -95,15 +95,15 @@
         },
         "default_material_bed_temperature": {
             "label": "Default Heated Bed Temperature",
-            "description": "The default temperature used for the heated heated bed. This should be the \"base\" temperature of a heated bed. All other print temperatures should use offsets based on this value"
+            "description": "The default temperature used for the heated bed. This should be the \"base\" temperature of a heated bed. All other print temperatures should use offsets based on this value"
         },
         "material_bed_temperature": {
             "label": "Heated Bed Temperature",
-            "description": "The temperature used for the heated heated bed. If this is 0, the bed temperature will not be adjusted."
+            "description": "The temperature used for the heated bed. If this is 0, the bed temperature will not be adjusted."
         },
         "material_bed_temperature_layer_0": {
             "label": "Heated Bed Temperature Initial Layer",
-            "description": "The temperature used for the heated heated bed at the first layer."
+            "description": "The temperature used for the heated bed at the first layer."
         },
         "speed_layer_0": {
             "description": "The speed for the initial layer. A lower value is advised to improve adhesion to the heated bed."

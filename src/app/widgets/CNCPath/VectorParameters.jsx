@@ -114,7 +114,7 @@ class VectorParameters extends PureComponent {
                             title={i18n._('Carving Path')}
                             content={(
                                 <div>
-                                    <p>{i18n._('Select a carve path:')}</p>
+                                    <p>{i18n._('Select a carving path:')}</p>
                                     <ul>
                                         <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
                                         <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
@@ -124,7 +124,7 @@ class VectorParameters extends PureComponent {
                             )}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Carve Path')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Carving Path')}</span>
                                 <Select
                                     disabled={disabled}
                                     className="sm-parameter-row__select"
@@ -146,7 +146,7 @@ class VectorParameters extends PureComponent {
                                             value: 'pocket'
                                         }
                                     ]}
-                                    placeholder={i18n._('Choose carve path')}
+                                    placeholder={i18n._('Choose carving path')}
                                     value={pathType}
                                     onChange={this.actions.onChangePathType}
                                 />
