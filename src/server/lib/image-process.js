@@ -234,16 +234,20 @@ async function processHalftone(modelInfo) {
     });
 }
 
+/**
+ * Convert raster image to vector image.
+ *
+ * @param modelInfo
+ * @returns {Promise<any>}
+ */
 function processVector(modelInfo) {
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
-    const { flip = 0 } = modelInfo.transformation;
     const options = {
         uploadName: modelInfo.uploadName,
         vectorThreshold: vectorThreshold,
         invert: invert,
-        turdSize: turdSize,
-        flip: flip
+        turdSize: turdSize
     };
     return convertRasterToSvg(options);
 }
@@ -281,6 +285,7 @@ function process(modelInfo) {
         } else if (mode === 'bw') {
             return processBW(modelInfo);
         } else if (mode === 'vector') {
+            // Note that vector is not flipped
             return processVector(modelInfo);
         } else if (mode === 'halftone') {
             return processHalftone(modelInfo);

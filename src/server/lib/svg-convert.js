@@ -5,7 +5,7 @@ import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
 import logger from './logger';
-import SVGParser, { flip } from '../../shared/lib/SVGParser';
+import SVGParser from '../../shared/lib/SVGParser';
 import DataStorage from '../DataStorage';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
@@ -21,6 +21,15 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 `;
 
 
+/**
+ * @param options
+ *      - uploadName
+ *      - vectorThreshold
+ *      - invert
+ *      - turdSize
+ *
+ * @returns {Promise<any>}
+ */
 const convertRasterToSvg = (options) => {
     const { uploadName, vectorThreshold, invert, turdSize } = options;
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
@@ -43,7 +52,6 @@ const convertRasterToSvg = (options) => {
             const svgParser = new SVGParser();
 
             const result = await svgParser.parse(svgStr);
-            flip(result, options.flip);
             const { width, height } = result;
 
             fs.writeFile(targetPath, svgToString(result), () => {
