@@ -18,7 +18,6 @@ const Logo = memo(() => (
     <Anchor
         className="navbar-brand"
         href="/#/workspace"
-        draggable='false'
         title={`${settings.name} ${settings.version}`}
         style={{ position: 'relative' }}
     >

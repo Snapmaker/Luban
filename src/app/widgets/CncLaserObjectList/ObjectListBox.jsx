@@ -110,7 +110,6 @@ class ObjectListBox extends PureComponent {
                                                 styles.name,
                                                 styles.bt
                                             )}
-                                            draggable="false"
                                             onClick={(event) => this.actions.onClickModelNameBox(model, event)}
                                         >
                                             <span
