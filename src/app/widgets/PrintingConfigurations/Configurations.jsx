@@ -45,7 +45,7 @@ function isOfficialDefinition(definition) {
 class Configurations extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
-        isAdvised: PropTypes.bool.isRequired,
+        isRecommended: PropTypes.bool.isRequired,
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
 
@@ -57,7 +57,7 @@ class Configurations extends PureComponent {
         onDownloadQualityDefinition: PropTypes.func.isRequired,
         onUploadQualityDefinition: PropTypes.func.isRequired,
 
-        updateDefaultAdvised: PropTypes.func.isRequired,
+        updateIsRecommended: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired
     };
 
@@ -178,6 +178,11 @@ class Configurations extends PureComponent {
                 notificationMessage: ''
             });
         },
+        /**
+         * Select `definition`.
+         *
+         * @param definition
+         */
         onSelectOfficialDefinition: (definition) => {
             this.setState({
                 isRenaming: false,
@@ -281,11 +286,11 @@ class Configurations extends PureComponent {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
         },
-        onSetOfficialTab: (isAdvised) => {
-            if (isAdvised && /^quality.([0-9_]+)$/.test(this.props.defaultQualityId)) {
+        onSetOfficialTab: (isRecommended) => {
+            if (isRecommended && /^quality.([0-9_]+)$/.test(this.props.defaultQualityId)) {
                 this.props.updateDefaultQualityId('quality.fast_print');
             }
-            this.props.updateDefaultAdvised(isAdvised);
+            this.props.updateIsRecommended(isRecommended);
         }
     };
 
@@ -294,37 +299,36 @@ class Configurations extends PureComponent {
         this.props.setTitle(i18n._('Printing Settings'));
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
+        const { defaultQualityId, qualityDefinitions } = this.props;
+
         // selected quality ID or definitions changed
-        if (nextProps.defaultQualityId !== this.props.defaultQualityId || nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
-            if (this.state.selectedDefinition === null || nextProps.defaultQualityId !== this.props.defaultQualityId) {
-                let definition = null;
+        if (defaultQualityId !== prevProps.defaultQualityId || qualityDefinitions !== prevProps.qualityDefinitions) {
+            // re-select definition based on new properties
+            let definition = null;
 
-                if (nextProps.qualityDefinitions.length > 0) {
-                    definition = nextProps.qualityDefinitions.find(d => d.definitionId === nextProps.defaultQualityId);
-                }
+            if (defaultQualityId && qualityDefinitions.length > 0) {
+                definition = qualityDefinitions.find(d => d.definitionId === defaultQualityId);
+            }
 
-                if (!definition) {
-                    // definition no found, select first official definition
-                    this.actions.onSelectOfficialDefinition(nextProps.qualityDefinitions[0]);
-                } else {
-                    this.actions.onSelectCustomDefinition(definition);
-                }
+            if (!definition) {
+                // definition no found, select first official definition
+                this.actions.onSelectOfficialDefinition(qualityDefinitions[0]);
+            } else {
+                this.actions.onSelectCustomDefinition(definition);
             }
         }
     }
 
     render() {
-        const { isAdvised, qualityDefinitions } = this.props;
+        const { isRecommended, qualityDefinitions } = this.props;
         const state = this.state;
         const actions = this.actions;
 
-        const fastPrintDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
-        const normalQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
-        const highQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
+        const fastPrintDefinition = qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+        const normalQualityDefinition = qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
+        const highQualityDefinition = qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
 
-
-        const isOfficialTab = isAdvised;
         const qualityDefinition = this.state.selectedDefinition;
 
         const customDefinitionOptions = qualityDefinitions.map(d => ({
@@ -344,7 +348,7 @@ class Configurations extends PureComponent {
                     <button
                         type="button"
                         style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': isOfficialTab })}
+                        className={classNames('sm-tab', { 'sm-selected': isRecommended })}
                         onClick={() => {
                             this.actions.onSetOfficialTab(true);
                         }}
@@ -354,7 +358,7 @@ class Configurations extends PureComponent {
                     <button
                         type="button"
                         style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': !isOfficialTab })}
+                        className={classNames('sm-tab', { 'sm-selected': !isRecommended })}
                         onClick={() => {
                             this.actions.onSetOfficialTab(false);
                         }}
@@ -362,7 +366,7 @@ class Configurations extends PureComponent {
                         {i18n._('Customize')}
                     </button>
                 </div>
-                {isOfficialTab && (
+                {isRecommended && (
                     <div className="sm-tabs" style={{ marginTop: '12px' }}>
                         <button
                             type="button"
@@ -396,7 +400,7 @@ class Configurations extends PureComponent {
                         </button>
                     </div>
                 )}
-                {isOfficialTab && (
+                {isRecommended && (
                     <div style={{ marginTop: '12px', marginBottom: '6px' }}>
                         <OptionalDropdown
                             draggable="false"
@@ -430,7 +434,7 @@ class Configurations extends PureComponent {
                         </OptionalDropdown>
                     </div>
                 )}
-                {!isOfficialTab && (
+                {!isRecommended && (
                     <div style={{ marginBottom: '6px' }}>
                         <input
                             ref={this.fileInput}
@@ -651,7 +655,9 @@ class Configurations extends PureComponent {
                                                                 }}
                                                             />
                                                         )}
-                                                        {type === 'float' && <span className="sm-parameter-row__input-unit">{unit}</span>}
+                                                        {type === 'float' && (
+                                                            <span className="sm-parameter-row__input-unit">{unit}</span>
+                                                        )}
                                                         {type === 'int' && (
                                                             <Input
                                                                 className="sm-parameter-row__input"
@@ -662,7 +668,9 @@ class Configurations extends PureComponent {
                                                                 }}
                                                             />
                                                         )}
-                                                        {type === 'int' && <span className="sm-parameter-row__input-unit">{unit}</span>}
+                                                        {type === 'int' && (
+                                                            <span className="sm-parameter-row__input-unit">{unit}</span>
+                                                        )}
                                                         {type === 'bool' && (
                                                             <input
                                                                 className="sm-parameter-row__checkbox"
@@ -706,19 +714,19 @@ class Configurations extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { qualityDefinitions, defaultQualityId, isAdvised, activeDefinition } = state.printing;
+    const { qualityDefinitions, defaultQualityId, isRecommended, activeDefinition } = state.printing;
     return {
         qualityDefinitions,
         defaultQualityId,
-        isAdvised,
+        isRecommended,
         activeDefinition
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateDefaultAdvised: (isAdvised) => dispatch(printingActions.updateState({ 'isAdvised': isAdvised })),
-        updateDefaultQualityId: (defaultQualityId) => dispatch(printingActions.updateState({ defaultQualityId })),
+        updateIsRecommended: (isRecommended) => dispatch(printingActions.updateIsRecommended(isRecommended)),
+        updateDefaultQualityId: (qualityId) => dispatch(printingActions.updateDefaultQualityId(qualityId)),
         updateActiveDefinition: (definition) => {
             dispatch(printingActions.updateActiveDefinition(definition));
             dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));

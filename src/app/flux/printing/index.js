@@ -60,7 +60,7 @@ const INITIAL_STATE = {
     // printing configurations
     materialDefinitions: [],
     qualityDefinitions: [],
-    isAdvised: true,
+    isRecommended: true, // Using recommended settings
     defaultMaterialId: 'material.pla',
     defaultQualityId: '',
     // Active definition
@@ -560,6 +560,18 @@ export const actions = {
         definition.name = name;
 
         return null;
+    },
+
+    updateIsRecommended: (isRecommended) => (dispatch) => {
+        dispatch(actions.updateState({ isRecommended }));
+    },
+
+    updateDefaultMaterialId: (materialId) => (dispatch) => {
+        dispatch(actions.updateState({ defaultMaterialId: materialId }));
+    },
+
+    updateDefaultQualityId: (qualityId) => (dispatch) => {
+        dispatch(actions.updateState({ defaultQualityId: qualityId }));
     },
 
     /**
