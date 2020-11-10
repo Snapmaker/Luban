@@ -11,7 +11,7 @@ class AnchorUndraggable extends PureComponent {
             PropTypes.func,
             PropTypes.string
         ]),
-        draggable: PropTypes.bool,
+        draggable: PropTypes.string,
         disabled: PropTypes.bool,
         href: PropTypes.string,
         onClick: PropTypes.func,
