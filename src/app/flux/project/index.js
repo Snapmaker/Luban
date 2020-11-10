@@ -67,8 +67,8 @@ export const actions = {
         // dispatch(actions.updateState(headType, { hasModel: !!models.length }));
         if (!models.length && initState) return;
 
-        const { defaultMaterialId, defaultQualityId, isAdvised } = editorState;
-        const envObj = { headType, defaultMaterialId, defaultQualityId, isAdvised, models: [] };
+        const { defaultMaterialId, defaultQualityId, isRecommended } = editorState;
+        const envObj = { headType, defaultMaterialId, defaultQualityId, isRecommended, models: [] };
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
             envObj.models.push(model.getSerializableConfig());
