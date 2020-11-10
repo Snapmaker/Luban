@@ -55,7 +55,7 @@ class AnchorUndraggable extends PureComponent {
         } = this.props;
         const {
             componentClass,
-            draggable = 'false',
+            draggable = false,
             ...props
         } = this.props;
         const Component = componentClass || 'a';

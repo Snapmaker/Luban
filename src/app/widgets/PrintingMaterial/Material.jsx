@@ -212,7 +212,6 @@ class Material extends PureComponent {
                             <Anchor
                                 key={option.value}
                                 className={classNames(styles['material-btn'], { [styles.selected]: this.actions.isMaterialSelected(option) })}
-                                draggable="false"
                                 onClick={() => this.actions.onChangeMaterial(option.value)}
                             >
                                 {i18n._(option.label)}
