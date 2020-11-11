@@ -110,13 +110,14 @@ export const actions = {
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             modActions = editorActions;
             modState = getState()[envHeadType];
+            await dispatch(editorActions.init(envHeadType));
         }
         if (envHeadType === HEAD_3DP) {
             modActions = printingActions;
             modState = getState().printing;
+            await dispatch(printingActions.initSize());
         }
-
-        await dispatch(modActions.init(envHeadType));
+        // await dispatch(modActions.init(envHeadType));
         modState.modelGroup.removeAllModels();
 
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
