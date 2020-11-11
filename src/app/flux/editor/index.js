@@ -8,7 +8,7 @@ import {
     sizeModelByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { baseActions, checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './base';
+import { baseActions, checkIsAllModelsPreviewed } from './base';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
@@ -159,16 +159,6 @@ export const actions = {
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
         let { width, height } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
-        if (sourceType === 'text') {
-            const textSize = computeTransformationSizeForTextVector(
-                DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, {
-                    width: sourceWidth,
-                    height: sourceHeight
-                }
-            );
-            width = textSize.width;
-            height = textSize.height;
-        }
         // Generate geometry
 
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);

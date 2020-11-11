@@ -4,6 +4,7 @@ import mv from 'mv';
 import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
+import libFontManager from 'font-manager';
 import logger from './logger';
 
 
@@ -45,6 +46,8 @@ class FontManager {
     constructor() {
         this.fontDir = './userData/fonts';
         this.fonts = [];
+        // preload fonts config
+        this.systemFonts = libFontManager.getAvailableFontsSync();
     }
 
     setFontDir(fontDir) {
@@ -164,12 +167,14 @@ class FontManager {
             return Promise.resolve(localFont);
         }
 
-        // download
-        log.debug(`Downloading font <${family}>...`);
-        return this.downloadFont(family) // subfamily is not supported (for now)
+        const fontConfig = libFontManager.findFontSync({ family });
+
+        return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {
-                log.debug(`Font <${family}> Downloaded`);
-                this.fonts.push(font);
+                log.debug(`Font <${family}> loadded`);
+                if (this.fonts) {
+                    this.fonts.push(font);
+                }
                 return font;
             })
             .catch((err) => {

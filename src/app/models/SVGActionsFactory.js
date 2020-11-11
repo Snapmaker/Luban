@@ -546,8 +546,13 @@ class SVGActionsFactory {
             let sourceType = 'svg';
             let mode = 'vector';
             if (svgModel.type === 'text') {
-                sourceType = 'raster';
-                mode = headType === 'cnc' ? 'greyscale' : 'bw';
+                if (headType === 'laser') {
+                    sourceType = 'text';
+                    mode = 'vector';
+                } else {
+                    sourceType = 'raster';
+                    mode = 'greyscale';
+                }
             }
 
 
