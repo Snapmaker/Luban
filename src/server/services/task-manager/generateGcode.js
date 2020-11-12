@@ -35,7 +35,7 @@ const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail) => {
                     name: name,
                     uploadName: name,
                     size: ws.bytesWritten,
-                    lastModifiedDate: new Date().getTime(),
+                    lastModified: +new Date(),
                     thumbnail: thumbnail
                 }
             });

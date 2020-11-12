@@ -260,10 +260,9 @@ class WifiTransport extends PureComponent {
                             size = `${(gcodeFile.size).toFixed(2)} B`;
                         }
 
-
-                        const lastModifiedDate = new Date(gcodeFile.lastModifiedDate);
-                        let date = `${lastModifiedDate.getFullYear()}.${lastModifiedDate.getMonth()}.${lastModifiedDate.getDay()}   ${lastModifiedDate.getHours()}:${lastModifiedDate.getMinutes()}`;
-                        if (!gcodeFile.lastModifiedDate) {
+                        const lastModified = new Date(gcodeFile.lastModified);
+                        let date = `${lastModified.getFullYear()}.${lastModified.getMonth()}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
+                        if (!gcodeFile.lastModified) {
                             date = '';
                         }
                         const selected = selectFileName === gcodeFile.uploadName;

@@ -113,11 +113,20 @@ export const uploadCaseFile = (req, res) => {
     });
 };
 
-
+/**
+ * Upload G-code file, parse metadata.
+ *
+ * @param req
+ * @param res
+ */
 export const uploadGcodeFile = (req, res) => {
     const file = req.files.file;
-    const port = req.body.port;
-    const dataSource = req.body.dataSource || PROTOCOL_TEXT;
+
+    if (!file) {
+        res.end();
+        return;
+    }
+
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -135,6 +144,7 @@ export const uploadGcodeFile = (req, res) => {
             res.end();
         }
     });
+    /*
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         return;
@@ -144,6 +154,7 @@ export const uploadGcodeFile = (req, res) => {
             log.error(`Failed to upload file ${uploadPath}`);
         }
     });
+    */
 };
 
 export const uploadUpdateFile = (req, res) => {

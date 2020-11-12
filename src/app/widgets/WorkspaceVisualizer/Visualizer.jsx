@@ -37,6 +37,7 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import i18n from '../../lib/i18n';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ProgressBar from '../../components/ProgressBar';
+
 // import modal from '../../lib/modal';
 
 
@@ -517,13 +518,15 @@ class Visualizer extends Component {
             this.renderScene();
         }
         if (nextProps.stage !== this.props.stage && nextProps.stage === WORKSPACE_STAGE.LOAD_GCODE_SUCCEED) {
-            const { min, max } = nextProps.boundingBox;
-            const target = new THREE.Vector3();
+            if (nextProps.boundingBox !== null) {
+                const { min, max } = nextProps.boundingBox;
+                const target = new THREE.Vector3();
 
-            target.copy(min).add(max).divideScalar(2);
-            const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
-            const position = new THREE.Vector3(target.x, target.y, width * 2);
-            this.canvas.current.setCamera(position, target);
+                target.copy(min).add(max).divideScalar(2);
+                const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
+                const position = new THREE.Vector3(target.x, target.y, width * 2);
+                this.canvas.current.setCamera(position, target);
+            }
         }
         // open the enclosureDoorOpened modal
         if (nextProps.isEnclosureDoorOpen !== this.props.isEnclosureDoorOpen) {
