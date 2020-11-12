@@ -266,11 +266,11 @@ class App extends PureComponent {
 
         if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
             const { findLastEnvironment, openedFile } = nextProps.projectState[headType];
+            UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
 
             if (findLastEnvironment) {
                 if (!this.state.recoveringProject) {
                     this.setState({ recoveringProject: true });
-                    UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
                     this.props.onRecovery(headType);
                 }
             } else if (this.state.recoveringProject) {

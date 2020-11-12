@@ -183,12 +183,14 @@ export const actions = {
 
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
+        console.log(openedFile); // log here to detect a bug cannot recover
         UniApi.File.save(openedFile.path, tmpFile);
     },
 
     open: (file, history) => async (dispatch) => {
         // file: { path, name }
         const [, tail] = file.name.split('.');
+        if (!tail) return;
 
         if (tail.substring(0, 4) === 'snap') {
             const formData = new FormData();
