@@ -137,7 +137,7 @@ export const actions = {
                     name: file.name,
                     uploadName: response.uploadName,
                     size: file.size,
-                    lastModifiedDate: file.lastModifiedDate,
+                    lastModified: file.lastModified,
                     thumbnail: ''
                 };
                 dispatch(actions.addGcodeFiles(gcodeFile));
@@ -168,7 +168,7 @@ export const actions = {
                     name: file.name,
                     uploadName: response.uploadName,
                     size: file.size,
-                    lastModifiedDate: file.lastModifiedDate,
+                    lastModified: +file.lastModified,
                     thumbnail: ''
                 };
                 dispatch(actions.renderGcodeFile(gcodeFile));
@@ -223,7 +223,7 @@ export const actions = {
                 name: file.name,
                 uploadName: response.uploadName,
                 size: file.size,
-                lastModifiedDate: file.lastModifiedDate,
+                lastModified: +file.lastModified,
                 thumbnail: ''
             };
             dispatch(actions.renderGcodeFile(gcodeFile, false));

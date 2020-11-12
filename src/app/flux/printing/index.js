@@ -208,7 +208,7 @@ export const actions = {
                     name: gcodeFilename,
                     uploadName: gcodeFilename,
                     size: gcodeFileLength,
-                    lastModifiedDate: new Date().getTime(),
+                    lastModified: +new Date(),
                     thumbnail: ''
                 },
                 printTime,

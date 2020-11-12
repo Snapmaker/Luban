@@ -845,7 +845,7 @@ export const actions = {
                 name: gcodeFile.name,
                 uploadName: gcodeFile.name,
                 size: gcodeFile.size,
-                lastModifiedDate: gcodeFile.lastModifiedDate,
+                lastModified: gcodeFile.lastModified,
                 thumbnail: gcodeFile.thumbnail
             },
             stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
