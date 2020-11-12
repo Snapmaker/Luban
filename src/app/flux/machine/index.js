@@ -118,6 +118,7 @@ const INITIAL_STATE = {
     connectionTimeout: 3000,
 
     // autoUpdate
+    autoupdateMessage: '',
     // Whether to check for available updates when the software is opened
     shouldCheckForUpdate: true,
     // Whether an update is being downloaded
@@ -331,6 +332,9 @@ export const actions = {
             });
     },
 
+    updateAutoupdateMessage: (autoupdateMessage) => (dispatch) => {
+        dispatch(actions.updateState({ autoupdateMessage: autoupdateMessage }));
+    },
     updateIsDownloading: (isDownloading) => (dispatch) => {
         dispatch(actions.updateState({ isDownloading: isDownloading }));
     },
