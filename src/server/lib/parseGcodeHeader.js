@@ -325,16 +325,20 @@ function parseGcodeHeader(filename) {
         }
         if (headerStart && headerEnd && header.length > 0) {
             const headers = header.splice(0);
+            // Parse headers to key/value pairs
             for (const h of headers) {
                 if (h.trim() === '') {
                     continue;
                 }
-                const key = h.split(':')[0].trim();
-                const value = h.split(':')[1].trim();
-                if (value.match(/^(-?\d+)(\.\d+)?$/)) {
-                    initMeta[key] = parseFloat(value);
-                } else {
-                    initMeta[key] = value;
+                const sep = h.indexOf(':');
+                if (sep !== -1) {
+                    const key = h.substr(0, sep).trim();
+                    const value = h.substr(sep + 1).trim();
+                    if (value.match(/^(-?\d+)(\.\d+)?$/)) {
+                        initMeta[key] = parseFloat(value);
+                    } else {
+                        initMeta[key] = value;
+                    }
                 }
             }
         }
