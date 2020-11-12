@@ -84,10 +84,10 @@ function sendUpdateMessage(text) {
 // handle update issue
 function updateHandle() {
     const message = {
-        error: 'update error',
-        checking: 'updating...',
-        updateAva: 'fetch new version and downloading...',
-        updateNotAva: 'do not to update'
+        error: 'An error occurred while checking for updates.',
+        checking: 'Checking for updates.',
+        updateAva: 'Updates are available.',
+        updateNotAva: 'Snapmaker Luban is up to date.'
     };
     // Official document: https://www.electron.build/auto-update.html
     autoUpdater.autoDownload = false;

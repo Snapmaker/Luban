@@ -66,6 +66,7 @@ class App extends PureComponent {
         saveAsFile: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
+        updateAutoupdateMessage: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired
     };
 
@@ -140,6 +141,9 @@ class App extends PureComponent {
             UniApi.File.openProjectFile();
         },
         initUniEvent: () => {
+            UniApi.Event.on('message', (event, message) => {
+                this.props.updateAutoupdateMessage(message);
+            });
             UniApi.Event.on('download-has-started', () => {
                 this.props.updateIsDownloading(true);
             });
@@ -373,6 +377,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
+        updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         developToolsInit: () => dispatch(developToolsActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),

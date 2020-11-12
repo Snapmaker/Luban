@@ -48,6 +48,7 @@ class General extends PureComponent {
         stateChanged: PropTypes.bool,
         shouldCheckForUpdate: PropTypes.bool,
         isDownloading: PropTypes.bool,
+        autoupdateMessage: PropTypes.string,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
         actions: PropTypes.object
     };
@@ -84,7 +85,7 @@ class General extends PureComponent {
     }
 
     render() {
-        const { state, stateChanged, shouldCheckForUpdate } = this.props;
+        const { state, stateChanged, shouldCheckForUpdate, autoupdateMessage } = this.props;
         const lang = get(state, 'lang', 'en');
 
         if (state.api.loading) {
@@ -129,8 +130,12 @@ class General extends PureComponent {
                             <div className={styles['autoupdate-wrapper']}>
                                 <p className={styles['update-title']}>{i18n._('Software Update')}</p>
                                 <button
+                                    className={classNames(
+                                        'btn',
+                                        'btn-outline-secondary',
+                                        styles['autoupdate-button'],
+                                    )}
                                     type="button"
-                                    className="btn btn-outline-secondary"
                                     onClick={this.actions.handleCheckForUpdate}
                                 >
                                     {i18n._('Check for update')}
@@ -145,6 +150,9 @@ class General extends PureComponent {
                                     <span className={styles['autoupdate-text']}>
                                         {i18n._('Automatically check for update')}
                                     </span>
+                                </div>
+                                <div className={styles['autoupdate-message']}>
+                                    {autoupdateMessage}
                                 </div>
                             </div>
                         </div>
@@ -183,10 +191,11 @@ class General extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { shouldCheckForUpdate, isDownloading } = machine;
+    const { shouldCheckForUpdate, isDownloading, autoupdateMessage } = machine;
 
     return {
         shouldCheckForUpdate,
+        autoupdateMessage,
         isDownloading
     };
 };
