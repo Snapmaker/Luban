@@ -107,6 +107,8 @@ const convertRasterToSvg = defaultAPIFactory((options) => request.post('/api/svg
 
 const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertTextToSvg', options));
 
+const convertOneLineTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertOneLineTextToSvg', options));
+
 //
 // toolpath
 //
@@ -323,6 +325,7 @@ export default {
     // svg
     convertRasterToSvg,
     convertTextToSvg,
+    convertOneLineTextToSvg,
 
     generateToolPath,
 

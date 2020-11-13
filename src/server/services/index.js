@@ -93,6 +93,7 @@ function registerApis(app) {
     // Svg
     app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg);
 
     // ToolPath
     app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);

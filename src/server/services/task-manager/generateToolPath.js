@@ -6,7 +6,6 @@ import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../../shared/lib/SVGParser';
-import { convertTextToSvg } from '../../lib/svg-convert';
 import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
@@ -26,19 +25,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     // no need to process model
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace'))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
-    } else if (sourceType === 'text' && mode === 'vector') {
-        const { text, 'font-family': font, 'font-size': size } = modelInfo.config;
-        const name = modelInfo.originalName;
-        const lineHeight = 1;
-        const alignment = 'middle';
-
-        // eslint-disable-next-line no-shadow
-        const { width, height, uploadName } = await convertTextToSvg({ text, font, name, size, lineHeight, alignment });
-        modelPath = `${DataStorage.tmpDir}/${uploadName}`;
-        modelInfo.sourceWidth = width;
-        // * 1.34, cause svg text height includes the space between text
-        // and the text vertical position different among fonts, it cause gcode y position not the same with svg
-        modelInfo.sourceHeight = height * 1.34;
     } else {
         if (uploadName.indexOf('svg') > 0) {
             return Promise.reject(new Error('process image need an image uploadName'));

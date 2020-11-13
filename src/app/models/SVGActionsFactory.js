@@ -545,14 +545,9 @@ class SVGActionsFactory {
             const { originalName, uploadName } = res.body;
             let sourceType = 'svg';
             let mode = 'vector';
-            if (svgModel.type === 'text') {
-                if (headType === 'laser') {
-                    sourceType = 'text';
-                    mode = 'vector';
-                } else {
-                    sourceType = 'raster';
-                    mode = 'greyscale';
-                }
+            if (svgModel.type === 'text' && headType === 'cnc') {
+                sourceType = 'raster';
+                mode = 'greyscale';
             }
 
 
