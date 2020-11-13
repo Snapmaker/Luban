@@ -168,7 +168,7 @@ const File = {
             const saveDialogReturnValue = await dialog.showSaveDialog({
                 title: targetFile,
                 defaultPath: targetFile,
-                filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
+                filters: [{ name: 'files', extensions: [targetFile.split('.').pop()] }]
             });
             targetFile = saveDialogReturnValue.filePath;
             if (!targetFile) throw new Error('export file canceled');

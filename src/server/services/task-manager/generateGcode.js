@@ -61,7 +61,7 @@ export const generateGcode = (modelInfos, onProgress) => {
     let boundingBox = null;
 
     const { uploadName } = modelInfos[0];
-    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name) + suffix;
+    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name + suffix);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
