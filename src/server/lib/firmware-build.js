@@ -6,7 +6,7 @@ async function firmwareAction(isMainController, filePath, version) {
     return new Promise((resolve) => {
         let destFilename = '';
         const date = new Date();
-        const month = date.getMonth() === 0 ? 12 : date.getMonth() + 1;
+        const month = date.getMonth() + 1;
         const day = String(date.getDate()).length === 1 ? `0${date.getDate()}` : date.getDate();
         const dateString = `${date.getFullYear()}${month}${day}`;
         if (isMainController) {

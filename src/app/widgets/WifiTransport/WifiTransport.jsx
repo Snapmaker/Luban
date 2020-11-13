@@ -261,7 +261,7 @@ class WifiTransport extends PureComponent {
                         }
 
                         const lastModified = new Date(gcodeFile.lastModified);
-                        let date = `${lastModified.getFullYear()}.${lastModified.getMonth()}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
+                        let date = `${lastModified.getFullYear()}.${lastModified.getMonth() + 1}.${lastModified.getDate()}   ${lastModified.getHours()}:${lastModified.getMinutes()}`;
                         if (!gcodeFile.lastModified) {
                             date = '';
                         }
