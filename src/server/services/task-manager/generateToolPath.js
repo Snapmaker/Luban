@@ -18,7 +18,8 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     // const { mode, source } = modelInfo;
     // const originFilename = source.filename;
     const { sourceType, mode, uploadName } = modelInfo;
-    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name) + suffix;
+    console.log(uploadName, path.parse(uploadName));
+    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name + suffix);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
