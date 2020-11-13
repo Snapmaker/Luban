@@ -272,7 +272,7 @@
     "winston": "~3.0.0",
     "xml2js": "~0.4.19",
     "xmldom": "^0.3.0",
-    "xterm": "^4.0.0",
+    "xterm": "^4.8.1",
     "xterm-addon-fit": "^0.3.0"
   },
   "devDependencies": {

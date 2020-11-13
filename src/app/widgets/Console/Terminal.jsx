@@ -89,7 +89,12 @@ class TerminalWrapper extends PureComponent {
         this.term.onData(this.eventHandler.onPaste);
 
         const el = this.terminalContainer.current;
-
+        setTimeout(() => {
+            const viewport = el.getElementsByClassName('terminal')[0];
+            viewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+            });
+        }, 500);
         this.term.open(el);
         this.term.focus(false);
         // this.fitAddon.fit();
