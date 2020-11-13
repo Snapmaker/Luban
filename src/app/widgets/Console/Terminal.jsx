@@ -74,7 +74,11 @@ class TerminalWrapper extends PureComponent {
         this.term = new Terminal({
             rows: 16,
             // bar, block, underline
-            cursorStyle: 'block',
+            cursorStyle: 'bar',
+            theme: {
+                // set cursor color the same to the background, for hiding
+                cursor: 'black'
+            },
             cursorBlink: false,
             scrollback: 1000,
             tabStopWidth: 4
@@ -249,12 +253,17 @@ class TerminalWrapper extends PureComponent {
                 className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
             >
                 <div ref={this.terminalContainer} />
+                <div style={{
+                    height: 1,
+                    backgroundColor: '#676869'
+                }}
+                />
                 <input
                     ref={this.input}
                     style={{
                         width: '100%',
                         height: inputHeight,
-                        backgroundColor: '#888888',
+                        backgroundColor: '#000000',
                         color: '#FFFFFF',
                         border: 'none'
                     }}
