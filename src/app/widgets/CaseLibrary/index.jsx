@@ -22,7 +22,7 @@ class CaseLibrary extends PureComponent {
         // laser: PropTypes.object.isRequired,
         insertDefaultCncTextVector: PropTypes.func.isRequired,
         insertDefaultLaserTextVector: PropTypes.func.isRequired,
-        updateDefaultAdvised: PropTypes.func.isRequired,
+        updateIsRecommended: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
@@ -69,9 +69,9 @@ class CaseLibrary extends PureComponent {
             const qualityDefinition = await this.props.qualityDefinitions.find(d => d.definitionId === qualityDefinitionId);
             if (qualityDefinition) {
                 if (['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'].indexOf(qualityDefinitionId) === -1) {
-                    this.props.updateDefaultAdvised(false);
+                    this.props.updateIsRecommended(false);
                 } else {
-                    this.props.updateDefaultAdvised(true);
+                    this.props.updateIsRecommended(true);
                 }
                 this.props.updateDefaultQualityId(qualityDefinitionId);
                 this.props.updateActiveDefinition(qualityDefinition);
@@ -88,7 +88,7 @@ class CaseLibrary extends PureComponent {
                         newDefinition.settings[key].from = addDefinition.definitionId;
                     }
                 }
-                this.props.updateDefaultAdvised(false);
+                this.props.updateIsRecommended(false);
 
                 this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
                 this.props.updateDefaultQualityId(newDefinition.definitionId);

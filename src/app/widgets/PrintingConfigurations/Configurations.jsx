@@ -287,7 +287,7 @@ class Configurations extends PureComponent {
             }
         },
         onSetOfficialTab: (isRecommended) => {
-            if (isRecommended && /^quality.([0-9_]+)$/.test(this.props.defaultQualityId)) {
+            if (isRecommended && (/^quality.([0-9_]+)$/.test(this.props.defaultQualityId) || this.props.defaultQualityId.indexOf('Caselibrary') > -1)) {
                 this.props.updateDefaultQualityId('quality.fast_print');
             }
             this.props.updateIsRecommended(isRecommended);
