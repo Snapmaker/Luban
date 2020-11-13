@@ -254,7 +254,7 @@ class TerminalWrapper extends PureComponent {
                     style={{
                         width: '100%',
                         height: inputHeight,
-                        backgroundColor: '#000000',
+                        backgroundColor: '#888888',
                         color: '#FFFFFF',
                         border: 'none'
                     }}

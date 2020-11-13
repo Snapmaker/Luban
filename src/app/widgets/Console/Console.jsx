@@ -34,7 +34,8 @@ class Console extends PureComponent {
 
     controllerEvents = {
         'serialport:close': () => {
-            this.actions.clearAll();
+            // now, not to clear logs after disconnect
+            // this.actions.clearAll();
         },
         // 'serialport:write': (data, context, dataSource) => {
         'serialport:write': (options) => {
