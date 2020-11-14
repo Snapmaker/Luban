@@ -1161,11 +1161,9 @@ class ModelGroup extends EventEmitter {
     addModel(modelInfo, relatedModels = {}) {
         const model = new Model(modelInfo, this);
 
-        model.modelName = this._createNewModelName({
-            'sourceType': modelInfo.sourceType,
-            'mode': modelInfo.mode,
-            'originalName': modelInfo.originalName
-        });
+        model.modelName = this._createNewModelName(
+            modelInfo
+        );
 
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
@@ -1217,17 +1215,18 @@ class ModelGroup extends EventEmitter {
      * Remember to call this after every Model creation and clone.
      */
     _createNewModelName(options) {
+        const isText = (options.config.svgNodeName && options.config.svgNodeName === 'text');
+        const isShape = (options.mode === 'vector' && options.config.svgNodeName && options.config.svgNodeName !== 'image');
         let baseName = '';
         if (options.sourceType === '3d') {
-            baseName = '3DModel';
+            baseName = options.originalName;
         } else {
-            if (options.sourceType === 'text') {
+            if (isText) {
                 baseName = 'Text';
-            } else if (options.mode !== 'vector') {
-                baseName = options.originalName;
-                // todo, it may named when upload, but not when create model
-            } else {
+            } else if (isShape) {
                 baseName = 'Shape';
+            } else {
+                baseName = options.originalName;
             }
         }
 
