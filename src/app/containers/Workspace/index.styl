@@ -10,8 +10,6 @@
         display: table-row;
     }
 
-    .primary-container,
-    .secondary-container,
     .primary-toggler,
     .secondary-toggler,
     .default-container {
@@ -31,6 +29,11 @@
         max-width: 360px;
         min-width: 360px;
         padding: 10px 6px 10px 6px;
+        display: block;
+        overflow: auto;
+        height: 100%;
+        position: absolute;
+        left: 0px;
 
         &.hidden {
             display: none;
@@ -50,6 +53,11 @@
         max-width: 360px;
         min-width: 360px;
         padding: 10px 10px 10px 6px;
+        display: block;
+        overflow: auto;
+        height: 100%;
+        position: absolute;
+        right: 0px;
 
         &.hidden {
             display: none;
