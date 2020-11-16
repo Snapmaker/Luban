@@ -74,7 +74,7 @@ class TerminalWrapper extends PureComponent {
         this.term = new Terminal({
             rows: 16,
             // bar, block, underline
-            cursorStyle: 'bar',
+            cursorStyle: 'block',
             theme: {
                 // set cursor color the same to the background, for hiding
                 cursor: 'black'
@@ -198,7 +198,7 @@ class TerminalWrapper extends PureComponent {
         } else {
             this.term.resize(cols, minRows);
         }
-        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight);
+        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight) - 1;
         this.setState({
             inputHeight
         });
@@ -254,7 +254,7 @@ class TerminalWrapper extends PureComponent {
             >
                 <div ref={this.terminalContainer} />
                 <div style={{
-                    height: 1,
+                    height: '1px',
                     backgroundColor: '#676869'
                 }}
                 />
