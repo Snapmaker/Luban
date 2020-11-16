@@ -1145,6 +1145,7 @@ class ModelGroup extends EventEmitter {
      *            sourceType,
      *            mode,
      *            originalName,
+     *            modelName,
      *            uploadName,
      *            sourceWidth: res.body.width,
      *            width,
@@ -1159,11 +1160,15 @@ class ModelGroup extends EventEmitter {
      * @returns {Model}
      */
     addModel(modelInfo, relatedModels = {}) {
+        if (!modelInfo.modelName) {
+            modelInfo.modelName = this._createNewModelName({
+                'sourceType': modelInfo.sourceType,
+                'mode': modelInfo.mode,
+                'originalName': modelInfo.originalName,
+                'config': modelInfo.config
+            });
+        }
         const model = new Model(modelInfo, this);
-
-        model.modelName = this._createNewModelName(
-            modelInfo
-        );
 
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
@@ -1212,21 +1217,29 @@ class ModelGroup extends EventEmitter {
     /**
      * Create a new name for model.
      *
-     * Remember to call this after every Model creation and clone.
+     * @param modelInfo - information needed to create new model name.
+     *      options = {
+     *            config,
+     *            mode,
+     *            sourceType,
+     *            originalName
+     *        };
+     * @returns modelName
      */
-    _createNewModelName(options) {
-        const isText = (options.config.svgNodeName && options.config.svgNodeName === 'text');
-        const isShape = (options.mode === 'vector' && options.config.svgNodeName && options.config.svgNodeName !== 'image');
+    _createNewModelName(modelInfo) {
+        const { config } = modelInfo;
+        const isText = (config && config.svgNodeName === 'text');
+        const isShape = (modelInfo.mode === 'vector' && config && config.svgNodeName !== 'image');
         let baseName = '';
-        if (options.sourceType === '3d') {
-            baseName = options.originalName;
+        if (modelInfo.sourceType === '3d') {
+            baseName = modelInfo.originalName;
         } else {
             if (isText) {
                 baseName = 'Text';
             } else if (isShape) {
                 baseName = 'Shape';
             } else {
-                baseName = options.originalName;
+                baseName = modelInfo.originalName;
             }
         }
 
