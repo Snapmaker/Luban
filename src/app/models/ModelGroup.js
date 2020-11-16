@@ -1162,14 +1162,13 @@ class ModelGroup extends EventEmitter {
     addModel(modelInfo, relatedModels = {}) {
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
-                'sourceType': modelInfo.sourceType,
-                'mode': modelInfo.mode,
-                'originalName': modelInfo.originalName,
-                'config': modelInfo.config
+                sourceType: modelInfo.sourceType,
+                mode: modelInfo.mode,
+                originalName: modelInfo.originalName,
+                config: modelInfo.config
             });
         }
         const model = new Model(modelInfo, this);
-
         model.meshObject.addEventListener('update', this.onModelUpdate);
         model.generateModelObject3D();
         model.processMode(modelInfo.mode, modelInfo.config);
