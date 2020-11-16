@@ -23,7 +23,7 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
     let modelPath = null;
     // no need to process model
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace' || mode === 'text')) || (sourceType === 'text' && mode === 'vector')) {
+    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace'))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         if (uploadName.indexOf('svg') > 0) {
@@ -43,7 +43,14 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
         generator.on('progress', (p) => {
             onProgress(p);
         });
-        const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
+
+        let toolPath;
+        try {
+            toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
+        } catch (e) {
+            console.log(e);
+        }
+
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                 if (err) {

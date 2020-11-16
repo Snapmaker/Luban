@@ -271,26 +271,39 @@ class SvgModel {
 
     async uploadSourceFile() {
         const { content } = this.genModelConfig();
-        let blob, file;
+        let blob, file, res;
         if (this.type === 'text') {
-            const canvas = document.createElement('canvas');
-            document.body.appendChild(canvas);
-            const ctx = canvas.getContext('2d');
-            const v = await Canvg.fromString(ctx, content);
-            await v.render();
-            blob = await new Promise(resolve => canvas.toBlob(resolve));
-            file = new File([blob], 'gen.png');
-            document.body.removeChild(canvas);
+            if (this.relatedModel.headType === 'cnc') {
+                const canvas = document.createElement('canvas');
+                document.body.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+                const v = await Canvg.fromString(ctx, content);
+                await v.render();
+                blob = await new Promise(resolve => canvas.toBlob(resolve));
+                file = new File([blob], 'gen.png');
+                document.body.removeChild(canvas);
+                const formData = new FormData();
+                formData.append('image', file);
+                res = await api.uploadImage(formData);
+            } else {
+                const { text, 'font-family': font, 'font-size': size } = this.relatedModel.config;
+                const { scaleX, scaleY } = this.relatedModel.transformation;
+                const { width, height } = this.elem.getBBox();
+                const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
+                const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
+                const name = this.relatedModel.originalName;
+                const alignment = 'middle';
+                res = await api.convertOneLineTextToSvg({ text, font, name, size, sourceWidth, sourceHeight, alignment });
+            }
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
+            const formData = new FormData();
+            formData.append('image', file);
+            res = await api.uploadImage(formData);
         }
 
         // console.log(content, URL.createObjectURL(blob));
-
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await api.uploadImage(formData);
         return res.body.uploadName;
     }
 

@@ -1,4 +1,3 @@
-import fontList from 'font-list';
 import fontManager from '../../lib/FontManager';
 
 
@@ -19,34 +18,36 @@ export const getPlatform = (req, res) => {
 };
 
 export const getFonts = (req, res) => {
-    // const fonts = fontManager.fonts
+    let fonts = [];
 
-    fontList.getFonts()
-        .then(fonts => {
-            fonts = fonts.filter(font => !!font)
-                .map((font) => {
-                    if (font[0] === '"') {
-                        font = font.substr(1, font.length - 2);
-                    }
+    fontManager.systemFonts.forEach((font) => {
+        if (font.path.toLocaleLowerCase().indexOf('.ttc') < 0
+            && fonts.findIndex(i => i === font.family) < 0) {
+            fonts.push(font.family);
+        }
+    });
 
-                    return {
-                        fontFamily: font,
-                        fontSubfamily: '',
-                        fullName: font,
-                        displayName: font
-                    };
-                })
-                .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
+    fonts = fonts.filter(font => !!font)
+        .map((font) => {
+            if (font[0] === '"') {
+                font = font.substr(1, font.length - 2);
+            }
 
-            res.send({
-                fonts: fonts
-            });
+            return {
+                fontFamily: font,
+                fontSubfamily: '',
+                fullName: font,
+                displayName: font
+            };
         })
-        .catch(err => {
-            console.log(err);
-        });
+        .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
+
+    res.send({
+        fonts: fonts
+    });
 };
 
+// deprecated, use system fonts instead
 export const uploadFont = (req, res) => {
     const fontFile = req.files.font;
 
