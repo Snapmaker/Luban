@@ -238,6 +238,7 @@ class Controls extends EventEmitter {
             case THREE.MOUSE.RIGHT:
                 this.state = STATE.PAN;
                 this.panMoved = false;
+                this.onClick(event);
                 this.handleMouseDownPan(event);
                 break;
             default:
@@ -317,7 +318,6 @@ class Controls extends EventEmitter {
      * @param event
      */
     onClick = (event) => {
-        // todo, to fix workspace not rotate
         if (!this.selectedGroup) {
             return;
         }
