@@ -47,7 +47,7 @@ class Model {
     constructor(modelInfo, modelGroup) {
         const {
             modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName
+            transformation, processImageName, modelName
         } = modelInfo;
 
         this.limitSize = limitSize;
@@ -58,7 +58,7 @@ class Model {
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = modelID;
-        this.modelName = 'unnamed';
+        this.modelName = modelName ?? 'unnamed';
 
         this.visible = true;
         this.headType = headType;

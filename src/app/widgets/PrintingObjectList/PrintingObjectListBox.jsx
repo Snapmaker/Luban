@@ -56,7 +56,7 @@ class PrintingObjectListBox extends PureComponent {
         return (
             <div className={styles['object-list-box']}>
                 {(modelGroup.models) && modelGroup.models.map((model) => {
-                    const modelName = path.basename(model.originalName);
+                    const modelName = path.basename(model.modelName);
                     const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
                     // const modelIcon = () => {
                     //     return styles.iconShape;
