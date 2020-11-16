@@ -169,6 +169,9 @@ class FontManager {
 
         const fontConfig = libFontManager.findFontSync({ family });
 
+        if (!fontConfig || !fontConfig.path) {
+            throw new Error('No Font Found!');
+        }
         return this.loadLocalFont(fontConfig.path, family) // subfamily is not supported (for now)
             .then((font) => {
                 log.debug(`Font <${family}> loadded`);
