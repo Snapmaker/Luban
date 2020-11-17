@@ -91,6 +91,20 @@ class TerminalWrapper extends PureComponent {
         };
         this.term.onResize(this.eventHandler.onResize);
         this.term.onData(this.eventHandler.onPaste);
+        this.term.onKey(
+            (e) => {
+                const { domEvent } = e;
+                // // control + a
+                // if (domEvent.ctrlKey && domEvent.key === 'a') {
+                //     this.term.selectAll();
+                //     document.execCommand('copy');
+                // }
+                // control + c
+                if (domEvent.ctrlKey && domEvent.key === 'c') {
+                    document.execCommand('copy');
+                }
+            }
+        );
 
         const el = this.terminalContainer.current;
         this.term.open(el);
