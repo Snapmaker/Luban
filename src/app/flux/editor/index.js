@@ -59,20 +59,6 @@ export const actions = {
 
     ...baseActions,
 
-    init: () => (dispatch, getState) => {
-        // TODO: temporary workaround for model image processing
-        const bindSVGActions = (headType) => {
-            const { SVGActions } = getState()[headType];
-
-            SVGActions.setModelTransformCallback(() => {
-                dispatch(actions.processSelectedModel(headType));
-            });
-        };
-
-        bindSVGActions('laser');
-        bindSVGActions('cnc');
-    },
-
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
@@ -474,14 +460,8 @@ export const actions = {
                 }
             });
         }
+        dispatch(actions.processSelectedModel(headType));
         dispatch(actions.resetProcessState(headType));
-
-        // const flip = transformation.flip;
-        // const svgflip = 0;
-
-        // transformation.flip = flip;
-        // transformation.svgflip = svgflip;
-        // dispatch(actions.updateSelectedModelFlip(headType, transformation));
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {

@@ -79,8 +79,6 @@ export const actions = {
             dispatch(editorActions.render('laser'));
         });
 
-        dispatch(editorActions.init('laser'));
-
         // TODO: not yet to clear old events before regist
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {

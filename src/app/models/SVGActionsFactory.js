@@ -458,8 +458,6 @@ class SVGActionsFactory {
 
         this.modelGroup.updateSelectedGroupTransformation(transformation);
         this.resetSelection();
-
-        // this.invokeModelTransformCallback();
     }
 
     addSelectedSvgModelsByModels(models) {
@@ -509,15 +507,6 @@ class SVGActionsFactory {
             width: posAndSize.width,
             height: posAndSize.height
         });
-    }
-
-    // // TODO: This is temporary workaround for model processing
-    setModelTransformCallback(callback) {
-        this.modelTransformCallback = callback;
-    }
-
-    invokeModelTransformCallback() {
-        this.modelTransformCallback && this.modelTransformCallback();
     }
 
     /**

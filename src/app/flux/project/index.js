@@ -110,7 +110,6 @@ export const actions = {
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             modActions = editorActions;
             modState = getState()[envHeadType];
-            await dispatch(editorActions.init(envHeadType));
         }
         if (envHeadType === HEAD_3DP) {
             modActions = printingActions;
@@ -236,9 +235,6 @@ export const actions = {
             await dispatch(actions.updateState({ openedFile: undefined }));
         }
 
-        if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            await dispatch(editorActions.init(headType));
-        }
         if (headType === HEAD_3DP) {
             await dispatch(printingActions.initSize());
         }
