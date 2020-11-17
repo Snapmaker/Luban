@@ -46,7 +46,13 @@ export const CNC_LASER_STAGE = {
     RE_PREVIEW: 7,
     GENERATING_GCODE: 8,
     GENERATE_GCODE_SUCCESS: 9,
-    GENERATE_GCODE_FAILED: 10
+    GENERATE_GCODE_FAILED: 10,
+    UPLOADING_IMAGE: 11,
+    UPLOAD_IMAGE_SUCCESS: 12,
+    UPLOAD_IMAGE_FAILED: 13,
+    PROCESSING_IMAGE: 14,
+    PROCESS_IMAGE_SUCCESS: 15,
+    PROCESS_IMAGE_FAILED: 16
 };
 
 export const actions = {
@@ -119,17 +125,29 @@ export const actions = {
      * 2. Create Mold from image information
      */
     uploadImage: (headType, file, mode, onError) => (dispatch) => {
+        dispatch(actions.updateState(headType, {
+            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
+            progress: 0.25
+        }));
         const formData = new FormData();
         formData.append('image', file);
 
         api.uploadImage(formData)
             .then((res) => {
+                dispatch(actions.updateState(headType, {
+                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
+                    progress: 1
+                }));
                 const { width, height, originalName, uploadName } = res.body;
                 dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
                 // dispatch(actions.generateMoldFromImage(headType, { originalName, uploadName, width, height }));
             })
             .catch((err) => {
                 onError && onError(err);
+                dispatch(actions.updateState(headType, {
+                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
+                    progress: 1
+                }));
             });
     },
 
@@ -380,7 +398,7 @@ export const actions = {
 
     // TODO: temporary workaround for model image processing
     processSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, SVGActions } = getState()[headType];
+        const { modelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -405,34 +423,16 @@ export const actions = {
             },
             config: selectedModel.config
         };
+        dispatch(baseActions.updateState(headType, {
+            stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
+            progress: 0
+        }));
 
-        api.processImage(options)
-            .then((res) => {
-                const processImageName = res.body.filename;
-                if (!processImageName) {
-                    return;
-                }
-
-                const svgModel = selectedModel.relatedModels.svgModel;
-                const toolPathModel = selectedModel.relatedModels.toolPathModel;
-
-                // modelGroup.updateSelectedModelProcessImage(processImageName);
-                selectedModel.updateProcessImageName(processImageName);
-
-                // SVGActions.updateElementImage(processImageName);
-                SVGActions.updateSvgModelImage(svgModel, processImageName);
-
-                // toolPathModelGroup.updateSelectedNeedPreview(true);
-                toolPathModel.updateNeedPreview(true);
-
-                // dispatch(baseActions.recordSnapshot(headType));
-                dispatch(baseActions.resetCalculatedState(headType));
-                dispatch(baseActions.render(headType));
-            })
-            .catch((e) => {
-                // TODO: use log
-                console.error(e);
-            });
+        controller.commitProcessImage({
+            taskId: uuid.v4(),
+            headType: headType,
+            data: options
+        });
     },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
@@ -444,6 +444,7 @@ export const actions = {
             sourceType, config, gcodeConfig, transformation));
         dispatch(actions.resetProcessState(headType));
     },
+
 
     onFlipSelectedModel: (headType, flipStr) => (dispatch, getState) => {
         const model = getState()[headType].modelGroup.getSelectedModel();
@@ -500,7 +501,7 @@ export const actions = {
         }));
         if (!modelState.hasModel) {
             dispatch(baseActions.updateState(headType, {
-                stage: 0,
+                stage: CNC_LASER_STAGE.EMPTY,
                 progress: 0
             }));
         }
@@ -839,6 +840,47 @@ export const actions = {
                 thumbnail: gcodeFile.thumbnail
             },
             stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
+            progress: 1
+        }));
+    },
+
+    /**
+     * Callback function trigger by event when image processed.
+     *
+     * @param headType
+     * @param taskResult
+     * @returns {Function}
+     */
+    onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
+        const { SVGActions, modelGroup } = getState()[headType];
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+
+        const selectedModel = selectedModels[0];
+        const processImageName = taskResult.filename;
+        if (!processImageName) {
+            return;
+        }
+
+        const svgModel = selectedModel.relatedModels.svgModel;
+        const toolPathModel = selectedModel.relatedModels.toolPathModel;
+
+        // modelGroup.updateSelectedModelProcessImage(processImageName);
+        selectedModel.updateProcessImageName(processImageName);
+
+        // SVGActions.updateElementImage(processImageName);
+        SVGActions.updateSvgModelImage(svgModel, processImageName);
+
+        // toolPathModelGroup.updateSelectedNeedPreview(true);
+        toolPathModel.updateNeedPreview(true);
+
+        // dispatch(baseActions.recordSnapshot(headType));
+        dispatch(baseActions.resetCalculatedState(headType));
+        dispatch(baseActions.render(headType));
+        dispatch(baseActions.updateState(headType, {
+            stage: CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS,
             progress: 1
         }));
     },

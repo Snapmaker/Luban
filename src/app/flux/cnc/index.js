@@ -92,6 +92,11 @@ export const actions = {
                     dispatch(editorActions.onReceiveGcodeTaskResult('cnc', taskResult));
                 }
             },
+            'taskCompleted:processImage': (taskResult) => {
+                if (taskResult.headType === 'cnc') {
+                    dispatch(editorActions.onReceiveProcessImageTaskResult('cnc', taskResult));
+                }
+            },
             'taskProgress:generateToolPath': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
                     dispatch(editorActions.updateState('cnc', {
@@ -100,6 +105,13 @@ export const actions = {
                 }
             },
             'taskProgress:generateGcode': (taskResult) => {
+                if (taskResult.headType === 'cnc') {
+                    dispatch(editorActions.updateState('cnc', {
+                        progress: taskResult.progress
+                    }));
+                }
+            },
+            'taskProgress:processImage': (taskResult) => {
                 if (taskResult.headType === 'cnc') {
                     dispatch(editorActions.updateState('cnc', {
                         progress: taskResult.progress

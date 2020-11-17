@@ -1,4 +1,8 @@
-import TaskManager, { TASK_TYPE_GENERATE_GCODE, TASK_TYPE_GENERATE_TOOLPATH } from './TaskManager';
+import TaskManager, {
+    TASK_TYPE_GENERATE_GCODE,
+    TASK_TYPE_GENERATE_TOOLPATH,
+    TASK_TYPE_PROCESS_IMAGE
+} from './TaskManager';
 
 const instance = new TaskManager();
 
@@ -27,10 +31,15 @@ const addGenerateGcodeTask = (socket, task) => {
     instance.addTask(socket, task.data, task.taskId, task.headType, TASK_TYPE_GENERATE_GCODE);
 };
 
+const addProcessImageTask = (socket, task) => {
+    instance.addTask(socket, task.data, task.taskId, task.headType, TASK_TYPE_PROCESS_IMAGE);
+};
+
 export default {
     instance,
     start,
     stop,
     addGenerateToolPathTask,
-    addGenerateGcodeTask
+    addGenerateGcodeTask,
+    addProcessImageTask
 };

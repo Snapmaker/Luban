@@ -253,6 +253,18 @@ class Visualizer extends Component {
                 return i18n._('Generated G-code successfully.');
             case CNC_LASER_STAGE.GENERATE_GCODE_FAILED:
                 return i18n._('Failed to generate G-code.');
+            case CNC_LASER_STAGE.UPLOADING_IMAGE:
+                return i18n._('Loading object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS:
+                return i18n._('Loaded object successfully.');
+            case CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED:
+                return i18n._('Failed to load object.');
+            case CNC_LASER_STAGE.PROCESSING_IMAGE:
+                return i18n._('Processing image {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
+                return i18n._('Process image successfully.');
+            case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
+                return i18n._('Failed to process image.');
             default:
                 return '';
         }
