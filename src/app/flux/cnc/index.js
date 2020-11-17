@@ -77,9 +77,6 @@ export const actions = {
         modelGroup.setDataChangedCallback(() => {
             dispatch(editorActions.render('cnc'));
         });
-
-        dispatch(editorActions.init('cnc'));
-
         // TODO: not yet to clear old events before regist
         const controllerEvents = {
             'taskCompleted:generateToolPath': (taskResult) => {
