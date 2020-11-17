@@ -459,7 +459,7 @@ class SVGActionsFactory {
         this.modelGroup.updateSelectedGroupTransformation(transformation);
         this.resetSelection();
 
-        this.invokeModelTransformCallback();
+        // this.invokeModelTransformCallback();
     }
 
     addSelectedSvgModelsByModels(models) {

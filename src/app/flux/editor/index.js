@@ -370,7 +370,10 @@ export const actions = {
         const { SVGActions } = getState()[headType];
         SVGActions.updateSelectedElementsTransformation(transformation);
 
-        dispatch(actions.processSelectedModel(headType));
+        // note that reprocess model only after resize and flip
+        if (transformation.scaleX || transformation.scaleY) {
+            dispatch(actions.processSelectedModel(headType));
+        }
         dispatch(actions.resetProcessState(headType));
     },
 
@@ -1153,6 +1156,7 @@ export const actions = {
 
         SVGActions.afterResizeElement(element);
         dispatch(actions.resetProcessState(headType));
+        dispatch(actions.processSelectedModel(headType));
     },
 
     /**
