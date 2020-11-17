@@ -4,8 +4,7 @@ import ConvexGeometry from '../components/three-extensions/ConvexGeometry';
 // import api from '../api';
 
 onmessage = (e) => {
-    const { options } = e.data;
-    const { uploadPath } = options;
+    const { uploadPath } = e.data;
     new ModelLoader().load(
         uploadPath,
         (geometry) => {
