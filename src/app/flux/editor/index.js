@@ -248,7 +248,7 @@ export const actions = {
 
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
+        const { SVGActions, toolPathModelGroup } = getState()[headType];
         if (!isMultiSelect) {
             // remove all selected model
             dispatch(actions.clearSelection(headType));
@@ -256,19 +256,12 @@ export const actions = {
 
         SVGActions.addSelectedSvgModelsByModels([model]);
 
-        toolPathModelGroup.selectToolPathModel(model.modelID);
         // todo, donot reset here
         SVGActions.resetSelection();
 
-        const selectedModelState = modelGroup.state;
-        // todo, multi select tool path model
+        // todo, multi select tool path model and `modelGroup.state` is undefined
         const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
-
-        const state = {
-            ...selectedModelState,
-            ...toolPathModelState
-        };
-        dispatch(baseActions.updateState(headType, state));
+        dispatch(baseActions.updateState(headType, toolPathModelState));
     },
 
     // todo, select model by toolPathModel ??? meshObject ???
@@ -283,6 +276,8 @@ export const actions = {
                 SVGActions.addSelectedSvgModelsByModels([model]);
 
                 toolPathModelGroup.selectToolPathModel(model.modelID);
+                const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
+                dispatch(baseActions.updateState(headType, toolPathModelState));
                 dispatch(baseActions.render(headType));
             }
         }
