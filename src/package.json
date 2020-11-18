@@ -37,7 +37,6 @@
     "express": "~4.16.3",
     "express-jwt": "~5.3.1",
     "express-session": "~1.15.6",
-    "font-manager": "^0.3.1",
     "hogan.js": "~3.0.2",
     "i18next": "~11.4.0",
     "i18next-express-middleware": "~1.2.0",

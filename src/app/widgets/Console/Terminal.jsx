@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import UniApi from '../../lib/uni-api';
 import log from '../../lib/log';
 import styles from './index.styl';
 
@@ -101,7 +102,7 @@ class TerminalWrapper extends PureComponent {
                 // }
                 // control + c
                 if (domEvent.ctrlKey && domEvent.key === 'c') {
-                    document.execCommand('copy');
+                    UniApi.Window.copySelection(this.term.getSelection());
                 }
             }
         );
