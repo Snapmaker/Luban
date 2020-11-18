@@ -5,7 +5,7 @@ import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
 // eslint-disable-next-line import/no-unresolved
-import libFontManager from 'font-manager';
+import libFontManager from 'font-scanner';
 import logger from './logger';
 
 
