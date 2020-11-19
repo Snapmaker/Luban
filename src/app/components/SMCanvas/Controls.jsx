@@ -238,7 +238,7 @@ class Controls extends EventEmitter {
             case THREE.MOUSE.RIGHT:
                 this.state = STATE.PAN;
                 this.panMoved = false;
-                this.onClick(event);
+                this.onClick(event, true);
                 this.handleMouseDownPan(event);
                 break;
             default:
@@ -317,7 +317,7 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-    onClick = (event) => {
+    onClick = (event, isRightClick = false) => {
         if (!this.selectedGroup) {
             return;
         }
@@ -338,7 +338,7 @@ class Controls extends EventEmitter {
             const intersect = this.ray.intersectObjects(allObjects, false)[0];
 
             const isMultiSelect = event.shiftKey;
-            this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
+            this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect, isRightClick);
 
             if (this.sourceType === '3D') {
                 this.transformControl.attach(this.selectedGroup);

@@ -75,8 +75,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModels: (intersect, isMultiSelect) => {
-            this.props.selectMultiModel(intersect, isMultiSelect);
+        onSelectModels: (intersect, isMultiSelect, isRightClick) => {
+            this.props.selectMultiModel(intersect, isMultiSelect, isRightClick);
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
@@ -353,7 +353,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectMultiModel: (intersect, isMultiSelect) => dispatch(printingActions.selectMultiModel(intersect, isMultiSelect)),
+    selectMultiModel: (intersect, isMultiSelect, isRightClick) => dispatch(printingActions.selectMultiModel(intersect, isMultiSelect, isRightClick)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),

@@ -558,29 +558,59 @@ class ModelGroup extends EventEmitter {
     }
 
     // use for canvas
-    selectMultiModel(intersect, isMultiSelect) {
+    selectMultiModel(intersect, isMultiSelect, isRightClick) {
         this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
-            if (intersect) {
-                const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                if (objectIndex === -1) {
-                    const model = this.models.find(d => d.meshObject === intersect.object);
-                    if (model) {
-                        this.addModelToSelectedGroup(model);
+            if (isRightClick) {
+                if (intersect) {
+                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                    if (objectIndex === -1) {
+                        this.unselectAllModels();
+                        const model = this.models.find(d => d.meshObject === intersect.object);
+                        if (model) {
+                            this.addModelToSelectedGroup(model);
+                        }
                     }
                 } else {
-                    const model = this.models.find(d => d.meshObject === intersect.object);
-                    if (model) {
-                        this.removeModelFromSelectedGroup(model);
+                    this.unselectAllModels();
+                }
+            } else {
+                if (intersect) {
+                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                    if (objectIndex === -1) {
+                        const model = this.models.find(d => d.meshObject === intersect.object);
+                        if (model) {
+                            this.addModelToSelectedGroup(model);
+                        }
+                    } else {
+                        const model = this.models.find(d => d.meshObject === intersect.object);
+                        if (model) {
+                            this.removeModelFromSelectedGroup(model);
+                        }
                     }
                 }
             }
         } else {
-            this.unselectAllModels();
-            if (intersect) {
-                const model = this.models.find(d => d.meshObject === intersect.object);
-                if (model) {
-                    this.addModelToSelectedGroup(model);
+            if (isRightClick) {
+                if (intersect) {
+                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                    if (objectIndex === -1) {
+                        this.unselectAllModels();
+                        const model = this.models.find(d => d.meshObject === intersect.object);
+                        if (model) {
+                            this.addModelToSelectedGroup(model);
+                        }
+                    }
+                } else {
+                    this.unselectAllModels();
+                }
+            } else if (!isRightClick) {
+                this.unselectAllModels();
+                if (intersect) {
+                    const model = this.models.find(d => d.meshObject === intersect.object);
+                    if (model) {
+                        this.addModelToSelectedGroup(model);
+                    }
                 }
             }
         }
