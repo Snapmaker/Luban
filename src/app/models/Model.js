@@ -403,11 +403,6 @@ class Model {
         if (height) {
             this.transformation.height = height;
         }
-        // because of text source has been transformed
-        if (this.config && this.config.svgNodeName === 'text') {
-            this.meshObject.scale.x = Math.abs(scaleX);
-            this.meshObject.scale.y = Math.abs(scaleY);
-        }
         this.transformation = { ...this.transformation };
         return this.transformation;
     }
