@@ -447,8 +447,8 @@ class LaserToolPathGenerator extends EventEmitter {
         flip(svg, 1);
         flip(svg, flipFlag);
         scale(svg, {
-            x: targetWidth / originWidth,
-            y: targetHeight / originHeight
+            x: (transformation.scaleX < 0 ? -1 : 1) * targetWidth / originWidth,
+            y: (transformation.scaleY < 0 ? -1 : 1) * targetHeight / originHeight
         });
 
         // For performance reason, we only optimize SVG with number of shapes less than 2000

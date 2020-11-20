@@ -22,6 +22,7 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
+    console.log('laser tool path', modelInfo);
     // no need to process model
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace'))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
