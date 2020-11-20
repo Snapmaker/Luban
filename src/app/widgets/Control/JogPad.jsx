@@ -288,7 +288,6 @@ const JogPad = React.memo((props) => {
                                     className="btn btn-sm btn-outline-secondary jog-z-minus"
                                     onClick={() => {
                                         const angle = actions.getJogAngle();
-                                        console.log('angel -----', angle);
                                         actions.jog({ B: -angle });
                                     }}
                                     disabled={!canClick}

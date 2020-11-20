@@ -37,6 +37,10 @@ class ModelGroup extends EventEmitter {
         this._bbox = null;
     }
 
+    setMaterials(materials) {
+        this.materials = materials;
+    }
+
     setDataChangedCallback(handler) {
         this.onDataChangedCallback = handler;
     }

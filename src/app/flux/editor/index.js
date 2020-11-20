@@ -182,7 +182,7 @@ export const actions = {
         let { width, height } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
         // Generate geometry
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
 
         if (!checkParams(headType, sourceType, mode)) {
             console.error(`sourceType or mode error, sourceType:${sourceType}, mode:${mode}`);
@@ -307,14 +307,14 @@ export const actions = {
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, toolPathModelGroup, materials } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
         }
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
 
         const selectedModel = selectedModels[0];
 
@@ -383,7 +383,7 @@ export const actions = {
     },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
-        const { modelGroup } = getState()[headType];
+        const { modelGroup, materials } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -392,7 +392,7 @@ export const actions = {
 
         const selectedModel = selectedModels[0];
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, selectedModel.sourceType, selectedModel.mode);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, selectedModel.sourceType, selectedModel.mode, materials.isRotate);
         const newConfig = {
             ...modelDefaultConfigs.config,
             ...selectedModel.config,
@@ -1394,7 +1394,7 @@ export const actions = {
     },
 
     updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
-        const { materials, toolPathModelGroup } = getState()[headType];
+        const { materials, modelGroup, toolPathModelGroup } = getState()[headType];
         const allMaterials = {
             ...materials,
             ...newMaterials
@@ -1409,6 +1409,7 @@ export const actions = {
             allMaterials.x = 0;
             allMaterials.y = 0;
         }
+        modelGroup.setMaterials(allMaterials);
         if (headType === 'laser') {
             toolPathModelGroup.updateMaterials(allMaterials);
         }

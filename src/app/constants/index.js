@@ -239,6 +239,7 @@ export const SOURCE_TYPE_DXF = 'dxf';
 export const SOURCE_TYPE_IMAGE3D = 'image3d';
 
 export const PROCESS_MODE_BW = 'bw';
+export const PROCESS_MODE_HALFTONE = 'halftone';
 export const PROCESS_MODE_VECTOR = 'vector';
 export const PROCESS_MODE_GREYSCALE = 'greyscale';
 export const PROCESS_MODE_ROTATION = 'rotation';

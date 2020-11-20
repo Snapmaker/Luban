@@ -112,7 +112,6 @@ class Visualizer extends Component {
             this.props.updateTarget({ x: 0, y: 0 });
         },
         onSelectModels: (intersect) => {
-            console.log('selectModel', intersect);
             this.props.selectModel(intersect);
         },
         /*

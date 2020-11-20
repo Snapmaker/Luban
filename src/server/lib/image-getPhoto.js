@@ -80,7 +80,6 @@ export const calibrationPhoto = (options) => {
 
 export const setMatrix = (options) => {
     const { matrix, address } = options;
-    console.log('setMatrix>>>>', matrix, address);
     let api = `http://${address}:8080/api/set_camera_calibration_matrix`;
     api += `?matrix=${matrix}`;
     return new Promise((resolve) => {

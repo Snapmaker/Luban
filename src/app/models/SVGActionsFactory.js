@@ -516,6 +516,7 @@ class SVGActionsFactory {
      */
     async createModelFromElement(element) {
         const headType = this.modelGroup.headType;
+        const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
         const svgModel = new SvgModel(element, this.size);
         this.svgModels.push(svgModel);
         svgModel.setParent(this.svgContentGroup.group);
@@ -540,7 +541,7 @@ class SVGActionsFactory {
             }
 
 
-            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
+            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
 
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };

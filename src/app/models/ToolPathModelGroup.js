@@ -307,28 +307,27 @@ class ToolPathModelGroup {
         return this.MOCK_MODEL;
     }
 
-    // eslint-disable-next-line no-unused-vars
     updateMaterials(materials) {
-        // this.materialsObj && this.toolPathObjs.remove(this.materialsObj);
-        // if (materials.isRotate) {
-        //     const geometry = new THREE.CylinderGeometry(materials.diameter / 2 - 0.1, materials.diameter / 2 - 0.1, materials.length, 32);
-        //     const texture = new THREE.TextureLoader().load('../../images/wood.png');
-        //     const material = new THREE.MeshPhongMaterial(
-        //         {
-        //             color: '#ffffff',
-        //             shininess: 0,
-        //             map: texture,
-        //             transparent: true,
-        //             opacity: 0.9,
-        //             blending: THREE.MultiplyBlending,
-        //             depthTest: false
-        //         }
-        //     );
-        //     const mesh = new THREE.Mesh(geometry, material);
-        //     mesh.position.y = materials.length / 2;
-        //     this.materialsObj = mesh;
-        //     this.toolPathObjs.add(mesh);
-        // }
+        this.materialsObj && this.toolPathObjs.remove(this.materialsObj);
+        if (materials.isRotate) {
+            const geometry = new THREE.CylinderGeometry(materials.diameter / 2 - 0.1, materials.diameter / 2 - 0.1, materials.length, 32);
+            const texture = new THREE.TextureLoader().load('../../images/wood.png');
+            const material = new THREE.MeshPhongMaterial(
+                {
+                    color: '#ffffff',
+                    shininess: 0,
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.9,
+                    blending: THREE.MultiplyBlending,
+                    depthTest: false
+                }
+            );
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.y = materials.length / 2;
+            this.materialsObj = mesh;
+            this.toolPathObjs.add(mesh);
+        }
     }
 }
 
