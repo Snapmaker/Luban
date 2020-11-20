@@ -12,8 +12,8 @@ import { ABSENT_VALUE } from '../../../constants';
 
 class GcodeConfigGreyscale extends PureComponent {
     static propTypes = {
-        density: PropTypes.number.isRequired,
-        movementMode: PropTypes.string.isRequired,
+        density: PropTypes.number,
+        movementMode: PropTypes.string,
         disabled: PropTypes.bool,
 
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
@@ -122,6 +122,7 @@ const mapStateToProps = (state) => {
     // const toolPathModel = toolPathModelGroup.getSelectedModel();
     const toolPathModelGroup = state.laser.toolPathModelGroup;
     const toolPathModel = toolPathModelGroup.getSelectedModel();
+
     const { gcodeConfig } = toolPathModel;
     const { density, movementMode } = gcodeConfig;
     return {

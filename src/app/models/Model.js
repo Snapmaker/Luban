@@ -231,16 +231,16 @@ class Model {
         };
     }
 
-    updateVisible(param) {
-        if (param === false) {
-            this.modelObject3D && (this.modelObject3D.visible = param);
-            this.processObject3D && (this.processObject3D.visible = param);
-        } else {
-            // todo
-            this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
-            this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
-        }
-    }
+    // updateVisible(param) {
+    //     if (param === false) {
+    //         this.modelObject3D && (this.modelObject3D.visible = param);
+    //         this.processObject3D && (this.processObject3D.visible = param);
+    //     } else {
+    //         // todo
+    //         this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
+    //         this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
+    //     }
+    // }
 
     getModeConfig(mode) {
         if (this.sourceType !== 'raster') {

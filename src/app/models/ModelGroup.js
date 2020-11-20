@@ -520,6 +520,7 @@ class ModelGroup extends EventEmitter {
         } else {
             state = this._getEmptyState();
         }
+        this.emit('select', modelArray);
         this.onDataChangedCallback();
 
         return state;
@@ -949,9 +950,6 @@ class ModelGroup extends EventEmitter {
 
     showAllModelsObj3D() {
         this.object.visible = true;
-        // for (const model of this.getModels()) {
-        //     model.updateVisible(true);
-        // }
     }
 
     _computeAvailableXY(model) {

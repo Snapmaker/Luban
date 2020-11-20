@@ -54,10 +54,10 @@ class GcodeToBufferGeometryWorkspace {
             const calculateXYZ = (state, modal) => {
                 const { headerType, isRotate = false, diameter } = modal;
                 let z = state.z;
-                if (isRotate && headerType === 'laser' && state.b) {
+                if (isRotate && headerType === 'laser') {
                     z = diameter / 2;
                 }
-                const res = Vector2.rotate({ x: state.x, y: z }, -state.b);
+                const res = Vector2.rotate({ x: state.x, y: z }, -state.b || 0);
                 return {
                     x: res.x,
                     y: state.y,

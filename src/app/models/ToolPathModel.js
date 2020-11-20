@@ -38,10 +38,6 @@ class ToolPathModel {
         this.isPreview = false;
     }
 
-    updateVisible(param) {
-        this.toolPathObj3D && (this.toolPathObj3D.visible = param);
-    }
-
 
     updateMode(mode, gcodeConfig) {
         if (mode === this.mode) {

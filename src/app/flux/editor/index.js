@@ -67,16 +67,8 @@ export const actions = {
 
     ...baseActions,
 
-    init: (headType) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-
-        SVGActions.setModelTransformCallback(() => {
-            // dispatch(actions.processSelectedModel(headType));
-            dispatch(actions.showAllModelsObj3D(headType));
-        });
-
+    init: (headType) => (dispatch) => {
         const materials = machineStore.get(`${headType}.materials`);
-        console.log('materials', materials);
         if (materials) {
             dispatch(actions.updateMaterials(headType, materials));
         }
@@ -298,10 +290,9 @@ export const actions = {
 
         dispatch(actions.clearSelection(headType));
 
-        toolPathModelGroup.selectToolPathModel();
-
         if (intersect) {
             const model = modelGroup.getSelectedModelByIntersect(intersect);
+
             if (model) {
                 SVGActions.addSelectedSvgModelsByModels([model]);
 
@@ -310,6 +301,8 @@ export const actions = {
                 dispatch(baseActions.updateState(headType, toolPathModelState));
                 dispatch(baseActions.render(headType));
             }
+        } else {
+            toolPathModelGroup.selectToolPathModel();
         }
     },
 
@@ -821,6 +814,7 @@ export const actions = {
                     isAllModelsPreviewed: isAllModelsPreviewed
                 }));
                 dispatch(actions.showAllToolPathsObj3D(headType));
+                dispatch(baseActions.render(headType));
             }
         }
     },
@@ -835,7 +829,6 @@ export const actions = {
     initSelectedModelListener: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
-        // modelGroup.addEventListener('update', () => {
         modelGroup.object.addEventListener('update', () => {
             dispatch(baseActions.render(headType));
         });
@@ -858,17 +851,12 @@ export const actions = {
         modelGroup.hideAllModelsObj3D();
         toolPathModelGroup.showAllToolPathModels();
         toolPathModelGroup.showToolPathObjs();
-        dispatch(baseActions.render(headType));
     },
 
     showAllModelsObj3D: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[headType];
         modelGroup.showAllModelsObj3D();
         toolPathModelGroup.hideAllToolPathModels();
-
-        dispatch(baseActions.updateState(headType, {
-            isAllModelsPreviewed: false
-        }));
     },
 
     onReceiveTaskResult: (headType, taskResult) => async (dispatch, getState) => {
@@ -1001,7 +989,7 @@ export const actions = {
         }
 
         const svgModel = selectedModel.relatedModels.svgModel;
-        const toolPathModel = selectedModel.relatedModels.toolPathModel;
+        // const toolPathModel = selectedModel.relatedModels.toolPathModel;
 
         // const { width, height } = res.body;
         //
@@ -1024,9 +1012,6 @@ export const actions = {
 
         // SVGActions.updateElementImage(processImageName);
         SVGActions.updateSvgModelImage(svgModel, processImageName);
-
-        // toolPathModelGroup.updateSelectedNeedPreview(true);
-        toolPathModel.updateNeedPreview(true);
 
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));
@@ -1282,6 +1267,7 @@ export const actions = {
      */
     resetProcessState: (headType) => (dispatch, getState) => {
         const { isAllModelsPreviewed } = getState()[headType];
+        dispatch(actions.showAllModelsObj3D(headType));
         if (isAllModelsPreviewed) {
             dispatch(baseActions.updateState(headType, {
                 isAllModelsPreviewed: false

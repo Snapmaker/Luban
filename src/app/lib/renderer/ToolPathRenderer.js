@@ -44,6 +44,7 @@ export const materialUnselected = new THREE.ShaderMaterial({
     fragmentShader: CNC_LASER_FRAG_SHADER,
     side: THREE.DoubleSide,
     transparent: true,
+    opacity: 0.9,
     linewidth: 1
 });
 export const materialSelected = new THREE.ShaderMaterial({
@@ -52,9 +53,11 @@ export const materialSelected = new THREE.ShaderMaterial({
     fragmentShader: CNC_LASER_FRAG_SELECT_SHADER,
     side: THREE.DoubleSide,
     transparent: true,
+    opacity: 0.9,
     linewidth: 1
 });
 
+// eslint-disable-next-line no-unused-vars
 const motionColor = {
     'G0': new THREE.Color(0xc8c8c8),
     'G1': new THREE.Color(0x000000),
@@ -159,8 +162,6 @@ class ToolPathRenderer {
         bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
         let material;
 
-        console.log('is', isSelected);
-
         if (isSelected) {
             material = materialSelected;
         } else {
@@ -169,14 +170,9 @@ class ToolPathRenderer {
         return new THREE.Line(bufferGeometry, material);
     }
 
-    parseToPoints(data) {
-        const geometry = new THREE.Geometry();
-        const material = new THREE.PointsMaterial({
-            size: 0.1,
-            vertexColors: THREE.VertexColors,
-            opacity: 0.9,
-            transparent: true
-        });
+    parseToPoints(data, isSelected) {
+        const positions = [];
+        const gCodes = [];
         let state = {
             G: 0,
             X: 0,
@@ -200,23 +196,30 @@ class ToolPathRenderer {
                 || state.B !== newState.B) {
                 state = newState;
                 const res = this.calculateXYZ(state);
-                geometry.vertices.push(new THREE.Vector3(res.X, res.Y, res.Z));
-                if (state.G === 0) {
-                    geometry.colors.push(motionColor.G0);
-                } else if (state.G === 1) {
-                    geometry.colors.push(motionColor.G1);
-                } else {
-                    geometry.colors.push(motionColor.unknown);
-                }
+                positions.push(res.X);
+                positions.push(res.Y);
+                positions.push(res.Z);
+                gCodes.push(state.G);
             }
         }
-        return new THREE.Points(geometry, material);
+        const bufferGeometry = new THREE.BufferGeometry();
+        const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+        const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
+        bufferGeometry.addAttribute('position', positionAttribute);
+        bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
+        let material;
+        if (isSelected) {
+            material = materialSelected;
+        } else {
+            material = materialUnselected;
+        }
+        return new THREE.Points(bufferGeometry, material);
     }
 
     calculateXYZ(state) {
         const { headType, isRotate = false, diameter } = this.toolPath;
         let z = state.Z;
-        if (isRotate && headType === 'laser' && state.B) {
+        if (isRotate && headType === 'laser') {
             z = diameter / 2;
         }
         const res = Vector2.rotate({ x: state.X, y: z }, -state.B);
