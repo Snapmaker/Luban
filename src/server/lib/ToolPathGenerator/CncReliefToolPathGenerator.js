@@ -201,15 +201,12 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             updated = false;
             for (let i = 0; i < width; i++) {
                 for (let j = 0; j < height; j++) {
-                    if (data[i][j] < 0) {
-                        continue;
-                    }
-                    let allowedDepth = 0;
+                    let allowedDepth = -255;
                     if (depthOffsetRatio < 255) {
                         for (let k = 0; k < 8; k++) {
                             const i2 = i + dx[k];
                             const j2 = j + dy[k];
-                            if (i2 < 0 || i2 > width - 1 || j2 < 0 || j2 > height - 1 || data[i2][j2] < 0) {
+                            if (i2 < 0 || i2 > width - 1 || j2 < 0 || j2 > height - 1) {
                                 continue;
                             }
                             allowedDepth = Math.max(allowedDepth, data[i2][j2]);

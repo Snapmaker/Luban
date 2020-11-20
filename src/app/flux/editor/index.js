@@ -9,7 +9,7 @@ import {
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
-import { PAGE_PROCESS } from '../../constants';
+import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants';
 
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
@@ -991,21 +991,21 @@ export const actions = {
         const svgModel = selectedModel.relatedModels.svgModel;
         // const toolPathModel = selectedModel.relatedModels.toolPathModel;
 
-        // const { width, height } = res.body;
-        //
-        //                 const svgModel = model.relatedModels.svgModel;
-        //                 const { sourceWidth, sourceHeight } = sizeModelByMachineSize(size, width, height);
-        //                 const modelOptions = {
-        //                     sourceWidth: sourceWidth,
-        //                     sourceHeight: sourceHeight,
-        //                     width: width,
-        //                     height: height,
-        //                     transformation: {
-        //                         width: width * model.transformation.scaleX,
-        //                         height: height * model.transformation.scaleY
-        //                     }
-        //                 };
-        //                 model.updateAndRefresh(modelOptions);
+        if (selectedModel.sourceType === SOURCE_TYPE_IMAGE3D) {
+            const { width, height } = taskResult;
+            const modelOptions = {
+                sourceWidth: width * DEFAULT_SCALE,
+                sourceHeight: height * DEFAULT_SCALE,
+                width: width,
+                height: height,
+                transformation: {
+                    width: Math.abs(width * selectedModel.transformation.scaleX),
+                    height: Math.abs(height * selectedModel.transformation.scaleY)
+                }
+            };
+            selectedModel.updateAndRefresh(modelOptions);
+            SVGActions.resetSelection();
+        }
 
         // modelGroup.updateSelectedModelProcessImage(processImageName);
         selectedModel.updateProcessImageName(processImageName);

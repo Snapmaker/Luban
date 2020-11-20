@@ -116,6 +116,8 @@ class TaskManager extends EventEmitter {
             } else if (taskSelected.taskType === TASK_TYPE_PROCESS_IMAGE) {
                 const res = await processImage(taskSelected.data, onProgress);
                 taskSelected.filename = res.filename;
+                taskSelected.width = res.width;
+                taskSelected.height = res.height;
             }
 
 

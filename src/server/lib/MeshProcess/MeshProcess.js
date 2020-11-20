@@ -277,7 +277,10 @@ export class MeshProcess {
         for (let i = 0; i < slicer.slicerLayers.length; i++) {
             data[i] = [];
             const slicerLayer = slicer.slicerLayers[i];
-            for (const polygon of slicerLayer.polygons.polygons) {
+
+            const polygons = [].concat(slicerLayer.polygonsPart.polygons).concat(slicerLayer.openPolygons.polygons);
+
+            for (const polygon of polygons) {
                 const ppath = polygon.path;
                 for (let j = 0; j < ppath.length; j++) {
                     const start = ppath[j % ppath.length];
