@@ -815,10 +815,10 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    selectMultiModel: (intersect, isMultiSelect, isRightClick) => (dispatch, getState) => {
+    selectMultiModel: (intersect, selectEvent) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
 
-        const modelState = modelGroup.selectMultiModel(intersect, isMultiSelect, isRightClick);
+        const modelState = modelGroup.selectMultiModel(intersect, selectEvent);
         dispatch(actions.updateState(modelState));
 
         dispatch(actions.render());

@@ -5,6 +5,7 @@ import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
 import Model from './Model';
+import { SELECTEVENT } from '../constants';
 
 const materialNormal = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 const materialSelected = new MeshPhongMaterial({ color: 0xf0f0f0 });
@@ -431,6 +432,7 @@ class ModelGroup extends EventEmitter {
             this.models.push(newModel);
             this.object.add(newModel.meshObject);
         }
+        this.unselectAllModels();
         return this._getEmptyState();
     }
 
@@ -558,61 +560,33 @@ class ModelGroup extends EventEmitter {
     }
 
     // use for canvas
-    selectMultiModel(intersect, isMultiSelect, isRightClick) {
+    selectMultiModel(intersect, selectEvent) {
         this.removeSelectedObjectParentMatrix();
-        if (isMultiSelect) {
-            if (isRightClick) {
-                if (intersect) {
-                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                    if (objectIndex === -1) {
-                        this.unselectAllModels();
-                        const model = this.models.find(d => d.meshObject === intersect.object);
-                        if (model) {
-                            this.addModelToSelectedGroup(model);
-                        }
-                    }
-                } else {
-                    this.unselectAllModels();
-                }
-            } else {
-                if (intersect) {
-                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                    if (objectIndex === -1) {
-                        const model = this.models.find(d => d.meshObject === intersect.object);
-                        if (model) {
-                            this.addModelToSelectedGroup(model);
-                        }
-                    } else {
-                        const model = this.models.find(d => d.meshObject === intersect.object);
-                        if (model) {
-                            this.removeModelFromSelectedGroup(model);
-                        }
-                    }
-                }
-            }
-        } else {
-            if (isRightClick) {
-                if (intersect) {
-                    const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                    if (objectIndex === -1) {
-                        this.unselectAllModels();
-                        const model = this.models.find(d => d.meshObject === intersect.object);
-                        if (model) {
-                            this.addModelToSelectedGroup(model);
-                        }
-                    }
-                } else {
-                    this.unselectAllModels();
-                }
-            } else if (!isRightClick) {
+        let model;
+        switch (selectEvent) {
+            case SELECTEVENT.UNSELECT:
                 this.unselectAllModels();
-                if (intersect) {
-                    const model = this.models.find(d => d.meshObject === intersect.object);
-                    if (model) {
-                        this.addModelToSelectedGroup(model);
-                    }
+                break;
+            case SELECTEVENT.UNSELECT_SINGLESELECT:
+                this.unselectAllModels();
+                model = this.models.find(d => d.meshObject === intersect.object);
+                if (model) {
+                    this.addModelToSelectedGroup(model);
                 }
-            }
+                break;
+            case SELECTEVENT.ADDSELECT:
+                model = this.models.find(d => d.meshObject === intersect.object);
+                if (model) {
+                    this.addModelToSelectedGroup(model);
+                }
+                break;
+            case SELECTEVENT.REMOVESELECT:
+                model = this.models.find(d => d.meshObject === intersect.object);
+                if (model) {
+                    this.removeModelFromSelectedGroup(model);
+                }
+                break;
+            default:
         }
         this.resetSelectedObjectWhenMultiSelect();
         this.applySelectedObjectParentMatrix();

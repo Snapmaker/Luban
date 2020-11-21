@@ -202,8 +202,8 @@ class Canvas extends Component {
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
         });
-        this.controls.on(EVENTS.SELECT_OBJECTS, (intersect, isMultiSelect, isRightClick) => {
-            this.onSelectModels(intersect, isMultiSelect, isRightClick);
+        this.controls.on(EVENTS.SELECT_OBJECTS, (intersect, selectEvent) => {
+            this.onSelectModels(intersect, selectEvent);
         });
 
         this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
