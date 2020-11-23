@@ -241,6 +241,17 @@ const Window = {
             title = `${this.initTitle} / ${filename}`;
         }
         this.window.setTitle(title);
+    },
+
+    copySelection(text) {
+        if (isElectron()) {
+            const clipboard = window.require('electron').clipboard;
+            clipboard.writeText(text, 'selection');
+        } else {
+            navigator.clipboard.writeText(text);
+            // execCommand is unstable
+            // document.execCommand('copy', true, text);
+        }
     }
 };
 

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import UniApi from '../../lib/uni-api';
 import log from '../../lib/log';
 import styles from './index.styl';
 
@@ -75,6 +76,10 @@ class TerminalWrapper extends PureComponent {
             rows: 16,
             // bar, block, underline
             cursorStyle: 'block',
+            theme: {
+                // set cursor color the same to the background, for hiding
+                cursor: 'black'
+            },
             cursorBlink: false,
             scrollback: 1000,
             tabStopWidth: 4
@@ -87,6 +92,20 @@ class TerminalWrapper extends PureComponent {
         };
         this.term.onResize(this.eventHandler.onResize);
         this.term.onData(this.eventHandler.onPaste);
+        this.term.onKey(
+            (e) => {
+                const { domEvent } = e;
+                // // control + a
+                // if (domEvent.ctrlKey && domEvent.key === 'a') {
+                //     this.term.selectAll();
+                //     document.execCommand('copy');
+                // }
+                // control + c
+                if (domEvent.ctrlKey && domEvent.key === 'c') {
+                    UniApi.Window.copySelection(this.term.getSelection());
+                }
+            }
+        );
 
         const el = this.terminalContainer.current;
         this.term.open(el);
@@ -194,7 +213,7 @@ class TerminalWrapper extends PureComponent {
         } else {
             this.term.resize(cols, minRows);
         }
-        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight);
+        const inputHeight = height - (this.terminalContainer.current.clientHeight || rows * lineHeight) - 1;
         this.setState({
             inputHeight
         });
@@ -249,6 +268,11 @@ class TerminalWrapper extends PureComponent {
                 className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
             >
                 <div ref={this.terminalContainer} />
+                <div style={{
+                    height: '1px',
+                    backgroundColor: '#676869'
+                }}
+                />
                 <input
                     ref={this.input}
                     style={{
