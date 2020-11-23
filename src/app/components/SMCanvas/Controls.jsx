@@ -9,6 +9,7 @@ import EventEmitter from 'events';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
+import { SELECTEVENT } from '../../constants';
 
 const EPS = 0.000001;
 
@@ -238,7 +239,7 @@ class Controls extends EventEmitter {
             case THREE.MOUSE.RIGHT:
                 this.state = STATE.PAN;
                 this.panMoved = false;
-                this.onClick(event);
+                this.onClick(event, true);
                 this.handleMouseDownPan(event);
                 break;
             default:
@@ -317,7 +318,7 @@ class Controls extends EventEmitter {
      *
      * @param event
      */
-    onClick = (event) => {
+    onClick = (event, isRightClick = false) => {
         if (!this.selectedGroup) {
             return;
         }
@@ -326,6 +327,7 @@ class Controls extends EventEmitter {
         if (distance < 0.004 && this.selectableObjects.children) {
             // TODO: selectable objects should not change when objects are selected
             let allObjects = this.selectableObjects.children;
+
             if (this.selectedGroup && this.selectedGroup.children) {
                 allObjects = allObjects.concat(this.selectedGroup.children);
             }
@@ -336,9 +338,49 @@ class Controls extends EventEmitter {
 
 
             const intersect = this.ray.intersectObjects(allObjects, false)[0];
-
             const isMultiSelect = event.shiftKey;
-            this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
+
+            let selectEvent = '';
+            if (isMultiSelect) {
+                if (isRightClick) {
+                    if (intersect) {
+                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                        if (objectIndex === -1) {
+                            selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                        }
+                    } else {
+                        selectEvent = SELECTEVENT.UNSELECT;
+                    }
+                } else {
+                    if (intersect) {
+                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                        if (objectIndex === -1) {
+                            selectEvent = SELECTEVENT.ADDSELECT;
+                        } else {
+                            selectEvent = SELECTEVENT.REMOVESELECT;
+                        }
+                    }
+                }
+            } else {
+                if (isRightClick) {
+                    if (intersect) {
+                        const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+                        if (objectIndex === -1) {
+                            selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                        }
+                    } else {
+                        selectEvent = SELECTEVENT.UNSELECT;
+                    }
+                } else if (!isRightClick) {
+                    if (intersect) {
+                        selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                    } else {
+                        selectEvent = SELECTEVENT.UNSELECT;
+                    }
+                }
+            }
+
+            this.emit(EVENTS.SELECT_OBJECTS, intersect, selectEvent);
 
             if (this.sourceType === '3D') {
                 this.transformControl.attach(this.selectedGroup);

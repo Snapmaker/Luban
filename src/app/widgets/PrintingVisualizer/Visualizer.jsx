@@ -75,8 +75,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModels: (intersect, isMultiSelect) => {
-            this.props.selectMultiModel(intersect, isMultiSelect);
+        onSelectModels: (intersect, selectEvent) => {
+            this.props.selectMultiModel(intersect, selectEvent);
         },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
@@ -153,7 +153,9 @@ class Visualizer extends PureComponent {
         if (selectedModelIDArray !== this.props.selectedModelIDArray) {
             selectedModelIDArray.forEach((modelID) => {
                 const model = modelGroup.models.find(d => d.modelID === modelID);
-                modelGroup.selectedGroup.add(model.meshObject);
+                if (model) {
+                    modelGroup.selectedGroup.add(model.meshObject);
+                }
             });
             this.canvas.current.controls.updateBoundingBox();
             this.canvas.current.controls.attach(modelGroup.selectedGroup);
@@ -353,7 +355,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    selectMultiModel: (intersect, isMultiSelect) => dispatch(printingActions.selectMultiModel(intersect, isMultiSelect)),
+    selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
