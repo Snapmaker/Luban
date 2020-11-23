@@ -869,10 +869,6 @@ export const actions = {
     onReceiveTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         // const state = getState()[headType];
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-        let isSelected = false;
-        if (toolPathModelGroup.selectedToolPathModel && toolPathModelGroup.selectedToolPathModel.modelID === taskResult.taskId) {
-            isSelected = true;
-        }
         const { data, filename } = taskResult;
 
         if (taskResult.taskStatus === 'failed' && toolPathModelGroup.getToolPathModelByID(data.id)) {
@@ -890,7 +886,7 @@ export const actions = {
             progress: 0
         }));
 
-        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename, isSelected);
+        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename);
 
         if (toolPathModelState) {
             dispatch(baseActions.updateState(headType, {
