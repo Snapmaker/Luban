@@ -393,6 +393,9 @@ export const actions = {
         if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'dxf') {
             return;
         }
+        if (selectedModel.config.svgNodeName === 'text') {
+            return;
+        }
 
         const options = {
             headType: headType,

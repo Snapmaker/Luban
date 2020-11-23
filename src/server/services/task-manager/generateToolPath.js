@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import Jimp from '../../lib/jimp';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import processImage from '../../lib/image-process';
@@ -22,7 +21,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
-    console.log('laser tool path', modelInfo);
     // no need to process model
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace'))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -73,43 +71,12 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     const suffix = '.json';
     // const { mode, source } = modelInfo;
     // const originFilename = source.filename;
-    const { sourceType, mode, uploadName, config } = modelInfo;
+    const { sourceType, mode, uploadName } = modelInfo;
     // const originFilename = uploadName;
-    let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
-
-    if (config.svgNodeName === 'text') {
-        const { width, height, flip = 0 } = modelInfo.transformation;
-
-        const { density = 4 } = modelInfo.gcodeConfig || {};
-        const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
-
-        img
-            .greyscale()
-            .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
-            .resize(width * density, height * density)
-            // .rotate(-rotationZ * 180 / Math.PI)
-            .background(0xffffffff);
-
-        // Turn transparent to white.
-        img.alphaToWhite();
-
-        // text to be engraved, so invert to turn black to white.
-        img.invert();
-
-        const result = await new Promise(resolve => {
-            const outputFilename = pathWithRandomSuffix(uploadName);
-            img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
-                resolve({
-                    filename: outputFilename
-                });
-            });
-        });
-        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
-    }
+    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
 
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
-
 
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         let toolPath;

@@ -532,13 +532,8 @@ class SVGActionsFactory {
             const res = await api.uploadImage(formData);
 
             const { originalName, uploadName } = res.body;
-            let sourceType = 'svg';
-            let mode = 'vector';
-            if (svgModel.type === 'text' && headType === 'cnc') {
-                sourceType = 'raster';
-                mode = 'greyscale';
-            }
-
+            const sourceType = 'svg';
+            const mode = 'vector';
 
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
 
