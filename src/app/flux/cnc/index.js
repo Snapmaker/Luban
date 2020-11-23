@@ -6,7 +6,6 @@ import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
     ACTION_UPDATE_STATE,
-    ACTION_UPDATE_MATERIALS,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
@@ -83,13 +82,6 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
-    updateMaterials: (headType, materials) => {
-        return {
-            headType,
-            type: ACTION_UPDATE_MATERIALS,
-            materials
-        };
-    },
     init: () => (dispatch, getState) => {
         const { modelGroup } = getState().cnc;
         modelGroup.setDataChangedCallback(() => {
@@ -189,11 +181,6 @@ export default function reducer(state = INITIAL_STATE, action) {
             case ACTION_UPDATE_CONFIG: {
                 return Object.assign({}, state, {
                     config: { ...state.config, ...action.config }
-                });
-            }
-            case ACTION_UPDATE_MATERIALS: {
-                return Object.assign({}, state, {
-                    materials: { ...state.materials, ...action.materials }
                 });
             }
             default:

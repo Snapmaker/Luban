@@ -19,8 +19,6 @@ import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
 import { Server } from './Server';
 import { actions as printingActions } from '../printing';
-import { actions as cncActions } from '../cnc';
-import { actions as laserActions } from '../laser';
 import { actions as editorActions } from '../editor';
 import { actions as widgetActions } from '../widget';
 import History from './History';
@@ -213,15 +211,6 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: true
                         }));
-                        if (headType.toLowerCase() === 'cnc') {
-                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
-                            }));
-                        } else if (headType.toLowerCase() === 'laser') {
-                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
-                            }));
-                        }
                         dispatch(actions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -236,15 +225,6 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: false
                         }));
-                        if (headType.toLowerCase() === 'cnc') {
-                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
-                            }));
-                        } else if (headType.toLowerCase() === 'laser') {
-                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
-                            }));
-                        }
                         dispatch(actions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -640,7 +620,6 @@ export const actions = {
                     heatedBedTargetTemperature,
                     isEmergencyStopped
                 } = result.data;
-
                 if (isEmergencyStopped) {
                     dispatch(actions.close(null, true));
                     server.close(() => {
@@ -661,23 +640,15 @@ export const actions = {
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
                     isEmergencyStopped: isEmergencyStopped
                 }));
+                // make 'workPosition' value as Number
                 if (!(_.isUndefined(b))) {
-                    if (workPosition.x !== x
-                                       || workPosition.y !== y
-                                       || workPosition.z !== z
-                                       || workPosition.b !== b) {
+                    if (Number(workPosition.x) !== x
+                       || Number(workPosition.y) !== y
+                       || Number(workPosition.z) !== z
+                       || Number(workPosition.b) !== b) {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: true
                         }));
-                        if (headType.toLowerCase() === 'cnc') {
-                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
-                            }));
-                        } else if (headType.toLowerCase() === 'laser') {
-                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: true
-                            }));
-                        }
                         dispatch(actions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
@@ -690,21 +661,12 @@ export const actions = {
                         }));
                     }
                 } else {
-                    if (workPosition.x !== x
-                                       || workPosition.y !== y
-                                       || workPosition.z !== z) {
+                    if (Number(workPosition.x) !== x
+                       || Number(workPosition.y) !== y
+                       || Number(workPosition.z) !== z) {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: false
                         }));
-                        if (headType.toLowerCase() === 'cnc') {
-                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
-                            }));
-                        } else if (headType.toLowerCase() === 'laser') {
-                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
-                                isRotate: false
-                            }));
-                        }
                         dispatch(actions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
@@ -715,9 +677,10 @@ export const actions = {
                         }));
                     }
                 }
-                if (originOffset.x !== offsetX
-                    || originOffset.y !== offsetY
-                    || originOffset.z !== offsetZ) {
+
+                if (Number(originOffset.x) !== offsetX
+                    || Number(originOffset.y) !== offsetY
+                    || Number(originOffset.z) !== offsetZ) {
                     dispatch(actions.updateState({
                         originOffset: {
                             x: `${offsetX.toFixed(3)}`,

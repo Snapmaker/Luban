@@ -181,7 +181,7 @@ class CaseLibrary extends PureComponent {
     };
 
     render() {
-        let CaseConfig, CaseConfigForFourAxis;
+        let CaseConfig;
         if (this.props.series === MACHINE_SERIES.ORIGINAL.value) {
             CaseConfig = CaseConfigOriginal;
         } else if (this.props.series === MACHINE_SERIES.CUSTOM.value) {
@@ -195,7 +195,6 @@ class CaseLibrary extends PureComponent {
         } else {
             CaseConfig = CaseConfig150;
         }
-        CaseConfigForFourAxis = CaseConfigFourAxis;
         return (
             <div className={styles.caselibrary}>
 
@@ -241,7 +240,7 @@ class CaseLibrary extends PureComponent {
                         {i18n._('4-axis')}
                     </h2>
                     <div className={styles.columns}>
-                        { CaseConfigForFourAxis.map((config) => {
+                        { CaseConfigFourAxis.map((config) => {
                             return (
                                 <div
                                     className={styles.column}

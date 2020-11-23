@@ -126,38 +126,9 @@ export const uploadCaseFile = (req, res) => {
  * @param res
  */
 export const uploadGcodeFile = async (req, res) => {
-    const { isCaseGcode } = req.body;
+    const file = req.files.file;
     let originalName, uploadName, uploadPath, originalPath;
-    if (isCaseGcode) {
-        const { casePath, name } = req.body;
-        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        originalName = path.basename(name);
-        uploadName = originalName.replace(/\.zip$/, '');
-        const tmpFileName = `${DataStorage.tmpDir}/${originalName}`;
-        try {
-            copyFileSync(originalPath, tmpFileName);
-        } catch (err) {
-            log.error(`Failed to upload file ${originalName} and err is ${err}`);
-        } finally {
-            await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
-            uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-            const stats = fs.statSync(uploadPath);
-            const size = stats.size;
-            const gcodeHeader = parseGcodeHeader(uploadPath);
-            res.send({
-                originalName,
-                uploadName,
-                size,
-                gcodeHeader
-            });
-            res.end();
-        }
-    } else {
-        const file = req.files.file;
-        if (!file) {
-            res.end();
-            return;
-        }
+    if (file) {
         originalPath = file.path;
         originalName = path.basename(file.name);
         uploadName = pathWithRandomSuffix(originalName);
@@ -175,6 +146,29 @@ export const uploadGcodeFile = async (req, res) => {
                 res.end();
             }
         });
+    } else {
+        const { casePath, name } = req.body;
+        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
+        originalName = path.basename(name);
+        uploadName = originalName.replace(/\.zip$/, '');
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        // const tmpFilePath = `${DataStorage.tmpDir}/${originalName}`;
+        const gcodeFile = {
+            name: originalName,
+            path: originalPath
+        };
+        await cpFileToTmp(gcodeFile);
+        await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
+        const stats = fs.statSync(uploadPath);
+        const size = stats.size;
+        const gcodeHeader = parseGcodeHeader(uploadPath);
+        res.send({
+            originalName,
+            uploadName,
+            size,
+            gcodeHeader
+        });
+        res.end();
     }
 
     /*

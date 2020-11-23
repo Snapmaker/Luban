@@ -535,7 +535,6 @@ export const CaseConfigFourAxis = [
         tag: 'workspace', // 3dp、laser、cnc、workspace
         title: '4-Axis Linkage CNC Carved Lion',
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
-        isCaseGcode: true,
         pathConfig: {
             name: 'CNC_test_4th.cnc.zip',
             casePath: './FourAxis/'

@@ -77,10 +77,6 @@ class ToolPathModel {
         };
     }
 
-    generateToolPath3D(toolPath) {
-        this.toolPathObj3D = generateToolPathObject3D(toolPath);
-    }
-
     loadToolPath(filename, isSelected = false) {
         this.toolPathFilename = filename;
         const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
