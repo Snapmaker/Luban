@@ -300,7 +300,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
         // const { transformation, source } = modelInfo;
         const { headType, mode, transformation, sourceHeight, sourceWidth, sourceType, gcodeConfig } = modelInfo;
 
-        const { positionX, positionY, positionZ } = transformation;
+        const { positionX, positionY, positionZ, scaleX, scaleY } = transformation;
 
         const originHeight = sourceHeight;
         const originWidth = sourceWidth;
@@ -318,8 +318,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         flip(svg, flipFlag);
         scale(svg, {
-            x: targetWidth / originWidth,
-            y: targetHeight / originHeight
+            x: (scaleX > 0 ? 1 : -1) * targetWidth / originWidth,
+            y: (scaleY > 0 ? 1 : -1) * targetHeight / originHeight
         });
         rotate(svg, rotationZ);
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);

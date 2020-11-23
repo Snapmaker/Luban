@@ -390,7 +390,10 @@ export const actions = {
         }
 
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'dxf') {
+            return;
+        }
+        if (selectedModel.config.svgNodeName === 'text') {
             return;
         }
 
