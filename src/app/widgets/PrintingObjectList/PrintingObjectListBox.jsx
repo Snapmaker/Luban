@@ -39,7 +39,7 @@ class PrintingObjectListBox extends PureComponent {
         limitTheLengthOfDisplayName: (name) => {
             let newName = name;
             if (newName.length > 36) {
-                newName = `${newName.slice(0, 27)}...${newName.slice(-9)}`;
+                newName = `${newName.slice(0, 24)}...${newName.slice(-9)}`;
             }
             return newName;
         }
