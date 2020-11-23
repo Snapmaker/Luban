@@ -4,7 +4,7 @@ import { Vector2 } from '../../../shared/lib/math/Vector2';
 const UNIFORMS = {
     // rgba
     u_g1_color: new THREE.Uniform(new THREE.Vector4(0, 0, 0, 1)),
-    u_select_color: new THREE.Uniform(new THREE.Vector4(0, 0, 0.9, 1))
+    u_select_color: new THREE.Uniform(new THREE.Vector4(0, 0, 250, 1))
 };
 
 const CNC_LASER_VERT_SHADER = [
@@ -16,7 +16,7 @@ const CNC_LASER_VERT_SHADER = [
     '}'
 ].join('');
 
-const CNC_LASER_FRAG_SHADER = [
+const CNC_LASER_FRAG_UNSELECT_SHADER = [
     'uniform vec4 u_g1_color;',
     'varying float v_g_code;',
     'void main(){',
@@ -38,16 +38,17 @@ const CNC_LASER_FRAG_SELECT_SHADER = [
     '}'
 ].join('');
 
-export const materialUnselected = new THREE.ShaderMaterial({
+
+export const MaterialUnselected = new THREE.ShaderMaterial({
     uniforms: UNIFORMS,
     vertexShader: CNC_LASER_VERT_SHADER,
-    fragmentShader: CNC_LASER_FRAG_SHADER,
+    fragmentShader: CNC_LASER_FRAG_UNSELECT_SHADER,
     side: THREE.DoubleSide,
     transparent: true,
     opacity: 0.9,
     linewidth: 1
 });
-export const materialSelected = new THREE.ShaderMaterial({
+export const MaterialSelected = new THREE.ShaderMaterial({
     uniforms: UNIFORMS,
     vertexShader: CNC_LASER_VERT_SHADER,
     fragmentShader: CNC_LASER_FRAG_SELECT_SHADER,
@@ -163,9 +164,9 @@ class ToolPathRenderer {
         let material;
 
         if (isSelected) {
-            material = materialSelected;
+            material = MaterialSelected;
         } else {
-            material = materialUnselected;
+            material = MaterialUnselected;
         }
         return new THREE.Line(bufferGeometry, material);
     }
@@ -209,9 +210,9 @@ class ToolPathRenderer {
         bufferGeometry.addAttribute('a_g_code', gCodeAttribute);
         let material;
         if (isSelected) {
-            material = materialSelected;
+            material = MaterialSelected;
         } else {
-            material = materialUnselected;
+            material = MaterialUnselected;
         }
         return new THREE.Points(bufferGeometry, material);
     }
@@ -230,5 +231,4 @@ class ToolPathRenderer {
         };
     }
 }
-
 export default ToolPathRenderer;

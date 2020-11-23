@@ -19,8 +19,10 @@ import { valueOf } from '../../lib/contants-utils';
 import { machineStore } from '../../store/local-storage';
 import { Server } from './Server';
 import { actions as printingActions } from '../printing';
-import { actions as widgetActions } from '../widget';
+import { actions as cncActions } from '../cnc';
+import { actions as laserActions } from '../laser';
 import { actions as editorActions } from '../editor';
+import { actions as widgetActions } from '../widget';
 import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
@@ -199,19 +201,57 @@ export const actions = {
             'Marlin:state': (options) => {
                 // TODO: serialPort
                 const { state } = options;
-                const { pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule } = state;
+                const { pos, headType, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule } = state;
 
                 const machineState = getState().machine;
 
-                if (machineState.workPosition.x !== pos.x
-                    || machineState.workPosition.y !== pos.y
-                    || machineState.workPosition.z !== pos.z) {
-                    dispatch(actions.updateState({
-                        workPosition: {
-                            ...machineState.workPosition,
-                            ...pos
+                if (pos.isFourAxis) {
+                    if (machineState.workPosition.x !== pos.x
+                       || machineState.workPosition.y !== pos.y
+                       || machineState.workPosition.z !== pos.z
+                       || machineState.workPosition.b !== pos.b) {
+                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            isRotate: true
+                        }));
+                        if (headType.toLowerCase() === 'cnc') {
+                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        } else if (headType.toLowerCase() === 'laser') {
+                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
                         }
-                    }));
+                        dispatch(actions.updateState({
+                            workPosition: {
+                                ...machineState.workPosition,
+                                ...pos
+                            }
+                        }));
+                    }
+                } else {
+                    if (machineState.workPosition.x !== pos.x
+                       || machineState.workPosition.y !== pos.y
+                       || machineState.workPosition.z !== pos.z) {
+                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            isRotate: false
+                        }));
+                        if (headType.toLowerCase() === 'cnc') {
+                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        } else if (headType.toLowerCase() === 'laser') {
+                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
+                        dispatch(actions.updateState({
+                            workPosition: {
+                                ...machineState.workPosition,
+                                ...pos
+                            }
+                        }));
+                    }
                 }
                 if (machineState.originOffset.x !== originOffset.x
                     || machineState.originOffset.y !== originOffset.y
@@ -588,7 +628,7 @@ export const actions = {
             server.on('http:status', (result) => {
                 const { workPosition, originOffset, gcodePrintingInfo } = getState().machine;
                 const {
-                    status, isHomed, x, y, z, offsetX, offsetY, offsetZ,
+                    status, isHomed, x, y, z, b, offsetX, offsetY, offsetZ,
                     laserFocalLength,
                     laserPower,
                     nozzleTemperature,
@@ -596,6 +636,7 @@ export const actions = {
                     heatedBedTemperature,
                     doorSwitchCount,
                     isEnclosureDoorOpen,
+                    headType,
                     heatedBedTargetTemperature,
                     isEmergencyStopped
                 } = result.data;
@@ -620,17 +661,59 @@ export const actions = {
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
                     isEmergencyStopped: isEmergencyStopped
                 }));
-                if (workPosition.x !== x
-                    || workPosition.y !== y
-                    || workPosition.z !== z) {
-                    dispatch(actions.updateState({
-                        workPosition: {
-                            x: `${x.toFixed(3)}`,
-                            y: `${y.toFixed(3)}`,
-                            z: `${z.toFixed(3)}`,
-                            a: '0.000'
+                if (!(_.isUndefined(b))) {
+                    if (workPosition.x !== x
+                                       || workPosition.y !== y
+                                       || workPosition.z !== z
+                                       || workPosition.b !== b) {
+                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            isRotate: true
+                        }));
+                        if (headType.toLowerCase() === 'cnc') {
+                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        } else if (headType.toLowerCase() === 'laser') {
+                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
                         }
-                    }));
+                        dispatch(actions.updateState({
+                            workPosition: {
+                                x: `${x.toFixed(3)}`,
+                                y: `${y.toFixed(3)}`,
+                                z: `${z.toFixed(3)}`,
+                                b: `${b.toFixed(3)}`,
+                                isFourAxis: true,
+                                a: '0.000'
+                            }
+                        }));
+                    }
+                } else {
+                    if (workPosition.x !== x
+                                       || workPosition.y !== y
+                                       || workPosition.z !== z) {
+                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                            isRotate: false
+                        }));
+                        if (headType.toLowerCase() === 'cnc') {
+                            dispatch(cncActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        } else if (headType.toLowerCase() === 'laser') {
+                            dispatch(laserActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
+                        dispatch(actions.updateState({
+                            workPosition: {
+                                x: `${x.toFixed(3)}`,
+                                y: `${y.toFixed(3)}`,
+                                z: `${z.toFixed(3)}`,
+                                a: '0.000'
+                            }
+                        }));
+                    }
                 }
                 if (originOffset.x !== offsetX
                     || originOffset.y !== offsetY

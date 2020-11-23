@@ -27,7 +27,7 @@ class Canvas extends Component {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         transformSourceType: PropTypes.string, // 2D, 3D. Default is 3D
-        toolPathModelGroup: PropTypes.object,
+        toolPathModelGroupObject: PropTypes.object,
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
         cameraInitialTarget: PropTypes.object.isRequired,
@@ -44,6 +44,7 @@ class Canvas extends Component {
 
         // tmp
         canOperateModel: PropTypes.bool,
+        // isToolpathModel: PropTypes.bool,
         showContextMenu: PropTypes.func
     };
 
@@ -69,7 +70,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.transformSourceType = this.props.transformSourceType || '3D';
-        this.toolPathModelGroup = this.props.toolPathModelGroup;
+        this.toolPathModelGroupObject = this.props.toolPathModelGroupObject;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -98,8 +99,7 @@ class Canvas extends Component {
         this.group.add(this.printableArea);
         this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
         this.group.add(this.modelGroup.object);
-
-        this.toolPathModelGroup && this.group.add(this.toolPathModelGroup);
+        this.toolPathModelGroupObject && this.group.add(this.toolPathModelGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
 
@@ -120,6 +120,13 @@ class Canvas extends Component {
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
+        }
+        if (this.props.toolPathModelGroupObject) {
+            if (this.props.toolPathModelGroupObject.isRotate && this.props.toolPathModelGroupObject.visible) {
+                this.controls.setShouldForbidSelect(true);
+            } else {
+                this.controls.setShouldForbidSelect(false);
+            }
         }
     }
 
@@ -201,7 +208,6 @@ class Canvas extends Component {
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
-
 
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();

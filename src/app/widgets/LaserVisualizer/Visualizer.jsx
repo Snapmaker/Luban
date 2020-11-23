@@ -347,7 +347,7 @@ class Visualizer extends Component {
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
-                        toolPathModelGroup={this.props.toolPathModelGroup.object}
+                        toolPathModelGroupObject={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}

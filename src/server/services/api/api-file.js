@@ -16,6 +16,12 @@ import {
 
 const log = logger('api:file');
 
+function copyFileSync(src, dst) {
+    if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dst);
+    }
+}
+
 const cpFileToTmp = async (file, uploadName) => {
     const originalName = path.basename(file.name);
     uploadName = uploadName || originalName;
@@ -119,31 +125,58 @@ export const uploadCaseFile = (req, res) => {
  * @param req
  * @param res
  */
-export const uploadGcodeFile = (req, res) => {
-    const file = req.files.file;
-
-    if (!file) {
-        res.end();
-        return;
-    }
-
-    const originalName = path.basename(file.name);
-    const uploadName = pathWithRandomSuffix(originalName);
-    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
-    mv(file.path, uploadPath, (err) => {
-        if (err) {
-            log.error(`Failed to upload file ${originalName}`);
-        } else {
+export const uploadGcodeFile = async (req, res) => {
+    const { isCaseGcode } = req.body;
+    let originalName, uploadName, uploadPath, originalPath;
+    if (isCaseGcode) {
+        const { casePath, name } = req.body;
+        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
+        originalName = path.basename(name);
+        uploadName = originalName.replace(/\.zip$/, '');
+        const tmpFileName = `${DataStorage.tmpDir}/${originalName}`;
+        try {
+            copyFileSync(originalPath, tmpFileName);
+        } catch (err) {
+            log.error(`Failed to upload file ${originalName} and err is ${err}`);
+        } finally {
+            await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
+            uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+            const stats = fs.statSync(uploadPath);
+            const size = stats.size;
             const gcodeHeader = parseGcodeHeader(uploadPath);
             res.send({
                 originalName,
                 uploadName,
+                size,
                 gcodeHeader
             });
             res.end();
         }
-    });
+    } else {
+        const file = req.files.file;
+        if (!file) {
+            res.end();
+            return;
+        }
+        originalPath = file.path;
+        originalName = path.basename(file.name);
+        uploadName = pathWithRandomSuffix(originalName);
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        mv(originalPath, uploadPath, (err) => {
+            if (err) {
+                log.error(`Failed to upload file ${originalName} ${err}`);
+            } else {
+                const gcodeHeader = parseGcodeHeader(uploadPath);
+                res.send({
+                    originalName,
+                    uploadName,
+                    gcodeHeader
+                });
+                res.end();
+            }
+        });
+    }
+
     /*
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
@@ -196,12 +229,6 @@ export const removeEnv = async (req, res) => {
     res.send(true);
     res.end();
 };
-
-function copyFileSync(src, dst) {
-    if (fs.existsSync(src)) {
-        fs.copyFileSync(src, dst);
-    }
-}
 
 
 /**

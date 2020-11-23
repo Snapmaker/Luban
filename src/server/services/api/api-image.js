@@ -25,7 +25,7 @@ export const set = (req, res) => {
 
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
+    const extname = path.extname(uploadName).toLowerCase();
     const { isRotate } = req.body;
 
     async.series([
@@ -35,7 +35,7 @@ export const set = (req, res) => {
             });
         },
         async (next) => {
-            if (path.extname(uploadName).toLowerCase() === '.svg') {
+            if (extname === '.svg') {
                 const svgParser = new SVGParser();
                 const svg = await svgParser.parseFile(uploadPath);
 
@@ -47,7 +47,7 @@ export const set = (req, res) => {
                 });
 
                 next();
-            } else if (path.extname(uploadName).toLowerCase() === '.dxf') {
+            } else if (extname === '.dxf') {
                 const result = await parseDxf(uploadPath);
                 const { width, height } = result;
 
@@ -59,7 +59,7 @@ export const set = (req, res) => {
                 });
 
                 next();
-            } else if (path.extname(uploadName) === '.stl') {
+            } else if (extname === '.stl') {
                 const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
                 const { width, height } = meshProcess.getWidthAndHeight();
                 res.send({
@@ -68,6 +68,7 @@ export const set = (req, res) => {
                     width: mmToPixel(width),
                     height: mmToPixel(height)
                 });
+                next();
             } else {
                 jimp.read(uploadPath).then((image) => {
                     res.send({
@@ -93,12 +94,12 @@ export const set = (req, res) => {
 };
 
 export const laserCaseImage = (req, res) => {
-    const { name, casePath } = req.body;
+    const { name, casePath, isRotate } = req.body;
     const originalName = path.basename(name);
-
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const extname = path.extname(uploadName).toLowerCase();
 
     async.series([
         (next) => {
@@ -107,7 +108,7 @@ export const laserCaseImage = (req, res) => {
             });
         },
         async (next) => {
-            if (path.extname(uploadName) === '.svg') {
+            if (extname === '.svg') {
                 const svgParser = new SVGParser();
                 const svg = await svgParser.parseFile(uploadPath);
 
@@ -116,6 +117,27 @@ export const laserCaseImage = (req, res) => {
                     uploadName: uploadName,
                     width: svg.width,
                     height: svg.height
+                });
+                next();
+            } else if (extname === '.dxf') {
+                const result = await parseDxf(uploadPath);
+                const { width, height } = result;
+
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width,
+                    height
+                });
+                next();
+            } else if (extname === '.stl') {
+                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
+                const { width, height } = meshProcess.getWidthAndHeight();
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width: mmToPixel(width),
+                    height: mmToPixel(height)
                 });
                 next();
             } else {
@@ -134,7 +156,7 @@ export const laserCaseImage = (req, res) => {
         }
     ], (err) => {
         if (err) {
-            log.error(`Failed to read image ${uploadName}`);
+            log.error(`Failed to read image ${uploadName} and err is ${err}`);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();

@@ -4,12 +4,13 @@ import uuid from 'uuid';
 import ToolPathModel from './ToolPathModel';
 import { DATA_PREFIX } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
-import { materialSelected, materialUnselected } from '../lib/renderer/ToolPathRenderer';
+import { MaterialUnselected, MaterialSelected } from '../lib/renderer/ToolPathRenderer';
 
 class ToolPathModelGroup {
     constructor(modelGroup) {
         this.object = new THREE.Group();
         this.object.visible = false;
+        this.object.isRotate = false;
 
         this.toolPathObjs = new THREE.Group();
         this.materialsObj = null;
@@ -96,14 +97,16 @@ class ToolPathModelGroup {
 
     selectToolPathModel(modelID) {
         this.selectedToolPathModel = this.getToolPathModel(modelID);
+        // change toolPathObj3D's material
         this.toolPathModels.forEach((item) => {
             if (item.toolPathObj3D) {
-                item.toolPathObj3D.material = materialUnselected;
+                item.toolPathObj3D.material = MaterialUnselected;
             }
         });
+
         if (this.selectedToolPathModel) {
             if (this.selectedToolPathModel.toolPathObj3D) {
-                this.selectedToolPathModel.toolPathObj3D.material = materialSelected;
+                this.selectedToolPathModel.toolPathObj3D.material = MaterialSelected;
             }
             return this.getState(this.selectedToolPathModel);
         } else {
@@ -223,10 +226,9 @@ class ToolPathModelGroup {
         this.viewPathObjs.visible = true;
     }
 
-    async receiveTaskResult(data, filename) {
+    async receiveTaskResult(data, filename, isSelected) {
         const toolPathModel = this.toolPathModels.find(d => d.id === data.id);
         if (toolPathModel) {
-            const isSelected = this.selectedToolPathModel && toolPathModel.modelID === this.selectedToolPathModel.modelID;
             toolPathModel.toolPathObj3D && this.toolPathObjs.remove(toolPathModel.toolPathObj3D);
             const toolPathObj3D = await toolPathModel.loadToolPath(filename, isSelected);
             if (!toolPathObj3D) {

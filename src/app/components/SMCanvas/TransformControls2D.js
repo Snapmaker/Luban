@@ -238,6 +238,11 @@ class TransformControls2D extends Object3D {
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
+    updateFramePeripheralVisible(visible) {
+        this.framePeripheral.visible = visible;
+    }
+
+
     onMouseHover(coord) {
         if (!this.object) {
             return false;

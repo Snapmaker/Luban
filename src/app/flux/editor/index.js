@@ -135,6 +135,7 @@ export const actions = {
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
 
+
         api.uploadImage(formData)
             .then((res) => {
                 dispatch(actions.updateState(headType, {
@@ -198,7 +199,6 @@ export const actions = {
                 toolShaftDiameter: toolParams.toolShaftDiameter
             }
             : modelDefaultConfigs.gcodeConfig;
-
         // cnc size limit
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
@@ -222,6 +222,13 @@ export const actions = {
             ...defaultTransformation,
             ...transformation
         };
+        // make caseConfigs's width as really width
+        if (transformation.width) {
+            width = transformation.width;
+        }
+        if (transformation.height) {
+            height = transformation.height;
+        }
 
         const modelID = getCount();
         const options = {
@@ -862,7 +869,10 @@ export const actions = {
     onReceiveTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         // const state = getState()[headType];
         const { modelGroup, toolPathModelGroup } = getState()[headType];
-
+        let isSelected = false;
+        if (toolPathModelGroup.selectedToolPathModel && toolPathModelGroup.selectedToolPathModel.modelID === taskResult.taskId) {
+            isSelected = true;
+        }
         const { data, filename } = taskResult;
 
         if (taskResult.taskStatus === 'failed' && toolPathModelGroup.getToolPathModelByID(data.id)) {
@@ -880,7 +890,7 @@ export const actions = {
             progress: 0
         }));
 
-        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename);
+        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename, isSelected);
 
         if (toolPathModelState) {
             dispatch(baseActions.updateState(headType, {
@@ -1413,6 +1423,7 @@ export const actions = {
         if (headType === 'laser') {
             toolPathModelGroup.updateMaterials(allMaterials);
         }
+        toolPathModelGroup.object.isRotate = allMaterials.isRotate;
         dispatch(baseActions.updateState(headType, {
             materials: {
                 ...allMaterials

@@ -13,7 +13,11 @@ const JogPad = React.memo((props) => {
         <div className={styles['jog-pad']}>
             <div className="mb-2">
                 <div className="row no-gutters">
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -31,7 +35,8 @@ const JogPad = React.memo((props) => {
                     </div>
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'y' }
                         )}
                     >
@@ -50,7 +55,11 @@ const JogPad = React.memo((props) => {
                             </button>
                         </div>
                     </div>
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -68,7 +77,8 @@ const JogPad = React.memo((props) => {
                     </div>
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'z' }
                         )}
                     >
@@ -90,7 +100,8 @@ const JogPad = React.memo((props) => {
                     {workPosition.isFourAxis && (
                         <div
                             className={classNames(
-                                styles['column-5'],
+                                { [styles['column-5']]: workPosition.isFourAxis },
+                                { [styles['column-4']]: !workPosition.isFourAxis },
                                 { [styles['jog-direction-highlight']]: keypadJogging }
                             )}
                         >
@@ -116,7 +127,9 @@ const JogPad = React.memo((props) => {
                 <div className="row no-gutters">
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'x' }
                         )}
                     >
@@ -135,7 +148,11 @@ const JogPad = React.memo((props) => {
                             </button>
                         </div>
                     </div>
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -150,7 +167,8 @@ const JogPad = React.memo((props) => {
                     </div>
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'x' }
                         )}
                     >
@@ -169,7 +187,11 @@ const JogPad = React.memo((props) => {
                             </button>
                         </div>
                     </div>
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -183,7 +205,11 @@ const JogPad = React.memo((props) => {
                         </div>
                     </div>
                     {workPosition.isFourAxis && (
-                        <div className={styles['column-5']}>
+                        <div className={classNames(
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+                        )}
+                        >
                             <div className="mr-3">
                                 <button
                                     type="button"
@@ -201,7 +227,11 @@ const JogPad = React.memo((props) => {
             </div>
             <div className="mb-2">
                 <div className="row no-gutters">
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -219,7 +249,9 @@ const JogPad = React.memo((props) => {
                     </div>
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
+
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'y' }
                         )}
                     >
@@ -238,7 +270,11 @@ const JogPad = React.memo((props) => {
                             </button>
                         </div>
                     </div>
-                    <div className={styles['column-5']}>
+                    <div className={classNames(
+                        { [styles['column-5']]: workPosition.isFourAxis },
+                        { [styles['column-4']]: !workPosition.isFourAxis },
+                    )}
+                    >
                         <div className="mr-3">
                             <button
                                 type="button"
@@ -256,7 +292,8 @@ const JogPad = React.memo((props) => {
                     </div>
                     <div
                         className={classNames(
-                            styles['column-5'],
+                            { [styles['column-5']]: workPosition.isFourAxis },
+                            { [styles['column-4']]: !workPosition.isFourAxis },
                             { [styles['jog-direction-highlight']]: keypadJogging || selectedAxis === 'z' }
                         )}
                     >
@@ -278,7 +315,8 @@ const JogPad = React.memo((props) => {
                     {workPosition.isFourAxis && (
                         <div
                             className={classNames(
-                                styles['column-5'],
+                                { [styles['column-5']]: workPosition.isFourAxis },
+                                { [styles['column-4']]: !workPosition.isFourAxis },
                                 { [styles['jog-direction-highlight']]: keypadJogging }
                             )}
                         >

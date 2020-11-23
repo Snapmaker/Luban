@@ -32,7 +32,7 @@ class JobType extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Job Type'));
+        this.props.setTitle(i18n._('Job Type & Size'));
     }
 
     componentWillReceiveProps(nextProps) {
@@ -55,7 +55,7 @@ class JobType extends PureComponent {
                                 this.props.updateMaterials({ isRotate: false });
                             }}
                         >
-                            {i18n._('3 Axis')}
+                            {i18n._('3-axis')}
                         </button>
                         <button
                             type="button"
@@ -65,7 +65,7 @@ class JobType extends PureComponent {
                                 this.props.updateMaterials({ isRotate: true });
                             }}
                         >
-                            {i18n._('4 Axis')}
+                            {i18n._('4-axis')}
                         </button>
                     </div>
                 </div>
@@ -99,22 +99,6 @@ class JobType extends PureComponent {
                         }}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Diameter (mm)')}</span>
-                                <Input
-                                    disabled={false}
-                                    className={styles['input-box-left']}
-                                    value={toFixed(diameter, 2)}
-                                    max={size.x}
-                                    min={2}
-                                    onChange={(value) => { this.props.updateMaterials({ diameter: value }); }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                >
-                                    D
-                                </span>
-                            </div>
-                            <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Length (mm)')}</span>
                                 <Input
                                     disabled={false}
@@ -128,6 +112,22 @@ class JobType extends PureComponent {
                                     className={styles['input-box-inner-text']}
                                 >
                                     L
+                                </span>
+                            </div>
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Diameter (mm)')}</span>
+                                <Input
+                                    disabled={false}
+                                    className={styles['input-box-left']}
+                                    value={toFixed(diameter, 2)}
+                                    max={size.x}
+                                    min={2}
+                                    onChange={(value) => { this.props.updateMaterials({ diameter: value }); }}
+                                />
+                                <span
+                                    className={styles['input-box-inner-text']}
+                                >
+                                    D
                                 </span>
                             </div>
                         </div>

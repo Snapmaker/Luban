@@ -139,7 +139,7 @@ class ToolParameters extends PureComponent {
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_S_F_S)}
                         >
                             <img
-                                src="images/cnc/cnc-tool-ball-end-mill-88x88.png"
+                                src="images/cnc/cnc-tool-straight-flut-88x88.png"
                                 role="presentation"
                                 alt="Straight Flute V-Bit"
                             />
