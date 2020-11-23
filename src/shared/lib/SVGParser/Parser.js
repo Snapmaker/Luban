@@ -70,11 +70,6 @@ class SVGParser {
         return this.parseObject(node);
     }
 
-    async parseText(path) {
-        const node = await this.readString(path);
-        return this.parseObject(node);
-    }
-
     async parseFile(path) {
         const node = await this.readFile(path);
         return this.parseObject(node);
