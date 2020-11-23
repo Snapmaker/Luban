@@ -388,7 +388,6 @@ export const actions = {
         if (selectedModels.length !== 1) {
             return;
         }
-
         const selectedModel = selectedModels[0];
         if (selectedModel.sourceType !== 'raster' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
             return;
@@ -396,6 +395,7 @@ export const actions = {
 
         const options = {
             headType: headType,
+            modelId: selectedModel.modelID,
             uploadName: selectedModel.uploadName,
             sourceType: selectedModel.sourceType,
             mode: selectedModel.mode,
@@ -831,22 +831,20 @@ export const actions = {
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
-        const selectedModels = modelGroup.getSelectedModelArray();
-        if (selectedModels.length !== 1) {
+        const model = modelGroup.getModel(taskResult.data.modelId);
+        if (!model) {
             return;
         }
-
-        const selectedModel = selectedModels[0];
         const processImageName = taskResult.filename;
         if (!processImageName) {
             return;
         }
 
-        const svgModel = selectedModel.relatedModels.svgModel;
-        const toolPathModel = selectedModel.relatedModels.toolPathModel;
+        const svgModel = model.relatedModels.svgModel;
+        const toolPathModel = model.relatedModels.toolPathModel;
 
         // modelGroup.updateSelectedModelProcessImage(processImageName);
-        selectedModel.updateProcessImageName(processImageName);
+        model.updateProcessImageName(processImageName);
 
         // SVGActions.updateElementImage(processImageName);
         SVGActions.updateSvgModelImage(svgModel, processImageName);
