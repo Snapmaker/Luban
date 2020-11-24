@@ -6,7 +6,7 @@ import Select from 'react-select';
 import isEqual from 'lodash/isEqual';
 import { NumberInput } from '../../../components/Input';
 import i18n from '../../../lib/i18n';
-import { actions } from '../../../flux/machine';
+import { actions as machineActions } from '../../../flux/machine';
 import styles from '../form.styl';
 import { MACHINE_SERIES } from '../../../constants';
 
@@ -54,7 +54,7 @@ class MachineSettings extends PureComponent {
         setEnclosureState: PropTypes.func.isRequired,
         getZAxisModuleState: PropTypes.func.isRequired,
         setZAxisModuleState: PropTypes.func.isRequired,
-        updateConnectionTimeout: PropTypes.func.isRequired
+        setConnectionTimeout: PropTypes.func.isRequired
     };
 
     state = {
@@ -143,7 +143,8 @@ class MachineSettings extends PureComponent {
             this.props.updateMachineSize(this.state.size);
             this.props.setEnclosureState(this.state.enclosureDoorDetection);
             this.props.setZAxisModuleState(this.state.zAxisModule);
-            this.props.updateConnectionTimeout(this.state.connectionTimeout);
+
+            this.props.setConnectionTimeout(this.state.connectionTimeout);
         }
     };
 
@@ -365,13 +366,13 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateMachineSeries: (series) => dispatch(actions.updateMachineSeries(series)),
-        updateMachineSize: (size) => dispatch(actions.updateMachineSize(size)),
-        getEnclosureState: () => dispatch(actions.getEnclosureState()),
-        setEnclosureState: (on) => dispatch(actions.setEnclosureState(on)),
-        getZAxisModuleState: () => dispatch(actions.getZAxisModuleState()),
-        setZAxisModuleState: (moduleId) => dispatch(actions.setZAxisModuleState(moduleId)),
-        updateConnectionTimeout: (time) => dispatch(actions.updateConnectionTimeout(time))
+        updateMachineSeries: (series) => dispatch(machineActions.updateMachineSeries(series)),
+        updateMachineSize: (size) => dispatch(machineActions.updateMachineSize(size)),
+        getEnclosureState: () => dispatch(machineActions.getEnclosureState()),
+        setEnclosureState: (on) => dispatch(machineActions.setEnclosureState(on)),
+        getZAxisModuleState: () => dispatch(machineActions.getZAxisModuleState()),
+        setZAxisModuleState: (moduleId) => dispatch(machineActions.setZAxisModuleState(moduleId)),
+        setConnectionTimeout: (connectionTimeout) => dispatch(machineActions.connect.setConnectionType(connectionTimeout))
     };
 };
 

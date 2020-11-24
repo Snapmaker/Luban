@@ -79,6 +79,7 @@ class Printing extends PureComponent {
             }
         },
         onChangeLaserPrintMode: () => {
+            // TODO: Don't call updateState from Component!!
             this.props.updateState({
                 isLaserPrintAutoMode: !this.props.isLaserPrintAutoMode
             });

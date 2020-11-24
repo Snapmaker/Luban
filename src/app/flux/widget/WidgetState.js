@@ -41,7 +41,6 @@ const DEFAULT_STATE = {
     developerPanel: {
         primary: {
             widgets: [
-                /* 'connectionPanel',*/
                 'axesPanel', 'macroPanel'
             ]
         },
@@ -92,16 +91,6 @@ const DEFAULT_STATE = {
             baudrate: 115200,
             autoReconnect: false,
             dataSource: PROTOCOL_TEXT
-        },
-        connectionPanel: {
-            minimized: false,
-            controller: {
-                type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
-            },
-            port: '',
-            baudrate: 115200,
-            autoReconnect: false,
-            dataSource: PROTOCOL_SCREEN
         },
         gcode: {
             minimized: false,

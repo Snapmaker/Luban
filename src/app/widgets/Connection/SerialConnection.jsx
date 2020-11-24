@@ -31,7 +31,7 @@ class SerialConnection extends PureComponent {
         headType: PropTypes.string,
         connectionTimeout: PropTypes.number,
         isConnected: PropTypes.bool,
-        updatePort: PropTypes.func.isRequired,
+        setMachineSerialPort: PropTypes.func.isRequired,
         executeGcodeG54: PropTypes.func.isRequired,
         updateMachineState: PropTypes.func.isRequired
     };
@@ -83,12 +83,6 @@ class SerialConnection extends PureComponent {
 
         // refresh ports on mount
         setTimeout(() => this.listPorts());
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (this.state.port !== prevState.port) {
-            this.props.updatePort(this.state.port);
-        }
     }
 
     componentWillUnmount() {
@@ -156,8 +150,12 @@ class SerialConnection extends PureComponent {
             });
             return;
         }
+
         const port = this.state.port;
         log.debug(`Connected to ${port}.`);
+
+        // save serial port on connection succeeded
+        this.props.setMachineSerialPort(this.state.port);
 
         const { series, seriesSize, headType } = state;
         const machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
@@ -419,7 +417,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
         executeGcodeG54: (series, headType) => dispatch(machineActions.executeGcodeG54(series, headType)),
-        updatePort: (port) => dispatch(machineActions.updatePort(port))
+        setMachineSerialPort: (port) => dispatch(machineActions.connect.setMachineSerialPort(port))
     };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);

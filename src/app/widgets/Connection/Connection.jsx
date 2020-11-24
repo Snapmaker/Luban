@@ -28,7 +28,8 @@ class Connection extends PureComponent {
         series: PropTypes.string.isRequired,
         isHomed: PropTypes.bool,
         isConnected: PropTypes.bool.isRequired,
-        updateConnectionState: PropTypes.func.isRequired,
+
+        setConnectionType: PropTypes.func.isRequired,
         executeGcodeAutoHome: PropTypes.func.isRequired
     };
 
@@ -44,14 +45,10 @@ class Connection extends PureComponent {
             });
         },
         onSelectTabSerial: () => {
-            this.props.updateConnectionState({
-                connectionType: CONNECTION_TYPE_SERIAL
-            });
+            this.props.setConnectionType(CONNECTION_TYPE_SERIAL);
         },
         onSelectTabWifi: () => {
-            this.props.updateConnectionState({
-                connectionType: CONNECTION_TYPE_WIFI
-            });
+            this.props.setConnectionType(CONNECTION_TYPE_WIFI);
         },
         openHomeModal: () => {
             this.setState({
@@ -178,7 +175,7 @@ const mapStateToProps = (state, ownPros) => {
 
 const mapDispatchToProps = (dispatch) => ({
     executeGcodeAutoHome: () => dispatch(machineActions.executeGcodeAutoHome()),
-    updateConnectionState: (state) => dispatch(machineActions.updateConnectionState(state))
+    setConnectionType: (connectionType) => dispatch(machineActions.connect.setConnectionType(connectionType))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Connection);
