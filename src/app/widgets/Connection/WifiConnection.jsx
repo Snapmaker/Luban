@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
 import { Button, InputGroup } from 'react-bootstrap';
-import { map, includes } from 'lodash';
+import { map } from 'lodash';
 
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
@@ -13,8 +13,10 @@ import {
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
-    CONNECTION_TYPE_WIFI, IMAGE_WIFI_CONNECTED,
-    IMAGE_WIFI_CONNECTING, IMAGE_WIFI_ERROR,
+    CONNECTION_TYPE_WIFI,
+    IMAGE_WIFI_CONNECTED,
+    IMAGE_WIFI_CONNECTING,
+    IMAGE_WIFI_ERROR,
     IMAGE_WIFI_WAITING,
     MACHINE_HEAD_TYPE,
     WORKFLOW_STATUS_IDLE,
@@ -32,27 +34,35 @@ import { Server } from '../../flux/machine/Server';
 
 class WifiConnection extends PureComponent {
     static propTypes = {
-        headType: PropTypes.string,
+        // discover server
         servers: PropTypes.array.isRequired,
-        discovering: PropTypes.bool.isRequired,
-        server: PropTypes.object.isRequired,
-        serverAddress: PropTypes.string,
-        workflowStatus: PropTypes.string.isRequired,
-        isOpen: PropTypes.bool.isRequired,
-        isConnected: PropTypes.bool.isRequired,
+        serverDiscovering: PropTypes.bool.isRequired,
+
+        discoverSnapmakerServers: PropTypes.func.isRequired,
+
+        // connection
         connectionType: PropTypes.string.isRequired,
         connectionStatus: PropTypes.string.isRequired,
-        manualIp: PropTypes.string,
 
-        discoverServers: PropTypes.func.isRequired,
+        server: PropTypes.object.isRequired,
+        manualIp: PropTypes.string,
+        serverAddress: PropTypes.string,
+
+        setSelectedServer: PropTypes.func.isRequired,
+        setManualIP: PropTypes.func.isRequired,
+
+        // TODO
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
-        updateLocalStorageManualIp: PropTypes.func.isRequired,
-        setServer: PropTypes.func.isRequired
+
+        // machine status
+        headType: PropTypes.string,
+        workflowStatus: PropTypes.string.isRequired,
+        isOpen: PropTypes.bool.isRequired,
+        isConnected: PropTypes.bool.isRequired
     };
 
     state = {
-        server: this.props.server,
         showConnectionMessage: false,
         connectionMessage: {
             text: '',
@@ -62,7 +72,7 @@ class WifiConnection extends PureComponent {
             onCancel: null,
             onConfirm: null
         },
-        showManualWiFi: false,
+        showManualWiFiModal: false,
         manualWiFi: {
             text: '',
             title: '',
@@ -76,19 +86,14 @@ class WifiConnection extends PureComponent {
 
     actions = {
         onRefreshServers: () => {
-            this.props.discoverServers();
+            this.props.discoverSnapmakerServers();
         },
         onChangeServerOption: (option) => {
-            const find = this.props.servers.find(v => v.name === option.name && v.address === option.address);
-            if (find) {
-                this.actions.setServer(find);
-                this.setState({
-                    server: find
-                });
+            const server = this.props.servers.find(v => v.name === option.name && v.address === option.address);
+            if (server) {
+                this.props.setSelectedServer(server);
+                this.setState({ server });
             }
-        },
-        setServer: (server) => {
-            this.props.setServer(server);
         },
         openServer: () => {
             this.props.openServer((err, data, text) => {
@@ -98,27 +103,7 @@ class WifiConnection extends PureComponent {
             });
         },
         closeServer: () => {
-            const workflowStatus = this.props.workflowStatus;
-            if (includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], workflowStatus)) {
-                this.setState({
-                    showConnectionMessage: true,
-                    connectionMessage: {
-                        text: i18n._('The machine is working, disconnect will stop current print.'),
-                        title: i18n._('Disconnection'),
-                        img: IMAGE_WIFI_WAITING,
-                        showCloseButton: false,
-                        onCancel: () => {
-                            this.actions.hideWifiConnectionMessage();
-                        },
-                        onConfirm: () => {
-                            this.actions.hideWifiConnectionMessage();
-                            this.props.closeServer();
-                        }
-                    }
-                });
-            } else {
-                this.props.closeServer();
-            }
+            this.props.closeServer();
         },
         hideWifiConnectionMessage: () => {
             this.setState({
@@ -142,7 +127,7 @@ class WifiConnection extends PureComponent {
             this.setState({
                 showConnectionMessage: true,
                 connectionMessage: {
-                    text: i18n._(''),
+                    text: '',
                     title: i18n._('Connected'),
                     img: IMAGE_WIFI_CONNECTED,
                     showCloseButton: false,
@@ -154,7 +139,7 @@ class WifiConnection extends PureComponent {
                 this.actions.hideWifiConnectionMessage();
             }, 1000);
         },
-        showWifiDisConnected: () => {
+        showWifiDisconnected: () => {
             this.setState({
                 showConnectionMessage: true,
                 connectionMessage: {
@@ -187,12 +172,13 @@ class WifiConnection extends PureComponent {
             this.actions.hideWifiConnectionMessage();
             this.props.closeServer();
         },
+
         /**
          * Show manual Wi-Fi modal
          */
-        showManualWiFi: () => {
+        showManualWiFiModal: () => {
             this.setState({
-                showManualWiFi: true,
+                showManualWiFiModal: true,
                 manualWiFi: {
                     text: null,
                     title: i18n._('Connect Manually'),
@@ -203,9 +189,10 @@ class WifiConnection extends PureComponent {
                     onCancel: this.actions.onCloseManualWiFi,
                     onConfirm: (text) => {
                         this.actions.onCloseManualWiFi();
+
+                        this.props.setManualIP(text);
                         const server = new Server('Manual', text);
-                        this.props.updateLocalStorageManualIp(text);
-                        this.props.setServer(server);
+                        this.props.setSelectedServer(server);
                         this.props.openServer();
                     }
                 }
@@ -216,14 +203,14 @@ class WifiConnection extends PureComponent {
          */
         onCloseManualWiFi: () => {
             this.setState({
-                showManualWiFi: false
+                showManualWiFiModal: false
             });
         }
     };
 
     componentDidMount() {
-        // Discover servers when mounted
-        setTimeout(() => this.props.discoverServers());
+        // Discover servers on mounted
+        this.props.discoverSnapmakerServers();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -240,7 +227,7 @@ class WifiConnection extends PureComponent {
                 this.actions.showWifiConnected();
             }
             if (this.props.connectionStatus !== CONNECTION_STATUS_IDLE && nextProps.connectionStatus === CONNECTION_STATUS_IDLE) {
-                this.actions.showWifiDisConnected();
+                this.actions.showWifiDisconnected();
             }
         }
     }
@@ -264,7 +251,7 @@ class WifiConnection extends PureComponent {
             this.setState({
                 server: find
             });
-            this.props.setServer(find);
+            this.props.setSelectedServer(find);
         }
 
         // Default select first server
@@ -272,7 +259,7 @@ class WifiConnection extends PureComponent {
             this.setState({
                 server: servers[0]
             });
-            this.props.setServer(servers[0]);
+            this.props.setSelectedServer(servers[0]);
         }
     }
 
@@ -305,8 +292,8 @@ class WifiConnection extends PureComponent {
     };
 
     render() {
-        const { headType, servers, workflowStatus, discovering, isConnected, isOpen } = this.props;
-        const { server, showConnectionMessage, connectionMessage, showManualWiFi, manualWiFi } = this.state;
+        const { headType, servers, workflowStatus, serverDiscovering, isConnected, isOpen } = this.props;
+        const { server, showConnectionMessage, connectionMessage, showManualWiFiModal, manualWiFi } = this.state;
         return (
             <div>
                 <InputGroup className="mb-3">
@@ -351,7 +338,7 @@ class WifiConnection extends PureComponent {
                                 className={classNames(
                                     'fa',
                                     'fa-refresh',
-                                    { 'fa-spin': discovering }
+                                    { 'fa-spin': serverDiscovering }
                                 )}
                             />
                         </Button>
@@ -363,7 +350,7 @@ class WifiConnection extends PureComponent {
                             name="btn-add"
                             title={i18n._('Add')}
                             disabled={isOpen}
-                            onClick={this.actions.showManualWiFi}
+                            onClick={this.actions.showManualWiFiModal}
                         >
                             <i
                                 className={classNames(
@@ -441,9 +428,8 @@ class WifiConnection extends PureComponent {
                         onCancel={connectionMessage.onCancel}
                         onConfirm={connectionMessage.onConfirm}
                     />
-                )
-                }
-                {showManualWiFi && (
+                )}
+                {showManualWiFiModal && (
                     <ModalSmallInput
                         showCloseButton={manualWiFi.showCloseButton}
                         img={manualWiFi.img}
@@ -455,8 +441,7 @@ class WifiConnection extends PureComponent {
                         onCancel={manualWiFi.onCancel}
                         onConfirm={manualWiFi.onConfirm}
                     />
-                )
-                }
+                )}
             </div>
         );
     }
@@ -465,29 +450,44 @@ class WifiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { headType, servers, discovering, server, serverAddress, workflowStatus, isOpen, isConnected, connectionStatus, connectionType, manualIp } = machine;
+    const {
+        servers,
+        serverDiscovering,
+
+        connectionType,
+        connectionStatus,
+        server,
+        serverAddress,
+        manualIp,
+        // machine status
+        headType, workflowStatus, isOpen, isConnected
+    } = machine;
 
     return {
-        headType,
-        manualIp,
         servers,
-        discovering,
-        serverAddress,
+        serverDiscovering,
+
+        connectionType,
+        connectionStatus,
+
         server,
+        manualIp,
+        serverAddress,
+
+        // machine status
+        headType,
         workflowStatus,
         isOpen,
-        isConnected,
-        connectionStatus,
-        connectionType
+        isConnected
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    discoverServers: () => dispatch(machineActions.discoverServers()),
+    discoverSnapmakerServers: () => dispatch(machineActions.discover.discoverSnapmakerServers()),
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
-    setServer: (server) => dispatch(machineActions.setServer(server)),
-    updateLocalStorageManualIp: (server) => dispatch(machineActions.updateManualIp(server))
+    setSelectedServer: (server) => dispatch(machineActions.connect.setSelectedServer(server)),
+    setManualIP: (server) => dispatch(machineActions.connect.setManualIP(server))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

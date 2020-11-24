@@ -1,18 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 import {
-    ABSENT_OBJECT,
     WORKFLOW_STATE_IDLE,
     CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI, PROTOCOL_SCREEN
+    PROTOCOL_SCREEN
 } from '../../constants';
 import { screenController } from '../../lib/controller';
 
-const STATUS_UNKNOWN = 'UNKNOWN';
-// const STATUS_IDLE = 'IDLE';
-// const STATUS_RUNNING = 'RUNNING';
-// const STATUS_PAUSED = 'PAUSED';
-
-let statusTimer = null;
 
 const INITIAL_STATE = {
     // Serial port
@@ -157,9 +150,6 @@ export const actions = {
         });
     },
 
-    updatePort: (port) => (dispatch) => {
-        dispatch(actions.updateState({ port: port }));
-    },
     // executeGcode: (gcode, context) => (dispatch, getState) => {
     executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
@@ -214,74 +204,7 @@ export const actions = {
     },
     setZAxisModuleState: (moduleId) => () => {
         screenController.writeln(`M1025 M${moduleId}`, { source: 'query' });
-    },
-    // Server
-    discoverServers: () => (dispatch, getState) => {
-        dispatch(actions.updateState({ discovering: true }));
-
-        setTimeout(() => {
-            const state = getState().machine;
-            if (state.discovering) {
-                dispatch(actions.updateState({ discovering: false }));
-            }
-        }, 3000);
-
-        screenController.listHTTPServers();
-    },
-    setServer: (server) => (dispatch) => {
-        // Update server
-        dispatch(actions.updateState({
-            server,
-            workflowStatus: STATUS_UNKNOWN,
-            isConnected: true,
-            connectionType: CONNECTION_TYPE_WIFI
-        }));
-
-        // TODO: Fix the issue that sometimes will get multiple machines' status simultaneously
-        // Cancel previous status polling
-        if (statusTimer) {
-            clearTimeout(statusTimer);
-            statusTimer = null;
-        }
-
-        // Get status of server frequently
-        const getStatus = () => {
-            server.requestStatus((err, res) => {
-                if (!err) {
-                    dispatch(actions.updateState({
-                        workflowStatus: res.body.status,
-                        workPosition: {
-                            x: server.x.toFixed(3),
-                            y: server.y.toFixed(3),
-                            z: server.z.toFixed(3)
-                        }
-                    }));
-                } else {
-                    dispatch(actions.updateState({ workflowStatus: STATUS_UNKNOWN }));
-                }
-
-                // If status timer is not cancelled, then re-schedule a new timeout
-                if (statusTimer !== null) {
-                    statusTimer = setTimeout(getStatus, 1500);
-                }
-            });
-        };
-        statusTimer = setTimeout(getStatus);
-    },
-    unsetServer: () => (dispatch) => {
-        dispatch(actions.updateState({
-            server: ABSENT_OBJECT,
-            workflowStatus: STATUS_UNKNOWN,
-            isConnected: false,
-            connectionType: ''
-        }));
-
-        if (statusTimer) {
-            clearTimeout(statusTimer);
-            statusTimer = null;
-        }
     }
-
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

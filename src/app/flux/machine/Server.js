@@ -83,7 +83,7 @@ export class Server extends events.EventEmitter {
         return `http://${this.address}:${this.port}`;
     }
 
-    equal(server) {
+    equals(server) {
         const { name, address, model } = server;
         if (name && name === this.name && address && address === this.address) {
             return !(model && model !== this.model);
@@ -186,9 +186,11 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 this.errorCount = 0;
-                if (code === 204) {
+
+                if (code === 204) { // No Content
                     return;
                 }
+
                 const { status, x, y, z, offsetX, offsetY, offsetZ } = data;
                 this.status = status.toLowerCase();
                 this.state.workPosition = {
