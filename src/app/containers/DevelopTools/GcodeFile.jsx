@@ -53,7 +53,7 @@ class GcodeFile extends PureComponent {
         onChangeGcodeFile: async (event) => {
             const file = event.target.files[0];
             try {
-                await this.actions.uploadGcodeFile(file);
+                this.actions.uploadGcodeFile(file);
             } catch (e) {
                 modal({
                     title: i18n._('Failed to upload file'),
@@ -61,27 +61,29 @@ class GcodeFile extends PureComponent {
                 });
             }
         },
-        uploadGcodeFile: async (file) => {
+        uploadGcodeFile: (file) => {
             const formData = new FormData();
             const { port } = this.props;
             formData.append('file', file);
             formData.append('port', port);
             formData.append('dataSource', PROTOCOL_SCREEN);
-            const res = await api.uploadGcodeFile(formData);
-            const { originalName, uploadName, gcodeHeader } = res.body;
-            let header = ';Header Start\n';
-            this.headerTextarea.value = `G-Code Name: ${originalName}\n`;
-            for (const key of Object.keys(gcodeHeader)) {
-                const value = gcodeHeader[key];
-                header += `${key}: ${value}\n`;
-                this.headerTextarea.value += `${key.substring(1)}: ${value}\n`;
-            }
-            header += ';Header End\n';
-            this.setState({
-                gcodeFile: originalName,
-                uploadName,
-                gcodeHeader: header
-            });
+            api.uploadGcodeFile(formData)
+                .then((res) => {
+                    const { originalName, uploadName, gcodeHeader } = res.body;
+                    let header = ';Header Start\n';
+                    this.headerTextarea.value = `G-Code Name: ${originalName}\n`;
+                    for (const key of Object.keys(gcodeHeader)) {
+                        const value = gcodeHeader[key];
+                        header += `${key}: ${value}\n`;
+                        this.headerTextarea.value += `${key.substring(1)}: ${value}\n`;
+                    }
+                    header += ';Header End\n';
+                    this.setState({
+                        gcodeFile: originalName,
+                        uploadName,
+                        gcodeHeader: header
+                    });
+                });
         },
         clickUploadGcodeFile: () => {
             this.gcodeFileRef.current.value = null;

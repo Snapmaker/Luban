@@ -7,7 +7,7 @@ import logger from '../../lib/logger';
 import DataStorage, { rmDir } from '../../DataStorage';
 import store from '../../store';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
-import parseGcodeHeader from '../../lib/parseGcodeHeader';
+import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { zipFolder, unzipFile } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import {
@@ -135,7 +135,7 @@ export const uploadGcodeFile = (req, res) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {
-            const gcodeHeader = parseGcodeHeader(uploadPath);
+            const gcodeHeader = parseLubanGcodeHeader(uploadPath);
             res.send({
                 originalName,
                 uploadName,
