@@ -680,6 +680,9 @@ class ModelGroup extends EventEmitter {
             // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
+            if (this.selectedModelIDArray.includes(model.modelID)) {
+                this.selectedGroup.add(model.meshObject);
+            }
         }
         this.applySelectedObjectParentMatrix();
         return this.getStateAndUpdateBoundingBox();
