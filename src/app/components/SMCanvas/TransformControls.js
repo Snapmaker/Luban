@@ -803,6 +803,8 @@ class TransformControls extends Object3D {
                 const parentSVec = new Vector3().copy(this.pointStart).applyQuaternion(this.parentQuaternionInv);
                 const parentEVec = new Vector3().copy(this.pointEnd).applyQuaternion(this.parentQuaternionInv);
                 parentEVec.divide(parentSVec);
+                let shouldDisableScale = false;
+
                 if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
                         parentEVec.y = parentEVec.x;
@@ -819,8 +821,10 @@ class TransformControls extends Object3D {
                     parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
                     parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
                 }
-
-                this.object.scale.copy(this.scaleStart).multiply(parentEVec);
+                shouldDisableScale = this.limitScaleValue(parentEVec);
+                if (!shouldDisableScale) {
+                    this.object.scale.copy(this.scaleStart).multiply(parentEVec);
+                }
 
                 break;
             }
@@ -839,6 +843,19 @@ class TransformControls extends Object3D {
         this.dragging = false;
 
         this.dispatchEvent(EVENTS.UPDATE);
+    }
+
+    limitScaleValue(parentEVec) {
+        let shouldDisableScale = false;
+        this.object.children.forEach((meshObject) => {
+            if (parentEVec.x * meshObject.scale.x < 0.01
+                || parentEVec.y * meshObject.scale.y < 0.01
+                || parentEVec.z * meshObject.scale.z < 0.01
+            ) {
+                shouldDisableScale = true;
+            }
+        });
+        return shouldDisableScale;
     }
 
     // Calculate the bbox of each model in the selectedGroup
