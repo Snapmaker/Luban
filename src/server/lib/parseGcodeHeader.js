@@ -249,6 +249,47 @@ function parse(line, initMeta, meta, options, startGcodeStart) {
     });
 }
 
+function parseLubanGcodeHeader(filename) {
+    const initMeta = {
+    };
+
+    const headers = [];
+    let headerStart = false;
+
+    const gcodeLines = fs.readFileSync(filename, 'utf8').split('\n');
+
+    for (let i = 0; i < 100; i++) {
+        const line = gcodeLines[i];
+        if (line.indexOf(';Header Start') !== -1) {
+            headerStart = true;
+            continue;
+        }
+        if (line.indexOf(';Header End') !== -1) {
+            break;
+        }
+        if (headerStart) {
+            headers.push(line);
+        }
+    }
+    for (const h of headers) {
+        if (h.trim() === '') {
+            continue;
+        }
+        const sep = h.indexOf(':');
+        if (sep !== -1) {
+            const key = h.substr(0, sep).trim();
+            const value = h.substr(sep + 1).trim();
+            if (value.match(/^(-?\d+)(\.\d+)?$/)) {
+                initMeta[key] = parseFloat(value);
+            } else {
+                initMeta[key] = value;
+            }
+        }
+    }
+
+    return initMeta;
+}
+
 function parseGcodeHeader(filename) {
     const initMeta = {
         ';header_type': null,
@@ -363,4 +404,7 @@ function parseGcodeHeader(filename) {
 }
 
 
-export default parseGcodeHeader;
+export {
+    parseGcodeHeader,
+    parseLubanGcodeHeader
+};
