@@ -1096,10 +1096,11 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-
+        const { SVGActions, toolPathModelGroup } = getState()[headType];
+        // change 'selectToolPathModel' when selectElements on edit
         SVGActions.selectElements(elements);
-
+        const modelID = elements[0].id;
+        toolPathModelGroup.selectToolPathModel(modelID);
         // select first toolPathModel by default
         // const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
         // toolPathModelGroup.selectToolPathModel(model && model.modelID);
