@@ -9,7 +9,7 @@ import settings from '../../config/settings';
 import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import storeManager from '../../store/local-storage';
+import storeManager, { machineStore } from '../../store/local-storage';
 import General from './General';
 import FirmwareTool from './FirmwareTool';
 import Workspace from './Workspace';
@@ -114,8 +114,9 @@ class Settings extends PureComponent {
         // Workspace
         config: {
             restoreDefaults: () => {
+                console.log('xxx', machineStore);
                 confirm({
-                    title: i18n._('Restore Defaults'),
+                    title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
                     storeManager.clear();

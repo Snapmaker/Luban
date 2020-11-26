@@ -105,6 +105,7 @@ export const actions = {
         }
 
         const envObj = JSON.parse(content);
+        console.log('recover', envObj);
         let modActions = null;
         let modState = null;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
