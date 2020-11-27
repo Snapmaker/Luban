@@ -108,7 +108,7 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
                 }
             });
         });
-    } else if (sourceType === 'raster' && mode === 'greyscale') {
+    } else if (mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
         generator.on('progress', (p) => onProgress(p));
 

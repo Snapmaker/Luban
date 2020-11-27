@@ -140,6 +140,10 @@ class Model {
                 taskInfo.transformation.flip += 1;
             }
         }
+        // svg process as image
+        if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
+            taskInfo.uploadName = this.uploadImageName;
+        }
         return taskInfo;
     }
 
@@ -410,7 +414,7 @@ class Model {
 
     // Update source
     updateSource(source) {
-        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, processImageName, width, height } = source;
+        const { sourceType, sourceHeight, sourceWidth, originalName, uploadName, uploadImageName, processImageName, width, height } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
@@ -419,6 +423,7 @@ class Model {
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
         this.processImageName = processImageName || this.processImageName;
+        this.uploadImageName = uploadImageName || this.uploadImageName;
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;

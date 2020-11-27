@@ -258,12 +258,13 @@ function processVector(modelInfo, onProgress) {
         invert: invert,
         turdSize: turdSize
     };
-    //todo: add onProgress in this return function
+    onProgress && onProgress(1);
+    // todo: add onProgress in this return function
     return convertRasterToSvg(options);
 }
 
 function processDxf(modelInfo, onProgress) {
-    //todo: add onProgress in this return function
+    // todo: add onProgress in this return function
     onProgress && onProgress(0.2);
     return new Promise(async (resolve) => {
         const { uploadName } = modelInfo;
@@ -287,7 +288,7 @@ function processDxf(modelInfo, onProgress) {
 
 function process(modelInfo, onProgress) {
     const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === 'raster') {
+    if (sourceType === 'raster' || sourceType === 'svg') {
         if (mode === 'greyscale') {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo, onProgress);

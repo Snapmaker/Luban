@@ -1,3 +1,4 @@
+import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
 import { remapElement } from '../ui/SVGEditor/element-recalculate';
@@ -252,6 +253,31 @@ class SvgModel {
         };
 
         return model;
+    }
+
+    // just for svg file
+    async uploadSourceImage() {
+        const { uploadName } = this.relatedModel;
+
+        if (uploadName.indexOf('.svg') === -1) {
+            return;
+        }
+        const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
+            .then(res => res.text());
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        const v = await Canvg.fromString(ctx, content);
+        await v.render();
+        const blob = await new Promise(resolve => canvas.toBlob(resolve));
+        const file = new File([blob], 'gen.png');
+        document.body.removeChild(canvas);
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await api.uploadImage(formData);
+        this.relatedModel.updateSource({
+            uploadImageName: res.body.uploadName
+        });
     }
 
     async updateSource() {

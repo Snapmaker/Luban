@@ -14,10 +14,10 @@ import api from '../../api';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
 import ImageProcessMode from './ImageProcessMode';
-import GcodeConfigSvgVector from './gcodeconfig/GcodeConfigSvgVector';
+import GcodeConfigVector from './gcodeconfig/GcodeConfigVector';
 import GcodeConfigRasterBW from './gcodeconfig/GcodeConfigRasterBW';
 import GcodeConfigGreyscale from './gcodeconfig/GcodeConfigGreyscale';
-import GcodeConfigRasterVector from './gcodeconfig/GcodeConfigRasterVector';
+// import GcodeConfigRasterVector from './gcodeconfig/GcodeConfigRasterVector';
 import { actions as editorActions } from '../../flux/editor';
 
 
@@ -219,12 +219,11 @@ class LaserParameters extends PureComponent {
 
         const isEditor = this.props.page === PAGE_EDITOR;
         const isProcess = this.props.page === PAGE_PROCESS;
-        const isBW = (sourceType === 'raster' && (mode === 'bw' || mode === 'halftone'));
-        const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
-        const isRasterVector = (sourceType === 'raster' && mode === 'vector');
-        const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
+        const isBW = (mode === 'bw' || mode === 'halftone');
+        const isGreyscale = (mode === 'greyscale');
+        const isVector = mode === 'vector';
         const isTextVector = (config.svgNodeName === 'text');
-        const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
 
         return (
             <React.Fragment>
@@ -266,7 +265,7 @@ class LaserParameters extends PureComponent {
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
-                {isProcessMode && (selectedModelArray.length === 1) && (
+                {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                     <ImageProcessMode
                         disabled={!selectedModelVisible}
                         sourceType={sourceType}
@@ -291,11 +290,8 @@ class LaserParameters extends PureComponent {
                 {isProcess && isGreyscale && (selectedModelArray && selectedModelArray.length === 1) && (
                     <GcodeConfigGreyscale disabled={!selectedModelVisible} />
                 )}
-                {isProcess && isRasterVector && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigRasterVector disabled={!selectedModelVisible} />
-                )}
-                {isProcess && (isSvgVector || isTextVector) && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigSvgVector disabled={!selectedModelVisible} />
+                {isProcess && (isVector || isTextVector) && (selectedModelArray && selectedModelArray.length === 1) && (
+                    <GcodeConfigVector disabled={!selectedModelVisible} />
                 )}
 
                 {isProcess && (

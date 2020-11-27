@@ -37,10 +37,10 @@ class ImageProcessMode extends PureComponent {
     render() {
         const { sourceType, mode, showOrigin, disabled } = this.props;
         const actions = this.actions;
-        const isBW = (sourceType === 'raster' && mode === 'bw');
-        const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
-        const isRasterVector = (sourceType === 'raster' && mode === 'vector');
-        const isHalftone = (sourceType === 'raster' && mode === 'halftone');
+        const isBW = mode === 'bw';
+        const isGreyscale = mode === 'greyscale';
+        const isRasterVector = sourceType === 'raster' && mode === 'vector';
+        const isHalftone = mode === 'halftone';
 
         return (
             <React.Fragment>

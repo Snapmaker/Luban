@@ -220,7 +220,7 @@ class CNCPath extends PureComponent {
         const isTextVector = (config.svgNodeName === 'text');
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const isProcessMode = isEditor && sourceType === 'raster' && config.svgNodeName !== 'text';
+        const showProcessImage = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
         return (
             <React.Fragment>
                 <input
@@ -254,7 +254,7 @@ class CNCPath extends PureComponent {
                 )}
                 {selectedModelArray.length === 1 && (
                     <div className="sm-parameter-container">
-                        {isProcessMode && (
+                        {isEditor && showProcessImage && (
                             <ImageProcessMode
                                 sourceType={sourceType}
                                 mode={mode}
