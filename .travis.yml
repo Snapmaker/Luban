@@ -30,6 +30,7 @@ addons:
             - libgconf-2-4
             - binutils
             - rpm
+            - libfontconfig-dev
 
 before_install:
     - git --version
