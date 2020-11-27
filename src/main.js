@@ -3,7 +3,7 @@ import 'regenerator-runtime/runtime';
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
-import { isNull } from 'lodash';
+import { isUndefined } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
 import MenuBuilder from './electron-app/Menu';
@@ -211,9 +211,9 @@ const createWindow = async () => {
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.on('openFile', () => {
         const newProjectFile = config.get('projectFile');
-        if (!isNull(newProjectFile)) {
+        if (!isUndefined(newProjectFile)) {
             mainWindow.webContents.send('open-file', newProjectFile);
-            config.set('projectFile', null);
+            config.set('projectFile', undefined);
         }
     });
 
