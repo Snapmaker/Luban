@@ -402,7 +402,10 @@ export const actions = {
 
 
         const options = selectedModel.getTaskInfo();
-
+        options.transformation = {
+            width: options.transformation.width,
+            height: options.transformation.height
+        };
 
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
