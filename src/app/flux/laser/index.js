@@ -73,13 +73,6 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    // Update state directly
-    updateState: (state) => {
-        return {
-            type: ACTION_UPDATE_STATE,
-            state
-        };
-    },
     init: () => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.setDataChangedCallback(() => {
