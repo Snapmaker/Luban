@@ -258,7 +258,8 @@ function parseLubanGcodeHeader(filename) {
 
     const gcodeLines = fs.readFileSync(filename, 'utf8').split('\n');
 
-    for (let i = 0; i < 100; i++) {
+    const maxSearchLines = Math.min(100, gcodeLines.length);
+    for (let i = 0; i < maxSearchLines; i++) {
         const line = gcodeLines[i];
         if (line.indexOf(';Header Start') !== -1) {
             headerStart = true;
