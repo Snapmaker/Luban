@@ -406,6 +406,14 @@ export const actions = {
         dispatch(baseActions.updateState({ laserSize }));
     },
 
+    updateIsLaserPrintAutoMode: (isLaserPrintAutoMode) => (dispatch) => {
+        dispatch(baseActions.updateState({ isLaserPrintAutoMode }));
+    },
+
+    updateMaterialThickness: (materialThickness) => (dispatch) => {
+        dispatch(baseActions.updateState({ materialThickness }));
+    },
+
     openServer: (callback) => (dispatch, getState) => {
         const { server, serverToken, isOpen } = getState().machine;
         if (isOpen) {

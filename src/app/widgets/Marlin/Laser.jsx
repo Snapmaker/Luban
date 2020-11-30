@@ -23,7 +23,8 @@ class Printing extends PureComponent {
         size: PropTypes.object,
 
         executeGcode: PropTypes.func.isRequired,
-        updateState: PropTypes.func.isRequired
+        updateIsLaserPrintAutoMode: PropTypes.func.isRequired,
+        updateMaterialThickness: PropTypes.func.isRequired
     };
 
 
@@ -79,15 +80,10 @@ class Printing extends PureComponent {
             }
         },
         onChangeLaserPrintMode: () => {
-            // TODO: Don't call updateState from Component!!
-            this.props.updateState({
-                isLaserPrintAutoMode: !this.props.isLaserPrintAutoMode
-            });
+            this.props.updateIsLaserPrintAutoMode(!this.props.isLaserPrintAutoMode);
         },
         onChangeMaterialThickness: (value) => {
-            this.props.updateState({
-                materialThickness: value
-            });
+            this.props.updateMaterialThickness(value);
         }
     };
 
@@ -232,7 +228,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
-        updateState: (state) => dispatch(machineActions.updateState(state))
+        updateIsLaserPrintAutoMode: (isLaserPrintAutoMode) => dispatch(machineActions.updateIsLaserPrintAutoMode(isLaserPrintAutoMode)),
+        updateMaterialThickness: (materialThickness) => dispatch(machineActions.updateIsLaserPrintAutoMode(materialThickness))
     };
 };
 
