@@ -16,6 +16,7 @@ import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
 import api from '../../api';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
@@ -121,15 +122,15 @@ class Settings extends PureComponent {
                 }).then(() => {
                     // remove recovery modelState
                     api.removeEnv({
-                        headType: 'cnc'
+                        headType: HEAD_CNC
                     });
                     api.removeEnv({
-                        headType: 'laser'
+                        headType: HEAD_LASER
                     });
                     api.removeEnv({
-                        headType: '3dp'
+                        headType: HEAD_3DP
                     });
-
+                    this.props.removeAllPrintingModels();
                     // remove material setting config
                     this.props.removeAllMaterialDefinition();
 
