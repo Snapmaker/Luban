@@ -381,7 +381,7 @@ export const actions = {
     },
 
     // TODO: temporary workaround for model image processing
-    processSelectedModel: (headType) => (dispatch, getState) => {
+    processSelectedModel: (headType) => async (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
@@ -389,27 +389,24 @@ export const actions = {
             return;
         }
         const selectedModel = selectedModels[0];
-        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'dxf') {
-            return;
-        }
+        // if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'dxf') {
+        //     return;
+        // }
         if (selectedModel.config.svgNodeName === 'text') {
             return;
         }
+        // svg process as image
+        if (selectedModel.sourceType === 'svg' && !selectedModel.uploadImageName) {
+            await selectedModel.relatedModels.svgModel.uploadSourceImage();
+        }
 
-        const options = {
-            headType: headType,
-            modelId: selectedModel.modelID,
-            uploadName: selectedModel.uploadName,
-            sourceType: selectedModel.sourceType,
-            mode: selectedModel.mode,
-            transformation: {
-                width: selectedModel.transformation.width,
-                height: selectedModel.transformation.height,
-                rotationZ: 0,
-                flip: selectedModel.transformation.flip
-            },
-            config: selectedModel.config
+
+        const options = selectedModel.getTaskInfo();
+        options.transformation = {
+            width: options.transformation.width,
+            height: options.transformation.height
         };
+
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
             progress: 0
@@ -834,10 +831,11 @@ export const actions = {
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
-        const model = modelGroup.getModel(taskResult.data.modelId);
+        const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {
             return;
         }
+
         const processImageName = taskResult.filename;
         if (!processImageName) {
             return;

@@ -32,6 +32,12 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
  */
 const convertRasterToSvg = (options) => {
     const { uploadName, vectorThreshold, invert, turdSize } = options;
+    // svg may get here, return the original file
+    if (uploadName.indexOf('.svg')) {
+        return Promise.resolve({
+            filename: uploadName
+        });
+    }
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
     const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     const params = {

@@ -34,7 +34,8 @@ class ImageProcessMode extends PureComponent {
     render() {
         const { sourceType, mode, showOrigin, disabled } = this.props;
         const actions = this.actions;
-        const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
+        const isGreyscale = mode === 'greyscale';
+        const isSvg = sourceType === 'svg';
 
         return (
             <React.Fragment>
@@ -68,6 +69,18 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('RELIEF')}</span>
                                 </div>
+                                {isSvg && (
+                                    <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'vector' })}>
+                                        <Anchor
+                                            disabled={disabled}
+                                            className={styles['laser-mode__btn']}
+                                            onClick={() => actions.changeSelectedModelMode('vector')}
+                                        >
+                                            <i className={styles['laser-mode__icon-vector']} />
+                                        </Anchor>
+                                        <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="sm-parameter-row">
@@ -80,7 +93,7 @@ class ImageProcessMode extends PureComponent {
                                 onChange={this.props.changeSelectedModelShowOrigin}
                             />
                         </div>
-                        {isRasterGreyscale && (
+                        {isGreyscale && (
                             <ReliefParameters disabled={disabled} />
                         )}
                     </React.Fragment>
