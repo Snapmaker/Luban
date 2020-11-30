@@ -403,7 +403,8 @@ const mapDispatchToProps = (dispatch) => {
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
-        openProject: (headType, history) => dispatch(projectActions.open(headType, history))
+        openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
+        removeAllMaterialDefinition: () => dispatch(printingActions.removeAllMaterialDefinition())
     };
 };
 

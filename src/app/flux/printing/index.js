@@ -508,6 +508,24 @@ export const actions = {
         }));
     },
 
+    removeAllMaterialDefinition: () => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        const newMaterialDefinitions = [];
+        for (const definition of state.materialDefinitions) {
+            if (definition.definitionId === 'material.pla' || definition.definitionId === 'material.abs') {
+                newMaterialDefinitions.push(definition);
+                continue;
+            }
+            definitionManager.removeDefinition(definition);
+        }
+        console.log('materialDefinitions', newMaterialDefinitions);
+
+        dispatch(actions.updateState({
+            materialDefinitions: newMaterialDefinitions
+        }));
+    },
+
     removeQualityDefinition: (definition) => async (dispatch, getState) => {
         const state = getState().printing;
 

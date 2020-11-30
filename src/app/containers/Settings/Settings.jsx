@@ -119,6 +119,7 @@ class Settings extends PureComponent {
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
+                    // remove recovery modelState
                     api.removeEnv({
                         headType: 'cnc'
                     });
@@ -129,6 +130,10 @@ class Settings extends PureComponent {
                         headType: '3dp'
                     });
 
+                    // remove material setting config
+                    this.props.removeAllMaterialDefinition();
+
+                    // remove basic setting
                     storeManager.clear();
                     window.location.reload();
                 });
