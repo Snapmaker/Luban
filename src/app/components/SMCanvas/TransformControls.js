@@ -803,7 +803,6 @@ class TransformControls extends Object3D {
                 const parentSVec = new Vector3().copy(this.pointStart).applyQuaternion(this.parentQuaternionInv);
                 const parentEVec = new Vector3().copy(this.pointEnd).applyQuaternion(this.parentQuaternionInv);
                 parentEVec.divide(parentSVec);
-                let shouldDisableScale = false;
 
                 if (this.object.uniformScalingState === true) {
                     if (this.axis === 'X') {
@@ -821,8 +820,7 @@ class TransformControls extends Object3D {
                     parentEVec.y = (this.axis === 'Y' ? parentEVec.y : 1);
                     parentEVec.z = (this.axis === 'Z' ? parentEVec.z : 1);
                 }
-                shouldDisableScale = this.limitScaleValue(parentEVec);
-                if (!shouldDisableScale) {
+                if (!this.checkIfItShouldDisableScale(parentEVec)) {
                     this.object.scale.copy(this.scaleStart).multiply(parentEVec);
                 }
 
@@ -845,15 +843,17 @@ class TransformControls extends Object3D {
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
-    limitScaleValue(parentEVec) {
+    checkIfItShouldDisableScale(parentEVec) {
         let shouldDisableScale = false;
-        this.object.children.forEach((meshObject) => {
+        this.object.children.every((meshObject) => {
             if (parentEVec.x * meshObject.scale.x < 0.01
                 || parentEVec.y * meshObject.scale.y < 0.01
                 || parentEVec.z * meshObject.scale.z < 0.01
             ) {
                 shouldDisableScale = true;
+                return false;
             }
+            return true;
         });
         return shouldDisableScale;
     }
