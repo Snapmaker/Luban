@@ -9,12 +9,13 @@ import settings from '../../config/settings';
 import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import storeManager, { machineStore } from '../../store/local-storage';
+import storeManager from '../../store/local-storage';
 import General from './General';
 import FirmwareTool from './FirmwareTool';
 import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
+import api from '../../api';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
@@ -114,11 +115,20 @@ class Settings extends PureComponent {
         // Workspace
         config: {
             restoreDefaults: () => {
-                console.log('xxx', machineStore);
                 confirm({
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
+                    api.removeEnv({
+                        headType: 'cnc'
+                    });
+                    api.removeEnv({
+                        headType: 'laser'
+                    });
+                    api.removeEnv({
+                        headType: '3dp'
+                    });
+
                     storeManager.clear();
                     window.location.reload();
                 });
