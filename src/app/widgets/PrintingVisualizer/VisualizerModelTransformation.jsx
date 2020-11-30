@@ -59,12 +59,15 @@ class VisualizerModelTransformation extends PureComponent {
                         transformation.positionY = value;
                         break;
                     case 'scaleX':
+                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleX = value;
                         break;
                     case 'scaleY':
+                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleY = value;
                         break;
                     case 'scaleZ':
+                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleZ = value;
                         break;
                     case 'rotateX':
@@ -83,6 +86,7 @@ class VisualizerModelTransformation extends PureComponent {
                         break;
                 }
             }
+            console.log('transformation', transformation);
 
             this.props.updateSelectedModelTransformation(transformation);
         },
@@ -286,7 +290,7 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
-                                    min={0}
+                                    min={1}
                                     value={scaleXPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform({ 'scaleX': value / 100 });
@@ -300,7 +304,7 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
-                                    min={0}
+                                    min={1}
                                     value={scaleYPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform({ 'scaleY': value / 100 });
@@ -314,7 +318,7 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
-                                    min={0}
+                                    min={1}
                                     value={scaleZPercent}
                                     onChange={(value) => {
                                         actions.onModelTransform({ 'scaleZ': value / 100 });
