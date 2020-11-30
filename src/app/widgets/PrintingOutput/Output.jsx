@@ -27,6 +27,7 @@ class Output extends PureComponent {
         gcodeLine: PropTypes.object,
         gcodeFile: PropTypes.object,
         hasModel: PropTypes.bool.isRequired,
+        hasAnyModelVisible: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
@@ -119,7 +120,7 @@ class Output extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const { workflowState, stage, gcodeLine, hasModel } = this.props;
+        const { workflowState, stage, gcodeLine, hasModel, hasAnyModelVisible } = this.props;
 
         const isSlicing = stage === PRINTING_STAGE.SLICING;
         const { isAnyModelOverstepped } = this.props;
@@ -131,7 +132,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || isSlicing || isAnyModelOverstepped}
+                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped}
                         style={{ display: 'block', width: '100%' }}
                     >
                         {i18n._('Generate G-code')}
@@ -214,6 +215,7 @@ const mapStateToProps = (state) => {
         workflowState,
         stage,
         modelGroup,
+        hasAnyModelVisible: modelGroup.hasAnyModelVisible(),
         boundingBox,
         hasModel,
         isAnyModelOverstepped,

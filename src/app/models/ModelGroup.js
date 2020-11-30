@@ -189,6 +189,10 @@ class ModelGroup extends EventEmitter {
         return this.selectedModelArray.length === 1 && this.selectedModelArray[0].changeShowOrigin();
     }
 
+    hasAnyModelVisible() {
+        return this.models.some((model) => model.visible);
+    }
+
     hideSelectedModel() {
         const models = this.getSelectedModelArray();
         models.forEach((model) => {
