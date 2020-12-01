@@ -243,8 +243,11 @@ export const actions = {
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
-    }
+    },
 
+    cleanAllRecentFiles: () => async () => {
+        UniApi.Menu.cleanAllRecentFiles();
+    }
 };
 
 

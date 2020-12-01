@@ -64,6 +64,17 @@ function recoverRecentFiles() {
     }
 }
 
+export function cleanAllRecentFiles() {
+    const menu = Menu.getApplicationMenu();
+    const itemRecentFiles = menu.getMenuItemById('recent-files');
+
+    for (const item of itemRecentFiles.submenu.items) {
+        if (item.label !== 'Clean All Recent Files') item.visible = false;
+    }
+    const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
+    fs.writeFileSync(recentFileName, JSON.stringify([]), 'utf-8');
+}
+
 function onClickPreferences(browserWindow) {
     const window = browserWindow;
 

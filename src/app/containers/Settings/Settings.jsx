@@ -116,10 +116,13 @@ class Settings extends PureComponent {
         // Workspace
         config: {
             restoreDefaults: () => {
+                this.props.cleanAllRecentFiles();
                 confirm({
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
+                    // api.removeElectronData();
+                    this.props.cleanAllRecentFiles();
                     // remove recovery modelState
                     api.removeEnv({
                         headType: HEAD_CNC

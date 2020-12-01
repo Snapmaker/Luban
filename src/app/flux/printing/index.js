@@ -519,7 +519,6 @@ export const actions = {
             }
             definitionManager.removeDefinition(definition);
         }
-        console.log('materialDefinitions', newMaterialDefinitions);
 
         dispatch(actions.updateState({
             materialDefinitions: newMaterialDefinitions

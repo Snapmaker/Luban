@@ -97,9 +97,9 @@ const Menu = {
             item.enabled = enabled;
         }
     },
-    addRecentFile(file, isSave) {
-        const menu = require('electron').remote.require('./Menu');
-        menu.addRecentFile(file, isSave);
+    cleanAllRecentFiles() {
+        const menu = window.require('electron').remote.require('./electron-app/Menu');
+        menu.cleanAllRecentFiles();
     }
 };
 

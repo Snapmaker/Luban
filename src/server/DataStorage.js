@@ -91,6 +91,11 @@ class DataStorage {
          //  await this.versionAdaptation();
      }
 
+     async resetRecentFiles() {
+         fs.writeFileSync(`${this.userDataDir}/recent-opened-files.json`, JSON.stringify([]), 'utf-8');
+         console.log('path', `${this.userDataDir}/recent-opened-files.json`);
+     }
+
      async initSlicer() {
          mkdirp.sync(this.configDir);
 
