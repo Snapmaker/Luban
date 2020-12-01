@@ -14,6 +14,7 @@ import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
 import { actions as projectActions } from '../flux/project';
+import { actions as settingActions } from '../flux/setting';
 
 import api from '../api';
 import i18n from '../lib/i18n';
@@ -404,9 +405,7 @@ const mapDispatchToProps = (dispatch) => {
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
-        removeAllMaterialDefinition: () => dispatch(printingActions.removeAllMaterialDefinition()),
-        removeAllPrintingModels: () => dispatch(printingActions.removeAllModels()),
-        cleanAllRecentFiles: () => dispatch(projectActions.cleanAllRecentFiles())
+        resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };
 };
 

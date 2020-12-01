@@ -9,14 +9,12 @@ import settings from '../../config/settings';
 import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import storeManager from '../../store/local-storage';
+// import storeManager from '../../store/local-storage';
 import General from './General';
 import FirmwareTool from './FirmwareTool';
 import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
-import api from '../../api';
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../constants';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
@@ -116,29 +114,11 @@ class Settings extends PureComponent {
         // Workspace
         config: {
             restoreDefaults: () => {
-                this.props.cleanAllRecentFiles();
                 confirm({
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
-                    // api.removeElectronData();
-                    this.props.cleanAllRecentFiles();
-                    // remove recovery modelState
-                    api.removeEnv({
-                        headType: HEAD_CNC
-                    });
-                    api.removeEnv({
-                        headType: HEAD_LASER
-                    });
-                    api.removeEnv({
-                        headType: HEAD_3DP
-                    });
-                    this.props.removeAllPrintingModels();
-                    // remove material setting config
-                    this.props.removeAllMaterialDefinition();
-
-                    // remove basic setting
-                    storeManager.clear();
+                    this.props.resetAllUserSettings();
                     window.location.reload();
                 });
             }

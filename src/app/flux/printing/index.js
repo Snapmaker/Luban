@@ -535,6 +535,23 @@ export const actions = {
         }));
     },
 
+    removeAllQualityDefinition: () => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        const newQualityDefinitions = [];
+        for (const definition of state.qualityDefinitions) {
+            if (definition.definitionId === 'quality.fast_print' || definition.definitionId === 'quality.normal_quality' || definition.definitionId === 'quality.high_quality') {
+                newQualityDefinitions.push(definition);
+                continue;
+            }
+            definitionManager.removeDefinition(definition);
+        }
+
+        dispatch(actions.updateState({
+            qualityDefinitions: newQualityDefinitions
+        }));
+    },
+
     updateMaterialDefinitionName: (definition, name) => async (dispatch, getState) => {
         if (!name || name.trim().length === 0) {
             return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
