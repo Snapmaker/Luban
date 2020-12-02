@@ -267,9 +267,10 @@ app.on('open-file', (event, projectFile) => {
 app.on('window-all-closed', () => {
     // Follow macOS convention of having the application in memory event
     // after all windows have been closed.
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+    // if (process.platform !== 'darwin') {
+    // }
+
+    app.quit();
 });
 
 /**
