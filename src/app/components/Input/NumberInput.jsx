@@ -15,6 +15,8 @@ class NumberInput extends PureComponent {
         onChange: PropTypes.func
     };
 
+    ref = React.createRef();
+
     constructor(props) {
         super(props);
 
@@ -66,6 +68,10 @@ class NumberInput extends PureComponent {
         }
     };
 
+    onFocus=() => {
+        this.ref.current.select();
+    };
+
     onAfterChangeWrapper(value) {
         const { min, max, onChange } = this.props;
 
@@ -113,6 +119,7 @@ class NumberInput extends PureComponent {
 
         return (
             <input
+                ref={this.ref}
                 {...rest}
                 type="number"
                 value={this.state.displayValue}
@@ -120,6 +127,7 @@ class NumberInput extends PureComponent {
                 onChange={this.onChange}
                 onBlur={this.onBlur}
                 onKeyUp={this.onKeyUp}
+                onFocus={this.onFocus}
             />
         );
     }

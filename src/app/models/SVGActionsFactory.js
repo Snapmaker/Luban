@@ -5,7 +5,7 @@ import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
 // import { remapElement } from '../../widgets/SVGEditor/element-recalculate';
 import { NS } from '../ui/SVGEditor/lib/namespaces';
-import { isZero } from '../lib/utils';
+import { isZero } from '../../shared/lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';
@@ -516,6 +516,7 @@ class SVGActionsFactory {
      */
     async createModelFromElement(element) {
         const headType = this.modelGroup.headType;
+        const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
         const svgModel = new SvgModel(element, this.size);
         this.svgModels.push(svgModel);
         svgModel.setParent(this.svgContentGroup.group);
@@ -535,7 +536,7 @@ class SVGActionsFactory {
             const sourceType = 'svg';
             const mode = 'vector';
 
-            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode);
+            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
 
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };

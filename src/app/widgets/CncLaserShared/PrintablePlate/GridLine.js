@@ -14,7 +14,10 @@ class GridLine {
         sizeY = (typeof sizeY === 'undefined') ? sizeX : sizeY;
         stepY = (typeof stepY === 'undefined') ? stepX : stepY;
 
-        for (let x = -1 * sizeX; x <= sizeX; x += stepX) {
+        const floorX = Math.floor(sizeX / stepX) * stepX;
+        const floorY = Math.floor(sizeY / stepY) * stepY;
+
+        for (let x = -1 * floorX; x <= floorX; x += stepX) {
             const geometry = new THREE.Geometry();
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
@@ -30,7 +33,7 @@ class GridLine {
             this.group.add(new THREE.Line(geometry, material));
         }
 
-        for (let y = -1 * sizeY; y <= sizeY; y += stepY) {
+        for (let y = -1 * floorY; y <= floorY; y += stepY) {
             const geometry = new THREE.Geometry();
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors

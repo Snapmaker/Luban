@@ -47,7 +47,7 @@ run into the fixtures before you use this feature.')}
                             type="button"
                             className="sm-btn btn-sm btn-outline-secondary"
                             onClick={() => {
-                                actions.move({ x: 0, y: 0, z: 0 });
+                                actions.move({ x: 0, y: 0, z: 0, b: 0 });
                             }}
                             disabled={!canClick}
                         >
@@ -66,7 +66,7 @@ run into the fixtures before you use this feature.')}
                             type="button"
                             className="sm-btn btn-sm btn-outline-secondary"
                             onClick={() => {
-                                props.executeGcode('G92 X0 Y0 Z0');
+                                props.executeGcode('G92 X0 Y0 Z0 B0');
                             }}
                             disabled={!canClick}
                         >

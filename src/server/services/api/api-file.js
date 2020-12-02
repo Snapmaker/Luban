@@ -16,6 +16,12 @@ import {
 
 const log = logger('api:file');
 
+function copyFileSync(src, dst) {
+    if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dst);
+    }
+}
+
 const cpFileToTmp = async (file, uploadName) => {
     const originalName = path.basename(file.name);
     uploadName = uploadName || originalName;
@@ -96,14 +102,21 @@ export const buildFirmwareFile = (req, res) => {
 
 export const uploadCaseFile = (req, res) => {
     const { name, casePath } = req.body;
-    const originalName = path.basename(name);
+    let originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
-    const uploadName = pathWithRandomSuffix(originalName);
+    let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    fs.copyFile(originalPath, uploadPath, (err) => {
+    console.log('originalName', originalName, uploadName, path.extname(originalName));
+
+    fs.copyFile(originalPath, uploadPath, async (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {
+            if (path.extname(originalName) === '.zip') {
+                await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+                originalName = originalName.replace(/\.zip$/, '');
+                uploadName = originalName;
+            }
             res.send({
                 originalName,
                 uploadName
@@ -119,31 +132,52 @@ export const uploadCaseFile = (req, res) => {
  * @param req
  * @param res
  */
-export const uploadGcodeFile = (req, res) => {
+export const uploadGcodeFile = async (req, res) => {
     const file = req.files.file;
-
-    if (!file) {
+    let originalName, uploadName, uploadPath, originalPath;
+    if (file) {
+        originalPath = file.path;
+        originalName = path.basename(file.name);
+        uploadName = pathWithRandomSuffix(originalName);
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        mv(originalPath, uploadPath, (err) => {
+            if (err) {
+                log.error(`Failed to upload file ${originalName} ${err}`);
+            } else {
+                const gcodeHeader = parseLubanGcodeHeader(uploadPath);
+                res.send({
+                    originalName,
+                    uploadName,
+                    gcodeHeader
+                });
+                res.end();
+            }
+        });
+    } else {
+        const { casePath, name } = req.body;
+        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
+        originalName = path.basename(name);
+        uploadName = originalName.replace(/\.zip$/, '');
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        // const tmpFilePath = `${DataStorage.tmpDir}/${originalName}`;
+        const gcodeFile = {
+            name: originalName,
+            path: originalPath
+        };
+        await cpFileToTmp(gcodeFile);
+        await unzipFile(`${originalName}`, `${DataStorage.tmpDir}`);
+        const stats = fs.statSync(uploadPath);
+        const size = stats.size;
+        const gcodeHeader = parseLubanGcodeHeader(uploadPath);
+        res.send({
+            originalName,
+            uploadName,
+            size,
+            gcodeHeader
+        });
         res.end();
-        return;
     }
 
-    const originalName = path.basename(file.name);
-    const uploadName = pathWithRandomSuffix(originalName);
-    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
-    mv(file.path, uploadPath, (err) => {
-        if (err) {
-            log.error(`Failed to upload file ${originalName}`);
-        } else {
-            const gcodeHeader = parseLubanGcodeHeader(uploadPath);
-            res.send({
-                originalName,
-                uploadName,
-                gcodeHeader
-            });
-            res.end();
-        }
-    });
     /*
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
@@ -196,12 +230,6 @@ export const removeEnv = async (req, res) => {
     res.send(true);
     res.end();
 };
-
-function copyFileSync(src, dst) {
-    if (fs.existsSync(src)) {
-        fs.copyFileSync(src, dst);
-    }
-}
 
 
 /**
@@ -333,7 +361,6 @@ export const uploadFileToTmp = (req, res) => {
 };
 
 export const recoverProjectFile = async (req, res) => {
-    // FIXME: lack of exception handling
     const file = req.files.file || JSON.parse(req.body.file);
     const { uploadName } = await cpFileToTmp(file);
 

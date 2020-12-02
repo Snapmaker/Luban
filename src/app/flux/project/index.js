@@ -69,6 +69,10 @@ export const actions = {
 
         const { defaultMaterialId, defaultQualityId, isRecommended } = editorState;
         const envObj = { headType, defaultMaterialId, defaultQualityId, isRecommended, models: [] };
+        if (headType === HEAD_CNC || headType === HEAD_LASER) {
+            const { materials } = getState()[headType];
+            envObj.materials = materials;
+        }
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
             envObj.models.push(model.getSerializableConfig());
@@ -121,7 +125,12 @@ export const actions = {
 
         modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
-        const { models, ...restState } = envObj;
+        const { models, materials, ...restState } = envObj;
+
+        if (materials && (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER)) {
+            dispatch(modActions.updateMaterials(envHeadType, materials));
+        }
+
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = models[k];
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,

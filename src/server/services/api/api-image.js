@@ -6,7 +6,8 @@ import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
-import imageProcess from '../../lib/image-process';
+import { unzipFile } from '../../lib/archive';
+import { editorProcess } from '../../lib/editor/process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';
 import trace from '../../lib/image-trace';
@@ -14,7 +15,8 @@ import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-
+import { MeshProcess } from '../../lib/MeshProcess/MeshProcess';
+import { mmToPixel } from '../../../shared/lib/utils';
 
 const log = logger('api:image');
 
@@ -24,6 +26,8 @@ export const set = (req, res) => {
 
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const extname = path.extname(uploadName).toLowerCase();
+    const { isRotate } = req.body;
 
     async.series([
         (next) => {
@@ -32,7 +36,7 @@ export const set = (req, res) => {
             });
         },
         async (next) => {
-            if (path.extname(uploadName).toLowerCase() === '.svg') {
+            if (extname === '.svg') {
                 const svgParser = new SVGParser();
                 const svg = await svgParser.parseFile(uploadPath);
 
@@ -44,7 +48,7 @@ export const set = (req, res) => {
                 });
 
                 next();
-            } else if (path.extname(uploadName).toLowerCase() === '.dxf') {
+            } else if (extname === '.dxf') {
                 const result = await parseDxf(uploadPath);
                 const { width, height } = result;
 
@@ -55,6 +59,16 @@ export const set = (req, res) => {
                     height
                 });
 
+                next();
+            } else if (extname === '.stl') {
+                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
+                const { width, height } = meshProcess.getWidthAndHeight();
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width: mmToPixel(width),
+                    height: mmToPixel(height)
+                });
                 next();
             } else {
                 jimp.read(uploadPath).then((image) => {
@@ -81,12 +95,12 @@ export const set = (req, res) => {
 };
 
 export const laserCaseImage = (req, res) => {
-    const { name, casePath } = req.body;
-    const originalName = path.basename(name);
-
+    const { name, casePath, isRotate } = req.body;
+    let originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-    const uploadName = pathWithRandomSuffix(originalName);
+    let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const extname = path.extname(uploadName).toLowerCase();
 
     async.series([
         (next) => {
@@ -95,7 +109,7 @@ export const laserCaseImage = (req, res) => {
             });
         },
         async (next) => {
-            if (path.extname(uploadName) === '.svg') {
+            if (extname === '.svg') {
                 const svgParser = new SVGParser();
                 const svg = await svgParser.parseFile(uploadPath);
 
@@ -104,6 +118,33 @@ export const laserCaseImage = (req, res) => {
                     uploadName: uploadName,
                     width: svg.width,
                     height: svg.height
+                });
+                next();
+            } else if (extname === '.dxf') {
+                const result = await parseDxf(uploadPath);
+                const { width, height } = result;
+
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width,
+                    height
+                });
+                next();
+            } else if (extname === '.stl' || extname === '.zip') {
+                console.log('uploadName', originalName, uploadName, extname);
+                if (extname === '.zip') {
+                    await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+                    originalName = originalName.replace(/\.zip$/, '');
+                    uploadName = originalName;
+                }
+                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
+                const { width, height } = meshProcess.getWidthAndHeight();
+                res.send({
+                    originalName: originalName,
+                    uploadName: uploadName,
+                    width: mmToPixel(width),
+                    height: mmToPixel(height)
                 });
                 next();
             } else {
@@ -122,7 +163,7 @@ export const laserCaseImage = (req, res) => {
         }
     ], (err) => {
         if (err) {
-            log.error(`Failed to read image ${uploadName}`);
+            log.error(`Failed to read image ${uploadName} and err is ${err}`);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();
@@ -138,7 +179,7 @@ export const laserCaseImage = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    imageProcess(options)
+    editorProcess(options)
         .then((result) => {
             res.send(result);
         })

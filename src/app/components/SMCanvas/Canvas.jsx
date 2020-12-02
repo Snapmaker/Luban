@@ -7,7 +7,7 @@
 
 import noop from 'lodash/noop';
 import React, { Component } from 'react';
-import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, WebGLRenderer } from 'three';
+import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight, WebGLRenderer } from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -27,7 +27,7 @@ class Canvas extends Component {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         transformSourceType: PropTypes.string, // 2D, 3D. Default is 3D
-        toolPathModelGroup: PropTypes.object,
+        toolPathModelGroupObject: PropTypes.object,
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
         cameraInitialTarget: PropTypes.object.isRequired,
@@ -44,6 +44,7 @@ class Canvas extends Component {
 
         // tmp
         canOperateModel: PropTypes.bool,
+        // isToolpathModel: PropTypes.bool,
         showContextMenu: PropTypes.func
     };
 
@@ -69,7 +70,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.transformSourceType = this.props.transformSourceType || '3D';
-        this.toolPathModelGroup = this.props.toolPathModelGroup;
+        this.toolPathModelGroupObject = this.props.toolPathModelGroupObject;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -85,6 +86,7 @@ class Canvas extends Component {
 
         // threejs
         this.camera = null;
+        this.light = null;
         this.renderer = null;
         this.scene = null;
         this.group = null;
@@ -97,8 +99,7 @@ class Canvas extends Component {
         this.group.add(this.printableArea);
         this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
         this.group.add(this.modelGroup.object);
-
-        this.toolPathModelGroup && this.group.add(this.toolPathModelGroup);
+        this.toolPathModelGroupObject && this.group.add(this.toolPathModelGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
 
@@ -119,6 +120,13 @@ class Canvas extends Component {
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
+        }
+        if (this.props.toolPathModelGroupObject) {
+            if (this.props.toolPathModelGroupObject.isRotate && this.props.toolPathModelGroupObject.visible) {
+                this.controls.setShouldForbidSelect(true);
+            } else {
+                this.controls.setShouldForbidSelect(false);
+            }
         }
     }
 
@@ -164,6 +172,8 @@ class Canvas extends Component {
 
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
+        this.light = new DirectionalLight(0xffffff, 0.6);
+        this.light.position.copy(this.cameraInitialPosition);
 
         // We need to change the default up vector if we use camera to respect XY plane
         if (this.props.cameraUp) {
@@ -177,12 +187,13 @@ class Canvas extends Component {
 
         this.scene = new Scene();
         this.scene.add(this.camera);
+        this.scene.add(this.light);
 
         this.group = new Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
 
-        this.scene.add(new HemisphereLight(0x000000, 0xe0e0e0));
+        this.scene.add(new HemisphereLight(0x000000, 0xcecece));
 
         this.node.current.appendChild(this.renderer.domElement);
     }
@@ -197,7 +208,6 @@ class Canvas extends Component {
 
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.object);
-
 
         this.controls.on(EVENTS.UPDATE, () => {
             this.renderScene();
@@ -465,6 +475,8 @@ class Canvas extends Component {
     }
 
     renderScene() {
+        this.light.position.copy(this.camera.position);
+
         this.renderer.render(this.scene, this.camera);
 
         TWEEN.update();

@@ -1,5 +1,6 @@
 import map from 'lodash/map';
 import includes from 'lodash/includes';
+import isUndefined from 'lodash/isUndefined';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -91,6 +92,8 @@ class Control extends PureComponent {
         keypad: PropTypes.bool.isRequired,
         selectedDistance: PropTypes.string.isRequired,
         customDistance: PropTypes.number.isRequired,
+        selectedAngle: PropTypes.string.isRequired,
+        customAngle: PropTypes.number.isRequired,
 
         updateWidgetState: PropTypes.func.isRequired
     };
@@ -120,6 +123,16 @@ class Control extends PureComponent {
             const customDistance = this.props.customDistance;
             return toUnits(units, customDistance);
         },
+        getJogAngle: () => {
+            const selectedAngle = this.state.selectedAngle;
+            if (selectedAngle) {
+                return Number(selectedAngle) || 0;
+            }
+
+            const customAngle = this.state.customAngle;
+            return Number(customAngle);
+        },
+
         // actions
         jog: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
@@ -128,6 +141,13 @@ class Control extends PureComponent {
                 this.actions.executeGcode(gcode.join('\n'));
             }
         },
+        selectAngle: (angle = '') => {
+            this.setState({ selectedAngle: angle });
+        },
+        changeCustomAngle: (customAngle) => {
+            this.setState({ customAngle: customAngle });
+        },
+
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
@@ -160,6 +180,17 @@ class Control extends PureComponent {
             }
             this.setState({ customDistance: distance });
         },
+        increaseCustomAngle: () => {
+            const { customAngle } = this.state;
+            const angle = customAngle + 1;
+            this.setState({ customAngle: angle });
+        },
+        decreaseCustomAngle: () => {
+            const { customAngle } = this.state;
+            const angle = customAngle - 1;
+            this.setState({ customAngle: angle });
+        },
+
         decreaseCustomDistance: () => {
             const { units, customDistance } = this.state;
             let distance = Math.max(Number(customDistance) - DISTANCE_STEP, DISTANCE_MIN);
@@ -179,15 +210,34 @@ class Control extends PureComponent {
             if (headType === HEAD_TYPE_CNC) {
                 gcode.push('G91', 'G0 Z5 F400', 'G90');
             }
-            gcode.push(
-                'G90', // absolute position
-                `G0 X${bbox.min.x} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
-                `G0 X${bbox.min.x} Y${bbox.max.y}`,
-                `G0 X${bbox.max.x} Y${bbox.max.y}`,
-                `G0 X${bbox.max.x} Y${bbox.min.y}`,
-                `G0 X${bbox.min.x} Y${bbox.min.y}`,
-                `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
-            );
+
+            if (!isUndefined(bbox.max.b)) {
+                const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
+                let maxB = bbox.max.b;
+                if (angleDiff > 360) {
+                    maxB = bbox.min.b + 360;
+                }
+                gcode.push(
+                    'G90', // absolute position
+                    `G0 B${bbox.min.b} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
+                    `G0 B${bbox.min.b} Y${bbox.max.y}`,
+                    `G0 B${maxB} Y${bbox.max.y}`,
+                    `G0 B${maxB} Y${bbox.min.y}`,
+                    `G0 B${bbox.min.b} Y${bbox.min.y}`,
+                    `G0 B${workPosition.b} Y${workPosition.y}` // go back to origin
+                );
+            } else {
+                gcode.push(
+                    'G90', // absolute position
+                    `G0 X${bbox.min.x} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
+                    `G0 X${bbox.min.x} Y${bbox.max.y}`,
+                    `G0 X${bbox.max.x} Y${bbox.max.y}`,
+                    `G0 X${bbox.max.x} Y${bbox.min.y}`,
+                    `G0 X${bbox.min.x} Y${bbox.min.y}`,
+                    `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
+                );
+            }
+
             if (headType === HEAD_TYPE_CNC) {
                 gcode.push('G91', 'G0 Z-5 F400', 'G90');
             }
@@ -269,6 +319,9 @@ class Control extends PureComponent {
             selectedAxis: '', // Defaults to empty
             selectedDistance: this.props.selectedDistance,
             customDistance: toUnits(METRIC_UNITS, this.props.customDistance),
+            selectedAngle: this.props.selectedAngle,
+            customAngle: this.props.customAngle,
+
 
             // display
             canClick: true, // Defaults to true
@@ -511,7 +564,7 @@ const mapStateToProps = (state, ownProps) => {
     const { widgetId } = ownProps;
     const { jog, axes, dataSource } = widgets[widgetId];
 
-    const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
+    const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
     const { port, headType, isConnected, workflowState, workPosition, originOffset = {}, workflowStatus } = machine;
     const { boundingBox } = state.workspace;
 
@@ -529,6 +582,8 @@ const mapStateToProps = (state, ownProps) => {
         keypad,
         selectedDistance,
         customDistance,
+        selectedAngle,
+        customAngle,
         boundingBox
     };
 };

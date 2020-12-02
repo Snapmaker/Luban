@@ -18,6 +18,7 @@ class Output extends PureComponent {
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
+        headType: PropTypes.string.isRequired,
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -31,6 +32,7 @@ class Output extends PureComponent {
         workflowState: PropTypes.string.isRequired,
         gcodeFile: PropTypes.object,
         generateGcode: PropTypes.func.isRequired,
+        generateViewPath: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         manualPreview: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
@@ -82,6 +84,9 @@ class Output extends PureComponent {
             } else {
                 this.props.manualPreview();
             }
+        },
+        onSimulation: () => {
+            this.props.generateViewPath();
         }
     };
 
@@ -105,9 +110,10 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel } = this.props;
+        const { page, workflowState, isAllModelsPreviewed, isGcodeGenerating, autoPreviewEnabled, gcodeFile, hasModel, headType } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
+        const isCNC = headType === 'cnc';
 
         return (
             <div>
@@ -119,16 +125,16 @@ class Output extends PureComponent {
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {isProcess ? i18n._('Preview') : i18n._('Process')}
+                        {isProcess ? i18n._('ToolPath') : i18n._('Process')}
                     </button>
                     {isProcess && (
                         <div>
                             <TipTrigger
-                                title={i18n._('Auto Preview')}
+                                title={i18n._('Auto ToolPath Preview')}
                                 content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto ToolPath Preview')}</span>
                                     <input
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
@@ -138,6 +144,17 @@ class Output extends PureComponent {
                                     />
                                 </div>
                             </TipTrigger>
+                            {isCNC && (
+                                <button
+                                    type="button"
+                                    className="sm-btn-large sm-btn-default"
+                                    disabled={!hasModel || !isAllModelsPreviewed || isGcodeGenerating}
+                                    onClick={this.actions.onSimulation}
+                                    style={{ display: 'block', width: '100%' }}
+                                >
+                                    {i18n._('Simulation')}
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
@@ -188,6 +205,7 @@ const mapStateToProps = (state, ownProps) => {
 
     return {
         page,
+        headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
         toolPathModelGroup,
@@ -210,7 +228,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         manualPreview: () => dispatch(editorActions.manualPreview(headType, true)),
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview(headType, value)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
-        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state))
+        updateWidgetState: (state) => dispatch(widgetActions.updateWidgetState(widgetId, '', state)),
+        generateViewPath: () => dispatch(editorActions.generateViewPath(headType))
     };
 };
 

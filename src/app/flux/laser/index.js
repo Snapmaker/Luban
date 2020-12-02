@@ -20,6 +20,16 @@ const INITIAL_STATE = {
 
     page: PAGE_EDITOR,
 
+    materials: {
+        isRotate: false,
+        diameter: 40,
+        length: 70,
+        fixtureLength: 20,
+        x: 0,
+        y: 0,
+        z: 0
+    },
+
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
     scale: 1,

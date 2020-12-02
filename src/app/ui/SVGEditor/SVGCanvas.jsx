@@ -20,11 +20,10 @@ import PrintableArea from './PrintableArea';
 import { DATA_PREFIX } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 import {
-    DEFAULT_SCALE,
-    DEFAULT_FILL_COLOR, SCALE_RATE,
-    SVG_EVENT_CONTEXTMENU,
-    SVG_EVENT_MODE
-} from './constants';
+    SCALE_RATE, SVG_EVENT_CONTEXTMENU,
+    SVG_EVENT_MODE,
+    DEFAULT_FILL_COLOR, DEFAULT_SCALE
+} from '../../constants/svg';
 import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
 
@@ -95,7 +94,8 @@ class SVGCanvas extends PureComponent {
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
         updateScale: PropTypes.func.isRequired,
-        updateTarget: PropTypes.func.isRequired
+        updateTarget: PropTypes.func.isRequired,
+        materials: PropTypes.object
     };
 
     updateTime = 0;
@@ -162,6 +162,9 @@ class SVGCanvas extends PureComponent {
 
         if (nextProps.size !== this.props.size) {
             this.updateCanvas(nextProps.size);
+        }
+        if (nextProps.materials !== this.props.materials) {
+            this.updateCanvas(null, nextProps.materials);
         }
     }
 
@@ -1102,7 +1105,10 @@ class SVGCanvas extends PureComponent {
         this.updateCanvas();
     };
 
-    updateCanvas = (size) => {
+    updateCanvas = (size, materials) => {
+        size = size || this.props.size;
+        materials = materials || this.props.materials;
+
         if (new Date().getTime() - this.updateTime < 20) {
             this.updateTime = new Date().getTime();
             return;
@@ -1115,7 +1121,6 @@ class SVGCanvas extends PureComponent {
         const ratio = Math.min(width, height) / 900;
         this.svgContainer.setAttribute('width', width);
         this.svgContainer.setAttribute('height', height);
-        size = size || this.props.size;
 
 
         const viewBoxWidth = size.x * 2;
@@ -1126,6 +1131,7 @@ class SVGCanvas extends PureComponent {
 
         const x = (width - svgWidth) / 2 + this.offsetX * this.scale;
         const y = (height - svgHeight) / 2 + this.offsetY * this.scale;
+
 
         setAttributes(this.svgContent, {
             width: svgWidth,
@@ -1143,7 +1149,7 @@ class SVGCanvas extends PureComponent {
             viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`
         });
 
-        this.printableArea.updateScale({ size: size, scale: this.scale });
+        this.printableArea.updateScale({ size: size, materials: materials, scale: this.scale });
         this.svgContentGroup.updateScale(this.scale);
     };
 

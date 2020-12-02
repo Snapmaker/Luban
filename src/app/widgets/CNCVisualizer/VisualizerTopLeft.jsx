@@ -52,7 +52,7 @@ class VisualizerTopLeft extends PureComponent {
                 <input
                     ref={this.fileInput}
                     type="file"
-                    accept=".svg, .png, .jpg, .jpeg, .bmp, .dxf"
+                    accept=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl"
                     style={{ display: 'none' }}
                     multiple={false}
                     onChange={this.actions.onChangeFile}

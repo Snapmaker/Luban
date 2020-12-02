@@ -52,11 +52,14 @@ const DEFAULT_STATE = {
         control: {
             minimized: false,
             headInfoExpanded: true,
-            axes: ['x', 'y', 'z'],
+            axes: ['x', 'y', 'z', 'b'],
             jog: {
                 keypad: false,
                 selectedDistance: '1',
-                customDistance: 10
+                customDistance: 10,
+                selectedAngle: '1',
+                customAngle: 5
+
             },
             shuttle: {
                 feedrateMin: 500,

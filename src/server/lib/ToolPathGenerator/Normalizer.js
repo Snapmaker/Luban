@@ -6,13 +6,14 @@
  * TODO: document
  */
 export default class Normalizer {
-    constructor(anchor, minX, maxX, minY, maxY, scale) {
+    constructor(anchor, minX, maxX, minY, maxY, scale, translate = { x: 0, y: 0 }) {
         this.anchor = anchor;
         this.minX = minX;
         this.maxX = maxX;
         this.minY = minY;
         this.maxY = maxY;
         this.scale = scale;
+        this.translate = translate;
     }
 
     x(x) {
@@ -24,7 +25,7 @@ export default class Normalizer {
         } else {
             res -= (this.minX + this.maxX) * 0.5;
         }
-        return Number((res * this.scale.x).toFixed(2));
+        return Math.round((res * this.scale.x + this.translate.x) * 100) / 100;
     }
 
     y(y) {
@@ -36,6 +37,6 @@ export default class Normalizer {
         } else {
             res -= (this.minY + this.maxY) * 0.5;
         }
-        return Number((res * this.scale.y).toFixed(2));
+        return Math.round((res * this.scale.y + this.translate.y) * 100) / 100;
     }
 }

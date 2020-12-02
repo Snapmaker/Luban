@@ -14,7 +14,7 @@ import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 
 
-const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
 
 class Cnc extends Component {
     static propTypes = {

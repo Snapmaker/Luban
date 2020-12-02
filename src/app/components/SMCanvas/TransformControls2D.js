@@ -7,7 +7,7 @@ import {
     Line, Mesh
 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import { isZero } from '../../lib/utils';
+import { isZero } from '../../../shared/lib/utils';
 
 
 const EVENTS = {
@@ -237,6 +237,11 @@ class TransformControls2D extends Object3D {
         }
         this.dispatchEvent(EVENTS.UPDATE);
     }
+
+    updateFramePeripheralVisible(visible) {
+        this.framePeripheral.visible = visible;
+    }
+
 
     onMouseHover(coord) {
         if (!this.object) {

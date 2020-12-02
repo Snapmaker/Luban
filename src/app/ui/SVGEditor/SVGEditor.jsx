@@ -10,6 +10,7 @@ import SvgTool from './SvgTool';
 class SVGEditor extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
+        materials: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
@@ -96,6 +97,7 @@ class SVGEditor extends PureComponent {
                             className={styles['svg-content']}
                             SVGActions={this.props.SVGActions}
                             size={this.props.size}
+                            materials={this.props.materials}
                             scale={this.props.scale}
                             target={this.props.target}
                             updateScale={this.props.updateScale}

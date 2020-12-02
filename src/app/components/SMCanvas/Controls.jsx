@@ -80,6 +80,8 @@ class Controls extends EventEmitter {
     // detection
     selectableObjects = null;
 
+    shouldForbidSelect = false;
+
     modelGroup = null;
 
     selectedGroup = null;
@@ -324,6 +326,7 @@ class Controls extends EventEmitter {
         }
         const mousePosition = this.getMouseCoord(event);
         const distance = Math.sqrt((this.mouseDownPosition.x - mousePosition.x) ** 2 + (this.mouseDownPosition.y - mousePosition.y) ** 2);
+
         if (distance < 0.004 && this.selectableObjects.children) {
             // TODO: selectable objects should not change when objects are selected
             let allObjects = this.selectableObjects.children;
@@ -379,7 +382,10 @@ class Controls extends EventEmitter {
                     }
                 }
             }
-
+            // When in four-axis mode, 'shouldForbidSelect' is true, each click will trigger 'UNSELECT' event
+            if (this.shouldForbidSelect) {
+                selectEvent = SELECTEVENT.UNSELECT;
+            }
             this.emit(EVENTS.SELECT_OBJECTS, intersect, selectEvent);
 
             if (this.sourceType === '3D') {
@@ -448,6 +454,11 @@ class Controls extends EventEmitter {
 
     setSelectableObjects(objects) {
         this.selectableObjects = objects;
+    }
+
+    setShouldForbidSelect(shouldForbidSelect) {
+        this.shouldForbidSelect = shouldForbidSelect;
+        this.transformControl.updateFramePeripheralVisible(!shouldForbidSelect);
     }
 
     updateBoundingBox() {
