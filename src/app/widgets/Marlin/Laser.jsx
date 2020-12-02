@@ -229,7 +229,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context)),
         updateIsLaserPrintAutoMode: (isLaserPrintAutoMode) => dispatch(machineActions.updateIsLaserPrintAutoMode(isLaserPrintAutoMode)),
-        updateMaterialThickness: (materialThickness) => dispatch(machineActions.updateIsLaserPrintAutoMode(materialThickness))
+        updateMaterialThickness: (materialThickness) => dispatch(machineActions.updateMaterialThickness(materialThickness))
     };
 };
 
