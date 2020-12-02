@@ -62,7 +62,7 @@ class Visualizer extends Component {
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
-        selectModel: PropTypes.func.isRequired,
+        selectModelInProcess: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         // onModelTransform: PropTypes.func.isRequired,
@@ -111,8 +111,8 @@ class Visualizer extends Component {
             this.props.updateScale(1);
             this.props.updateTarget({ x: 0, y: 0 });
         },
-        onSelectModels: (intersect) => {
-            this.props.selectModel(intersect);
+        onSelectModels: (intersect, selectEvent) => {
+            this.props.selectModelInProcess(intersect, selectEvent);
         },
         /*
         onModelAfterTransform: () => {
@@ -559,7 +559,7 @@ const mapDispatchToProps = (dispatch) => {
         arrangeAllModels2D: () => dispatch(editorActions.arrangeAllModels2D('cnc')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
-        selectModel: (intersect) => dispatch(editorActions.selectModelInProcess('cnc', intersect)),
+        selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),
 

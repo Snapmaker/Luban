@@ -382,16 +382,11 @@ class Controls extends EventEmitter {
                     }
                 }
             }
-
-            this.emit(EVENTS.SELECT_OBJECTS, intersect, selectEvent);
-
-            if (!this.shouldForbidSelect) {
-                this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
-            } else {
-                if (!intersect) {
-                    this.emit(EVENTS.SELECT_OBJECTS, intersect, isMultiSelect);
-                }
+            // When in four-axis mode, 'shouldForbidSelect' is true, each click will trigger 'UNSELECT' event
+            if (this.shouldForbidSelect) {
+                selectEvent = SELECTEVENT.UNSELECT;
             }
+            this.emit(EVENTS.SELECT_OBJECTS, intersect, selectEvent);
 
             if (this.sourceType === '3D') {
                 this.transformControl.attach(this.selectedGroup);
