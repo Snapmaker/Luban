@@ -9,7 +9,7 @@ import {
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
-import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants';
+import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT } from '../../constants';
 
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
@@ -285,12 +285,12 @@ export const actions = {
     },
 
     // todo, select model by toolPathModel ??? meshObject ???
-    selectModelInProcess: (headType, intersect) => (dispatch, getState) => {
+    selectModelInProcess: (headType, intersect, selectEvent) => (dispatch, getState) => {
         const { SVGActions, modelGroup, toolPathModelGroup } = getState()[headType];
 
         dispatch(actions.clearSelection(headType));
 
-        if (intersect) {
+        if (intersect && selectEvent !== SELECTEVENT.UNSELECT) {
             const model = modelGroup.getSelectedModelByIntersect(intersect);
 
             if (model) {
