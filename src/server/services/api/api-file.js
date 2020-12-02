@@ -102,14 +102,21 @@ export const buildFirmwareFile = (req, res) => {
 
 export const uploadCaseFile = (req, res) => {
     const { name, casePath } = req.body;
-    const originalName = path.basename(name);
+    let originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
-    const uploadName = pathWithRandomSuffix(originalName);
+    let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    fs.copyFile(originalPath, uploadPath, (err) => {
+    console.log('originalName', originalName, uploadName, path.extname(originalName));
+
+    fs.copyFile(originalPath, uploadPath, async (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalName}`);
         } else {
+            if (path.extname(originalName) === '.zip') {
+                await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+                originalName = originalName.replace(/\.zip$/, '');
+                uploadName = originalName;
+            }
             res.send({
                 originalName,
                 uploadName
