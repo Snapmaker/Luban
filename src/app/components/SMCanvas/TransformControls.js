@@ -845,9 +845,9 @@ class TransformControls extends Object3D {
 
     shouldApplyScaleToObjects(parentEVec) {
         return this.object.children.every((meshObject) => {
-            if (parentEVec.x * meshObject.scale.x < 0.01
-              || parentEVec.y * meshObject.scale.y < 0.01
-              || parentEVec.z * meshObject.scale.z < 0.01
+            if (parentEVec.x * this.object.scale.x * meshObject.scale.x < 0.01
+              || parentEVec.y * this.object.scale.y * meshObject.scale.y < 0.01
+              || parentEVec.z * this.object.scale.z * meshObject.scale.z < 0.01
             ) {
                 return false; // should disable
             }
