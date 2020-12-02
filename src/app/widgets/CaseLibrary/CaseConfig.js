@@ -148,7 +148,7 @@ export const CaseConfig150 = [
         title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A150/3D-A150.png',
         pathConfig: {
-            name: '3DP_test_A150.stl',
+            name: '3DP_test_A150.stl.zip',
             casePath: './A150/'
         },
         material: {
@@ -286,7 +286,7 @@ export const CaseConfig250 = [
         title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
-            name: '3DP_test_A250.stl',
+            name: '3DP_test_A250.stl.zip',
             casePath: './A250/'
         },
         material: {
@@ -370,7 +370,7 @@ export const CaseConfig350 = [
         title: '3D Printed Spiral Vase',
         imgSrc: '../../images/user-case/A250/3D-A250&A350.png',
         pathConfig: {
-            name: '3DP_test_A350.stl',
+            name: '3DP_test_A350.stl.zip',
             casePath: './A350/'
         },
         material: {
@@ -505,7 +505,7 @@ export const CaseConfigFourAxis = [
         pathConfig: {
             // for stl in cnc
             isRotate: true,
-            name: 'CNC_test_4th.stl',
+            name: 'CNC_test_4th.stl.zip',
             casePath: './FourAxis/'
         },
         caseConfigs: {

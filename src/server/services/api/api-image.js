@@ -6,6 +6,7 @@ import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
 import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
+import { unzipFile } from '../../lib/archive';
 import { editorProcess } from '../../lib/editor/process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import stockRemap from '../../lib/stock-remap';
@@ -95,9 +96,9 @@ export const set = (req, res) => {
 
 export const laserCaseImage = (req, res) => {
     const { name, casePath, isRotate } = req.body;
-    const originalName = path.basename(name);
+    let originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-    const uploadName = pathWithRandomSuffix(originalName);
+    let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
     const extname = path.extname(uploadName).toLowerCase();
 
@@ -130,7 +131,13 @@ export const laserCaseImage = (req, res) => {
                     height
                 });
                 next();
-            } else if (extname === '.stl') {
+            } else if (extname === '.stl' || extname === '.zip') {
+                console.log('uploadName', originalName, uploadName, extname);
+                if (extname === '.zip') {
+                    await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+                    originalName = originalName.replace(/\.zip$/, '');
+                    uploadName = originalName;
+                }
                 const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
                 const { width, height } = meshProcess.getWidthAndHeight();
                 res.send({

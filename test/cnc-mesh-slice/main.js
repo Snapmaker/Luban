@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import DataStorage from '../../src/server/DataStorage';
-import CncMeshLinkageToolPathGenerator2 from '../../src/server/lib/ToolPathGenerator/MeshToolPath/CncMeshLinkageToolPathGenerator2';
+import CncMeshLinkageToolPathGenerator from '../../src/server/lib/ToolPathGenerator/MeshToolPath/CncMeshLinkageToolPathGenerator';
 
 DataStorage.tmpDir = path.join(__dirname, './input');
 
@@ -43,7 +43,7 @@ const parseAsCNC = (toolPathObj) => {
 
 function process() {
     // const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
-    const mesh = new CncMeshLinkageToolPathGenerator2({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
+    const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
     // const mesh = new MeshToolPathGenerator({ uploadName: 'cube.stl', isRotate: true });
     const data = mesh.generateToolPathObj();
 
