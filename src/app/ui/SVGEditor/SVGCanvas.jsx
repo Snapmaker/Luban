@@ -1062,13 +1062,21 @@ class SVGCanvas extends PureComponent {
 
     onKeyUp = (event) => {
         const value = this.onKeyMovingValue;
-        console.log('up', event, value);
-        this.props.onMoveElement(null, {
-            dx: value.dx,
-            dy: value.dy
-        });
-        value.dx = 0;
-        value.dy = 0;
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                this.props.onMoveElement(null, {
+                    dx: value.dx,
+                    dy: value.dy
+                });
+                value.dx = 0;
+                value.dy = 0;
+                break;
+            default:
+                break;
+        }
     }
 
     onMouseWheel = (event) => {
