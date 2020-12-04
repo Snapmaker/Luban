@@ -237,6 +237,7 @@ export const actions = {
         }
         if (headType === HEAD_3DP) {
             modState = getState().printing;
+            dispatch(printingActions.destroyGcodeLine());
         }
 
         if (modState.modelGroup.hasModel()) {
