@@ -213,6 +213,7 @@ class TransformControls extends Object3D {
             LINE: new BufferGeometry(),
             SELECTEDLINE: new BufferGeometry().setFromPoints(selectedPoints),
             BOX: new BoxBufferGeometry(0.125, 0.125, 0.125),
+            PLANE: new PlaneBufferGeometry(0.2, 0.2, 2),
 
             TRANSLATE_PICKER: new CylinderBufferGeometry(0.2, 0, 1, 4, 1, false),
             ROTATE_PICKER: new TorusBufferGeometry(1, 0.1, 4, 24),
@@ -245,15 +246,18 @@ class TransformControls extends Object3D {
             ['X', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_RED.clone()), [1, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_GREEN.clone()), null, [0, 0, Math.PI / 2]],
             ['Y', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_GREEN.clone()), [0, 1, 0]],
+            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0.15, 0.15, 0]],
             ['Z', new Line(defaults.LINE.clone(), defaults.LINE_MATERIAL_BLUE.clone()), null, [0, -Math.PI / 2, 0]],
             ['Z', new Mesh(defaults.ARROW.clone(), defaults.MESH_MATERIAL_BLUE.clone()), [0, 0, 1], [Math.PI / 2, 0, 0]]
         ]);
+
         this.translatePeripheral.visible = false;
         this.add(this.translatePeripheral);
 
         this.translatePicker = this.createPeripheral([
             ['X', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0.6, 0, 0], [0, 0, -Math.PI / 2]],
             ['Y', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0.6, 0]],
+            ['XY', new Mesh(defaults.PLANE.clone(), defaults.MESH_MATERIAL_INVISIBLE.clone()), [0.15, 0.15, 0]],
             ['Z', new Mesh(defaults.TRANSLATE_PICKER.clone(), defaults.MESH_MATERIAL_INVISIBLE), [0, 0, 0.6], [Math.PI / 2, 0, 0]]
         ]);
         this.translatePicker.visiable = false;
@@ -433,7 +437,7 @@ class TransformControls extends Object3D {
             // camera
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
-            const multiObjectPosition = this.object.position;
+
             const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             const multiObjectWidth = new Vector3();
@@ -482,6 +486,7 @@ class TransformControls extends Object3D {
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
             });
+            const multiObjectPosition = new Vector3().addVectors(minObjectBoundingBox, maxObjectBoundingBox).multiplyScalar(0.5);
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
@@ -719,7 +724,9 @@ class TransformControls extends Object3D {
             default:
                 break;
         }
-
+        if (!picker) {
+            return false;
+        }
         const intersect = this.ray.intersectObjects(picker.children, false)[0];
         if (intersect) {
             this.axis = intersect.object.label;
@@ -773,8 +780,8 @@ class TransformControls extends Object3D {
         switch (this.mode) {
             case 'translate': {
                 const offset = new Vector3().subVectors(this.pointEnd, this.pointStart);
-                offset.x = (this.axis === 'X' ? offset.x : 0);
-                offset.y = (this.axis === 'Y' ? offset.y : 0);
+                offset.x = (this.axis.indexOf('X') !== -1 ? offset.x : 0);
+                offset.y = (this.axis.indexOf('Y') !== -1 ? offset.y : 0);
                 offset.z = (this.axis === 'Z' ? offset.z : 0);
                 // Dive in to object local offset
                 offset.applyQuaternion(this.parentQuaternionInv).divide(this.parentScale);
@@ -862,7 +869,7 @@ class TransformControls extends Object3D {
             if (child.geometry) {
                 const clone = child.geometry.clone();
                 if (this.object.children.length === 1) {
-                    clone.applyMatrix(this.object.matrix);
+                    clone.applyMatrix(child.matrixWorld);
                     clone.computeBoundingBox();
                     this.object.boundingBox[index] = clone.boundingBox;
                 } else {

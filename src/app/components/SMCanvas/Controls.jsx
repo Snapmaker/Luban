@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import EventEmitter from 'events';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
+import SupportControls from './SupportControls';
 // const EPSILON = 0.000001;
 import { SELECTEVENT } from '../../constants';
 
@@ -18,7 +19,8 @@ const STATE = {
     ROTATE: 0,
     DOLLY: 1,
     PAN: 2,
-    TRANSFORM: 3
+    TRANSFORM: 3,
+    SUPPORT: 4
 };
 
 // Events sent by Controls
@@ -91,7 +93,7 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan, modelGroup) {
         super();
 
         this.sourceType = sourceType;
@@ -102,6 +104,7 @@ class Controls extends EventEmitter {
         this.onPan = onPan;
 
         this.initTransformControls();
+        this.initSupportControls(modelGroup);
 
         this.bindEventListeners();
     }
@@ -121,6 +124,13 @@ class Controls extends EventEmitter {
         this.group.add(this.transformControl);
     }
 
+    initSupportControls(modelGroup) {
+        this.supportControl = new SupportControls(this.camera, modelGroup);
+        this.supportControl.addEventListener('update', () => {
+            this.emit(EVENTS.UPDATE);
+        });
+    }
+
     setTransformMode(mode) {
         if (this.transformControl) {
             this.transformControl.mode = mode;
@@ -138,6 +148,7 @@ class Controls extends EventEmitter {
         this.domElement.addEventListener('mousemove', this.onMouseHover, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
         this.domElement.addEventListener('click', this.onClick, false);
+        this.domElement.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
         document.addEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
@@ -208,6 +219,13 @@ class Controls extends EventEmitter {
         // Prevent the browser from scrolling.
         event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
+        // mousedown on support mode
+        if (this.state === STATE.SUPPORT) {
+            if (event.button === THREE.MOUSE.RIGHT) {
+                this.stopSupportMode();
+            }
+            return;
+        }
 
         switch (event.button) {
             case THREE.MOUSE.LEFT: {
@@ -250,13 +268,17 @@ class Controls extends EventEmitter {
         if (this.state !== STATE.NONE) {
             // Track events even when the mouse move outside of window
             document.addEventListener('mousemove', this.onDocumentMouseMove, false);
-            document.addEventListener('mouseup', this.onDocumentMouseUp, false);
+            // document.addEventListener('mouseup', this.onDocumentMouseUp, false);
         }
     };
 
     onMouseHover = (event) => {
         event.preventDefault();
-
+        // model move with mouse no matter mousedown
+        if (this.state === STATE.SUPPORT) {
+            this.supportControl.onMouseHover(this.getMouseCoord(event));
+            this.emit(EVENTS.TRANSFORM_OBJECT);
+        }
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
         }
@@ -290,6 +312,13 @@ class Controls extends EventEmitter {
     };
 
     onDocumentMouseUp = (event) => {
+        if (this.state === STATE.SUPPORT) {
+            // generate support onAfterModelTransform
+            this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+            this.supportControl.onMouseUp();
+            return;
+        }
+
         switch (this.state) {
             case STATE.PAN:
                 if (!this.panMoved) { // Right click to open context menu
@@ -312,7 +341,8 @@ class Controls extends EventEmitter {
         this.state = STATE.NONE;
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
-        document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
+        // mouse up needed no matter mousedowm on support mode
+        // document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
     /**
@@ -321,7 +351,8 @@ class Controls extends EventEmitter {
      * @param event
      */
     onClick = (event, isRightClick = false) => {
-        if (!this.selectedGroup) {
+        // todo, to fix workspace not rotate
+        if (!this.selectedGroup || this.state === STATE.SUPPORT) {
             return;
         }
         const mousePosition = this.getMouseCoord(event);
@@ -472,6 +503,18 @@ class Controls extends EventEmitter {
 
     detach() {
         this.transformControl.detach();
+    }
+
+    startSupportMode() {
+        this.state = STATE.SUPPORT;
+        this.transformControl.mode = null;
+        this.supportControl.start();
+    }
+
+    stopSupportMode() {
+        this.transformControl.mode = 'translate';
+        this.state = STATE.NONE;
+        this.supportControl.stop();
     }
 
     updateCamera() {

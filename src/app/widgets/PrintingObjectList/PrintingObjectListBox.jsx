@@ -65,7 +65,7 @@ class PrintingObjectListBox extends PureComponent {
                         <TipTrigger
                             key={model.modelID}
                             title={i18n._('Object')}
-                            content={modelName}
+                            content={model.modelName}
                         >
                             <div
                                 className={classNames(

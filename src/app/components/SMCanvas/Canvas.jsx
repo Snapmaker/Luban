@@ -202,7 +202,7 @@ class Canvas extends Component {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget);
+        this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget, this.modelGroup);
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
@@ -235,6 +235,8 @@ class Canvas extends Component {
         if (['translate', 'scale', 'rotate'].includes(mode)) {
             this.transformControls && this.transformControls.setMode(mode);
             this.controls && this.controls.setTransformMode(mode);
+        } else {
+            this.controls && this.controls.setTransformMode(null);
         }
     }
 

@@ -1,0 +1,61 @@
+import * as THREE from 'three';
+
+import SupportHelper from '../../lib/support-helper';
+import ThreeUtils from '../three-extensions/ThreeUtils';
+
+class SupportControls extends THREE.Object3D {
+    camera = null;
+
+    raycaster = new THREE.Raycaster();
+
+    horizontalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+    _model = null;
+
+    constructor(camera, modelGroup) {
+        super();
+        this.camera = camera;
+        this.modelGroup = modelGroup;
+    }
+
+    start() {
+    }
+
+    stop() {
+        if (this._model) {
+            this.modelGroup.removeModel(this._model);
+            this._model = null;
+        }
+    }
+
+
+    setModelPosition(position) {
+        if (!this._model) {
+            this._model = this.modelGroup.addSupportOnSelectedModel();
+        }
+
+        const object = this._model.meshObject;
+        object.position.copy(position);
+        SupportHelper.generateSupportGeometry(this._model);
+        this.dispatchEvent({ type: 'update' });
+    }
+
+    onMouseHover(coord) {
+        this.raycaster.setFromCamera(coord, this.camera);
+        const mousePosition = this.raycaster.ray.intersectPlane(this.horizontalPlane);
+        this.setModelPosition(mousePosition);
+    }
+
+
+    onMouseUp() {
+        SupportHelper.generateSupportGeometry(this._model);
+        if (this._model.isInitSupport) {
+            this.modelGroup.removeModel(this._model);
+        } else {
+            ThreeUtils.setObjectParent(this._model.meshObject, this._model.target.meshObject);
+        }
+        this._model = null;
+    }
+}
+
+export default SupportControls;

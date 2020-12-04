@@ -14,15 +14,6 @@ const EVENTS = {
 
 let updateTimer;
 
-const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-const materialSelected = new THREE.MeshPhongMaterial({ color: 0xd0d0d0, shininess: 0 });
-
-const materialOverstepped = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    shininess: 30,
-    transparent: true,
-    opacity: 0.6
-});
 
 const DEFAULT_TRANSFORMATION = {
     positionX: 0,
@@ -297,7 +288,10 @@ class Model {
 
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-        const { position, rotation, scale, uniformScalingState } = this.meshObject;
+        const { uniformScalingState } = this.meshObject;
+        const position = this.meshObject.getWorldPosition();
+        const scale = this.meshObject.getWorldScale();
+        const rotation = new THREE.Euler().setFromQuaternion(this.meshObject.getWorldQuaternion(), undefined, false);
 
         const transformation = {
             positionX: position.x,
@@ -497,10 +491,13 @@ class Model {
         if (this.sourceType !== '3d') {
             return;
         }
-        this.computeBoundingBox();
+        const parentObject = this.meshObject.parent;
+        ThreeUtils.removeObjectParent(this.meshObject);
 
+        this.computeBoundingBox();
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
+        ThreeUtils.setObjectParent(this.meshObject, parentObject);
     }
 
     // 3D
@@ -523,11 +520,48 @@ class Model {
     setOversteppedAndSelected(overstepped, isSelected) {
         this.overstepped = overstepped;
         if (this.overstepped) {
+            const materialOverstepped = new THREE.MeshPhongMaterial({
+                color: 0xff0000,
+                shininess: 30,
+                transparent: true,
+                opacity: 0.6
+            });
+
             this.meshObject.material = materialOverstepped;
-        } else if (isSelected) {
+        } else {
+            this.setSelected(isSelected);
+        }
+    }
+
+    setSelected(isSelected) {
+        if (typeof isSelected === 'boolean') {
+            this.isSelected = isSelected;
+        }
+
+        const materialSelected = new THREE.MeshPhongMaterial({
+            color: 0xf0f0f0,
+            side: THREE.DoubleSide
+        });
+
+        const materialNormal = new THREE.MeshPhongMaterial({
+            color: 0xa0a0a0,
+            specular: 0xb0b0b0,
+            shininess: 30,
+            side: THREE.DoubleSide
+        });
+
+        if (this.isSelected === true) {
             this.meshObject.material = materialSelected;
         } else {
             this.meshObject.material = materialNormal;
+        }
+        // for indexed geometry
+        if (isSelected && this.meshObject.geometry.getAttribute('color')) {
+            this.meshObject.material.vertexColors = true;
+        }
+        // for support geometry
+        if (this.supportTag === true) {
+            this.meshObject.material.color.set(0xFFD700);
         }
     }
 
@@ -542,7 +576,6 @@ class Model {
             geometry: this.meshObject.geometry.clone(),
             material: this.meshObject.material.clone()
         }, modelGroup);
-
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
         clone.generateProcessObject3D();

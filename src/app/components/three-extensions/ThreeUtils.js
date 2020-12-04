@@ -149,6 +149,39 @@ const ThreeUtils = {
         } else {
             return size;
         }
+    },
+
+    removeObjectParent(obj) {
+        const parent = obj.parent;
+        if(!parent) return;
+
+        parent.updateMatrixWorld();
+        parent.remove(obj);
+        obj.applyMatrix(parent.matrixWorld)
+    },
+
+    setObjectParent(obj, parent){
+        if(!parent) return;
+        
+        this.removeObjectParent(obj)
+        parent.updateMatrixWorld();
+        obj.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld)) 
+        parent.add(obj)
+    },
+    applyObjectMatrix(obj, matrix) {
+        const inverse = new THREE.Matrix4().getInverse(matrix)
+        obj.children.forEach(child=>{
+            child.applyMatrix(inverse)
+        })
+        obj.applyMatrix(matrix);
+    },
+    liftObjectOnlyChildMatrix(obj) {
+        if(obj.children.length !== 1) return;
+        
+        const child = obj.children[0];
+        const m = child.matrix;
+        obj.applyMatrix(m);
+        child.applyMatrix(new THREE.Matrix4().getInverse(m));
     }
 
 };

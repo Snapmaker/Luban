@@ -32,10 +32,28 @@ let curaEnginePath;
     }
 })();
 
-function callCuraEngine(modelPath, configPath, outputPath) {
+// extends api for support models
+function callCuraEngine(modelConfig, supportConfig, outputPath) {
+    const args = ['slice', '-v', '-p', '-o', outputPath];
+
+    if (modelConfig && modelConfig.path.length) {
+        args.push('-j', modelConfig.configFilePath);
+        for (const filePath of modelConfig.path) {
+            args.push('-l', filePath);
+        }
+    }
+    if (supportConfig && supportConfig.path.length) {
+        for (const filePath of supportConfig.path) {
+            args.push('-l', filePath);
+            // notice that this config just effects the previous model
+            args.push('-j', supportConfig.configFilePath);
+        }
+    }
+
+    // console.log(args);
     return childProcess.spawn(
         curaEnginePath,
-        ['slice', '-v', '-p', '-j', configPath, '-o', outputPath, '-l', modelPath]
+        args
     );
 }
 
@@ -86,22 +104,41 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { originalName, uploadName, boundingBox, thumbnail } = params;
+    const { originalName, model, support, boundingBox, thumbnail } = params;
+    const modelConfig = {
+        configFilePath: `${DataStorage.configDir}/active_final.def.json`,
+        path: []
+    };
+    for (const modelName of model) {
+        const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
 
-    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-
-    if (!fs.existsSync(uploadPath)) {
-        log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-        onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
-        return;
+        if (!fs.existsSync(uploadPath)) {
+            log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            return;
+        }
+        modelConfig.path.push(uploadPath);
     }
 
-    const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
+    const supportConfig = {
+        configFilePath: `${DataStorage.configDir}/support.def.json`,
+        path: []
+    };
+    for (const modelName of support) {
+        const uploadPath = `${DataStorage.tmpDir}/${modelName}`;
+
+        if (!fs.existsSync(uploadPath)) {
+            log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+            return;
+        }
+        supportConfig.path.push(uploadPath);
+    }
+
 
     const gcodeFilename = pathWithRandomSuffix(`${path.parse(originalName).name}.gcode`);
     const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFilename}`;
-
-    const process = callCuraEngine(uploadPath, configFilePath, gcodeFilePath);
+    const process = callCuraEngine(modelConfig, supportConfig, gcodeFilePath);
 
     process.stderr.on('data', (data) => {
         const array = data.toString().split('\n');

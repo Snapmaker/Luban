@@ -311,8 +311,9 @@ export const actions = {
     },
 
     // Update definition settings and save.
-    updateDefinitionSettings: (definition, settings) => () => {
-        settings = definitionManager.calculateDependencies(definition, settings);
+    updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        settings = definitionManager.calculateDependencies(definition, settings, modelGroup);
 
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
@@ -365,7 +366,8 @@ export const actions = {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
         } else {
             // TODO: Optimize performance
-            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings);
+            const { modelGroup } = getState().printing;
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup);
         }
 
         // Update activeDefinition to force component re-render
@@ -652,11 +654,12 @@ export const actions = {
     },
 
     generateGcode: (thumbnail) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, boundingBox } = getState().printing;
+        const { hasModel, activeDefinition, boundingBox, modelGroup } = getState().printing;
         if (!hasModel) {
             return;
         }
-
+        modelGroup.removeSelectedObjectParentMatrix();
+        modelGroup.unselectAllModels();
         // Info user that slice has started
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICE_PREPARING,
@@ -667,7 +670,7 @@ export const actions = {
 
 
         const result = await dispatch(actions.prepareModel());
-        const { originalName, uploadName } = result;
+
 
         // Prepare definition file
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
@@ -685,9 +688,9 @@ export const actions = {
             modelFileName: filename
         };
         */
+
         const params = {
-            originalName: originalName,
-            uploadName: uploadName,
+            ...result,
             boundingBox: boundingBox,
             thumbnail: thumbnail
         };
@@ -698,27 +701,41 @@ export const actions = {
         return new Promise((resolve) => {
             const { modelGroup } = getState().printing;
 
-            const originalName = modelGroup.getModels()[0].originalName;
-            const uploadPath = `${DATA_PREFIX}/${originalName}`;
-            const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
-            const stlFileName = `${basenameWithoutExt}.stl`;
 
-            modelGroup.removeHiddenMeshObjects();
+            // modelGroup.removeHiddenMeshObjects();
 
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
 
             setTimeout(async () => {
-                const stl = new ModelExporter().parse(modelGroup.showObject, 'stl', true);
-                modelGroup.addHiddenMeshObjects();
-                const blob = new Blob([stl], { type: 'text/plain' });
-                const fileOfBlob = new File([blob], stlFileName);
+                const models = modelGroup.models.filter(i => i.visible);
+                const ret = { model: [], support: [] };
+                for (const item of models) {
+                    const mesh = item.meshObject.clone();
+                    mesh.applyMatrix(item.meshObject.parent.matrix);
+                    const stl = new ModelExporter().parse(mesh, 'stl', true);
+                    const blob = new Blob([stl], { type: 'text/plain' });
 
-                const formData = new FormData();
-                formData.append('file', fileOfBlob);
-                formData.append('uploadName', stlFileName);
-                const uploadResult = await api.uploadFile(formData);
+                    const originalName = item.originalName || (`supporter_${(Math.random() * 1000).toFixed(0)}`);
+                    const uploadPath = `${DATA_PREFIX}/${originalName}`;
+                    const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
+                    const stlFileName = `${basenameWithoutExt}.stl`;
+                    const fileOfBlob = new File([blob], stlFileName);
 
-                resolve(uploadResult.body);
+                    const formData = new FormData();
+                    formData.append('file', fileOfBlob);
+                    formData.append('uploadName', stlFileName);
+                    const uploadResult = await api.uploadFile(formData);
+                    if (item.supportTag === true) {
+                        ret.support.push(uploadResult.body.uploadName);
+                    } else {
+                        ret.model.push(uploadResult.body.uploadName);
+                        if (!ret.originalName) {
+                            ret.originalName = uploadResult.body.originalName;
+                        }
+                    }
+                }
+
+                resolve(ret);
             }, 50);
         });
     },
@@ -1046,7 +1063,15 @@ export const actions = {
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     },
-
+    addSupport: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.addSupportOnSelectedModel();
+        dispatch(actions.render());
+    },
+    setDefaultSupportSize: (size) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.defaultSupportSize = size;
+    },
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight,
         mode, sourceType, config, gcodeConfig, transformation) => async (dispatch, getState) => {
         const { size } = getState().machine;
@@ -1068,6 +1093,11 @@ export const actions = {
                     const bufferGeometry = new THREE.BufferGeometry();
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                     const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+
+                    // const material = new THREE.MeshPhongMaterial({
+                    //     side: THREE.DoubleSide,
+                    //     vertexColors: true
+                    // });
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();

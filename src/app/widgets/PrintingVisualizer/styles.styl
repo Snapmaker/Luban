@@ -118,19 +118,34 @@ $visualizer-padding = 10px
         background-color: $background-color
         background-repeat: no-repeat
         background-position: center
+        background-size: 48px 48px
 
         &.operation-move
             border-top-left-radius: $border-radius
             border-top-right-radius: $border-radius
             background-image: url('/images/48x48/icon-move-normal-48x48.png')
+            &:disabled
+                background-color: $background-color
+                background-image: url('/images/48x48/icon-move-disabled-48x48.png')
 
         &.operation-scale
             background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+            &:disabled
+                background-color: $background-color
+                background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
 
         &.operation-rotate
+            background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
+            &:disabled
+                background-color: $background-color
+                background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+        &.operation-support
             border-bottom-left-radius: $border-radius
             border-bottom-right-radius: $border-radius
-            background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
+            background-image: url('/images/48x48/icon-support-normal-48x48.png')
+            &:disabled
+                background-color: $background-color
+                background-image: url('/images/48x48/icon-support-disabled-48x48.png')
 
         &:hover,
         &.selected
@@ -144,18 +159,9 @@ $visualizer-padding = 10px
 
             &.operation-rotate
                 background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
-
-        &:disabled
-            background-color: $background-color
-
-            &.operation-move
-                background-image: url('/images/48x48/icon-move-disabled-48x48.png')
-
-            &.operation-scale
-                background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
-
-            &.operation-rotate
-                background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+            
+            &.operation-support
+                background-image: url('/images/48x48/icon-support-hover-48x48.png')
 
     > .panel
         background-color: $background-color
@@ -182,13 +188,13 @@ $visualizer-padding = 10px
             border: 1px solid $dark-blue-color
         &.move-panel
             top: 0
-            height: 132px
+            
             transform: translate(0, 64px * .5 - 93px / 2)
 
         &.scale-panel,&.scale-panel-multi
             top: 0
             transform: translate(0, 64px * 1.5 - 133px / 2)
-            height: 207px
+            
             width: 130px
             .icon
                 display: inline-block
@@ -207,14 +213,29 @@ $visualizer-padding = 10px
         &.rotate-panel
             top: 0
             transform: translate(0, 64px * 2.5 - 133px / 2)
-            height: 172px
+            
+
+        &.support-panel
+            top: 0
+            width: 294px
+            transform: translate(0, 64px * 4 - 133px / 2)
+
+        .title-mode 
+            font-size: 16px;
+            font-weight: 500;
+            color: #272829;
+            line-height: 22px;
+        
 
         .axis
             margin: 12px 0
-            height: 27px
+            
             width: 100%
             position: relative
-
+        
+        .axis-padding-left 
+            padding-left:10px
+            
         .axis-green
             color: #22ac38
 
@@ -246,6 +267,14 @@ $visualizer-padding = 10px
 
             > input
                 width: 80px
+
+        .input-container
+            display: inline-block
+            margin: 0 5px
+            width: 60px
+            > .suffix
+                display: inline-block
+                margin-left: -15px
 
         .axis-unit-1
         .axis-unit-2
@@ -397,3 +426,5 @@ $visualizer-padding = 10px
             height: 14px
             margin-top: 5px
             float: right
+
+    

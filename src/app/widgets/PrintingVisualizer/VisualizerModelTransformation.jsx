@@ -29,13 +29,22 @@ class VisualizerModelTransformation extends PureComponent {
             scaleY: PropTypes.number,
             scaleZ: PropTypes.number
         }).isRequired,
+        defaultSupportSize: PropTypes.shape({
+            x: PropTypes.number,
+            y: PropTypes.number
+        }).isRequired,
+        isSupporting: PropTypes.bool.isRequired,
         // transformation: PropTypes.object,
+        getControls: PropTypes.func.isRequired,
+        clearAllManualSupport: PropTypes.func.isRequired,
         updateBoundingBox: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
+        setDefaultSupportSize: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
     };
 
+    state = {}
 
     actions = {
         changeUniformScalingState: (uniformScalingState) => {
@@ -118,15 +127,29 @@ class VisualizerModelTransformation extends PureComponent {
             this.props.onModelAfterTransform();
             this.props.updateBoundingBox();
         },
+        setDefaultSupportSize: (size) => {
+            size = { ...this.props.defaultSupportSize, ...size };
+            this.props.setDefaultSupportSize(size);
+        },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
+        },
+        startSupportMode: () => {
+            this.props.getControls().startSupportMode();
+        },
+        stopSupportMode: () => {
+            this.props.getControls().stopSupportMode();
+        },
+        clearAllManualSupport: () => {
+            this.props.clearAllManualSupport();
         }
+
 
     };
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, transformMode, transformation } = this.props;
+        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -136,8 +159,11 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateY = 0;
         let rotateZ = 0;
         let uniformScalingState = true;
-        const disabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+        const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true;
+        }));
+        const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
+            return model.visible === true && model.supportTag !== 'support';
         }));
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));
@@ -153,51 +179,69 @@ class VisualizerModelTransformation extends PureComponent {
 
         return (
             <React.Fragment>
-                <div className={classNames(styles['model-transformation__container'], { [styles.disabled]: disabled })}>
+                <div className={classNames(styles['model-transformation__container'])}>
                     <Anchor
                         componentClass="button"
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-move'],
+                            { [styles.disabled]: transformDisabled },
                             {
-                                [styles.selected]: transformMode === 'translate'
+                                [styles.selected]: !transformDisabled && transformMode === 'translate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('translate');
                         }}
-                        disabled={disabled}
+                        disabled={transformDisabled}
                     />
                     <Anchor
                         componentClass="button"
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-scale'],
+                            { [styles.disabled]: transformDisabled },
                             {
-                                [styles.selected]: transformMode === 'scale'
+                                [styles.selected]: !transformDisabled && transformMode === 'scale'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('scale');
                         }}
-                        disabled={disabled}
+                        disabled={transformDisabled}
                     />
                     <Anchor
                         componentClass="button"
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-rotate'],
+                            { [styles.disabled]: transformDisabled },
                             {
-                                [styles.selected]: transformMode === 'rotate'
+                                [styles.selected]: !transformDisabled && transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('rotate');
                         }}
-                        disabled={disabled}
+                        disabled={transformDisabled}
+                    />
+                    <Anchor
+                        componentClass="button"
+                        className={classNames(
+                            styles['model-operation'],
+                            styles['operation-support'],
+                            { [styles.disabled]: supportDisabled },
+                            {
+                                [styles.selected]: !supportDisabled && transformMode === 'support'
+                            }
+                        )}
+                        onClick={() => {
+                            actions.setTransformMode('support');
+                        }}
+                        disabled={supportDisabled}
                     />
                 </div>
-                {!disabled && transformMode === 'translate' && (
+                {!transformDisabled && transformMode === 'translate' && (
                     <div className={classNames(styles.panel, styles['move-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -284,7 +328,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!disabled && transformMode === 'scale' && (
+                {!transformDisabled && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -350,7 +394,7 @@ class VisualizerModelTransformation extends PureComponent {
                     </div>
                 )}
 
-                {!disabled && transformMode === 'rotate' && (
+                {!transformDisabled && transformMode === 'rotate' && (
                     <div className={classNames(styles.panel, styles['rotate-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -478,6 +522,85 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
+
+                {!supportDisabled && transformMode === 'support' && (
+                    <div className={classNames(styles.panel, styles['support-panel'])}>
+                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
+                            <span className={classNames(styles['title-mode'])}>{i18n._('Manual Support')}</span>
+                        </div>
+                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
+
+                            <span style={{ fontSize: '14px', width: '125px', display: 'inline-block' }}>
+                                {i18n._('Support Size(mm)')}
+                            </span>
+
+                            <span
+                                className={classNames(styles['input-container'])}
+
+                            >
+                                <Input
+                                    min={0}
+                                    max={size.y / 2}
+                                    value={defaultSupportSize.x}
+                                    onChange={(value) => {
+                                        actions.setDefaultSupportSize({ x: value });
+                                    }}
+                                />
+                                <span className={classNames(styles.suffix)}>X</span>
+                            </span>
+                            <span
+                                className={classNames(styles['input-container'])}
+
+                            >
+                                <Input
+                                    min={0}
+                                    max={size.y / 2}
+                                    value={defaultSupportSize.y}
+                                    onChange={(value) => {
+                                        actions.setDefaultSupportSize({ y: value });
+                                    }}
+                                />
+                                <span className={classNames(styles.suffix)}>Y</span>
+                            </span>
+
+                        </div>
+                        <div className={classNames(styles.axis)}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                style={{ width: '125px' }}
+                                disabled={isSupporting}
+                                onClick={actions.startSupportMode}
+                            >
+                                <span>{i18n._('Add Support')}</span>
+                            </Anchor>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                style={{ width: '128px' }}
+                                onClick={actions.stopSupportMode}
+                            >
+                                <span>{i18n._('Done')}</span>
+                            </Anchor>
+
+                        </div>
+                        <div
+                            className={classNames(styles.axis)}
+                            style={{ borderTop: '1px solid #E7E8E9', paddingTop: '10px' }}
+                        >
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                style={{ width: '125px' }}
+                                onClick={actions.clearAllManualSupport}
+                            >
+                                <span>{i18n._('Clear All Support')}</span>
+                            </Anchor>
+                        </div>
+
+                    </div>
+                )}
+
             </React.Fragment>
         );
     }
@@ -496,7 +619,9 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
+        defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
+
         transformMode
     };
 };
@@ -505,6 +630,7 @@ const mapDispatchToProps = (dispatch) => ({
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
+    setDefaultSupportSize: (size) => dispatch(printingActions.setDefaultSupportSize(size)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value))
 });
 
