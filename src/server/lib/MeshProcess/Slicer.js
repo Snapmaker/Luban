@@ -102,8 +102,6 @@ class SlicerLayer {
 
     createPolygonsPart() {
         this.polygonsPart = this.polygons.splitIntoParts();
-        this.polygonsPart.simplify();
-        this.polygonsPart.removeDegenerateVerts();
     }
 }
 

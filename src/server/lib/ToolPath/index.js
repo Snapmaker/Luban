@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { isEqual, isZero } from '../../../shared/lib/utils';
+import { isEqual, isZero, round } from '../../../shared/lib/utils';
 
 // Temporarily prevent the rotation axis motor from losing steps
 const MAX_B_SPEED = 2400;
@@ -111,6 +111,12 @@ class ToolPath {
         this.setCommand(commandObj);
     }
 
+    move0XZ(x, z, f) {
+        const moveRate = this.setMoveRate(f);
+        const commandObj = moveRate ? { 'G': 0, X: x, Z: z, F: moveRate } : { 'G': 0, X: x, Z: z };
+        this.setCommand(commandObj);
+    }
+
     move0BY(b, y, f) {
         const moveRate = this.setMoveRate(this.toRotateF(b - this.state.B, 0, y - this.state.Y, 0, f));
         const commandObj = moveRate ? { 'G': 0, B: b, Y: y, F: moveRate } : { 'G': 0, B: b, Y: y };
@@ -191,6 +197,12 @@ class ToolPath {
         this.setCommand(commandObj);
     }
 
+    move1XYZB(x, y, z, b, f) {
+        const rapidMoveRate = this.setRapidMoveRate(this.toRotateF(b - this.state.B, x - this.state.X, y - this.state.Y, z - this.state.Z, f));
+        const commandObj = rapidMoveRate ? { 'G': 1, X: x, Y: y, Z: z, B: b, F: rapidMoveRate } : { 'G': 1, X: x, Y: y, Z: z, B: b };
+        this.setCommand(commandObj);
+    }
+
     // safeStart(x, y, stopHeight, safetyHeight) {
     //     this.commands.push({ G: 90 });
     //     this.commands.push({ G: 0, Z: stopHeight, F: 400 });
@@ -208,6 +220,11 @@ class ToolPath {
 
     setComment(comment) {
         this.commands.push({ 'C': comment });
+    }
+
+    toB(x) {
+        const b = x / this.diameter / Math.PI * 360;
+        return round(b, 2);
     }
 
     toRotateF(db = 0, dx = 0, dy = 0, dz = 0, f) {

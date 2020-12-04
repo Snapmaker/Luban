@@ -26,8 +26,16 @@ export class Polygon {
         this.path.push(p);
     }
 
+    unshift(p) {
+        this.path.unshift(p);
+    }
+
     get(i) {
         return this.path[i];
+    }
+
+    pop() {
+        this.path.pop();
     }
 
     size() {
@@ -46,6 +54,12 @@ export class Polygon {
                 this.path.push(p1);
             }
         }
+    }
+
+    clone() {
+        const polygon = new Polygon();
+        polygon.path = this.path.map(v => { return { x: v.x, y: v.y }; });
+        return polygon;
     }
 
     forEach(callback) {
@@ -202,15 +216,29 @@ export class Polygon {
 }
 
 export class Polygons {
-    polygons = [];
+    data = [];
+
+    size() {
+        return this.data.length;
+    }
 
     add(polygon) {
-        this.polygons.push(polygon);
+        this.data.push(polygon);
+    }
+
+    addPolygons(polygons) {
+        for (const polygon of polygons.data) {
+            this.add(polygon);
+        }
+    }
+
+    get(i) {
+        return this.data[i];
     }
 
     forEach(callback) {
-        for (let i = 0; i < this.polygons.length; i++) {
-            callback(this.polygons[i], i, this.polygons);
+        for (let i = 0; i < this.data.length; i++) {
+            callback(this.data[i], i, this.data);
         }
     }
 
@@ -221,14 +249,14 @@ export class Polygons {
         const smallestLineSegmentSquared = smallestLineSegment * smallestLineSegment;
         const allowedErrorDistanceSquared = allowedErrorDistance * allowedErrorDistance;
 
-        for (const polygon of this.polygons) {
+        for (const polygon of this.data) {
             polygon.simplify(smallestLineSegmentSquared, allowedErrorDistanceSquared);
         }
     }
 
     removeDegenerateVerts() {
-        for (let polyIdx = 0; polyIdx < this.polygons.length; polyIdx++) {
-            const polygon = this.polygons[polyIdx];
+        for (let polyIdx = 0; polyIdx < this.data.length; polyIdx++) {
+            const polygon = this.data[polyIdx];
             const result = new Polygon();
             const isDegenerate = function (last, now, next) {
                 const lastLine = Vector2.sub(now, last);
@@ -256,9 +284,9 @@ export class Polygons {
 
             if (isChanged) {
                 if (result.size() > 2) {
-                    this.polygons[polyIdx] = result;
+                    this.data[polyIdx] = result;
                 } else {
-                    this.polygons.splice(polyIdx, 1);
+                    this.data.splice(polyIdx, 1);
                     polyIdx--; // effectively the next iteration has the same poly_idx (referring to a new poly which is not yet processed)
                 }
             }
@@ -268,35 +296,20 @@ export class Polygons {
     }
 
     close() {
-        for (const polygon of this.polygons) {
+        for (const polygon of this.data) {
             polygon.close();
         }
-    }
-
-    splitIntoParts() {
-        const polygonOffsetPaths = [];
-        for (const polygon of this.polygons) {
-            polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
-        }
-        const result = PolygonOffset.recursiveUnion(polygonOffsetPaths);
-        const polygonsParts = new Polygons();
-        for (const paths of result) {
-            const polygonPart = new Polygon();
-            for (const pathElement of paths[0]) {
-                polygonPart.add({ x: pathElement[0], y: pathElement[1] });
-            }
-            polygonsParts.add(polygonPart);
-        }
-        return polygonsParts;
     }
 
 
     convexHull() {
         const newPath = [];
 
-        let first = this.polygons[0].path[0];
+        // console.trace('convexHull', this.data);
 
-        this.polygons.forEach((polygon) => {
+        let first = this.data[0].path[0];
+
+        this.data.forEach((polygon) => {
             polygon.forEach((point) => {
                 if (point.y < first.y) {
                     first = point;
@@ -312,7 +325,7 @@ export class Polygons {
             angle: 0,
             line: 0
         });
-        for (const polygon of this.polygons) {
+        for (const polygon of this.data) {
             for (const point of polygon.path) {
                 const v = Vector2.sub(point, first);
                 const angle = Vector2.angle(v) % 360;
@@ -352,13 +365,20 @@ export class Polygons {
         return polygons;
     }
 
-    diffPolygons(polygons) {
+    splitIntoParts() {
+        const polygonsPart = this.union();
+        polygonsPart.simplify();
+        polygonsPart.removeDegenerateVerts();
+        return polygonsPart;
+    }
+
+    diff(polygons) {
         let diffPolygonArrays = [];
-        for (const polygon of this.polygons) {
+        for (const polygon of this.data) {
             diffPolygonArrays.push([polygon.path.map(v => [v.x, v.y])]);
         }
-        for (let i = 0; i < polygons.length; i++) {
-            const polygonPathArray = polygons[i].path.map(v => [v.x, v.y]);
+        for (const polygon of polygons.data) {
+            const polygonPathArray = polygon.path.map(v => [v.x, v.y]);
             diffPolygonArrays = martinez.diff(diffPolygonArrays, [[polygonPathArray]]);
         }
         const diffPolygons = new Polygons();
@@ -372,5 +392,86 @@ export class Polygons {
             }
         }
         return diffPolygons;
+    }
+
+    union(polygons) {
+        const polygonOffsetPaths = [];
+        for (const polygon of this.data) {
+            polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
+        }
+        if (polygons && polygons.size() > 0) {
+            for (const polygon of polygons.data) {
+                polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
+            }
+        }
+        const result = PolygonOffset.recursiveUnion(polygonOffsetPaths);
+        const unionPolygons = new Polygons();
+        for (const paths of result) {
+            const polygonPart = new Polygon();
+            for (const pathElement of paths[0]) {
+                polygonPart.add({ x: pathElement[0], y: pathElement[1] });
+            }
+            unionPolygons.add(polygonPart);
+        }
+        return unionPolygons;
+    }
+
+    intersection(polygons) {
+        let intersectionPolygonArrays = [];
+        for (const polygon of this.data) {
+            intersectionPolygonArrays.push([polygon.path.map(v => [v.x, v.y])]);
+        }
+        const polygonPathArrays = [];
+        for (let i = 0; i < polygons.size(); i++) {
+            const polygonPathArray = polygons.get(i).path.map(v => [v.x, v.y]);
+            polygonPathArrays.push(polygonPathArray);
+        }
+        intersectionPolygonArrays = martinez.intersection(intersectionPolygonArrays, [polygonPathArrays]);
+
+        const intersectionPolygons = new Polygons();
+        if (intersectionPolygonArrays) {
+            for (const intersectionPolygonArray of intersectionPolygonArrays) {
+                for (const intersectionPolygon of intersectionPolygonArray) {
+                    const polygon = new Polygon();
+                    for (const point of intersectionPolygon) {
+                        polygon.add({ x: point[0], y: point[1] });
+                    }
+                    intersectionPolygons.add(polygon);
+                }
+            }
+        }
+        return intersectionPolygons;
+    }
+
+    padding(offset) {
+        const resultPolygons = new Polygons();
+        for (const polygon of this.data) {
+            const polygonArray = polygon.path.map(v => [v.x, v.y]);
+            const result = new PolygonOffset(polygonArray).padding(offset);
+            const resultPolygon = new Polygon();
+            if (result && result.length > 0 && result[0].length > 0) {
+                for (const point of result[0]) {
+                    resultPolygon.add({ x: point[0], y: point[1] });
+                }
+                resultPolygons.add(resultPolygon);
+            }
+        }
+        return resultPolygons;
+    }
+
+    rotate(angle) {
+        this.data.forEach(polygon => {
+            polygon.forEach(point => {
+                const { x, y } = Vector2.rotate(point, angle);
+                point.x = x;
+                point.y = y;
+            });
+        });
+    }
+
+    clone() {
+        const polygons = new Polygons();
+        polygons.data = this.data.map(v => v.clone());
+        return polygons;
     }
 }

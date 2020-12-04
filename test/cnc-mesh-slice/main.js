@@ -43,9 +43,11 @@ const parseAsCNC = (toolPathObj) => {
 
 function process() {
     // const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
-    const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
+    const d = new Date().getTime();
+    const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', materials: { isRotate: true, diameter: 36 }, toolParams: { toolAngle: 20, toolShaftDiameter: 3.175 }, gcodeConfig: { density: 5, jogSpeed: 600, workSpeed: 200 } });
     // const mesh = new MeshToolPathGenerator({ uploadName: 'cube.stl', isRotate: true });
     const data = mesh.generateToolPathObj();
+    console.log('time', new Date().getTime() - d);
 
     console.log(data.estimatedTime);
 
