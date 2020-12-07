@@ -9,17 +9,16 @@ import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerat
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
 import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D } from '../../constants';
-import { editorProcess } from '../../lib/editor/process';
 
 const log = logger('service:TaskManager');
 
 const generateCncViewPath = async (modelInfo, onProgress) => {
-    const { sourceType, mode, uploadName, processImageName, config } = modelInfo;
+    const { sourceType, mode, uploadName, processImageName } = modelInfo;
     let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
-    if (config.svgNodeName === 'text') {
-        const result = await editorProcess(modelInfo);
-        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
-    }
+    // if (config.svgNodeName === 'text') {
+    //     const result = await editorProcess(modelInfo);
+    //     modelPath = `${DataStorage.tmpDir}/${result.filename}`;
+    // }
 
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         let viewPath;

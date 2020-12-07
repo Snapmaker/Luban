@@ -60,10 +60,6 @@ class XToBToolPath extends ToolPath {
         this.circle = circle;
     }
 
-    toB(x) {
-        return this.toCircleB(x, 0);
-    }
-
     toCircleB(x, circle = this.circle) {
         const b = x / this.diameter / Math.PI * 360 + circle * 360;
         return round(b, 2);

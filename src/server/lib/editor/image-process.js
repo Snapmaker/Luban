@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import Jimp from 'jimp';
+import Jimp from '../jimp';
 import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import { svgInverse, svgToString } from '../../../shared/lib/SVGParser/SvgToString';
 
