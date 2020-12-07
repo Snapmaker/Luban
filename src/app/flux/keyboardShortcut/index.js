@@ -67,6 +67,34 @@ export const actions = {
                     const { layerCountDisplayed } = getState().printing;
                     dispatch(printingActions.showGcodeLayers(layerCountDisplayed + direction));
                 }
+            },
+            'Arrow': (e, { direction }) => {
+                const from = window.location.hash.split('/')[1];
+                if (['laser', 'cnc'].includes(from)) {
+                    let dx = 0, dy = 0;
+                    const step = 0.1;
+                    switch (e.key) {
+                        case 'ArrowUp':
+                            dy += step;
+                            break;
+                        case 'ArrowDown':
+                            dy += -step;
+                            break;
+                        case 'ArrowLeft':
+                            dx += -step;
+                            break;
+                        case 'ArrowRight':
+                            dx += step;
+                            break;
+                        default:
+                            break;
+                    }
+                    dispatch(editorActions.updateSelectedModelDeviation(from, { dx, dy }));
+                }
+                if (from === '3dp') {
+                    const { layerCountDisplayed } = getState().printing;
+                    dispatch(printingActions.showGcodeLayers(layerCountDisplayed + direction));
+                }
             }
         };
         Object.keys(keyEventHandlers).forEach(eventName => {
