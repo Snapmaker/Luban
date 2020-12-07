@@ -358,6 +358,16 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
+    updateSelectedModelDeviation: (headType, deviation) => (dispatch, getState) => {
+        const { SVGActions, modelGroup } = getState()[headType];
+        const selectedModelsTransformation = modelGroup.getSelectedModelTransformation();
+        const transformation = {
+            positionX: selectedModelsTransformation.positionX + deviation.dx,
+            positionY: selectedModelsTransformation.positionY + deviation.dy
+        };
+        SVGActions.updateSelectedElementsTransformation(transformation);
+    },
+
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 

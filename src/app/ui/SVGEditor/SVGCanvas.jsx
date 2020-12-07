@@ -129,12 +129,6 @@ class SVGCanvas extends PureComponent {
     // drawing variables
     currentDrawing = {};
 
-    // on key moving value
-    onKeyMovingValue = {
-        dx: 0,
-        dy: 0
-    }
-
     // selectedElements = [];
 
     counter = 0;
@@ -146,7 +140,6 @@ class SVGCanvas extends PureComponent {
         this.setupSVGBackground();
         this.setupSVGContent();
         this.setupMouseEvents();
-        this.setupKeyEvents();
         this.setupPrintableArea();
         this.onResize();
         this.setupTextActions();
@@ -275,11 +268,6 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
         window.addEventListener('dblclick', this.onDblClick, false);
-    }
-
-    setupKeyEvents() {
-        window.addEventListener('keydown', this.onKeyDown, false);
-        window.addEventListener('keyup', this.onKeyUp, false);
     }
 
     setupPrintableArea() {
@@ -1028,56 +1016,6 @@ class SVGCanvas extends PureComponent {
             this.setMode('textedit');
         }
     };
-
-    onKeyDown = (event) => {
-        const value = this.onKeyMovingValue;
-        const transform = this.svgContainer.createSVGTransform();
-
-        if (value.dx === 0 && value.dy === 0) {
-            transform.setTranslate(0, 0);
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
-            this.svgContentGroup.translateSelectorOnMouseDown(transform);
-        }
-        switch (event.key) {
-            case 'ArrowUp':
-                value.dy += -0.1;
-                break;
-            case 'ArrowDown':
-                value.dy += 0.1;
-                break;
-            case 'ArrowLeft':
-                value.dx += -0.1;
-                break;
-            case 'ArrowRight':
-                value.dx += 0.1;
-                break;
-            default:
-                return;
-        }
-
-        transform.setTranslate(value.dx, value.dy);
-        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-        this.svgContentGroup.translateSelectorOnMouseMove(transform);
-    }
-
-    onKeyUp = (event) => {
-        const value = this.onKeyMovingValue;
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'ArrowDown':
-            case 'ArrowLeft':
-            case 'ArrowRight':
-                this.props.onMoveElement(null, {
-                    dx: value.dx,
-                    dy: value.dy
-                });
-                value.dx = 0;
-                value.dy = 0;
-                break;
-            default:
-                break;
-        }
-    }
 
     onMouseWheel = (event) => {
         event.preventDefault();
