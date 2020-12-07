@@ -150,6 +150,11 @@ export const actions = {
         await UniApi.File.exportAs(targetFile, tmpFile);
     },
 
+    exportPrintingManagerFile: (targetFile) => async () => {
+        const configFile = `/Config/${targetFile}`;
+        await UniApi.File.exportAs(targetFile, configFile);
+    },
+
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;

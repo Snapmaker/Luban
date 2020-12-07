@@ -16,6 +16,7 @@ import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CncLaserOutputWidget from './CncLaserOutput';
 import PrintingMaterialWidget from './PrintingMaterial';
+import PrintingManagerWidget from './PrintingManager';
 import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
 import WifiTransport from './WifiTransport';
@@ -40,6 +41,7 @@ const getWidgetByName = (name) => {
         'enclosure': EnclosureWidget,
         '3dp-object-list': PrintingObjectList,
         '3dp-material': PrintingMaterialWidget,
+        '3dp-manager': PrintingManagerWidget,
         '3dp-configurations': PrintingConfigurationsWidget,
         '3dp-output': PrintingOutputWidget,
         'laser-params': LaserParamsWidget,
