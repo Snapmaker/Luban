@@ -455,11 +455,16 @@ class ModelGroup extends EventEmitter {
         }
         this.models.splice(0);
         for (const model of models) {
-            const newModel = model.clone(this);
+            // remove clone model here
+            const newModel = model;
             newModel.meshObject.addEventListener('update', this.onModelUpdate);
             newModel.computeBoundingBox();
             this.models.push(newModel);
-            this.object.add(newModel.meshObject);
+            let parent = this.object;
+            if (model.supportTag) { // support parent should be the target model
+                parent = model.target.meshObject;
+            }
+            ThreeUtils.setObjectParent(newModel.meshObject, parent);
         }
         this.unselectAllModels();
         return this._getEmptyState();
@@ -566,7 +571,7 @@ class ModelGroup extends EventEmitter {
     // use for widget
     selectModelById(modelID, isMultiSelect = false) {
         const selectModel = this.models.find(d => d.modelID === modelID);
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         if (isMultiSelect) {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
@@ -583,7 +588,7 @@ class ModelGroup extends EventEmitter {
             }
         }
         // this.resetSelectedObjectWhenMultiSelect();
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
 
         this.modelChanged();
         return this.getStateAndUpdateBoundingBox();
@@ -591,7 +596,7 @@ class ModelGroup extends EventEmitter {
 
     // use for canvas
     selectMultiModel(intersect, selectEvent) {
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         let model;
         switch (selectEvent) {
             case SELECTEVENT.UNSELECT:
@@ -619,7 +624,7 @@ class ModelGroup extends EventEmitter {
             default:
         }
         // this.resetSelectedObjectWhenMultiSelect();
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
         this.modelChanged();
         this.emit('select');
         return this.getStateAndUpdateBoundingBox();
@@ -682,14 +687,14 @@ class ModelGroup extends EventEmitter {
     selectAllModels() {
         this.selectedModelArray = this.models;
         // this.selectedModelIDArray = [];
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         this.selectedModelArray.forEach((model) => {
             model.setSelected(true);
             this.selectedGroup.add(model.meshObject);
             // this.selectedModelIDArray.push(model.modelID);
         });
         // this.resetSelectedObjectWhenMultiSelect();
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
         this.modelChanged();
 
         return {
@@ -711,7 +716,7 @@ class ModelGroup extends EventEmitter {
     }
 
     arrangeAllModels() {
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         this.resetSelectedObjectScaleAndRotation();
         const models = this.getModels();
         for (const model of models) {
@@ -735,7 +740,7 @@ class ModelGroup extends EventEmitter {
                 this.selectedGroup.add(model.meshObject);
             }
         }
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
         return this.getStateAndUpdateBoundingBox();
     }
 
@@ -743,7 +748,7 @@ class ModelGroup extends EventEmitter {
         const modelsToCopy = this.selectedModelArray;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
 
         // Unselect all models
         this.unselectAllModels();
@@ -777,7 +782,7 @@ class ModelGroup extends EventEmitter {
             this.object.add(newModel.meshObject);
             this.addModelToSelectedGroup(newModel);
         });
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
 
         return this.getStateAndUpdateBoundingBox();
     }
@@ -786,11 +791,11 @@ class ModelGroup extends EventEmitter {
      * Copy action: copy selected models (simply save the objects without their current positions).
      */
     copy() {
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
 
         this.clipboard = this.selectedModelArray.map(model => model.clone(this));
 
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
     }
 
     /**
@@ -800,7 +805,7 @@ class ModelGroup extends EventEmitter {
         const modelsToCopy = this.clipboard;
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
 
         // Unselect all models
         this.unselectAllModels();
@@ -828,7 +833,7 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(newModel);
             }
         });
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
 
         return this.getStateAndUpdateBoundingBox();
     }
@@ -876,12 +881,12 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         selected.forEach((item) => {
             item.layFlat();
             item.computeBoundingBox();
         });
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
         return this.getState();
     }
 
@@ -967,7 +972,7 @@ class ModelGroup extends EventEmitter {
     // Note: the function is only useful for 3D object operations on Canvas
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
-        this.removeSelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
@@ -975,7 +980,7 @@ class ModelGroup extends EventEmitter {
             selected.computeBoundingBox();
         });
         this._checkAnyModelOversteppedOrSelected();
-        this.applySelectedObjectParentMatrix();
+        // this.applySelectedObjectParentMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = true;
 
         // removeSelectedObjectParentMatrix makes object matrixWorld exception
@@ -1137,6 +1142,9 @@ class ModelGroup extends EventEmitter {
         let isOverstepped = false;
         model.computeBoundingBox();
         isOverstepped = this._bbox && !this._bbox.containsBox(model.boundingBox);
+        if (isOverstepped) {
+            console.log(this._bbox, model.boundingBox);
+        }
         return isOverstepped;
     }
 
@@ -1184,9 +1192,15 @@ class ModelGroup extends EventEmitter {
     }
 
     cloneModels() {
-        this.removeSelectedObjectParentMatrix();
-        const newModels = this.models.map(d => d.clone());
-        this.applySelectedObjectParentMatrix();
+        // this.removeSelectedObjectParentMatrix();
+        const newModels = this.models.map(d => d.clone(this));
+
+        for (const model of newModels) {
+            if (model.supportTag) {
+                model.target = newModels.find(i => i.originModelID === model.target.modelID);
+            }
+        }
+        // this.applySelectedObjectParentMatrix();
         return newModels;
     }
 

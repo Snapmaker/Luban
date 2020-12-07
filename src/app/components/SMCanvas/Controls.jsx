@@ -371,7 +371,7 @@ class Controls extends EventEmitter {
             this.ray.setFromCamera(coord, this.camera);
 
 
-            const intersect = this.ray.intersectObjects(allObjects, false)[0];
+            const intersect = this.ray.intersectObjects(allObjects, true)[0];
             const isMultiSelect = event.shiftKey;
 
             let selectEvent = '';

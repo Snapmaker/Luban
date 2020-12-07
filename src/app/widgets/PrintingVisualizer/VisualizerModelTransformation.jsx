@@ -160,10 +160,10 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateZ = 0;
         let uniformScalingState = true;
         const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
-            return model.visible === true;
+            return model.visible === true && !model.supportTag;
         }));
         const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
-            return model.visible === true && model.supportTag !== 'support';
+            return model.visible === true && !model.supportTag;
         }));
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));

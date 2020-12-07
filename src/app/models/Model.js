@@ -38,7 +38,7 @@ class Model {
     constructor(modelInfo, modelGroup) {
         const {
             modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
-            transformation, processImageName, modelName
+            transformation, processImageName, modelName, supportTag, target
         } = modelInfo;
 
         this.limitSize = limitSize;
@@ -63,6 +63,8 @@ class Model {
         this.config = config;
         this.gcodeConfig = gcodeConfig;
         this.mode = mode;
+        this.supportTag = supportTag;
+        this.target = target;
 
         this.processImageName = processImageName;
 
@@ -454,14 +456,14 @@ class Model {
             // clone this.convexGeometry then clone.computeBoundingBox() is faster.
             if (this.convexGeometry) {
                 const clone = this.convexGeometry.clone();
-                this.meshObject.updateMatrix();
-                clone.applyMatrix(this.meshObject.matrix);
+                this.meshObject.updateMatrixWorld();
+                clone.applyMatrix(this.meshObject.matrixWorld);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
             } else {
                 const clone = this.meshObject.geometry.clone();
-                this.meshObject.updateMatrix();
-                clone.applyMatrix(this.meshObject.matrix);
+                this.meshObject.updateMatrixWorld();
+                clone.applyMatrix(this.meshObject.matrixWorld);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
             }
@@ -576,11 +578,12 @@ class Model {
             geometry: this.meshObject.geometry.clone(),
             material: this.meshObject.material.clone()
         }, modelGroup);
+        clone.originModelID = this.modelID;
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
-        this.meshObject.updateMatrix();
-        clone.setMatrix(this.meshObject.matrix);
+        this.meshObject.updateMatrixWorld();
+        clone.setMatrix(this.meshObject.matrixWorld);
 
         // copy convex geometry as well
         if (this.sourceType === '3d') {
