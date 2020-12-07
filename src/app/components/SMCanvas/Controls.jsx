@@ -220,11 +220,13 @@ class Controls extends EventEmitter {
         event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
         // mousedown on support mode
+        this.prevState = null;
         if (this.state === STATE.SUPPORT) {
-            if (event.button === THREE.MOUSE.RIGHT) {
-                this.stopSupportMode();
-            }
-            return;
+            this.prevState = STATE.SUPPORT;
+            // if (event.button === THREE.MOUSE.RIGHT) {
+            //     this.stopSupportMode();
+            // }
+            // return;
         }
 
         switch (event.button) {
@@ -259,7 +261,8 @@ class Controls extends EventEmitter {
             case THREE.MOUSE.RIGHT:
                 this.state = STATE.PAN;
                 this.panMoved = false;
-                this.onClick(event, true);
+                // should not trigger click here
+                // this.onClick(event, true);
                 this.handleMouseDownPan(event);
                 break;
             default:
@@ -312,18 +315,18 @@ class Controls extends EventEmitter {
     };
 
     onDocumentMouseUp = (event) => {
-        if (this.state === STATE.SUPPORT) {
-            // generate support onAfterModelTransform
-            this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
-            this.supportControl.onMouseUp();
-            return;
-        }
-
         switch (this.state) {
             case STATE.PAN:
-                if (!this.panMoved) { // Right click to open context menu
-                    // Note that the event is mouse up, not really contextmenu
-                    this.emit(EVENTS.CONTEXT_MENU, event);
+                if (!this.panMoved) {
+                    if (this.prevState === STATE.SUPPORT) {
+                        // stop support mode on right click
+                        this.prevState = null;
+                        this.stopSupportMode();
+                    } else {
+                        // Right click to open context menu
+                        // Note that the event is mouse up, not really contextmenu
+                        this.emit(EVENTS.CONTEXT_MENU, event);
+                    }
                 } else {
                     this.onPan();
                 }
@@ -338,7 +341,7 @@ class Controls extends EventEmitter {
                 break;
         }
 
-        this.state = STATE.NONE;
+        this.state = this.prevState || STATE.NONE;
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         // mouse up needed no matter mousedowm on support mode
@@ -353,6 +356,8 @@ class Controls extends EventEmitter {
     onClick = (event, isRightClick = false) => {
         // todo, to fix workspace not rotate
         if (!this.selectedGroup || this.state === STATE.SUPPORT) {
+            this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+            this.supportControl.onMouseUp();
             return;
         }
         const mousePosition = this.getMouseCoord(event);
