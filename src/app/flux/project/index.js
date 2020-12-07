@@ -162,7 +162,17 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
     save: (headType, dialogOptions = false) => async (dispatch, getState) => {
-        // ? save should return when no model in editor
+        // save should return when no model in editor
+        let modelGroup;
+        if (headType === HEAD_3DP) {
+            modelGroup = getState().printing.modelGroup;
+        } else {
+            modelGroup = getState()[headType].modelGroup;
+        }
+        if (!modelGroup.hasModel()) {
+            return;
+        }
+
         const state = getState().project[headType];
         const { openedFile, unSaved } = state;
         if (!unSaved) return;
