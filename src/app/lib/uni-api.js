@@ -98,8 +98,10 @@ const Menu = {
         }
     },
     cleanAllRecentFiles() {
-        const menu = window.require('electron').remote.require('./electron-app/Menu');
-        menu.cleanAllRecentFiles();
+        if (isElectron()) {
+            const menu = window.require('electron').remote.require('./electron-app/Menu');
+            menu.cleanAllRecentFiles();
+        }
     }
 };
 

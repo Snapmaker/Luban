@@ -21,10 +21,10 @@ export const actions = {
         dispatch(printingActions.removeAllModels());
 
         // remove material setting config
-        dispatch(printingActions.removeAllMaterialDefinition());
+        dispatch(printingActions.removeAllMaterialDefinitions());
 
         // remove quality setting config
-        dispatch(printingActions.removeAllQualityDefinition());
+        dispatch(printingActions.removeAllQualityDefinitions());
 
         // reset basic store
         storeManager.clear();

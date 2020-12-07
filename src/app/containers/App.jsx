@@ -68,7 +68,8 @@ class App extends PureComponent {
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
-        shouldCheckForUpdate: PropTypes.bool.isRequired
+        shouldCheckForUpdate: PropTypes.bool.isRequired,
+        resetAllUserSettings: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();

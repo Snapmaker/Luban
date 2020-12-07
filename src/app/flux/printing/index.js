@@ -508,12 +508,14 @@ export const actions = {
         }));
     },
 
-    removeAllMaterialDefinition: () => async (dispatch, getState) => {
+    // removes all non-predefined definitions
+    removeAllMaterialDefinitions: () => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newMaterialDefinitions = [];
+        const defaultDefinitionIds = ['material.pla', 'material.abs'];
         for (const definition of state.materialDefinitions) {
-            if (definition.definitionId === 'material.pla' || definition.definitionId === 'material.abs') {
+            if (defaultDefinitionIds.includes(definition)) {
                 newMaterialDefinitions.push(definition);
                 continue;
             }
@@ -535,12 +537,14 @@ export const actions = {
         }));
     },
 
-    removeAllQualityDefinition: () => async (dispatch, getState) => {
+    // removes all non-predefined definitions
+    removeAllQualityDefinitions: () => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newQualityDefinitions = [];
+        const defaultDefinitionIds = ['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'];
         for (const definition of state.qualityDefinitions) {
-            if (definition.definitionId === 'quality.fast_print' || definition.definitionId === 'quality.normal_quality' || definition.definitionId === 'quality.high_quality') {
+            if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newQualityDefinitions.push(definition);
                 continue;
             }
