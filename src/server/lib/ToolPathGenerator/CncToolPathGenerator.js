@@ -492,7 +492,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
         const data = [];
 
         for (let i = 0; i < viewPath.length; i++) {
-            let order = true;
+            let order = false;
             for (let j = 0; j < viewPath.length; j++) {
                 if (i === j) {
                     continue;
