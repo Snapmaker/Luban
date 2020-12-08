@@ -433,6 +433,9 @@ export const actions = {
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
         const state = getState().printing;
         const savedDefinition = await definitionManager.getDefinition(definitionId);
+        if (!savedDefinition) {
+            return;
+        }
         if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
             const newDefinitions = state.materialDefinitions.map((item) => {
                 if (item.definitionId === definitionId) {
