@@ -146,8 +146,10 @@ const File = {
             const file = { path: targetFile, name: path.basename(targetFile) };
 
             fs.copyFileSync(tmpFile, targetFile);
-            const menu = window.require('electron').remote.require('./electron-app/Menu');
-            menu.addRecentFile(file);
+            // const menu = window.require('electron').remote.require('./electron-app/Menu');
+            // menu.addRecentFile(file);
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('add-recent-file', file);
 
             return file;
         } else {
