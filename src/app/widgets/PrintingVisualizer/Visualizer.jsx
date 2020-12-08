@@ -118,6 +118,19 @@ class Visualizer extends PureComponent {
         },
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
+        },
+        startSupportMode: () => {
+            this.canvas.current.controls.startSupportMode();
+        },
+        clearSelectedSupport: () => {
+            const { modelGroup } = this.props;
+            const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
+            if (isSupportSelected) {
+                modelGroup.removeSelectedModel();
+            }
+        },
+        clearAllManualSupport: () => {
+            this.props.modelGroup.removeAllManualSupport();
         }
     };
 
@@ -151,12 +164,10 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(transformMode);
         }
         if (selectedModelIDArray !== this.props.selectedModelIDArray) {
-            selectedModelIDArray.forEach((modelID) => {
-                const model = modelGroup.models.find(d => d.modelID === modelID);
-                if (model) {
-                    modelGroup.selectedGroup.add(model.meshObject);
-                }
-            });
+            // selectedModelIDArray.forEach((modelID) => {
+            //     const model = modelGroup.models.find(d => d.modelID === modelID);
+            //     modelGroup.selectedGroup.add(model.meshObject);
+            // });
             this.canvas.current.controls.updateBoundingBox();
             this.canvas.current.controls.attach(modelGroup.selectedGroup);
         }
@@ -219,9 +230,13 @@ class Visualizer extends PureComponent {
         // const actions = this.actions;
 
         const isModelSelected = (selectedModelIDArray.length > 0);
+        const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
         const isModelDisplayed = (displayedType === 'model');
         const notice = this.getNotice();
-
+        let isSupporting = false;
+        if (this.canvas.current && this.canvas.current.controls.state === 4) {
+            isSupporting = true;
+        }
         return (
             <div
                 className={styles.visualizer}
@@ -232,7 +247,12 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation updateBoundingBox={this.actions.updateBoundingBox} />
+                    <VisualizerModelTransformation
+                        updateBoundingBox={this.actions.updateBoundingBox}
+                        getControls={() => this.canvas.current && this.canvas.current.controls}
+                        isSupporting={isSupporting}
+                        clearAllManualSupport={this.actions.clearAllManualSupport}
+                    />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
@@ -314,6 +334,27 @@ class Visualizer extends PureComponent {
                             },
                             {
                                 type: 'item',
+                                label: i18n._('Add Manual Support'),
+                                disabled: !isModelSelected || isSupportSelected,
+                                onClick: this.actions.startSupportMode
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Delete Selected Support'),
+                                disabled: !isSupportSelected,
+                                onClick: this.actions.clearSelectedSupport
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Clear All Manual Support'),
+                                disabled: false,
+                                onClick: this.actions.clearAllManualSupport
+                            },
+                            {
+                                type: 'separator'
+                            },
+                            {
+                                type: 'item',
                                 label: i18n._('Clear Heated Bed'),
                                 disabled: !hasModel || !isModelDisplayed,
                                 onClick: this.actions.clearBuildPlate
@@ -363,7 +404,8 @@ const mapDispatchToProps = (dispatch) => ({
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
-    layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel())
+    layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
+    addSupport: () => dispatch(printingActions.addSupport())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

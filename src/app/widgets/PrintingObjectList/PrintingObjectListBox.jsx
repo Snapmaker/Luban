@@ -55,7 +55,7 @@ class PrintingObjectListBox extends PureComponent {
 
         return (
             <div className={styles['object-list-box']}>
-                {(modelGroup.models) && modelGroup.models.map((model) => {
+                {(modelGroup.models) && modelGroup.models.filter(model => !model.supportTag).map((model) => {
                     const modelName = path.basename(model.modelName);
                     const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
                     // const modelIcon = () => {
@@ -65,7 +65,7 @@ class PrintingObjectListBox extends PureComponent {
                         <TipTrigger
                             key={model.modelID}
                             title={i18n._('Object')}
-                            content={modelName}
+                            content={model.modelName}
                         >
                             <div
                                 className={classNames(

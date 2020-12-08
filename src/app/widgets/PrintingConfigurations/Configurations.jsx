@@ -153,6 +153,9 @@ class Configurations extends PureComponent {
                     'support_type',
                     'support_pattern',
                     'support_infill_rate',
+                    'support_z_distance',
+                    // 'support_xy_distance',
+                    // 'support_xy_overrides_z',
                     'support_angle'
                 ]
             }
