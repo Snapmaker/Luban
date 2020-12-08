@@ -11,7 +11,7 @@ import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
-import { HEAD_3DP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -40,6 +40,7 @@ class Material extends PureComponent {
         defaultMaterialId: PropTypes.string.isRequired,
         materialDefinitions: PropTypes.array.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
+        updateManagerDisplayType: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired
@@ -54,7 +55,8 @@ class Material extends PureComponent {
     };
 
     actions = {
-        onShowMaterialManager: () => {
+        onShowPrintingManager: () => {
+            this.props.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL);
             this.props.updateShowPrintingManager(true);
         },
         onChangeMaterialValue: (option) => {
@@ -161,7 +163,7 @@ class Material extends PureComponent {
                     />
                 </div>
                 <Anchor
-                    onClick={this.actions.onShowMaterialManager}
+                    onClick={this.actions.onShowPrintingManager}
                 >
                     <span
                         className={classNames(
@@ -243,6 +245,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
             dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         },
+        updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
     };

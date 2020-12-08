@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Widget from '../../widgets/Widget';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
+import PrintingManager from '../../views/PrintingManager';
 import styles from '../layout.styl';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -116,6 +117,7 @@ class Printing extends PureComponent {
                                 })}
                             </Sortable>
                         </form>
+                        <PrintingManager />
                     </div>
                 </div>
             </div>

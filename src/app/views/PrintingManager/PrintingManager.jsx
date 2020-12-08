@@ -12,10 +12,10 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import widgetStyles from '../styles.styl';
+import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
-import { HEAD_3DP, PRITING_MANAGER_TYPE_QUALITY, PRITING_MANAGER_TYPE_MATERIAL } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -87,7 +87,6 @@ function isOfficialDefinition(definition) {
 
 class PrintingManager extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
         showPrintingManager: PropTypes.bool,
         managerDisplayType: PropTypes.string.isRequired,
         materialDefinitions: PropTypes.array.isRequired,
@@ -237,20 +236,20 @@ class PrintingManager extends PureComponent {
             this.props.onUploadManagerDefinition(qualityFile, this.props.managerDisplayType);
         },
         importFile: (managerDisplayType) => {
-            if (managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL) {
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 this.materialFileInput.current.value = null;
                 this.materialFileInput.current.click();
-            } else if (managerDisplayType === PRITING_MANAGER_TYPE_QUALITY) {
+            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 this.qualityFileInput.current.value = null;
                 this.qualityFileInput.current.click();
             }
         },
         exportPrintingManagerFile: (managerDisplayType) => {
             let definitionId, targetFile;
-            if (managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL) {
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 definitionId = this.state.materialDefinitionForManager.definitionId;
                 targetFile = `${definitionId}.def.json`;
-            } else if (managerDisplayType === PRITING_MANAGER_TYPE_QUALITY) {
+            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
                 definitionId = qualityDefinitionForManager.definitionId;
                 if (isOfficialDefinition(qualityDefinitionForManager)) {
@@ -332,8 +331,7 @@ class PrintingManager extends PureComponent {
         },
 
         onSelectMaterialTypeNotUpdate: (definitionId) => {
-            const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            const materialDefinitionForManager = JSON.parse(JSON.stringify(definition));
+            const materialDefinitionForManager = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
             if (materialDefinitionForManager) {
                 this.setState({
                     materialDefinitionForManager: materialDefinitionForManager,
@@ -342,14 +340,15 @@ class PrintingManager extends PureComponent {
             }
         },
         onSelectMaterialTypeAndUpdate: (definitionId) => {
-            const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (definition) {
+            const materialDefinitionForManager = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
+            if (materialDefinitionForManager) {
                 this.setState({
-                    materialDefinitionForManager: definition
+                    materialDefinitionForManager: materialDefinitionForManager,
+                    nameForMaterial: materialDefinitionForManager.name
                 });
 
-                this.props.updateDefaultMaterialId(definition.definitionId);
-                this.props.updateActiveDefinition(definition);
+                this.props.updateDefaultMaterialId(materialDefinitionForManager.definitionId);
+                this.props.updateActiveDefinition(materialDefinitionForManager);
             }
         },
         onChangeMaterialDefinitionForManager: (key, value, checkboxKey) => {
@@ -412,13 +411,13 @@ class PrintingManager extends PureComponent {
         },
 
         onDuplicateManagerDefinition: async (managerDisplayType) => {
-            if (managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL) {
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 const definition = this.state.materialDefinitionForManager;
                 const newDefinition = await this.props.duplicateMaterialDefinition(definition);
 
                 // Select new definition after creation
-                this.actions.onSelectMaterialTypeAndUpdate(newDefinition.definitionId);
-            } else if (managerDisplayType === PRITING_MANAGER_TYPE_QUALITY) {
+                this.actions.onSelectMaterialTypeNotUpdate(newDefinition.definitionId);
+            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const definition = this.state.qualityDefinitionForManager;
                 const newDefinition = await this.props.duplicateQualityDefinition(definition);
 
@@ -427,7 +426,7 @@ class PrintingManager extends PureComponent {
             }
         },
         onRemoveManagerDefinition: async (managerDisplayType) => {
-            if (managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL) {
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 const definition = this.state.materialDefinitionForManager;
                 await confirm({
                     body: `Are you sure to remove profile "${definition.name}"?`
@@ -439,7 +438,7 @@ class PrintingManager extends PureComponent {
                 if (this.props.materialDefinitions.length) {
                     this.actions.onSelectMaterialTypeAndUpdate(this.props.materialDefinitions[0].definitionId);
                 }
-            } else if (managerDisplayType === PRITING_MANAGER_TYPE_QUALITY) {
+            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const definition = this.state.qualityDefinitionForManager;
 
                 await confirm({
@@ -455,11 +454,6 @@ class PrintingManager extends PureComponent {
             }
         }
     };
-
-    constructor(props) {
-        super(props);
-        this.props.setTitle(i18n._('Material'));
-    }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.showPrintingManager !== this.props.showPrintingManager) {
@@ -506,8 +500,12 @@ class PrintingManager extends PureComponent {
                 });
                 this.props.updateActiveDefinition(qualityDefinitionForManager);
             } else {
-                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager.definitionId)
-                || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                let qualityDefinitionForManager;
+                if (this.state.qualityDefinitionForManager) {
+                    qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager.definitionId);
+                } else {
+                    qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                }
                 Object.assign(newState, {
                     qualityDefinitionForManager: qualityDefinitionForManager
                 });
@@ -543,7 +541,6 @@ class PrintingManager extends PureComponent {
         const currentQualityOption = qualityDefinitionOptions.find((item) => {
             return item.label === qualityDefinitionForManager.name;
         });
-
         return (
             <React.Fragment>
                 {showPrintingManager && (
@@ -558,14 +555,14 @@ class PrintingManager extends PureComponent {
                         >
                             <div className={classNames(styles['manager-type-wrapper'])}>
                                 <Anchor
-                                    onClick={() => actions.updateManagerDisplayType(PRITING_MANAGER_TYPE_MATERIAL)}
-                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL })}
+                                    onClick={() => actions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL)}
+                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL })}
                                 >
                                     {i18n._('Material')}
                                 </Anchor>
                                 <Anchor
-                                    onClick={() => actions.updateManagerDisplayType(PRITING_MANAGER_TYPE_QUALITY)}
-                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRITING_MANAGER_TYPE_QUALITY })}
+                                    onClick={() => actions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY)}
+                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY })}
                                     style={{ marginLeft: '20px' }}
                                 >
                                     {i18n._('Printing Settings')}
@@ -574,7 +571,7 @@ class PrintingManager extends PureComponent {
                             <div className={classNames(styles['manager-content'])}>
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
-                                        { managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {
+                                        { managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
@@ -586,7 +583,7 @@ class PrintingManager extends PureComponent {
                                                 </li>
                                             );
                                         }))}
-                                        { managerDisplayType === PRITING_MANAGER_TYPE_QUALITY && (qualityDefinitionOptions.map((option) => {
+                                        { managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (qualityDefinitionOptions.map((option) => {
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
@@ -631,7 +628,7 @@ class PrintingManager extends PureComponent {
                                     </div>
                                 </div>
                                 <div className={classNames(styles['manager-details'])}>
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
                                         <div className="sm-parameter-container">
                                             <div className="sm-parameter-row">
                                                 <span className="sm-parameter-row__label-lg">{i18n._('Name')}</span>
@@ -700,7 +697,7 @@ class PrintingManager extends PureComponent {
                                             })}
                                         </div>
                                     )}
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_QUALITY && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
                                         <div style={{ marginBottom: '6px' }}>
                                             <div className="sm-parameter-row">
                                                 <span className="sm-parameter-row__label-lg">{i18n._('Name')}</span>
@@ -909,7 +906,7 @@ class PrintingManager extends PureComponent {
                                     >
                                         {i18n._('Copy')}
                                     </Anchor>
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
                                         <Anchor
                                             className="sm-btn-large sm-btn-default"
                                             onClick={() => { actions.onRemoveManagerDefinition(managerDisplayType); }}
@@ -918,7 +915,7 @@ class PrintingManager extends PureComponent {
                                             {i18n._('Delete')}
                                         </Anchor>
                                     )}
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_QUALITY && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
                                         <Anchor
                                             className="sm-btn-large sm-btn-default"
                                             onClick={() => { actions.onRemoveManagerDefinition(managerDisplayType); }}
@@ -936,7 +933,7 @@ class PrintingManager extends PureComponent {
                                     >
                                         {i18n._('Close')}
                                     </Anchor>
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_MATERIAL && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
                                         <Anchor
                                             onClick={() => { actions.onSaveMaterialForManager(managerDisplayType); }}
                                             className="sm-btn-large sm-btn-primary"
@@ -945,7 +942,7 @@ class PrintingManager extends PureComponent {
                                             {i18n._('Save')}
                                         </Anchor>
                                     )}
-                                    {managerDisplayType === PRITING_MANAGER_TYPE_QUALITY && (
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
                                         <Anchor
                                             onClick={() => { actions.onSaveQualityForManager(managerDisplayType); }}
                                             className="sm-btn-large sm-btn-primary"

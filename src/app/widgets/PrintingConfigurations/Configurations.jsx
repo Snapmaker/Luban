@@ -11,7 +11,7 @@ import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { HEAD_3DP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
 
 import styles from './styles.styl';
 
@@ -41,6 +41,7 @@ class Configurations extends PureComponent {
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
 
+        updateManagerDisplayType: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
@@ -146,6 +147,7 @@ class Configurations extends PureComponent {
 
     actions = {
         onShowMaterialManager: () => {
+            this.props.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY);
             this.props.updateShowPrintingManager(true);
         },
         /**
@@ -586,6 +588,7 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(printingActions.updateActiveDefinition(definition));
             dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         },
+        updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))

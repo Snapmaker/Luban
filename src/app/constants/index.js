@@ -53,8 +53,8 @@ export const STAGES_3DP = {
     modelLoaded: 11,
     gcodeRendered: 12
 };
-export const PRITING_MANAGER_TYPE_MATERIAL = 'material';
-export const PRITING_MANAGER_TYPE_QUALITY = 'quality';
+export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
+export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
 
