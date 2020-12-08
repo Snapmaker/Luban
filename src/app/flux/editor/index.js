@@ -1338,6 +1338,10 @@ export const actions = {
     },
 
     /**
+     * SVG Actions below
+     ***************************************************************************/
+
+    /**
      * Create model from element.
      */
     createModelFromElement: (headType, element) => async (dispatch, getState) => {
@@ -1371,23 +1375,50 @@ export const actions = {
         SVGActions.clearSelection();
     },
 
-    /**
-     * Resize element.
-     */
-    resizeElement: (headType, element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) => (dispatch, getState) => {
+    moveElementsStart: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling });
+        SVGActions.moveElementsStart(elements);
     },
 
-    // TODO: ...
+    moveElements: (headType, elements, { dx, dy }) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElements(elements, { dx, dy });
+    },
+
+    moveElementsFinish: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElementsFinish(elements, options);
+    },
+
     /**
-     * Resize element.
+     * Resize elements start.
      */
-    afterResizeElement: (headType, element) => (dispatch, getState) => {
+    resizeElementsStart: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElementsStart(elements, options);
+    },
+
+    /**
+     * Resize elements (resizing).
+     */
+    resizeElements: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElements(elements, options);
+    },
+
+    /**
+     * Resize elements finish.
+     */
+    resizeElementsFinish: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
 
-        SVGActions.afterResizeElement(element);
+        SVGActions.resizeElementsFinish(elements, options);
+
         dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -1400,13 +1431,27 @@ export const actions = {
     },
 
     /**
-     * Move element on mouse up
+     * Rotate elements start.
      */
-    moveElement: (headType, element, { dx, dy }) => (dispatch, getState) => {
+    rotateElementsStart: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.moveElement(element, { dx, dy });
-        dispatch(actions.resetProcessState(headType));
+        SVGActions.rotateElementsStart(elements);
+    },
+
+    /**
+     * Rotate elements (rotating).
+     */
+    rotateElements: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElements(elements, options);
+    },
+
+    rotateElementsFinish: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElementsFinish(elements);
     },
 
     /**

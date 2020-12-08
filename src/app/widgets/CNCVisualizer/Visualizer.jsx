@@ -72,13 +72,22 @@ class Visualizer extends Component {
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
-        onResizeElement: PropTypes.func.isRequired,
-        onAfterResizeElement: PropTypes.func.isRequired,
-        onMoveElement: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
-        updateTextTransformationAfterEdit: PropTypes.func.isRequired
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+
+        elementActions: PropTypes.shape({
+            moveElementsStart: PropTypes.func.isRequired,
+            moveElements: PropTypes.func.isRequired,
+            moveElementsFinish: PropTypes.func.isRequired,
+            resizeElementsStart: PropTypes.func.isRequired,
+            resizeElements: PropTypes.func.isRequired,
+            resizeElementsFinish: PropTypes.func.isRequired,
+            rotateElementsStart: PropTypes.func.isRequired,
+            rotateElements: PropTypes.func.isRequired,
+            rotateElementsFinish: PropTypes.func.isRequired
+        })
     };
 
     contextMenuRef = React.createRef();
@@ -352,9 +361,6 @@ class Visualizer extends Component {
                         onCreateElement={this.props.onCreateElement}
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
-                        onResizeElement={this.props.onResizeElement}
-                        onAfterResizeElement={this.props.onAfterResizeElement}
-                        onMoveElement={this.props.onMoveElement}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
@@ -569,16 +575,23 @@ const mapDispatchToProps = (dispatch) => {
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('cnc', element)),
         onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('cnc')),
-        onResizeElement: (element, options) => dispatch(editorActions.resizeElement('cnc', element, options)),
-        onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('cnc', element)),
-        onMoveElement: (element, options) => dispatch(editorActions.moveElement('cnc', element, options)),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('cnc')),
         onRotateElement: (element, options) => dispatch(editorActions.rotateElement('cnc', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
+        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation)),
 
-        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation))
-
+        elementActions: {
+            moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),
+            moveElements: (elements, options) => dispatch(editorActions.moveElements('cnc', elements, options)),
+            moveElementsFinish: (elements, options) => dispatch(editorActions.moveElementsFinish('cnc', elements, options)),
+            resizeElementsStart: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
+            resizeElements: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
+            resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
+            rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('cnc', elements, options)),
+            rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
+            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options))
+        }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
     };

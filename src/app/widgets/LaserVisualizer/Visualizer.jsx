@@ -71,13 +71,22 @@ class Visualizer extends Component {
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
-        onResizeElement: PropTypes.func.isRequired,
-        onAfterResizeElement: PropTypes.func.isRequired,
-        onMoveElement: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
-        updateTextTransformationAfterEdit: PropTypes.func.isRequired
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+
+        elementActions: PropTypes.shape({
+            moveElementsStart: PropTypes.func.isRequired,
+            moveElements: PropTypes.func.isRequired,
+            moveElementsFinish: PropTypes.func.isRequired,
+            resizeElementsStart: PropTypes.func.isRequired,
+            resizeElements: PropTypes.func.isRequired,
+            resizeElementsFinish: PropTypes.func.isRequired,
+            rotateElementsStart: PropTypes.func.isRequired,
+            rotateElements: PropTypes.func.isRequired,
+            rotateElementsFinish: PropTypes.func.isRequired
+        })
     };
 
     contextMenuRef = React.createRef();
@@ -329,12 +338,10 @@ class Visualizer extends Component {
                         onCreateElement={this.props.onCreateElement}
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
-                        onResizeElement={this.props.onResizeElement}
-                        onAfterResizeElement={this.props.onAfterResizeElement}
-                        onMoveElement={this.props.onMoveElement}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
+                        elementActions={this.props.elementActions}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                     />
                 </div>
@@ -551,16 +558,23 @@ const mapDispatchToProps = (dispatch) => {
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('laser', element)),
         onSelectElements: (elements) => dispatch(editorActions.selectElements('laser', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('laser')),
-        onResizeElement: (element, options) => dispatch(editorActions.resizeElement('laser', element, options)),
-        onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('laser', element)),
-        onMoveElement: (element, options) => dispatch(editorActions.moveElement('laser', element, options)),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('laser')),
         onRotateElement: (element, options) => dispatch(editorActions.rotateElement('laser', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),
+        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
 
-        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation))
-
+        elementActions: {
+            moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),
+            moveElements: (elements, options) => dispatch(editorActions.moveElements('laser', elements, options)),
+            moveElementsFinish: (elements, options) => dispatch(editorActions.moveElementsFinish('laser', elements, options)),
+            resizeElementsStart: (elements, options) => dispatch(editorActions.resizeElementsStart('laser', elements, options)),
+            resizeElements: (elements, options) => dispatch(editorActions.resizeElements('laser', elements, options)),
+            resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsFinish('laser', elements, options)),
+            rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('laser', elements, options)),
+            rotateElements: (elements, options) => dispatch(editorActions.rotateElements('laser', elements, options)),
+            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options))
+        }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
     };

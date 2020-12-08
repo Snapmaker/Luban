@@ -30,6 +30,16 @@ const coordGmModelToSvg = (size, transformation) => {
 const svg = document.createElementNS(NS.SVG, 'svg');
 
 
+// TODO: copied from element-transform, put it as util function
+function getTransformList(elem) {
+    const transform = elem.transform;
+    if (!transform) {
+        elem.setAttribute('transform', 'translate(0,0)');
+    }
+    return elem.transform.baseVal;
+}
+
+
 class SVGActionsFactory {
     // event = new EventEmitter();
 
@@ -605,13 +615,114 @@ class SVGActionsFactory {
     }
 
     /**
-     * Resize element.
+     * Move elements start.
+     *
+     * Prepend [T = (0, 0)] to transform list, make transform list [T][T][R][S][T].
+     *
+     * @param elements - List of SVGElement
      */
-    resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
+    moveElementsStart(elements) {
+        // Prepend [T]
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = svg.createSVGTransform();
+            transform.setTranslate(0, 0);
+
+            transformList.insertItemBefore(transform, 0);
+        }
+
+        // TODO: refactor this
+        const transform = svg.createSVGTransform();
+        transform.setTranslate(0, 0);
+        this.svgContentGroup.translateSelectorOnMouseDown(transform);
+    }
+
+    /**
+     * Move elements (moving).
+     *
+     * Modify the first [T] of transform list.
+     *
+     * @param elements - TODO
+     * @param dx - delta X since move start
+     * @param dy - delta Y since move start
+     */
+    moveElements(elements, { dx = 0, dy = 0 }) {
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = transformList.getItem(0);
+            transform.setTranslate(dx, dy);
+        }
+
+        // TODO: refactor this
+        const transform = svg.createSVGTransform();
+        transform.setTranslate(dx, dy);
+        this.svgContentGroup.translateSelectorOnMouseMove(transform);
+    }
+
+    /**
+     * After Move elements.
+     */
+    moveElementsFinish(elements, { dx = 0, dy = 0 }) {
+        console.log('moveElementsFinish elements = ', elements, ' dx, dy = ', dx, dy);
+
+        for (const element of elements) {
+            const svgModel = this.getSVGModelByElement(element);
+            // svgModel.onUpdate();
+            svgModel.onTransformComplete();
+        }
+    }
+
+    /**
+     * Resize elements start.
+     *
+     * Note that we only support resize on single element.
+     *
+     * @param elements - List of SVGElement
+     */
+    resizeElementsStart(elements) {
+        console.log('resize elements start', elements);
+
+        // Do nothing
+    }
+
+    /**
+     * Resize elements (resizing).
+     *
+     * Modify scale ratio and center point.
+     *
+     * @param elements - List of SVGElement
+     * @param scaleX
+     * @param scaleY
+     * @param centerX
+     * @param centerY
+     */
+    resizeElements(elements, { scaleX, scaleY, centerX, centerY }) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        // TODO: Do scale on multiple models
+        const element = elements[0];
+
+        // Set scale and translate on transformList
+        // [T][R][S][T]
+        const transformList = getTransformList(element);
+
+        const scale = transformList.getItem(2);
+        scale.setScale(scaleX, scaleY);
+
+        const translate = transformList.getItem(0);
+        translate.setTranslate(centerX, centerY);
+
+        /*
         const svgModel = this.getSVGModelByElement(element);
-
         svgModel.elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling });
+        */
+        console.log('resize element', element);
 
+        // TODO: refactor
         const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
         this.modelGroup.updateSelectedGroupTransformation({
             positionX: posAndSize.positionX - this.size.x,
@@ -622,20 +733,46 @@ class SVGActionsFactory {
     }
 
     /**
-     * Resize element.
+     * Resize elements finish.
+     *
+     * Normalize transform list (and element attributes).
+     *
+     * @param elements
      */
-    afterResizeElement(element) {
-        const svgModel = this.getSVGModelByElement(element);
-        svgModel.onUpdate();
+    resizeElementsFinish(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
 
+        const element = elements[0];
+
+        const svgModel = this.getSVGModelByElement(element);
+        svgModel.onTransformComplete();
+
+        /* TODO: remove
         this.updateSelectedModelsByTransformation({});
+        */
     }
 
     /**
-     * Move element.
+     * Rotate elements start.
+     *
+     * Prepend [R = (0, 0, 0)] to transform list, make transform list [R][T][R][S][T].
+     *
      */
-    moveElement(element, { dx, dy }) {
-        this.updateSelectedModelsByTransformation({ dx, dy });
+    rotateElementsStart(elements) {
+        console.log('rotate start', elements);
+
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = svg.createSVGTransform();
+            transform.setRotate(0, 0, 0);
+
+            transformList.insertItemBefore(transform, 0);
+        }
+
+        this.svgContentGroup.rotateSelectorOnMouseDown();
     }
 
     /**
@@ -643,6 +780,38 @@ class SVGActionsFactory {
      */
     rotateElement(element, { angle, cx, cy }) {
         this.updateSelectedModelsByTransformation({ cx, cy, deltaAngle: angle });
+    }
+
+    /**
+     * Rotate elements (rotating).
+     *
+     * @param elements
+     * @param angle
+     * @param cx
+     * @param cy
+     */
+    rotateElements(elements, { deltaAngle, cx, cy }) {
+        // this.updateSelectedModelsByTransformation({ cx, cy, deltaAngle: angle });
+        console.log('rotate elements', elements, deltaAngle, cx, cy);
+
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = transformList.getItem(0);
+            transform.setRotate(deltaAngle, cx, cy);
+        }
+
+        const rotate = svg.createSVGTransform();
+        rotate.setRotate(deltaAngle, cx, cy);
+        this.svgContentGroup.rotateSelectorOnMouseMove(rotate);
+    }
+
+    /**
+     * Rotate elements finish.
+     */
+    rotateElementsFinish(elements) {
+        // TODO:
+        console.log('rotate elements finish', elements);
     }
 
     /**

@@ -356,6 +356,7 @@ class SVGContentGroup {
         }
     }
 
+    // TODO: remove
     // [T][R][S][T] -> [R][T][R][S][T]
     rotateSelectedElementsOnMouseDown() {
         for (const elem of this.selectedElements) {
