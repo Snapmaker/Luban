@@ -313,7 +313,7 @@ export const actions = {
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        settings = definitionManager.calculateDependencies(definition, settings, modelGroup);
+        settings = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel());
 
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
@@ -669,7 +669,7 @@ export const actions = {
         // Prepare model file
 
 
-        const result = await dispatch(actions.prepareModel());
+        const { model, support, originalName } = await dispatch(actions.prepareModel());
 
 
         // Prepare definition file
@@ -690,7 +690,9 @@ export const actions = {
         */
 
         const params = {
-            ...result,
+            model,
+            support,
+            originalName,
             boundingBox: boundingBox,
             thumbnail: thumbnail
         };
@@ -708,14 +710,14 @@ export const actions = {
 
             setTimeout(async () => {
                 const models = modelGroup.models.filter(i => i.visible);
-                const ret = { model: [], support: [] };
+                const ret = { model: [], support: [], originalName: null };
                 for (const item of models) {
                     const mesh = item.meshObject.clone();
                     mesh.applyMatrix(item.meshObject.parent.matrix);
                     const stl = new ModelExporter().parse(mesh, 'stl', true);
                     const blob = new Blob([stl], { type: 'text/plain' });
 
-                    const originalName = item.originalName || (`supporter_${(Math.random() * 1000).toFixed(0)}`);
+                    const originalName = item.originalName;
                     const uploadPath = `${DATA_PREFIX}/${originalName}`;
                     const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
                     const stlFileName = `${basenameWithoutExt}.stl`;
@@ -1093,11 +1095,6 @@ export const actions = {
                     const bufferGeometry = new THREE.BufferGeometry();
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
                     const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-
-                    // const material = new THREE.MeshPhongMaterial({
-                    //     side: THREE.DoubleSide,
-                    //     vertexColors: true
-                    // });
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();

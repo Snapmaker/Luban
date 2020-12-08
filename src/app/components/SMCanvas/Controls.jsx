@@ -93,7 +93,7 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan, modelGroup) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan, removeModel, addSupportOnSelectedModel) {
         super();
 
         this.sourceType = sourceType;
@@ -104,7 +104,7 @@ class Controls extends EventEmitter {
         this.onPan = onPan;
 
         this.initTransformControls();
-        this.initSupportControls(modelGroup);
+        this.initSupportControls(removeModel, addSupportOnSelectedModel);
 
         this.bindEventListeners();
     }
@@ -124,8 +124,8 @@ class Controls extends EventEmitter {
         this.group.add(this.transformControl);
     }
 
-    initSupportControls(modelGroup) {
-        this.supportControl = new SupportControls(this.camera, modelGroup);
+    initSupportControls(removeModel, addSupportOnSelectedModel) {
+        this.supportControl = new SupportControls(this.camera, removeModel, addSupportOnSelectedModel);
         this.supportControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
@@ -148,7 +148,6 @@ class Controls extends EventEmitter {
         this.domElement.addEventListener('mousemove', this.onMouseHover, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
         this.domElement.addEventListener('click', this.onClick, false);
-        this.domElement.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
         document.addEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
@@ -271,7 +270,7 @@ class Controls extends EventEmitter {
         if (this.state !== STATE.NONE) {
             // Track events even when the mouse move outside of window
             document.addEventListener('mousemove', this.onDocumentMouseMove, false);
-            // document.addEventListener('mouseup', this.onDocumentMouseUp, false);
+            document.addEventListener('mouseup', this.onDocumentMouseUp, false);
         }
     };
 
@@ -323,6 +322,8 @@ class Controls extends EventEmitter {
                         this.prevState = null;
                         this.stopSupportMode();
                     } else {
+                        // check if any model selected
+                        this.onClick(event, true);
                         // Right click to open context menu
                         // Note that the event is mouse up, not really contextmenu
                         this.emit(EVENTS.CONTEXT_MENU, event);

@@ -335,7 +335,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Add Manual Support'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.startSupportMode
                             },
                             {

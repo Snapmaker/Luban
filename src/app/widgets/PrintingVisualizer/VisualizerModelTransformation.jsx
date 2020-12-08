@@ -34,6 +34,7 @@ class VisualizerModelTransformation extends PureComponent {
             y: PropTypes.number
         }).isRequired,
         isSupporting: PropTypes.bool.isRequired,
+        modelSize: PropTypes.object.isRequired,
         // transformation: PropTypes.object,
         getControls: PropTypes.func.isRequired,
         clearAllManualSupport: PropTypes.func.isRequired,
@@ -95,7 +96,6 @@ class VisualizerModelTransformation extends PureComponent {
                         break;
                 }
             }
-            console.log('transformation', transformation);
 
             this.props.updateSelectedModelTransformation(transformation);
         },
@@ -149,7 +149,7 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting } = this.props;
+        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, modelSize } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -160,11 +160,17 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateZ = 0;
         let uniformScalingState = true;
         const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+            return model.visible === true;
+        }));
+        const supportDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true && !model.supportTag;
         }));
-        const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
-            return model.visible === true && !model.supportTag;
-        }));
+
+        const isSupportSelected = selectedModelArray.length === 1 && selectedModelArray.every((model) => {
+            return model.supportTag;
+        });
+
+
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));
             moveY = Number(toFixed(transformation.positionY, 1));
@@ -200,7 +206,7 @@ class VisualizerModelTransformation extends PureComponent {
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-scale'],
-                            { [styles.disabled]: transformDisabled },
+                            { [styles.disabled]: (transformDisabled) },
                             {
                                 [styles.selected]: !transformDisabled && transformMode === 'scale'
                             }
@@ -215,15 +221,15 @@ class VisualizerModelTransformation extends PureComponent {
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-rotate'],
-                            { [styles.disabled]: transformDisabled },
+                            { [styles.disabled]: transformDisabled || supportDisabled },
                             {
-                                [styles.selected]: !transformDisabled && transformMode === 'rotate'
+                                [styles.selected]: !(transformDisabled || supportDisabled) && transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('rotate');
                         }}
-                        disabled={transformDisabled}
+                        disabled={transformDisabled || supportDisabled}
                     />
                     <Anchor
                         componentClass="button"
@@ -328,7 +334,7 @@ class VisualizerModelTransformation extends PureComponent {
                         </div>
                     </div>
                 )}
-                {!transformDisabled && transformMode === 'scale' && (
+                {!transformDisabled && !isSupportSelected && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -390,6 +396,54 @@ class VisualizerModelTransformation extends PureComponent {
                             >
                                 <span>{i18n._('Reset')}</span>
                             </Anchor>
+                        </div>
+                    </div>
+                )}
+
+                {!transformDisabled && isSupportSelected && transformMode === 'scale' && (
+                    <div className={classNames(styles.panel, styles['scale-panel'])}>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={1}
+                                    value={modelSize.x}
+                                    onChange={(value) => {
+                                        actions.onModelTransform({ 'scaleX': value / modelSize.x });
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>mm</span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={1}
+                                    value={modelSize.y}
+                                    onChange={(value) => {
+                                        console.log(value, modelSize.y);
+                                        actions.onModelTransform({ 'scaleY': value / modelSize.y });
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>mm</span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={1}
+                                    value={modelSize.z}
+                                    onChange={(value) => {
+                                        actions.onModelTransform({ 'scaleZ': value / modelSize.z });
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>mm</span>
                         </div>
                     </div>
                 )}
@@ -614,14 +668,24 @@ const mapStateToProps = (state) => {
         hasModel,
         transformMode
     } = printing;
-
+    let modelSize = {};
+    if (modelGroup.selectedModelArray.length === 1) {
+        const model = modelGroup.selectedModelArray[0];
+        model.computeBoundingBox();
+        const { min, max } = model.boundingBox;
+        modelSize = {
+            x: Number((max.x - min.x).toFixed(1)),
+            y: Number((max.y - min.y).toFixed(1)),
+            z: Number((max.z - min.z).toFixed(1))
+        };
+    }
     return {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
-
+        modelSize,
         transformMode
     };
 };

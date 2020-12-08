@@ -78,7 +78,7 @@ class DefinitionManager {
     }
 
     // Calculate hidden settings
-    calculateDependencies(definition, settings, modelGroup) {
+    calculateDependencies(definition, settings, hasSupportModel) {
         if (settings.infill_sparse_density) {
             const infillLineWidth = definition.settings.infill_line_width.default_value; // 0.4
             const infillSparseDensity = settings.infill_sparse_density.default_value;
@@ -151,7 +151,7 @@ class DefinitionManager {
         }
 
         // fix CuraEngine z_overide_xy not effected on support_mesh
-        if (modelGroup && modelGroup.hasSupportModel() && settings.support_z_distance) {
+        if (hasSupportModel && settings.support_z_distance) {
             const supportZDistance = settings.support_z_distance.default_value;
             definition.settings.support_xy_distance.default_value = supportZDistance;
         } else if (definition.settings.support_xy_distance.default_value === definition.settings.support_z_distance.default_value) {

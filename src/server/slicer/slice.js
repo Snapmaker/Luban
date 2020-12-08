@@ -32,7 +32,18 @@ let curaEnginePath;
     }
 })();
 
-// extends api for support models
+/**
+     * callCuraEngine
+     *
+     * @param modelConfig - information needed to create new model.
+     *  modelConfig = {
+                configFilePath,
+                path: [modelPathString]
+            };
+     * @param supportConfig same as modelConfig
+     * @param outputPath output file path
+     * @returns process
+     */
 function callCuraEngine(modelConfig, supportConfig, outputPath) {
     const args = ['slice', '-v', '-p', '-o', outputPath];
 

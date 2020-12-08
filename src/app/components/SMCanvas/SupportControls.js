@@ -12,10 +12,11 @@ class SupportControls extends THREE.Object3D {
 
     _model = null;
 
-    constructor(camera, modelGroup) {
+    constructor(camera, removeModel, addSupportOnSelectedModel) {
         super();
         this.camera = camera;
-        this.modelGroup = modelGroup;
+        this.removeModel = removeModel;
+        this.addSupportOnSelectedModel = addSupportOnSelectedModel;
     }
 
     start() {
@@ -23,7 +24,7 @@ class SupportControls extends THREE.Object3D {
 
     stop() {
         if (this._model) {
-            this.modelGroup.removeModel(this._model);
+            this.removeModel(this._model);
             this._model = null;
         }
     }
@@ -31,7 +32,7 @@ class SupportControls extends THREE.Object3D {
 
     setModelPosition(position) {
         if (!this._model) {
-            this._model = this.modelGroup.addSupportOnSelectedModel();
+            this._model = this.addSupportOnSelectedModel();
         }
 
         const object = this._model.meshObject;
@@ -50,7 +51,7 @@ class SupportControls extends THREE.Object3D {
     onMouseUp() {
         SupportHelper.generateSupportGeometry(this._model);
         if (this._model.isInitSupport) {
-            this.modelGroup.removeModel(this._model);
+            this.removeModel(this._model);
         } else {
             ThreeUtils.setObjectParent(this._model.meshObject, this._model.target.meshObject);
         }

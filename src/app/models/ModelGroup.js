@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { Vector3, Group, Euler, Box3, Quaternion, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
@@ -7,8 +7,6 @@ import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
 import SupportHelper from '../lib/support-helper';
-
-const { Vector3, Group, Euler, Box3, Quaternion } = THREE;
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -455,16 +453,14 @@ class ModelGroup extends EventEmitter {
         }
         this.models.splice(0);
         for (const model of models) {
-            // remove clone model here
-            const newModel = model;
-            newModel.meshObject.addEventListener('update', this.onModelUpdate);
-            newModel.computeBoundingBox();
-            this.models.push(newModel);
+            model.meshObject.addEventListener('update', this.onModelUpdate);
+            model.computeBoundingBox();
+            this.models.push(model);
             let parent = this.object;
             if (model.supportTag) { // support parent should be the target model
                 parent = model.target.meshObject;
             }
-            ThreeUtils.setObjectParent(newModel.meshObject, parent);
+            ThreeUtils.setObjectParent(model.meshObject, parent);
         }
         this.unselectAllModels();
         return this._getEmptyState();
@@ -612,6 +608,10 @@ class ModelGroup extends EventEmitter {
             case SELECTEVENT.ADDSELECT:
                 model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
+                    // cannot select model and support
+                    if (this.selectedModelArray.length && this.selectedModelArray[0].supportTag !== model.supportTag) {
+                        break;
+                    }
                     this.addModelToSelectedGroup(model);
                 }
                 break;
@@ -646,11 +646,11 @@ class ModelGroup extends EventEmitter {
         if (!(model instanceof Model)) return;
 
         model.setSelected(true);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new THREE.Matrix4().getInverse(this.selectedGroup.matrix));
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
         this.selectedModelArray.push(model);
 
         ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
-        this.prepareSelectedGroupMatrix();
+        this.prepareSelectedGroup();
     }
 
     removeModelFromSelectedGroup(model) {
@@ -658,7 +658,7 @@ class ModelGroup extends EventEmitter {
         if (!this.selectedGroup.children.find(obj => obj === model.meshObject)) return;
 
         model.setSelected(false);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new THREE.Matrix4().getInverse(this.selectedGroup.matrix));
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
         let parent = this.object;
         if (model.supportTag) { // support parent should be the target model
             parent = model.target.meshObject;
@@ -671,15 +671,17 @@ class ModelGroup extends EventEmitter {
             this.selectedModelArray.push(selectedModel);
         });
 
-        this.prepareSelectedGroupMatrix();
+        this.prepareSelectedGroup();
     }
 
-    prepareSelectedGroupMatrix() {
+    prepareSelectedGroup() {
         if (this.selectedModelArray.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
+            this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
         } else {
+            this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
-            const matrix = new THREE.Matrix4().makeTranslation(p.x, p.y, p.z);
+            const matrix = new Matrix4().makeTranslation(p.x, p.y, p.z);
             ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
         }
     }
@@ -947,10 +949,9 @@ class ModelGroup extends EventEmitter {
             }
         }
         if (uniformScalingState !== undefined) {
+            this.selectedGroup.uniformScalingState = uniformScalingState;
             if (this.selectedGroup.children.length === 1) {
                 this.selectedGroup.children[0].uniformScalingState = uniformScalingState;
-            } else {
-                this.selectedGroup.uniformScalingState = uniformScalingState;
             }
         }
         if (rotationX !== undefined) {
@@ -964,6 +965,12 @@ class ModelGroup extends EventEmitter {
         }
         this.selectedGroup.updateMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
+        if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].supportTag) {
+            const model = this.selectedModelArray[0];
+            const revert = ThreeUtils.removeObjectParent(model.meshObject);
+            SupportHelper.generateSupportGeometry(model);
+            revert();
+        }
 
         this.modelChanged();
     }
@@ -1142,9 +1149,6 @@ class ModelGroup extends EventEmitter {
         let isOverstepped = false;
         model.computeBoundingBox();
         isOverstepped = this._bbox && !this._bbox.containsBox(model.boundingBox);
-        if (isOverstepped) {
-            console.log(this._bbox, model.boundingBox);
-        }
         return isOverstepped;
     }
 
@@ -1305,18 +1309,20 @@ class ModelGroup extends EventEmitter {
         model.supportSize = { ...this.defaultSupportSize };
         model.target = target;
         model.modelName = this._createNewModelName({ baseName: `${target.modelName}-support` });
+        model.originalName = `supporter_${(Math.random() * 1000).toFixed(0)}`;
         const bbox = target.boundingBox;
         model.updateTransformation({
             positionX: Math.max(bbox.min.x + 5, bbox.max.x + 5),
-            positionY: (bbox.min.y + bbox.max.y) / 2
+            positionY: (bbox.min.y + bbox.max.y) / 2,
+            uniformScalingState: false
         });
-        const geometry = new THREE.BufferGeometry();
-        const material = new THREE.MeshPhongMaterial({
-            side: THREE.DoubleSide,
+        const geometry = new BufferGeometry();
+        const material = new MeshPhongMaterial({
+            side: DoubleSide,
             color: 0xFFD700
         });
-        model.meshObject = new THREE.Mesh(geometry, material);
-
+        model.meshObject = new Mesh(geometry, material);
+        model.meshObject.supportTag = true;
         model.computeBoundingBox();
 
         // add to group and select

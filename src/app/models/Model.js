@@ -493,13 +493,13 @@ class Model {
         if (this.sourceType !== '3d') {
             return;
         }
-        const parentObject = this.meshObject.parent;
-        ThreeUtils.removeObjectParent(this.meshObject);
+
+        const revert = ThreeUtils.removeObjectParent(this.meshObject);
 
         this.computeBoundingBox();
         this.meshObject.position.z = this.meshObject.position.z - this.boundingBox.min.z;
         this.onTransform();
-        ThreeUtils.setObjectParent(this.meshObject, parentObject);
+        revert();
     }
 
     // 3D

@@ -153,11 +153,12 @@ const ThreeUtils = {
 
     removeObjectParent(obj) {
         const parent = obj.parent;
-        if(!parent) return;
+        if(!parent) return () =>{};
 
         parent.updateMatrixWorld();
         parent.remove(obj);
-        obj.applyMatrix(parent.matrixWorld)
+        obj.applyMatrix(parent.matrixWorld);
+        return () => this.setObjectParent(obj, parent);
     },
 
     setObjectParent(obj, parent){
@@ -169,9 +170,9 @@ const ThreeUtils = {
         parent.add(obj)
     },
     applyObjectMatrix(obj, matrix) {
-        const inverse = new THREE.Matrix4().getInverse(matrix)
+        const inverse = new THREE.Matrix4().getInverse(matrix);
         obj.children.forEach(child=>{
-            child.applyMatrix(inverse)
+            child.applyMatrix(inverse);
         })
         obj.applyMatrix(matrix);
     },
