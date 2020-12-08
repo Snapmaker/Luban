@@ -99,8 +99,8 @@ const Menu = {
     },
     cleanAllRecentFiles() {
         if (isElectron()) {
-            const menu = window.require('electron').remote.require('./electron-app/Menu');
-            menu.cleanAllRecentFiles();
+            const { ipcRenderer } = window.require('electron');
+            ipcRenderer.send('clean-all-recent-files');
         }
     }
 };

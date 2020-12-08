@@ -90,6 +90,7 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/image/cameraCalibrationPhoto'), api.image.cameraCalibrationPhoto);
     app.post(urljoin(settings.route, 'api/image/setCameraCalibrationMatrix'), api.image.setCameraCalibrationMatrix);
 
+
     // Svg
     app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);

@@ -6,7 +6,7 @@ import Store from 'electron-store';
 import { isUndefined, isNull } from 'lodash';
 import path from 'path';
 import { configureWindow } from './electron-app/window';
-import MenuBuilder from './electron-app/Menu';
+import MenuBuilder, { cleanAllRecentFiles } from './electron-app/Menu';
 import launchServer from './server-cli';
 import DataStorage from './DataStorage';
 import pkg from './package.json';
@@ -215,6 +215,10 @@ const createWindow = async () => {
             mainWindow.webContents.send('open-file', newProjectFile);
             config.set('projectFile', null);
         }
+    });
+
+    ipcMain.on('clean-all-recent-files', () => {
+        cleanAllRecentFiles();
     });
 
     updateHandle();
