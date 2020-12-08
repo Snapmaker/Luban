@@ -213,6 +213,20 @@ export class Polygon {
         this.path = newPath;
         this.close();
     }
+
+    isPointInPolygon(point) {
+        let inside = false;
+        for (let i = 0, len = this.path.length - 1; i < len; i++) {
+            const p = this.path[i];
+            const q = this.path[i + 1];
+
+            if ((p.y > point.y) !== (q.y > point.y)
+                && point.x < p.x + (q.x - p.x) * (point.y - p.y) / (q.y - p.y)) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
 }
 
 export class Polygons {
@@ -249,8 +263,15 @@ export class Polygons {
         const smallestLineSegmentSquared = smallestLineSegment * smallestLineSegment;
         const allowedErrorDistanceSquared = allowedErrorDistance * allowedErrorDistance;
 
-        for (const polygon of this.data) {
+        let i = 0;
+        while (i < this.data.length) {
+            const polygon = this.data[i];
             polygon.simplify(smallestLineSegmentSquared, allowedErrorDistanceSquared);
+            if (polygon.size() <= 2) {
+                this.data.splice(i, 1);
+            } else {
+                i++;
+            }
         }
     }
 
@@ -367,8 +388,23 @@ export class Polygons {
 
     splitIntoParts() {
         const polygonsPart = this.union();
+        for (const datum of polygonsPart.data) {
+            if (datum.size() === 0) {
+                console.log(polygonsPart);
+            }
+        }
         polygonsPart.simplify();
+        for (const datum of polygonsPart.data) {
+            if (datum.size() === 0) {
+                console.log('2', polygonsPart);
+            }
+        }
         polygonsPart.removeDegenerateVerts();
+        for (const datum of polygonsPart.data) {
+            if (datum.size() === 0) {
+                console.log('2', polygonsPart);
+            }
+        }
         return polygonsPart;
     }
 
@@ -394,7 +430,7 @@ export class Polygons {
         return diffPolygons;
     }
 
-    union(polygons) {
+    union(polygons, test = false) {
         const polygonOffsetPaths = [];
         for (const polygon of this.data) {
             polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
@@ -404,7 +440,10 @@ export class Polygons {
                 polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
             }
         }
-        const result = PolygonOffset.recursiveUnion(polygonOffsetPaths);
+        const result = PolygonOffset.recursiveUnion(polygonOffsetPaths, test);
+        if (test) {
+            console.log('test 1', result);
+        }
         const unionPolygons = new Polygons();
         for (const paths of result) {
             const polygonPart = new Polygon();
