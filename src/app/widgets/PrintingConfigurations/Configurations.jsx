@@ -3,18 +3,15 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Select from 'react-select';
 import classNames from 'classnames';
-import includes from 'lodash/includes';
 import Anchor from '../../components/Anchor';
-import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
-import confirm from '../../lib/confirm';
 import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { HEAD_3DP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
 
 import styles from './styles.styl';
 
@@ -34,11 +31,6 @@ function isDefinitionEditable(definition) {
     return !definition.metadata.readonly;
 }
 
-function isOfficialDefinition(definition) {
-    return includes(['quality.fast_print',
-        'quality.normal_quality',
-        'quality.high_quality'], definition.definitionId);
-}
 
 // config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
 // do all things by 'config name'
@@ -49,14 +41,10 @@ class Configurations extends PureComponent {
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
 
+        updateManagerDisplayType: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
-        duplicateQualityDefinition: PropTypes.func.isRequired,
-        removeQualityDefinition: PropTypes.func.isRequired,
-        updateQualityDefinitionName: PropTypes.func.isRequired,
-        onDownloadQualityDefinition: PropTypes.func.isRequired,
-        onUploadQualityDefinition: PropTypes.func.isRequired,
-
+        updateShowPrintingManager: PropTypes.func.isRequired,
         updateIsRecommended: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired
     };
@@ -65,12 +53,7 @@ class Configurations extends PureComponent {
 
     state = {
         // control UI
-        notificationMessage: '',
         showOfficialConfigDetails: true,
-
-        // rename custom config
-        newName: null,
-        isRenaming: false,
 
         selectedDefinition: null,
 
@@ -163,23 +146,9 @@ class Configurations extends PureComponent {
     };
 
     actions = {
-        onClickToUpload: () => {
-            this.fileInput.current.value = null;
-            this.fileInput.current.click();
-        },
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-            this.props.onUploadQualityDefinition(file);
-        },
-        showNotification: (msg) => {
-            this.setState({
-                notificationMessage: msg
-            });
-        },
-        clearNotification: () => {
-            this.setState({
-                notificationMessage: ''
-            });
+        onShowMaterialManager: () => {
+            this.props.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY);
+            this.props.updateShowPrintingManager(true);
         },
         /**
          * Select `definition`.
@@ -188,7 +157,6 @@ class Configurations extends PureComponent {
          */
         onSelectOfficialDefinition: (definition) => {
             this.setState({
-                isRenaming: false,
                 selectedDefinition: definition
             });
             this.props.updateDefaultQualityId(definition.definitionId);
@@ -202,49 +170,10 @@ class Configurations extends PureComponent {
         },
         onSelectCustomDefinition: (definition) => {
             this.setState({
-                isRenaming: false,
                 selectedDefinition: definition
             });
             // this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
-        },
-        // Extended operations
-        onChangeNewName: (event) => {
-            this.setState({
-                newName: event.target.value
-            });
-        },
-        onRenameDefinitionStart: () => {
-            if (!this.state.isRenaming) {
-                const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
-                this.setState({
-                    isRenaming: true,
-                    newName: definition.name
-                });
-            } else {
-                this.actions.onRenameDefinitionEnd();
-            }
-        },
-        onRenameDefinitionEnd: async () => {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
-            const { newName } = this.state;
-
-            if (newName === definition.name) { // unchanged
-                this.setState({
-                    isRenaming: false
-                });
-                return;
-            }
-
-            try {
-                await this.props.updateQualityDefinitionName(definition, newName);
-            } catch (err) {
-                this.actions.showNotification(err);
-            }
-
-            this.setState({
-                isRenaming: false
-            });
         },
         onChangeCustomDefinition: (key, value) => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
@@ -263,31 +192,6 @@ class Configurations extends PureComponent {
                     [key]: { default_value: value }
                 }
             });
-        },
-        onDuplicateDefinition: async () => {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
-            const newDefinition = await this.props.duplicateQualityDefinition(definition);
-
-            // Select new definition after creation
-            this.actions.onSelectCustomDefinitionById(newDefinition.definitionId);
-        },
-        onDownloadQualityDefinition: () => {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
-            this.props.onDownloadQualityDefinition(definition.definitionId);
-        },
-        onRemoveDefinition: async () => {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
-            await confirm({
-                body: `Are you sure to remove profile "${definition.name}"?`
-            });
-
-            await this.props.removeQualityDefinition(definition);
-            this.props.updateDefaultQualityId('quality.fast_print');
-
-            // After removal, select the first definition
-            if (this.props.qualityDefinitions.length) {
-                this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
-            }
         },
         onSetOfficialTab: (isRecommended) => {
             if (isRecommended && (/^quality.([0-9_]+)$/.test(this.props.defaultQualityId) || this.props.defaultQualityId.indexOf('Caselibrary') > -1)) {
@@ -350,7 +254,7 @@ class Configurations extends PureComponent {
                 <div className="sm-tabs" style={{ marginTop: '6px', marginBottom: '12px' }}>
                     <button
                         type="button"
-                        style={{ width: '50%' }}
+                        style={{ width: '43%' }}
                         className={classNames('sm-tab', { 'sm-selected': isRecommended })}
                         onClick={() => {
                             this.actions.onSetOfficialTab(true);
@@ -360,7 +264,7 @@ class Configurations extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        style={{ width: '50%' }}
+                        style={{ width: '43%', borderRight: '1px solid #c8c8c8' }}
                         className={classNames('sm-tab', { 'sm-selected': !isRecommended })}
                         onClick={() => {
                             this.actions.onSetOfficialTab(false);
@@ -368,6 +272,15 @@ class Configurations extends PureComponent {
                     >
                         {i18n._('Customize')}
                     </button>
+                    <Anchor
+                        onClick={this.actions.onShowMaterialManager}
+                    >
+                        <span
+                            className={classNames(
+                                styles['manager-icon'],
+                            )}
+                        />
+                    </Anchor>
                 </div>
                 {isRecommended && (
                     <div className="sm-tabs" style={{ marginTop: '12px' }}>
@@ -439,15 +352,10 @@ class Configurations extends PureComponent {
                 )}
                 {!isRecommended && (
                     <div style={{ marginBottom: '6px' }}>
-                        <input
-                            ref={this.fileInput}
-                            type="file"
-                            accept=".json"
-                            style={{ display: 'none' }}
-                            multiple={false}
-                            onChange={actions.onChangeFile}
-                        />
-                        <div>
+                        <div style={{
+                            marginBottom: '10px'
+                        }}
+                        >
                             <span style={{
                                 width: '100px',
                                 lineHeight: '34px',
@@ -475,60 +383,7 @@ class Configurations extends PureComponent {
                                 />
                             </span>
                         </div>
-                        <div style={{ marginTop: '10px', color: '#808080' }}>
-                            {!state.isRenaming && (
-                                <span>{qualityDefinition.name}</span>
-                            )}
-                            {state.isRenaming && (
-                                <React.Fragment>
-                                    <input
-                                        value={state.newName}
-                                        onChange={actions.onChangeNewName}
-                                    />
-                                    <Anchor
-                                        className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
-                                        onClick={actions.onRenameDefinitionEnd}
-                                    />
-                                </React.Fragment>
-                            )}
-                            <div
-                                style={{
-                                    display: 'inline-block',
-                                    float: 'right'
-                                }}
-                            >
-                                {!isOfficialDefinition(qualityDefinition) && (
-                                    <Anchor
-                                        className={classNames('fa', 'fa-edit', widgetStyles['fa-btn'])}
-                                        onClick={actions.onRenameDefinitionStart}
-                                    />
-                                )}
-                                <Anchor
-                                    className={classNames('fa', 'fa-upload', widgetStyles['fa-btn'])}
-                                    onClick={actions.onClickToUpload}
-                                />
-                                <Anchor
-                                    className={classNames('fa', 'fa-download', widgetStyles['fa-btn'])}
-                                    onClick={actions.onDownloadQualityDefinition}
-                                />
-                                <Anchor
-                                    className={classNames('fa', 'fa-plus', widgetStyles['fa-btn'])}
-                                    onClick={actions.onDuplicateDefinition}
-                                />
-                                {!isOfficialDefinition(qualityDefinition) && (
-                                    <Anchor
-                                        className={classNames('fa', 'fa-trash-o', widgetStyles['fa-btn'])}
-                                        onClick={actions.onRemoveDefinition}
-                                    />
-                                )}
-                            </div>
-                        </div>
                         <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                        {state.notificationMessage && (
-                            <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
-                                {state.notificationMessage}
-                            </Notifications>
-                        )}
                         <div className="sm-parameter-container">
                             {this.state.customConfigGroup.map((group) => {
                                 return (
@@ -708,7 +563,6 @@ class Configurations extends PureComponent {
                                 );
                             })}
                         </div>
-                        <div className={widgetStyles.separator} />
                     </div>
                 )}
             </div>
@@ -734,11 +588,9 @@ const mapDispatchToProps = (dispatch) => {
             dispatch(printingActions.updateActiveDefinition(definition));
             dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         },
-        duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
-        onDownloadQualityDefinition: (definitionId) => dispatch(printingActions.onDownloadQualityDefinition(definitionId)),
-        onUploadQualityDefinition: (file) => dispatch(printingActions.onUploadQualityDefinition(file)),
-        removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
+        updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
+        updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
     };
 };

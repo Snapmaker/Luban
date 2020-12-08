@@ -4,7 +4,7 @@ import { isNil } from 'lodash';
 import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
 import { timestamp, pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
 
@@ -112,6 +112,10 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
     // model: null, // selected model
     boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+
+    // PrintingManager
+    showPrintingManager: false,
+    managerDisplayType: PRINTING_MANAGER_TYPE_MATERIAL,
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -310,6 +314,14 @@ export const actions = {
         };
     },
 
+    updateShowPrintingManager: (showPrintingManager) => (dispatch) => {
+        dispatch(actions.updateState({ showPrintingManager }));
+    },
+
+    updateManagerDisplayType: (managerDisplayType) => (dispatch) => {
+        dispatch(actions.updateState({ managerDisplayType }));
+    },
+
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
@@ -418,35 +430,81 @@ export const actions = {
 
         return createdDefinition;
     },
+    updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
+        const state = getState().printing;
+        const savedDefinition = await definitionManager.getDefinition(definitionId);
+        if (!savedDefinition) {
+            return;
+        }
+        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+            const newDefinitions = state.materialDefinitions.map((item) => {
+                if (item.definitionId === definitionId) {
+                    return savedDefinition;
+                } else {
+                    return item;
+                }
+            });
+            dispatch(actions.updateState({
+                materialDefinitions: [...newDefinitions]
+            }));
+        } else if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+            const newDefinitions = state.qualityDefinitions.map((item) => {
+                if (item.definitionId === definitionId) {
+                    return savedDefinition;
+                } else {
+                    return item;
+                }
+            });
+            dispatch(actions.updateState({
+                qualityDefinitions: [...newDefinitions]
+            }));
+        }
+    },
 
-    onUploadQualityDefinition: (file) => (dispatch, getState) => {
+    onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
         const formData = new FormData();
         formData.append('file', file);
         api.uploadFile(formData)
             .then(async (res) => {
                 const response = res.body;
-                const definitionId = `quality.${timestamp()}`;
+                const definitionId = `${type}.${timestamp()}`;
                 const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
-                const { qualityDefinitions } = getState().printing;
                 let name = definition.name;
-                while (qualityDefinitions.find(e => e.name === name)) {
-                    name = `#${name}`;
+                if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+                    const { materialDefinitions } = getState().printing;
+                    while (materialDefinitions.find(e => e.name === name)) {
+                        name = `#${name}`;
+                    }
+                    definition.name = name;
+                    await definitionManager.updateDefinition({
+                        definitionId: definition.definitionId,
+                        name
+                    });
+                    dispatch(actions.updateState({
+                        materialDefinitions: [...materialDefinitions, definition],
+                        defaultMaterialId: definitionId
+                    }));
+                } else if (type === PRINTING_MANAGER_TYPE_QUALITY) {
+                    const { qualityDefinitions } = getState().printing;
+                    while (qualityDefinitions.find(e => e.name === name)) {
+                        name = `#${name}`;
+                    }
+                    definition.name = name;
+                    await definitionManager.updateDefinition({
+                        definitionId: definition.definitionId,
+                        name
+                    });
+                    dispatch(actions.updateState({
+                        qualityDefinitions: [...qualityDefinitions, definition],
+                        defaultQualityId: definitionId
+                    }));
                 }
-                definition.name = name;
-                await definitionManager.updateDefinition({
-                    definitionId: definition.definitionId,
-                    name
-                });
-                dispatch(actions.updateState({
-                    qualityDefinitions: [...qualityDefinitions, definition],
-                    defaultQualityId: definitionId
-                }));
             })
             .catch(() => {
                 // Ignore error
             });
     },
-
+    // TODO: not use and need to be deleted
     onDownloadQualityDefinition: (definitionId) => async () => {
         const result = await definitionManager.getRawDefinition(definitionId);
         const blob = new Blob([JSON.stringify(result.definition)], { type: 'text/plain;charset=utf-8' });
@@ -538,7 +596,7 @@ export const actions = {
         });
 
         definition.name = name;
-
+        dispatch(actions.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_MATERIAL));
         return null;
     },
 
@@ -560,6 +618,7 @@ export const actions = {
         });
 
         definition.name = name;
+        dispatch(actions.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_QUALITY));
 
         return null;
     },
