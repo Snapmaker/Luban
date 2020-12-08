@@ -351,7 +351,10 @@ class App extends PureComponent {
                         />
 
                         {location.pathname.indexOf('/settings') === 0 && (
-                            <Settings {...this.props} />
+                            <Settings
+                                location={this.props.location}
+                                resetAllUserSettings={this.props.resetAllUserSettings}
+                            />
                         )}
 
                         {location.pathname.indexOf('/caselibrary') === 0 && (

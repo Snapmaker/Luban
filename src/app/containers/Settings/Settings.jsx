@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import i18next from 'i18next';
 import _ from 'lodash';
 import camelCase from 'lodash/camelCase';
@@ -22,7 +23,8 @@ const mapSectionPathToId = (path = '') => {
 
 class Settings extends PureComponent {
     static propTypes = {
-        ...withRouter.propTypes
+        resetAllUserSettings: PropTypes.func.isRequired,
+        location: PropTypes.object.isRequired
     };
 
     sections = [
