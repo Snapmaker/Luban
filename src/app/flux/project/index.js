@@ -180,7 +180,9 @@ export const actions = {
 
         const state = getState().project[headType];
         const { openedFile, unSaved } = state;
-        if (!unSaved) return;
+        if (!unSaved) {
+            return;
+        }
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {
             const result = await UniApi.Dialog.showMessageBox({
@@ -252,7 +254,6 @@ export const actions = {
         }
         if (headType === HEAD_3DP) {
             modState = getState().printing;
-            dispatch(printingActions.destroyGcodeLine());
         }
 
         if (modState.modelGroup.hasModel()) {
@@ -261,6 +262,7 @@ export const actions = {
         }
 
         if (headType === HEAD_3DP) {
+            dispatch(printingActions.destroyGcodeLine());
             await dispatch(printingActions.initSize());
         }
 
