@@ -575,7 +575,7 @@ export const actions = {
         const newMaterialDefinitions = [];
         const defaultDefinitionIds = ['material.pla', 'material.abs'];
         for (const definition of state.materialDefinitions) {
-            if (defaultDefinitionIds.includes(definition)) {
+            if (defaultDefinitionIds.includes(definition.definitionId)) {
                 newMaterialDefinitions.push(definition);
                 continue;
             }
