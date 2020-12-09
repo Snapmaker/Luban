@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import i18next from 'i18next';
 import _ from 'lodash';
 import camelCase from 'lodash/camelCase';
@@ -9,7 +10,7 @@ import settings from '../../config/settings';
 import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import storeManager from '../../store/local-storage';
+// import storeManager from '../../store/local-storage';
 import General from './General';
 import FirmwareTool from './FirmwareTool';
 import Workspace from './Workspace';
@@ -22,7 +23,8 @@ const mapSectionPathToId = (path = '') => {
 
 class Settings extends PureComponent {
     static propTypes = {
-        ...withRouter.propTypes
+        resetAllUserSettings: PropTypes.func.isRequired,
+        location: PropTypes.object.isRequired
     };
 
     sections = [
@@ -115,10 +117,10 @@ class Settings extends PureComponent {
         config: {
             restoreDefaults: () => {
                 confirm({
-                    title: i18n._('Restore Defaults'),
+                    title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
                 }).then(() => {
-                    storeManager.clear();
+                    this.props.resetAllUserSettings();
                     window.location.reload();
                 });
             }

@@ -568,6 +568,25 @@ export const actions = {
         }));
     },
 
+    // removes all non-predefined definitions
+    removeAllMaterialDefinitions: () => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        const newMaterialDefinitions = [];
+        const defaultDefinitionIds = ['material.pla', 'material.abs'];
+        for (const definition of state.materialDefinitions) {
+            if (defaultDefinitionIds.includes(definition)) {
+                newMaterialDefinitions.push(definition);
+                continue;
+            }
+            definitionManager.removeDefinition(definition);
+        }
+
+        dispatch(actions.updateState({
+            materialDefinitions: newMaterialDefinitions
+        }));
+    },
+
     removeQualityDefinition: (definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
@@ -575,6 +594,25 @@ export const actions = {
 
         dispatch(actions.updateState({
             qualityDefinitions: state.qualityDefinitions.filter(d => d.definitionId !== definition.definitionId)
+        }));
+    },
+
+    // removes all non-predefined definitions
+    removeAllQualityDefinitions: () => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        const newQualityDefinitions = [];
+        const defaultDefinitionIds = ['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'];
+        for (const definition of state.qualityDefinitions) {
+            if (defaultDefinitionIds.includes(definition.definitionId)) {
+                newQualityDefinitions.push(definition);
+                continue;
+            }
+            definitionManager.removeDefinition(definition);
+        }
+
+        dispatch(actions.updateState({
+            qualityDefinitions: newQualityDefinitions
         }));
     },
 

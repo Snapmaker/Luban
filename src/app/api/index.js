@@ -322,6 +322,7 @@ export default {
     getCameraCalibration,
     cameraCalibrationPhoto,
     setCameraCalibrationMatrix,
+
     // svg
     convertRasterToSvg,
     convertTextToSvg,

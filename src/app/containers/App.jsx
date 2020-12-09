@@ -14,6 +14,7 @@ import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
 import { actions as projectActions } from '../flux/project';
+import { actions as settingActions } from '../flux/setting';
 
 import api from '../api';
 import i18n from '../lib/i18n';
@@ -66,7 +67,8 @@ class App extends PureComponent {
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
-        shouldCheckForUpdate: PropTypes.bool.isRequired
+        shouldCheckForUpdate: PropTypes.bool.isRequired,
+        resetAllUserSettings: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -347,7 +349,10 @@ class App extends PureComponent {
                         />
 
                         {location.pathname.indexOf('/settings') === 0 && (
-                            <Settings {...this.props} />
+                            <Settings
+                                location={this.props.location}
+                                resetAllUserSettings={this.props.resetAllUserSettings}
+                            />
                         )}
 
                         {location.pathname.indexOf('/caselibrary') === 0 && (
@@ -397,7 +402,8 @@ const mapDispatchToProps = (dispatch) => {
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
-        openProject: (headType, history) => dispatch(projectActions.open(headType, history))
+        openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
+        resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };
 };
 
