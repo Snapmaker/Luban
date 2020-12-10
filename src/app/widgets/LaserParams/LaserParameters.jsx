@@ -166,7 +166,7 @@ class LaserParameters extends PureComponent {
         const isGreyscale = (mode === 'greyscale');
         const isVector = mode === 'vector';
         const isTextVector = (config.svgNodeName === 'text');
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
 
         return (
             <React.Fragment>

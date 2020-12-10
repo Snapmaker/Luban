@@ -5,6 +5,7 @@ import {
     PROCESS_MODE_HALFTONE,
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE_DXF,
+    SOURCE_TYPE_SVG,
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER
 } from '../../constants';
@@ -18,8 +19,7 @@ const processImage3d = (modelInfo) => {
 
 export const editorProcess = (modelInfo) => {
     const { headType, sourceType, mode } = modelInfo;
-
-    if (sourceType === SOURCE_TYPE_RASTER) {
+    if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) {
         if (mode === PROCESS_MODE_GREYSCALE) {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo);

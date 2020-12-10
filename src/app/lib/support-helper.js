@@ -65,7 +65,11 @@ export default {
         const rayDirection = new THREE.Vector3(0, 0, 1);
         const size = model.supportSize;
         const raycaster = new THREE.Raycaster(center, rayDirection);
-        const intersect = raycaster.intersectObject(target.meshObject, true)[0];
+        const intersects = raycaster.intersectObject(target.meshObject, true);
+        let intersect = intersects[0];
+        if (intersects.length >= 2) {
+            intersect = intersects[intersects.length - 2];
+        }
         model.isInitSupport = true;
         let height = 100;
         if (intersect && intersect.distance > 0) {

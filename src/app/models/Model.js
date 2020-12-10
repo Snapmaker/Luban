@@ -221,7 +221,10 @@ class Model {
     changeShowOrigin() {
         this.showOrigin = !this.showOrigin;
         this.modelObject3D.visible = this.showOrigin;
-        this.processObject3D.visible = !this.showOrigin;
+        if (this.processObject3D) {
+            this.processObject3D.visible = !this.showOrigin;
+        }
+
         return {
             showOrigin: this.showOrigin,
             showImageName: this.showOrigin ? this.uploadName : this.processImageName
@@ -291,9 +294,14 @@ class Model {
     onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { uniformScalingState } = this.meshObject;
-        const position = this.meshObject.getWorldPosition();
-        const scale = this.meshObject.getWorldScale();
-        const rotation = new THREE.Euler().setFromQuaternion(this.meshObject.getWorldQuaternion(), undefined, false);
+
+        const position = new THREE.Vector3();
+        this.meshObject.getWorldPosition(position);
+        const scale = new THREE.Vector3();
+        this.meshObject.getWorldScale(scale);
+        const quaternion = new THREE.Quaternion();
+        this.meshObject.getWorldQuaternion(quaternion);
+        const rotation = new THREE.Euler().setFromQuaternion(quaternion, undefined, false);
 
         const transformation = {
             positionX: position.x,
@@ -583,6 +591,7 @@ class Model {
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
         this.meshObject.updateMatrixWorld();
+
         clone.setMatrix(this.meshObject.matrixWorld);
 
         // copy convex geometry as well

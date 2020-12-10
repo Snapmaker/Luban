@@ -43,7 +43,8 @@ class SupportControls extends THREE.Object3D {
 
     onMouseHover(coord) {
         this.raycaster.setFromCamera(coord, this.camera);
-        const mousePosition = this.raycaster.ray.intersectPlane(this.horizontalPlane);
+        const mousePosition = new THREE.Vector3();
+        this.raycaster.ray.intersectPlane(this.horizontalPlane, mousePosition);
         this.setModelPosition(mousePosition);
     }
 

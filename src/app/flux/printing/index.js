@@ -379,7 +379,7 @@ export const actions = {
         } else {
             // TODO: Optimize performance
             const { modelGroup } = getState().printing;
-            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup);
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings, modelGroup && modelGroup.hasSupportModel());
         }
 
         // Update activeDefinition to force component re-render
@@ -822,7 +822,6 @@ export const actions = {
 
                     const formData = new FormData();
                     formData.append('file', fileOfBlob);
-                    formData.append('uploadName', stlFileName);
                     const uploadResult = await api.uploadFile(formData);
                     if (item.supportTag === true) {
                         ret.support.push(uploadResult.body.uploadName);

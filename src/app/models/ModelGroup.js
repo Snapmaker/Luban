@@ -227,10 +227,12 @@ class ModelGroup extends EventEmitter {
     }
 
     removeModel(model) {
-        if (model.sourceType === '3d') {
+        if (model.meshObject && model.meshObject.parent) {
+            model.meshObject.parent.remove(model.meshObject);
+        }
+        if (model.sourceType !== '3d') {
             model.meshObject.remove(model.modelObject3D);
             model.meshObject.remove(model.processObject3D);
-            model.meshObject.parent.remove(model.meshObject);
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         this.models = this.models.filter(item => item !== model);
@@ -271,7 +273,7 @@ class ModelGroup extends EventEmitter {
         const models = this.getModels();
         for (const model of models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
-            this.object.remove(model.meshObject);
+            model.meshObject.parent.remove(model.meshObject);
         }
         this.models.splice(0);
     }
@@ -445,14 +447,15 @@ class ModelGroup extends EventEmitter {
     }
 
     undoRedo(models) {
+        this.unselectAllModels();
         for (const model of this.models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
-            this.object.remove(model.meshObject);
-            // TODO: remove selected group without applyMatrix will cause problem
-            this.selectedGroup.remove(model.meshObject);
+
+            ThreeUtils.removeObjectParent(model.meshObject);
         }
         this.models.splice(0);
-        for (const model of models) {
+        for (const item of models) {
+            const model = item.clone();
             model.meshObject.addEventListener('update', this.onModelUpdate);
             model.computeBoundingBox();
             this.models.push(model);
@@ -462,7 +465,7 @@ class ModelGroup extends EventEmitter {
             }
             ThreeUtils.setObjectParent(model.meshObject, parent);
         }
-        this.unselectAllModels();
+
         return this._getEmptyState();
     }
 
@@ -980,6 +983,7 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         // this.removeSelectedObjectParentMatrix();
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
@@ -994,10 +998,10 @@ class ModelGroup extends EventEmitter {
         // run index after process done
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d' && selected.supportTag !== 'support') {
-                SupportHelper.indexModelAsync(selected);
+                // SupportHelper.indexModelAsync(selected);
             }
         });
-
+        this.prepareSelectedGroup();
         if (selectedModelArray.length === 0) {
             return null;
         } else {
