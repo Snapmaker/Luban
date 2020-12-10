@@ -53,6 +53,92 @@ export const STAGES_3DP = {
     modelLoaded: 11,
     gcodeRendered: 12
 };
+export const QUALITY_CONFIG_GROUP = [
+    {
+        name: 'Quality',
+        expanded: false,
+        fields: [
+            'layer_height',
+            'layer_height_0',
+            'initial_layer_line_width_factor'
+        ]
+    },
+    {
+        name: 'Shell',
+        expanded: false,
+        fields: [
+            'wall_thickness',
+            'top_thickness',
+            'bottom_thickness',
+            'outer_inset_first'
+        ]
+    },
+    {
+        name: 'Infill',
+        expanded: false,
+        fields: [
+            'infill_sparse_density'
+        ]
+    },
+    {
+        name: 'Speed',
+        expanded: false,
+        fields: [
+            // 'speed_print',
+            'speed_print_layer_0',
+            'speed_infill',
+            'speed_wall_0',
+            'speed_wall_x',
+            'speed_topbottom',
+            'speed_travel',
+            'speed_travel_layer_0'
+        ]
+    },
+    {
+        name: 'Retract & Z Hop',
+        expanded: false,
+        fields: [
+            'retraction_enable',
+            'retract_at_layer_change',
+            'retraction_amount',
+            'retraction_speed',
+            'retraction_hop_enabled',
+            'retraction_hop'
+        ]
+    },
+    {
+        name: 'Surface',
+        expanded: false,
+        fields: [
+            'magic_spiralize',
+            'magic_mesh_surface_mode'
+        ]
+    },
+    {
+        name: 'Heated Bed Adhesion Type',
+        expanded: false,
+        fields: [
+            'adhesion_type',
+            'skirt_line_count',
+            'brim_line_count',
+            'raft_margin'
+        ]
+    },
+    {
+        name: 'Support',
+        expanded: false,
+        fields: [
+            'support_enable',
+            'support_type',
+            'support_pattern',
+            'support_infill_rate',
+            'support_z_distance',
+            // 'support_xy_distance',
+            // 'support_xy_overrides_z',
+            'support_angle'
+        ]
+    }
+];
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 const publicPath = global.PUBLIC_PATH || '';

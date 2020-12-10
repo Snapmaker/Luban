@@ -30,9 +30,6 @@ function isDefinitionEditable(definition, key) {
         && key !== 'material_diameter';
 }
 
-// function isOfficialDefinition(definition) {
-//     return includes(['material.pla', 'material.abs'], definition.definitionId);
-// }
 
 class Material extends PureComponent {
     static propTypes = {
@@ -43,6 +40,7 @@ class Material extends PureComponent {
         updateManagerDisplayType: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
+        updateDefinitionsForManager: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired
     };
 
@@ -82,7 +80,7 @@ class Material extends PureComponent {
                 this.props.updateActiveDefinition(definition);
             }
         },
-        onChangeMaterialDefinition: (key, value) => {
+        onChangeMaterialDefinition: (key, value, shouldUpdateDefinitionsForManager = false) => {
             const definition = this.state.materialDefinition;
             if (!isDefinitionEditable(definition, key)) {
                 return;
@@ -93,6 +91,9 @@ class Material extends PureComponent {
                 [key]: { default_value: value }
             });
             this.props.updateActiveDefinition(definition);
+            if (shouldUpdateDefinitionsForManager) {
+                this.props.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_MATERIAL);
+            }
         },
         isMaterialSelected: (option) => {
             return this.state.materialDefinition && this.state.materialDefinition.name === option.label;
@@ -214,7 +215,7 @@ class Material extends PureComponent {
                                                 type="checkbox"
                                                 checked={defaultValue}
                                                 disabled={!isDefinitionEditable(materialDefinition, key)}
-                                                onChange={(event) => this.actions.onChangeMaterialDefinition(key, event.target.checked)}
+                                                onChange={(event) => this.actions.onChangeMaterialDefinition(key, event.target.checked, type === 'bool')}
                                             />
                                         )}
                                         <span className="sm-parameter-row__input-unit">{unit}</span>
@@ -247,7 +248,8 @@ const mapDispatchToProps = (dispatch) => {
         },
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
+        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
+        updateDefinitionsForManager: (definitionId, type) => dispatch(printingActions.updateDefinitionsForManager(definitionId, type))
     };
 };
 

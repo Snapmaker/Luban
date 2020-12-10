@@ -15,7 +15,7 @@ import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, QUALITY_CONFIG_GROUP } from '../../constants';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -66,13 +66,17 @@ const QUALITY_CONFIG_KEYS = [
     'support_infill_rate',
     'support_angle'
 ];
-const QUALITY_CHECKBOX_KEY_ARRAY = [
+const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
     'outer_inset_first',
     'retraction_enable',
     'retract_at_layer_change',
     'retraction_hop',
     'magic_spiralize',
-    'support_enable'
+    'support_enable',
+    'magic_mesh_surface_mode',
+    'adhesion_type',
+    'support_type',
+    'support_pattern'
 ];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
@@ -124,89 +128,7 @@ class PrintingManager extends PureComponent {
         notificationMessage: '',
         nameForMaterial: 'PLA',
         nameForQuality: 'Fast Print',
-        qualityConfigGroup: [
-            {
-                name: i18n._('Quality'),
-                expanded: false,
-                fields: [
-                    'layer_height',
-                    'layer_height_0',
-                    'initial_layer_line_width_factor'
-                ]
-            },
-            {
-                name: i18n._('Shell'),
-                expanded: false,
-                fields: [
-                    'wall_thickness',
-                    'top_thickness',
-                    'bottom_thickness',
-                    'outer_inset_first'
-                ]
-            },
-            {
-                name: i18n._('Infill'),
-                expanded: false,
-                fields: [
-                    'infill_sparse_density'
-                ]
-            },
-            {
-                name: i18n._('Speed'),
-                expanded: false,
-                fields: [
-                    // 'speed_print',
-                    'speed_print_layer_0',
-                    'speed_infill',
-                    'speed_wall_0',
-                    'speed_wall_x',
-                    'speed_topbottom',
-                    'speed_travel',
-                    'speed_travel_layer_0'
-                ]
-            },
-            {
-                name: i18n._('Retract & Z Hop'),
-                expanded: false,
-                fields: [
-                    'retraction_enable',
-                    'retract_at_layer_change',
-                    'retraction_amount',
-                    'retraction_speed',
-                    'retraction_hop_enabled',
-                    'retraction_hop'
-                ]
-            },
-            {
-                name: i18n._('Surface'),
-                expanded: false,
-                fields: [
-                    'magic_spiralize',
-                    'magic_mesh_surface_mode'
-                ]
-            },
-            {
-                name: i18n._('Heated Bed Adhesion Type'),
-                expanded: false,
-                fields: [
-                    'adhesion_type',
-                    'skirt_line_count',
-                    'brim_line_count',
-                    'raft_margin'
-                ]
-            },
-            {
-                name: i18n._('Support'),
-                expanded: false,
-                fields: [
-                    'support_enable',
-                    'support_type',
-                    'support_pattern',
-                    'support_infill_rate',
-                    'support_angle'
-                ]
-            }
-        ]
+        qualityConfigGroup: QUALITY_CONFIG_GROUP
     };
 
     actions = {
@@ -519,7 +441,11 @@ class PrintingManager extends PureComponent {
                 retract_at_layer_change: d.settings.retract_at_layer_change.default_value,
                 retraction_hop: d.settings.retraction_hop.default_value,
                 magic_spiralize: d.settings.magic_spiralize.default_value,
-                support_enable: d.settings.support_enable.default_value
+                support_enable: d.settings.support_enable.default_value,
+                magic_mesh_surface_mode: d.settings.magic_mesh_surface_mode.default_value,
+                adhesion_type: d.settings.adhesion_type.default_value,
+                support_type: d.settings.support_type.default_value,
+                support_pattern: d.settings.support_pattern.default_value
             }));
             Object.assign(newState, {
                 qualityDefinitionOptions: qualityDefinitionOptions
@@ -716,9 +642,9 @@ class PrintingManager extends PureComponent {
                                                 </Notifications>
                                             )}
                                             <div className="sm-parameter-container">
-                                                {this.state.qualityConfigGroup.map((group) => {
+                                                {state.qualityConfigGroup.map((group) => {
                                                     return (
-                                                        <div key={group.name}>
+                                                        <div key={i18n._(group.name)}>
                                                             <Anchor
                                                                 className="sm-parameter-header"
                                                                 onClick={() => {
@@ -865,7 +791,7 @@ class PrintingManager extends PureComponent {
                                                                                     type="checkbox"
                                                                                     checked={currentQualityOption[key]}
                                                                                     disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                                    onChange={(event) => actions.onChangeQualityDefinitionForManager(key, event.target.checked, QUALITY_CHECKBOX_KEY_ARRAY)}
+                                                                                    onChange={(event) => actions.onChangeQualityDefinitionForManager(key, event.target.checked, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY)}
                                                                                 />
                                                                             )}
                                                                             {type === 'enum' && (
@@ -878,9 +804,9 @@ class PrintingManager extends PureComponent {
                                                                                     disabled={!isDefinitionEditable(qualityDefinitionForManager)}
                                                                                     options={opts}
                                                                                     searchable={false}
-                                                                                    value={defaultValue}
+                                                                                    value={currentQualityOption[key]}
                                                                                     onChange={(option) => {
-                                                                                        actions.onChangeQualityDefinitionForManager(key, option.value);
+                                                                                        actions.onChangeQualityDefinitionForManager(key, option.value, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY);
                                                                                     }}
                                                                                 />
                                                                             )}

@@ -11,7 +11,7 @@ import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, QUALITY_CONFIG_GROUP } from '../../constants';
 
 import styles from './styles.styl';
 
@@ -42,6 +42,7 @@ class Configurations extends PureComponent {
         qualityDefinitions: PropTypes.array.isRequired,
 
         updateManagerDisplayType: PropTypes.func.isRequired,
+        updateDefinitionsForManager: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
@@ -57,92 +58,7 @@ class Configurations extends PureComponent {
 
         selectedDefinition: null,
 
-        customConfigGroup: [
-            {
-                name: i18n._('Quality'),
-                expanded: false,
-                fields: [
-                    'layer_height',
-                    'layer_height_0',
-                    'initial_layer_line_width_factor'
-                ]
-            },
-            {
-                name: i18n._('Shell'),
-                expanded: false,
-                fields: [
-                    'wall_thickness',
-                    'top_thickness',
-                    'bottom_thickness',
-                    'outer_inset_first'
-                ]
-            },
-            {
-                name: i18n._('Infill'),
-                expanded: false,
-                fields: [
-                    'infill_sparse_density'
-                ]
-            },
-            {
-                name: i18n._('Speed'),
-                expanded: false,
-                fields: [
-                    // 'speed_print',
-                    'speed_print_layer_0',
-                    'speed_infill',
-                    'speed_wall_0',
-                    'speed_wall_x',
-                    'speed_topbottom',
-                    'speed_travel',
-                    'speed_travel_layer_0'
-                ]
-            },
-            {
-                name: i18n._('Retract & Z Hop'),
-                expanded: false,
-                fields: [
-                    'retraction_enable',
-                    'retract_at_layer_change',
-                    'retraction_amount',
-                    'retraction_speed',
-                    'retraction_hop_enabled',
-                    'retraction_hop'
-                ]
-            },
-            {
-                name: i18n._('Surface'),
-                expanded: false,
-                fields: [
-                    'magic_spiralize',
-                    'magic_mesh_surface_mode'
-                ]
-            },
-            {
-                name: i18n._('Heated Bed Adhesion Type'),
-                expanded: false,
-                fields: [
-                    'adhesion_type',
-                    'skirt_line_count',
-                    'brim_line_count',
-                    'raft_margin'
-                ]
-            },
-            {
-                name: i18n._('Support'),
-                expanded: false,
-                fields: [
-                    'support_enable',
-                    'support_type',
-                    'support_pattern',
-                    'support_infill_rate',
-                    'support_z_distance',
-                    // 'support_xy_distance',
-                    // 'support_xy_overrides_z',
-                    'support_angle'
-                ]
-            }
-        ]
+        customConfigGroup: QUALITY_CONFIG_GROUP
     };
 
     actions = {
@@ -175,12 +91,11 @@ class Configurations extends PureComponent {
             // this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
-        onChangeCustomDefinition: (key, value) => {
+        onChangeCustomDefinition: (key, value, shouldUpdateDefinitionsForManager = false) => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === this.props.defaultQualityId);
             if (!isDefinitionEditable(definition)) {
                 return;
             }
-
             definition.settings[key].default_value = value;
 
             this.props.updateDefinitionSettings(definition, {
@@ -192,6 +107,9 @@ class Configurations extends PureComponent {
                     [key]: { default_value: value }
                 }
             });
+            if (shouldUpdateDefinitionsForManager) {
+                this.props.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_QUALITY);
+            }
         },
         onSetOfficialTab: (isRecommended) => {
             if (isRecommended && (/^quality.([0-9_]+)$/.test(this.props.defaultQualityId) || this.props.defaultQualityId.indexOf('Caselibrary') > -1)) {
@@ -387,7 +305,7 @@ class Configurations extends PureComponent {
                         <div className="sm-parameter-container">
                             {this.state.customConfigGroup.map((group) => {
                                 return (
-                                    <div key={group.name}>
+                                    <div key={i18n._(group.name)}>
                                         <Anchor
                                             className="sm-parameter-header"
                                             onClick={() => {
@@ -535,7 +453,7 @@ class Configurations extends PureComponent {
                                                                 type="checkbox"
                                                                 checked={defaultValue}
                                                                 disabled={!editable}
-                                                                onChange={(event) => actions.onChangeCustomDefinition(key, event.target.checked)}
+                                                                onChange={(event) => actions.onChangeCustomDefinition(key, event.target.checked, type === 'bool')}
                                                             />
                                                         )}
                                                         {type === 'enum' && (
@@ -591,7 +509,8 @@ const mapDispatchToProps = (dispatch) => {
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
+        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
+        updateDefinitionsForManager: (definitionId, type) => dispatch(printingActions.updateDefinitionsForManager(definitionId, type))
     };
 };
 
