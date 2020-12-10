@@ -96,7 +96,7 @@ const JogDistance = (props) => {
     return (
         <div>
             <div className={styles['jog-distance-control']}>
-                <p>{i18n._('XYZ Axis Travel Distance')}</p>
+                <p style={{ marginBottom: '5px' }}>{i18n._('XYZ Axis Travel Distance')}</p>
                 <div className="row no-gutters">
                     <div className="col-12">
                         <div className="input-group no-gutters">
@@ -137,7 +137,7 @@ const JogDistance = (props) => {
                                     title={`0.05 ${units}`}
                                     onClick={() => actions.selectDistance('0.05')}
                                     disabled={!canClick}
-                                    style={{ borderRadius: '0', height: '31.25px' }}
+                                    style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
                                 >
                                     0.05
                                 </button>
@@ -187,7 +187,7 @@ const JogDistance = (props) => {
             </div>
             {workPosition.isFourAxis && (
                 <div className={styles['jog-distance-control']}>
-                    <p>{i18n._('B Axis Angle of Rotation')}</p>
+                    <p style={{ marginTop: '5px', marginBottom: '5px' }}>{i18n._('B Axis Angle of Rotation')}</p>
                     <div className="row no-gutters">
                         <div className="col-12">
                             <div className="input-group no-gutters">
@@ -198,6 +198,7 @@ const JogDistance = (props) => {
                                         title={`10 ${units}`}
                                         onClick={() => actions.selectAngle('5')}
                                         disabled={!canClick}
+                                        style={{ height: '31.25px' }}
                                     >
                                         5
                                     </button>
@@ -207,6 +208,7 @@ const JogDistance = (props) => {
                                         title={`1 ${units}`}
                                         onClick={() => actions.selectAngle('1')}
                                         disabled={!canClick}
+                                        style={{ height: '31.25px' }}
                                     >
                                         1
                                     </button>
@@ -216,6 +218,7 @@ const JogDistance = (props) => {
                                         title={`0.1 ${units}`}
                                         onClick={() => actions.selectAngle('0.5')}
                                         disabled={!canClick}
+                                        style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
                                     >
                                         0.5
                                     </button>

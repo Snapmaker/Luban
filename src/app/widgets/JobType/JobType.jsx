@@ -71,6 +71,7 @@ class JobType extends PureComponent {
                 </div>
                 {!isRotate && (
                     <img
+                        draggable="false"
                         style={{
                             margin: '8px 0px 0px 0px',
                             width: '100%',
@@ -84,6 +85,7 @@ class JobType extends PureComponent {
                 {isRotate && (
                     <div>
                         <img
+                            draggable="false"
                             style={{
                                 margin: '8px 0px 0px 0px',
                                 width: '100%',

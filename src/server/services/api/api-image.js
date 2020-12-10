@@ -132,7 +132,6 @@ export const laserCaseImage = (req, res) => {
                 });
                 next();
             } else if (extname === '.stl' || extname === '.zip') {
-                console.log('uploadName', originalName, uploadName, extname);
                 if (extname === '.zip') {
                     await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
                     originalName = originalName.replace(/\.zip$/, '');

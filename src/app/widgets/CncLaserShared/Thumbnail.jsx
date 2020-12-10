@@ -66,7 +66,9 @@ class Thumbnail extends PureComponent {
 
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
+
         this.object = this.props.toolPathModelGroup.toolPathObjs.clone();
+        this.object.visible = true;
         const boundingBox = this.props.modelGroup.getAllBoundingBox();
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;

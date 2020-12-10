@@ -106,6 +106,7 @@ class Visualizer extends Component {
             }
         },
         autoFocus: () => {
+            this.canvas.current.setCameraOnTop();
             this.props.updateScale(1);
             this.props.updateTarget({ x: 0, y: 0 });
         },
@@ -175,7 +176,7 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size) || !isEqual(nextProps.materials, this.props.materials)) {
             const { size, materials } = nextProps;
             this.printableArea.updateSize(size, materials);
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, 300), new THREE.Vector3());
         }
 
         /*

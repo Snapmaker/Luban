@@ -19,13 +19,9 @@ import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import { DATA_PREFIX } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
-import {
-    SCALE_RATE, SVG_EVENT_CONTEXTMENU,
-    SVG_EVENT_MODE,
-    DEFAULT_FILL_COLOR, DEFAULT_SCALE
-} from '../../constants/svg';
 import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
+import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 
 
 const STEP_COUNT = 10;
