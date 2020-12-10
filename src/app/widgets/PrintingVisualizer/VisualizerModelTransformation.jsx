@@ -69,15 +69,12 @@ class VisualizerModelTransformation extends PureComponent {
                         transformation.positionY = value;
                         break;
                     case 'scaleX':
-                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleX = value;
                         break;
                     case 'scaleY':
-                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleY = value;
                         break;
                     case 'scaleZ':
-                        value = value < 0.01 ? 0.01 : value;
                         transformation.scaleZ = value;
                         break;
                     case 'rotateX':

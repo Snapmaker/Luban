@@ -910,6 +910,18 @@ class ModelGroup extends EventEmitter {
         };
     }
 
+    shouldApplyScaleToObjects(scaleX, scaleY, scaleZ) {
+        return this.selectedGroup.children.every((meshObject) => {
+            if (scaleX * this.selectedGroup.scale.x * meshObject.scale.x < 0.01
+              || scaleY * this.selectedGroup.scale.y * meshObject.scale.y < 0.01
+              || scaleZ * this.selectedGroup.scale.z * meshObject.scale.z < 0.01
+            ) {
+                return false; // should disable
+            }
+            return true;
+        });
+    }
+
     updateSelectedGroupTransformation(transformation) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
 
@@ -928,24 +940,51 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.position.setY(positionY);
         }
         if (this.selectedGroup.uniformScalingState === true) {
-            if (scaleX !== undefined) {
+            if (scaleX !== undefined && this.shouldApplyScaleToObjects(scaleX, scaleX, scaleX)) {
                 this.selectedGroup.scale.set(scaleX, scaleX, scaleX);
             }
-            if (scaleY !== undefined) {
+            if (scaleY !== undefined && this.shouldApplyScaleToObjects(scaleY, scaleY, scaleY)) {
                 this.selectedGroup.scale.set(scaleY, scaleY, scaleY);
             }
-            if (scaleZ !== undefined) {
+            if (scaleZ !== undefined && this.shouldApplyScaleToObjects(scaleZ, scaleZ, scaleZ)) {
                 this.selectedGroup.scale.set(scaleZ, scaleZ, scaleZ);
             }
         } else {
             if (scaleX !== undefined) {
-                this.selectedGroup.scale.setX(scaleX);
+                const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
+                    if (scaleX * this.selectedGroup.scale.x * meshObject.scale.x < 0.01
+                    ) {
+                        return false; // should disable
+                    }
+                    return true;
+                });
+                if (shouldApplyScaleToObjects) {
+                    this.selectedGroup.scale.setX(scaleX);
+                }
             }
             if (scaleY !== undefined) {
-                this.selectedGroup.scale.setY(scaleY);
+                const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
+                    if (scaleY * this.selectedGroup.scale.y * meshObject.scale.y < 0.01
+                    ) {
+                        return false; // should disable
+                    }
+                    return true;
+                });
+                if (shouldApplyScaleToObjects) {
+                    this.selectedGroup.scale.setY(scaleY);
+                }
             }
             if (scaleZ !== undefined) {
-                this.selectedGroup.scale.setZ(scaleZ);
+                const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
+                    if (scaleZ * this.selectedGroup.scale.z * meshObject.scale.z < 0.01
+                    ) {
+                        return false; // should disable
+                    }
+                    return true;
+                });
+                if (shouldApplyScaleToObjects) {
+                    this.selectedGroup.scale.setZ(scaleZ);
+                }
             }
         }
         if (uniformScalingState !== undefined) {
