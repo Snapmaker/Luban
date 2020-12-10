@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import log from '../../lib/log';
 import { MACHINE_SERIES } from '../../constants';
 import api from '../../api';
 import modal from '../../lib/modal';
@@ -99,21 +98,7 @@ class CaseLibrary extends PureComponent {
             }
         },
         loadLaserCncCaseSettings: async (config) => {
-            if (config.mode === 'trace') {
-                const res = await api.uploadLaserCaseImage(config.pathConfig, config.mode, () => {
-                    modal({
-                        title: i18n._('Parse Error'),
-                        body: i18n._('Failed to parse image file {{filename}}.', { filename: config.pathConfig.name })
-                    });
-                });
-                const result = await api.processTrace({
-                    originalName: res.body.originalName,
-                    uploadName: res.body.uploadName,
-                    width: res.body.width,
-                    height: res.body.height
-                });
-                log.warn('trace', res, result);
-            } else if (config.mode === 'text') {
+            if (config.mode === 'text') {
                 if (config.tag === 'laser') {
                     await this.props.insertDefaultLaserTextVector(config.caseConfigs, config.caseTransformation);
                 } else {
