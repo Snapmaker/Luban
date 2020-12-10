@@ -354,6 +354,15 @@ class Canvas extends Component {
         this.startTween(tween);
     }
 
+    toFront() {
+        this.camera.position.x = this.cameraInitialPosition.x;
+        this.camera.position.y = this.cameraInitialPosition.y;
+        this.camera.position.z = this.cameraInitialPosition.z;
+        this.controls.setTarget(new Vector3(0, 0, this.cameraInitialPosition.z));
+        // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
+        this.renderScene();
+    }
+
     toLeft() {
         this.camera.rotation.x = Math.PI / 2;
         this.camera.rotation.z = 0;

@@ -66,8 +66,8 @@ class Visualizer extends PureComponent {
         zoomOut: () => {
             this.canvas.current.zoomOut();
         },
-        autoFocus: () => {
-            this.canvas.current.autoFocus();
+        toFront: () => {
+            this.canvas.current.toFront();
         },
         toLeft: () => {
             this.canvas.current.toLeft();
@@ -358,7 +358,7 @@ class Visualizer extends PureComponent {
                     <SecondaryToolbar
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}
-                        autoFocus={this.actions.autoFocus}
+                        toFront={this.actions.toFront}
                     />
                 </div>
                 <ContextMenu

@@ -10,18 +10,18 @@ class SecondaryToolbar extends Component {
     static propTypes = {
         zoomIn: PropTypes.func,
         zoomOut: PropTypes.func,
-        autoFocus: PropTypes.func
+        toFront: PropTypes.func
     };
 
     render() {
-        const { zoomIn, zoomOut, autoFocus } = this.props;
+        const { zoomIn, zoomOut, toFront } = this.props;
         return (
             <div className="pull-right">
                 <div className="btn-toolbar">
                     <div className="btn-group">
                         <RepeatButton
                             className={styles.btnIcon}
-                            onClick={autoFocus}
+                            onClick={toFront}
                             title={i18n._('Reset Position')}
                         >
                             <i className={classNames(styles.icon, styles.iconFocusCenter)} />

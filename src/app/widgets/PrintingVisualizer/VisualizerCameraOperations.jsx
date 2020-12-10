@@ -12,7 +12,7 @@ class VisualizerCameraOperations extends PureComponent {
             toTop: PropTypes.func.isRequired,
             toBottom: PropTypes.func.isRequired,
             toRight: PropTypes.func.isRequired,
-            autoFocus: PropTypes.func.isRequired
+            toFront: PropTypes.func.isRequired
         })
     };
 
@@ -33,7 +33,7 @@ class VisualizerCameraOperations extends PureComponent {
                     />
                     <Anchor
                         className={classNames(styles['camera-reset'])}
-                        onClick={actions.autoFocus}
+                        onClick={actions.toFront}
                     />
                     <Anchor
                         className={classNames('fa', 'fa-chevron-down', styles['turn-down'])}
