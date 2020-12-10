@@ -163,7 +163,6 @@ class CaseLibrary extends PureComponent {
             const casePath = config.pathConfig.casePath;
             formData.append('casePath', casePath);
             formData.append('name', name);
-            formData.append('isCaseGcode', config.isCaseGcode);
             api.uploadGcodeFile(formData)
                 .then((res) => {
                     const response = res.body;

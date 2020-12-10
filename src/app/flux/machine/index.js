@@ -223,7 +223,7 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: true
                         }));
-                        dispatch(actions.updateState({
+                        dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
                                 ...pos
@@ -237,7 +237,7 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: false
                         }));
-                        dispatch(actions.updateState({
+                        dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
                                 ...pos
@@ -572,7 +572,7 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: true
                         }));
-                        dispatch(actions.updateState({
+                        dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
                                 y: `${y.toFixed(3)}`,
@@ -590,7 +590,7 @@ export const actions = {
                         dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
                             isRotate: false
                         }));
-                        dispatch(actions.updateState({
+                        dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
                                 y: `${y.toFixed(3)}`,
@@ -604,7 +604,7 @@ export const actions = {
                 if (Number(originOffset.x) !== offsetX
                     || Number(originOffset.y) !== offsetY
                     || Number(originOffset.z) !== offsetZ) {
-                    dispatch(actions.updateState({
+                    dispatch(baseActions.updateState({
                         originOffset: {
                             x: `${offsetX.toFixed(3)}`,
                             y: `${offsetY.toFixed(3)}`,

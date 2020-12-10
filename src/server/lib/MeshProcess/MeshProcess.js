@@ -156,7 +156,6 @@ export class MeshProcess {
 
         const layerThickness = 1 / this.sliceDensity;
         const initialLayerThickness = layerThickness / 2;
-
         const imageWidth = Math.floor((width - initialLayerThickness) / layerThickness) + 1;
         const imageHeight = Math.floor((height - initialLayerThickness) / layerThickness) + 1;
 
@@ -254,6 +253,7 @@ export class MeshProcess {
 
         const imageWidth = Math.ceil(width * this.sliceDensity);
         const imageHeight = Math.floor((height - initialLayerThickness) / layerThickness) + 1;
+        console.log('convertTo3AxisImage', r, r * Math.PI * 2, this.mesh.aabb.length, this.sliceDensity, width, imageWidth);
 
         const slicer = new Slicer(this.mesh, layerThickness, imageHeight, initialLayerThickness);
 

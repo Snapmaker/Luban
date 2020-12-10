@@ -156,6 +156,10 @@ export const actions = {
     },
 
     uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch) => {
+        dispatch(actions.updateState(headType, {
+            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
+            progress: 0.25
+        }));
         api.uploadLaserCaseImage(file)
             .then((res) => {
                 const { width, height, originalName, uploadName } = res.body;
