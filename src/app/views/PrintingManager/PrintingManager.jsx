@@ -15,56 +15,11 @@ import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, QUALITY_CONFIG_GROUP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
 
-
-const MATERIAL_CONFIG_KEYS = [
-    'material_diameter',
-    'material_flow',
-    'material_print_temperature',
-    'material_print_temperature_layer_0',
-    'material_final_print_temperature',
-    'machine_heated_bed',
-    'material_bed_temperature',
-    'material_bed_temperature_layer_0'
-];
-const QUALITY_CONFIG_KEYS = [
-    'layer_height',
-    'layer_height_0',
-    'initial_layer_line_width_factor',
-    'wall_thickness',
-    'top_thickness',
-    'bottom_thickness',
-    'outer_inset_first',
-    'infill_sparse_density',
-    // 'speed_print',
-    'speed_print_layer_0',
-    'speed_infill',
-    'speed_wall_0',
-    'speed_wall_x',
-    'speed_topbottom',
-    'speed_travel',
-    'speed_travel_layer_0',
-    'retraction_enable',
-    'retract_at_layer_change',
-    'retraction_amount',
-    'retraction_speed',
-    'retraction_hop_enabled',
-    'retraction_hop',
-    // 'Surface'
-    'magic_spiralize',
-    'magic_mesh_surface_mode',
-    // 'HeatedBedAdhesionType'
-    'adhesion_type',
-    'skirt_line_count',
-    'brim_line_count',
-    'raft_margin',
-    // 'Support'
-    'support_enable',
-    'support_type',
-    'support_pattern',
-    'support_infill_rate',
-    'support_angle'
+// checkbox and select
+const MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY = [
+    'machine_heated_bed'
 ];
 const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
     'outer_inset_first',
@@ -128,7 +83,10 @@ class PrintingManager extends PureComponent {
         notificationMessage: '',
         nameForMaterial: 'PLA',
         nameForQuality: 'Fast Print',
-        qualityConfigGroup: QUALITY_CONFIG_GROUP
+        qualityConfigGroup: PRINTING_QUALITY_CONFIG_GROUP.map((config) => {
+            config.expanded = false;
+            return config;
+        })
     };
 
     actions = {
@@ -231,7 +189,7 @@ class PrintingManager extends PureComponent {
             const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
             const newDefinitionSettings = {};
             for (const [key, value] of Object.entries(qualityDefinitionForManager.settings)) {
-                if (QUALITY_CONFIG_KEYS.indexOf(key) > -1) {
+                if (PRINTING_QUALITY_CONFIG_KEYS.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
             }
@@ -295,7 +253,7 @@ class PrintingManager extends PureComponent {
             const materialDefinitionForManager = this.state.materialDefinitionForManager;
             const newDefinitionSettings = {};
             for (const [key, value] of Object.entries(materialDefinitionForManager.settings)) {
-                if (MATERIAL_CONFIG_KEYS.indexOf(key) > -1) {
+                if (PRINTING_MATERIAL_CONFIG_KEYS.indexOf(key) > -1) {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
             }
@@ -399,11 +357,15 @@ class PrintingManager extends PureComponent {
                 this.props.updateActiveDefinition(materialDefinitionForManager);
             }
 
-            const materialDefinitionOptions = nextProps.materialDefinitions.map(d => ({
-                label: d.name,
-                machine_heated_bed: d.settings.machine_heated_bed.default_value,
-                value: d.definitionId
-            }));
+            const materialDefinitionOptions = nextProps.materialDefinitions.map(d => {
+                const checkboxAndSelectGroup = {};
+                MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY.forEach((key) => {
+                    checkboxAndSelectGroup[key] = d.settings[key].default_value;
+                });
+                checkboxAndSelectGroup.label = d.name;
+                checkboxAndSelectGroup.value = d.definitionId;
+                return checkboxAndSelectGroup;
+            });
             Object.assign(newState, {
                 materialDefinitionOptions: materialDefinitionOptions
             });
@@ -433,20 +395,15 @@ class PrintingManager extends PureComponent {
                 });
                 this.props.updateActiveDefinition(qualityDefinitionForManager);
             }
-            const qualityDefinitionOptions = nextProps.qualityDefinitions.map(d => ({
-                label: d.name,
-                value: d.definitionId,
-                outer_inset_first: d.settings.outer_inset_first.default_value,
-                retraction_enable: d.settings.retraction_enable.default_value,
-                retract_at_layer_change: d.settings.retract_at_layer_change.default_value,
-                retraction_hop: d.settings.retraction_hop.default_value,
-                magic_spiralize: d.settings.magic_spiralize.default_value,
-                support_enable: d.settings.support_enable.default_value,
-                magic_mesh_surface_mode: d.settings.magic_mesh_surface_mode.default_value,
-                adhesion_type: d.settings.adhesion_type.default_value,
-                support_type: d.settings.support_type.default_value,
-                support_pattern: d.settings.support_pattern.default_value
-            }));
+            const qualityDefinitionOptions = nextProps.qualityDefinitions.map(d => {
+                const checkboxAndSelectGroup = {};
+                QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY.forEach((key) => {
+                    checkboxAndSelectGroup[key] = d.settings[key].default_value;
+                });
+                checkboxAndSelectGroup.label = d.name;
+                checkboxAndSelectGroup.value = d.definitionId;
+                return checkboxAndSelectGroup;
+            });
             Object.assign(newState, {
                 qualityDefinitionOptions: qualityDefinitionOptions
             });
@@ -572,7 +529,7 @@ class PrintingManager extends PureComponent {
                                                 </Notifications>
                                             )}
                                             <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                                            {MATERIAL_CONFIG_KEYS.map((key) => {
+                                            {PRINTING_MATERIAL_CONFIG_KEYS.map((key) => {
                                                 const setting = materialDefinitionForManager.settings[key];
 
                                                 const { label, description, type, unit = '', enabled = '' } = setting;

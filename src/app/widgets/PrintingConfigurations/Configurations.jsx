@@ -11,7 +11,7 @@ import i18n from '../../lib/i18n';
 import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, QUALITY_CONFIG_GROUP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
 
 import styles from './styles.styl';
 
@@ -58,7 +58,11 @@ class Configurations extends PureComponent {
 
         selectedDefinition: null,
 
-        customConfigGroup: QUALITY_CONFIG_GROUP
+        customConfigGroup: PRINTING_QUALITY_CONFIG_GROUP.map((config) => {
+            config.expanded = false;
+            return config;
+        })
+
     };
 
     actions = {

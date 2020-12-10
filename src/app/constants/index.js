@@ -53,10 +53,59 @@ export const STAGES_3DP = {
     modelLoaded: 11,
     gcodeRendered: 12
 };
-export const QUALITY_CONFIG_GROUP = [
+// !important: keys in PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP should change togethor
+export const PRINTING_MATERIAL_CONFIG_KEYS = [
+    'material_diameter',
+    'material_flow',
+    'material_print_temperature',
+    'material_print_temperature_layer_0',
+    'material_final_print_temperature',
+    'machine_heated_bed',
+    'material_bed_temperature',
+    'material_bed_temperature_layer_0'
+];
+export const PRINTING_QUALITY_CONFIG_KEYS = [
+    'layer_height',
+    'layer_height_0',
+    'initial_layer_line_width_factor',
+    'wall_thickness',
+    'top_thickness',
+    'bottom_thickness',
+    'outer_inset_first',
+    'infill_sparse_density',
+    // 'speed_print',
+    'speed_print_layer_0',
+    'speed_infill',
+    'speed_wall_0',
+    'speed_wall_x',
+    'speed_topbottom',
+    'speed_travel',
+    'speed_travel_layer_0',
+    'retraction_enable',
+    'retract_at_layer_change',
+    'retraction_amount',
+    'retraction_speed',
+    'retraction_hop_enabled',
+    'retraction_hop',
+    // 'Surface'
+    'magic_spiralize',
+    'magic_mesh_surface_mode',
+    // 'HeatedBedAdhesionType'
+    'adhesion_type',
+    'skirt_line_count',
+    'brim_line_count',
+    'raft_margin',
+    // 'Support'
+    'support_enable',
+    'support_type',
+    'support_pattern',
+    'support_infill_rate',
+    'support_z_distance',
+    'support_angle'
+];
+export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
         name: 'Quality',
-        expanded: false,
         fields: [
             'layer_height',
             'layer_height_0',
@@ -65,7 +114,6 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Shell',
-        expanded: false,
         fields: [
             'wall_thickness',
             'top_thickness',
@@ -75,14 +123,12 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Infill',
-        expanded: false,
         fields: [
             'infill_sparse_density'
         ]
     },
     {
         name: 'Speed',
-        expanded: false,
         fields: [
             // 'speed_print',
             'speed_print_layer_0',
@@ -96,7 +142,6 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Retract & Z Hop',
-        expanded: false,
         fields: [
             'retraction_enable',
             'retract_at_layer_change',
@@ -108,7 +153,6 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Surface',
-        expanded: false,
         fields: [
             'magic_spiralize',
             'magic_mesh_surface_mode'
@@ -116,7 +160,6 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Heated Bed Adhesion Type',
-        expanded: false,
         fields: [
             'adhesion_type',
             'skirt_line_count',
@@ -126,7 +169,6 @@ export const QUALITY_CONFIG_GROUP = [
     },
     {
         name: 'Support',
-        expanded: false,
         fields: [
             'support_enable',
             'support_type',
@@ -141,6 +183,7 @@ export const QUALITY_CONFIG_GROUP = [
 ];
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
+
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
 
