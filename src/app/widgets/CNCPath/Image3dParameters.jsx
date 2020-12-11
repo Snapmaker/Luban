@@ -7,15 +7,14 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as textActions } from '../../flux/text';
 import TipTrigger from '../../components/TipTrigger';
-import { FACE_BACK, FACE_DOWN, FACE_FRONT, FACE_LEFT, FACE_RIGHT, FACE_UP } from '../../constants';
+import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
 
 class Image3dParameters extends PureComponent {
     static propTypes = {
         disabled: PropTypes.bool,
-        materials: PropTypes.object,
         config: PropTypes.shape({
-            face: PropTypes.string,
+            direction: PropTypes.string,
             minGray: PropTypes.number,
             maxGray: PropTypes.number,
             sliceDensity: PropTypes.number
@@ -33,7 +32,7 @@ class Image3dParameters extends PureComponent {
             this.setState(state => ({ expanded: !state.expanded }));
         },
         onChangeFace: (option) => {
-            this.props.updateSelectedModelConfig({ face: option.value });
+            this.props.updateSelectedModelConfig({ direction: option.value });
         },
         onChangeMinGray: (minGray) => {
             this.props.updateSelectedModelConfig({ minGray });
@@ -48,28 +47,27 @@ class Image3dParameters extends PureComponent {
 
     render() {
         const { config, disabled } = this.props;
-        const { face } = config;
-        const faceOptions = [{
-            value: FACE_FRONT,
-            label: FACE_FRONT
+        const { direction } = config;
+        const directionOptions = [{
+            value: DIRECTION_FRONT,
+            label: DIRECTION_FRONT
         }, {
-            value: FACE_BACK,
-            label: FACE_BACK
+            value: DIRECTION_BACK,
+            label: DIRECTION_BACK
         }, {
-            value: FACE_LEFT,
-            label: FACE_LEFT
+            value: DIRECTION_LEFT,
+            label: DIRECTION_LEFT
         }, {
-            value: FACE_RIGHT,
-            label: FACE_RIGHT
+            value: DIRECTION_RIGHT,
+            label: DIRECTION_RIGHT
         }, {
-            value: FACE_UP,
-            label: FACE_UP
+            value: DIRECTION_UP,
+            label: DIRECTION_UP
         }, {
-            value: FACE_DOWN,
-            label: FACE_DOWN
+            value: DIRECTION_DOWN,
+            label: DIRECTION_DOWN
         }];
         const actions = this.actions;
-        const { isRotate } = this.props.materials;
 
         return (
             <div>
@@ -84,7 +82,7 @@ class Image3dParameters extends PureComponent {
                     )}
                     />
                 </Anchor>
-                {this.state.expanded && !isRotate && (
+                {this.state.expanded && (
                     <React.Fragment>
                         <TipTrigger
                             title={i18n._('Projection Direction')}
@@ -98,8 +96,8 @@ class Image3dParameters extends PureComponent {
                                     backspaceRemoves={false}
                                     clearable={false}
                                     searchable={false}
-                                    options={faceOptions}
-                                    value={face}
+                                    options={directionOptions}
+                                    value={direction}
                                     onChange={(option) => {
                                         actions.onChangeFace(option);
                                         this.props.processSelectedModel();
@@ -116,7 +114,6 @@ class Image3dParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { fonts } = state.text;
-    const { materials } = state.cnc;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
@@ -126,8 +123,7 @@ const mapStateToProps = (state) => {
         value: 'AddFonts'
     });
     return {
-        fontOptions,
-        materials
+        fontOptions
     };
 };
 

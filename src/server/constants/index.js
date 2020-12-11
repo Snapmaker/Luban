@@ -40,12 +40,12 @@ export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngi
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
 
 // 3D Mesh Convert 2D Image
-export const FACE_FRONT = 'front';
-export const FACE_BACK = 'back';
-export const FACE_LEFT = 'left';
-export const FACE_RIGHT = 'right';
-export const FACE_UP = 'up';
-export const FACE_DOWN = 'down';
+export const DIRECTION_FRONT = 'front';
+export const DIRECTION_BACK = 'back';
+export const DIRECTION_LEFT = 'left';
+export const DIRECTION_RIGHT = 'right';
+export const DIRECTION_UP = 'up';
+export const DIRECTION_DOWN = 'down';
 
 // Model
 export const SOURCE_TYPE_3DP = '3dp';
@@ -65,4 +65,5 @@ export const PROCESS_MODE_GREYSCALE = 'greyscale';
 export const CNC_IMAGE_NEGATIVE_RANGE_FIELD = 254;
 
 export const CNC_MESH_SLICE_MODE_ROTATION = 'rotation';
-export const CNC_MESH_SLICE_MODE_MULTI_FACE = 'multi face';
+export const CNC_MESH_SLICE_MODE_LINKAGE = 'linkage';
+export const CNC_MESH_SLICE_MODE_MULTI_DIRECTION = 'multi face';

@@ -384,12 +384,13 @@ export const PROCESS_MODE_PLANE = 'plane';
 export const PROCESS_MODE_4AXIS_LINKAGE = '4axisLinkage';
 
 // 3D Mesh Convert 2D Image
-export const FACE_FRONT = 'front';
-export const FACE_BACK = 'back';
-export const FACE_LEFT = 'left';
-export const FACE_RIGHT = 'right';
-export const FACE_UP = 'up';
-export const FACE_DOWN = 'down';
+export const DIRECTION_FRONT = 'front';
+export const DIRECTION_BACK = 'back';
+export const DIRECTION_LEFT = 'left';
+export const DIRECTION_RIGHT = 'right';
+export const DIRECTION_UP = 'up';
+export const DIRECTION_DOWN = 'down';
 
 export const CNC_MESH_SLICE_MODE_ROTATION = 'rotation';
-export const CNC_MESH_SLICE_MODE_MULTI_FACE = 'multi face';
+export const CNC_MESH_SLICE_MODE_LINKAGE = 'linkage';
+export const CNC_MESH_SLICE_MODE_MULTI_DIRECTION = 'multi face';

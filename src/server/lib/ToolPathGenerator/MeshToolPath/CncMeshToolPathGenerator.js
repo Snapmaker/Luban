@@ -1,9 +1,10 @@
 import EventEmitter from 'events';
-import { CNC_MESH_SLICE_MODE_ROTATION, FACE_BACK, FACE_FRONT, FACE_LEFT, FACE_RIGHT } from '../../../constants';
+import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, DIRECTION_BACK, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT } from '../../../constants';
 import DataStorage from '../../../DataStorage';
 import CncReliefToolPathGenerator from '../CncReliefToolPathGenerator';
 import { MeshProcess } from '../../MeshProcess/MeshProcess';
 import XToBToolPath from '../../ToolPath/XToBToolPath';
+import CncMeshLinkageToolPathGenerator from './CncMeshLinkageToolPathGenerator';
 
 export default class CncMeshToolPathGenerator extends EventEmitter {
     constructor(modelInfo) {
@@ -43,6 +44,14 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         return toolPath;
     }
 
+    generateToolPathSliceModeLinkage() {
+        const generator = new CncMeshLinkageToolPathGenerator(this.modelInfo);
+        generator.on('progress', (p) => {
+            this.emit('progress', p);
+        });
+        return generator.generateToolPathObj();
+    }
+
     async generateToolPathSliceModeMultiFace() {
         const meshProcess = new MeshProcess(this.modelInfo);
         const { width, height } = meshProcess.getWidthAndHeight();
@@ -53,7 +62,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         });
 
         const parseToToolPath = async (face, i) => {
-            meshProcess.mesh.setFace(face);
+            meshProcess.mesh.setDirection(face);
             meshProcess.mesh.offset({
                 x: -meshProcess.mesh.aabb.min.x,
                 y: -(meshProcess.mesh.aabb.min.y + meshProcess.mesh.aabb.max.y) / 2,
@@ -83,7 +92,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             return toolPath;
         };
 
-        const faces = [FACE_LEFT, FACE_FRONT, FACE_RIGHT, FACE_BACK];
+        const faces = [DIRECTION_LEFT, DIRECTION_FRONT, DIRECTION_RIGHT, DIRECTION_BACK];
 
         const { jogSpeed } = this.gcodeConfig;
 
@@ -131,12 +140,13 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         if (this.isRotate) {
             if (this.sliceMode === CNC_MESH_SLICE_MODE_ROTATION) {
                 res = await this.generateToolPathSliceModeRotation();
-            } else {
-                res = await this.generateToolPathSliceModeMultiFace();
+            } else if (this.sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
+                res = this.generateToolPathSliceModeLinkage();
             }
         } else {
             res = await this.generateToolPathSliceModeRotation();
         }
+        this.emit('progress', 1);
 
         return res;
     }
