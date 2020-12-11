@@ -83,10 +83,13 @@ class PrintingManager extends PureComponent {
         notificationMessage: '',
         nameForMaterial: 'PLA',
         nameForQuality: 'Fast Print',
-        qualityConfigGroup: PRINTING_QUALITY_CONFIG_GROUP.map((config) => {
-            config.expanded = false;
-            return config;
-        })
+        qualityConfigExpanded: (function () {
+            PRINTING_QUALITY_CONFIG_GROUP.forEach((config) => {
+                this[config.name] = false;
+            });
+            return this;
+        }).call({}),
+        qualityConfigGroup: PRINTING_QUALITY_CONFIG_GROUP
     };
 
     actions = {
@@ -416,8 +419,7 @@ class PrintingManager extends PureComponent {
         const actions = this.actions;
         const { managerDisplayType } = this.props;
         const { materialDefinitionOptions, materialDefinitionForManager, showPrintingManager,
-            qualityDefinitionOptions, qualityDefinitionForManager } = state;
-
+            qualityDefinitionOptions, qualityDefinitionForManager, qualityConfigExpanded } = state;
         const currentMaterialOption = materialDefinitionOptions.find((item) => {
             return item.label === materialDefinitionForManager.name;
         });
@@ -605,9 +607,9 @@ class PrintingManager extends PureComponent {
                                                             <Anchor
                                                                 className="sm-parameter-header"
                                                                 onClick={() => {
-                                                                    group.expanded = !group.expanded;
+                                                                    qualityConfigExpanded[group.name] = !qualityConfigExpanded[group.name];
                                                                     this.setState({
-                                                                        qualityConfigGroup: JSON.parse(JSON.stringify(state.qualityConfigGroup))
+                                                                        qualityConfigExpanded: JSON.parse(JSON.stringify(qualityConfigExpanded))
                                                                     });
                                                                 }}
                                                             >
@@ -615,13 +617,13 @@ class PrintingManager extends PureComponent {
                                                                 <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
                                                                 <span className={classNames(
                                                                     'fa',
-                                                                    group.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                                                                    qualityConfigExpanded[group.name] ? 'fa-angle-double-up' : 'fa-angle-double-down',
                                                                     'sm-parameter-header__indicator',
                                                                     'pull-right',
                                                                 )}
                                                                 />
                                                             </Anchor>
-                                                            {group.expanded && group.fields.map((key) => {
+                                                            {qualityConfigExpanded[group.name] && group.fields.map((key) => {
                                                                 const setting = qualityDefinitionForManager.settings[key];
 
                                                                 const { label, description, type, unit = '', enabled, options } = setting;
