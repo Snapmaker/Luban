@@ -64,6 +64,7 @@ class App extends PureComponent {
         onRecovery: PropTypes.func.isRequired,
         quitRecovery: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
+        saveAndClose: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
