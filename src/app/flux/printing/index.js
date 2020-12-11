@@ -326,7 +326,6 @@ export const actions = {
     updateDefinitionSettings: (definition, settings) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         settings = definitionManager.calculateDependencies(definition, settings, modelGroup && modelGroup.hasSupportModel());
-
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
