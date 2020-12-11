@@ -69,7 +69,6 @@ const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/r
 
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
-const uploadLaserCaseImage = defaultAPIFactory((formdata) => request.post('/api/image/laserCaseImage').send(formdata));
 
 
 // Stock Remap
@@ -311,7 +310,6 @@ export default {
     packageEnv,
     recoverProjectFile,
     uploadImage,
-    uploadLaserCaseImage,
     stockRemapProcess,
     processImage,
     processTrace,

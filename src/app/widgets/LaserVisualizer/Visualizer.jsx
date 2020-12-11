@@ -61,7 +61,7 @@ class Visualizer extends Component {
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
-        selectTargetModel: PropTypes.func.isRequired,
+        selectModelInProcess: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         // onModelTransform: PropTypes.func.isRequired,
@@ -110,10 +110,10 @@ class Visualizer extends Component {
             this.props.updateScale(1);
             this.props.updateTarget({ x: 0, y: 0 });
         },
-        onSelectModels: (intersect) => { // this is a toolpath model? mesh object??
+        onSelectModels: (intersect, selectEvent) => { // this is a toolpath model? mesh object??
             // todo
             // console.log('----on process select----', model);
-            this.props.selectTargetModel(intersect);
+            this.props.selectModelInProcess(intersect, selectEvent);
         },
         /*
         onModelAfterTransform: () => {
@@ -542,7 +542,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
-        selectTargetModel: (intersect) => dispatch(editorActions.selectModelInProcess('laser', intersect)),
+        selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
         removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 

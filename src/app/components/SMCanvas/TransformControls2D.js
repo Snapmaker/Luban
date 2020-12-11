@@ -240,6 +240,7 @@ class TransformControls2D extends Object3D {
 
     updateFramePeripheralVisible(visible) {
         this.framePeripheral.visible = visible;
+        this.dispatchEvent(EVENTS.UPDATE);
     }
 
 

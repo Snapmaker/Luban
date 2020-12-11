@@ -21,92 +21,36 @@ import { mmToPixel } from '../../../shared/lib/utils';
 const log = logger('api:image');
 
 export const set = (req, res) => {
-    const file = req.files.image;
-    const originalName = path.basename(file.name);
-
-    const uploadName = pathWithRandomSuffix(originalName);
-    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    const extname = path.extname(uploadName).toLowerCase();
+    const files = req.files;
     const { isRotate } = req.body;
+    let originalName, uploadName, uploadPath, originalPath;
+    // if 'files' does not exist, the model in the case library is being loaded
+    if (files) {
+        const file = files.image;
+        originalName = path.basename(file.name);
+        uploadName = pathWithRandomSuffix(originalName);
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        originalPath = file.path;
+    } else {
+        const { name, casePath } = req.body;
+        originalName = path.basename(name);
+        originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
+        uploadName = pathWithRandomSuffix(originalName);
+        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    }
+    const extname = path.extname(uploadName).toLowerCase();
 
     async.series([
         (next) => {
-            mv(file.path, uploadPath, () => {
-                next();
-            });
-        },
-        async (next) => {
-            if (extname === '.svg') {
-                const svgParser = new SVGParser();
-                const svg = await svgParser.parseFile(uploadPath);
-
-                res.send({
-                    originalName: originalName,
-                    uploadName: uploadName,
-                    width: svg.width,
-                    height: svg.height
-                });
-
-                next();
-            } else if (extname === '.dxf') {
-                const result = await parseDxf(uploadPath);
-                const { width, height } = result;
-
-                res.send({
-                    originalName: originalName,
-                    uploadName: uploadName,
-                    width,
-                    height
-                });
-
-                next();
-            } else if (extname === '.stl') {
-                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: isRotate === 'true' } });
-                const { width, height } = meshProcess.getWidthAndHeight();
-                res.send({
-                    originalName: originalName,
-                    uploadName: uploadName,
-                    width: mmToPixel(width),
-                    height: mmToPixel(height)
-                });
-                next();
-            } else {
-                jimp.read(uploadPath).then((image) => {
-                    res.send({
-                        originalName: originalName,
-                        uploadName: uploadName,
-                        width: image.bitmap.width,
-                        height: image.bitmap.height
-                    });
+            if (files) {
+                mv(originalPath, uploadPath, () => {
                     next();
-                }).catch((err) => {
-                    next(err);
+                });
+            } else {
+                fs.copyFile(originalPath, uploadPath, () => {
+                    next();
                 });
             }
-        }
-    ], (err) => {
-        if (err) {
-            log.error(`Failed to read image ${uploadName}`);
-            res.status(ERR_INTERNAL_SERVER_ERROR).end();
-        } else {
-            res.end();
-        }
-    });
-};
-
-export const laserCaseImage = (req, res) => {
-    const { name, casePath, isRotate } = req.body;
-    let originalName = path.basename(name);
-    const originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-    let uploadName = pathWithRandomSuffix(originalName);
-    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    const extname = path.extname(uploadName).toLowerCase();
-
-    async.series([
-        (next) => {
-            fs.copyFile(originalPath, uploadPath, () => {
-                next();
-            });
         },
         async (next) => {
             if (extname === '.svg') {
@@ -119,6 +63,7 @@ export const laserCaseImage = (req, res) => {
                     width: svg.width,
                     height: svg.height
                 });
+
                 next();
             } else if (extname === '.dxf') {
                 const result = await parseDxf(uploadPath);
@@ -130,6 +75,7 @@ export const laserCaseImage = (req, res) => {
                     width,
                     height
                 });
+
                 next();
             } else if (extname === '.stl' || extname === '.zip') {
                 if (extname === '.zip') {
@@ -162,7 +108,7 @@ export const laserCaseImage = (req, res) => {
         }
     ], (err) => {
         if (err) {
-            log.error(`Failed to read image ${uploadName} and err is ${err}`);
+            log.error(`Failed to read image ${uploadName}`);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();
