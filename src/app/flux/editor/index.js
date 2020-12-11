@@ -374,7 +374,10 @@ export const actions = {
     },
 
     updateSelectedModelDeviation: (headType, deviation) => (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { page, SVGActions, modelGroup } = getState()[headType];
+        if (page === PAGE_PROCESS) {
+            return;
+        }
         const selectedModelsTransformation = modelGroup.getSelectedModelTransformation();
         const transformation = {
             positionX: selectedModelsTransformation.positionX + deviation.dx,
