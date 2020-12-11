@@ -172,6 +172,25 @@
                 }
             }
         },
+        "support":{
+            "children":{
+                "support_enable":{
+                    "label": "Generate Auto Support"
+                },
+                "support_pattern":{
+                    "enabled": true
+                },
+                "support_infill_rate":{
+                    "enabled": true
+                },
+                "support_z_distance":{
+                    "enabled": true
+                },
+                "support_angle":{
+                    "enabled": true
+                }
+            }
+        },
         "speed": {
             "type": "category",
             "children": {

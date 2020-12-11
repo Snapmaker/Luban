@@ -320,6 +320,7 @@ export const actions = {
 
         // Set or replace image config
         const config = {
+            ...selectedModel.config,
             ...modelDefaultConfigs.config,
             ...selectedModel.getModeConfig(mode)
         };
@@ -414,7 +415,7 @@ export const actions = {
         }
         const selectedModel = selectedModels[0];
 
-        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'svg' && selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
             return;
         }
         // svg process as image

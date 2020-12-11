@@ -144,18 +144,20 @@ class DefinitionManager {
         if (settings.support_pattern) {
             settings.support_wall_count = settings.support_pattern.default_value === 'grid' ? { default_value: 1 } : { default_value: 0 };
         }
-        if (settings.support_z_distance) {
+        if (settings.support_z_distance) { // copy cura feature
             const supportZDistance = settings.support_z_distance.default_value;
-            definition.settings.support_top_distance.default_value = supportZDistance;
-            definition.settings.support_bottom_distance.default_value = supportZDistance / 2;
+            settings.support_top_distance = { default_value: supportZDistance };
+            settings.support_bottom_distance = { default_value: supportZDistance / 2 };
         }
 
         // fix CuraEngine z_overide_xy not effected on support_mesh
-        if (hasSupportModel && settings.support_z_distance) {
-            const supportZDistance = settings.support_z_distance.default_value;
-            definition.settings.support_xy_distance.default_value = supportZDistance;
+        if (hasSupportModel) {
+            if (settings.support_z_distance) {
+                const supportZDistance = settings.support_z_distance.default_value;
+                settings.support_xy_distance = { default_value: supportZDistance };
+            }
         } else if (definition.settings.support_xy_distance.default_value === definition.settings.support_z_distance.default_value) {
-            definition.settings.support_xy_distance.default_value = 0.875;
+            settings.support_xy_distance.default_value = 0.875; // reset xy
         }
         return settings;
     }

@@ -23,7 +23,7 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        selectedModelIDArray: PropTypes.array,
+        selectedModelArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -159,11 +159,11 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelIDArray, renderingTimestamp, modelGroup } = nextProps;
+        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
-        if (selectedModelIDArray !== this.props.selectedModelIDArray) {
+        if (selectedModelArray !== this.props.selectedModelArray) {
             // selectedModelIDArray.forEach((modelID) => {
             //     const model = modelGroup.models.find(d => d.modelID === modelID);
             //     modelGroup.selectedGroup.add(model.meshObject);
@@ -225,11 +225,11 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, selectedModelIDArray, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+        const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
 
         // const actions = this.actions;
 
-        const isModelSelected = (selectedModelIDArray.length > 0);
+        const isModelSelected = (selectedModelArray.length > 0);
         const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
         const isModelDisplayed = (displayedType === 'model');
         const notice = this.getNotice();
@@ -384,7 +384,7 @@ const mapStateToProps = (state) => {
         stage,
         size,
         allModel: modelGroup.models,
-        selectedModelIDArray: modelGroup.selectedModelIDArray,
+        selectedModelArray: modelGroup.selectedModelArray,
         modelGroup,
         hasModel,
         gcodeLineGroup,

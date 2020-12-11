@@ -356,8 +356,10 @@ class Controls extends EventEmitter {
      */
     onClick = (event, isRightClick = false) => {
         // todo, to fix workspace not rotate
-        if (!this.selectedGroup || this.state === STATE.SUPPORT) {
-            this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+        if (!this.selectedGroup) {
+            return;
+        }
+        if (this.state === STATE.SUPPORT) {
             this.supportControl.onMouseUp();
             return;
         }

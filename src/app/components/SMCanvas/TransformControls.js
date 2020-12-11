@@ -437,7 +437,7 @@ class TransformControls extends Object3D {
             // camera
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
-
+            const multiObjectPosition = this.object.position;
             const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
             const multiObjectWidth = new Vector3();
@@ -486,7 +486,6 @@ class TransformControls extends Object3D {
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
                 this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
             });
-            const multiObjectPosition = new Vector3().addVectors(minObjectBoundingBox, maxObjectBoundingBox).multiplyScalar(0.5);
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
             // parent
