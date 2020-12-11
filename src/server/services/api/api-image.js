@@ -24,7 +24,6 @@ export const set = (req, res) => {
     const files = req.files;
     const { isRotate } = req.body;
     let originalName, uploadName, uploadPath, originalPath;
-    console.log('files', files);
     // if 'files' does not exist, the model in the case library is being loaded
     if (files) {
         const file = files.image;
@@ -33,7 +32,6 @@ export const set = (req, res) => {
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         originalPath = file.path;
     } else {
-        console.log('2');
         const { name, casePath } = req.body;
         originalName = path.basename(name);
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
@@ -49,7 +47,6 @@ export const set = (req, res) => {
                     next();
                 });
             } else {
-                console.log('2');
                 fs.copyFile(originalPath, uploadPath, () => {
                     next();
                 });
