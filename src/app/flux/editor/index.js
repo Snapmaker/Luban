@@ -13,7 +13,7 @@ import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT } from '../../constants'
 
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
-import { round } from '../../../shared/lib/utils';
+import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
 
 const getCount = (() => {
@@ -215,13 +215,6 @@ export const actions = {
             ...defaultTransformation,
             ...transformation
         };
-        // make caseConfigs's width as really width
-        if (transformation.width) {
-            width = transformation.width;
-        }
-        if (transformation.height) {
-            height = transformation.height;
-        }
 
         const modelID = getCount();
         const options = {
@@ -988,18 +981,20 @@ export const actions = {
 
         if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
             const { width, height } = taskResult;
-            const modelOptions = {
-                sourceWidth: width * DEFAULT_SCALE,
-                sourceHeight: height * DEFAULT_SCALE,
-                width: width,
-                height: height,
-                transformation: {
-                    width: Math.abs(width * model.transformation.scaleX),
-                    height: Math.abs(height * model.transformation.scaleY)
-                }
-            };
-            model.updateAndRefresh(modelOptions);
-            SVGActions.resetSelection();
+            if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
+                const modelOptions = {
+                    sourceWidth: width * DEFAULT_SCALE,
+                    sourceHeight: height * DEFAULT_SCALE,
+                    width: width,
+                    height: height,
+                    transformation: {
+                        width: Math.abs(width * model.transformation.scaleX),
+                        height: Math.abs(height * model.transformation.scaleY)
+                    }
+                };
+                model.updateAndRefresh(modelOptions);
+                SVGActions.resetSelection();
+            }
         }
 
         // modelGroup.updateSelectedModelProcessImage(processImageName);
@@ -1074,7 +1069,7 @@ export const actions = {
         const { modelGroup, toolPathModelGroup, materials, toolParams } = getState()[headType];
 
         for (const model of modelGroup.getModels()) {
-            if (model.hideFlag) continue;
+            if (!model.visible) continue;
             const modelTaskInfo = model.getTaskInfo();
             const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
             if (toolPathModelTaskInfo) {

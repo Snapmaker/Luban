@@ -3,11 +3,11 @@ import isNumber from 'lodash/isNumber';
 import { NS } from './lib/namespaces';
 import { getRotationAngle, getScale } from './element-transform';
 
-import { DEFAULT_FILL_COLOR } from '../../constants/svg';
 // eslint-disable-next-line no-unused-vars
 import PathTagParser from '../../../shared/lib/SVGParser/PathTagParser';
 import AttributesParser from '../../../shared/lib/SVGParser/AttributesParser';
 import { isZero } from '../../../shared/lib/utils';
+import { DEFAULT_FILL_COLOR } from './constants';
 
 function toXml(str) {
     // &apos; is ok in XML, but not HTML
