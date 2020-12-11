@@ -6,7 +6,6 @@ import Model from './Model';
 import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
-import SupportHelper from '../lib/support-helper';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -33,11 +32,6 @@ class ModelGroup extends EventEmitter {
 
         this.candidatePoints = null;
         this._bbox = null;
-
-        this.defaultSupportSize = {
-            x: 5,
-            y: 5
-        };
     }
 
     setMaterials(materials) {
@@ -1010,7 +1004,7 @@ class ModelGroup extends EventEmitter {
         if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].supportTag) {
             const model = this.selectedModelArray[0];
             const revert = ThreeUtils.removeObjectParent(model.meshObject);
-            SupportHelper.generateSupportGeometry(model);
+            model.generateSupportGeometry();
             revert();
         }
 
@@ -1034,12 +1028,6 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup.shouldUpdateBoundingbox = true;
 
         // removeSelectedObjectParentMatrix makes object matrixWorld exception
-        // run index after process done
-        selectedModelArray.forEach((selected) => {
-            if (selected.sourceType === '3d' && selected.supportTag !== 'support') {
-                // SupportHelper.indexModelAsync(selected);
-            }
-        });
         this.prepareSelectedGroup();
         if (selectedModelArray.length === 0) {
             return null;
@@ -1305,9 +1293,6 @@ class ModelGroup extends EventEmitter {
             model.meshObject.position.x = point.x;
             model.meshObject.position.y = point.y;
         }
-        if (model.sourceType === '3d') {
-            SupportHelper.indexModelAsync(model, () => this.modelChanged());
-        }
 
         model.computeBoundingBox();
 
@@ -1332,7 +1317,7 @@ class ModelGroup extends EventEmitter {
         return !!this.models.find(i => i.supportTag === true);
     }
 
-    addSupportOnSelectedModel() {
+    addSupportOnSelectedModel(defaultSupportSize) {
         if (this.selectedModelArray.length !== 1) {
             return null;
         }
@@ -1349,7 +1334,7 @@ class ModelGroup extends EventEmitter {
         }, this);
 
         model.supportTag = true;
-        model.supportSize = { ...this.defaultSupportSize };
+        model.supportSize = { ...defaultSupportSize };
         model.target = target;
         model.modelName = this._createNewModelName({ baseName: `${target.modelName}-support` });
         model.originalName = `supporter_${(Math.random() * 1000).toFixed(0)}`;
@@ -1373,7 +1358,7 @@ class ModelGroup extends EventEmitter {
         // todo, use this to refresh obj list
         this.models = [...this.models];
         this.object.add(model.meshObject);
-        SupportHelper.generateSupportGeometry(model);
+        model.generateSupportGeometry();
 
         // this.selectModelById(model.modelID);
 
@@ -1382,6 +1367,15 @@ class ModelGroup extends EventEmitter {
         // refresh view
         this.modelChanged();
         return model;
+    }
+
+    saveSupportModel(model) {
+        model.generateSupportGeometry();
+        if (model.isInitSupport) {
+            this.removeModel(model);
+        } else {
+            ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+        }
     }
 
     modelChanged() {

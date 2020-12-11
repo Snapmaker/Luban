@@ -29,6 +29,7 @@ class VisualizerModelTransformation extends PureComponent {
             scaleY: PropTypes.number,
             scaleZ: PropTypes.number
         }).isRequired,
+        supportActions: PropTypes.object,
         defaultSupportSize: PropTypes.shape({
             x: PropTypes.number,
             y: PropTypes.number
@@ -36,12 +37,12 @@ class VisualizerModelTransformation extends PureComponent {
         isSupporting: PropTypes.bool.isRequired,
         modelSize: PropTypes.object.isRequired,
         // transformation: PropTypes.object,
-        getControls: PropTypes.func.isRequired,
-        clearAllManualSupport: PropTypes.func.isRequired,
+        // getControls: PropTypes.func.isRequired,
+        // clearAllManualSupport: PropTypes.func.isRequired,
         updateBoundingBox: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
-        setDefaultSupportSize: PropTypes.func.isRequired,
+        // setDefaultSupportSize: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
     };
 
@@ -124,29 +125,29 @@ class VisualizerModelTransformation extends PureComponent {
             this.props.onModelAfterTransform();
             this.props.updateBoundingBox();
         },
-        setDefaultSupportSize: (size) => {
-            size = { ...this.props.defaultSupportSize, ...size };
-            this.props.setDefaultSupportSize(size);
-        },
+        // setDefaultSupportSize: (size) => {
+        //     // size = { ...this.props.defaultSupportSize, ...size };
+        //     this.props.supportActions.setDefaultSize(size);
+        // },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
-        },
-        startSupportMode: () => {
-            this.props.getControls().startSupportMode();
-        },
-        stopSupportMode: () => {
-            this.props.getControls().stopSupportMode();
-        },
-        clearAllManualSupport: () => {
-            this.props.clearAllManualSupport();
         }
+        // startSupportMode: () => {
+        //     this.props.getControls().startSupportMode();
+        // },
+        // stopSupportMode: () => {
+        //     // this.props.getControls().stopSupportMode();
+        // },
+        // clearAllManualSupport: () => {
+        //     this.props.clearAllManualSupport();
+        // }
 
 
     };
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, modelSize } = this.props;
+        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, modelSize, supportActions } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -420,7 +421,6 @@ class VisualizerModelTransformation extends PureComponent {
                                     min={1}
                                     value={modelSize.y}
                                     onChange={(value) => {
-                                        console.log(value, modelSize.y);
                                         actions.onModelTransform({ 'scaleY': value / modelSize.y });
                                         actions.onModelAfterTransform();
                                     }}
@@ -594,7 +594,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     max={size.y / 2}
                                     value={defaultSupportSize.x}
                                     onChange={(value) => {
-                                        actions.setDefaultSupportSize({ x: value });
+                                        supportActions.setDefaultSupportSize({ x: value });
                                     }}
                                 />
                                 <span className={classNames(styles.suffix)}>X</span>
@@ -608,7 +608,7 @@ class VisualizerModelTransformation extends PureComponent {
                                     max={size.y / 2}
                                     value={defaultSupportSize.y}
                                     onChange={(value) => {
-                                        actions.setDefaultSupportSize({ y: value });
+                                        supportActions.setDefaultSupportSize({ y: value });
                                     }}
                                 />
                                 <span className={classNames(styles.suffix)}>Y</span>
@@ -621,7 +621,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 className={styles['reset-button']}
                                 style={{ width: '125px' }}
                                 disabled={isSupporting}
-                                onClick={actions.startSupportMode}
+                                onClick={supportActions.startSupportMode}
                             >
                                 <span>{i18n._('Add Support')}</span>
                             </Anchor>
@@ -629,7 +629,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 componentClass="button"
                                 className={styles['reset-button']}
                                 style={{ width: '128px' }}
-                                onClick={actions.stopSupportMode}
+                                onClick={supportActions.stopSupportMode}
                             >
                                 <span>{i18n._('Done')}</span>
                             </Anchor>
@@ -643,7 +643,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 componentClass="button"
                                 className={styles['reset-button']}
                                 style={{ width: '125px' }}
-                                onClick={actions.clearAllManualSupport}
+                                onClick={supportActions.clearAllManualSupport}
                             >
                                 <span>{i18n._('Clear All Support')}</span>
                             </Anchor>
@@ -680,7 +680,7 @@ const mapStateToProps = (state) => {
         size: machine.size,
         selectedModelArray: modelGroup.selectedModelArray,
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
-        defaultSupportSize: modelGroup.defaultSupportSize,
+        // defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
         modelSize,
         transformMode
@@ -690,9 +690,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
-    setDefaultSupportSize: (size) => dispatch(printingActions.setDefaultSupportSize(size)),
-    setTransformMode: (value) => dispatch(printingActions.setTransformMode(value))
+    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation))
+    // setDefaultSupportSize: (size) => dispatch(printingActions.setDefaultSupportSize(size)),
 });
 
 

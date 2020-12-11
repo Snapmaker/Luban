@@ -21,6 +21,13 @@ const commandKeys = [
         preventDefault: true
     },
     {
+        keys: ['esc'],
+        cmd: 'ESC',
+        payload: {
+        },
+        preventDefault: true
+    },
+    {
         keys: ['mod+a'],
         cmd: 'SELECTALL',
         payload: {

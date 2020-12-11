@@ -34,6 +34,7 @@ class Canvas extends Component {
         cameraUp: PropTypes.object,
         scale: PropTypes.number,
         target: PropTypes.object,
+        supportActions: PropTypes.object,
 
         // callback
         onSelectModels: PropTypes.func,
@@ -203,10 +204,8 @@ class Canvas extends Component {
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
-        const removeModel = this.modelGroup.removeModel && this.modelGroup.removeModel.bind(this.modelGroup);
-        const addSupportOnSelectedModel = this.modelGroup.addSupportOnSelectedModel && this.modelGroup.addSupportOnSelectedModel.bind(this.modelGroup);
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
-            removeModel, addSupportOnSelectedModel);
+            this.props.supportActions);
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
