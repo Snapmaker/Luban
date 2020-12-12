@@ -543,7 +543,7 @@ DxfParser.prototype._parse = function _parse(dxfString) {
 
                 let entity;
                 const handler = self._entityHandlers[curr.value];
-                if (handler !== null) {
+                if (handler !== null && handler !== undefined) {
                     entity = handler.parseEntity(scanner, curr);
                     curr = scanner.lastReadGroup;
                 } else {
