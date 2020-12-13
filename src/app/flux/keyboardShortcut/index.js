@@ -24,6 +24,21 @@ export const actions = {
                     displayedType === 'model' && (dispatch(printingActions.removeSelectedModel()));
                 }
             },
+            'ESC': () => {
+                const from = window.location.hash.split('/')[1];
+
+                if (from === '3dp') {
+                    const { modelGroup } = getState().printing;
+                    modelGroup.unselectAllModels();
+                    dispatch(printingActions.render());
+                }
+                // TODO: canvans cannot auto refresh by unselect
+                // if (['laser', 'cnc'].includes(from)) {
+                //     const { modelGroup } = getState()[from];
+                //     modelGroup.unselectAllModels();
+                //     dispatch(editorActions.render());
+                // }
+            },
             'DUPLICATE': () => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {

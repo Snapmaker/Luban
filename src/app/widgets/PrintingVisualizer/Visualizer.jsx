@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
 
+
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
 import ProgressBar from '../../components/ProgressBar';
@@ -40,9 +41,14 @@ class Visualizer extends PureComponent {
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
+        setTransformMode: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
+    state = {
+        isSupporting: false,
+        defaultSupportSize: { x: 5, y: 5 }
+    };
 
     printableArea = null;
 
@@ -119,18 +125,70 @@ class Visualizer extends PureComponent {
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
         },
+        setTransformMode: (value) => {
+            this.props.setTransformMode(value);
+            this.canvas.current.setTransformMode(value);
+        }
+        // startSupportMode: () => {
+        //     this.canvas.current.controls.startSupportMode();
+        // },
+        // clearSelectedSupport: () => {
+        //     const { modelGroup } = this.props;
+        //     const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
+        //     if (isSupportSelected) {
+        //         modelGroup.removeSelectedModel();
+        //     }
+        // },
+        // clearAllManualSupport: () => {
+        //     this.props.modelGroup.removeAllManualSupport();
+        // }
+    };
+
+    // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
+    supportActions = {
+        isSupporting: () => {
+            return this.state.isSupporting;
+        },
         startSupportMode: () => {
+            this.actions.setTransformMode('support');
+            this.setState({ isSupporting: true });
             this.canvas.current.controls.startSupportMode();
+            const model = this.props.selectedModelArray[0];
+            model.setVertexColors();
+            console.log('start support mode');
         },
-        clearSelectedSupport: () => {
+        stopSupportMode: () => {
+            console.trace();
+            this.setState({ isSupporting: false });
+            this.supportActions.saveSupport();
+            this.canvas.current.controls.stopSupportMode();
+            const model = this.props.selectedModelArray[0];
+            model && model.removeVertexColors();
+            console.log('stop support mode');
+        },
+        moveSupport: (position) => {
             const { modelGroup } = this.props;
-            const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
-            if (isSupportSelected) {
-                modelGroup.removeSelectedModel();
+            if (!this._model) {
+                this._model = modelGroup.addSupportOnSelectedModel(this.state.defaultSupportSize);
             }
+            this._model.setSupportPosition(position);
+
+            console.log('support model moved');
         },
-        clearAllManualSupport: () => {
-            this.props.modelGroup.removeAllManualSupport();
+        saveSupport: () => {
+            if (this._model) {
+                const { modelGroup } = this.props;
+                modelGroup.saveSupportModel(this._model);
+                this._model = null;
+            }
+
+            console.log('support model done');
+        },
+        setDefaultSupportSize: (size) => {
+            let defaultSupportSize = this.state.defaultSupportSize;
+            defaultSupportSize = { ...defaultSupportSize, ...size };
+            this.setState({ defaultSupportSize });
+            console.log('set default support size');
         }
     };
 
@@ -162,6 +220,9 @@ class Visualizer extends PureComponent {
         const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
+            if (transformMode !== 'support') {
+                this.supportActions.stopSupportMode();
+            }
         }
         if (selectedModelArray !== this.props.selectedModelArray) {
             // selectedModelIDArray.forEach((modelID) => {
@@ -170,6 +231,8 @@ class Visualizer extends PureComponent {
             // });
             this.canvas.current.controls.updateBoundingBox();
             this.canvas.current.controls.attach(modelGroup.selectedGroup);
+
+            this.supportActions.stopSupportMode();
         }
 
         if (!isEqual(size, this.props.size)) {
@@ -184,6 +247,7 @@ class Visualizer extends PureComponent {
             // Re-position model group
             gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
             this.canvas.current.setCamera(new Vector3(0, -Math.max(size.x, size.y, size.z) * 2, size.z / 2), new Vector3(0, 0, size.z / 2));
+            this.supportActions.stopSupportMode();
         }
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
@@ -233,10 +297,10 @@ class Visualizer extends PureComponent {
         const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
         const isModelDisplayed = (displayedType === 'model');
         const notice = this.getNotice();
-        let isSupporting = false;
-        if (this.canvas.current && this.canvas.current.controls.state === 4) {
-            isSupporting = true;
-        }
+        // let isSupporting = false;
+        // if (this.canvas.current && this.canvas.current.controls.state === 4) {
+        //     isSupporting = true;
+        // }
         return (
             <div
                 className={styles.visualizer}
@@ -249,9 +313,11 @@ class Visualizer extends PureComponent {
                 <div className={styles['visualizer-model-transformation']}>
                     <VisualizerModelTransformation
                         updateBoundingBox={this.actions.updateBoundingBox}
-                        getControls={() => this.canvas.current && this.canvas.current.controls}
-                        isSupporting={isSupporting}
-                        clearAllManualSupport={this.actions.clearAllManualSupport}
+                        setTransformMode={this.actions.setTransformMode}
+                        supportActions={this.supportActions}
+                        defaultSupportSize={this.state.defaultSupportSize}
+                        isSupporting={this.state.isSupporting}
+
                     />
                 </div>
 
@@ -281,6 +347,7 @@ class Visualizer extends PureComponent {
                         cameraInitialTarget={new Vector3(0, 0, size.z / 2)}
                         cameraUp={new Vector3(0, 0, 1)}
                         gcodeLineGroup={gcodeLineGroup}
+                        supportActions={this.supportActions}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
@@ -336,19 +403,19 @@ class Visualizer extends PureComponent {
                                 type: 'item',
                                 label: i18n._('Add Manual Support'),
                                 disabled: !isModelSelected || isSupportSelected,
-                                onClick: this.actions.startSupportMode
+                                onClick: this.supportActions.startSupportMode
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Support'),
                                 disabled: !isSupportSelected,
-                                onClick: this.actions.clearSelectedSupport
+                                onClick: this.supportActions.clearSelectedSupport
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Clear All Manual Support'),
                                 disabled: false,
-                                onClick: this.actions.clearAllManualSupport
+                                onClick: this.supportActions.clearAllManualSupport
                             },
                             {
                                 type: 'separator'
@@ -405,6 +472,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
+    setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     addSupport: () => dispatch(printingActions.addSupport())
 });
 

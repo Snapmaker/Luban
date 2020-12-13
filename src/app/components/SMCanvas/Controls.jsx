@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import EventEmitter from 'events';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
-import SupportControls from './SupportControls';
 // const EPSILON = 0.000001;
 import { SELECTEVENT } from '../../constants';
 
@@ -90,10 +89,12 @@ class Controls extends EventEmitter {
 
     ray = new THREE.Raycaster();
 
+    horizontalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
-    constructor(sourceType, camera, group, domElement, onScale, onPan, removeModel, addSupportOnSelectedModel) {
+    constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions) {
         super();
 
         this.sourceType = sourceType;
@@ -104,7 +105,7 @@ class Controls extends EventEmitter {
         this.onPan = onPan;
 
         this.initTransformControls();
-        this.initSupportControls(removeModel, addSupportOnSelectedModel);
+        this.supportActions = supportActions;
 
         this.bindEventListeners();
     }
@@ -122,13 +123,6 @@ class Controls extends EventEmitter {
         this.transformControl.mode = 'translate';
 
         this.group.add(this.transformControl);
-    }
-
-    initSupportControls(removeModel, addSupportOnSelectedModel) {
-        this.supportControl = new SupportControls(this.camera, removeModel, addSupportOnSelectedModel);
-        this.supportControl.addEventListener('update', () => {
-            this.emit(EVENTS.UPDATE);
-        });
     }
 
     setTransformMode(mode) {
@@ -278,7 +272,11 @@ class Controls extends EventEmitter {
         event.preventDefault();
         // model move with mouse no matter mousedown
         if (this.state === STATE.SUPPORT) {
-            this.supportControl.onMouseHover(this.getMouseCoord(event));
+            const coord = this.getMouseCoord(event);
+            this.ray.setFromCamera(coord, this.camera);
+            const mousePosition = new THREE.Vector3();
+            this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
+            this.supportActions.moveSupport(mousePosition);
             this.emit(EVENTS.TRANSFORM_OBJECT);
         }
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
@@ -320,7 +318,7 @@ class Controls extends EventEmitter {
                     if (this.prevState === STATE.SUPPORT) {
                         // stop support mode on right click
                         this.prevState = null;
-                        this.stopSupportMode();
+                        this.supportActions.stopSupportMode();
                     } else {
                         // check if any model selected
                         this.onClick(event, true);
@@ -360,7 +358,7 @@ class Controls extends EventEmitter {
             return;
         }
         if (this.state === STATE.SUPPORT) {
-            this.supportControl.onMouseUp();
+            this.supportActions.saveSupport();
             return;
         }
         const mousePosition = this.getMouseCoord(event);
@@ -515,14 +513,10 @@ class Controls extends EventEmitter {
 
     startSupportMode() {
         this.state = STATE.SUPPORT;
-        this.transformControl.mode = null;
-        this.supportControl.start();
     }
 
     stopSupportMode() {
-        this.transformControl.mode = 'translate';
         this.state = STATE.NONE;
-        this.supportControl.stop();
     }
 
     updateCamera() {
