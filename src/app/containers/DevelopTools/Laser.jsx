@@ -24,14 +24,14 @@ class CNC extends PureComponent {
     render() {
         const { laserState } = this.props;
         const { onchangeLaserPrecent, onchangeFocusHeight, onchangeLaserState } = this.props;
-        const { laserPercent, focusHeight, txtFocusX, txtFocusY, txtFocusZ, txtMovementX, txtMovementY, txtMovementZ, relativeMode } = laserState;
+        const { laserPercent, focusHeight, txtFocusX, txtFocusY, txtFocusZ, txtMovementX, txtMovementY, txtMovementZ } = laserState;
         return (
             <div>
                 <div>
                     <p>{i18n._('Laser')}</p>
                     <ul style={{ listStyle: 'none' }}>
                         <li>
-                            <p className={styles['title-row']}>{i18n._('Current Power')}:</p>
+                            <p className={styles['title-row']}>Power</p>
                             <p className={styles['title-row']}>{laserPercent}%</p>
                         </li>
                         <li>
@@ -71,7 +71,7 @@ class CNC extends PureComponent {
                         </li>
                         <li>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('draw calibration')}>
-                                {i18n._('Draw Bound')}
+                                Draw Bound
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('draw ruler')}>
                                 {i18n._('Draw Ruler')}
@@ -116,12 +116,6 @@ class CNC extends PureComponent {
                                 value={txtMovementZ}
                                 onChange={(value) => { onchangeLaserState({ txtMovementZ: value }); }}
                             />
-                            <button className={styles['btn-func']} type="button" onClick={() => { onchangeLaserState({ relativeMode: !relativeMode }); }}>
-                                {relativeMode ? i18n._('Relative coordinates') : i18n._('Absolute coordinates')}
-                            </button>
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('laser move require', { laserState })}>
-                                {i18n._('Move Require')}
-                            </button>
                         </li>
                     </ul>
                 </div>

@@ -296,11 +296,6 @@ class WebcamWidget extends PureComponent {
                                 <Space width="4" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="remove">
-                                <i className="fa fa-fw fa-times" />
-                                <Space width="4" />
-                                {i18n._('Remove Widget')}
-                            </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>
                 </Widget.Header>

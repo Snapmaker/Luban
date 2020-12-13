@@ -96,8 +96,7 @@ const DEFAULT_STATE = {
             dataSource: PROTOCOL_TEXT
         },
         gcode: {
-            minimized: false,
-            needRemove: false
+            minimized: false
         },
         macro: {
             minimized: false,

@@ -80,7 +80,7 @@ class GcodeConfigRasterBW extends PureComponent {
                                         value: 'Diagonal2',
                                         label: i18n._('Diagonal2')
                                     }]}
-                                    placeholder={i18n._('Choose an algorithm')}
+                                    placeholder=""
                                     searchable={false}
                                     value={direction}
                                     onChange={this.actions.onChangeDirection}

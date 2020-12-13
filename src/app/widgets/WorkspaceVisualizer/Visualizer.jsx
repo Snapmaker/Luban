@@ -648,11 +648,11 @@ class Visualizer extends Component {
             case WORKSPACE_STAGE.EMPTY:
                 return '';
             case WORKSPACE_STAGE.LOADING_GCODE:
-                return i18n._('Loading Gcode...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+                return i18n._('Loading G-code...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case WORKSPACE_STAGE.LOAD_GCODE_SUCCEED:
-                return i18n._('Loaded Gcode successfully.');
+                return i18n._('Loaded G-code successfully.');
             case WORKSPACE_STAGE.LOAD_GCODE_FAILED:
-                return i18n._('Failed to load Gcode.');
+                return i18n._('Failed to load G-code.');
             default:
                 return '';
         }

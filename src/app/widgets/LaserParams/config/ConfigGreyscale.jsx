@@ -191,7 +191,7 @@ class ConfigGreyscale extends PureComponent {
                                             value: 'SierraLite',
                                             label: 'Sierra Lite'
                                         }]}
-                                        placeholder={i18n._('Choose algorithms')}
+                                        placeholder=""
                                         searchable={false}
                                         value={algorithm}
                                         onChange={(value) => {

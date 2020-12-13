@@ -3,8 +3,6 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
-import confirm from '../../lib/confirm';
-import i18n from '../../lib/i18n';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
 
@@ -17,28 +15,9 @@ class PrimaryWidgets extends PureComponent {
         primaryWidgets: PropTypes.array.isRequired,
 
         toggleToDefault: PropTypes.func.isRequired,
-        onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired,
         updateTabContainer: PropTypes.func.isRequired
-    };
-
-    removeWidget = (widgetId) => () => {
-        confirm({
-            title: i18n._('Remove Widget'),
-            body: i18n._('Are you sure you want to remove this widget?')
-        }).then(() => {
-            const primaryWidgets = _.slice(this.props.primaryWidgets);
-            _.remove(primaryWidgets, (n) => (n === widgetId));
-            this.onChangeWidgetOrder(primaryWidgets);
-
-            if (widgetId.match(/\w+:[\w-]+/)) {
-                // Remove forked widget settings
-                this.onChangeWidgetOrder([]);
-            }
-
-            this.props.onRemoveWidget(widgetId);
-        });
     };
 
     onChangeWidgetOrder = (widgets) => {
@@ -56,7 +35,6 @@ class PrimaryWidgets extends PureComponent {
                 >
                     <Widget
                         widgetId={widgetId}
-                        onRemove={this.removeWidget(widgetId)}
                         onToggle={this.props.toggleToDefault(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',

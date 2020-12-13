@@ -294,7 +294,6 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
-            '/developTools',
             '/caselibrary',
             '/settings/general',
             '/settings/machine',
