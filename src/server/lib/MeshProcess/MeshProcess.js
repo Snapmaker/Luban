@@ -3,7 +3,7 @@ import fs from 'fs';
 import { Mesh } from './Mesh';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import {
-    CNC_IMAGE_NEGATIVE_RANGE_FIELD, FACE_FRONT
+    CNC_IMAGE_NEGATIVE_RANGE_FIELD, DIRECTION_FRONT, DIRECTION_RIGHT
 } from '../../constants';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
@@ -107,12 +107,14 @@ const writeSvg = (width, height, paths, outputFile, p = '') => {
 export class MeshProcess {
     constructor(modelInfo) {
         const { uploadName, config = {}, transformation = {}, materials = {} } = modelInfo;
+
         const { isRotate, diameter } = materials;
-        const { face = FACE_FRONT, minGray = 0, maxGray = 255,
+
+        const { direction = DIRECTION_FRONT, minGray = 0, maxGray = 255,
             sliceDensity = 5, extensionX = 0, extensionY = 0 } = config;
 
         this.uploadName = uploadName;
-        this.face = face;
+        this.direction = direction;
         this.minGray = minGray;
         this.maxGray = maxGray;
         this.extensionX = extensionX;
@@ -120,12 +122,18 @@ export class MeshProcess {
         this.sliceDensity = sliceDensity;
         this.transformation = transformation;
 
-        this.flip = isRotate ? 1 : 0;
+        this.flip = isRotate ? 3 : 0;
+        if (transformation.flip) {
+            this.flip = this.flip ^ transformation.flip;
+        }
 
         this.isRotate = isRotate;
         this.diameter = diameter;
 
         this.mesh = Mesh.loadSTLFile(`${DataStorage.tmpDir}/${uploadName}`);
+
+        this._setDirection();
+
         if (!this.mesh) {
             throw new Error(`MeshProcess load uploadName: ${uploadName} failed`);
         }
@@ -226,8 +234,6 @@ export class MeshProcess {
                     }
                 }
 
-                image.flip((this.flip & 2) > 0, (this.flip & 1) > 0);
-
                 image.write(`${DataStorage.tmpDir}/${this.outputFilename}`, () => {
                     resolve({
                         filename: this.outputFilename,
@@ -253,7 +259,6 @@ export class MeshProcess {
 
         const imageWidth = Math.ceil(width * this.sliceDensity);
         const imageHeight = Math.floor((height - initialLayerThickness) / layerThickness) + 1;
-        console.log('convertTo3AxisImage', r, r * Math.PI * 2, this.mesh.aabb.length, this.sliceDensity, width, imageWidth);
 
         const slicer = new Slicer(this.mesh, layerThickness, imageHeight, initialLayerThickness);
 
@@ -330,8 +335,6 @@ export class MeshProcess {
                     }
                 }
 
-                image.flip((this.flip & 2) > 0, (this.flip & 1) > 0);
-
                 image.write(`${DataStorage.tmpDir}/${this.outputFilename}`, () => {
                     resolve({
                         filename: this.outputFilename,
@@ -343,8 +346,20 @@ export class MeshProcess {
         });
     }
 
+    _setDirection() {
+        this.mesh.setDirection(this.direction);
+        // eslint-disable-next-line no-self-compare
+        if (this.flip & 1 === 1) {
+            this.mesh.addCoordinateSystem({ zSymbol: -1 });
+        }
+        if (this.flip & 2 === 1) {
+            this.mesh.addCoordinateSystem({ xSymbol: -1 });
+        }
+    }
+
     convertToImage() {
         if (this.isRotate) {
+            this.mesh.addDirection(DIRECTION_RIGHT);
             this.mesh.offset({
                 x: -(this.mesh.aabb.max.x + this.mesh.aabb.min.x) / 2,
                 y: -(this.mesh.aabb.max.y + this.mesh.aabb.min.y) / 2,
@@ -352,7 +367,7 @@ export class MeshProcess {
             });
             return this.convertTo4AxisImage();
         } else {
-            this.mesh.setFace(this.face);
+            this.mesh.addCoordinateSystem({ ySymbol: -1 });
             this.mesh.offset({
                 x: -this.mesh.aabb.min.x,
                 y: -this.mesh.aabb.min.y,

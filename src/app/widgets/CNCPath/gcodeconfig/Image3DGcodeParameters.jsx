@@ -9,7 +9,7 @@ import { NumberInput as Input } from '../../../components/Input';
 import Anchor from '../../../components/Anchor';
 import TipTrigger from '../../../components/TipTrigger';
 import { actions } from '../../../flux/editor';
-import { CNC_MESH_SLICE_MODE_MULTI_FACE, CNC_MESH_SLICE_MODE_ROTATION } from '../../../constants';
+import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION } from '../../../constants';
 
 class Image3DGcodeParameters extends PureComponent {
     static propTypes = {
@@ -18,6 +18,7 @@ class Image3DGcodeParameters extends PureComponent {
         targetDepth: PropTypes.number,
         materials: PropTypes.object,
         sliceMode: PropTypes.string,
+        smoothY: PropTypes.bool,
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
@@ -45,6 +46,9 @@ class Image3DGcodeParameters extends PureComponent {
         onChangeSliceMode: (option) => {
             this.props.updateSelectedModelGcodeConfig({ sliceMode: option.value });
         },
+        onChangeSmoothY: () => {
+            this.props.updateSelectedModelGcodeConfig({ smoothY: !this.props.smoothY });
+        },
         onChangeSafetyHeight: (safetyHeight) => {
             this.props.updateSelectedModelGcodeConfig({ safetyHeight });
         },
@@ -57,15 +61,15 @@ class Image3DGcodeParameters extends PureComponent {
     };
 
     render() {
-        const { size, disabled, materials, sliceMode, targetDepth, stepDown, safetyHeight, stopHeight, density } = this.props;
+        const { size, disabled, materials, sliceMode, smoothY, targetDepth, stepDown, safetyHeight, stopHeight, density } = this.props;
         const { isRotate, diameter } = materials;
 
         const sliceModeOptions = [{
             value: CNC_MESH_SLICE_MODE_ROTATION,
             label: CNC_MESH_SLICE_MODE_ROTATION
         }, {
-            value: CNC_MESH_SLICE_MODE_MULTI_FACE,
-            label: CNC_MESH_SLICE_MODE_MULTI_FACE
+            value: CNC_MESH_SLICE_MODE_LINKAGE,
+            label: CNC_MESH_SLICE_MODE_LINKAGE
         }
         ];
 
@@ -129,6 +133,18 @@ class Image3DGcodeParameters extends PureComponent {
                                         </div>
                                     </TipTrigger>
                                 </React.Fragment>
+                            )}
+                            {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Smooth Y')}</span>
+                                    <input
+                                        disabled={disabled}
+                                        type="checkbox"
+                                        className="sm-parameter-row__checkbox"
+                                        checked={smoothY}
+                                        onChange={this.actions.onChangeSmoothY}
+                                    />
+                                </div>
                             )}
 
                             <TipTrigger
@@ -221,11 +237,12 @@ const mapStateToProps = (state) => {
     const { toolPathModelGroup, materials } = state.cnc;
     const toolPathModel = toolPathModelGroup.getSelectedModel();
     const { gcodeConfig } = toolPathModel;
-    const { sliceMode, targetDepth, stepDown, safetyHeight, stopHeight, density } = gcodeConfig;
+    const { sliceMode, smoothY, targetDepth, stepDown, safetyHeight, stopHeight, density } = gcodeConfig;
     return {
         size: machine.size,
         materials,
         sliceMode,
+        smoothY,
         targetDepth,
         stepDown,
         safetyHeight,

@@ -2,7 +2,7 @@ import fs from 'fs';
 import { AABB3D } from './AABB3D';
 import { Vector3 } from '../../../shared/lib/math/Vector3';
 import { STLParse } from '../../../shared/lib/STLParse/STLParse';
-import { FACE_BACK, FACE_DOWN, FACE_FRONT, FACE_LEFT, FACE_RIGHT, FACE_UP } from '../../constants';
+import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
 
 const VERTEX_MELD_DISTANCE = 0.03;
@@ -24,12 +24,16 @@ const modifyCoordinateSystem = (p, propCoordinates, nextCoordinates) => {
 };
 
 const surfaceOptions = {
-    [FACE_FRONT]: { x: 'x', y: 'y', z: 'z', xSymbol: 1, ySymbol: -1, zSymbol: 1 },
-    [FACE_BACK]: { x: 'x', y: 'y', z: 'z', xSymbol: -1, ySymbol: 1, zSymbol: 1 },
-    [FACE_LEFT]: { x: 'y', y: 'x', z: 'z', xSymbol: -1, ySymbol: -1, zSymbol: 1 },
-    [FACE_RIGHT]: { x: 'y', y: 'x', z: 'z', xSymbol: 1, ySymbol: 1, zSymbol: 1 },
-    [FACE_UP]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: 1, zSymbol: 1 },
-    [FACE_DOWN]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: -1, zSymbol: -1 }
+    [DIRECTION_FRONT]: { x: 'x', y: 'y', z: 'z', xSymbol: 1, ySymbol: 1, zSymbol: 1 },
+    [DIRECTION_BACK]: { x: 'x', y: 'y', z: 'z', xSymbol: -1, ySymbol: -1, zSymbol: 1 },
+    [DIRECTION_LEFT]: { x: 'y', y: 'x', z: 'z', xSymbol: -1, ySymbol: 1, zSymbol: 1 },
+    [DIRECTION_RIGHT]: { x: 'y', y: 'x', z: 'z', xSymbol: 1, ySymbol: -1, zSymbol: 1 },
+    [DIRECTION_UP]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: -1, zSymbol: 1 },
+    [DIRECTION_DOWN]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: 1, zSymbol: -1 }
+};
+
+const isEqualCoordinateSystem = (c1, c2) => {
+    return c1.x === c2.x && c1.y === c2.y && c1.z === c2.z && c1.xSymbol === c2.xSymbol && c1.ySymbol === c2.ySymbol && c1.zSymbol === c2.zSymbol;
 };
 
 export class Mesh {
@@ -195,8 +199,35 @@ export class Mesh {
         this.aabb.rotate(angle);
     }
 
-    setFace(face) {
-        this.setCoordinateSystem(surfaceOptions[face]);
+    addDirection(direction) {
+        this.addCoordinateSystem(surfaceOptions[direction]);
+    }
+
+    setDirection(direction) {
+        this.setCoordinateSystem(surfaceOptions[direction]);
+    }
+
+    addCoordinateSystem(coordinates) {
+        const nCoordinates = {};
+        if (coordinates.x) {
+            nCoordinates[coordinates.x] = this.coordinates.x;
+        }
+        if (coordinates.y) {
+            nCoordinates[coordinates.y] = this.coordinates.y;
+        }
+        if (coordinates.z) {
+            nCoordinates[coordinates.z] = this.coordinates.z;
+        }
+        if (coordinates.xSymbol === -1) {
+            nCoordinates.xSymbol = -this.coordinates.xSymbol;
+        }
+        if (coordinates.ySymbol === -1) {
+            nCoordinates.ySymbol = -this.coordinates.ySymbol;
+        }
+        if (coordinates.zSymbol === -1) {
+            nCoordinates.zSymbol = -this.coordinates.zSymbol;
+        }
+        this.setCoordinateSystem(nCoordinates);
     }
 
     setCoordinateSystem(coordinates) {
@@ -204,6 +235,11 @@ export class Mesh {
             ...this.coordinates,
             ...coordinates
         };
+
+        if (isEqualCoordinateSystem(nCoordinate, this.coordinates)) {
+            return;
+        }
+
         for (const vertex of this.vertices) {
             modifyCoordinateSystem(vertex.p, this.coordinates, nCoordinate);
         }
