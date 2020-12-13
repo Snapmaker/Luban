@@ -463,7 +463,7 @@ class DeveloperPanel extends PureComponent {
                                     disabled={isScreenProtocol}
                                     onClick={this.actions.switchOff}
                                 >
-                                    {i18n._('Screen')}
+                                    Screen
                                 </button>
                             )}
                         </div>
@@ -478,7 +478,7 @@ class DeveloperPanel extends PureComponent {
                                     disabled={!canClick}
                                     onClick={this.actions.forceSwitch}
                                 >
-                                    {i18n._('Switch')}
+                                    Switch
                                 </button>
                             </div>
                             <div

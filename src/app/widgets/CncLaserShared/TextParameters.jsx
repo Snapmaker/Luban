@@ -153,10 +153,6 @@ Start a new line manually according to your needs.')}
                                     clearable={false}
                                     searchable={false}
                                     options={[
-                                        { label: i18n._('1.0'), value: 1 },
-                                        { label: i18n._('1.2'), value: 1.2 },
-                                        { label: i18n._('1.5'), value: 1.5 },
-                                        { label: i18n._('2.0'), value: 2 }
                                     ]}
                                     value={lineHeight}
                                     onChange={actions.onChangeLineHeight}

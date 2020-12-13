@@ -89,7 +89,7 @@ class Setting extends PureComponent {
                         <li>
                             <p className={styles['title-row']}>{i18n._('Size')}</p>
                             <p className={styles['title-row']}>{i18n._('Offset')}</p>
-                            <p className={styles['title-row']}>{i18n._('Direction')}</p>
+                            <p className={styles['title-row']}>Direction</p>
                             <p className={styles['title-row']}>{i18n._('Home Location')}</p>
                         </li>
                         <li>

@@ -47,7 +47,7 @@ class LightBar extends PureComponent {
                             checked={this.state.lightStatus}
                             onChange={this.actions.switchLightBar}
                         />
-                        {i18n._('Switch Light')}
+                        Switch Light
                         <br />
                     </li>
                     <li>

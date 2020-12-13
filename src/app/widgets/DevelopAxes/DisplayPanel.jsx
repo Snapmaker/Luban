@@ -40,8 +40,8 @@ class DisplayPanel extends PureComponent {
                     <thead>
                         <tr>
                             <th className="nowrap" title={i18n._('Axis')}>{i18n._('Axis')}</th>
-                            <th title={i18n._('Machine Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Machine Position')}</th>
-                            <th title={i18n._('Work Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Work Position')}</th>
+                            <th title={i18n._('Machine Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Machine Coordinates')}</th>
+                            <th title={i18n._('Work Coordinates')} style={{ textAlign: 'right' }}>{i18n._('Work Coordinates')}</th>
                             <th className="nowrap" title={i18n._('Action')}>{i18n._('Action')}</th>
                         </tr>
                     </thead>

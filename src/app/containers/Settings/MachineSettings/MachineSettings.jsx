@@ -226,7 +226,7 @@ class MachineSettings extends PureComponent {
                             clearable={false}
                             searchable={false}
                             disabled={isConnected}
-                            name={i18n._('- Please Select -')}
+                            name="select-machine"
                             options={machineSeriesOptions}
                             value={series}
                             onChange={this.actions.onChangeMachineSeries}
@@ -273,7 +273,7 @@ class MachineSettings extends PureComponent {
                         <Select
                             clearable={false}
                             searchable={false}
-                            name={i18n._('Door detection')}
+                            name={i18n._('Door Detection')}
                             options={doorDetectionOptions}
                             value={enclosureDoorDetection}
                             onChange={this.actions.onChangeEnclosureState}
@@ -305,15 +305,15 @@ class MachineSettings extends PureComponent {
                             options={[
                                 {
                                     value: 3000,
-                                    label: i18n._('3s')
+                                    label: '3s'
                                 },
                                 {
                                     value: 15000,
-                                    label: i18n._('15s')
+                                    label: '15s'
                                 },
                                 {
                                     value: 30000,
-                                    label: i18n._('30s')
+                                    label: '30s'
                                 }
                             ]}
                             value={connectionTimeout}

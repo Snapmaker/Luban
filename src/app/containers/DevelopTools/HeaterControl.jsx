@@ -81,7 +81,7 @@ class HeaterControl extends PureComponent {
                         </tr>
                         <tr>
                             <td style={{ padding: '0' }}>
-                                <p style={{ margin: '0', padding: '0' }}>{i18n._('Bed')}</p>
+                                <p style={{ margin: '0', padding: '0' }}>Bed</p>
                             </td>
                             <td style={{ width: '60px' }}>
                                 <div className="input-group input-group-sm" style={{ float: 'right' }}>

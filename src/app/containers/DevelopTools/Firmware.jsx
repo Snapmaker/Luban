@@ -176,7 +176,7 @@ class Firmware extends PureComponent {
                     <tbody>
                         <tr>
                             <td style={{ paddingLeft: '0px', width: '60%' }}>
-                                <p style={{ margin: '0' }}>{i18n._('Packet Type for Raw Update')}:</p>
+                                <p style={{ margin: '0' }}>Packet Type for Raw Update:</p>
                                 <Select
                                     clearable={false}
                                     options={[{
@@ -227,7 +227,7 @@ class Firmware extends PureComponent {
                         this.actions.updateOriginFile('start update origin file', { originFileUpdateType });
                     }}
                 >
-                    {i18n._('Raw Update')}
+                    Raw Update
                 </button>
                 <button
                     className={styles['btn-func']}

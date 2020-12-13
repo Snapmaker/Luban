@@ -88,25 +88,6 @@ const Sidebar = (props) => {
                             </Link>
                         </li>
                     )}
-                    <li
-                        className={classNames(
-                            'text-center',
-                            { [styles.active]: pathname.indexOf('/developTools') === 0 }
-                        )}
-                        style={{
-                            display: 'none'
-                        }}
-                    >
-                        <Link to="/developTools" title={i18n._('DevelopTools')} draggable="false">
-                            <i
-                                className={classNames(
-                                    styles.icon,
-                                    styles.iconInvert,
-                                    styles['icon-3dp']
-                                )}
-                            />
-                        </Link>
-                    </li>
                 </ul>
                 <ul className={styles.navFixedBottom}>
                     <li

@@ -73,8 +73,6 @@ class Workspace extends PureComponent {
     };
 
     widgetEventHandler = {
-        onRemoveWidget: () => {
-        },
         onDragStart: () => {
             this.setState({ isDraggingWidget: true });
         },
@@ -271,7 +269,6 @@ class Workspace extends PureComponent {
                                 defaultWidgets={defaultWidgets}
                                 primaryWidgets={primaryWidgets}
                                 toggleToDefault={this.actions.toggleToDefault}
-                                onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                 onDragStart={this.widgetEventHandler.onDragStart}
                                 onDragEnd={this.widgetEventHandler.onDragEnd}
                                 updateTabContainer={this.props.updateTabContainer}
@@ -344,7 +341,6 @@ class Workspace extends PureComponent {
                                 defaultWidgets={defaultWidgets}
                                 secondaryWidgets={secondaryWidgets}
                                 toggleToDefault={this.actions.toggleToDefault}
-                                onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                 onDragStart={this.widgetEventHandler.onDragStart}
                                 onDragEnd={this.widgetEventHandler.onDragEnd}
                                 updateTabContainer={this.props.updateTabContainer}
