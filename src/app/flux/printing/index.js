@@ -1142,6 +1142,7 @@ export const actions = {
         }));
     },
 
+
     displayGcode: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
         // modelGroup.visible = false;
@@ -1160,10 +1161,10 @@ export const actions = {
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     },
-    addSupport: () => (dispatch, getState) => {
+    saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.addSupportOnSelectedModel();
-        dispatch(actions.render());
+        modelGroup.saveSupportModel(model);
+        dispatch(actions.recordSnapshot());
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

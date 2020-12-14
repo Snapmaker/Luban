@@ -441,15 +441,20 @@ class ModelGroup extends EventEmitter {
     }
 
     undoRedo(models) {
+        const newModels = models.map(d => d.clone(this));
+
         this.unselectAllModels();
         for (const model of this.models) {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
-
             ThreeUtils.removeObjectParent(model.meshObject);
         }
         this.models.splice(0);
-        for (const item of models) {
-            const model = item.clone();
+        for (const model of newModels) {
+            if (model.supportTag) {
+                if (!model.target) continue;
+                model.target = newModels.find(i => i.originModelID === model.target.modelID);
+                if (!model.target) continue;
+            }
             model.meshObject.addEventListener('update', this.onModelUpdate);
             model.computeBoundingBox();
             this.models.push(model);

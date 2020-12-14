@@ -875,7 +875,7 @@ class Model {
         const bufferGeometry = this.meshObject.geometry;
         bufferGeometry.removeAttribute('color');
         this.setSelected(true);
-        this.modelGroup.modelChanged();
+        this.modelGroup && this.modelGroup.modelChanged();
     }
 
     setRelatedModels(relatedModels) {
