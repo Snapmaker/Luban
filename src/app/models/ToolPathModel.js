@@ -17,7 +17,7 @@ class ToolPathModel {
 
         this.modelID = modelID;
         this.mode = mode;
-
+        console.log('mode', mode);
         this.id = null;
 
         this.printOrder = 1;
@@ -40,6 +40,7 @@ class ToolPathModel {
 
 
     updateMode(mode, gcodeConfig) {
+        console.log('updateMode', mode);
         if (mode === this.mode) {
             return;
         }

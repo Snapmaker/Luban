@@ -10,6 +10,7 @@ import {
 } from '../actionType';
 import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
 import { PAGE_EDITOR, CNC_TOOL_SNAP_V_BIT_CONFIG } from '../../constants';
+import definitionManager from './DefinitionManager';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
@@ -61,6 +62,9 @@ const INITIAL_STATE = {
         toolAngle: CNC_TOOL_SNAP_V_BIT_CONFIG.angle, // tool angle (in degree, defaults to 30° for V-Bit)，
         toolShaftDiameter: CNC_TOOL_SNAP_V_BIT_CONFIG.shaftDiameter // tool angle (in degree, defaults to 30° for V-Bit)
     },
+    toolDefinitions: [],
+    activeToolDefinition: null,
+    showCncToolManager: false,
 
     // snapshot state
     undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
@@ -82,11 +86,18 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
-    init: () => (dispatch, getState) => {
+    init: () => async (dispatch, getState) => {
         const { modelGroup } = getState().cnc;
         modelGroup.setDataChangedCallback(() => {
             dispatch(editorActions.render('cnc'));
         });
+        await definitionManager.init();
+
+        dispatch(editorActions.updateState('cnc', {
+            toolDefinitions: definitionManager.toolDefinitions,
+            activeToolDefinition: definitionManager.activeToolDefinition
+        }));
+
         // TODO: not yet to clear old events before regist
         const controllerEvents = {
             'taskProgress:generateToolPath': (taskResult) => {
@@ -146,7 +157,64 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
+    duplicateToolCategoryDefinition: (activeToolCategory) => async (dispatch, getState) => {
+        const state = getState().cnc;
+        const newToolCategory = {
+            ...activeToolCategory
+        };
+        while (state.toolDefinitions.find(d => d.category === newToolCategory.category)) {
+            newToolCategory.category = `#${newToolCategory.category}`;
+        }
+        const createdDefinition = await definitionManager.createToolCategoryDefinition(newToolCategory);
+        dispatch(editorActions.updateState('cnc', {
+            toolDefinitions: [...state.toolDefinitions, createdDefinition]
+        }));
 
+        return createdDefinition;
+    },
+    duplicateToolListDefinition: (activeToolCategoryDefinition, activeToolListDefinition) => async (dispatch, getState) => {
+        const state = getState().cnc;
+        const newToolListDefinition = {
+            ...activeToolListDefinition
+        };
+        while (activeToolCategoryDefinition.toolList.find(d => d.toolName === newToolListDefinition.toolName)) {
+            newToolListDefinition.toolName = `#${newToolListDefinition.toolName}`;
+        }
+        const newToolDefinitions = state.toolDefinitions;
+        const createdDefinition = await definitionManager.createToolListDefinition(activeToolCategoryDefinition, newToolListDefinition);
+        const isReplacedDefinition = (d) => d.category === createdDefinition.category;
+        const index = newToolDefinitions.findIndex(isReplacedDefinition);
+        newToolDefinitions.splice(index, 1, createdDefinition);
+
+        dispatch(editorActions.updateState('cnc', {
+            toolDefinitions: [...newToolDefinitions]
+        }));
+        return newToolListDefinition.toolName;
+    },
+    removeToolCategoryDefinition: (activeToolCategory) => async (dispatch, getState) => {
+        const state = getState().cnc;
+        await definitionManager.removeToolCategoryDefinition(activeToolCategory);
+
+        dispatch(editorActions.updateState('cnc', {
+            toolDefinitions: state.toolDefinitions.filter(d => d.category !== activeToolCategory.category)
+        }));
+    },
+    removeToolListDefinition: (activeToolCategory, activeToolList) => async (dispatch, getState) => {
+        const state = getState().cnc;
+        const createdDefinition = await definitionManager.removeToolListDefinition(activeToolCategory, activeToolList);
+
+        const newToolDefinitions = state.toolDefinitions;
+        const isReplacedDefinition = (d) => d.category === createdDefinition.category;
+        const index = newToolDefinitions.findIndex(isReplacedDefinition);
+        newToolDefinitions.splice(index, 1, createdDefinition);
+        console.log('removeToolListDefinition', newToolDefinitions);
+        dispatch(editorActions.updateState('cnc', {
+            toolDefinitions: [...newToolDefinitions]
+        }));
+    },
+    updateShowCncToolManager: (showCncToolManager) => (dispatch) => {
+        dispatch(editorActions.updateState('cnc', { showCncToolManager }));
+    },
     changeToolParams: (toolParams) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,

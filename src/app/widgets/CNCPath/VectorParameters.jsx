@@ -3,11 +3,11 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import Slider from 'rc-slider';
+// import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { NumberInput as Input } from '../../components/Input';
+import { NumberInput as Input, TextInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import { actions } from '../../flux/editor';
@@ -26,19 +26,24 @@ class VectorParameters extends PureComponent {
         tabWidth: PropTypes.number,
         tabHeight: PropTypes.number,
         tabSpace: PropTypes.number,
-        fillDensity: PropTypes.number.isRequired,
+        methodType: PropTypes.string,
+        // fillDensity: PropTypes.number.isRequired,
 
         // action
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
-        expanded: true
+        methodExpanded: true,
+        heightExpanded: true
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+        onToggleMethodExpand: () => {
+            this.setState(state => ({ methodExpanded: !state.methodExpanded }));
+        },
+        onToggleHeightExpand: () => {
+            this.setState(state => ({ heightExpanded: !state.heightExpanded }));
         },
         // config
         onChangePathType: (options) => {
@@ -58,9 +63,6 @@ class VectorParameters extends PureComponent {
             if (-targetDepth > this.props.tabHeight) {
                 this.props.updateSelectedModelGcodeConfig({ stepDown: -targetDepth });
             }
-        },
-        onChangeStepDown: (stepDown) => {
-            this.props.updateSelectedModelGcodeConfig({ stepDown: stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
             this.props.updateSelectedModelGcodeConfig({ safetyHeight: safetyHeight });
@@ -91,27 +93,39 @@ class VectorParameters extends PureComponent {
     render() {
         const { size, disabled } = this.props;
         const {
-            pathType, targetDepth, stepDown, safetyHeight, stopHeight,
-            fillDensity,
-            enableTab, tabWidth, tabHeight, tabSpace
+            pathType, targetDepth, safetyHeight, stopHeight,
+            enableTab, tabWidth, tabHeight, tabSpace, methodType
         } = this.props;
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleMethodExpand}>
                     <span className="fa fa-image sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Path')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Method')}</span>
                     <span className={classNames(
                         'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        this.state.methodExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {this.state.expanded && (
+                {this.state.methodExpanded && (
                     <React.Fragment>
                         <TipTrigger
-                            title={i18n._('Carving Path')}
+                            title={i18n._('Method')}
+                            content={i18n._('Method')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                <TextInput
+                                    disabled
+                                    className="sm-parameter-row__input"
+                                    value={methodType}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('method')}
                             content={(
                                 <div>
                                     <p>{i18n._('Select a carving path:')}</p>
@@ -124,7 +138,7 @@ class VectorParameters extends PureComponent {
                             )}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Carving Path')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Path')}</span>
                                 <Select
                                     disabled={disabled}
                                     className="sm-parameter-row__select"
@@ -150,104 +164,6 @@ class VectorParameters extends PureComponent {
                                     value={pathType}
                                     onChange={this.actions.onChangePathType}
                                 />
-                            </div>
-                        </TipTrigger>
-                        {pathType === 'pocket' && (
-                            <TipTrigger
-                                title={i18n._('Fill Density')}
-                                content={i18n._('Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__slider-input"
-                                        value={fillDensity}
-                                        min={1}
-                                        max={20}
-                                        onChange={this.actions.onChangeFillDensity}
-                                    />
-                                    <Slider
-                                        disabled={disabled}
-                                        className="sm-parameter-row__slider"
-                                        value={fillDensity}
-                                        min={1}
-                                        max={20}
-                                        onChange={this.actions.onChangeFillDensity}
-                                    />
-                                </div>
-                            </TipTrigger>
-                        )}
-                        <TipTrigger
-                            title={i18n._('Target Depth')}
-                            content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    className="sm-parameter-row__input"
-                                    value={targetDepth}
-                                    min={0.01}
-                                    max={size.z}
-                                    step={0.1}
-                                    onChange={this.actions.onChangeTargetDepth}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm</span>
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Step Down')}
-                            content={i18n._('Enter the depth of each carving step.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    className="sm-parameter-row__input"
-                                    value={stepDown}
-                                    min={0.01}
-                                    max={targetDepth}
-                                    step={0.1}
-                                    onChange={this.actions.onChangeStepDown}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm</span>
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Jog Height')}
-                            content={i18n._('The distance between the tool and the material when it’s not carving.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    className="sm-parameter-row__input"
-                                    value={safetyHeight}
-                                    min={0.1}
-                                    max={size.z}
-                                    step={1}
-                                    onChange={this.actions.onChangeSafetyHeight}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm</span>
-                            </div>
-                        </TipTrigger>
-                        <TipTrigger
-                            title={i18n._('Stop Height')}
-                            content={i18n._('The distance between the tool and the material when the machine stops.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    className="sm-parameter-row__input"
-                                    value={stopHeight}
-                                    min={0.1}
-                                    max={size.z}
-                                    step={1}
-                                    onChange={this.actions.onChangeStopHeight}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
                         </TipTrigger>
                         {(pathType === 'path' || pathType === 'outline') && (
@@ -311,6 +227,75 @@ class VectorParameters extends PureComponent {
                                 </TipTrigger>
                             </OptionalDropdown>
                         )}
+                    </React.Fragment>
+                )}
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleHeightExpand}>
+                    <span className="fa fa-image sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('Height')}</span>
+                    <span className={classNames(
+                        'fa',
+                        this.state.heightExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {this.state.heightExpanded && (
+                    <React.Fragment>
+                        <TipTrigger
+                            title={i18n._('Target Depth')}
+                            content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={targetDepth}
+                                    min={0.01}
+                                    max={size.z}
+                                    step={0.1}
+                                    onChange={this.actions.onChangeTargetDepth}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Jog Height')}
+                            content={i18n._('The distance between the tool and the material when it’s not carving.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={safetyHeight}
+                                    min={0.1}
+                                    max={size.z}
+                                    step={1}
+                                    onChange={this.actions.onChangeSafetyHeight}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Stop Height')}
+                            content={i18n._('The distance between the tool and the material when the machine stops.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={stopHeight}
+                                    min={0.1}
+                                    max={size.z}
+                                    step={1}
+                                    onChange={this.actions.onChangeStopHeight}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
                     </React.Fragment>
                 )}
             </div>

@@ -6,7 +6,8 @@ import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants'
 import i18n from '../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import Transformation from '../CncLaserShared/Transformation';
-import GcodeParameters from '../CncLaserShared/GcodeParameters';
+// import GcodeParameters from '../CncLaserShared/GcodeParameters';
+import GcodeParametersForCnc from '../CncLaserShared/GcodeParametersForCnc';
 import VectorParameters from './VectorParameters';
 import Image3dParameters from './Image3dParameters';
 import ImageProcessMode from './ImageProcessMode';
@@ -99,8 +100,16 @@ class CNCPath extends PureComponent {
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
-
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
+        let methodType;
+        if (isImage3d) {
+            methodType = 'Carve';
+        } else if (isSvgVector || isTextVector) {
+            methodType = 'Contour';
+        } else if (isGreyscale) {
+            methodType = 'Carve';
+        }
+        console.log('sourceType', sourceType, mode, isGreyscale, methodType);
         return (
             <React.Fragment>
                 {isEditor && (
@@ -109,6 +118,23 @@ class CNCPath extends PureComponent {
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
 
+                    />
+                )}
+                {isProcess && (
+                    <GcodeParametersForCnc
+                        selectedModelArray={selectedModelArray}
+                        selectedModelVisible={selectedModelVisible}
+                        printOrder={printOrder}
+                        gcodeConfig={gcodeConfig}
+                        updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                        paramsDescs={
+                            {
+                                jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                            }
+                        }
                     />
                 )}
                 {selectedModelArray.length === 1 && (
@@ -141,37 +167,23 @@ class CNCPath extends PureComponent {
                         )}
                         {isProcess && (isSvgVector) && (
                             <VectorParameters
+                                methodType={methodType}
                                 disabled={!selectedModelVisible}
                             />
                         )}
                         {isProcess && isGreyscale && (
                             <ReliefGcodeParameters
+                                methodType={methodType}
                                 disabled={!selectedModelVisible}
                             />
                         )}
                         {isProcess && isImage3d && (
                             <Image3DGcodeParameters
+                                methodType={methodType}
                                 disabled={!selectedModelVisible}
                             />
                         )}
                     </div>
-                )}
-                {isProcess && (
-                    <GcodeParameters
-                        selectedModelArray={selectedModelArray}
-                        selectedModelVisible={selectedModelVisible}
-                        printOrder={printOrder}
-                        gcodeConfig={gcodeConfig}
-                        updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                        paramsDescs={
-                            {
-                                jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
-                            }
-                        }
-                    />
                 )}
             </React.Fragment>
         );
@@ -219,7 +231,6 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('cnc', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode)),
-
         modifyText: (element, options) => dispatch(editorActions.modifyText('cnc', element, options))
     };
 };

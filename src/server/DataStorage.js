@@ -93,8 +93,10 @@ class DataStorage {
 
      async initSlicer() {
          mkdirp.sync(this.configDir);
+         mkdirp.sync(`${this.configDir}/cncConfig`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
+         console.log('fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)', fs.existsSync(CURA_ENGINE_CONFIG_LOCAL));
          if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
              const files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
              for (const file of files) {
