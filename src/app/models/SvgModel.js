@@ -265,6 +265,9 @@ class SvgModel {
         const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
             .then(res => res.text());
         const canvas = document.createElement('canvas');
+        // set canvas size to get image of exactly same size
+        canvas.width = this.relatedModel.width;
+        canvas.height = this.relatedModel.height;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
         const v = await Canvg.fromString(ctx, content);
