@@ -119,10 +119,9 @@ class Settings extends PureComponent {
                 confirm({
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
-                }).then(() => {
-                    this.props.resetAllUserSettings();
+                }).then(this.props.resetAllUserSettings().then(() => {
                     window.location.reload();
-                });
+                }));
             }
         },
         // About

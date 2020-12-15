@@ -6,6 +6,17 @@ import { actions as projectActions } from '../project';
 
 export const actions = {
     resetAllUserSettings: () => async (dispatch) => {
+        // macros
+        try {
+            let res = await api.macros.fetch();
+            const { records: macros } = res.body;
+            for (const macro of macros) {
+                res = await api.macros.delete(macro.id);
+            }
+        } catch (err) {
+            //Ignore error
+        }
+
         // api.removeElectronData();
         dispatch(projectActions.cleanAllRecentFiles());
         // remove recovery modelState
