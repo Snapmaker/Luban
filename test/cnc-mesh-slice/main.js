@@ -44,13 +44,75 @@ const parseAsCNC = (toolPathObj) => {
 function process() {
     // const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: 'scad_chess_knight.stl', isRotate: true, diameter: 36, gcodeConfig: { density: 5, toolAngle: 20, jogSpeed: 600, workSpeed: 200 } });
     const d = new Date().getTime();
-    const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: '4thsnapmaker.stl',
-        materials:
-            { isRotate: true, diameter: 50 },
-        toolParams: { toolDiameter: 0.3, toolAngle: 30, toolShaftDiameter: 3.175 },
-        gcodeConfig: { density: 10, jogSpeed: 600, workSpeed: 200, smoothY: false },
-        testRange: { min: 0, max: 100 },
-        transformation: { width: 124, height: 75 }
+    const mesh = new CncMeshLinkageToolPathGenerator({
+        modelID: 'modelID0',
+        modelName: 'scad_chess_knight.stl',
+        headType: 'cnc',
+        sourceType: 'image3d',
+        mode: 'greyscale',
+        visible: true,
+        sourceHeight: 372.39539999999994,
+        sourceWidth: 1017.9,
+        originalName: 'scad_chess_knight.stl',
+        uploadName: 'scad_chess_knight.stl',
+        processImageName: 'scad_chess_knight.png',
+        transformation: {
+            positionX: 0,
+            positionY: 0,
+            positionZ: 0,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 1,
+            uniformScalingState: true,
+            flip: 0,
+            width: 130.5,
+            height: 47.742999999999995
+        },
+        config: {
+            direction: 'front',
+            minGray: 0,
+            maxGray: 255,
+            sliceDensity: 5,
+            extensionX: 0,
+            extensionY: 0,
+            svgNodeName: 'image',
+            invert: false
+        },
+        printOrder: 1,
+        gcodeConfig: {
+            sliceMode: 'linkage',
+            targetDepth: 2,
+            stepDown: 0.5,
+            safetyHeight: 1,
+            stopHeight: 10,
+            density: 5,
+            jogSpeed: 3000,
+            workSpeed: 300,
+            plungeSpeed: 300,
+            dwellTime: 896745231,
+            isModel: true
+        },
+        toolPathFilename: null,
+        gcodeConfigPlaceholder: {
+            jogSpeed: 'jogSpeed',
+            workSpeed: 'workSpeed',
+            dwellTime: 'dwellTime',
+            plungeSpeed: 'plungeSpeed'
+        },
+        materials: {
+            isRotate: true,
+            diameter: 35,
+            length: 75,
+            fixtureLength: 20,
+            x: 109.96,
+            y: 75,
+            z: 0
+        },
+        toolParams: { toolDiameter: 0.2, toolAngle: 30, toolShaftDiameter: 3.175 },
+        id: '5d59c0c4-b902-4d70-a187-da65668ea4cb'
     });
     // const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: '4thsnapmaker.stl', materials: { isRotate: true, diameter: 40 }, toolParams: { toolDiameter: 0.2, toolAngle: 30, toolShaftDiameter: 3.175 }, gcodeConfig: { density: 5, jogSpeed: 600, workSpeed: 200 } });
     // const mesh = new MeshToolPathGenerator({ uploadName: 'cube.stl', isRotate: true });
