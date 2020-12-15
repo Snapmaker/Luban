@@ -197,6 +197,12 @@ class ToolPath {
         this.setCommand(commandObj);
     }
 
+    move1XZB(x, z, b, f) {
+        const rapidMoveRate = this.setRapidMoveRate(this.toRotateF(b - this.state.B, x - this.state.X, 0, z - this.state.Z, f));
+        const commandObj = rapidMoveRate ? { 'G': 1, X: x, Z: z, B: b, F: rapidMoveRate } : { 'G': 1, X: x, Z: z, B: b };
+        this.setCommand(commandObj);
+    }
+
     move1XYZB(x, y, z, b, f) {
         const rapidMoveRate = this.setRapidMoveRate(this.toRotateF(b - this.state.B, x - this.state.X, y - this.state.Y, z - this.state.Z, f));
         const commandObj = rapidMoveRate ? { 'G': 1, X: x, Y: y, Z: z, B: b, F: rapidMoveRate } : { 'G': 1, X: x, Y: y, Z: z, B: b };

@@ -348,11 +348,10 @@ export class MeshProcess {
 
     _setDirection() {
         this.mesh.setDirection(this.direction);
-        // eslint-disable-next-line no-self-compare
-        if (this.flip & 1 === 1) {
+        if ((this.flip & 1) > 0) {
             this.mesh.addCoordinateSystem({ zSymbol: -1 });
         }
-        if (this.flip & 2 === 1) {
+        if ((this.flip & 2) > 0) {
             this.mesh.addCoordinateSystem({ xSymbol: -1 });
         }
     }

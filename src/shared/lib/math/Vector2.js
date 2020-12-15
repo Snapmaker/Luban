@@ -1,4 +1,4 @@
-import { angleToPi, isEqual, piToAngle, round } from '../utils';
+import { angleToPi, isEqual, piToAngle } from '../utils';
 
 export class Vector2 {
     static ZERO = {
@@ -93,12 +93,12 @@ export class Vector2 {
 
     static anglePoint(p1, p2) {
         const angle = piToAngle(Math.atan2(p2.y - p1.y, p2.x - p1.x));
-        return round(angle > 0 ? angle : angle + 360, 3);
+        return angle > 0 ? angle : angle + 360;
     }
 
     static angle(v) {
         const angle = piToAngle(Math.atan2(v.y, v.x));
-        return round(angle > 0 ? angle : angle + 360, 3);
+        return angle > 0 ? angle : angle + 360;
     }
 
     static rotate(p, angle, center = { x: 0, y: 0 }) {

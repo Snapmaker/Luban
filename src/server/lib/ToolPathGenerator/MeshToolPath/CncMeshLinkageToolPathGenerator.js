@@ -135,7 +135,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const { x, y } = Vector2.rotate(gcodePoint, gcodePoint.b);
                 const gX = round(x, 3);
                 const gZ = round(y, 3);
-                this.toolPath.move1XYZB(gX, gY, gZ, gcodePoint.b, workSpeed);
+                this.toolPath.move1XZB(gX, gZ, gcodePoint.b, workSpeed);
             }
 
             lastPoint = point;
@@ -273,7 +273,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             ...pointRotate
         });
 
-        if (this.toolAngle > 60) {
+        if (this.toolAngle < 60) {
             this._calculateCurveYCollisionArea(slicerLayers, index, interpolatePoints, angle);
             this._calculateXCollisionArea(interpolatePoints, angle);
         }
@@ -441,6 +441,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
 
         const mesh = meshProcess.mesh;
 
+        mesh.addCoordinateSystem({ ySymbol: -1 });
+
         const { width, height } = meshProcess.getWidthAndHeight();
         meshProcess.mesh.resize({
             x: this.transformation.width / width,
@@ -478,8 +480,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i - 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
+                this.emitProgress(0.2 * i / slicerLayers.length + 0.2);
             }
-            this.emitProgress(0.4);
 
             for (let i = slicerLayers.length - 2; i >= 0; i--) {
                 const slicerLayer = slicerLayers[i];
@@ -488,8 +490,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i + 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
+                this.emitProgress(0.2 * (slicerLayers.length - i) / slicerLayers.length + 0.4);
             }
-            this.emitProgress(0.6);
         }
 
         const p = this.progress;
