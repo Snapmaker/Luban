@@ -221,6 +221,12 @@ class ModelGroup extends EventEmitter {
     }
 
     removeModel(model) {
+        if (!model.supportTag) { // remove support children
+            this.models
+                .filter(i => i.supportTag && i.target === model)
+                .map(m => this.removeModel(m));
+        }
+
         if (model.meshObject && model.meshObject.parent) {
             model.meshObject.parent.remove(model.meshObject);
         }
@@ -689,19 +695,16 @@ class ModelGroup extends EventEmitter {
     }
 
     selectAllModels() {
-        this.selectedModelArray = this.models;
-        // this.selectedModelIDArray = [];
-        // this.removeSelectedObjectParentMatrix();
-        this.selectedModelArray.forEach((model) => {
-            model.setSelected(true);
-            this.selectedGroup.add(model.meshObject);
-            // this.selectedModelIDArray.push(model.modelID);
+        this.selectedModelArray = [];
+
+        this.models.forEach((model) => {
+            if (model.supportTag) return;
+            this.addModelToSelectedGroup(model);
         });
-        // this.resetSelectedObjectWhenMultiSelect();
-        // this.applySelectedObjectParentMatrix();
+
         this.modelChanged();
 
-        return {
+        return { // warning: this may not be correct
             selectedModelArray: this.selectedModelArray,
             selectedGroup: this.selectedGroup,
             selectedModelIDArray: this.selectedModelIDArray
@@ -1232,7 +1235,6 @@ class ModelGroup extends EventEmitter {
     }
 
     cloneModels() {
-        // this.removeSelectedObjectParentMatrix();
         const newModels = this.models.map(d => d.clone(this));
 
         for (const model of newModels) {
@@ -1240,8 +1242,8 @@ class ModelGroup extends EventEmitter {
                 model.target = newModels.find(i => i.originModelID === model.target.modelID);
             }
         }
-        // this.applySelectedObjectParentMatrix();
-        return newModels;
+        // remove supports without target
+        return newModels.filter(model => (!model.supportTag || model.target));
     }
 
 

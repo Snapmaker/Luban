@@ -809,6 +809,7 @@ export const actions = {
                 const ret = { model: [], support: [], originalName: null };
                 for (const item of models) {
                     const mesh = item.meshObject.clone();
+                    mesh.children = []; // remove support children
                     mesh.applyMatrix(item.meshObject.parent.matrix);
                     const stl = new ModelExporter().parse(mesh, 'stl', true);
                     const blob = new Blob([stl], { type: 'text/plain' });

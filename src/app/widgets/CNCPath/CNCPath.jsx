@@ -99,7 +99,7 @@ class CNCPath extends PureComponent {
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const showProcessImage = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
 
         return (
             <React.Fragment>
@@ -113,7 +113,7 @@ class CNCPath extends PureComponent {
                 )}
                 {selectedModelArray.length === 1 && (
                     <div className="sm-parameter-container">
-                        {isEditor && showProcessImage && (
+                        {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                             <ImageProcessMode
                                 sourceType={sourceType}
                                 mode={mode}
