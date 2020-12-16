@@ -46,16 +46,16 @@ function process() {
     const d = new Date().getTime();
     const mesh = new CncMeshLinkageToolPathGenerator({
         modelID: 'modelID0',
-        modelName: 'scad_chess_knight.stl',
+        modelName: 'k.stl',
         headType: 'cnc',
         sourceType: 'image3d',
         mode: 'greyscale',
         visible: true,
         sourceHeight: 372.39539999999994,
         sourceWidth: 1017.9,
-        originalName: 'scad_chess_knight.stl',
-        uploadName: 'scad_chess_knight.stl',
-        processImageName: 'scad_chess_knight.png',
+        originalName: 'k.stl',
+        uploadName: 'k.stl',
+        processImageName: 'k.png',
         transformation: {
             positionX: 0,
             positionY: 0,
@@ -67,9 +67,9 @@ function process() {
             scaleY: 1,
             scaleZ: 1,
             uniformScalingState: true,
-            flip: 0,
-            width: 130.5,
-            height: 47.742999999999995
+            flip: 0
+            // width: 130.5,
+            // height: 47.742999999999995
         },
         config: {
             direction: 'front',
@@ -84,8 +84,9 @@ function process() {
         printOrder: 1,
         gcodeConfig: {
             sliceMode: 'linkage',
+            smoothY: false,
             targetDepth: 2,
-            stepDown: 0.5,
+            stepDown: 1,
             safetyHeight: 1,
             stopHeight: 10,
             density: 5,
@@ -104,7 +105,7 @@ function process() {
         },
         materials: {
             isRotate: true,
-            diameter: 35,
+            diameter: 60,
             length: 75,
             fixtureLength: 20,
             x: 109.96,

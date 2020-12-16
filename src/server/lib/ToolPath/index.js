@@ -123,6 +123,12 @@ class ToolPath {
         this.setCommand(commandObj);
     }
 
+    move0XZB(x, z, b, f) {
+        const moveRate = this.setMoveRate(this.toRotateF(b - this.state.B, x - this.state.X, 0, z - this.state.Z, f));
+        const commandObj = moveRate ? { 'G': 0, X: x, Z: z, B: b, F: moveRate } : { 'G': 0, X: x, Z: z, B: b };
+        this.setCommand(commandObj);
+    }
+
     move0XYZ(x, y, z, f) {
         const moveRate = this.setMoveRate(f);
         const commandObj = moveRate ? { 'G': 0, X: x, Y: y, Z: z, F: moveRate } : { 'G': 0, X: x, Y: y, Z: z };
