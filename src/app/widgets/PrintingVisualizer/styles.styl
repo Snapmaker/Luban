@@ -109,6 +109,7 @@ $visualizer-padding = 10px
 
         &.disabled
             opacity(.5)
+
     .model-operation
         display: block
         width: 56px
@@ -124,25 +125,30 @@ $visualizer-padding = 10px
             border-top-left-radius: $border-radius
             border-top-right-radius: $border-radius
             background-image: url('/images/48x48/icon-move-normal-48x48.png')
+
             &:disabled
                 background-color: $background-color
                 background-image: url('/images/48x48/icon-move-disabled-48x48.png')
 
         &.operation-scale
             background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+
             &:disabled
                 background-color: $background-color
                 background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
 
         &.operation-rotate
             background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
+
             &:disabled
                 background-color: $background-color
                 background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+
         &.operation-support
             border-bottom-left-radius: $border-radius
             border-bottom-right-radius: $border-radius
             background-image: url('/images/48x48/icon-support-normal-48x48.png')
+
             &:disabled
                 background-color: $background-color
                 background-image: url('/images/48x48/icon-support-disabled-48x48.png')
@@ -159,7 +165,7 @@ $visualizer-padding = 10px
 
             &.operation-rotate
                 background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
-            
+
             &.operation-support
                 background-image: url('/images/48x48/icon-support-hover-48x48.png')
 
@@ -172,6 +178,7 @@ $visualizer-padding = 10px
         border: 1px solid $border-color
         border-radius: $border-radius
         opacity(.8)
+
         .reset-button
             background-color: #FFFFFF
             margin-left: 8px;
@@ -184,18 +191,21 @@ $visualizer-padding = 10px
             height: 30px
             padding: 6px 9px
             line-height: 1.4
+
         .reset-button:hover
             border: 1px solid $dark-blue-color
+
         &.move-panel
             top: 0
-            
+
             transform: translate(0, 64px * .5 - 93px / 2)
 
-        &.scale-panel,&.scale-panel-multi
+        &.scale-panel, &.scale-panel-multi
             top: 0
             transform: translate(0, 64px * 1.5 - 133px / 2)
-            
+
             width: 130px
+
             .icon
                 display: inline-block
                 width: 30px
@@ -203,39 +213,42 @@ $visualizer-padding = 10px
                 background-repeat: no-repeat;
                 background-position: center;
                 vertical-align: middle;
+
                 &.icon-checked
                     background-image: url("../../images/checked-on-14x14.png")
+
                 &.icon-unchecked
                     background-image: url("../../images/checked-off-14x14.png")
+
         &.scale-panel-multi
             height: 138px
 
         &.rotate-panel
             top: 0
             transform: translate(0, 64px * 2.5 - 133px / 2)
-            
+
 
         &.support-panel
             top: 0
             width: 294px
             transform: translate(0, 64px * 4 - 133px / 2)
 
-        .title-mode 
+        .title-mode
             font-size: 16px;
             font-weight: 500;
             color: #272829;
             line-height: 22px;
-        
+
 
         .axis
             margin: 12px 0
-            
+
             width: 100%
             position: relative
-        
-        .axis-padding-left 
-            padding-left:10px
-            
+
+        .axis-padding-left
+            padding-left: 10px
+
         .axis-green
             color: #22ac38
 
@@ -272,6 +285,7 @@ $visualizer-padding = 10px
             display: inline-block
             margin: 0 5px
             width: 60px
+
             > .suffix
                 display: inline-block
                 margin-left: -15px
@@ -427,4 +441,3 @@ $visualizer-padding = 10px
             margin-top: 5px
             float: right
 
-    

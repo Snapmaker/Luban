@@ -55,7 +55,7 @@ const appConfig = {
         },
 
         trans: {
-            component: 'Trans' ,
+            component: 'Trans',
             i18nKey: 'i18nKey',
             extensions: ['.js', '.jsx'],
             fallbackKey: function (ns, value) {
