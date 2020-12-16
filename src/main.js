@@ -130,6 +130,9 @@ function updateHandle() {
     ipcMain.on('checkForUpdate', () => {
         autoUpdater.checkForUpdates();
     });
+    ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {
+        mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
+    });
 }
 
 // https://github.com/electron/electron/blob/v8.5.1/docs/api/app.md#apprequestsingleinstancelock

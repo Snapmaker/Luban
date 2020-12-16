@@ -68,6 +68,7 @@ class App extends PureComponent {
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
+        updateShouldCheckForUpdate: PropTypes.func.isRequired,
         shouldCheckForUpdate: PropTypes.bool.isRequired,
         resetAllUserSettings: PropTypes.func.isRequired
     };
@@ -149,8 +150,11 @@ class App extends PureComponent {
             UniApi.Event.on('download-has-started', () => {
                 this.props.updateIsDownloading(true);
             });
-            UniApi.Event.on('update-available', (event, downloadInfo, oldVersionn) => {
-                UniApi.Update.downloadUpdate(downloadInfo, oldVersionn);
+            UniApi.Event.on('update-should-check-for-update', (event, checkForUpdate) => {
+                this.props.updateShouldCheckForUpdate(checkForUpdate);
+            });
+            UniApi.Event.on('update-available', (event, downloadInfo, oldVersion) => {
+                UniApi.Update.downloadUpdate(downloadInfo, oldVersion, this.props.shouldCheckForUpdate);
             });
             UniApi.Event.on('is-replacing-app-now', (event, downloadInfo) => {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
@@ -376,10 +380,10 @@ const mapStateToProps = (state) => {
         projectState
     };
 };
-
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
+        updateShouldCheckForUpdate: (shouldAutoUpdate) => dispatch(machineActions.updateShouldCheckForUpdate(shouldAutoUpdate)),
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         developToolsInit: () => dispatch(developToolsActions.init()),
