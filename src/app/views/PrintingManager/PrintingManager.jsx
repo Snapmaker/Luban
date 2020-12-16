@@ -52,7 +52,6 @@ class PrintingManager extends PureComponent {
         qualityDefinitions: PropTypes.array.isRequired,
         series: PropTypes.string.isRequired,
 
-        updateActiveDefinition: PropTypes.func.isRequired,
         updateQualityDefinitionName: PropTypes.func.isRequired,
         updateMaterialDefinitionName: PropTypes.func.isRequired,
         updateDefinitionsForManager: PropTypes.func.isRequired,
@@ -149,7 +148,6 @@ class PrintingManager extends PureComponent {
                 qualityDefinitionForManager: definition,
                 nameForQuality: definition.name
             });
-            this.props.updateActiveDefinition(definition);
         },
         onSelectQualityTypeById: (definitionId) => {
             const definition = this.props.qualityDefinitions.find(d => d.definitionId === definitionId);
@@ -181,12 +179,6 @@ class PrintingManager extends PureComponent {
                     qualityDefinitionOptions: newqQualityDefinitionOptions
                 });
             }
-            // this.props.updateActiveDefinition({
-            //     ownKeys: [key],
-            //     settings: {
-            //         [key]: { default_value: value }
-            //     }
-            // });
         },
         onSaveQualityForManager: async (managerDisplayType) => {
             const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
@@ -197,20 +189,19 @@ class PrintingManager extends PureComponent {
                 }
             }
 
-            this.props.updateDefinitionSettings(qualityDefinitionForManager, newDefinitionSettings);
-            this.props.updateDefinitionsForManager(qualityDefinitionForManager.definitionId, managerDisplayType);
+            await this.props.updateDefinitionSettings(qualityDefinitionForManager, newDefinitionSettings);
 
             const { nameForQuality } = this.state;
 
-            if (nameForQuality === qualityDefinitionForManager.name) { // unchanged
-                return;
+            if (nameForQuality !== qualityDefinitionForManager.name) { // changed
+                try {
+                    await this.props.updateQualityDefinitionName(qualityDefinitionForManager, nameForQuality);
+                } catch (err) {
+                    this.actions.showNotification(err);
+                }
             }
 
-            try {
-                await this.props.updateQualityDefinitionName(qualityDefinitionForManager, nameForQuality);
-            } catch (err) {
-                this.actions.showNotification(err);
-            }
+            this.props.updateDefinitionsForManager(qualityDefinitionForManager.definitionId, managerDisplayType);
         },
 
         onSelectMaterialTypeNotUpdate: (definitionId) => {
@@ -231,7 +222,6 @@ class PrintingManager extends PureComponent {
                 });
 
                 this.props.updateDefaultMaterialId(materialDefinitionForManager.definitionId);
-                this.props.updateActiveDefinition(materialDefinitionForManager);
             }
         },
         onChangeMaterialDefinitionForManager: (key, value, checkboxKey) => {
@@ -260,20 +250,18 @@ class PrintingManager extends PureComponent {
                     newDefinitionSettings[key] = { 'default_value': value.default_value };
                 }
             }
-            this.props.updateDefinitionSettings(materialDefinitionForManager, newDefinitionSettings);
-            this.props.updateDefinitionsForManager(materialDefinitionForManager.definitionId, managerDisplayType);
+            await this.props.updateDefinitionSettings(materialDefinitionForManager, newDefinitionSettings);
 
             const { nameForMaterial } = this.state;
 
-            if (nameForMaterial === materialDefinitionForManager.name) { // unchanged
-                return;
+            if (nameForMaterial !== materialDefinitionForManager.name) { // changed
+                try {
+                    await this.props.updateMaterialDefinitionName(materialDefinitionForManager, nameForMaterial);
+                } catch (err) {
+                    this.actions.showNotification(err);
+                }
             }
-
-            try {
-                await this.props.updateMaterialDefinitionName(materialDefinitionForManager, nameForMaterial);
-            } catch (err) {
-                this.actions.showNotification(err);
-            }
+            this.props.updateDefinitionsForManager(materialDefinitionForManager.definitionId, managerDisplayType);
         },
 
         isMaterialSelectedForManager: (option) => {
@@ -350,14 +338,12 @@ class PrintingManager extends PureComponent {
                 Object.assign(newState, {
                     materialDefinitionForManager: materialDefinitionForManager
                 });
-                this.props.updateActiveDefinition(materialDefinitionForManager);
             } else {
                 const materialDefinitionForManager = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinitionForManager.definitionId)
                 || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 Object.assign(newState, {
                     materialDefinitionForManager: materialDefinitionForManager
                 });
-                this.props.updateActiveDefinition(materialDefinitionForManager);
             }
 
             const materialDefinitionOptions = nextProps.materialDefinitions.map(d => {
@@ -385,18 +371,12 @@ class PrintingManager extends PureComponent {
                 Object.assign(newState, {
                     qualityDefinitionForManager: qualityDefinitionForManager
                 });
-                this.props.updateActiveDefinition(qualityDefinitionForManager);
             } else {
-                let qualityDefinitionForManager;
-                if (this.state.qualityDefinitionForManager) {
-                    qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager.definitionId);
-                } else {
-                    qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
-                }
+                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager.definitionId)
+                || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
                 Object.assign(newState, {
                     qualityDefinitionForManager: qualityDefinitionForManager
                 });
-                this.props.updateActiveDefinition(qualityDefinitionForManager);
             }
             const qualityDefinitionOptions = nextProps.qualityDefinitions.map(d => {
                 const checkboxAndSelectGroup = {};
@@ -596,7 +576,7 @@ class PrintingManager extends PureComponent {
                                             </div>
                                             <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                                             {state.notificationMessage && (
-                                                <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
+                                                <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                                     {state.notificationMessage}
                                                 </Notifications>
                                             )}
