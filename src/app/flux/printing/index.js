@@ -633,7 +633,6 @@ export const actions = {
         });
 
         definition.name = name;
-        dispatch(actions.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_MATERIAL));
         return null;
     },
 
@@ -655,7 +654,6 @@ export const actions = {
         });
 
         definition.name = name;
-        dispatch(actions.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_QUALITY));
 
         return null;
     },
