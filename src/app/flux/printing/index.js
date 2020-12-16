@@ -807,6 +807,7 @@ export const actions = {
                 const ret = { model: [], support: [], originalName: null };
                 for (const item of models) {
                     const mesh = item.meshObject.clone();
+                    mesh.children = []; // remove support children
                     mesh.applyMatrix(item.meshObject.parent.matrix);
                     const stl = new ModelExporter().parse(mesh, 'stl', true);
                     const blob = new Blob([stl], { type: 'text/plain' });
@@ -1140,6 +1141,7 @@ export const actions = {
         }));
     },
 
+
     displayGcode: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
         // modelGroup.visible = false;
@@ -1158,10 +1160,10 @@ export const actions = {
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     },
-    addSupport: () => (dispatch, getState) => {
+    saveSupport: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.addSupportOnSelectedModel();
-        dispatch(actions.render());
+        modelGroup.saveSupportModel(model);
+        dispatch(actions.recordSnapshot());
     },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

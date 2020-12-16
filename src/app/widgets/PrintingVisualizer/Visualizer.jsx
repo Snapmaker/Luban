@@ -42,6 +42,7 @@ class Visualizer extends PureComponent {
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         duplicateSelectedModel: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
+        saveSupport: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -155,16 +156,13 @@ class Visualizer extends PureComponent {
             this.canvas.current.controls.startSupportMode();
             const model = this.props.selectedModelArray[0];
             model.setVertexColors();
-            console.log('start support mode');
         },
         stopSupportMode: () => {
-            console.trace();
             this.setState({ isSupporting: false });
             this.supportActions.saveSupport();
             this.canvas.current.controls.stopSupportMode();
             const model = this.props.selectedModelArray[0];
             model && model.removeVertexColors();
-            console.log('stop support mode');
         },
         moveSupport: (position) => {
             const { modelGroup } = this.props;
@@ -172,23 +170,17 @@ class Visualizer extends PureComponent {
                 this._model = modelGroup.addSupportOnSelectedModel(this.state.defaultSupportSize);
             }
             this._model.setSupportPosition(position);
-
-            console.log('support model moved');
         },
         saveSupport: () => {
             if (this._model) {
-                const { modelGroup } = this.props;
-                modelGroup.saveSupportModel(this._model);
+                this.props.saveSupport(this._model);
                 this._model = null;
             }
-
-            console.log('support model done');
         },
         setDefaultSupportSize: (size) => {
             let defaultSupportSize = this.state.defaultSupportSize;
             defaultSupportSize = { ...defaultSupportSize, ...size };
             this.setState({ defaultSupportSize });
-            console.log('set default support size');
         }
     };
 
@@ -233,6 +225,9 @@ class Visualizer extends PureComponent {
             this.canvas.current.controls.attach(modelGroup.selectedGroup);
 
             this.supportActions.stopSupportMode();
+            if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {
+                this.actions.setTransformMode('translate');
+            }
         }
 
         if (!isEqual(size, this.props.size)) {
@@ -473,7 +468,7 @@ const mapDispatchToProps = (dispatch) => ({
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
-    addSupport: () => dispatch(printingActions.addSupport())
+    saveSupport: (model) => dispatch(printingActions.saveSupport(model))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);
