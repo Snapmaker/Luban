@@ -45,7 +45,7 @@ const appConfig = {
     ],
     dest: './',
     options: {
-        sort: false,
+        sort: true,
 
         attr: {},
 
@@ -54,7 +54,14 @@ const appConfig = {
             extensions: ['.js', '.jsx']
         },
 
-        trans: {},
+        trans: {
+            component: 'Trans',
+            i18nKey: 'i18nKey',
+            extensions: ['.js', '.jsx'],
+            fallbackKey: function (ns, value) {
+                return value;
+            }
+        },
 
         lngs: [
             'en', // English (default)

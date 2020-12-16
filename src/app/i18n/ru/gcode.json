@@ -1,15 +1,15 @@
 {
-    "Rapid Move (G0)": "Холостые (G0)",
-    "Linear Move (G1)": "По прямой (G1)",
-    "Inches (G20)": "Дюймы (G20)",
-    "Millimeters (G21)": "Миллиметры (G21)",
     "Absolute (G90)": "Абсолютные (G90)",
-    "Relative (G91)": "Относительные (G91)",
+    "Inches (G20)": "Дюймы (G20)",
     "Inverse Time (G93)": "Обратное время (G93)",
-    "Units/Min (G94)": "Единиц/мин (G94)",
-    "Spindle On, CW (M3)": "",
-    "Spindle On, CCW (M4)": "",
-    "Spindle Off (M5)": "",
+    "Linear Move (G1)": "По прямой (G1)",
+    "Millimeters (G21)": "Миллиметры (G21)",
+    "Power Off (M5)": "",
     "Power On (M3)": "",
-    "Power Off (M5)": ""
+    "Rapid Move (G0)": "Холостые (G0)",
+    "Relative (G91)": "Относительные (G91)",
+    "Spindle Off (M5)": "",
+    "Spindle On, CCW (M4)": "",
+    "Spindle On, CW (M3)": "",
+    "Units/Min (G94)": "Единиц/мин (G94)"
 }

@@ -163,10 +163,10 @@ class ToolParameters extends PureComponent {
                                 </p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-Bit')}</b>: 0.2 mm</li>
+                                    <li><b>{i18n._('Carving V-bit')}</b>: 0.2 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 1.5 mm</li>
-                                    <li><b>{i18n._('Straight Flute V-Bit')}</b>: 0.3 mm</li>
+                                    <li><b>{i18n._('Straight Flute V-bit')}</b>: 0.3 mm</li>
                                 </ul>
                             </div>
                         )}
@@ -220,7 +220,7 @@ class ToolParameters extends PureComponent {
                                 </p>
                                 <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                 <ul>
-                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Carving V-bit')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 1.5 mm</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>

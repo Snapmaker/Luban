@@ -712,7 +712,6 @@ class Visualizer extends Component {
                     <ModalSmall
                         title={i18n._('Emergency Stop')}
                         text={i18n._('The network connection has been interrupted, please follow the on-screen instructions to solve the problem.')}
-                        // subtext={i18n._('xx')}
                         img={IMAGE_EMERGENCY_STOP}
                         onClose={this.actions.closeModal}
                     />
