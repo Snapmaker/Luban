@@ -1,15 +1,15 @@
 {
-    "Rapid Move (G0)": "Movimento rapido (G0)",
-    "Linear Move (G1)": "Movimento lineare (G1)",
-    "Inches (G20)": "Pollici (G20)",
-    "Millimeters (G21)": "Millimetri (G21)",
     "Absolute (G90)": "Misure assolute (G90)",
-    "Relative (G91)": "Misure relative (G91)",
+    "Inches (G20)": "Pollici (G20)",
     "Inverse Time (G93)": "Velocita in inverso del tempo (G93)",
-    "Units/Min (G94)": "Velocita in unità al minuto (G94)",
-    "Spindle On, CW (M3)": "Elettromandrino On orario (M3)",
-    "Spindle On, CCW (M4)": "Elettromandrino On antiorario (M4)",
-    "Spindle Off (M5)": "Elettromandrino off (M5)",
+    "Linear Move (G1)": "Movimento lineare (G1)",
+    "Millimeters (G21)": "Millimetri (G21)",
+    "Power Off (M5)": "",
     "Power On (M3)": "",
-    "Power Off (M5)": ""
+    "Rapid Move (G0)": "Movimento rapido (G0)",
+    "Relative (G91)": "Misure relative (G91)",
+    "Spindle Off (M5)": "Elettromandrino off (M5)",
+    "Spindle On, CCW (M4)": "Elettromandrino On antiorario (M4)",
+    "Spindle On, CW (M3)": "Elettromandrino On orario (M3)",
+    "Units/Min (G94)": "Velocita in unità al minuto (G94)"
 }

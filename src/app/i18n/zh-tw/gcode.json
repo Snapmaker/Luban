@@ -1,15 +1,15 @@
 {
-    "Rapid Move (G0)": "快速移動 (G0)",
-    "Linear Move (G1)": "線性移動 (G1)",
-    "Inches (G20)": "英吋 (G20)",
-    "Millimeters (G21)": "公厘 (G21)",
     "Absolute (G90)": "絕對座標 (G90)",
-    "Relative (G91)": "相對座標 (G91)",
+    "Inches (G20)": "英吋 (G20)",
     "Inverse Time (G93)": "反計時 (G93)",
-    "Units/Min (G94)": "單位/分鐘 (G94)",
-    "Spindle On, CW (M3)": "主軸正轉 (M3)",
-    "Spindle On, CCW (M4)": "主軸逆轉 (M4)",
-    "Spindle Off (M5)": "主軸停止 (M5)",
+    "Linear Move (G1)": "線性移動 (G1)",
+    "Millimeters (G21)": "公厘 (G21)",
+    "Power Off (M5)": "",
     "Power On (M3)": "",
-    "Power Off (M5)": ""
+    "Rapid Move (G0)": "快速移動 (G0)",
+    "Relative (G91)": "相對座標 (G91)",
+    "Spindle Off (M5)": "主軸停止 (M5)",
+    "Spindle On, CCW (M4)": "主軸逆轉 (M4)",
+    "Spindle On, CW (M3)": "主軸正轉 (M3)",
+    "Units/Min (G94)": "單位/分鐘 (G94)"
 }

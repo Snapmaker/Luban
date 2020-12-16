@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
+import { Trans } from 'react-i18next';
+
 // import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './index.styl';
@@ -20,8 +22,10 @@ const MotionButtonGroup = (props) => {
                             <div>
                                 <p>{i18n._('Click to check the boundary of the image to be engraved.')}</p>
                                 <br />
-                                <p>{i18n._('Note: If you are using the CNC Carving Module, make sure the carving bit will not \
-run into the fixtures before you use this feature.')}
+                                <p>
+                                    <Trans>
+                                        Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.
+                                    </Trans>
                                 </p>
                             </div>
                         )}

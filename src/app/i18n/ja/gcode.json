@@ -1,15 +1,15 @@
 {
-    "Rapid Move (G0)": "位置決め(早送り) (G0)",
-    "Linear Move (G1)": "直線補間 (G1)",
-    "Inches (G20)": "インチ入力 (G20)",
-    "Millimeters (G21)": "ミリメータ入力(G21)",
     "Absolute (G90)": "アブソリュート指令(絶対座標) (G90)",
-    "Relative (G91)": "インクレメンタル指令(相対座標) (G91)",
+    "Inches (G20)": "インチ入力 (G20)",
     "Inverse Time (G93)": "インバースタイム送り (G93)",
-    "Units/Min (G94)": "Units/Minモード (G94)",
-    "Spindle On, CW (M3)": "スピンドル オンCW(正転) (M3)",
-    "Spindle On, CCW (M4)": "スピンドル オンCCW(逆転) (M4)",
-    "Spindle Off (M5)": "スピンドル オフ (M5)",
+    "Linear Move (G1)": "直線補間 (G1)",
+    "Millimeters (G21)": "ミリメータ入力(G21)",
+    "Power Off (M5)": "",
     "Power On (M3)": "",
-    "Power Off (M5)": ""
+    "Rapid Move (G0)": "位置決め(早送り) (G0)",
+    "Relative (G91)": "インクレメンタル指令(相対座標) (G91)",
+    "Spindle Off (M5)": "スピンドル オフ (M5)",
+    "Spindle On, CCW (M4)": "スピンドル オンCCW(逆転) (M4)",
+    "Spindle On, CW (M3)": "スピンドル オンCW(正転) (M3)",
+    "Units/Min (G94)": "Units/Minモード (G94)"
 }

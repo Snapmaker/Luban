@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
+import { Trans } from 'react-i18next';
+
 import { actions as machineActions } from '../flux/machine';
 import { actions as developToolsActions } from '../flux/develop-tools';
 import { actions as keyboardShortcutActions } from '../flux/keyboardShortcut';
@@ -19,7 +21,6 @@ import { actions as settingActions } from '../flux/setting';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
-import Space from '../components/Space';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -31,7 +32,7 @@ import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
 // import recoverEnvironmentModal from '../modals/modal-recover-environment';
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../constants';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
 
@@ -194,19 +195,18 @@ class App extends PureComponent {
                     title: i18n._('Warning'),
                     body: (
                         <div>
-                            {i18n._('This is an alpha feature that helps you get started with CNC Carving. Make sure you')}
-                            <Space width={4} />
-                            <a
-                                style={{ color: '#28a7e1' }}
-                                href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {i18n._('Read This First - Safety Information')}
-                            </a>
-                            <Space width={4} />
-                            {i18n._('before any further instructions.')}
-
+                            <Trans>
+                                This is an alpha feature that helps you get started with CNC Carving. Make sure you
+                                <a
+                                    style={{ color: '#28a7e1' }}
+                                    href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Read This First - Safety Information
+                                </a>
+                                before any further instructions.
+                            </Trans>
                         </div>
                     ),
                     footer: (
