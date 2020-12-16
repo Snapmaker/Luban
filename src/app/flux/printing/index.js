@@ -1165,6 +1165,11 @@ export const actions = {
         modelGroup.saveSupportModel(model);
         dispatch(actions.recordSnapshot());
     },
+    clearAllManualSupport: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.removeAllManualSupport();
+        dispatch(actions.recordSnapshot());
+    },
     setDefaultSupportSize: (size) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.defaultSupportSize = size;

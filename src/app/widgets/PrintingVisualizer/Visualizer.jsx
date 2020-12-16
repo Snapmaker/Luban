@@ -43,6 +43,7 @@ class Visualizer extends PureComponent {
         duplicateSelectedModel: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired,
         saveSupport: PropTypes.func.isRequired,
+        clearAllManualSupport: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -181,6 +182,9 @@ class Visualizer extends PureComponent {
             let defaultSupportSize = this.state.defaultSupportSize;
             defaultSupportSize = { ...defaultSupportSize, ...size };
             this.setState({ defaultSupportSize });
+        },
+        clearAllManualSupport: () => {
+            this.props.clearAllManualSupport();
         }
     };
 
@@ -468,6 +472,7 @@ const mapDispatchToProps = (dispatch) => ({
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
+    clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))
 });
 
