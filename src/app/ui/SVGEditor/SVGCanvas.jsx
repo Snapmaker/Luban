@@ -1016,6 +1016,8 @@ class SVGCanvas extends PureComponent {
             case 'ArrowDown':
             case 'ArrowLeft':
             case 'ArrowRight':
+                // use arrow keys to move models
+                // key down listener is in flux/keyboardShortcut
                 this.props.onMoveSelectedElementsByKey();
                 break;
             default:

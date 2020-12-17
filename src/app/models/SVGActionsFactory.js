@@ -37,6 +37,7 @@ class SVGActionsFactory {
 
     selectedSvgModels = [];
 
+    // deviation of moving with arrow keys
     onKeyMovingValue = {
         x: 0,
         y: 0
@@ -720,6 +721,9 @@ class SVGActionsFactory {
         this.resetSelection();
     }
 
+    /**
+     * move selected elements by arrow key on key down
+     */
     onMovingByArrowKeyDown({ dx, dy }) {
         const transform = svg.createSVGTransform();
         if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
@@ -734,6 +738,9 @@ class SVGActionsFactory {
         this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
     }
 
+    /**
+     * move selected elements by arrow key on key up
+     */
     onMovingByArrowKeyUp() {
         const dx = this.onKeyMovingValue.x, dy = this.onKeyMovingValue.y;
         this.updateSelectedModelsByTransformation({ dx, dy });

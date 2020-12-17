@@ -86,6 +86,8 @@ export const actions = {
             'Arrow': (e, { direction }) => {
                 const from = window.location.hash.split('/')[1];
                 if (['laser', 'cnc'].includes(from)) {
+                    // use arrow keys to move models
+                    // on keyUp listener is in SVGCanvas
                     let dx = 0, dy = 0;
                     const step = 0.1;
                     switch (e.key) {
