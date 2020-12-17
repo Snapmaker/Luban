@@ -115,14 +115,13 @@ class Settings extends PureComponent {
         },
         // Workspace
         config: {
-            restoreDefaults: () => {
-                confirm({
+            restoreDefaults: async () => {
+                await confirm({
                     title: i18n._('Reset All User Settings'),
                     body: i18n._('Are you sure you want to restore the default settings?')
-                }).then(() => {
-                    this.props.resetAllUserSettings();
-                    window.location.reload();
                 });
+                await this.props.resetAllUserSettings();
+                window.location.reload();
             }
         },
         // About
