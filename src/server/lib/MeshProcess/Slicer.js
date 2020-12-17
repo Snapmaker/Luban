@@ -108,11 +108,7 @@ class SlicerLayer {
 export class Slicer {
     slicerLayers = [];
 
-    mesh;
-
     constructor(mesh, layerThickness, sliceLayerCount, initialLayerThickness) {
-        this.mesh = mesh;
-
         this.buildLayersWithHeight(layerThickness, sliceLayerCount, initialLayerThickness);
         const zbbox = this.buildZHeightsForFaces(mesh);
 

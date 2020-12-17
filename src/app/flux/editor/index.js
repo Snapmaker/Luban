@@ -1328,11 +1328,18 @@ export const actions = {
      * Resize element.
      */
     afterResizeElement: (headType, element) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.afterResizeElement(element);
         dispatch(actions.resetProcessState(headType));
-        dispatch(actions.processSelectedModel(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
     },
 
     /**
@@ -1422,7 +1429,10 @@ export const actions = {
                 ...allMaterials
             }
         }));
-        dispatch(actions.processSelectedModel(headType));
+        if (materials.isRotate !== allMaterials.isRotate) {
+            console.log(materials, newMaterials);
+            dispatch(actions.processSelectedModel(headType));
+        }
         dispatch(actions.showAllModelsObj3D(headType));
     }
 };

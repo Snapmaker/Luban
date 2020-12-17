@@ -12,7 +12,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         super();
         const { uploadName, gcodeConfig = {}, transformation = {}, materials = {}, toolParams = {} } = modelInfo;
 
-        const { density = 5, smoothY = true } = gcodeConfig;
+        const { density = 5, safetyHeight = 0, smoothY = true, stepDown } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter = 0, toolAngle = 0, toolShaftDiameter = 0 } = toolParams;
 
@@ -22,18 +22,18 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         this.gcodeConfig = gcodeConfig;
 
         this.density = density;
+        this.smoothY = smoothY;
+        this.stepDown = stepDown;
 
         this.isRotate = isRotate;
         this.diameter = diameter;
 
-        this.initialZ = diameter / 2;
+        this.initialZ = diameter / 2 + safetyHeight;
         this.toolPath = new ToolPath({ isRotate, diameter: diameter });
 
         this.toolDiameter = toolDiameter;
         this.toolAngle = toolAngle;
         this.toolShaftDiameter = toolShaftDiameter;
-
-        this.smoothY = smoothY;
     }
 
     _generateHullPolygonCutPath(convexHullPolygon) {
@@ -45,6 +45,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         };
 
         const cutPath = [];
+
+        let lastB = 0;
 
         for (let i = 0; i < convexHullPolygon.size(); i++) {
             const p = convexHullPolygon.get(i);
@@ -61,12 +63,23 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             const an1 = Vector2.anglePoint(p, pre);
             const an2 = Vector2.anglePoint(p, next);
             const cutAngle = new CutAngle(an1, an2);
+            const normal = cutAngle.getNormal();
+
+            let b = 90 - normal;
+
+            while (Math.abs(lastB - b) > 180) {
+                b = lastB > b ? b + 360 : b - 360;
+            }
+
             cutPath.push({
                 x: p.x,
                 y: p.y,
                 cutAngle: cutAngle,
-                normal: cutAngle.getNormal()
+                normal: cutAngle.getNormal(),
+                b: b
             });
+
+            lastB = b;
         }
 
         return cutPath;
@@ -76,14 +89,35 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         return p1.x * 1000000000 + p1.y * 1000000 + p2.x * 1000 + p2.y;
     }
 
+    _testConsole(datas) {
+        for (const data of datas) {
+            this.toolPath.move0Z(data.z, 300);
+            this.toolPath.move0Y(data.y, 300);
+            this.toolPath.move0B(0, 300);
+
+            const polygons = data.polygons;
+
+            for (let j = 0; j < polygons.size(); j++) {
+                const polygon = polygons.get(j);
+                for (let i = 0; i < polygon.size(); i++) {
+                    const point = polygon.get(i);
+
+                    if (i === 0) {
+                        this.toolPath.move0XZ(point.x, point.y, 300);
+                    } else {
+                        this.toolPath.move1XZ(point.x, point.y, 300);
+                    }
+                }
+            }
+        }
+    }
+
     _generateSlicerLayerToolPath(slicerLayers, index) {
         const { jogSpeed = 300, workSpeed = 300, plungeSpeed = 300 } = this.gcodeConfig;
         const slicerLayer = slicerLayers[index];
 
         const polygonsPart = slicerLayer.polygonsPart;
         const convexHullPolygons = polygonsPart.convexHull();
-
-        const gY = slicerLayer.z;
 
         const diffPolygons = convexHullPolygons.diff(polygonsPart);
         const lineSet = new Set();
@@ -93,41 +127,37 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             });
         });
 
-        const path = this._generateHullPolygonCutPath(convexHullPolygons.get(0));
+        const convexHullPath = this._generateHullPolygonCutPath(convexHullPolygons.get(0));
 
         let lastPoint = null;
 
-        for (let i = 0; i < path.length; i++) {
-            const point = path[i];
+        const path = [];
 
-            const lastState = this.toolPath.getState();
+        const gY = slicerLayer.z;
 
-            let b = 90 - point.normal;
-
-            while (Math.abs(lastState.B - b) > 180) {
-                b = lastState.B > b ? b + 360 : b - 360;
-            }
-
-            point.b = b;
+        for (let i = 0; i < convexHullPath.length; i++) {
+            const point = convexHullPath[i];
 
             if (i === 0) {
-                this.toolPath.move0Z(this.initialZ, jogSpeed);
-                this.toolPath.move0B(b, jogSpeed);
-
                 lastPoint = point;
-
                 continue;
             }
 
             const gcodePoints = this._interpolatePoints(slicerLayers, index, lastPoint, point, diffPolygons, lineSet);
+
+            if (gcodePoints.length === 0) {
+                lastPoint = point;
+
+                continue;
+            }
 
             if (i === 1) {
                 const { x, y } = Vector2.rotate(gcodePoints[0], gcodePoints[0].b);
 
                 const gX = round(x, 3);
                 const gZ = round(y, 3);
-                this.toolPath.move0XY(gX, gY, jogSpeed);
-                this.toolPath.move1Z(gZ, plungeSpeed);
+
+                path.push({ x: gX, y: gZ, b: gcodePoints[0].b });
             }
 
             for (let j = 1; j < gcodePoints.length; j++) {
@@ -135,10 +165,57 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const { x, y } = Vector2.rotate(gcodePoint, gcodePoint.b);
                 const gX = round(x, 3);
                 const gZ = round(y, 3);
-                this.toolPath.move1XZB(gX, gZ, gcodePoint.b, workSpeed);
+                // this.toolPath.move1XZB(gX, gZ, gcodePoint.b, workSpeed);
+                path.push({ x: gX, y: gZ, b: gcodePoint.b });
             }
 
             lastPoint = point;
+        }
+
+        const stepDownPaths = this._generateGocdePointsByStepDown(convexHullPath);
+
+        stepDownPaths.push(path);
+
+        let lastState = this.toolPath.getState();
+        let circle = Math.round(lastState.B / 360);
+
+        for (let i = 0; i < stepDownPaths.length; i++) {
+            for (let j = 0; j < stepDownPaths[i].length; j++) {
+                const p = stepDownPaths[i][j];
+
+                lastState = this.toolPath.getState();
+
+                let b = p.b + circle * 360;
+
+                while (Math.abs(lastState.B - b) > 180) {
+                    b = lastState.B > b ? b + 360 : b - 360;
+                }
+                circle = Math.round(b / 360);
+
+                const { x, y } = p;
+                const gX = round(x, 3);
+                const gZ = round(y, 3);
+
+                if (i === 0 && j === 0) {
+                    this.toolPath.move0Z(this.initialZ, jogSpeed);
+                    this.toolPath.move0B(b, jogSpeed);
+
+
+                    this.toolPath.move0XY(gX, gY, jogSpeed);
+                    this.toolPath.move1Z(gZ, plungeSpeed);
+                } else if (j === 0) {
+                    this.toolPath.move0B(b, jogSpeed);
+
+                    this.toolPath.move0XY(gX, gY, jogSpeed);
+                    this.toolPath.move1Z(gZ, plungeSpeed);
+                } else {
+                    if (p.g === 0) {
+                        this.toolPath.move0XZB(gX, gZ, b, jogSpeed);
+                    } else {
+                        this.toolPath.move1XZB(gX, gZ, b, workSpeed);
+                    }
+                }
+            }
         }
     }
 
@@ -155,7 +232,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             b: point.b
         };
 
-        const segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * this.density);
+        let segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * this.density);
+        segCount = Math.max(segCount, Math.ceil(Math.abs(lastPointRotate.b - pointRotate.b)));
 
         if (segCount <= 1) {
             gcodePoints.push(lastPoint);
@@ -171,6 +249,10 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             interpolatePoints = this._interpolateCurvePoints(slicerLayers, index, diffPolygons, lastPointRotate, pointRotate, hash, angle);
         } else {
             interpolatePoints = this._interpolateLinePoints(segCount, lastPointRotate, pointRotate);
+        }
+
+        if (!interpolatePoints) {
+            return gcodePoints;
         }
 
         for (let i = 0; i < interpolatePoints.size(); i++) {
@@ -209,7 +291,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
     }
 
     _interpolateCurvePoints(slicerLayers, index, diffPolygons, lastPointRotate, pointRotate, hash, angle) {
-        const segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * 50);
+        const segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * 10);
 
         const interpolatePointsTmp = new Polygon();
         for (let j = 1; j < segCount; j++) {
@@ -278,8 +360,33 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             this._calculateXCollisionArea(interpolatePoints, angle);
         }
 
+        return this._generateGocdePointsByStepDownFromCurvePoints(interpolatePoints);
+    }
 
-        return interpolatePoints;
+    _generateGocdePointsByStepDownFromCurvePoints(interpolatePoints) {
+        if (this.stepDown < 0.05 || this.stepDown >= this.diameter) {
+            return interpolatePoints;
+        }
+        const interpolatePointsStepDown = new Polygon();
+        let update = true;
+        let sort = false;
+        let cutY = interpolatePoints.get(0).y;
+        while (update || !sort) {
+            update = false;
+            sort = !sort;
+            for (let i = sort ? 0 : interpolatePoints.size() - 1; sort ? i < interpolatePoints.size() : i >= 0; sort ? i++ : i--) {
+                const p = interpolatePoints.get(i);
+                if (cutY + this.stepDown > p.y) {
+                    interpolatePointsStepDown.add({ x: p.x, y: p.y, b: p.b });
+                } else {
+                    interpolatePointsStepDown.add({ x: p.x, y: cutY + this.stepDown, b: p.b });
+                    update = true;
+                }
+            }
+
+            cutY += this.stepDown;
+        }
+        return interpolatePointsStepDown;
     }
 
     _normalAngle(a) {
@@ -425,6 +532,77 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         return (p.x - p1.x) / (p2.x - p1.x) * (p2.y - p1.y) + p1.y;
     }
 
+    _generateGocdePointsByStepDown(convexHullPath) {
+        const stepDownPaths = [];
+
+        if (this.stepDown < 0.05 || this.stepDown >= this.diameter) {
+            return stepDownPaths;
+        }
+
+        let path = [];
+        for (let i = 0; i < convexHullPath.length; i++) {
+            const point = convexHullPath[i];
+
+            if (i > 0) {
+                const lastPoint = convexHullPath[i - 1];
+                const segCount = Math.max(1, Math.ceil(Math.abs(convexHullPath[i].b - convexHullPath[i - 1].b)));
+                for (let j = 1; j <= segCount; j++) {
+                    const nX = lastPoint.x + (point.x - lastPoint.x) / segCount * j;
+                    const nY = lastPoint.y + (point.y - lastPoint.y) / segCount * j;
+                    const nb = lastPoint.b + (point.b - lastPoint.b) / segCount * j;
+
+                    const { x, y } = Vector2.rotate({
+                        x: nX,
+                        y: nY
+                    }, nb);
+
+                    path.push({ x, y, b: nb });
+                }
+            } else {
+                const { x, y } = Vector2.rotate(point, point.b);
+                path.push({ x, y, b: point.b });
+            }
+        }
+
+        const radiusSquare = this.diameter / 2 * this.diameter / 2;
+        const initialZSquare = this.initialZ * this.initialZ;
+
+        let update = true;
+        while (update) {
+            update = false;
+            const pathTmp = [];
+            for (let i = 0; i < path.length; i++) {
+                const point = path[i];
+                const nY = point.y + this.stepDown;
+                const maxY = Math.sqrt(radiusSquare - point.x * point.x);
+                const initZY = Math.sqrt(initialZSquare - point.x * point.x);
+                if (nY > maxY) {
+                    pathTmp.push({
+                        g: 0,
+                        x: point.x,
+                        y: initZY,
+                        b: point.b
+                    });
+                } else {
+                    pathTmp.push({
+                        x: point.x,
+                        y: nY,
+                        b: point.b
+                    });
+                    update = true;
+                }
+            }
+            if (update) {
+                stepDownPaths.push(pathTmp);
+                path = pathTmp;
+            }
+        }
+
+        stepDownPaths.reverse();
+
+        return stepDownPaths;
+    }
+
     emitProgress(progress) {
         this.progress = progress;
         this.emit('progress', progress);
@@ -444,11 +622,13 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         mesh.addCoordinateSystem({ ySymbol: -1 });
 
         const { width, height } = meshProcess.getWidthAndHeight();
-        meshProcess.mesh.resize({
-            x: this.transformation.width / width,
-            y: this.transformation.width / width,
-            z: this.transformation.height / height
-        });
+        if (this.transformation.width && this.transformation.height) {
+            meshProcess.mesh.resize({
+                x: this.transformation.width / width,
+                y: this.transformation.width / width,
+                z: this.transformation.height / height
+            });
+        }
 
         mesh.offset({
             x: -(mesh.aabb.max.x + mesh.aabb.min.x) / 2,
@@ -472,6 +652,11 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
 
         const slicerLayers = slicer.slicerLayers;
 
+        for (const slicerLayer of slicerLayers) {
+            delete slicerLayer.polygons;
+            delete slicerLayer.openPolygons;
+        }
+
         if (this.smoothY) {
             for (let i = 1; i < slicerLayers.length; i++) {
                 const slicerLayer = slicerLayers[i];
@@ -480,8 +665,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i - 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
-                this.emitProgress(0.2 * i / slicerLayers.length + 0.2);
             }
+            this.emitProgress(0.4);
 
             for (let i = slicerLayers.length - 2; i >= 0; i--) {
                 const slicerLayer = slicerLayers[i];
@@ -490,8 +675,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i + 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
-                this.emitProgress(0.2 * (slicerLayers.length - i) / slicerLayers.length + 0.4);
             }
+            this.emitProgress(0.6);
         }
 
         const p = this.progress;

@@ -239,6 +239,20 @@ const defaultGcodeConfigs = {
         dwellTime: ABSENT_VALUE,
         isModel: true
     },
+    [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D, true)]: {
+        sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
+        smoothY: true,
+        targetDepth: 2.0,
+        stepDown: 10,
+        safetyHeight: 1.0,
+        stopHeight: 10,
+        density: 5,
+        jogSpeed: 3000,
+        workSpeed: 300,
+        plungeSpeed: 300,
+        dwellTime: ABSENT_VALUE,
+        isModel: true
+    },
     [toKey(HEAD_CNC)]: {
         optimizePath: false,
         fillEnabled: DEFAULT_FILL_ENABLED,

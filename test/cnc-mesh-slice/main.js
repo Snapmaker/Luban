@@ -46,30 +46,30 @@ function process() {
     const d = new Date().getTime();
     const mesh = new CncMeshLinkageToolPathGenerator({
         modelID: 'modelID0',
-        modelName: 'scad_chess_knight.stl',
+        modelName: 'k.stl',
         headType: 'cnc',
         sourceType: 'image3d',
         mode: 'greyscale',
         visible: true,
-        sourceHeight: 372.39539999999994,
-        sourceWidth: 1017.9,
-        originalName: 'scad_chess_knight.stl',
-        uploadName: 'scad_chess_knight.stl',
-        processImageName: 'scad_chess_knight.png',
+        sourceHeight: 786.7703747684369,
+        sourceWidth: 2046.5639999999999,
+        originalName: 'k.stl',
+        uploadName: 'k.stl',
+        processImageName: 'k.stl',
         transformation: {
-            positionX: 0,
-            positionY: 0,
+            positionX: 0.12569354814490907,
+            positionY: 27.78755698502397,
             positionZ: 0,
             rotationX: 0,
             rotationY: 0,
             rotationZ: 0,
-            scaleX: 1,
-            scaleY: 1,
+            scaleX: 0.5418204665184021,
+            scaleY: 0.5418204665184021,
             scaleZ: 1,
             uniformScalingState: true,
             flip: 0,
-            width: 130.5,
-            height: 47.742999999999995
+            width: 142.16285400509835,
+            height: 54.652345064088784
         },
         config: {
             direction: 'front',
@@ -79,13 +79,15 @@ function process() {
             extensionX: 0,
             extensionY: 0,
             svgNodeName: 'image',
+            'stroke-width': '0.3175128654610011',
             invert: false
         },
         printOrder: 1,
         gcodeConfig: {
             sliceMode: 'linkage',
+            smoothY: true,
             targetDepth: 2,
-            stepDown: 0.5,
+            stepDown: 10,
             safetyHeight: 1,
             stopHeight: 10,
             density: 5,
@@ -95,7 +97,7 @@ function process() {
             dwellTime: 896745231,
             isModel: true
         },
-        toolPathFilename: null,
+        toolPathFilename: "King's Bust_33814056.stl._34358096.json",
         gcodeConfigPlaceholder: {
             jogSpeed: 'jogSpeed',
             workSpeed: 'workSpeed',
@@ -104,15 +106,15 @@ function process() {
         },
         materials: {
             isRotate: true,
-            diameter: 35,
+            diameter: 45,
             length: 75,
             fixtureLength: 20,
-            x: 109.96,
+            x: 141.37,
             y: 75,
             z: 0
         },
         toolParams: { toolDiameter: 0.2, toolAngle: 30, toolShaftDiameter: 3.175 },
-        id: '5d59c0c4-b902-4d70-a187-da65668ea4cb'
+        id: 'b69ebe65-ca9c-4128-b70c-798421813d3c'
     });
     // const mesh = new CncMeshLinkageToolPathGenerator({ uploadName: '4thsnapmaker.stl', materials: { isRotate: true, diameter: 40 }, toolParams: { toolDiameter: 0.2, toolAngle: 30, toolShaftDiameter: 3.175 }, gcodeConfig: { density: 5, jogSpeed: 600, workSpeed: 200 } });
     // const mesh = new MeshToolPathGenerator({ uploadName: 'cube.stl', isRotate: true });

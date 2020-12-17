@@ -259,7 +259,7 @@ export class Polygons {
     /**
      * Removes vertices of the polygons to make sure that they are not too high
      */
-    simplify(smallestLineSegment = 0.05, allowedErrorDistance = 0.025) {
+    simplify(smallestLineSegment = 0.08, allowedErrorDistance = 0.04) {
         const smallestLineSegmentSquared = smallestLineSegment * smallestLineSegment;
         const allowedErrorDistanceSquared = allowedErrorDistance * allowedErrorDistance;
 
@@ -326,8 +326,6 @@ export class Polygons {
     convexHull() {
         const newPath = [];
 
-        // console.trace('convexHull', this.data);
-
         let first = this.data[0].path[0];
 
         this.data.forEach((polygon) => {
@@ -388,23 +386,8 @@ export class Polygons {
 
     splitIntoParts() {
         const polygonsPart = this.union();
-        for (const datum of polygonsPart.data) {
-            if (datum.size() === 0) {
-                console.log(polygonsPart);
-            }
-        }
         polygonsPart.simplify();
-        for (const datum of polygonsPart.data) {
-            if (datum.size() === 0) {
-                console.log('2', polygonsPart);
-            }
-        }
         polygonsPart.removeDegenerateVerts();
-        for (const datum of polygonsPart.data) {
-            if (datum.size() === 0) {
-                console.log('2', polygonsPart);
-            }
-        }
         return polygonsPart;
     }
 
@@ -441,9 +424,6 @@ export class Polygons {
             }
         }
         const result = PolygonOffset.recursiveUnion(polygonOffsetPaths, test);
-        if (test) {
-            console.log('test 1', result);
-        }
         const unionPolygons = new Polygons();
         for (const paths of result) {
             const polygonPart = new Polygon();
