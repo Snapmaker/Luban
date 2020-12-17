@@ -37,6 +37,11 @@ class SVGActionsFactory {
 
     selectedSvgModels = [];
 
+    onKeyMovingValue = {
+        x: 0,
+        y: 0
+    };
+
     constructor(modelGroup) {
         this.modelGroup = modelGroup;
 
@@ -713,6 +718,27 @@ class SVGActionsFactory {
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
         this.resetSelection();
+    }
+
+    onMovingByArrowKeyDown({ dx, dy }) {
+        const transform = svg.createSVGTransform();
+        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
+            transform.setTranslate(0, 0);
+            this.svgContentGroup.translateSelectorOnMouseDown(transform);
+            this.svgContentGroup.translateSelectedElementsOnMouseDown();
+        }
+        this.onKeyMovingValue.x += dx;
+        this.onKeyMovingValue.y += dy;
+        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
+        this.svgContentGroup.translateSelectorOnMouseMove(transform);
+        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
+    }
+
+    onMovingByArrowKeyUp() {
+        const dx = this.onKeyMovingValue.x, dy = this.onKeyMovingValue.y;
+        this.updateSelectedModelsByTransformation({ dx, dy });
+        this.onKeyMovingValue.x = 0;
+        this.onKeyMovingValue.y = 0;
     }
 }
 

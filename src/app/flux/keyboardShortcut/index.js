@@ -90,10 +90,10 @@ export const actions = {
                     const step = 0.1;
                     switch (e.key) {
                         case 'ArrowUp':
-                            dy += step;
+                            dy += -step;
                             break;
                         case 'ArrowDown':
-                            dy += -step;
+                            dy += step;
                             break;
                         case 'ArrowLeft':
                             dx += -step;
@@ -104,7 +104,7 @@ export const actions = {
                         default:
                             break;
                     }
-                    dispatch(editorActions.updateSelectedModelDeviation(from, { dx, dy }));
+                    dispatch(editorActions.moveElementsOnKeyDown(from, { dx, dy }));
                 }
                 if (from === '3dp') {
                     const { layerCountDisplayed } = getState().printing;
