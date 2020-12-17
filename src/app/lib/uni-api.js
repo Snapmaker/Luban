@@ -25,7 +25,7 @@ const Update = {
             ipcRenderer.send('checkForUpdate');
         }
     },
-    downloadUpdate(downloadInfo, oldVersionn) {
+    downloadUpdate(downloadInfo, oldVersion, shouldCheckForUpdate) {
         if (isElectron()) {
             const { remote, ipcRenderer } = window.require('electron');
             const { dialog } = remote;
@@ -35,16 +35,18 @@ const Update = {
                 type: 'info',
                 buttons: [i18n._('Later'), i18n._('Download now')],
                 defaultId: 1,
+                checkboxLabel: i18n._('Automatically check for update'),
+                checkboxChecked: shouldCheckForUpdate,
                 title: i18n._('Update Snapmaker Luban'),
                 message: i18n._(`Snapmaker Luban ${releaseName} Update`),
-                detail: i18n._(`Current version : ${oldVersionn}`)
+                detail: i18n._(`Current version : ${oldVersion}`)
                 // detail: 'A new version has been detected. Should i download it now?'
             };
-
             dialog.showMessageBox(dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
                     ipcRenderer.send('startingDownloadUpdate');
                 }
+                ipcRenderer.send('updateShouldCheckForUpdate', returnValue.checkboxChecked);
             });
         }
     },
