@@ -1343,12 +1343,29 @@ export const actions = {
     },
 
     /**
-     * Move element.
+     * Move element on mouse up
      */
     moveElement: (headType, element, { dx, dy }) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         SVGActions.moveElement(element, { dx, dy });
+        dispatch(actions.resetProcessState(headType));
+    },
+
+    /**
+     * Move elements on key down
+     */
+    moveElementsOnKeyDown: (headType, { dx, dy }) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.onMovingByArrowKeyDown({ dx, dy });
+    },
+
+    /**
+     * Move elements on key up
+     */
+    moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.onMovingByArrowKeyUp();
         dispatch(actions.resetProcessState(headType));
     },
 

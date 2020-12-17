@@ -84,6 +84,7 @@ class SVGCanvas extends PureComponent {
         onResizeElement: PropTypes.func.isRequired,
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
+        onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
@@ -136,6 +137,7 @@ class SVGCanvas extends PureComponent {
         this.setupSVGBackground();
         this.setupSVGContent();
         this.setupMouseEvents();
+        this.setupKeyEvents();
         this.setupPrintableArea();
         this.onResize();
         this.setupTextActions();
@@ -267,6 +269,10 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
         window.addEventListener('dblclick', this.onDblClick, false);
+    }
+
+    setupKeyEvents() {
+        window.addEventListener('keyup', this.onKeyUp, false);
     }
 
     setupPrintableArea() {
@@ -1003,6 +1009,21 @@ class SVGCanvas extends PureComponent {
             }
         }
     };
+
+    onKeyUp = (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                // use arrow keys to move models
+                // key down listener is in flux/keyboardShortcut
+                this.props.onMoveSelectedElementsByKey();
+                break;
+            default:
+                break;
+        }
+    }
 
     onDblClick = (evt) => {
         const mouseTarget = this.getMouseTarget(evt);

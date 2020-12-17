@@ -29,6 +29,7 @@ class SVGEditor extends PureComponent {
         onResizeElement: PropTypes.func.isRequired,
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
+        onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
 
@@ -109,6 +110,7 @@ class SVGEditor extends PureComponent {
                             onResizeElement={this.props.onResizeElement}
                             onAfterResizeElement={this.props.onAfterResizeElement}
                             onMoveElement={this.props.onMoveElement}
+                            onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                             onRotateElement={this.props.onRotateElement}
                             updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                         />

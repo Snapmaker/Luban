@@ -74,6 +74,7 @@ class Visualizer extends Component {
         onResizeElement: PropTypes.func.isRequired,
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
+        onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired
@@ -331,6 +332,7 @@ class Visualizer extends Component {
                         onResizeElement={this.props.onResizeElement}
                         onAfterResizeElement={this.props.onAfterResizeElement}
                         onMoveElement={this.props.onMoveElement}
+                        onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
@@ -552,6 +554,7 @@ const mapDispatchToProps = (dispatch) => {
         onResizeElement: (element, options) => dispatch(editorActions.resizeElement('laser', element, options)),
         onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('laser', element)),
         onMoveElement: (element, options) => dispatch(editorActions.moveElement('laser', element, options)),
+        onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('laser')),
         onRotateElement: (element, options) => dispatch(editorActions.rotateElement('laser', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),

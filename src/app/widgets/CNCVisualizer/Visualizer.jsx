@@ -75,6 +75,7 @@ class Visualizer extends Component {
         onResizeElement: PropTypes.func.isRequired,
         onAfterResizeElement: PropTypes.func.isRequired,
         onMoveElement: PropTypes.func.isRequired,
+        onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired
@@ -354,6 +355,7 @@ class Visualizer extends Component {
                         onResizeElement={this.props.onResizeElement}
                         onAfterResizeElement={this.props.onAfterResizeElement}
                         onMoveElement={this.props.onMoveElement}
+                        onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
@@ -569,6 +571,7 @@ const mapDispatchToProps = (dispatch) => {
         onResizeElement: (element, options) => dispatch(editorActions.resizeElement('cnc', element, options)),
         onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('cnc', element)),
         onMoveElement: (element, options) => dispatch(editorActions.moveElement('cnc', element, options)),
+        onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('cnc')),
         onRotateElement: (element, options) => dispatch(editorActions.rotateElement('cnc', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
