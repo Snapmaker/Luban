@@ -259,7 +259,7 @@ export class Polygons {
     /**
      * Removes vertices of the polygons to make sure that they are not too high
      */
-    simplify(smallestLineSegment = 0.05, allowedErrorDistance = 0.025) {
+    simplify(smallestLineSegment = 0.08, allowedErrorDistance = 0.04) {
         const smallestLineSegmentSquared = smallestLineSegment * smallestLineSegment;
         const allowedErrorDistanceSquared = allowedErrorDistance * allowedErrorDistance;
 
@@ -325,8 +325,6 @@ export class Polygons {
 
     convexHull() {
         const newPath = [];
-
-        // console.trace('convexHull', this.data);
 
         let first = this.data[0].path[0];
 

@@ -176,17 +176,21 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
 
         stepDownPaths.push(path);
 
+        let lastState = this.toolPath.getState();
+        let circle = Math.round(lastState.B / 360);
+
         for (let i = 0; i < stepDownPaths.length; i++) {
             for (let j = 0; j < stepDownPaths[i].length; j++) {
                 const p = stepDownPaths[i][j];
 
-                const lastState = this.toolPath.getState();
+                lastState = this.toolPath.getState();
 
-                let b = p.b;
+                let b = p.b + circle * 360;
 
                 while (Math.abs(lastState.B - b) > 180) {
                     b = lastState.B > b ? b + 360 : b - 360;
                 }
+                circle = Math.round(b / 360);
 
                 const { x, y } = p;
                 const gX = round(x, 3);
@@ -287,7 +291,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
     }
 
     _interpolateCurvePoints(slicerLayers, index, diffPolygons, lastPointRotate, pointRotate, hash, angle) {
-        const segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * 50);
+        const segCount = Math.ceil(Math.abs(lastPointRotate.x - pointRotate.x) * 10);
 
         const interpolatePointsTmp = new Polygon();
         for (let j = 1; j < segCount; j++) {
@@ -648,6 +652,11 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
 
         const slicerLayers = slicer.slicerLayers;
 
+        for (const slicerLayer of slicerLayers) {
+            delete slicerLayer.polygons;
+            delete slicerLayer.openPolygons;
+        }
+
         if (this.smoothY) {
             for (let i = 1; i < slicerLayers.length; i++) {
                 const slicerLayer = slicerLayers[i];
@@ -656,8 +665,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i - 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
-                this.emitProgress(0.2 * i / slicerLayers.length + 0.2);
             }
+            this.emitProgress(0.4);
 
             for (let i = slicerLayers.length - 2; i >= 0; i--) {
                 const slicerLayer = slicerLayers[i];
@@ -666,8 +675,8 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const offsetPolygons = slicerLayers[i + 1].polygonsPart.padding(offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
-                this.emitProgress(0.2 * (slicerLayers.length - i) / slicerLayers.length + 0.4);
             }
+            this.emitProgress(0.6);
         }
 
         const p = this.progress;
