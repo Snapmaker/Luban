@@ -59,9 +59,10 @@ export default (options) => new Promise((resolve) => {
     const props = {
         ...options,
         onConfirm: () => {
-            resolve();
+            resolve(true);
         },
         onCancel: () => {
+            resolve(false);
         },
         container: container
     };

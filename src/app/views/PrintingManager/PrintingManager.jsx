@@ -299,9 +299,12 @@ class PrintingManager extends PureComponent {
         onRemoveManagerDefinition: async (managerDisplayType) => {
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 const definition = this.state.materialDefinitionForManager;
-                await confirm({
+                const confirmed = await confirm({
                     body: `Are you sure to remove profile "${definition.name}"?`
                 });
+                if (!confirmed) {
+                    return;
+                }
 
                 await this.props.removeMaterialDefinition(definition);
 
@@ -312,9 +315,12 @@ class PrintingManager extends PureComponent {
             } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const definition = this.state.qualityDefinitionForManager;
 
-                await confirm({
+                const confirmed = await confirm({
                     body: `Are you sure to remove profile "${definition.name}"?`
                 });
+                if (!confirmed) {
+                    return;
+                }
 
                 await this.props.removeQualityDefinition(definition);
 
