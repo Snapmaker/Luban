@@ -1356,7 +1356,10 @@ export const actions = {
      * Move elements on key down
      */
     moveElementsOnKeyDown: (headType, { dx, dy }) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { page, SVGActions } = getState()[headType];
+        if (page === PAGE_PROCESS) {
+            return;
+        }
         SVGActions.onMovingByArrowKeyDown({ dx, dy });
     },
 
