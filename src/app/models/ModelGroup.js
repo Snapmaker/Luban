@@ -917,9 +917,9 @@ class ModelGroup extends EventEmitter {
 
     shouldApplyScaleToObjects(scaleX, scaleY, scaleZ) {
         return this.selectedGroup.children.every((meshObject) => {
-            if (scaleX * this.selectedGroup.scale.x * meshObject.scale.x < 0.01
-              || scaleY * this.selectedGroup.scale.y * meshObject.scale.y < 0.01
-              || scaleZ * this.selectedGroup.scale.z * meshObject.scale.z < 0.01
+            if (scaleX * meshObject.scale.x < 0.01
+              || scaleY * meshObject.scale.y < 0.01
+              || scaleZ * meshObject.scale.z < 0.01
             ) {
                 return false; // should disable
             }
@@ -957,7 +957,7 @@ class ModelGroup extends EventEmitter {
         } else {
             if (scaleX !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleX * this.selectedGroup.scale.x * meshObject.scale.x < 0.01
+                    if (scaleX * meshObject.scale.x < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -969,7 +969,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleY !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleY * this.selectedGroup.scale.y * meshObject.scale.y < 0.01
+                    if (scaleY * meshObject.scale.y < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -981,7 +981,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleZ !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleZ * this.selectedGroup.scale.z * meshObject.scale.z < 0.01
+                    if (scaleZ * meshObject.scale.z < 0.01
                     ) {
                         return false; // should disable
                     }
