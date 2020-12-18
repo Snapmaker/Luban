@@ -463,6 +463,7 @@ class ModelGroup extends EventEmitter {
             }
             model.meshObject.addEventListener('update', this.onModelUpdate);
             model.computeBoundingBox();
+            model.stickToPlate();
             this.models.push(model);
             let parent = this.object;
             if (model.supportTag) { // support parent should be the target model
@@ -682,15 +683,22 @@ class ModelGroup extends EventEmitter {
         this.prepareSelectedGroup();
     }
 
+    // refresh selected group matrix
     prepareSelectedGroup() {
         if (this.selectedModelArray.length === 1) {
+            ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
             ThreeUtils.liftObjectOnlyChildMatrix(this.selectedGroup);
             this.selectedGroup.uniformScalingState = this.selectedGroup.children[0].uniformScalingState;
         } else {
             this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
+
+            // set selected group position need to remove children temporarily
+            const children = [...this.selectedGroup.children];
+            children.map(obj => ThreeUtils.removeObjectParent(obj));
             const matrix = new Matrix4().makeTranslation(p.x, p.y, p.z);
             ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
+            children.map(obj => ThreeUtils.setObjectParent(obj, this.selectedGroup));
         }
     }
 
@@ -1008,7 +1016,7 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.rotation.z = rotationZ;
         }
         this.selectedGroup.updateMatrix();
-        this.selectedGroup.shouldUpdateBoundingbox = false;
+        this.selectedGroup.shouldUpdateBoundingbox = true;
         if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].supportTag) {
             const model = this.selectedModelArray[0];
             const revert = ThreeUtils.removeObjectParent(model.meshObject);
@@ -1024,7 +1032,6 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         // this.removeSelectedObjectParentMatrix();
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();

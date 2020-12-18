@@ -93,7 +93,7 @@ class CNCPath extends PureComponent {
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
-        const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
+        const isGreyscale = (mode === 'greyscale');
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (config.svgNodeName === 'text');
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
@@ -144,7 +144,7 @@ class CNCPath extends PureComponent {
                                 disabled={!selectedModelVisible}
                             />
                         )}
-                        {isProcess && isRasterGreyscale && (
+                        {isProcess && isGreyscale && (
                             <ReliefGcodeParameters
                                 disabled={!selectedModelVisible}
                             />
