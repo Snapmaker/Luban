@@ -1,6 +1,5 @@
 import map from 'lodash/map';
 import includes from 'lodash/includes';
-import isUndefined from 'lodash/isUndefined';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -210,8 +209,7 @@ class Control extends PureComponent {
             if (headType === HEAD_TYPE_CNC) {
                 gcode.push('G91', 'G0 Z5 F400', 'G90');
             }
-
-            if (!isUndefined(bbox.max.b)) {
+            if (workPosition.isFourAxis) {
                 const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
                 let maxB = bbox.max.b;
                 if (angleDiff > 360) {
