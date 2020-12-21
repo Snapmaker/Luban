@@ -108,7 +108,7 @@ class JobType extends PureComponent {
                                 <Input
                                     disabled={false}
                                     className={styles['input-box-left']}
-                                    value={toFixed(length, 2)}
+                                    value={toFixed(length, 1)}
                                     max={size.y}
                                     min={10}
                                     onChange={(value) => { this.props.updateMaterials({ length: value }); }}
@@ -124,7 +124,7 @@ class JobType extends PureComponent {
                                 <Input
                                     disabled={false}
                                     className={styles['input-box-left']}
-                                    value={toFixed(diameter, 2)}
+                                    value={toFixed(diameter, 1)}
                                     max={size.x}
                                     min={2}
                                     onChange={(value) => { this.props.updateMaterials({ diameter: value }); }}

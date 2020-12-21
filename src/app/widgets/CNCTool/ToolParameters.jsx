@@ -141,12 +141,11 @@ class ToolParameters extends PureComponent {
                             <img
                                 src="images/cnc/cnc-tool-straight-flut-88x88.png"
                                 role="presentation"
-                                alt="Straight Flute V-Bit"
+                                alt="Straight Groove V-bit"
                             />
                         </Anchor>
-                        <span className={styles['select-tool-text']}>{i18n._('Straight Flute V-Bit')}</span>
+                        <span className={styles['select-tool-text']}>{i18n._('Straight Groove V-bit')}</span>
                     </div>
-
                 </div>
 
                 <OptionalDropdown
@@ -166,7 +165,7 @@ class ToolParameters extends PureComponent {
                                     <li><b>{i18n._('Carving V-bit')}</b>: 0.2 mm</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 1.5 mm</li>
-                                    <li><b>{i18n._('Straight Flute V-bit')}</b>: 0.3 mm</li>
+                                    <li><b>{i18n._('Straight Groove V-bit')}</b>: 0.3 mm</li>
                                 </ul>
                             </div>
                         )}
@@ -194,7 +193,7 @@ class ToolParameters extends PureComponent {
                                     <li><b>{i18n._('Carving V-bit')}</b>: 30°</li>
                                     <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
                                     <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
-                                    <li><b>{i18n._('Straight Flute V-Bit')}</b>: 20°</li>
+                                    <li><b>{i18n._('Straight Groove V-bit')}</b>: 20°</li>
                                 </ul>
                             </div>
                         )}

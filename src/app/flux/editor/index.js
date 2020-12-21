@@ -155,11 +155,13 @@ export const actions = {
             });
     },
 
-    uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch) => {
+    uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
             progress: 0.25
         }));
+        const { materials } = getState()[headType];
+        file.isRotate = materials.isRotate;
         api.uploadImage(file)
             .then((res) => {
                 dispatch(actions.updateState(headType, {
@@ -1450,7 +1452,6 @@ export const actions = {
             }
         }));
         if (materials.isRotate !== allMaterials.isRotate) {
-            console.log(materials, newMaterials);
             dispatch(actions.processSelectedModel(headType));
         }
         dispatch(actions.showAllModelsObj3D(headType));
