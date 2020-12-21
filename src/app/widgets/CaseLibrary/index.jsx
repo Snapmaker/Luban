@@ -36,7 +36,8 @@ class CaseLibrary extends PureComponent {
         uploadCaseModel: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired,
         uploadCncCaseImage: PropTypes.func.isRequired,
-        uploadLaserCaseImage: PropTypes.func.isRequired
+        uploadLaserCaseImage: PropTypes.func.isRequired,
+        use4Axis: PropTypes.bool.isRequired
     };
 
 
@@ -220,42 +221,45 @@ class CaseLibrary extends PureComponent {
                             );
                         })}
                     </div>
-                    <h2 className={styles.subTitle}>
-                        {i18n._('4-axis')}
-                    </h2>
-                    <div className={styles.columns}>
-                        { CaseConfigFourAxis.map((config) => {
-                            return (
-                                <div
-                                    className={styles.column}
-                                    key={config.pathConfig.name + timestamp()}
-                                >
-                                    <div>
-                                        <img className={styles.imgIcon} src={config.imgSrc} alt={config.title} />
-                                    </div>
-                                    <div className={styles.cardtext}>
-                                        <h4>{config.title}</h4>
-                                        <p>{i18n._('by Snapmaker')}</p>
-                                    </div>
+                    {this.props.use4Axis && (
+                        <div>
+                            <h2 className={styles.subTitle}>
+                                {i18n._('4-axis')}
+                            </h2>
+                            <div className={styles.columns}>
+                                { CaseConfigFourAxis.map((config) => {
+                                    return (
+                                        <div
+                                            className={styles.column}
+                                            key={config.pathConfig.name + timestamp()}
+                                        >
+                                            <div>
+                                                <img className={styles.imgIcon} src={config.imgSrc} alt={config.title} />
+                                            </div>
+                                            <div className={styles.cardtext}>
+                                                <h4>{config.title}</h4>
+                                                <p>{i18n._('by Snapmaker')}</p>
+                                            </div>
 
-                                    <button
-                                        type="button"
-                                        className={classNames(
-                                            'sm-btn-large',
-                                            'sm-btn-default',
-                                            styles.load,
-                                        )}
-                                        disabled={this.props.isConnected && (this.props.series === MACHINE_SERIES.A150.value || this.props.series === MACHINE_SERIES.ORIGINAL.value)}
-                                        onClick={() => this.loadFourAxisCase(config)}
-                                    >
-                                        {i18n._(config.loadText || 'load')}
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                            <button
+                                                type="button"
+                                                className={classNames(
+                                                    'sm-btn-large',
+                                                    'sm-btn-default',
+                                                    styles.load,
+                                                )}
+                                                disabled={this.props.isConnected && (this.props.series === MACHINE_SERIES.A150.value || this.props.series === MACHINE_SERIES.ORIGINAL.value)}
+                                                onClick={() => this.loadFourAxisCase(config)}
+                                            >
+                                                {i18n._(config.loadText || 'load')}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
-
             </div>
         );
     }
@@ -270,6 +274,7 @@ const mapStateToProps = (state) => {
         series: machine.series,
         headType: machine.headType,
         isConnected: machine.isConnected,
+        use4Axis: machine.use4Axis,
         defaultMaterialId,
         qualityDefinitions,
         activeDefinition

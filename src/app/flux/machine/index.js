@@ -141,8 +141,9 @@ const INITIAL_STATE = {
     // Whether to check for available updates when the software is opened
     shouldCheckForUpdate: true,
     // Whether an update is being downloaded
-    isDownloading: false
+    isDownloading: false,
     // endregion
+    use4Axis: false
 };
 
 
@@ -159,6 +160,8 @@ export const actions = {
         actions.__initControllerEvents(dispatch, getState);
 
         actions.__initCNCSecurityWarning(dispatch);
+
+        actions.__init4Axis(dispatch);
 
         if (machineStore.get('shouldCheckForUpdate') === false) {
             const shouldCheckForUpdate = false;
@@ -358,6 +361,14 @@ export const actions = {
 
         dispatch(baseActions.updateState({
             shouldShowCncWarning
+        }));
+    },
+
+    __init4Axis: (dispatch) => {
+        const use4Axis = machineStore.get('settings.use4Axis');
+
+        dispatch(baseActions.updateState({
+            use4Axis: use4Axis === 'true' || use4Axis === true
         }));
     },
 
