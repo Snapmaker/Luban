@@ -863,6 +863,7 @@ class TransformControls extends Object3D {
 
     // Calculate the bbox of each model in the selectedGroup
     updateBoundingBox() {
+        this.object.updateMatrixWorld();
         this.object.children.forEach((child, index) => {
             // cannot get 'child.geometry.boundingBox', have to use 'child.geometry'
             if (child.geometry) {
