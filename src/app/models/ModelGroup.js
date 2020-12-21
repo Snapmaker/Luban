@@ -159,6 +159,7 @@ class ModelGroup extends EventEmitter {
                 const objectChildrenScale = new Vector3();
                 const objectChildrenQuaternion = new Quaternion();
                 // object
+                child.updateMatrixWorld();
                 child.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
 
                 if (selectedGroup.children.length === 1) {
@@ -488,12 +489,13 @@ class ModelGroup extends EventEmitter {
         const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         this.selectedGroup.children.forEach((meshObject) => {
-            maxObjectPosition.x = Math.max(meshObject.position.x, maxObjectPosition.x);
-            maxObjectPosition.y = Math.max(meshObject.position.y, maxObjectPosition.y);
-            maxObjectPosition.z = Math.max(meshObject.position.z, maxObjectPosition.z);
+            const position = meshObject.getWorldPosition();
+            maxObjectPosition.x = Math.max(position.x, maxObjectPosition.x);
+            maxObjectPosition.y = Math.max(position.y, maxObjectPosition.y);
+            maxObjectPosition.z = Math.max(position.z, maxObjectPosition.z);
 
-            minObjectPosition.x = Math.min(meshObject.position.x, minObjectPosition.x);
-            minObjectPosition.y = Math.min(meshObject.position.y, minObjectPosition.y);
+            minObjectPosition.x = Math.min(position.x, minObjectPosition.x);
+            minObjectPosition.y = Math.min(position.y, minObjectPosition.y);
         });
         if (this.selectedGroup.children.length > 1) {
             return new Vector3(
@@ -692,11 +694,12 @@ class ModelGroup extends EventEmitter {
         } else {
             this.selectedGroup.uniformScalingState = true;
             const p = this.calculateSelectedGroupPosition(this.selectedGroup);
-
             // set selected group position need to remove children temporarily
             const children = [...this.selectedGroup.children];
             children.map(obj => ThreeUtils.removeObjectParent(obj));
-            const matrix = new Matrix4().makeTranslation(p.x, p.y, p.z);
+            // only make the diff translation
+            const oldPosition = this.selectedGroup.getWorldPosition();
+            const matrix = new Matrix4().makeTranslation(p.x - oldPosition.x, p.y - oldPosition.y, p.z - oldPosition.z);
             ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.selectedGroup));
         }
@@ -1016,7 +1019,7 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.rotation.z = rotationZ;
         }
         this.selectedGroup.updateMatrix();
-        this.selectedGroup.shouldUpdateBoundingbox = true;
+        this.selectedGroup.shouldUpdateBoundingbox = false;
         if (this.selectedModelArray.length === 1 && this.selectedModelArray[0].supportTag) {
             const model = this.selectedModelArray[0];
             const revert = ThreeUtils.removeObjectParent(model.meshObject);
@@ -1040,7 +1043,7 @@ class ModelGroup extends EventEmitter {
         });
         this._checkAnyModelOversteppedOrSelected();
         // this.applySelectedObjectParentMatrix();
-        this.selectedGroup.shouldUpdateBoundingbox = true;
+        this.selectedGroup.shouldUpdateBoundingbox = false;
 
         // removeSelectedObjectParentMatrix makes object matrixWorld exception
         this.prepareSelectedGroup();
