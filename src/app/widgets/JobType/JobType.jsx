@@ -21,7 +21,9 @@ class JobType extends PureComponent {
 
         materials: PropTypes.object.isRequired,
 
-        updateMaterials: PropTypes.func.isRequired
+        updateMaterials: PropTypes.func.isRequired,
+
+        use4Axis: PropTypes.bool.isRequired
     };
 
     state = {
@@ -33,6 +35,7 @@ class JobType extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Job Type & Size'));
+        this.props.setDisplay(this.props.use4Axis);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -142,13 +145,14 @@ class JobType extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
-    const { size } = state.machine;
+    const { size, use4Axis } = state.machine;
     const { page, materials } = state[headType];
 
     return {
         size,
         page,
-        materials
+        materials,
+        use4Axis
     };
 };
 
