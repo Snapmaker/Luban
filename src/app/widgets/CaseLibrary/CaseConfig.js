@@ -532,13 +532,43 @@ export const CaseConfigFourAxis = [
     },
 
     {
-        tag: 'workspace', // 3dp、laser、cnc、workspace
+        tag: 'cnc',
         title: '4-Axis Linkage CNC Carved Lion',
+        mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+        materials: {
+            diameter: 35,
+            fixtureLength: 20,
+            isCW: true,
+            isRotate: true,
+            length: 75
+        },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
         pathConfig: {
-            name: 'CNC_test_4th.cnc.zip',
+            // for stl in cnc
+            isRotate: true,
+            name: 'CNC_test_4th_lion.stl.zip',
             casePath: './FourAxis/'
         },
-        loadText: 'load gcode'
+        caseConfigs: {
+            config: {
+
+            },
+            gcodeConfig: {
+                toolSnap: CNC_TOOL_SNAP_S_F_S,
+                stepDown: 17.5,
+                safetyHeight: 1,
+                stopHeight: 10,
+                jogSpeed: 1500
+                // plungeSpeed: 400,
+                // workSpeed: 400
+            }
+        },
+        caseTransformation: {
+            positionX: 0,
+            positionY: 22.5,
+            rotationZ: 0,
+            width: 110,
+            height: 45
+        }
     }
 ];

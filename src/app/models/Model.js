@@ -76,6 +76,10 @@ class Model {
             this.transformation.width = width;
             this.transformation.height = height;
         }
+        if (width && height) {
+            this.transformation.scaleX = this.transformation.width / width;
+            this.transformation.scaleY = this.transformation.height / height;
+        }
 
         this.modelObject3D = null;
         this.processObject3D = null;
