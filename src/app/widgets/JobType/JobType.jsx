@@ -35,11 +35,11 @@ class JobType extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Job Type & Size'));
-        this.props.setDisplay(this.props.use4Axis);
+        this.props.setDisplay(this.props.use4Axis && this.props.page === PAGE_EDITOR);
     }
 
     componentWillReceiveProps(nextProps) {
-        this.props.setDisplay(nextProps.page === PAGE_EDITOR);
+        this.props.setDisplay(this.props.use4Axis && nextProps.page === PAGE_EDITOR);
     }
 
     render() {
