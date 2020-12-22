@@ -44,12 +44,13 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         return toolPath;
     }
 
-    generateToolPathSliceModeLinkage() {
+    async generateToolPathSliceModeLinkage() {
         const generator = new CncMeshLinkageToolPathGenerator(this.modelInfo);
         generator.on('progress', (p) => {
             this.emit('progress', p);
         });
-        return generator.generateToolPathObj();
+        const toolPath = await generator.generateToolPathObj();
+        return toolPath;
     }
 
     async generateToolPathSliceModeMultiFace() {
@@ -141,7 +142,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             if (this.sliceMode === CNC_MESH_SLICE_MODE_ROTATION) {
                 res = await this.generateToolPathSliceModeRotation();
             } else if (this.sliceMode === CNC_MESH_SLICE_MODE_LINKAGE) {
-                res = this.generateToolPathSliceModeLinkage();
+                res = await this.generateToolPathSliceModeLinkage();
             }
         } else {
             res = await this.generateToolPathSliceModeRotation();

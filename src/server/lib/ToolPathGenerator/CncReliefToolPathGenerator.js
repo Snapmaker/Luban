@@ -5,6 +5,7 @@ import Normalizer from './Normalizer';
 import { round } from '../../../shared/lib/utils';
 import { CNC_IMAGE_NEGATIVE_RANGE_FIELD } from '../../constants';
 import XToBToolPath from '../ToolPath/XToBToolPath';
+import { asyncFor } from '../../../shared/lib/array-async';
 
 const OVERLAP_RATE = 0.5;
 const MAX_DENSITY = 20;
@@ -388,7 +389,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         };
     };
 
-    parseImageToToolPathObj = (data) => {
+    parseImageToToolPathObj = async (data) => {
         const { jogSpeed, workSpeed, plungeSpeed } = this.gcodeConfig;
         let { safetyHeight, stopHeight } = this.gcodeConfig;
 
@@ -413,7 +414,6 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         const zMin = [];
 
-
         for (let j = 0; j < this.targetHeight; j++) {
             zMin[j] = this.initialZ;
             for (let i = 0; i < this.targetWidth; i++) {
@@ -430,7 +430,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             let isOrder = true;
             const zState = new ZState();
 
-            for (let j = 0; j < this.targetHeight; j++) {
+            await asyncFor(0, this.targetHeight - 1, 1, (j) => {
                 const gY = normalizer.y(this.targetHeight - 1 - j);
 
                 if (zMin[j] >= curDepth + this.stepDown) {
@@ -439,7 +439,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         z: this.initialZ,
                         f: jogSpeed
                     });
-                    continue;
+                    return;
                 }
 
                 if (j > 0) {
@@ -495,7 +495,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     progress = p;
                     this.emit('progress', progress);
                 }
-            }
+            });
             if (cutDown) {
                 this.toolPath.move0Z(safetyHeight, jogSpeed);
                 this.toolPath.move0XY(normalizedX0, normalizedHeight, jogSpeed);
@@ -548,8 +548,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
     }
 
     generateToolPathObj() {
-        return this._processImage().then((data) => {
-            return this.parseImageToToolPathObj(data);
+        return this._processImage().then(async (data) => {
+            const res = await this.parseImageToToolPathObj(data);
+            return res;
         });
     }
 }
