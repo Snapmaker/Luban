@@ -289,6 +289,12 @@ class ToolPath {
                     this.estimatedTime += commandObj.P / 1000;
                 }
             }
+            if (commandObj.G === 1 || commandObj.G === 0) {
+                const newDirection = this.getDirection(commandObj);
+                if (newDirection) {
+                    this.estimatedTime += newDirection.lineLength * 60 / (commandObj.G === 0 ? this.state.moveRate : this.state.rapidMoveRate);
+                }
+            }
             this.commands.push(commandObj);
             this.setDirection(null);
         }
