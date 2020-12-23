@@ -19,7 +19,7 @@ const DEFAULT_STATE = {
         right: {
             show: true,
             widgets: [
-                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
+                'wifi-transport', 'enclosure', 'filter', 'control', 'macro', 'gcode'
             ]
         }
     },

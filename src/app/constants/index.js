@@ -37,6 +37,11 @@ export const MODAL_ADD_MACRO = 'add';
 export const MODAL_EDIT_MACRO = 'edit';
 export const MODAL_RUN_MACRO = 'run';
 
+// Filter
+export const FILTER_SPEED_FAST = 'Fast';
+export const FILTER_SPEED_MEDIUM = 'Medium';
+export const FILTER_SPEED_LOW = 'Low';
+
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
