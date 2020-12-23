@@ -70,7 +70,7 @@ class Canvas extends Component {
         this.backgroundGroup = this.props.backgroundGroup;
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
-        this.transformSourceType = this.props.transformSourceType || '3D';
+        this.transformSourceType = this.props.transformSourceType || '3D'; // '3D' | '2D'
         this.toolPathModelGroupObject = this.props.toolPathModelGroupObject;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
@@ -85,12 +85,13 @@ class Canvas extends Component {
         // controls
         this.transformControls = null; // pan/scale/rotate selected model
 
+
         // threejs
         this.camera = null;
-        this.light = null;
         this.renderer = null;
         this.scene = null;
         this.group = null;
+        this.light = null;
     }
 
     componentDidMount() {
@@ -173,7 +174,12 @@ class Canvas extends Component {
 
         this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
-        this.light = new DirectionalLight(0xffffff, 0.6);
+        if (this.transformSourceType === '2D') {
+            this.light = new DirectionalLight(0xffffff, 0.6);
+        }
+        if (this.transformSourceType === '3D') {
+            this.light = new DirectionalLight(0x666666, 0.4);
+        }
         this.light.position.copy(this.cameraInitialPosition);
 
         // We need to change the default up vector if we use camera to respect XY plane
@@ -194,7 +200,14 @@ class Canvas extends Component {
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
 
-        this.scene.add(new HemisphereLight(0x000000, 0xcecece));
+        if (this.transformSourceType === '3D') {
+            const lightTop = new HemisphereLight(0xdddddd, 0x666666);
+            lightTop.position.copy(new Vector3(0, 0, 1000));
+            this.scene.add(lightTop);
+        }
+        if (this.transformSourceType === '2D') {
+            this.scene.add(new HemisphereLight(0x000000, 0xcecece));
+        }
 
         this.node.current.appendChild(this.renderer.domElement);
     }
