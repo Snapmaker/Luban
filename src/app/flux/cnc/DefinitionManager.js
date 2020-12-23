@@ -1,20 +1,16 @@
 import api from '../../api';
 
 class DefinitionManager {
-    activeToolDefinition = null;
+    activeToolListDefinition = null;
 
     toolDefinitions = [];
 
     async init() {
-        // active definition
-        const res = await api.cncConfigs.getToolListDefinition('active');
-        this.activeToolDefinition = res.body.definition;
-
-        // res = await api.cncConfigs.getDefinition('mdf', 'snap.flat-end-mill');
-        // this.activeToolDefinition = res.body.definition;
-
         const toolDefinitions = await api.cncConfigs.getAllDefinitions();
         this.toolDefinitions = toolDefinitions.body.definitions;
+        // active definition
+        const res = await api.cncConfigs.getToolListDefinition('active');
+        this.activeToolListDefinition = res.body.definition;
     }
 
     async getToolListDefinition(definitionId) {
@@ -37,19 +33,18 @@ class DefinitionManager {
         return res.body.definition;
     }
 
-    async removeToolCategoryDefinition(activeToolCategory) {
-        console.log('activeToolCategory', activeToolCategory);
-        await api.cncConfigs.removeToolCategoryDefinition(activeToolCategory.category);
+    async removeToolCategoryDefinition(definitionId) {
+        await api.cncConfigs.removeToolCategoryDefinition(definitionId);
+        return null;
     }
 
     async removeToolListDefinition(activeToolCategory, activeToolList) {
         const res = await api.cncConfigs.removeToolListDefinition(activeToolCategory, activeToolList);
         return res.body.definition;
     }
-    // TODO:
 
-    async uploadDefinition(definitionId, tmpPath) {
-        const res = await api.printingConfigs.uploadDefinition(definitionId, tmpPath);
+    async uploadToolDefinition(uploadName, toolDefinitions) {
+        const res = await api.cncConfigs.uploadToolDefinition(uploadName, toolDefinitions);
         const { err, definition } = res.body;
         if (err) {
             console.error(err);
@@ -59,11 +54,17 @@ class DefinitionManager {
         }
     }
 
-    // Update definition
-    // Only name & settings are configurable
-    async updateDefinition(definition) {
-        await api.printingConfigs.updateDefinition(definition.definitionId, definition, this.series);
+    async updateToolDefinition(activeToolCategory) {
+        await api.cncConfigs.updateToolDefinition(activeToolCategory);
     }
+
+    async changeActiveToolListDefinition(definitionId, toolName) {
+        const res = await api.cncConfigs.changeActiveToolListDefinition(definitionId, toolName);
+        return res.body.definition;
+    }
+    // TODO:
+    // Update active definition
+    // Only definitionId & toolName are configurable
 }
 
 const definitionManager = new DefinitionManager();

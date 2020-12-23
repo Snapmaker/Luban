@@ -1,30 +1,47 @@
 {
-    "category": "mdf",
+    "category": "Default",
+    "definitionId": "Default",
     "toolName": "snap.v-bit",
     "cuttingData": {
         "diameter": {
-            "default_value": 0.2
+            "default_value": 0.2,
+            "unit": "mm",
+            "label": "Cutting Diameter"
         },
         "angle": {
-            "default_value": 30
+            "default_value": 30,
+            "unit": "°",
+            "label": "Point Angle"
         },
         "shaftDiameter": {
-            "default_value": 3.175
+            "default_value": 3.175,
+            "unit": "mm",
+            "label": "Shaft Diameter"
         },
         "jogSpeed": {
-            "default_value": 300
+            "default_value": 300,
+            "unit": "mm/min",
+            "label": "Jog Speed"
         },
         "workSpeed": {
-            "default_value": 300
+            "default_value": 300,
+            "unit": "mm/min",
+            "label": "Work Speed"
         },
         "plungeSpeed": {
-            "default_value": 300
+            "default_value": 300,
+            "unit": "mm/min",
+            "label": "Plunge Speed"
         },
         "stepdown": {
-            "default_value": 0.5
+            "default_value": 0.5,
+            "unit": "mm",
+            "label": "Step Down"
         },
         "density": {
-            "default_value": 5
+            "default_value": 5,
+            "unit": "dot/mm",
+            "label": "Density"
         }
     }
 }

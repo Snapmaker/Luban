@@ -1,46 +1,34 @@
 import fs from 'fs';
 import path from 'path';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, CNC_CONFIG_SUBCATEGORY } from '../../constants';
 import DataStorage from '../../DataStorage';
-// import { timestamp } from '../../../shared/lib/random-utils';
 
-const cncConfig = 'cncConfig';
-
-const isDefaultToolDefinition = (definitionName) => {
-    return definitionName.indexOf('quality') !== -1
-     && (definitionName.indexOf('fast_print') !== -1
-     || definitionName.indexOf('high_quality') !== -1
-     || definitionName.indexOf('normal_quality') !== -1
-     );
-};
 
 /**
  * Get definition
  */
 export const getToolListDefinition = (req, res) => {
-    const { category } = req.params;
-    const definitionId = req.query.definitionId;
-    if (!category) {
+    const { definitionId } = req.params;
+    const toolName = req.query.toolName;
+    if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
-            err: 'Parameter "category" is required.'
+            err: 'Parameter "definitionId" is required.'
         });
         return;
     }
 
-    const filePath = path.join(`${DataStorage.configDir}`, cncConfig, `${category}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}.def.json`);
 
     const data = fs.readFileSync(filePath, 'utf8');
     // try {
     const json = JSON.parse(data);
     let result;
-    if (category === 'active') {
+    if (definitionId === 'active') {
         result = json;
-        console.log('active', result);
     } else {
-        const newDefinition = json.toolList.find((item) => item.toolName === definitionId);
-        newDefinition.category = json.category;
+        const newDefinition = json.toolList.find((item) => item.toolName === toolName);
+        newDefinition.definitionId = json.definitionId;
         result = newDefinition;
-        console.log('filePath', category, newDefinition, filePath, result);
     }
     res.send({ definition: result });
     // } catch (e) {
@@ -50,17 +38,41 @@ export const getToolListDefinition = (req, res) => {
     // }
 };
 
+export const changeActiveToolListDefinition = (req, res) => {
+    const { definitionId } = req.params;
+    const toolName = req.query.toolName;
+    if (!definitionId) {
+        res.status(ERR_BAD_REQUEST).send({
+            err: 'Parameter "definitionId" is required.'
+        });
+        return;
+    }
+
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}.def.json`);
+    const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, 'active.def.json');
+    const data = fs.readFileSync(filePath, 'utf8');
+    const json = JSON.parse(data);
+    const newDefinition = json.toolList.find((item) => item.toolName === toolName);
+    newDefinition.definitionId = json.definitionId;
+    fs.writeFile(activeFilePath, JSON.stringify(newDefinition, null, 2), 'utf8', (err) => {
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({ definition: newDefinition });
+        }
+    });
+};
+
 export const getToolDefinitions = (req, res) => {
     const regex = /([A-Za-z0-9_]+).def.json$/;
 
-    const configDir = `${DataStorage.configDir}/cncConfig`;
+    const configDir = `${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`;
     const filenames = fs.readdirSync(configDir);
 
     // // Load pre-defined definitions first
     const definitions = [];
 
     for (const filename of filenames) {
-        console.log('filename.substr(0, filename.length - 9)', filename.substr(0, filename.length - 9));
         if (regex.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
             const filePath = path.join(configDir, filename);
             const data = fs.readFileSync(filePath, 'utf8');
@@ -72,13 +84,11 @@ export const getToolDefinitions = (req, res) => {
 };
 export const createToolCategoryDefinition = (req, res) => {
     const { activeToolCategory } = req.body;
-    const category = activeToolCategory.category;
-    // const newCategoryPrefix = `${category}${timestamp()}`;
-    const filename = `${category}.def.json`;
+    const definitionId = activeToolCategory.definitionId;
+    const filename = `${definitionId}.def.json`;
 
-    const destPath = path.join(`${DataStorage.configDir}`, cncConfig, filename);
+    const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
 
-    console.log('createToolDefinition', destPath, activeToolCategory);
     fs.writeFile(destPath, JSON.stringify(activeToolCategory, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -91,11 +101,10 @@ export const createToolCategoryDefinition = (req, res) => {
 export const createToolListDefinition = (req, res) => {
     const { activeToolCategory, activeToolList } = req.body;
     const newActiveToolDefinition = JSON.parse(JSON.stringify(activeToolList));
-    const category = activeToolCategory.category;
-    const filename = `${category}.def.json`;
-    console.log('newActiveToolDefinition', newActiveToolDefinition);
+    const definitionId = activeToolCategory.definitionId;
+    const filename = `${definitionId}.def.json`;
 
-    const destPath = path.join(`${DataStorage.configDir}`, cncConfig, filename);
+    const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
     activeToolCategory.toolList.push(newActiveToolDefinition);
 
     fs.writeFile(destPath, JSON.stringify(activeToolCategory, null, 2), 'utf8', (err) => {
@@ -109,10 +118,9 @@ export const createToolListDefinition = (req, res) => {
 };
 
 export const removeToolCategoryDefinition = (req, res) => {
-    const { category } = req.params;
+    const { definitionId } = req.body;
 
-    const filePath = path.join(`${DataStorage.configDir}/${cncConfig}`, `${category}.def.json`);
-    console.log('removeToolCategoryDefinition', category, filePath);
+    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -124,12 +132,11 @@ export const removeToolCategoryDefinition = (req, res) => {
 export const removeToolListDefinition = (req, res) => {
     const { activeToolCategory, activeToolList } = req.body;
     const newActiveToolDefinition = JSON.parse(JSON.stringify(activeToolList));
-    const category = activeToolCategory.category;
-    const filename = `${category}.def.json`;
+    const definitionId = activeToolCategory.definitionId;
+    const filename = `${definitionId}.def.json`;
 
-    const destPath = path.join(`${DataStorage.configDir}`, cncConfig, filename);
+    const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
     activeToolCategory.toolList = activeToolCategory.toolList.filter(d => d.toolName !== newActiveToolDefinition.toolName);
-    console.log('removeToolListDefinition', activeToolCategory);
 
     fs.writeFile(destPath, JSON.stringify(activeToolCategory, null, 2), 'utf8', (err) => {
         if (err) {
@@ -142,25 +149,10 @@ export const removeToolListDefinition = (req, res) => {
 };
 
 
-export const updateDefinition = (req, res) => {
-    const { definitionId } = req.params;
-    const series = isDefaultQualityDefinition(definitionId) ? req.body.series : '';
-
-    const definitionLoader = new DefinitionLoader();
-    definitionLoader.loadDefinition(definitionId, series);
-
-    const { definition } = req.body;
-
-    if (definition.name) {
-        definitionLoader.updateName(definition.name);
-    }
-
-    if (definition.settings) {
-        definitionLoader.updateSettings(definition.settings);
-    }
-
-    const filePath = path.join(`${DataStorage.configDir}/${series}`, `${definitionId}.def.json`);
-    fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
+export const updateToolDefinition = (req, res) => {
+    const { activeToolCategory } = req.body;
+    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${activeToolCategory.definitionId}.def.json`);
+    fs.writeFile(filePath, JSON.stringify(activeToolCategory, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
         } else {
@@ -170,32 +162,39 @@ export const updateDefinition = (req, res) => {
     });
 };
 
-export const uploadDefinition = (req, res) => {
-    const { definitionId, tmpPath } = req.body;
-    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${tmpPath}`, 'utf-8');
+export const uploadToolDefinition = (req, res) => {
+    const { uploadName, toolDefinitions } = req.body;
+    const filePath = uploadName;
+    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${filePath}`, 'utf-8');
     const obj = JSON.parse(readFileSync);
-
-    if (!obj.inherits) {
-        obj.inherits = 'fdmprinter';
-    }
-
-    if (!obj.metadata) {
-        obj.metadata = {};
-    }
-    obj.metadata.readonly = false;
-
-    const definitionLoader = new DefinitionLoader();
-    try {
-        definitionLoader.loadJSON(definitionId, obj);
-        const filePath = path.join(`${DataStorage.configDir}`, `${definitionId}.def.json`);
-        fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
-            if (err) {
-                res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
-            } else {
-                res.send({ status: 'ok', definition: definitionLoader.toObject() });
-            }
+    const newDefinitionId = uploadName.substr(0, uploadName.length - 9);
+    obj.definitionId = newDefinitionId;
+    // // TODO: if have't the 'toolList',should add default toolDefinition
+    if (obj.toolList) {
+        obj.toolList.forEach((item) => {
+            item.definitionId = newDefinitionId;
         });
-    } catch (e) {
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });
+    } else {
+        const defaultToolCategory = toolDefinitions.find((d) => d.definitionId === 'Default');
+        obj.toolList = defaultToolCategory.toolList;
     }
+
+    if (!obj.category) {
+        obj.category = newDefinitionId;
+    }
+    while (toolDefinitions.find(d => d.category === obj.category)) {
+        obj.category = `#${obj.category}`;
+    }
+    // try {
+    const newFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filePath);
+    fs.writeFile(newFilePath, JSON.stringify(obj, null, 2), 'utf8', (err) => {
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({ status: 'ok', definition: obj });
+        }
+    });
+    // } catch (e) {
+    //     res.status(ERR_INTERNAL_SERVER_ERROR).send({ err: e });
+    // }
 };

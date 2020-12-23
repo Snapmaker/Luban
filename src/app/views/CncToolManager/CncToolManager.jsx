@@ -3,93 +3,70 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes } from 'lodash';
-// import Select from 'react-select';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions as printingActions } from '../../flux/printing';
 import { actions as cncActions } from '../../flux/cnc';
 import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS } from '../../constants';
 
+const SUBCATEGORY = 'CncConfig';
 
-// Only custom material is editable, changes on diameter is not allowed as well
-function isDefinitionEditable(definition) {
-    return !definition.metadata.readonly;
+function isOfficialListDefinition(activeToolList) {
+    return includes(['Default'],
+        activeToolList.definitionId)
+            && includes(['snap.v-bit',
+                'snap.flat-end-mill',
+                'snap.ball-end-mill',
+                'snap.straight-flute-sharp'],
+            activeToolList.toolName);
 }
 
-function isOfficialDefinition(definition) {
-    if (definition) {
-        return includes(['mdf'],
-            definition.category);
-    } else {
-        return true;
-    }
-}
 function isOfficialCategoryDefinition(activeToolCategory) {
-    return includes(['mdf'],
-        activeToolCategory.category);
+    return includes(['Default'],
+        activeToolCategory.definitionId);
 }
 class PrintingManager extends PureComponent {
     static propTypes = {
         showCncToolManager: PropTypes.bool,
-        managerDisplayType: PropTypes.string.isRequired,
-        materialDefinitions: PropTypes.array.isRequired,
-        qualityDefinitions: PropTypes.array.isRequired,
         toolDefinitions: PropTypes.array.isRequired,
-        // activeToolListDefinition: PropTypes.object,
-        series: PropTypes.string.isRequired,
         duplicateToolCategoryDefinition: PropTypes.func.isRequired,
         duplicateToolListDefinition: PropTypes.func.isRequired,
 
-        updateQualityDefinitionName: PropTypes.func.isRequired,
-        updateMaterialDefinitionName: PropTypes.func.isRequired,
-        updateDefinitionsForManager: PropTypes.func.isRequired,
+        updateToolListDefinition: PropTypes.func.isRequired,
+        updateToolDefinitionName: PropTypes.func.isRequired,
+        // updateDefinitionsForManager: PropTypes.func.isRequired,
         removeToolCategoryDefinition: PropTypes.func.isRequired,
         removeToolListDefinition: PropTypes.func.isRequired,
+        onUploadToolDefinition: PropTypes.func.isRequired,
 
-        updateDefinitionSettings: PropTypes.func.isRequired,
-        onUploadManagerDefinition: PropTypes.func.isRequired,
-        exportPrintingManagerFile: PropTypes.func.isRequired,
+        // updateDefinitionSettings: PropTypes.func.isRequired,
+        exportConfigFile: PropTypes.func.isRequired,
 
-        updateShowCncToolManager: PropTypes.func.isRequired,
-        updateManagerDisplayType: PropTypes.func.isRequired,
-        updateDefaultMaterialId: PropTypes.func.isRequired
+        updateShowCncToolManager: PropTypes.func.isRequired
     };
 
-   materialFileInput = React.createRef();
-
-   qualityFileInput = React.createRef();
+   toolFileInput = React.createRef();
 
     state = {
-        materialDefinitionForManager: null,
-        qualityDefinitionForManager: null,
-        materialDefinitionOptions: [],
-        qualityDefinitionOptions: [],
         showCncToolManager: false,
+        nameForToolList: 'snap.v-bit',
 
         activeToolListDefinition: null,
         activeToolCategory: null,
 
         isCategorySelected: false,
-        notificationMessage: '',
-        nameForMaterial: 'PLA',
-        nameForQuality: 'Fast Print'
+        notificationMessage: ''
     };
 
     actions = {
         hidePrintingManager: () => {
             this.props.updateShowCncToolManager(false);
-        },
-        updateManagerDisplayType: (managerDisplayType) => {
-            this.actions.clearNotification();
-            this.props.updateManagerDisplayType(managerDisplayType);
         },
         showNotification: (msg) => {
             this.setState({
@@ -101,216 +78,110 @@ class PrintingManager extends PureComponent {
                 notificationMessage: ''
             });
         },
-        onChangeMaterialFileForManager: (event) => {
-            const materialFile = event.target.files[0];
-            this.props.onUploadManagerDefinition(materialFile, this.props.managerDisplayType);
-        },
-        onChangeQualityFileForManager: (event) => {
-            const qualityFile = event.target.files[0];
-            this.props.onUploadManagerDefinition(qualityFile, this.props.managerDisplayType);
-        },
-        importFile: (managerDisplayType) => {
-            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                this.materialFileInput.current.value = null;
-                this.materialFileInput.current.click();
-            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
-                this.qualityFileInput.current.value = null;
-                this.qualityFileInput.current.click();
-            }
-        },
-        exportPrintingManagerFile: (managerDisplayType) => {
-            let definitionId, targetFile;
-            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
-                definitionId = this.state.materialDefinitionForManager.definitionId;
-                targetFile = `${definitionId}.def.json`;
-            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
-                const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
-                definitionId = qualityDefinitionForManager.definitionId;
-                if (isOfficialDefinition(qualityDefinitionForManager)) {
-                    targetFile = `${this.props.series}/${definitionId}.def.json`;
-                } else {
-                    targetFile = `${definitionId}.def.json`;
-                }
-            }
-            this.props.exportPrintingManagerFile(targetFile);
-        },
-
-        onSelectQualityType: (definition) => {
+        onChangeToolCategoryName: (event) => {
+            const { activeToolCategory } = this.state;
             this.setState({
-                qualityDefinitionForManager: definition,
-                nameForQuality: definition.name
+                activeToolCategory: {
+                    ...activeToolCategory,
+                    category: event.target.value
+                }
             });
         },
-        onSelectQualityTypeById: (definitionId) => {
-            const definition = this.props.qualityDefinitions.find(d => d.definitionId === definitionId);
-            this.actions.onSelectQualityType(definition);
-        },
-        onChangeQualityDefinitionForManager: (key, value, checkboxKeyArray) => {
-            const { qualityDefinitionForManager, qualityDefinitionOptions } = this.state;
-
-            if (!isDefinitionEditable(qualityDefinitionForManager)) {
-                return;
-            }
-
-            qualityDefinitionForManager.settings[key].default_value = value;
+        onChangeToolListName: (event) => {
             this.setState({
-                qualityDefinitionForManager,
-                nameForQuality: qualityDefinitionForManager.name
+                nameForToolList: event.target.value
             });
-            if (checkboxKeyArray) {
-                let newqQualityDefinitionOptions;
-                checkboxKeyArray.forEach((checkboxKey) => {
-                    newqQualityDefinitionOptions = qualityDefinitionOptions.map((item) => {
-                        if (item.label === qualityDefinitionForManager.name && key === checkboxKey) {
-                            item[checkboxKey] = value;
-                        }
-                        return item;
-                    });
-                });
-                this.setState({
-                    qualityDefinitionOptions: newqQualityDefinitionOptions
-                });
-            }
-            // this.props.updateActiveDefinition({
-            //     ownKeys: [key],
-            //     settings: {
-            //         [key]: { default_value: value }
-            //     }
-            // });
         },
-        onSaveQualityForManager: async (managerDisplayType) => {
-            const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
-            const newDefinitionSettings = {};
-            for (const [key, value] of Object.entries(qualityDefinitionForManager.settings)) {
-                if (PRINTING_QUALITY_CONFIG_KEYS.indexOf(key) > -1) {
-                    newDefinitionSettings[key] = { 'default_value': value.default_value };
+        onChangeToolFileForManager: (event) => {
+            const toolFile = event.target.files[0];
+            this.props.onUploadToolDefinition(toolFile);
+        },
+        importFile: () => {
+            this.toolFileInput.current.value = null;
+            this.toolFileInput.current.click();
+        },
+        exportConfigFile: () => {
+            const { activeToolCategory } = this.state;
+            const definitionId = activeToolCategory.definitionId;
+            const targetFile = `${definitionId}.def.json`;
+            this.props.exportConfigFile(targetFile, SUBCATEGORY);
+        },
+        onChangeToolDefinition: (key, value) => {
+            const { activeToolListDefinition } = this.state;
+            activeToolListDefinition.cuttingData[key].default_value = value;
+
+            this.setState({
+                activeToolListDefinition
+            });
+        },
+        onSaveToolCategory: async () => {
+            const { activeToolCategory, isCategorySelected } = this.state;
+            const definitionId = activeToolCategory.definitionId;
+            const oldCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            if (oldCategory.category !== activeToolCategory.category) { // unchanged
+                try {
+                    await this.props.updateToolDefinitionName(isCategorySelected, definitionId, oldCategory.category, activeToolCategory.category);
+                } catch (err) {
+                    this.actions.showNotification(err);
                 }
             }
-
-            this.props.updateDefinitionSettings(qualityDefinitionForManager, newDefinitionSettings);
-            this.props.updateDefinitionsForManager(qualityDefinitionForManager.definitionId, managerDisplayType);
-
-            const { nameForQuality } = this.state;
-
-            if (nameForQuality === qualityDefinitionForManager.name) { // unchanged
-                return;
-            }
-
-            try {
-                await this.props.updateQualityDefinitionName(qualityDefinitionForManager, nameForQuality);
-            } catch (err) {
-                this.actions.showNotification(err);
-            }
         },
 
-        onSelectMaterialTypeNotUpdate: (definitionId) => {
-            const materialDefinitionForManager = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (materialDefinitionForManager) {
-                this.setState({
-                    materialDefinitionForManager: materialDefinitionForManager,
-                    nameForMaterial: materialDefinitionForManager.name
-                });
-            }
-        },
-        onSelectMaterialTypeAndUpdate: (definitionId) => {
-            const materialDefinitionForManager = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (materialDefinitionForManager) {
-                this.setState({
-                    materialDefinitionForManager: materialDefinitionForManager,
-                    nameForMaterial: materialDefinitionForManager.name
-                });
-
-                this.props.updateDefaultMaterialId(materialDefinitionForManager.definitionId);
-            }
-        },
-        onChangeMaterialDefinitionForManager: (key, value, checkboxKey) => {
-            const { materialDefinitionForManager, materialDefinitionOptions } = this.state;
-            materialDefinitionForManager.settings[key].default_value = value;
-            this.setState({
-                materialDefinitionForManager: materialDefinitionForManager
-            });
-            if (checkboxKey) {
-                const newMaterialDefinitionOptions = materialDefinitionOptions.map((item) => {
-                    if (item.label === materialDefinitionForManager.name) {
-                        item[checkboxKey] = value;
-                    }
-                    return item;
-                });
-                this.setState({
-                    materialDefinitionOptions: newMaterialDefinitionOptions
-                });
-            }
-        },
-        onSaveMaterialForManager: async (managerDisplayType) => {
-            const materialDefinitionForManager = this.state.materialDefinitionForManager;
-            const newDefinitionSettings = {};
-            for (const [key, value] of Object.entries(materialDefinitionForManager.settings)) {
-                if (PRINTING_MATERIAL_CONFIG_KEYS.indexOf(key) > -1) {
-                    newDefinitionSettings[key] = { 'default_value': value.default_value };
+        onSaveToolList: async () => {
+            const { activeToolListDefinition, isCategorySelected, nameForToolList } = this.state;
+            const definitionId = activeToolListDefinition.definitionId;
+            const oldCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            const oldToolList = oldCategory.toolList.find(d => d.toolName === activeToolListDefinition.toolName);
+            await this.props.updateToolListDefinition(activeToolListDefinition);
+            if (oldToolList.toolName !== nameForToolList) { // unchanged
+                try {
+                    await this.props.updateToolDefinitionName(isCategorySelected, definitionId, oldToolList.toolName, nameForToolList);
+                } catch (err) {
+                    this.actions.showNotification(err);
                 }
             }
-            this.props.updateDefinitionSettings(materialDefinitionForManager, newDefinitionSettings);
-            this.props.updateDefinitionsForManager(materialDefinitionForManager.definitionId, managerDisplayType);
-
-            const { nameForMaterial } = this.state;
-
-            if (nameForMaterial === materialDefinitionForManager.name) { // unchanged
-                return;
+        },
+        isNameSelectedNow: (definitionId, name) => {
+            return this.state.activeToolListDefinition && this.state.activeToolListDefinition.toolName === name && this.state.activeToolListDefinition.definitionId === definitionId;
+        },
+        isCategorySelectedNow: (definitionId) => {
+            return this.state.activeToolCategory && this.state.activeToolCategory.definitionId === definitionId;
+        },
+        onSelectToolCategory: (definitionId) => {
+            const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            const toolName = this.state.activeToolListDefinition.toolName;
+            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.toolName === toolName)
+             || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+            if (toolDefinitionForManager) {
+                toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
+                this.setState({ activeToolListDefinition: toolDefinitionForManager });
             }
-
-            try {
-                await this.props.updateMaterialDefinitionName(materialDefinitionForManager, nameForMaterial);
-            } catch (err) {
-                this.actions.showNotification(err);
-            }
-        },
-        isNameSelectedNow: (category, name) => {
-            return this.state.activeToolListDefinition && this.state.activeToolListDefinition.toolName === name && this.state.activeToolListDefinition.category === category;
-        },
-        isCategorySelectedNow: (category) => {
-            return this.state.activeToolCategory && this.state.activeToolCategory.category === category;
-        },
-        onSelectToolCategory: (category) => {
-            const toolListForManager = this.props.toolDefinitions.find(d => d.category === category);
-            // const toolDefinitionForManager = toolListForManager.toolList[0];
             this.setState({
-                activeToolCategory: toolListForManager,
+                activeToolCategory: activeToolCategory,
                 isCategorySelected: true
             });
         },
-        onSelectToolName: (category, toolName) => {
-            const activeToolCategory = this.props.toolDefinitions.find(d => d.category === category);
+        onSelectToolName: (definitionId, toolName) => {
+            const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
             const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.toolName === toolName);
-            toolDefinitionForManager.category = activeToolCategory.category;
+            toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
             if (toolDefinitionForManager) {
                 this.setState({
                     activeToolListDefinition: toolDefinitionForManager,
                     activeToolCategory: activeToolCategory,
+                    nameForToolList: toolDefinitionForManager.toolName,
                     isCategorySelected: false
                 });
             }
         },
-        onChangeNameForMaterial: (event) => {
-            this.setState({
-                nameForMaterial: event.target.value
-            });
-        },
-        onChangeNameForQuality: (event) => {
-            this.setState({
-                nameForQuality: event.target.value
-            });
-        },
         onDuplicateToolCategoryDefinition: async () => {
             const newDefinition = await this.props.duplicateToolCategoryDefinition(this.state.activeToolCategory);
-            this.actions.onSelectToolCategory(newDefinition.category);
-            // this.setState({
-            //     activeToolCategory: newDefinition
-            // });
+            this.actions.onSelectToolCategory(newDefinition.definitionId);
         },
         onDuplicateToolNameDefinition: async () => {
             const newToolName = await this.props.duplicateToolListDefinition(this.state.activeToolCategory, this.state.activeToolListDefinition);
             // need to change ,update activeToolListDefinition
-            this.actions.onSelectToolName(this.state.activeToolCategory.category, newToolName);
+            this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
         },
         onRemoveToolDefinition: async () => {
             const { isCategorySelected, activeToolCategory } = this.state;
@@ -319,12 +190,7 @@ class PrintingManager extends PureComponent {
                     body: `Are you sure to remove category profile "${activeToolCategory.category}"?`
                 });
 
-                await this.props.removeToolCategoryDefinition(activeToolCategory);
-
-                // After removal, select the first definition
-                if (this.props.toolDefinitions.length) {
-                    this.actions.onSelectToolCategory(this.props.toolDefinitions[0].category);
-                }
+                await this.props.removeToolCategoryDefinition(activeToolCategory.definitionId);
             } else {
                 const activeToolListDefinition = this.state.activeToolListDefinition;
 
@@ -333,16 +199,14 @@ class PrintingManager extends PureComponent {
                 });
 
                 await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
+            }
 
-                // After removal, select the first definition
+            // After removal, select the first definition
+            if (this.props.toolDefinitions.length) {
                 if (activeToolCategory) {
-                    const activeToolList = activeToolCategory.toolList;
-                    if (activeToolList.length) {
-                        console.log('ddd', activeToolCategory.category, activeToolList[0].toolName);
-                        this.actions.onSelectToolName(activeToolCategory.category, activeToolList[0].toolName);
-                    } else {
-                        this.actions.onSelectToolCategory(activeToolCategory.category);
-                    }
+                    this.actions.onSelectToolCategory(activeToolCategory.definitionId);
+                } else {
+                    this.actions.onSelectToolCategory(this.props.toolDefinitions[0].definitionId);
                 }
             }
         }
@@ -355,20 +219,19 @@ class PrintingManager extends PureComponent {
         if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
             const newState = {};
             if (this.props.toolDefinitions.length === 0) {
-                const activeToolCategory = nextProps.toolDefinitions.find(d => d.category === 'mdf');
+                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
                 const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
-                activeToolListDefinition.category = activeToolCategory && activeToolCategory.category;
+                activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolCategory,
                     activeToolListDefinition
                 });
             } else {
-                const activeToolCategory = nextProps.toolDefinitions.find(d => d.category === this.state.activeToolListDefinition.category) || nextProps.toolDefinitions.find(d => d.category === 'mdf').toolList;
+                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
                 const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === this.state.activeToolListDefinition.toolName)
                 || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
-                console.log('activeToolListDefinition', activeToolListDefinition);
                 if (activeToolListDefinition) {
-                    activeToolListDefinition.category = activeToolCategory && activeToolCategory.category;
+                    activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                     Object.assign(newState, {
                         activeToolCategory,
                         activeToolListDefinition
@@ -378,11 +241,13 @@ class PrintingManager extends PureComponent {
             const toolDefinitionOptions = nextProps.toolDefinitions.map(d => {
                 const checkboxAndSelectGroup = {};
                 const category = d.category;
+                const definitionId = d.definitionId;
                 const nameArray = [];
                 d.toolList.forEach((item) => {
                     nameArray.push(item.toolName);
                 });
                 checkboxAndSelectGroup.category = category;
+                checkboxAndSelectGroup.definitionId = definitionId;
                 checkboxAndSelectGroup.nameArray = nameArray;
                 return checkboxAndSelectGroup;
             });
@@ -396,9 +261,9 @@ class PrintingManager extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const { managerDisplayType } = this.props;
-        const { materialDefinitionForManager, showCncToolManager,
-            qualityDefinitionForManager, activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory } = state;
+        const { showCncToolManager,
+            activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory } = state;
+
         return (
             <React.Fragment>
                 {showCncToolManager && (
@@ -413,7 +278,7 @@ class PrintingManager extends PureComponent {
                         >
                             <div className={classNames(styles['manager-type-wrapper'])}>
                                 <div
-                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL })}
+                                    className={classNames(styles['manager-type'])}
                                 >
                                     {i18n._('Tool')}
                                 </div>
@@ -423,20 +288,20 @@ class PrintingManager extends PureComponent {
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
                                             return (
-                                                <li key={`${option.category}`}>
+                                                <li key={`${option.definitionId}`}>
                                                     <Anchor
-                                                        className={classNames(styles['manager-btn'], { [styles.selected]: isCategorySelected && this.actions.isCategorySelectedNow(option.category) })}
-                                                        onClick={() => this.actions.onSelectToolCategory(option.category)}
+                                                        className={classNames(styles['manager-btn'], { [styles.selected]: isCategorySelected && this.actions.isCategorySelectedNow(option.definitionId) })}
+                                                        onClick={() => this.actions.onSelectToolCategory(option.definitionId)}
                                                     >
                                                         {i18n._(option.category)}
                                                     </Anchor>
-                                                    <ul>
+                                                    <ul style={{ listStyle: 'none' }}>
                                                         { option.nameArray.map(singleName => {
                                                             return (
                                                                 <li key={`${singleName}`}>
                                                                     <Anchor
-                                                                        className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.category, singleName) })}
-                                                                        onClick={() => this.actions.onSelectToolName(option.category, singleName)}
+                                                                        className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.definitionId, singleName) })}
+                                                                        onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
                                                                     >
                                                                         {i18n._(singleName)}
                                                                     </Anchor>
@@ -449,31 +314,23 @@ class PrintingManager extends PureComponent {
                                         }))}
                                     </ul>
                                     <input
-                                        ref={this.materialFileInput}
+                                        ref={this.toolFileInput}
                                         type="file"
                                         accept=".json"
                                         style={{ display: 'none' }}
                                         multiple={false}
-                                        onChange={this.actions.onChangeMaterialFileForManager}
-                                    />
-                                    <input
-                                        ref={this.qualityFileInput}
-                                        type="file"
-                                        accept=".json"
-                                        style={{ display: 'none' }}
-                                        multiple={false}
-                                        onChange={this.actions.onChangeQualityFileForManager}
+                                        onChange={this.actions.onChangeToolFileForManager}
                                     />
                                     <div className="sm-tabs">
                                         <Anchor
-                                            onClick={() => this.actions.importFile(managerDisplayType)}
+                                            onClick={() => this.actions.importFile()}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                         >
                                             {i18n._('Import')}
                                         </Anchor>
                                         <Anchor
                                             className={classNames(styles['manager-file'], 'sm-tab')}
-                                            onClick={() => this.actions.exportPrintingManagerFile(managerDisplayType)}
+                                            onClick={() => this.actions.exportConfigFile()}
                                         >
                                             {i18n._('Export')}
                                         </Anchor>
@@ -488,12 +345,16 @@ class PrintingManager extends PureComponent {
                                                 <input
                                                     className="sm-parameter-row__input"
                                                     style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                    value={activeToolListDefinition.toolName}
+                                                    onChange={actions.onChangeToolListName}
+                                                    disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                                    value={state.nameForToolList}
                                                 />
                                             )}
                                             {isCategorySelected && (
                                                 <input
                                                     className="sm-parameter-row__input"
+                                                    onChange={actions.onChangeToolCategoryName}
+                                                    disabled={isOfficialCategoryDefinition(activeToolCategory)}
                                                     style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
                                                     value={activeToolCategory.category}
                                                 />
@@ -506,16 +367,21 @@ class PrintingManager extends PureComponent {
                                         )}
                                         {!isCategorySelected && (Object.entries(activeToolListDefinition.cuttingData).map(([key, setting]) => {
                                             const defaultValue = setting.default_value;
+                                            const label = setting.label;
                                             const unit = setting.unit;
 
                                             return (
                                                 <div key={key} className="sm-parameter-row">
 
                                                     <TipTrigger>
-                                                        <span className="sm-parameter-row__label-lg">{i18n._(key)}</span>
+                                                        <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
                                                         <Input
                                                             className="sm-parameter-row__input"
                                                             value={defaultValue}
+                                                            onChange={value => {
+                                                                this.actions.onChangeToolDefinition(key, value);
+                                                            }}
+                                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
                                                         />
                                                         <span className="sm-parameter-row__input-unit">{unit}</span>
                                                     </TipTrigger>
@@ -558,7 +424,7 @@ class PrintingManager extends PureComponent {
                                         <Anchor
                                             className="sm-btn-large sm-btn-default"
                                             onClick={() => { actions.onRemoveToolDefinition(); }}
-                                            disabled={isOfficialCategoryDefinition(activeToolCategory)}
+                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
                                         >
                                             {i18n._('Delete')}
                                         </Anchor>
@@ -572,20 +438,20 @@ class PrintingManager extends PureComponent {
                                     >
                                         {i18n._('Close')}
                                     </Anchor>
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
+                                    {isCategorySelected && (
                                         <Anchor
-                                            onClick={() => { actions.onSaveMaterialForManager(managerDisplayType); }}
+                                            onClick={() => { actions.onSaveToolCategory(); }}
                                             className="sm-btn-large sm-btn-primary"
-                                            disabled={isOfficialDefinition(materialDefinitionForManager)}
+                                            disabled={isOfficialCategoryDefinition(activeToolCategory)}
                                         >
                                             {i18n._('Save')}
                                         </Anchor>
                                     )}
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
+                                    {!isCategorySelected && (
                                         <Anchor
-                                            onClick={() => { actions.onSaveQualityForManager(managerDisplayType); }}
+                                            onClick={() => { actions.onSaveToolList(); }}
                                             className="sm-btn-large sm-btn-primary"
-                                            disabled={isOfficialDefinition(qualityDefinitionForManager)}
+                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
                                         >
                                             {i18n._('Save')}
                                         </Anchor>
@@ -601,46 +467,26 @@ class PrintingManager extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { qualityDefinitions, materialDefinitions,
-        managerDisplayType } = state.printing;
     const { showCncToolManager, toolDefinitions, activeToolListDefinition } = state.cnc;
-    const { series } = state.machine;
     return {
-        series,
-        materialDefinitions,
         showCncToolManager,
         toolDefinitions,
-        activeToolListDefinition,
-        managerDisplayType,
-        qualityDefinitions
+        activeToolListDefinition
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateDefinitionsForManager: (definitionId, type) => dispatch(printingActions.updateDefinitionsForManager(definitionId, type)),
-        updateDefaultQualityId: (qualityId) => dispatch(printingActions.updateDefaultQualityId(qualityId)),
-        updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateDefaultMaterialId(defaultMaterialId)),
-        updateActiveDefinition: (definition, shouldSave = false) => {
-            dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
-        },
-        updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
-
         updateShowCncToolManager: (showCncToolManager) => dispatch(cncActions.updateShowCncToolManager(showCncToolManager)),
         duplicateToolCategoryDefinition: (activeToolCategory) => dispatch(cncActions.duplicateToolCategoryDefinition(activeToolCategory)),
         duplicateToolListDefinition: (activeToolCategory, activeToolListDefinition) => dispatch(cncActions.duplicateToolListDefinition(activeToolCategory, activeToolListDefinition)),
-        removeToolCategoryDefinition: (activeToolCategory) => dispatch(cncActions.removeToolCategoryDefinition(activeToolCategory)),
+        removeToolCategoryDefinition: (definitionId) => dispatch(cncActions.removeToolCategoryDefinition(definitionId)),
         removeToolListDefinition: (activeToolCategory, activeToolList) => dispatch(cncActions.removeToolListDefinition(activeToolCategory, activeToolList)),
-
-        onUploadManagerDefinition: (materialFile, type) => dispatch(printingActions.onUploadManagerDefinition(materialFile, type)),
-        exportPrintingManagerFile: (targetFile) => dispatch(projectActions.exportPrintingManagerFile(targetFile)),
-        duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
-        duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
-        removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
-        updateMaterialDefinitionName: (definition, name) => dispatch(printingActions.updateMaterialDefinitionName(definition, name)),
-        updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
+        exportConfigFile: (targetFile, subCategory) => dispatch(projectActions.exportConfigFile(targetFile, subCategory)),
+        onUploadToolDefinition: (toolFile) => dispatch(cncActions.onUploadToolDefinition(toolFile)),
+        onDownloadToolListDefinition: (activeToolCategory, activeToolList) => dispatch(cncActions.onDownloadToolListDefinition(activeToolCategory, activeToolList)),
+        updateToolDefinitionName: (isCategorySelected, definitionId, oldName, newName) => dispatch(cncActions.updateToolDefinitionName(isCategorySelected, definitionId, oldName, newName)),
+        updateToolListDefinition: (activeToolList) => dispatch(cncActions.updateToolListDefinition(activeToolList))
     };
 };
 

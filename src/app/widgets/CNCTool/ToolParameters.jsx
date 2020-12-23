@@ -32,7 +32,6 @@ class ToolParameters extends PureComponent {
 
         toolSnap: PropTypes.string.isRequired,
         toolParams: PropTypes.object.isRequired,
-        updateShowCncToolManager: PropTypes.func.isRequired,
         changeToolParams: PropTypes.func.isRequired,
         updateToolSnap: PropTypes.func.isRequired
     };
@@ -42,9 +41,6 @@ class ToolParameters extends PureComponent {
     };
 
     actions = {
-        onShowPrintingManager: () => {
-            this.props.updateShowCncToolManager(true);
-        },
         onChangeTool: (tool) => {
             if (!_.includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_SNAP_S_F_S, CNC_TOOL_CUSTOM], tool)) {
                 return;
@@ -63,7 +59,6 @@ class ToolParameters extends PureComponent {
                 toolAngle: config.angle,
                 toolShaftDiameter: config.shaftDiameter
             });
-            console.log('tool', tool);
             this.props.updateToolSnap(tool);
         },
         onChangeToolDiameter: (toolDiameter) => {
@@ -262,7 +257,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateShowCncToolManager: (showCncToolManager) => dispatch(cncActions.updateShowCncToolManager(showCncToolManager)),
         changeToolParams: (params) => {
             dispatch(cncActions.changeToolParams(params));
             dispatch(editorActions.updateAllModelGcodeConfig('cnc', params));

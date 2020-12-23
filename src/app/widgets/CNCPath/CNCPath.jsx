@@ -1,9 +1,12 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-
+import classNames from 'classnames';
+import Select from 'react-select';
+import styles from './styles.styl';
 import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants';
 import i18n from '../../lib/i18n';
+import Anchor from '../../components/Anchor';
 import TextParameters from '../CncLaserShared/TextParameters';
 import Transformation from '../CncLaserShared/Transformation';
 // import GcodeParameters from '../CncLaserShared/GcodeParameters';
@@ -14,6 +17,7 @@ import ImageProcessMode from './ImageProcessMode';
 import ReliefGcodeParameters from './gcodeconfig/ReliefGcodeParameters';
 import Image3DGcodeParameters from './gcodeconfig/Image3DGcodeParameters';
 import { actions as editorActions } from '../../flux/editor';
+import { actions as cncActions } from '../../flux/cnc';
 
 class CNCPath extends PureComponent {
     static propTypes = {
@@ -22,6 +26,7 @@ class CNCPath extends PureComponent {
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object,
+        toolDefinitions: PropTypes.array.isRequired,
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
@@ -41,18 +46,36 @@ class CNCPath extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
-
+        changeActiveToolListDefinition: PropTypes.func.isRequired,
         updateSelectedModelConfig: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
 
         // operator functions
-        modifyText: PropTypes.func.isRequired
+        modifyText: PropTypes.func.isRequired,
+        updateShowCncToolManager: PropTypes.func.isRequired
     };
 
     state = {
+        activeToolListDefinition: null
     };
 
     actions = {
+        onShowCncToolManager: () => {
+            this.props.updateShowCncToolManager(true);
+        },
+        onChangeActiveToolListValue: (option) => {
+            const definitionId = option.definitionId;
+            const toolName = option.toolName;
+            const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            const toolListDefinition = activeToolCategory.toolList.find(k => k.toolName === toolName);
+            toolListDefinition.definitionId = definitionId;
+            if (toolListDefinition) {
+                this.setState({
+                    activeToolListDefinition: toolListDefinition
+                });
+                this.props.changeActiveToolListDefinition(definitionId, toolName);
+            }
+        }
     };
 
     constructor(props) {
@@ -76,6 +99,45 @@ class CNCPath extends PureComponent {
         } else {
             this.props.setDisplay(false);
         }
+        if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
+            const newState = {};
+            if (this.props.toolDefinitions.length === 0) {
+                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
+                Object.assign(newState, {
+                    activeToolListDefinition
+                });
+            } else {
+                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === this.state.activeToolListDefinition.toolName)
+                        || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                if (activeToolListDefinition) {
+                    activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
+                    Object.assign(newState, {
+                        activeToolListDefinition
+                    });
+                }
+            }
+            const toolDefinitionOptions = [];
+            nextProps.toolDefinitions.forEach(d => {
+                const category = d.category;
+                const definitionId = d.definitionId;
+                toolDefinitionOptions.push(...d.toolList.map((item) => {
+                    const checkboxAndSelectGroup = {};
+                    const toolName = item.toolName;
+                    checkboxAndSelectGroup.toolName = toolName;
+                    checkboxAndSelectGroup.definitionId = definitionId;
+                    checkboxAndSelectGroup.label = `${category} - ${toolName}`;
+                    checkboxAndSelectGroup.value = `${definitionId}-${toolName}`;
+                    return checkboxAndSelectGroup;
+                }));
+            });
+            Object.assign(newState, {
+                toolDefinitionOptions: toolDefinitionOptions
+            });
+            this.setState(newState);
+        }
     }
 
     render() {
@@ -95,6 +157,7 @@ class CNCPath extends PureComponent {
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
         const isGreyscale = sourceType !== 'image3d' && mode === 'greyscale';
+        const { toolDefinitionOptions, activeToolListDefinition } = this.state;
         const isSvgVector = ((sourceType === 'svg' || sourceType === 'dxf') && mode === 'vector');
         const isTextVector = (config.svgNodeName === 'text');
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
@@ -109,7 +172,6 @@ class CNCPath extends PureComponent {
         } else if (isGreyscale) {
             methodType = 'Carve';
         }
-        console.log('sourceType', sourceType, mode, isGreyscale, methodType);
         return (
             <React.Fragment>
                 {isEditor && (
@@ -121,21 +183,44 @@ class CNCPath extends PureComponent {
                     />
                 )}
                 {isProcess && (
-                    <GcodeParametersForCnc
-                        selectedModelArray={selectedModelArray}
-                        selectedModelVisible={selectedModelVisible}
-                        printOrder={printOrder}
-                        gcodeConfig={gcodeConfig}
-                        updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                        paramsDescs={
-                            {
-                                jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                    <div>
+                        <div className={classNames(
+                            styles['material-select']
+                        )}
+                        >
+                            <Select
+                                clearable={false}
+                                searchable
+                                options={toolDefinitionOptions}
+                                value={`${activeToolListDefinition.definitionId}-${activeToolListDefinition.toolName}`}
+                                onChange={this.actions.onChangeActiveToolListValue}
+                            />
+                        </div>
+                        <Anchor
+                            onClick={this.actions.onShowCncToolManager}
+                        >
+                            <span
+                                className={classNames(
+                                    styles['manager-icon'],
+                                )}
+                            />
+                        </Anchor>
+                        <GcodeParametersForCnc
+                            selectedModelArray={selectedModelArray}
+                            selectedModelVisible={selectedModelVisible}
+                            printOrder={printOrder}
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                                }
                             }
-                        }
-                    />
+                        />
+                    </div>
                 )}
                 {selectedModelArray.length === 1 && (
                     <div className="sm-parameter-container">
@@ -171,7 +256,7 @@ class CNCPath extends PureComponent {
                                 disabled={!selectedModelVisible}
                             />
                         )}
-                        {isProcess && isGreyscale && (
+                        {isProcess && isGreyscale && !isImage3d && (
                             <ReliefGcodeParameters
                                 methodType={methodType}
                                 disabled={!selectedModelVisible}
@@ -192,7 +277,7 @@ class CNCPath extends PureComponent {
 
 // todo, selected model will be instead
 const mapStateToProps = (state) => {
-    const { page, modelGroup, toolPathModelGroup, printOrder } = state.cnc;
+    const { page, modelGroup, toolPathModelGroup, printOrder, toolDefinitions } = state.cnc;
     const selectedModel = modelGroup.getSelectedModel();
     const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
     const selectedModelID = selectedModel.modelID;
@@ -212,6 +297,7 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         selectedModelID,
         selectedModel,
+        toolDefinitions,
         // todo, next version fix like selectedModelID
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
@@ -224,6 +310,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        changeActiveToolListDefinition: (definitionId, toolName) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, toolName)),
+        updateShowCncToolManager: (showCncToolManager) => dispatch(cncActions.updateShowCncToolManager(showCncToolManager)),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),

@@ -61,7 +61,7 @@ class PrintingManager extends PureComponent {
         removeQualityDefinition: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         onUploadManagerDefinition: PropTypes.func.isRequired,
-        exportPrintingManagerFile: PropTypes.func.isRequired,
+        exportConfigFile: PropTypes.func.isRequired,
 
         updateShowPrintingManager: PropTypes.func.isRequired,
         updateManagerDisplayType: PropTypes.func.isRequired,
@@ -126,7 +126,7 @@ class PrintingManager extends PureComponent {
                 this.qualityFileInput.current.click();
             }
         },
-        exportPrintingManagerFile: (managerDisplayType) => {
+        exportConfigFile: (managerDisplayType) => {
             let definitionId, targetFile;
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 definitionId = this.state.materialDefinitionForManager.definitionId;
@@ -140,7 +140,7 @@ class PrintingManager extends PureComponent {
                     targetFile = `${definitionId}.def.json`;
                 }
             }
-            this.props.exportPrintingManagerFile(targetFile);
+            this.props.exportConfigFile(targetFile);
         },
 
         onSelectQualityType: (definition) => {
@@ -492,7 +492,7 @@ class PrintingManager extends PureComponent {
                                         </Anchor>
                                         <Anchor
                                             className={classNames(styles['manager-file'], 'sm-tab')}
-                                            onClick={() => this.actions.exportPrintingManagerFile(managerDisplayType)}
+                                            onClick={() => this.actions.exportConfigFile(managerDisplayType)}
                                         >
                                             {i18n._('Export')}
                                         </Anchor>
@@ -857,7 +857,7 @@ const mapDispatchToProps = (dispatch) => {
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
         onUploadManagerDefinition: (materialFile, type) => dispatch(printingActions.onUploadManagerDefinition(materialFile, type)),
-        exportPrintingManagerFile: (targetFile) => dispatch(projectActions.exportPrintingManagerFile(targetFile)),
+        exportConfigFile: (targetFile) => dispatch(projectActions.exportConfigFile(targetFile)),
         duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),

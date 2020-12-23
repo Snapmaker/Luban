@@ -99,28 +99,6 @@ class Image3DGcodeParameters extends PureComponent {
                                 />
                             </div>
                         </TipTrigger>
-                        {!isRotate && (
-                            <TipTrigger
-                                title={i18n._('Target Depth')}
-                                content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
-                            >
-                                <div
-                                    className="sm-parameter-row"
-                                >
-                                    <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={targetDepth}
-                                        min={0.01}
-                                        max={size.z}
-                                        step={0.1}
-                                        onChange={this.actions.onChangeTargetDepth}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">dot/mm</span>
-                                </div>
-                            </TipTrigger>
-                        )}
 
                         {isRotate && (
                             <React.Fragment>

@@ -926,7 +926,6 @@ export const actions = {
 
     updateAllModelGcodeConfig: (headType, gcodeConfig) => (dispatch, getState) => {
         // const { modelGroup, model } = getState()[headType];
-        console.log('gcodeConfig', gcodeConfig);
         const { toolPathModelGroup, selectedModelID } = getState()[headType];
         toolPathModelGroup.updateAllModelGcodeConfig(gcodeConfig);
         dispatch(actions.manualPreview(headType));

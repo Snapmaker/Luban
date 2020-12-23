@@ -150,8 +150,13 @@ export const actions = {
         await UniApi.File.exportAs(targetFile, tmpFile);
     },
 
-    exportPrintingManagerFile: (targetFile) => async () => {
-        const configFile = `/Config/${targetFile}`;
+    exportConfigFile: (targetFile, subCategory) => async () => {
+        let configFile;
+        if (subCategory) {
+            configFile = `/Config/${subCategory}/${targetFile}`;
+        } else {
+            configFile = `/Config/${targetFile}`;
+        }
         await UniApi.File.exportAs(targetFile, configFile);
     },
 

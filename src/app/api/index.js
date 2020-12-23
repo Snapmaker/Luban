@@ -281,15 +281,20 @@ printingConfigs.uploadDefinition = defaultAPIFactory((definitionId, tmpPath, ser
 //
 const cncConfigs = {};
 cncConfigs.getAllDefinitions = defaultAPIFactory(() => request.get('/api/cncToolDefinitions'));
-cncConfigs.getToolListDefinition = defaultAPIFactory((category, definitionId) => request.get(`/api/cncToolListDefinition/${category}`).query({ definitionId }));
+cncConfigs.getToolListDefinition = defaultAPIFactory((definitionId, toolName) => request.get(`/api/cncToolListDefinition/${definitionId}`).query({ toolName }));
 cncConfigs.createToolCategoryDefinition = defaultAPIFactory((activeToolCategory) => request.post('/api/cncToolCategoryDefinition').send({ activeToolCategory }));
 cncConfigs.createToolListDefinition = defaultAPIFactory((activeToolCategory, activeToolList) => request.post('/api/cncToolListDefinition/').send({ activeToolCategory, activeToolList }));
-cncConfigs.removeToolCategoryDefinition = defaultAPIFactory((category) => request.delete(`/api/cncToolCategoryDefinition/${category}`));
+cncConfigs.removeToolCategoryDefinition = defaultAPIFactory((definitionId) => request.delete('/api/cncToolCategoryDefinition').send({ definitionId }));
 cncConfigs.removeToolListDefinition = defaultAPIFactory((activeToolCategory, activeToolList) => request.delete('/api/cncToolListDefinition').send({
     activeToolCategory,
     activeToolList
 }));
-
+cncConfigs.uploadToolDefinition = defaultAPIFactory((uploadName, toolDefinitions) => request.post('/api/cncToolDefinitions/upload').send({
+    uploadName,
+    toolDefinitions
+}));
+cncConfigs.updateToolDefinition = defaultAPIFactory((activeToolCategory) => request.put('/api/cncToolDefinitions/update').send({ activeToolCategory }));
+cncConfigs.changeActiveToolListDefinition = defaultAPIFactory((definitionId, toolName) => request.post(`/api/cncToolListDefinition/${definitionId}`).query({ toolName }));
 //
 // Macros
 //
