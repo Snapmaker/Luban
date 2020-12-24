@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import path from 'path';
 import uuid from 'uuid';
 import api from '../../api';
@@ -9,8 +10,9 @@ import {
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
-import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT } from '../../constants';
+import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT, DATA_PREFIX, EPSILON } from '../../constants';
 
+import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 import { isEqual, round } from '../../../shared/lib/utils';
@@ -183,6 +185,61 @@ export const actions = {
             });
     },
 
+    prepareStlVisualizer: (headType, model) => (dispatch, getState) => {
+        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
+        const worker = new LoadModelWorker();
+        worker.postMessage({ uploadPath });
+        worker.onmessage = async (e) => {
+            const data = e.data;
+
+            const { type } = data;
+
+            switch (type) {
+                case 'LOAD_MODEL_POSITIONS': {
+                    const { positions } = data;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+
+                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.computeVertexNormals();
+                    const mesh = new THREE.Mesh(bufferGeometry, material);
+                    model.image3dObj = mesh;
+                    break;
+                }
+                case 'LOAD_MODEL_CONVEX': {
+                    worker.terminate();
+                    const { positions } = data;
+
+                    const convexGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                    convexGeometry.addAttribute('position', positionAttribute);
+                    model.convexGeometry = convexGeometry;
+
+                    break;
+                }
+                case 'LOAD_MODEL_PROGRESS': {
+                    const state = getState().printing;
+                    const progress = 0.25 + data.progress * 0.5;
+                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                        dispatch(actions.updateState({ progress }));
+                    }
+                    break;
+                }
+                case 'LOAD_MODEL_FAILED': {
+                    worker.terminate();
+                    dispatch(actions.updateState({
+                        stage: CNC_LASER_STAGE.PREVIEW_FAILED,
+                        progress: 0
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
+    },
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions } = getState()[headType];
@@ -249,6 +306,11 @@ export const actions = {
         SVGActions.createFromModel(model);
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
+
+        if (model.uploadName.indexOf('.stl') > 0) {
+            dispatch(actions.prepareStlVisualizer(headType, model));
+        }
+
 
         // Process image right after created
         dispatch(actions.showAllModelsObj3D(headType));

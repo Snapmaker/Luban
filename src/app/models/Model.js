@@ -84,6 +84,9 @@ class Model {
         this.modelObject3D = null;
         this.processObject3D = null;
 
+        // for cnc model visualizer
+        this.image3dObj = null;
+
         this.estimatedTime = 0;
 
         this.boundingBox = null;

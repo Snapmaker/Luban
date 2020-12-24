@@ -81,6 +81,9 @@ const INITIAL_STATE = {
 
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
+    // stl visualizer state
+    stlVisualizer: { show: false },
+
     previewFailed: false,
     autoPreviewEnabled: true,
 
@@ -292,6 +295,10 @@ export const actions = {
             .catch(() => {
                 // Ignore error
             });
+    },
+    updateStlVisualizer: (obj) => (dispatch, getState) => {
+        const { stlVisualizer } = getState().cnc;
+        dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
     },
     changeActiveToolListDefinition: (definitionId, name) => async (dispatch) => {
         const activeToolListDefinition = await definitionManager.changeActiveToolListDefinition(

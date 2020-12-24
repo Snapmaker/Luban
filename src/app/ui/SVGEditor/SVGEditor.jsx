@@ -6,6 +6,8 @@ import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
 
+import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
+
 
 class SVGEditor extends PureComponent {
     static propTypes = {
@@ -91,7 +93,7 @@ class SVGEditor extends PureComponent {
 
     render() {
         return (
-            <div className={styles['laser-table']}>
+            <div className={styles['laser-table']} style={{ position: 'relative' }}>
                 <div className={styles['laser-table-row']}>
                     <div className={styles['view-space']}>
                         <SVGCanvas
@@ -120,7 +122,9 @@ class SVGEditor extends PureComponent {
                         insertDefaultTextVector={this.insertDefaultTextVector}
                         setMode={this.setMode}
                     />
+
                 </div>
+                <Cnc3DVisualizer />
             </div>
         );
     }

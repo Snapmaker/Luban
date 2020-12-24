@@ -8,6 +8,7 @@ import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
+
 import { actions as widgetActions } from '../../flux/widget';
 import { actions as editorActions } from '../../flux/editor';
 import CncToolManager from '../../views/CncToolManager/CncToolManager';
