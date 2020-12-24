@@ -540,17 +540,14 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         };
     };
 
-    generateViewPathObj() {
-        return this._processImage().then((data) => {
-            return this.isRotate ? this.parseRotateImageToViewPathObj(data)
-                : this.parseImageToViewPathObj(data);
-        });
+    async generateViewPathObj() {
+        const data = await this.this._processImage();
+        return this.isRotate ? this.parseRotateImageToViewPathObj(data)
+            : this.parseImageToViewPathObj(data);
     }
 
-    generateToolPathObj() {
-        return this._processImage().then(async (data) => {
-            const res = await this.parseImageToToolPathObj(data);
-            return res;
-        });
+    async generateToolPathObj() {
+        const data = await this._processImage();
+        return this.parseImageToToolPathObj(data);
     }
 }

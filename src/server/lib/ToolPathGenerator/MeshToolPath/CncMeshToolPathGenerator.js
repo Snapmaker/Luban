@@ -40,8 +40,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             this.emit('progress', p);
         });
 
-        const toolPath = await generator.generateToolPathObj();
-        return toolPath;
+        return generator.generateToolPathObj();
     }
 
     async generateToolPathSliceModeLinkage() {
@@ -49,8 +48,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         generator.on('progress', (p) => {
             this.emit('progress', p);
         });
-        const toolPath = await generator.generateToolPathObj();
-        return toolPath;
+        return generator.generateToolPathObj();
     }
 
     async generateToolPathSliceModeMultiFace() {
@@ -89,8 +87,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             generator.initialZ = this.diameter / 2;
             generator.imageInitalZ = meshProcess.mesh.aabb.length.y / 2;
             generator.imageFinalZ = 0;
-            const toolPath = await generator.generateToolPathObj();
-            return toolPath;
+            return generator.generateToolPathObj();
         };
 
         const faces = [DIRECTION_LEFT, DIRECTION_FRONT, DIRECTION_RIGHT, DIRECTION_BACK];
