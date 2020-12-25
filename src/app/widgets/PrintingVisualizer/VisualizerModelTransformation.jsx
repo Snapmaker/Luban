@@ -35,6 +35,7 @@ class VisualizerModelTransformation extends PureComponent {
             y: PropTypes.number
         }).isRequired,
         isSupporting: PropTypes.bool.isRequired,
+        isSupportSelected: PropTypes.bool.isRequired,
         modelSize: PropTypes.object.isRequired,
         // transformation: PropTypes.object,
         // getControls: PropTypes.func.isRequired,
@@ -147,7 +148,7 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, modelSize, supportActions } = this.props;
+        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, isSupportSelected, modelSize, supportActions } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -163,10 +164,6 @@ class VisualizerModelTransformation extends PureComponent {
         const supportDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true && !model.supportTag;
         }));
-
-        const isSupportSelected = selectedModelArray.length === 1 && selectedModelArray.every((model) => {
-            return model.supportTag;
-        });
 
 
         if (selectedModelArray.length >= 1) {
@@ -666,9 +663,11 @@ const mapStateToProps = (state) => {
         transformMode
     } = printing;
     let modelSize = {};
-    if (modelGroup.selectedModelArray.length === 1) {
+    const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray.every((model) => {
+        return model.supportTag;
+    });
+    if (isSupportSelected) {
         const model = modelGroup.selectedModelArray[0];
-        model.computeBoundingBox();
         const { min, max } = model.boundingBox;
         modelSize = {
             x: Number((max.x - min.x).toFixed(1)),
@@ -682,6 +681,7 @@ const mapStateToProps = (state) => {
         transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         // defaultSupportSize: modelGroup.defaultSupportSize,
         hasModel,
+        isSupportSelected,
         modelSize,
         transformMode
     };

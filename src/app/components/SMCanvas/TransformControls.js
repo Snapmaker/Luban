@@ -2,8 +2,6 @@ import {
     DoubleSide,
     Float32BufferAttribute,
     Vector3,
-    Euler,
-    Box3,
     Quaternion,
     Matrix4,
     Group,
@@ -21,6 +19,8 @@ import {
     LineBasicMaterial
 } from 'three';
 // import * as THREE from 'three';
+
+import ThreeUtils from '../three-extensions/ThreeUtils';
 
 import { ArcBufferGeometry } from './ArcGeometry';
 
@@ -438,49 +438,12 @@ class TransformControls extends Object3D {
             this.camera.updateMatrixWorld();
             this.camera.matrixWorld.decompose(cameraPosition, cameraQuaternion, cameraScale);
             const multiObjectPosition = this.object.position;
-            const maxObjectBoundingBox = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-            const minObjectBoundingBox = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-            const multiObjectWidth = new Vector3();
 
             const objectPosition = new Vector3();
             const objectScale = new Vector3();
             const objectQuaternion = new Quaternion();
 
-            this.object.children.forEach((child, index) => {
-                const objectChildrenPosition = new Vector3();
-                const objectChildrenScale = new Vector3();
-                const objectChildrenQuaternion = new Quaternion();
-                // object
-
-                child.matrixWorld.decompose(objectChildrenPosition, objectChildrenQuaternion, objectChildrenScale);
-
-                if (this.object.shouldUpdateBoundingbox) {
-                    if (!this.object.boundingBox[index]) {
-                        this.updateBoundingBox();
-                    }
-                    // Calculate selectedGroup's BBox in Canvas
-                    const boundingBox = this.object.boundingBox[index];
-                    if (boundingBox && boundingBox.min && boundingBox.max) {
-                        if (this.object.children.length === 1) {
-                            minObjectBoundingBox.x = Math.min(boundingBox.min.x, minObjectBoundingBox.x);
-                            minObjectBoundingBox.y = Math.min(boundingBox.min.y, minObjectBoundingBox.y);
-                            minObjectBoundingBox.z = Math.min(boundingBox.min.z, minObjectBoundingBox.z);
-
-                            maxObjectBoundingBox.x = Math.max(boundingBox.max.x, maxObjectBoundingBox.x);
-                            maxObjectBoundingBox.y = Math.max(boundingBox.max.y, maxObjectBoundingBox.y);
-                            maxObjectBoundingBox.z = Math.max(boundingBox.max.z, maxObjectBoundingBox.z);
-                        } else {
-                            minObjectBoundingBox.x = Math.min(boundingBox.min.x + objectChildrenPosition.x - objectPosition.x, minObjectBoundingBox.x);
-                            minObjectBoundingBox.y = Math.min(boundingBox.min.y + objectChildrenPosition.y - objectPosition.y, minObjectBoundingBox.y);
-                            minObjectBoundingBox.z = Math.min(0, minObjectBoundingBox.z);
-
-                            maxObjectBoundingBox.x = Math.max(boundingBox.max.x + objectChildrenPosition.x - objectPosition.x, maxObjectBoundingBox.x);
-                            maxObjectBoundingBox.y = Math.max(boundingBox.max.y + objectChildrenPosition.y - objectPosition.y, maxObjectBoundingBox.y);
-                            maxObjectBoundingBox.z = Math.max(boundingBox.max.z - boundingBox.min.z, maxObjectBoundingBox.z);
-                        }
-                    }
-                }
-
+            this.object.children.forEach((child) => {
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
@@ -502,6 +465,10 @@ class TransformControls extends Object3D {
             const unitZ = new Vector3(0, 0, 1);
 
             if (this.object.shouldUpdateBoundingbox) {
+                const boundingBox = ThreeUtils.computeBoundingBox(this.object);
+                const maxObjectBoundingBox = boundingBox.max;
+                const minObjectBoundingBox = boundingBox.min;
+                const multiObjectWidth = new Vector3();
                 multiObjectWidth.x = (maxObjectBoundingBox.x - minObjectBoundingBox.x);
                 multiObjectWidth.y = (maxObjectBoundingBox.y - minObjectBoundingBox.y);
                 multiObjectWidth.z = (maxObjectBoundingBox.z - minObjectBoundingBox.z);
@@ -863,48 +830,6 @@ class TransformControls extends Object3D {
 
     // Calculate the bbox of each model in the selectedGroup
     updateBoundingBox() {
-        this.object.updateMatrixWorld();
-        this.object.children.forEach((child, index) => {
-            // cannot get 'child.geometry.boundingBox', have to use 'child.geometry'
-            if (child.geometry) {
-                const clone = child.geometry.clone();
-                if (this.object.children.length === 1) {
-                    clone.applyMatrix(child.matrixWorld);
-                    clone.computeBoundingBox();
-                    this.object.boundingBox[index] = clone.boundingBox;
-                } else {
-                    const parentClone = this.object.clone();
-                    const newRotation = new Euler(
-                        child.rotation.x + this.object.rotation.x,
-                        child.rotation.y + this.object.rotation.y,
-                        child.rotation.z + this.object.rotation.z,
-                    );
-                    const newScale = new Vector3(
-                        child.scale.x * this.object.scale.x,
-                        child.scale.y * this.object.scale.y,
-                        child.scale.z * this.object.scale.z,
-                    );
-
-                    parentClone.rotation.copy(newRotation);
-                    parentClone.scale.copy(newScale);
-                    parentClone.updateMatrix();
-                    clone.applyMatrix(parentClone.matrix);
-                    clone.computeBoundingBox();
-                    const minBoundingBox = clone.boundingBox.min;
-                    const maxBoundingBox = clone.boundingBox.max;
-                    const centerPosition = new Vector3(
-                        (minBoundingBox.x + maxBoundingBox.x) / 2,
-                        (minBoundingBox.y + maxBoundingBox.y) / 2,
-                        (minBoundingBox.z + maxBoundingBox.z) / 2,
-                    );
-                    const newBoundingBox = new Box3(
-                        new Vector3(minBoundingBox.x - centerPosition.x, minBoundingBox.y - centerPosition.y, minBoundingBox.z - centerPosition.z),
-                        new Vector3(maxBoundingBox.x - centerPosition.x, maxBoundingBox.y - centerPosition.y, maxBoundingBox.z - centerPosition.z)
-                    );
-                    this.object.boundingBox[index] = newBoundingBox;
-                }
-            }
-        });
         this.object.shouldUpdateBoundingbox = true;
     }
 }
