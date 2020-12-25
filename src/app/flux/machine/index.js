@@ -143,7 +143,7 @@ const INITIAL_STATE = {
     // Whether an update is being downloaded
     isDownloading: false,
     // endregion
-    use4Axis: false
+    use4Axis: true
 };
 
 
