@@ -138,7 +138,7 @@ class General extends PureComponent {
                                     type="button"
                                     onClick={this.actions.handleCheckForUpdate}
                                 >
-                                    {i18n._('Check for update')}
+                                    {i18n._('Check for updates')}
                                 </button>
                                 <div className={styles['autoupdate-auto']}>
                                     <input
@@ -148,7 +148,7 @@ class General extends PureComponent {
                                         onChange={(event) => { this.props.updateShouldCheckForUpdate(event.target.checked); }}
                                     />
                                     <span className={styles['autoupdate-text']}>
-                                        {i18n._('Automatically check for update')}
+                                        {i18n._('Automatically check for updates')}
                                     </span>
                                 </div>
                                 <div className={styles['autoupdate-message']}>

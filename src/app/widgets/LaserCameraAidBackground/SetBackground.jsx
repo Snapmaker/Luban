@@ -160,7 +160,7 @@ class SetBackground extends PureComponent {
                                         {i18n._('Information')}
                                         <br />
                                         <Space width={4} />
-                                        {i18n._('The camera hasn\'t calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}
+                                        {i18n._('The camera hasn\'t been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.')}
                                     </div>
                                 </Modal.Body>
                                 <Modal.Footer>

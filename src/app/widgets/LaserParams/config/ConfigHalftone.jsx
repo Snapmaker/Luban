@@ -110,7 +110,7 @@ class ConfigHalftone extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Angle')}
-                            content={i18n._('Set halfton rotation angle')}
+                            content={i18n._('Set Halftone rotation angle')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Angle')}</span>

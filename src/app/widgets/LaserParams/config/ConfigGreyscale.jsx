@@ -99,7 +99,7 @@ class ConfigGreyscale extends PureComponent {
 
                             <TipTrigger
                                 title={i18n._('Brightness')}
-                                content={i18n._('The engraved picture is brighter when this value is bigger.')}
+                                content={i18n._('The engraved picture is brighter when this value is larger.')}
                             >
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Brightness')}</span>

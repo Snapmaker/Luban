@@ -116,7 +116,7 @@ class FirmwareTool extends PureComponent {
                 </div>
                 {shouldShowWarning && (
                     <p className={styles.warningNotes}>
-                        {i18n._('Please select one or more firmware')}
+                        {i18n._('Please select one or more firmware binaries')}
                     </p>
                 )}
             </div>

@@ -104,6 +104,7 @@ const appConfig = {
     }
 };
 
+// configuration fields that are displayed in config panel
 const curaFields = [
     'material_diameter',
     'material_flow',
@@ -153,10 +154,10 @@ const curaFields = [
 function customTransform(file, enc, done) {
     const parser = this.parser;
     const content = fs.readFileSync(file.path, enc);
-    const extname = path.extname(file.path);
+    const basename = path.basename(file.path);
 
     // Extract descriptions from Cura config file
-    if (extname === '.json') {
+    if (basename === 'snapmaker.def.json') {
         const curaConfig = JSON.parse(content);
 
         const walk = (name, node) => {
