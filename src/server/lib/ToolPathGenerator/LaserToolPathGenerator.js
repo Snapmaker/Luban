@@ -5,6 +5,7 @@ import Normalizer from './Normalizer';
 import { svgToSegments } from './SVGFill';
 import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import XToBToolPath from '../ToolPath/XToBToolPath';
+import { asyncFor } from '../../../shared/lib/array-async';
 
 function pointEqual(p1, p2) {
     return p1[0] === p2[0] && p1[1] === p2[1];
@@ -122,7 +123,7 @@ class LaserToolPathGenerator extends EventEmitter {
 
         for (let i = 0; i < width; ++i) {
             const isReverse = (i % 2 === 0);
-            for (let j = (isReverse ? height : 0); isReverse ? j >= 0 : j < height; isReverse ? j-- : j++) {
+            await asyncFor(isReverse ? height : 0, isReverse ? 0 : height - 1, isReverse ? -1 : 1, (j) => {
                 const idx = j * width * 4 + i * 4;
                 if (img.bitmap.data[idx] < bwThreshold) {
                     toolPath.move1XY(normalizer.x(i), normalizer.y(j));
@@ -130,7 +131,7 @@ class LaserToolPathGenerator extends EventEmitter {
                     toolPath.setCommand({ G: 4, P: dwellTime });
                     toolPath.spindleOff();
                 }
-            }
+            });
             const p = i / width;
             if (p - progress > 0.05) {
                 progress = p;
