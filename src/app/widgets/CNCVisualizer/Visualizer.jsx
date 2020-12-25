@@ -73,7 +73,6 @@ class Visualizer extends Component {
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
 
@@ -361,8 +360,8 @@ class Visualizer extends Component {
                         onCreateElement={this.props.onCreateElement}
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
+                        elementActions={this.props.elementActions}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                        onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                         use3DVisualizer
@@ -576,7 +575,6 @@ const mapDispatchToProps = (dispatch) => {
         onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('cnc')),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('cnc')),
-        onRotateElement: (element, options) => dispatch(editorActions.rotateElement('cnc', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation)),

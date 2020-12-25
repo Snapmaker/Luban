@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import uuid from 'uuid';
+import includes from 'lodash/includes';
+
 import api from '../../api';
 import {
     checkParams,
@@ -10,13 +12,14 @@ import {
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
-import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT, DATA_PREFIX, EPSILON } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT, DATA_PREFIX, EPSILON } from '../../constants';
 
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
+import SvgModel from '../../models/SvgModel';
 
 const getCount = (() => {
     let count = 0;
@@ -432,19 +435,6 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
-    updateSelectedModelDeviation: (headType, deviation) => (dispatch, getState) => {
-        const { page, SVGActions, modelGroup } = getState()[headType];
-        if (page === PAGE_PROCESS) {
-            return;
-        }
-        const selectedModelsTransformation = modelGroup.getSelectedModelTransformation();
-        const transformation = {
-            positionX: selectedModelsTransformation.positionX + deviation.dx,
-            positionY: selectedModelsTransformation.positionY + deviation.dy
-        };
-        SVGActions.updateSelectedElementsTransformation(transformation);
-    },
-
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup, materials } = getState()[headType];
 
@@ -857,26 +847,6 @@ export const actions = {
     //     }
     // },
 
-    manualPreview: (headType, isProcess) => async (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
-
-        const { materials, toolParams = {} } = getState()[headType];
-
-        if (isProcess || autoPreviewEnabled) {
-            for (const model of modelGroup.getModels()) {
-                await model.preview({ materials, toolParams });
-            }
-
-            const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup, toolPathModelGroup);
-            if (isAllModelsPreviewed) {
-                dispatch(baseActions.updateState(headType, {
-                    isAllModelsPreviewed: isAllModelsPreviewed
-                }));
-                dispatch(actions.showAllToolPathsObj3D(headType));
-                dispatch(baseActions.render(headType));
-            }
-        }
-    },
 
     setAutoPreview: (headType, value) => (dispatch) => {
         dispatch(baseActions.updateState(headType, {
@@ -1115,16 +1085,6 @@ export const actions = {
         return modelGroup.getSelectedModel();
     },
 
-    togglePage: (headType, page) => (dispatch) => {
-        dispatch(baseActions.updateState(headType, {
-            page: page
-        }));
-        if (page === PAGE_PROCESS) {
-            dispatch(actions.manualPreview(headType));
-        }
-        dispatch(baseActions.render(headType));
-    },
-
     /**
      * Generate View Path.
      *
@@ -1339,7 +1299,7 @@ export const actions = {
 
     /**
      * SVG Actions below
-     ***************************************************************************/
+     **************************************************************************/
 
     /**
      * Create model from element.
@@ -1364,6 +1324,8 @@ export const actions = {
         // select first toolPathModel by default
         // const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
         // toolPathModelGroup.selectToolPathModel(model && model.modelID);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -1373,24 +1335,48 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.clearSelection();
+
+        dispatch(baseActions.render(headType));
     },
 
+    /**
+     * Move elements start.
+     */
     moveElementsStart: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         SVGActions.moveElementsStart(elements);
     },
 
-    moveElements: (headType, elements, { dx, dy }) => (dispatch, getState) => {
+    /**
+     * Move elements.
+     */
+    moveElements: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.moveElements(elements, { dx, dy });
+        SVGActions.moveElements(elements, options);
     },
 
+    /**
+     * Move elements finish.
+     */
     moveElementsFinish: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         SVGActions.moveElementsFinish(elements, options);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Move elements immediately.
+     */
+    moveElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -1428,19 +1414,34 @@ export const actions = {
         if (selectedModel.sourceType !== 'image3d') {
             dispatch(actions.processSelectedModel(headType));
         }
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Resize elements immediately.
+     */
+    resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
      * Rotate elements start.
      */
-    rotateElementsStart: (headType, elements) => (dispatch, getState) => {
+    rotateElementsStart: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.rotateElementsStart(elements);
+        SVGActions.rotateElementsStart(elements, options);
     },
 
     /**
      * Rotate elements (rotating).
+     *
+     * @param options.deltaAngle - delta angle
      */
     rotateElements: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
@@ -1448,10 +1449,37 @@ export const actions = {
         SVGActions.rotateElements(elements, options);
     },
 
+    /**
+     * Rotate element.
+     */
+    rotateElement: (headType, element, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        // FIXME: remove this
+        SVGActions.rotateElement(element, options);
+        dispatch(actions.resetProcessState(headType));
+    },
+
+    /**
+     * Rotate elements finish.
+     */
     rotateElementsFinish: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
         SVGActions.rotateElementsFinish(elements);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Rotate elements immediately.
+     */
+    rotateElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -1471,16 +1499,6 @@ export const actions = {
     moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
         SVGActions.onMovingByArrowKeyUp();
-        dispatch(actions.resetProcessState(headType));
-    },
-
-    /**
-     * Rotate element.
-     */
-    rotateElement: (headType, element, { angle, cx, cy }) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-
-        SVGActions.rotateElement(element, { angle, cx, cy });
         dispatch(actions.resetProcessState(headType));
     },
 
@@ -1555,6 +1573,95 @@ export const actions = {
             dispatch(actions.processSelectedModel(headType));
         }
         dispatch(actions.showAllModelsObj3D(headType));
+    },
+
+    /**
+     * Process procedure: page control, data synchronize and preview
+     **************************************************************************/
+
+    __synchronizeElements: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        const selectedElements = SVGActions.getSelectedElements();
+
+        console.log('synchronize elements', selectedElements);
+
+        // Convert position from SVG coordinate to logical coordinate
+        // TODO: Convert in SVGActions, and update here
+        for (const element of selectedElements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            const model = svgModel.relatedModel;
+
+            const t = SvgModel.getElementTransform(element);
+            const size = getState().machine.size;
+
+            const transformation = {
+                ...model.transformation,
+                positionX: t.x - size.x,
+                positionY: -t.y + size.y,
+                positionZ: 0,
+                scaleX: t.scaleX,
+                scaleY: t.scaleY,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: -t.angle / 180 * Math.PI,
+                width: t.width * t.scaleX,
+                height: t.height * t.scaleY
+            };
+
+            model.updateTransformation(transformation);
+        }
+    },
+
+    /**
+     * Switch to another page.
+     *
+     * @param headType
+     * @param page
+     */
+    switchToPage: (headType, page) => (dispatch) => {
+        if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
+            return;
+        }
+
+        // switch to `page`
+        dispatch(baseActions.updateState(headType, { page }));
+
+        // when switching to "Process" page, we need to
+        // 1. synchronize SVG elements to its corresponding image in "Process" page
+        // 2. trigger preview of all images
+        if (page === PAGE_PROCESS) {
+            dispatch(actions.__synchronizeElements(headType));
+
+            dispatch(actions.manualPreview(headType));
+        }
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Manual Preview (what's the meaning of "manual" here?)
+     */
+    manualPreview: (headType, isProcess) => async (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
+
+        const { materials, toolParams = {} } = getState()[headType];
+
+        if (isProcess || autoPreviewEnabled) {
+            for (const model of modelGroup.getModels()) {
+                await model.preview({ materials, toolParams });
+            }
+
+            const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup, toolPathModelGroup);
+            if (isAllModelsPreviewed) {
+                dispatch(baseActions.updateState(headType, {
+                    isAllModelsPreviewed: isAllModelsPreviewed
+                }));
+                dispatch(actions.showAllToolPathsObj3D(headType));
+                dispatch(baseActions.render(headType));
+            }
+        }
     }
 };
 

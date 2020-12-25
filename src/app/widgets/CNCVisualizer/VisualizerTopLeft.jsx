@@ -11,7 +11,7 @@ class VisualizerTopLeft extends PureComponent {
     static propTypes = {
         uploadImage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
-        togglePage: PropTypes.func.isRequired
+        switchToPage: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -29,7 +29,9 @@ class VisualizerTopLeft extends PureComponent {
                 uploadMode = 'greyscale';
             }
 
-            this.props.togglePage(PAGE_EDITOR);
+            // Switch to PAGE_EDITOR page if new image being uploaded
+            this.props.switchToPage(PAGE_EDITOR);
+
             if (uploadMode === 'greyscale') {
                 this.props.setAutoPreview(false);
             }
@@ -74,7 +76,7 @@ class VisualizerTopLeft extends PureComponent {
 const mapDispatchToProps = (dispatch) => ({
     setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('cnc', value)),
     uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
-    togglePage: (page) => dispatch(editorActions.togglePage('cnc', page))
+    switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page))
 });
 
 

@@ -15,7 +15,7 @@ class VisualizerTopLeft extends PureComponent {
         redo: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
-        togglePage: PropTypes.func.isRequired
+        switchToPage: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -33,7 +33,8 @@ class VisualizerTopLeft extends PureComponent {
                 uploadMode = 'bw';
             }
 
-            this.props.togglePage(PAGE_EDITOR);
+            // Switch to PAGE_EDITOR page if new image being uploaded
+            this.props.switchToPage(PAGE_EDITOR);
 
             if (uploadMode === 'greyscale') {
                 this.props.setAutoPreview(false);
@@ -100,7 +101,7 @@ const mapDispatchToProps = (dispatch) => ({
     redo: () => dispatch(editorActions.redo('laser')),
     setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
     uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
-    togglePage: (page) => dispatch(editorActions.togglePage('laser', page))
+    switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))
 });
 
 

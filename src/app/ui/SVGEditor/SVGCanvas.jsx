@@ -83,7 +83,6 @@ class SVGCanvas extends PureComponent {
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -95,7 +94,7 @@ class SVGCanvas extends PureComponent {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired
-        }),
+        }).isRequired,
 
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
@@ -473,13 +472,15 @@ class SVGCanvas extends PureComponent {
                 draw.startX = x;
                 draw.startY = y;
 
+                const bbox = this.svgContentGroup.getSelectedElementsBBox();
                 draw.startAngle = this.svgContentGroup.getElementAngel(); // FIXME: angle
-                draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
 
-                console.log('SVGCanvas, rotate start, start angle = ', draw.startAngle);
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                draw.center = { x: cx, y: cy };
 
                 const elements = this.svgContentGroup.selectedElements;
-                this.props.elementActions.rotateElementsStart(elements);
+                this.props.elementActions.rotateElementsStart(elements, { cx, cy });
 
                 break;
             }
@@ -749,24 +750,17 @@ class SVGCanvas extends PureComponent {
                 return;
             }
             case 'rotate': {
-                const bbox = draw.bbox;
-                const cx = bbox.x + bbox.width / 2;
-                const cy = bbox.y + bbox.height / 2;
-
-                // angleOld = angle rotate
-                // angle0 = angle to X axis (right, positive)
-                // angle1 = angle to Y axis (up, negative)
-                // angle2 = new angle rotate
+                const center = draw.center;
 
                 // calculate handle angle (in degree)
-                const handleAngle = Math.atan2(y - cy, x - cx) / Math.PI * 180;
+                const handleAngle = Math.atan2(y - center.y, x - center.x) / Math.PI * 180;
 
                 // convert handle angle to SVG angle (X axis positive is 0°)
                 const rotateAngle = (handleAngle + 90) % 360;
                 const deltaAngle = (rotateAngle - draw.startAngle) % 360;
 
                 const elements = this.svgContentGroup.selectedElements;
-                this.props.elementActions.rotateElements(elements, { deltaAngle, cx, cy });
+                this.props.elementActions.rotateElements(elements, { deltaAngle, cx: center.x, cy: center.y });
 
                 return;
             }
@@ -940,12 +934,8 @@ class SVGCanvas extends PureComponent {
 
             // being moved
             case 'move': {
-                const dx = x - draw.startX;
-                const dy = y - draw.startY;
-
                 const elements = this.svgContentGroup.selectedElements;
-                // this.props.onAfterMoveElements(elements, { dx, dy });
-                this.props.elementActions.moveElementsFinish(elements, { dx, dy });
+                this.props.elementActions.moveElementsFinish(elements);
 
                 // set back to select mode
                 this.setMode('select');
@@ -962,26 +952,14 @@ class SVGCanvas extends PureComponent {
                 return;
             }
 
-            // being rotated
             case 'rotate': {
-                const bbox = draw.bbox;
-                const cx = bbox.x + bbox.width / 2;
-                const cy = bbox.y + bbox.height / 2;
-
-                // angleOld = angle rotate
-                // angle0 = angle to X axis (right, positive)
-                // angle1 = angle to Y axis (up, negative)
-                // angle2 = new angle rotate
-                const angleOld = draw.startAngle;
-                let angle = Math.atan2(y - cy, x - cx);
-                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-
-                angle = (angle - angleOld + 540) % 360 - 180;
-
-                this.props.onRotateElement(null, { angle, cx, cy });
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.rotateElementsFinish(elements);
 
                 // TODO: Workaround here, reselect elements to avoid miscalculation of transformations
-                this.selectOnly(this.svgContentGroup.selectedElements);
+                // Re-select all elements to give items axis aligned selector
+                this.selectOnly(elements);
+
                 this.setMode('select');
                 return;
             }
@@ -1532,6 +1510,8 @@ class SVGCanvas extends PureComponent {
 
     render() {
         const { className = '' } = this.props;
+
+        console.log('render()', this.props.elementActions);
 
         return (
             <React.Fragment>

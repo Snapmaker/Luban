@@ -30,7 +30,6 @@ class SVGEditor extends PureComponent {
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
@@ -43,7 +42,7 @@ class SVGEditor extends PureComponent {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired
-        }),
+        }).isRequired,
 
         createText: PropTypes.func.isRequired
     };
@@ -120,7 +119,6 @@ class SVGEditor extends PureComponent {
                             onSelectElements={this.props.onSelectElements}
                             onClearSelection={this.props.onClearSelection}
                             onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                            onRotateElement={this.props.onRotateElement}
                             updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                             elementActions={this.props.elementActions}
                         />

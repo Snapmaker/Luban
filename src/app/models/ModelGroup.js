@@ -906,6 +906,15 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    /**
+     * Update transformation of selected group.
+     *
+     * Note that this function is used for 3DP only.
+     *
+     * TODO: Laser and CNC was moved to somewhere else.
+     *
+     * @param transformation
+     */
     updateSelectedGroupTransformation(transformation) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
 

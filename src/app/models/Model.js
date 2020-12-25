@@ -788,24 +788,34 @@ class Model {
         }
     }
 
+    // TODO: move preview method to flux. @parachute
     async preview(options) {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
+
         if (toolPathModelTaskInfo && toolPathModelTaskInfo.visible) {
+            // TODO: too complex the API
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo,
                 ...options
             };
+
+            // Check if parameters are the same, if yes then skip the preview
             const lastToolPathStr = JSON.stringify({ ...taskInfo, toolPathFilename: '' });
             if (this.lastToolPathStr === lastToolPathStr) {
                 return true;
             }
+
+            // Generate task ID for new tool path
             const id = uuid.v4();
             this.relatedModels.toolPathModel.id = id;
             taskInfo.id = id;
+
             this.lastToolPathStr = lastToolPathStr;
             this.relatedModels.toolPathModel.isPreview = false;
+
+            // Commit async task
             controller.commitToolPathTask({
                 taskId: taskInfo.modelID,
                 headType: this.headType,

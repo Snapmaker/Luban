@@ -2,15 +2,49 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
-import { NumberInput as Input, DegreeInput } from '../../components/Input';
+import { DegreeInput, NumberInput as Input } from '../../components/Input';
+
+import { actions as editorActions } from '../../flux/editor';
+
 import styles from './styles.styl';
 
-class Transformation extends PureComponent {
+/**
+ * Transformation section.
+ *
+ * This component is used for display properties of selected SVG elements.
+ */
+class TransformationSection extends PureComponent {
     static propTypes = {
+        // headType: PropTypes.string.isRequired, // laser | cnc
+
+        size: PropTypes.shape({
+            x: PropTypes.number,
+            y: PropTypes.number,
+            z: PropTypes.number
+        }).isRequired,
+        selectedElements: PropTypes.array.isRequired,
+        // element transformation
+        selectedElementsTransformation: PropTypes.shape({
+            x: PropTypes.number.isRequired,
+            y: PropTypes.number.isRequired,
+            width: PropTypes.number.isRequired,
+            height: PropTypes.number.isRequired,
+            scaleX: PropTypes.number.isRequired,
+            scaleY: PropTypes.number.isRequired,
+            angle: PropTypes.number.isRequired
+        }).isRequired,
+        // element actions
+        elementActions: PropTypes.shape({
+            moveElementsImmediately: PropTypes.func.isRequired,
+            resizeElementsImmediately: PropTypes.func.isRequired,
+            rotateElementsImmediately: PropTypes.func.isRequired
+        }),
+
         selectedModelArray: PropTypes.array,
         sourceType: PropTypes.string,
         transformation: PropTypes.shape({
@@ -27,14 +61,8 @@ class Transformation extends PureComponent {
 
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         // updateSelectedModelFlip: PropTypes.func.isRequired,
-        updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
+        updateSelectedModelUniformScalingState: PropTypes.func.isRequired
         // onModelAfterTransform: PropTypes.func.isRequired,
-        // redux
-        size: PropTypes.shape({
-            x: PropTypes.number,
-            y: PropTypes.number,
-            z: PropTypes.number
-        }).isRequired
     };
 
     state = {
@@ -45,50 +73,56 @@ class Transformation extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        // dont set width and height on transform
-        onChangeWidth: (width) => {
-            const selectedModelArray = this.props.selectedModelArray;
-            if (selectedModelArray && selectedModelArray.length === 1) {
+
+        onChangeLogicalX: (logicalX) => {
+            const elements = this.props.selectedElements;
+            const x = logicalX + this.props.size.x;
+            this.props.elementActions.moveElementsImmediately(elements, { newX: x });
+        },
+
+        onChangeLogicalY: (logicalY) => {
+            const elements = this.props.selectedElements;
+            const y = -logicalY + this.props.size.y;
+            this.props.elementActions.moveElementsImmediately(elements, { newY: y });
+        },
+
+        onChangeWidth: (newWidth) => {
+            const elements = this.props.selectedElements;
+
+            if (elements.length === 1) {
+                // TODO: save uniformScalingState in SVGModel
                 if (this.props.transformation.uniformScalingState) {
-                    this.props.updateSelectedModelTransformation({
-                        width,
-                        height: this.props.transformation.height * width / this.props.transformation.width,
-                        scaleX: this.props.transformation.scaleX * width / this.props.transformation.width,
-                        scaleY: this.props.transformation.scaleY * width / this.props.transformation.width
-                    });
+                    const { width, height, scaleX, scaleY } = this.props.selectedElementsTransformation;
+                    const newHeight = height * scaleY * (newWidth / width / scaleX);
+                    this.props.elementActions.resizeElementsImmediately(elements, { newWidth, newHeight });
                 } else {
-                    this.props.updateSelectedModelTransformation({ width, scaleX: this.props.transformation.scaleX * width / this.props.transformation.width });
+                    this.props.elementActions.resizeElementsImmediately(elements, { newWidth });
                 }
             }
         },
-        onChangeHeight: (height) => {
-            const selectedModelArray = this.props.selectedModelArray;
-            if (selectedModelArray && selectedModelArray.length === 1) {
+        onChangeHeight: (newHeight) => {
+            const elements = this.props.selectedElements;
+
+            if (elements.length === 1) {
+                // TODO: save uniformScalingState in SVGModel
                 if (this.props.transformation.uniformScalingState) {
-                    this.props.updateSelectedModelTransformation({
-                        height,
-                        width: this.props.transformation.width * height / this.props.transformation.height,
-                        scaleY: this.props.transformation.scaleY * height / this.props.transformation.height,
-                        scaleX: this.props.transformation.scaleX * height / this.props.transformation.height
-                    });
+                    const { width, height, scaleX, scaleY } = this.props.selectedElementsTransformation;
+                    const newWidth = width * scaleX * (newHeight / height / scaleY);
+                    this.props.elementActions.resizeElementsImmediately(elements, { newWidth, newHeight });
                 } else {
-                    this.props.updateSelectedModelTransformation({ height, scaleY: this.props.transformation.scaleY * height / this.props.transformation.height });
+                    this.props.elementActions.resizeElementsImmediately(elements, { newHeight });
                 }
             }
         },
-        onChangeRotationZ: (degree) => {
-            const rotationZ = degree * Math.PI / 180;
-            this.props.updateSelectedModelTransformation({ rotationZ });
+
+        onChangeLogicalAngle: (logicalAngle) => {
+            const newAngle = -logicalAngle;
+            // const rotationZ = degree * Math.PI / 180;
+            // this.props.updateSelectedModelTransformation({ rotationZ });
+            const elements = this.props.selectedElements;
+            this.props.elementActions.rotateElementsImmediately(elements, { newAngle });
         },
-        onChangePositionX: (positionX) => {
-            // if (positionX) {
-            //     return;
-            // }
-            this.props.updateSelectedModelTransformation({ positionX });
-        },
-        onChangePositionY: (positionY) => {
-            this.props.updateSelectedModelTransformation({ positionY });
-        },
+
         onChangeFlip: (key) => {
             const selectedModelArray = this.props.selectedModelArray;
             if (selectedModelArray && selectedModelArray.length === 1) {
@@ -103,14 +137,34 @@ class Transformation extends PureComponent {
         }
     };
 
+    convertSVGPointToLogicalPoint(p, size) {
+        return {
+            x: p.x - size.x,
+            y: -p.y + size.y
+        };
+    }
+
     render() {
-        const { size, selectedModelArray, sourceType } = this.props;
-        const { rotationZ = 0, width = 125, height = 125, positionX = 0, positionY = 0, uniformScalingState = false } = this.props.transformation;
+        const { selectedElementsTransformation, size, selectedModelArray, sourceType, transformation } = this.props;
+
+        const { x, y, width, height, scaleX, scaleY, angle } = selectedElementsTransformation;
+
+        // calculate logical transformation
+        // TODO: convert positions in flux
+        const { x: logicalX, y: logicalY } = this.convertSVGPointToLogicalPoint({ x, y }, size);
+        const logicalWidth = width * scaleX;
+        const logicalHeight = height * scaleY;
+        const logicalAngle = -angle;
+
+        const { uniformScalingState = false } = transformation;
+
         const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
+
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
+
         return (
-            <React.Fragment>
+            <div>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
                     <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Transformation')}</span>
@@ -124,6 +178,7 @@ class Transformation extends PureComponent {
                 </Anchor>
                 {this.state.expanded && (
                     <React.Fragment>
+                        {/* X */}
                         <TipTrigger
                             title={i18n._('Move (mm)')}
                             content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
@@ -132,12 +187,12 @@ class Transformation extends PureComponent {
                             <Input
                                 className={styles['input-box-left']}
                                 disabled={!selectedNotHide}
-                                value={toFixed(positionX, 1)}
+                                value={toFixed(logicalX, 1)}
                                 min={-size.x}
                                 max={size.x}
                                 onChange={(value) => {
-                                    actions.onChangePositionX(value);
-                                    actions.onModelAfterTransform();
+                                    actions.onChangeLogicalX(value);
+                                    // actions.onModelAfterTransform();
                                 }}
                             />
                             <span
@@ -148,17 +203,22 @@ class Transformation extends PureComponent {
                             </span>
                             <span
                                 className={styles['description-text']}
-                                style={{ marginLeft: '6px', width: '32px', textAlign: 'center', display: 'inline-block' }}
+                                style={{
+                                    marginLeft: '6px',
+                                    width: '32px',
+                                    textAlign: 'center',
+                                    display: 'inline-block'
+                                }}
                             />
                             <Input
                                 className={styles['input-box-right']}
                                 disabled={!selectedNotHide}
-                                value={toFixed(positionY, 1)}
+                                value={toFixed(logicalY, 1)}
                                 min={-size.y}
                                 max={size.y}
                                 onChange={(value) => {
-                                    actions.onChangePositionY(value);
-                                    actions.onModelAfterTransform();
+                                    actions.onChangeLogicalY(value);
+                                    // actions.onModelAfterTransform();
                                 }}
                             />
                             <span
@@ -177,7 +237,7 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width, 1)}
+                                    value={toFixed(logicalWidth, 1)}
                                     min={1}
                                     max={size.x}
                                     onChange={(value) => {
@@ -195,7 +255,14 @@ class Transformation extends PureComponent {
                                     type="button"
                                     disabled={!selectedNotHide || sourceType === 'raster'}
                                     className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
-                                    style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '10px', marginRight: '5px' }}
+                                    style={{
+                                        height: '22px',
+                                        width: '22px',
+                                        display: 'inline-block',
+                                        'verticalAlign': 'middle',
+                                        marginLeft: '10px',
+                                        marginRight: '5px'
+                                    }}
                                     onClick={() => {
                                         actions.onChangeUniformScalingState(!uniformScalingState);
                                         actions.onModelAfterTransform();
@@ -204,12 +271,12 @@ class Transformation extends PureComponent {
                                 <Input
                                     className={styles['input-box-right']}
                                     disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height, 1)}
+                                    value={toFixed(logicalHeight, 1)}
                                     min={1}
                                     max={size.y}
                                     onChange={(value) => {
                                         actions.onChangeHeight(value);
-                                        actions.onModelAfterTransform();
+                                        // actions.onModelAfterTransform();
                                     }}
                                 />
                                 <span
@@ -229,11 +296,11 @@ class Transformation extends PureComponent {
                                 <DegreeInput
                                     className={styles['input-box-left']}
                                     disabled={!selectedNotHide}
-                                    value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1) : 0}
+                                    value={toFixed(logicalAngle, 1)}
                                     suffix="°"
                                     onChange={(value) => {
-                                        actions.onChangeRotationZ(value);
-                                        actions.onModelAfterTransform();
+                                        actions.onChangeLogicalAngle(value);
+                                        // actions.onModelAfterTransform();
                                     }}
                                 />
                                 <span
@@ -272,22 +339,30 @@ class Transformation extends PureComponent {
                         </TipTrigger>
                     </React.Fragment>
                 )}
-            </React.Fragment>
+            </div>
         );
     }
 }
 
-const mapStateToProps = (state, props) => {
-    const { headType } = props;
+const mapStateToProps = (state, ownProps) => {
+    const { headType } = ownProps;
+
     const machine = state.machine;
-    const { modelGroup } = state[headType];
+    const { modelGroup, SVGActions } = state[headType];
+
+    const selectedElements = SVGActions.getSelectedElements();
+    const selectedElementsTransformation = SVGActions.getSelectedElementsTransformation();
+
     const transformation = modelGroup.getSelectedModelTransformation();
     const selectedModelArray = modelGroup.getSelectedModelArray();
-    // const { modelID, sourceType, visible } = selectedModel;
+
     const sourceType = (selectedModelArray.length === 1) ? selectedModelArray[0].sourceType : null;
     const visible = (selectedModelArray.length === 1) ? selectedModelArray[0].visible : null;
+
     return {
         size: machine.size,
+        selectedElements,
+        selectedElementsTransformation,
         selectedModelArray,
         sourceType,
         visible,
@@ -296,4 +371,16 @@ const mapStateToProps = (state, props) => {
     };
 };
 
-export default connect(mapStateToProps)(Transformation);
+const mapDispatchToProps = (dispatch, ownProps) => {
+    const { headType } = ownProps;
+
+    return {
+        elementActions: {
+            moveElementsImmediately: (elements, options) => dispatch(editorActions.moveElementsImmediately(headType, elements, options)),
+            resizeElementsImmediately: (elements, options) => dispatch(editorActions.resizeElementsImmediately(headType, elements, options)),
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately(headType, elements, options))
+        }
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(TransformationSection);

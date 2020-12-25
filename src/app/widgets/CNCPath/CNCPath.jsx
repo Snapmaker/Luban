@@ -8,7 +8,7 @@ import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D } from '../../constants'
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import TextParameters from '../CncLaserShared/TextParameters';
-import Transformation from '../CncLaserShared/Transformation';
+import TransformationSection from '../CncLaserShared/TransformationSection';
 // import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import GcodeParametersForCnc from '../CncLaserShared/GcodeParametersForCnc';
 import VectorParameters from './VectorParameters';
@@ -176,11 +176,10 @@ class CNCPath extends PureComponent {
         return (
             <React.Fragment>
                 {isEditor && (
-                    <Transformation
+                    <TransformationSection
                         headType="cnc"
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
-
                     />
                 )}
                 {isProcess && (
