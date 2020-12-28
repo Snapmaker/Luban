@@ -20,7 +20,13 @@
         },
         "adhesion_type": {
             "label": "Heated Bed Adhesion Type",
-            "description": "Different options that help to improve both priming your extrusion and adhesion to the heated bed. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model. Skirt is a line printed around the model, but not connected to the model."
+            "description": "Different options that help to improve both priming your extrusion and adhesion to the heated bed. Brim adds a single layer flat area around the base of your model to prevent warping. Raft adds a thick grid with a roof below the model. Skirt is a line printed around the model, but not connected to the model.",
+            "options": {
+                "skirt": "Skirt",
+                "brim": "Brim",
+                "raft": "Raft",
+                "none": "None"
+            }
         },
         "bottom_thickness": {
             "label": "Bottom Thickness",
@@ -66,7 +72,11 @@
         "machine_buildplate_type": {
             "default_value": "aluminum",
             "label": "Heated Bed Material",
-            "description": "The material of the heated bed installed on the printer."
+            "description": "The material of the heated bed installed on the printer.",
+            "options": {
+                "glass": "Glass",
+                "aluminum": "Aluminum"
+            }
         },
         "machine_width": {
             "default_value": 125
@@ -178,7 +188,6 @@
         "platform_adhesion": {
             "label": "Heated Bed Adhesion"
         },
-
         "raft_interface_line_width": {
             "description": "Width of the lines in the middle raft layer. Making the second layer extrude more causes the lines to stick to the heated bed."
         },
