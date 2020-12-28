@@ -161,7 +161,7 @@ export const actions = {
 
         actions.__initCNCSecurityWarning(dispatch);
 
-        actions.__init4Axis(dispatch);
+        // actions.__init4Axis(dispatch);
 
         if (machineStore.get('shouldCheckForUpdate') === false) {
             const shouldCheckForUpdate = false;
