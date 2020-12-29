@@ -28,9 +28,22 @@ class Filter extends PureComponent {
             });
         },
         onChangeFilterSpeed: (workSpeed) => {
-            console.log('workspeed', workSpeed);
+            // todo remove this test
+            let speed;
+            if (workSpeed === FILTER_SPEED_FAST) {
+                speed = 2;
+            }
+            if (workSpeed === FILTER_SPEED_MEDIUM) {
+                speed = 1;
+            }
+            if (workSpeed === FILTER_SPEED_LOW) {
+                speed = 0;
+            }
+
+            //test
             this.setState({
-                workSpeed: workSpeed
+                workSpeed: workSpeed,
+                filterLife: speed // todo remove it
             });
         }
     };
@@ -38,7 +51,6 @@ class Filter extends PureComponent {
 
     render() {
         const { isFilterEnable, workSpeed, filterLife } = this.state;
-        console.log('xxxx', filterLife);
         return (
             <div>
                 <div className="sm-parameter-container">
@@ -69,22 +81,34 @@ class Filter extends PureComponent {
                             )}
                         >
                             <button
+                                disabled={!isFilterEnable}
                                 type="button"
-                                className={(workSpeed === FILTER_SPEED_LOW) ? styles.active : styles.passive}
+                                className={classNames(
+                                    (workSpeed === FILTER_SPEED_LOW) ? styles.active : styles.passive,
+                                    (!isFilterEnable) ? styles.disabled : null
+                                )}
                                 onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_LOW)}
                             >
                                 {i18n._('Low')}
                             </button>
                             <button
+                                disabled={!isFilterEnable}
                                 type="button"
-                                className={(workSpeed === FILTER_SPEED_MEDIUM) ? styles.active : styles.passive}
+                                className={classNames(
+                                    (workSpeed === FILTER_SPEED_MEDIUM) ? styles.active : styles.passive,
+                                    (!isFilterEnable) ? styles.disabled : null
+                                )}
                                 onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_MEDIUM)}
                             >
                                 {i18n._('Medium')}
                             </button>
                             <button
+                                disabled={!isFilterEnable}
                                 type="button"
-                                className={(workSpeed === FILTER_SPEED_FAST) ? styles.active : styles.passive}
+                                className={classNames(
+                                    (workSpeed === FILTER_SPEED_FAST) ? styles.active : styles.passive,
+                                    (!isFilterEnable) ? styles.disabled : null
+                                )}
                                 onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_FAST)}
                             >
                                 {i18n._('Fast')}
