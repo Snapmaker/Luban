@@ -60,6 +60,7 @@ export const PROCESS_MODE_VECTOR = 'vector';
 export const PROCESS_MODE_HALFTONE = 'halftone';
 export const PROCESS_MODE_GREYSCALE = 'greyscale';
 
+export const CNC_CONFIG_SUBCATEGORY = 'CncConfig';
 // Use a special a value to expand the range of pixels in the picture
 // 255 -> 0 => 255 ->0 -> -255
 export const CNC_IMAGE_NEGATIVE_RANGE_FIELD = 254;

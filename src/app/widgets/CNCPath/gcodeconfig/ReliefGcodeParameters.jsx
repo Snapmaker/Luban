@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 
 import i18n from '../../../lib/i18n';
-import { NumberInput as Input } from '../../../components/Input';
+import { NumberInput as Input, TextInput } from '../../../components/Input';
 import Anchor from '../../../components/Anchor';
 import TipTrigger from '../../../components/TipTrigger';
 import { actions } from '../../../flux/editor';
@@ -17,17 +17,21 @@ class ReliefGcodeParameters extends PureComponent {
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
-        density: PropTypes.number,
+        methodType: PropTypes.string,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
-        expanded: true
+        methodExpanded: true,
+        heightExpanded: true
     };
 
     actions = {
-        onToggleExpand: () => {
-            this.setState(state => ({ expanded: !state.expanded }));
+        onToggleMethodExpand: () => {
+            this.setState(state => ({ methodExpanded: !state.methodExpanded }));
+        },
+        onToggleHeightExpand: () => {
+            this.setState(state => ({ heightExpanded: !state.heightExpanded }));
         },
         onChangeTargetDepth: (targetDepth) => {
             if (targetDepth > this.props.size.z) {
@@ -38,37 +42,55 @@ class ReliefGcodeParameters extends PureComponent {
                 this.props.updateSelectedModelGcodeConfig({ stepDown: targetDepth });
             }
         },
-        onChangeStepDown: (stepDown) => {
-            this.props.updateSelectedModelGcodeConfig({ stepDown });
-        },
         onChangeSafetyHeight: (safetyHeight) => {
             this.props.updateSelectedModelGcodeConfig({ safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
             this.props.updateSelectedModelGcodeConfig({ stopHeight });
-        },
-        onChangeDensity: (density) => {
-            this.props.updateSelectedModelGcodeConfig({ density });
         }
     };
 
     render() {
         const { size, disabled } = this.props;
-        const { targetDepth, stepDown, safetyHeight, stopHeight, density } = this.props;
+        const { targetDepth, safetyHeight, stopHeight, methodType } = this.props;
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleMethodExpand}>
                     <span className="fa fa-image sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Relief')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Method')}</span>
                     <span className={classNames(
                         'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        this.state.methodExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {this.state.expanded && (
+                <TipTrigger
+                    title={i18n._('Method')}
+                    content={i18n._('Method')}
+                >
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                        <TextInput
+                            disabled
+                            className="sm-parameter-row__input"
+                            value={methodType}
+                        />
+                    </div>
+                </TipTrigger>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleHeightExpand}>
+                    <span className="fa fa-image sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('Relief')}</span>
+                    <span className={classNames(
+                        'fa',
+                        this.state.heightExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {this.state.heightExpanded && (
                     <React.Fragment>
                         <div>
                             <TipTrigger
@@ -92,24 +114,6 @@ class ReliefGcodeParameters extends PureComponent {
                                 </div>
                             </TipTrigger>
 
-                            <TipTrigger
-                                title={i18n._('Step Down')}
-                                content={i18n._('Enter the depth of each carving step.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={stepDown}
-                                        min={0.01}
-                                        max={targetDepth}
-                                        step={0.1}
-                                        onChange={this.actions.onChangeStepDown}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
 
                             <TipTrigger
                                 title={i18n._('Jog Height')}
@@ -148,28 +152,7 @@ class ReliefGcodeParameters extends PureComponent {
                                     <span className="sm-parameter-row__input-unit">mm</span>
                                 </div>
                             </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Density')}
-                                content={i18n._('Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Density')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={density}
-                                        min={0.1}
-                                        max={20}
-                                        step={0.1}
-                                        onChange={this.actions.onChangeDensity}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">dot/mm</span>
-                                </div>
-                            </TipTrigger>
                         </div>
-
-
                     </React.Fragment>
                 )}
             </div>
@@ -182,14 +165,13 @@ const mapStateToProps = (state) => {
     const toolPathModelGroup = state.cnc.toolPathModelGroup;
     const toolPathModel = toolPathModelGroup.getSelectedModel();
     const { gcodeConfig } = toolPathModel;
-    const { targetDepth, stepDown, safetyHeight, stopHeight, density } = gcodeConfig;
+    const { targetDepth, stepDown, safetyHeight, stopHeight } = gcodeConfig;
     return {
         size: machine.size,
         targetDepth,
         stepDown,
         safetyHeight,
-        stopHeight,
-        density
+        stopHeight
     };
 };
 

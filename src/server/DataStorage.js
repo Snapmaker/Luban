@@ -4,6 +4,7 @@ import mkdirp from 'mkdirp';
 import { app } from 'electron';
 import isElectron from 'is-electron';
 // import semver from 'semver';
+import { CNC_CONFIG_SUBCATEGORY } from './constants';
 import logger from './lib/logger';
 import { initFonts } from './lib/FontManager';
 // import settings from './config/settings';
@@ -93,6 +94,7 @@ class DataStorage {
 
      async initSlicer() {
          mkdirp.sync(this.configDir);
+         mkdirp.sync(`${this.configDir}/${CNC_CONFIG_SUBCATEGORY}`);
 
          const CURA_ENGINE_CONFIG_LOCAL = '../resources/CuraEngine/Config';
          if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {

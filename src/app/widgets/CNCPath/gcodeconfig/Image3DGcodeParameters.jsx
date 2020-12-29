@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 
 import Select from 'react-select';
 import i18n from '../../../lib/i18n';
-import { NumberInput as Input } from '../../../components/Input';
+import { NumberInput as Input, TextInput } from '../../../components/Input';
 import Anchor from '../../../components/Anchor';
 import TipTrigger from '../../../components/TipTrigger';
 import { actions } from '../../../flux/editor';
@@ -22,12 +22,13 @@ class Image3DGcodeParameters extends PureComponent {
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
-        density: PropTypes.number,
+        methodType: PropTypes.string,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     state = {
-        expanded: true
+        methodExpanded: true,
+        heightExpanded: true
     };
 
     actions = {
@@ -39,9 +40,6 @@ class Image3DGcodeParameters extends PureComponent {
             if (targetDepth < this.props.stepDown) {
                 this.props.updateSelectedModelGcodeConfig({ stepDown: targetDepth });
             }
-        },
-        onChangeStepDown: (stepDown) => {
-            this.props.updateSelectedModelGcodeConfig({ stepDown });
         },
         onChangeSliceMode: (option) => {
             this.props.updateSelectedModelGcodeConfig({ sliceMode: option.value });
@@ -61,8 +59,8 @@ class Image3DGcodeParameters extends PureComponent {
     };
 
     render() {
-        const { size, disabled, materials, sliceMode, smoothY, targetDepth, stepDown, safetyHeight, stopHeight, density } = this.props;
-        const { isRotate, diameter } = materials;
+        const { size, disabled, materials, sliceMode, smoothY, targetDepth, safetyHeight, stopHeight, methodType } = this.props;
+        const { isRotate } = materials;
 
         const sliceModeOptions = [{
             value: CNC_MESH_SLICE_MODE_ROTATION,
@@ -75,155 +73,138 @@ class Image3DGcodeParameters extends PureComponent {
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleMethodExpand}>
                     <span className="fa fa-image sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Model')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Method')}</span>
                     <span className={classNames(
                         'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        this.state.methodExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {this.state.expanded && (
+                {this.state.methodExpanded && (
                     <React.Fragment>
-                        <div>
-                            {!isRotate && (
+                        <TipTrigger
+                            title={i18n._('Method')}
+                            content={i18n._('Method')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                <TextInput
+                                    disabled
+                                    className="sm-parameter-row__input"
+                                    value={methodType}
+                                />
+                            </div>
+                        </TipTrigger>
+
+                        {isRotate && (
+                            <React.Fragment>
                                 <TipTrigger
-                                    title={i18n._('Target Depth')}
-                                    content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
+                                    title={i18n._('Slice Mode')}
+                                    content={i18n._('Select the slice mode of the mesh tool path')}
                                 >
-                                    <div
-                                        className="sm-parameter-row"
-                                    >
-                                        <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
-                                        <Input
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Slice Mode')}</span>
+                                        <Select
                                             disabled={disabled}
-                                            className="sm-parameter-row__input"
-                                            value={targetDepth}
-                                            min={0.01}
-                                            max={size.z}
-                                            step={0.1}
-                                            onChange={this.actions.onChangeTargetDepth}
+                                            className="sm-parameter-row__select"
+                                            backspaceRemoves={false}
+                                            clearable={false}
+                                            searchable={false}
+                                            options={sliceModeOptions}
+                                            value={sliceMode}
+                                            onChange={this.actions.onChangeSliceMode}
                                         />
-                                        <span className="sm-parameter-row__input-unit">dot/mm</span>
                                     </div>
                                 </TipTrigger>
-                            )}
+                            </React.Fragment>
+                        )}
+                        {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label-lg">{i18n._('Smooth Y')}</span>
+                                <input
+                                    disabled={disabled}
+                                    type="checkbox"
+                                    className="sm-parameter-row__checkbox"
+                                    checked={smoothY}
+                                    onChange={this.actions.onChangeSmoothY}
+                                />
+                            </div>
+                        )}
+                    </React.Fragment>
+                )}
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleHeightExpand}>
+                    <span className="fa fa-image sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('Height')}</span>
+                    <span className={classNames(
+                        'fa',
+                        this.state.heightExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {this.state.heightExpanded && (
+                    <React.Fragment>
+                        <TipTrigger
+                            title={i18n._('Target Depth')}
+                            content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={targetDepth}
+                                    min={0.01}
+                                    max={size.z}
+                                    step={0.1}
+                                    onChange={this.actions.onChangeTargetDepth}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
 
-                            {isRotate && (
-                                <React.Fragment>
-                                    <TipTrigger
-                                        title={i18n._('Slice Mode')}
-                                        content={i18n._('Select the slice mode of the mesh tool path')}
-                                    >
-                                        <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Slice Mode')}</span>
-                                            <Select
-                                                disabled={disabled}
-                                                className="sm-parameter-row__select"
-                                                backspaceRemoves={false}
-                                                clearable={false}
-                                                searchable={false}
-                                                options={sliceModeOptions}
-                                                value={sliceMode}
-                                                onChange={this.actions.onChangeSliceMode}
-                                            />
-                                        </div>
-                                    </TipTrigger>
-                                </React.Fragment>
-                            )}
-                            {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Smooth Y')}</span>
-                                    <input
-                                        disabled={disabled}
-                                        type="checkbox"
-                                        className="sm-parameter-row__checkbox"
-                                        checked={smoothY}
-                                        onChange={this.actions.onChangeSmoothY}
-                                    />
-                                </div>
-                            )}
+                        <TipTrigger
+                            title={i18n._('Jog Height')}
+                            content={i18n._('The distance between the tool and the material when it’s not carving.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={safetyHeight}
+                                    min={0.1}
+                                    max={size.z}
+                                    step={1}
+                                    onChange={this.actions.onChangeSafetyHeight}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
 
-                            <TipTrigger
-                                title={i18n._('Step Down')}
-                                content={i18n._('Enter the depth of each carving step.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={stepDown}
-                                        min={0.01}
-                                        max={isRotate ? diameter : targetDepth}
-                                        step={0.1}
-                                        onChange={this.actions.onChangeStepDown}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Jog Height')}
-                                content={i18n._('The distance between the tool and the material when it’s not carving.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={safetyHeight}
-                                        min={0.1}
-                                        max={size.z}
-                                        step={1}
-                                        onChange={this.actions.onChangeSafetyHeight}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Stop Height')}
-                                content={i18n._('The distance between the tool and the material when the machine stops.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={stopHeight}
-                                        min={0.1}
-                                        max={size.z}
-                                        step={1}
-                                        onChange={this.actions.onChangeStopHeight}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Density')}
-                                content={i18n._('Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Density')}</span>
-                                    <Input
-                                        disabled={disabled}
-                                        className="sm-parameter-row__input"
-                                        value={density}
-                                        min={0.1}
-                                        max={20}
-                                        step={0.1}
-                                        onChange={this.actions.onChangeDensity}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">dot/mm</span>
-                                </div>
-                            </TipTrigger>
-                        </div>
-
+                        <TipTrigger
+                            title={i18n._('Stop Height')}
+                            content={i18n._('The distance between the tool and the material when the machine stops.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
+                                <Input
+                                    disabled={disabled}
+                                    className="sm-parameter-row__input"
+                                    value={stopHeight}
+                                    min={0.1}
+                                    max={size.z}
+                                    step={1}
+                                    onChange={this.actions.onChangeStopHeight}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
 
                     </React.Fragment>
                 )}

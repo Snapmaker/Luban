@@ -17,7 +17,6 @@ class ToolPathModel {
 
         this.modelID = modelID;
         this.mode = mode;
-
         this.id = null;
 
         this.printOrder = 1;

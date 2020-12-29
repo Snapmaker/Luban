@@ -44,7 +44,6 @@ const cpFileToTmp = async (file, uploadName) => {
 export const set = async (req, res) => {
     let { uploadName } = req.body;
     const file = req.files.file;
-
     if (file) { // post blob file in web
         const originalName = path.basename(file.name);
         if (!uploadName) {
@@ -106,7 +105,6 @@ export const uploadCaseFile = (req, res) => {
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
     let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
-    console.log('originalName', originalName, uploadName, path.extname(originalName));
 
     fs.copyFile(originalPath, uploadPath, async (err) => {
         if (err) {

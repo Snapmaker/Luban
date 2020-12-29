@@ -10,6 +10,7 @@ export * as watch from './api-watch';
 export * as image from './api-image';
 export * as file from './api-file';
 export * as printingConfigs from './api-printing-definition';
+export * as cncConfigs from './api-cnc-definition';
 export * as utils from './api-utils';
 export * as toolpath from './api-tool-path';
 export * as svg from './api-svg';

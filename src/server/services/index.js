@@ -160,6 +160,18 @@ function registerApis(app) {
     app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
     app.put(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.updateDefinition);
     app.post(urljoin(settings.route, 'api/printingDefinition/upload'), api.printingConfigs.uploadDefinition);
+
+    app.get(urljoin(settings.route, 'api/cncToolDefinitions'), api.cncConfigs.getToolDefinitions);
+
+    app.get(urljoin(settings.route, 'api/cncToolListDefinition/:definitionId'), api.cncConfigs.getToolListDefinition);
+    app.post(urljoin(settings.route, 'api/cncToolCategoryDefinition'), api.cncConfigs.createToolCategoryDefinition);
+    app.post(urljoin(settings.route, 'api/cncToolListDefinition'), api.cncConfigs.createToolListDefinition);
+    app.delete(urljoin(settings.route, 'api/cncToolCategoryDefinition'), api.cncConfigs.removeToolCategoryDefinition);
+    app.delete(urljoin(settings.route, 'api/cncToolListDefinition'), api.cncConfigs.removeToolListDefinition);
+    app.post(urljoin(settings.route, 'api/cncToolDefinitions/upload'), api.cncConfigs.uploadToolDefinition);
+    app.post(urljoin(settings.route, 'api/cncToolListDefinition/:definitionId'), api.cncConfigs.changeActiveToolListDefinition);
+
+    app.put(urljoin(settings.route, 'api/cncToolDefinitions/update'), api.cncConfigs.updateToolDefinition);
 }
 
 export {

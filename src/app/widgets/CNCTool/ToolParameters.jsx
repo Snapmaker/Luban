@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import Anchor from '../../components/Anchor';
+import styles from './styles.styl';
 import {
     CNC_TOOL_SNAP_V_BIT,
     CNC_TOOL_SNAP_V_BIT_CONFIG,
@@ -20,7 +21,7 @@ import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { actions as cncActions } from '../../flux/cnc';
 import { actions as editorActions } from '../../flux/editor';
-import styles from './styles.styl';
+
 
 class ToolParameters extends PureComponent {
     static propTypes = {
