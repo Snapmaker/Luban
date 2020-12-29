@@ -462,23 +462,7 @@ class Model {
 
     computeBoundingBox() {
         if (this.sourceType === '3d') {
-            // after operated(move/scale/rotate), model.geometry is not changed
-            // so need to call: geometry.applyMatrix(matrixLocal);
-            // then call: geometry.computeBoundingBox(); to get operated modelMesh BoundingBox
-            // clone this.convexGeometry then clone.computeBoundingBox() is faster.
-            if (this.convexGeometry) {
-                const clone = this.convexGeometry.clone();
-                this.meshObject.updateMatrixWorld();
-                clone.applyMatrix(this.meshObject.matrixWorld);
-                clone.computeBoundingBox();
-                this.boundingBox = clone.boundingBox;
-            } else {
-                const clone = this.meshObject.geometry.clone();
-                this.meshObject.updateMatrixWorld();
-                clone.applyMatrix(this.meshObject.matrixWorld);
-                clone.computeBoundingBox();
-                this.boundingBox = clone.boundingBox;
-            }
+            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
         } else {
             const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
             const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
@@ -878,7 +862,7 @@ class Model {
     removeVertexColors() {
         const bufferGeometry = this.meshObject.geometry;
         bufferGeometry.removeAttribute('color');
-        this.setSelected(true);
+        this.setSelected();
         this.modelGroup && this.modelGroup.modelChanged();
     }
 

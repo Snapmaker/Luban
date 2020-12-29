@@ -22,18 +22,18 @@ const ThreeUtils = {
     },
 
     // get matrix for rotating v2 to v1. Applying matrix to v2 can make v2 to parallels v1.
-    getRotateMatrixBetweenVector3: function (v1, v2){
+    getRotateMatrixBetweenVector3: function (v1, v2) {
         const quaternion = ThreeUtils.getQuaternionBetweenVector3(v1, v2);
         const matrix4 = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
         return matrix4;
     },
 
-    getMouseXY: function(event, domElement) {
-        var rect = domElement.getBoundingClientRect();
+    getMouseXY: function (event, domElement) {
+        const rect = domElement.getBoundingClientRect();
         return new THREE.Vector2(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
             -((event.clientY - rect.top) / rect.height) * 2 + 1
-        )
+        );
     },
 
     // get world info
@@ -45,7 +45,7 @@ const ThreeUtils = {
 
     getObjectWorldQuaternion: function (object) {
         const result = new THREE.Quaternion();
-        object.getWorldQuaternion (result);
+        object.getWorldQuaternion(result);
         return result;
     },
 
@@ -56,26 +56,26 @@ const ThreeUtils = {
     },
 
     getEventWorldPosition: function (event, domElement, camera) {
-        var rect = domElement.getBoundingClientRect();
-        var tempVector3 = new THREE.Vector3();
+        const rect = domElement.getBoundingClientRect();
+        const tempVector3 = new THREE.Vector3();
 
         // the x&y in standard thereejs coordinate
         // standardX, standardY: [-1, 1]
-        const standardX =  ((event.clientX - rect.left) / rect.width ) * 2 - 1;
-        const standardY = -((event.clientY - rect.top) / rect.height ) * 2 + 1;
+        const standardX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const standardY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
         tempVector3.set(standardX, standardY, 0.5);
 
-        tempVector3.unproject(camera );
-        tempVector3.sub(camera.position ).normalize();
-        var distance = -camera.position.z / tempVector3.z;
+        tempVector3.unproject(camera);
+        tempVector3.sub(camera.position).normalize();
+        const distance = -camera.position.z / tempVector3.z;
 
-        var result = new THREE.Vector3().copy(camera.position).add(tempVector3.multiplyScalar(distance));
+        const result = new THREE.Vector3().copy(camera.position).add(tempVector3.multiplyScalar(distance));
         return result;
     },
 
     // set world transformation
-    setObjectWorldPosition: function(object, position) {
+    setObjectWorldPosition: function (object, position) {
         const parent = object.parent;
         parent.updateMatrixWorld();
         const matrix = new THREE.Matrix4().getInverse(parent.matrixWorld);
@@ -84,7 +84,7 @@ const ThreeUtils = {
     },
 
     setObjectWorldScale: function (object, scale) {
-        var localScale = object.parent.worldToLocal(scale);
+        const localScale = object.parent.worldToLocal(scale);
         object.scale.copy(localScale);
     },
 
@@ -105,7 +105,7 @@ const ThreeUtils = {
         const scaleY = targetSize.y / originSize2D.y;
 
         const worldScale = new THREE.Vector3(scaleX, scaleY, 1);
-        ThreeUtils.setObjectWorldScale(object, worldScale );
+        ThreeUtils.setObjectWorldScale(object, worldScale);
 
         const deltaX = (scaleX - originScale.x) * originSize2D.x;
         const deltaY = (scaleY - originScale.y) * originSize2D.y;
@@ -144,13 +144,13 @@ const ThreeUtils = {
             box.max.y - box.min.y,
             box.max.z - box.min.z
         );
-        if (is2D){
+        if (is2D) {
             return new THREE.Vector2(size.x, size.y);
         } else {
             return size;
         }
     },
-    
+
     generateSupportBoxGeometry(width, height, topZ, bottomZ = 0) {
         const depth = topZ - bottomZ;
         const box = new THREE.BoxBufferGeometry(width, height, depth).toNonIndexed();
@@ -160,7 +160,7 @@ const ThreeUtils = {
 
     removeObjectParent(obj) {
         const parent = obj.parent;
-        if(!parent) return () =>{};
+        if (!parent) return () => {};
 
         parent.updateMatrixWorld();
         parent.remove(obj);
@@ -168,31 +168,72 @@ const ThreeUtils = {
         return () => this.setObjectParent(obj, parent);
     },
 
-    setObjectParent(obj, parent){
-        if(!parent) return;
-        
-        this.removeObjectParent(obj)
+    setObjectParent(obj, parent) {
+        if (!parent) return;
+
+        this.removeObjectParent(obj);
         parent.updateMatrixWorld();
-        obj.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld)) 
-        parent.add(obj)
+        obj.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld));
+        parent.add(obj);
     },
     applyObjectMatrix(obj, matrix) {
         const inverse = new THREE.Matrix4().getInverse(matrix);
-        obj.children.forEach(child=>{
+        obj.children.forEach(child => {
             child.applyMatrix(inverse);
-        })
+        });
         obj.applyMatrix(matrix);
     },
     liftObjectOnlyChildMatrix(obj) {
-        if(obj.children.length !== 1) return;
-        
+        if (obj.children.length !== 1) return;
+
         const child = obj.children[0];
         const m = child.matrix;
         obj.applyMatrix(m);
         child.applyMatrix(new THREE.Matrix4().getInverse(m));
-    }
+    },
+    computeBoundingBox: (function () {
+        const caches = {};
+        const initialBox = new THREE.Box3(
+            new THREE.Vector3(Infinity, Infinity, Infinity),
+            new THREE.Vector3(-Infinity, -Infinity, -Infinity)
+        );
+        const tmpMatrix = new THREE.Matrix4();
+        return function computeBoundingBox(obj) {
+            let cache = caches[obj.uuid];
+            if (!cache) {
+                cache = {
+                    geometry: obj.isMesh && obj.geometry.clone(),
+                    lastMatrix: new THREE.Matrix4(),
+                    lastBbox: new THREE.Box3().copy(initialBox)
+                };
+                caches[obj.uuid] = cache;
+            }
+            const { geometry, lastMatrix, lastBbox } = cache;
+
+            if (obj.isMesh) {
+                obj.updateMatrixWorld();
+                if (lastBbox.equals(initialBox) || !lastMatrix.equals(obj.matrixWorld)) {
+                    geometry.applyMatrix(obj.matrixWorld);
+                    if(!geometry.boundingBox) {
+                        geometry.computeBoundingBox();
+                    }
+                    lastBbox.copy(geometry.boundingBox);
+                    lastMatrix.copy(obj.matrixWorld);
+                    geometry.applyMatrix(tmpMatrix.getInverse(obj.matrixWorld));
+                }
+            } else {
+                lastBbox.copy(initialBox);
+            }
+
+            for (const child of obj.children) {
+                const cBBox = ThreeUtils.computeBoundingBox(child);
+                lastBbox.expandByPoint(cBBox.min).expandByPoint(cBBox.max);
+            }
+
+            return lastBbox;
+        };
+    }())
 
 };
 
 export default ThreeUtils;
-
