@@ -1,14 +1,14 @@
 // import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import styles from './index.styl';
-import { Button } from '../../components/Buttons';
 import {
     FILTER_SPEED_FAST,
     FILTER_SPEED_MEDIUM,
     FILTER_SPEED_LOW
 } from '../../constants';
-
+import i18n from '../../lib/i18n';
 
 class Filter extends PureComponent {
     static propTypes = {
@@ -18,7 +18,7 @@ class Filter extends PureComponent {
     state = {
         isFilterEnable: true,
         workSpeed: FILTER_SPEED_FAST,
-        filterLife: 2
+        filterLife: 0
     };
 
     actions = {
@@ -38,57 +38,91 @@ class Filter extends PureComponent {
 
     render() {
         const { isFilterEnable, workSpeed, filterLife } = this.state;
+        console.log('xxxx', filterLife);
         return (
             <div>
-                <div className={styles.tableContainer}>
-                    <table className={styles.table}>
-                        <tbody>
-                            <tr key="1">
-                                <td>
-                                    Filter
-                                </td>
-                                <td>
-                                    <Button onClick={this.actions.onHandleFilterEnabled}>
-                                        {isFilterEnable ? 'on' : 'off'}
-                                    </Button>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tbody>
-                            <tr key="2">
-                                <td>
-                                    Work Speed
-                                </td>
-                                <td>
-                                    <Button onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_LOW)}>
-                                        {workSpeed === FILTER_SPEED_LOW ? 'on' : 'Low'}
-                                    </Button>
-                                </td>
-                                <td>
-                                    <Button onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_MEDIUM)}>
-                                        {workSpeed === FILTER_SPEED_MEDIUM ? 'on' : 'Medium'}
-                                    </Button>
-                                </td>
-                                <td>
-                                    <Button onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_FAST)}>
-                                        {workSpeed === FILTER_SPEED_FAST ? 'on' : 'Fast'}
-                                    </Button>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tbody>
-                            <tr key="3">
-                                <td>
-                                    Filter Life
-                                </td>
-                                <td>
-                                    {filterLife >= 0 ? '=' : null}
-                                    {filterLife >= 1 ? '=' : null}
-                                    {filterLife >= 2 ? '=' : null}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div className="sm-parameter-container">
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label-lg">{i18n._('Filter')}</span>
+                        <button
+                            type="button"
+                            className={classNames(
+                                'sm-btn-small',
+                                isFilterEnable ? 'sm-btn-primary' : 'sm-btn-danger'
+                            )}
+                            style={{
+                                float: 'right'
+                            }}
+                            onClick={this.actions.onHandleFilterEnabled}
+                        >
+                            {!isFilterEnable && <i className="fa fa-toggle-off" />}
+                            {!!isFilterEnable && <i className="fa fa-toggle-on" />}
+                            <span className="space" />
+                            {isFilterEnable ? i18n._('On') : i18n._('Off')}
+                        </button>
+                    </div>
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
+                        <span
+                            className={classNames(
+                                styles['btn-3btns']
+                            )}
+                        >
+                            <button
+                                type="button"
+                                className={(workSpeed === FILTER_SPEED_LOW) ? styles.active : styles.passive}
+                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_LOW)}
+                            >
+                                {i18n._('Low')}
+                            </button>
+                            <button
+                                type="button"
+                                className={(workSpeed === FILTER_SPEED_MEDIUM) ? styles.active : styles.passive}
+                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_MEDIUM)}
+                            >
+                                {i18n._('Medium')}
+                            </button>
+                            <button
+                                type="button"
+                                className={(workSpeed === FILTER_SPEED_FAST) ? styles.active : styles.passive}
+                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_FAST)}
+                            >
+                                {i18n._('Fast')}
+                            </button>
+                        </span>
+                    </div>
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Filter Life')}</span>
+                        <span
+                            className={classNames(
+                                styles.lifeLength
+                            )}
+                        >
+                            <span
+                                className={classNames(
+                                    'space',
+                                    filterLife >= 0 ? styles.active : styles.passive
+                                )}
+                            />
+                            <span
+                                className={classNames(
+                                    'space',
+                                    filterLife >= 1 ? styles.active : styles.passive
+                                )}
+                            />
+                            <span
+                                className={classNames(
+                                    'space',
+                                    filterLife >= 2 ? styles.active : styles.passive
+                                )}
+                            />
+                        </span>
+                    </div>
+                    {(filterLife === 0) && (
+                        <div className={classNames(styles.notice)}>
+                            {i18n._('The filter element needs to be replaced.')}
+                        </div>
+                    )}
                 </div>
             </div>
         );
