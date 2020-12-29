@@ -9,7 +9,7 @@ import DataStorage from '../../DataStorage';
  */
 export const getToolListDefinition = (req, res) => {
     const { definitionId } = req.params;
-    const toolName = req.query.toolName;
+    const name = req.query.name;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -26,7 +26,7 @@ export const getToolListDefinition = (req, res) => {
     if (definitionId === 'active') {
         result = json;
     } else {
-        const newDefinition = json.toolList.find((item) => item.toolName === toolName);
+        const newDefinition = json.toolList.find((item) => item.name === name);
         newDefinition.definitionId = json.definitionId;
         result = newDefinition;
     }
@@ -40,7 +40,7 @@ export const getToolListDefinition = (req, res) => {
 
 export const changeActiveToolListDefinition = (req, res) => {
     const { definitionId } = req.params;
-    const toolName = req.query.toolName;
+    const name = req.query.name;
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'
@@ -52,7 +52,7 @@ export const changeActiveToolListDefinition = (req, res) => {
     const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, 'active.def.json');
     const data = fs.readFileSync(filePath, 'utf8');
     const json = JSON.parse(data);
-    const newDefinition = json.toolList.find((item) => item.toolName === toolName);
+    const newDefinition = json.toolList.find((item) => item.name === name);
     newDefinition.definitionId = json.definitionId;
     fs.writeFile(activeFilePath, JSON.stringify(newDefinition, null, 2), 'utf8', (err) => {
         if (err) {
@@ -136,7 +136,7 @@ export const removeToolListDefinition = (req, res) => {
     const filename = `${definitionId}.def.json`;
 
     const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
-    activeToolCategory.toolList = activeToolCategory.toolList.filter(d => d.toolName !== newActiveToolDefinition.toolName);
+    activeToolCategory.toolList = activeToolCategory.toolList.filter(d => d.name !== newActiveToolDefinition.name);
 
     fs.writeFile(destPath, JSON.stringify(activeToolCategory, null, 2), 'utf8', (err) => {
         if (err) {
@@ -169,7 +169,6 @@ export const uploadToolDefinition = (req, res) => {
     const obj = JSON.parse(readFileSync);
     const newDefinitionId = uploadName.substr(0, uploadName.length - 9);
     obj.definitionId = newDefinitionId;
-    // // TODO: if have't the 'toolList',should add default toolDefinition
     if (obj.toolList) {
         obj.toolList.forEach((item) => {
             item.definitionId = newDefinitionId;

@@ -155,14 +155,14 @@ class PrintingManager extends PureComponent {
         },
         onChangeQualityDefinitionForManager: (key, value, checkboxKeyArray) => {
             const { qualityDefinitionForManager, qualityDefinitionOptions } = this.state;
-
+            const newQualityDefinitionForManager = JSON.parse(JSON.stringify(qualityDefinitionForManager));
             if (!isDefinitionEditable(qualityDefinitionForManager)) {
                 return;
             }
 
-            qualityDefinitionForManager.settings[key].default_value = value;
+            newQualityDefinitionForManager.settings[key].default_value = value;
             this.setState({
-                qualityDefinitionForManager,
+                qualityDefinitionForManager: newQualityDefinitionForManager,
                 nameForQuality: qualityDefinitionForManager.name
             });
             if (checkboxKeyArray) {
@@ -226,9 +226,11 @@ class PrintingManager extends PureComponent {
         },
         onChangeMaterialDefinitionForManager: (key, value, checkboxKey) => {
             const { materialDefinitionForManager, materialDefinitionOptions } = this.state;
-            materialDefinitionForManager.settings[key].default_value = value;
+            const newMaterialDefinitionForManager = JSON.parse(JSON.stringify(materialDefinitionForManager));
+
+            newMaterialDefinitionForManager.settings[key].default_value = value;
             this.setState({
-                materialDefinitionForManager: materialDefinitionForManager
+                materialDefinitionForManager: newMaterialDefinitionForManager
             });
             if (checkboxKey) {
                 const newMaterialDefinitionOptions = materialDefinitionOptions.map((item) => {
@@ -336,7 +338,7 @@ class PrintingManager extends PureComponent {
         if (nextProps.showPrintingManager !== this.props.showPrintingManager) {
             this.setState({ showPrintingManager: nextProps.showPrintingManager });
         }
-
+        // Load 'materialDefinitions' and compose the content of the manager
         if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
             const newState = {};
             if (this.props.materialDefinitions.length === 0) {
@@ -439,7 +441,9 @@ class PrintingManager extends PureComponent {
                                     {i18n._('Printing Settings')}
                                 </Anchor>
                             </div>
-                            <div className={classNames(styles['manager-content'])}>
+                            <div
+                                className={classNames(styles['manager-content'])}
+                            >
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         { managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {

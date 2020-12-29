@@ -65,15 +65,15 @@ class CNCPath extends PureComponent {
         },
         onChangeActiveToolListValue: (option) => {
             const definitionId = option.definitionId;
-            const toolName = option.toolName;
+            const name = option.name;
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
-            const toolListDefinition = activeToolCategory.toolList.find(k => k.toolName === toolName);
+            const toolListDefinition = activeToolCategory.toolList.find(k => k.name === name);
             toolListDefinition.definitionId = definitionId;
             if (toolListDefinition) {
                 this.setState({
                     activeToolListDefinition: toolListDefinition
                 });
-                this.props.changeActiveToolListDefinition(definitionId, toolName);
+                this.props.changeActiveToolListDefinition(definitionId, name);
             }
         }
     };
@@ -99,19 +99,20 @@ class CNCPath extends PureComponent {
         } else {
             this.props.setDisplay(false);
         }
+        // Load 'toolDefinitions' and compose the content of the tool select
         if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
             const newState = {};
             if (this.props.toolDefinitions.length === 0) {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
                 activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolListDefinition
                 });
             } else {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === this.state.activeToolListDefinition.toolName)
-                        || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === this.state.activeToolListDefinition.name)
+                        || activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
                 if (activeToolListDefinition) {
                     activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                     Object.assign(newState, {
@@ -125,11 +126,11 @@ class CNCPath extends PureComponent {
                 const definitionId = d.definitionId;
                 toolDefinitionOptions.push(...d.toolList.map((item) => {
                     const checkboxAndSelectGroup = {};
-                    const toolName = item.toolName;
-                    checkboxAndSelectGroup.toolName = toolName;
+                    const name = item.name;
+                    checkboxAndSelectGroup.name = name;
                     checkboxAndSelectGroup.definitionId = definitionId;
-                    checkboxAndSelectGroup.label = `${category} - ${toolName}`;
-                    checkboxAndSelectGroup.value = `${definitionId}-${toolName}`;
+                    checkboxAndSelectGroup.label = `${category} - ${name}`;
+                    checkboxAndSelectGroup.value = `${definitionId}-${name}`;
                     return checkboxAndSelectGroup;
                 }));
             });
@@ -192,7 +193,7 @@ class CNCPath extends PureComponent {
                                 clearable={false}
                                 searchable
                                 options={toolDefinitionOptions}
-                                value={`${activeToolListDefinition.definitionId}-${activeToolListDefinition.toolName}`}
+                                value={`${activeToolListDefinition.definitionId}-${activeToolListDefinition.name}`}
                                 onChange={this.actions.onChangeActiveToolListValue}
                             />
                         </div>
@@ -310,7 +311,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeActiveToolListDefinition: (definitionId, toolName) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, toolName)),
+        changeActiveToolListDefinition: (definitionId, name) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, name)),
         updateShowCncToolManager: (showCncToolManager) => dispatch(cncActions.updateShowCncToolManager(showCncToolManager)),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),

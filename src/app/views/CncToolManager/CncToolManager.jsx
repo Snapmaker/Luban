@@ -24,7 +24,7 @@ function isOfficialListDefinition(activeToolList) {
                 'snap.flat-end-mill',
                 'snap.ball-end-mill',
                 'snap.straight-flute-sharp'],
-            activeToolList.toolName);
+            activeToolList.name);
 }
 
 function isOfficialCategoryDefinition(activeToolCategory) {
@@ -40,18 +40,16 @@ class PrintingManager extends PureComponent {
 
         updateToolListDefinition: PropTypes.func.isRequired,
         updateToolDefinitionName: PropTypes.func.isRequired,
-        // updateDefinitionsForManager: PropTypes.func.isRequired,
         removeToolCategoryDefinition: PropTypes.func.isRequired,
         removeToolListDefinition: PropTypes.func.isRequired,
         onUploadToolDefinition: PropTypes.func.isRequired,
 
-        // updateDefinitionSettings: PropTypes.func.isRequired,
         exportConfigFile: PropTypes.func.isRequired,
 
         updateShowCncToolManager: PropTypes.func.isRequired
     };
 
-   toolFileInput = React.createRef();
+    toolFileInput = React.createRef();
 
     state = {
         showCncToolManager: false,
@@ -108,10 +106,11 @@ class PrintingManager extends PureComponent {
         },
         onChangeToolDefinition: (key, value) => {
             const { activeToolListDefinition } = this.state;
-            activeToolListDefinition.cuttingData[key].default_value = value;
+            const newActiveToolListDefinition = JSON.parse(JSON.stringify(activeToolListDefinition));
+            newActiveToolListDefinition.config[key].default_value = value;
 
             this.setState({
-                activeToolListDefinition
+                activeToolListDefinition: newActiveToolListDefinition
             });
         },
         onSaveToolCategory: async () => {
@@ -131,27 +130,27 @@ class PrintingManager extends PureComponent {
             const { activeToolListDefinition, isCategorySelected, nameForToolList } = this.state;
             const definitionId = activeToolListDefinition.definitionId;
             const oldCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
-            const oldToolList = oldCategory.toolList.find(d => d.toolName === activeToolListDefinition.toolName);
+            const oldToolList = oldCategory.toolList.find(d => d.name === activeToolListDefinition.name);
             await this.props.updateToolListDefinition(activeToolListDefinition);
-            if (oldToolList.toolName !== nameForToolList) { // unchanged
+            if (oldToolList.name !== nameForToolList) { // unchanged
                 try {
-                    await this.props.updateToolDefinitionName(isCategorySelected, definitionId, oldToolList.toolName, nameForToolList);
+                    await this.props.updateToolDefinitionName(isCategorySelected, definitionId, oldToolList.name, nameForToolList);
                 } catch (err) {
                     this.actions.showNotification(err);
                 }
             }
         },
         isNameSelectedNow: (definitionId, name) => {
-            return this.state.activeToolListDefinition && this.state.activeToolListDefinition.toolName === name && this.state.activeToolListDefinition.definitionId === definitionId;
+            return this.state.activeToolListDefinition && this.state.activeToolListDefinition.name === name && this.state.activeToolListDefinition.definitionId === definitionId;
         },
         isCategorySelectedNow: (definitionId) => {
             return this.state.activeToolCategory && this.state.activeToolCategory.definitionId === definitionId;
         },
         onSelectToolCategory: (definitionId) => {
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
-            const toolName = this.state.activeToolListDefinition.toolName;
-            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.toolName === toolName)
-             || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+            const name = this.state.activeToolListDefinition.name;
+            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name)
+             || activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
             if (toolDefinitionForManager) {
                 toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
                 this.setState({ activeToolListDefinition: toolDefinitionForManager });
@@ -161,15 +160,15 @@ class PrintingManager extends PureComponent {
                 isCategorySelected: true
             });
         },
-        onSelectToolName: (definitionId, toolName) => {
+        onSelectToolName: (definitionId, name) => {
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
-            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.toolName === toolName);
+            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name);
             toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
             if (toolDefinitionForManager) {
                 this.setState({
                     activeToolListDefinition: toolDefinitionForManager,
                     activeToolCategory: activeToolCategory,
-                    nameForToolList: toolDefinitionForManager.toolName,
+                    nameForToolList: toolDefinitionForManager.name,
                     isCategorySelected: false
                 });
             }
@@ -195,7 +194,7 @@ class PrintingManager extends PureComponent {
                 const activeToolListDefinition = this.state.activeToolListDefinition;
 
                 await confirm({
-                    body: `Are you sure to remove profile "${activeToolListDefinition.toolName}"?`
+                    body: `Are you sure to remove profile "${activeToolListDefinition.name}"?`
                 });
 
                 await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
@@ -216,11 +215,12 @@ class PrintingManager extends PureComponent {
         if (nextProps.showCncToolManager !== this.props.showCncToolManager) {
             this.setState({ showCncToolManager: nextProps.showCncToolManager });
         }
+        // Load 'toolDefinitions' and compose the content of the manager
         if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
             const newState = {};
             if (this.props.toolDefinitions.length === 0) {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
                 activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolCategory,
@@ -228,8 +228,8 @@ class PrintingManager extends PureComponent {
                 });
             } else {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.toolName === this.state.activeToolListDefinition.toolName)
-                || activeToolCategory.toolList.find(k => k.toolName === 'snap.v-bit');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === this.state.activeToolListDefinition.name)
+                || activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
                 if (activeToolListDefinition) {
                     activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                     Object.assign(newState, {
@@ -244,7 +244,7 @@ class PrintingManager extends PureComponent {
                 const definitionId = d.definitionId;
                 const nameArray = [];
                 d.toolList.forEach((item) => {
-                    nameArray.push(item.toolName);
+                    nameArray.push(item.name);
                 });
                 checkboxAndSelectGroup.category = category;
                 checkboxAndSelectGroup.definitionId = definitionId;
@@ -283,7 +283,9 @@ class PrintingManager extends PureComponent {
                                     {i18n._('Tool')}
                                 </div>
                             </div>
-                            <div className={classNames(styles['manager-content'])}>
+                            <div
+                                className={classNames(styles['manager-content'])}
+                            >
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
@@ -365,10 +367,12 @@ class PrintingManager extends PureComponent {
                                                 {state.notificationMessage}
                                             </Notifications>
                                         )}
-                                        {!isCategorySelected && (Object.entries(activeToolListDefinition.cuttingData).map(([key, setting]) => {
+                                        {!isCategorySelected && (Object.entries(activeToolListDefinition.config).map(([key, setting]) => {
                                             const defaultValue = setting.default_value;
                                             const label = setting.label;
                                             const unit = setting.unit;
+                                            const min = setting.min || 0;
+                                            const max = setting.max || 6000;
 
                                             return (
                                                 <div key={key} className="sm-parameter-row">
@@ -378,6 +382,8 @@ class PrintingManager extends PureComponent {
                                                         <Input
                                                             className="sm-parameter-row__input"
                                                             value={defaultValue}
+                                                            min={min}
+                                                            max={max}
                                                             onChange={value => {
                                                                 this.actions.onChangeToolDefinition(key, value);
                                                             }}
@@ -399,7 +405,7 @@ class PrintingManager extends PureComponent {
                                             onClick={() => { actions.onDuplicateToolCategoryDefinition(); }}
                                             style={{ marginRight: '11px' }}
                                         >
-                                            {i18n._('Copy')}
+                                            {i18n._('Copy Catalog')}
                                         </Anchor>
                                     )}
                                     {!isCategorySelected && (
@@ -408,7 +414,7 @@ class PrintingManager extends PureComponent {
                                             onClick={() => { actions.onDuplicateToolNameDefinition(); }}
                                             style={{ marginRight: '11px' }}
                                         >
-                                            {i18n._('Copy')}
+                                            {i18n._('Copy Profile')}
                                         </Anchor>
                                     )}
                                     {isCategorySelected && (
@@ -417,7 +423,7 @@ class PrintingManager extends PureComponent {
                                             onClick={() => { actions.onRemoveToolDefinition(); }}
                                             disabled={isOfficialCategoryDefinition(activeToolCategory)}
                                         >
-                                            {i18n._('Delete')}
+                                            {i18n._('Delete Catalog')}
                                         </Anchor>
                                     )}
                                     {!isCategorySelected && (
@@ -426,7 +432,7 @@ class PrintingManager extends PureComponent {
                                             onClick={() => { actions.onRemoveToolDefinition(); }}
                                             disabled={isOfficialListDefinition(activeToolListDefinition)}
                                         >
-                                            {i18n._('Delete')}
+                                            {i18n._('Delete Profile')}
                                         </Anchor>
                                     )}
                                 </div>

@@ -58,13 +58,13 @@ class DefinitionManager {
         await api.cncConfigs.updateToolDefinition(activeToolCategory);
     }
 
-    async changeActiveToolListDefinition(definitionId, toolName) {
-        const res = await api.cncConfigs.changeActiveToolListDefinition(definitionId, toolName);
+    async changeActiveToolListDefinition(definitionId, name) {
+        const res = await api.cncConfigs.changeActiveToolListDefinition(definitionId, name);
         return res.body.definition;
     }
     // TODO:
     // Update active definition
-    // Only definitionId & toolName are configurable
+    // Only definitionId & name are configurable
 }
 
 const definitionManager = new DefinitionManager();

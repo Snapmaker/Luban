@@ -164,12 +164,14 @@ export const actions = {
         const { toolDefinitions } = getState().cnc;
         const newToolCategory = toolDefinitions.find((d) => d.definitionId === activeToolList.definitionId);
         const newToolList = newToolCategory.toolList;
-        const isReplacedTool = (d) => d.toolName === activeToolList.toolName;
+        // find the old tool list definition and replace it
+        const isReplacedTool = (d) => d.name === activeToolList.name;
         const toolIndex = newToolList.findIndex(isReplacedTool);
         newToolList.splice(toolIndex, 1, {
-            toolName: activeToolList.toolName,
-            cuttingData: activeToolList.cuttingData
+            name: activeToolList.name,
+            config: activeToolList.config
         });
+
         await definitionManager.updateToolDefinition(newToolCategory);
         const isReplacedDefinition = (d) => d.definitionId === newToolCategory.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
@@ -195,18 +197,20 @@ export const actions = {
             }
             activeDefinition.category = newName;
         } else {
-            const duplicatedToolList = activeDefinition.toolList.find(d => d.toolName === newName);
+            const duplicatedToolList = activeDefinition.toolList.find(d => d.name === newName);
             if (duplicatedToolList) {
                 return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { newName }));
             }
-            const oldToolList = activeDefinition.toolList.find(d => d.toolName === oldName);
-            oldToolList.toolName = newName;
+            const oldToolList = activeDefinition.toolList.find(d => d.name === oldName);
+            oldToolList.name = newName;
         }
 
         await definitionManager.updateToolDefinition(activeDefinition);
+        // find the old tool category definition and replace it
         const isReplacedDefinition = (d) => d.definitionId === activeDefinition.definitionId;
         const index = toolDefinitions.findIndex(isReplacedDefinition);
         toolDefinitions.splice(index, 1, activeDefinition);
+
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...toolDefinitions]
         }));
@@ -220,6 +224,7 @@ export const actions = {
         };
         const definitionId = `${activeToolCategory.definitionId}${timestamp()}`;
         newToolCategory.definitionId = definitionId;
+        // make sure category is not repeated
         while (state.toolDefinitions.find(d => d.category === newToolCategory.category)) {
             newToolCategory.category = `#${newToolCategory.category}`;
         }
@@ -235,8 +240,9 @@ export const actions = {
         const newToolListDefinition = {
             ...activeToolListDefinition
         };
-        while (activeToolCategoryDefinition.toolList.find(d => d.toolName === newToolListDefinition.toolName)) {
-            newToolListDefinition.toolName = `#${newToolListDefinition.toolName}`;
+        // make sure name is not repeated
+        while (activeToolCategoryDefinition.toolList.find(d => d.name === newToolListDefinition.name)) {
+            newToolListDefinition.name = `#${newToolListDefinition.name}`;
         }
         const newToolDefinitions = state.toolDefinitions;
         const createdDefinition = await definitionManager.createToolListDefinition(activeToolCategoryDefinition, newToolListDefinition);
@@ -247,7 +253,7 @@ export const actions = {
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
-        return newToolListDefinition.toolName;
+        return newToolListDefinition.name;
     },
     removeToolCategoryDefinition: (definitionId) => async (dispatch, getState) => {
         const state = getState().cnc;
@@ -272,6 +278,7 @@ export const actions = {
     onUploadToolDefinition: (file) => async (dispatch, getState) => {
         const formData = new FormData();
         formData.append('file', file);
+        // set a new name that cannot be repeated
         formData.append('uploadName', `${file.name.substr(0, file.name.length - 9)}${timestamp()}.def.json`);
         api.uploadFile(formData)
             .then(async (res) => {
@@ -286,10 +293,10 @@ export const actions = {
                 // Ignore error
             });
     },
-    changeActiveToolListDefinition: (definitionId, toolName) => async (dispatch) => {
+    changeActiveToolListDefinition: (definitionId, name) => async (dispatch) => {
         const activeToolListDefinition = await definitionManager.changeActiveToolListDefinition(
             definitionId,
-            toolName
+            name
         );
         dispatch(editorActions.updateState('cnc', {
             activeToolListDefinition
