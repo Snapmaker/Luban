@@ -6,7 +6,6 @@ import { MeshProcess } from '../../MeshProcess/MeshProcess';
 import { Slicer } from '../../MeshProcess/Slicer';
 import ToolPath from '../../ToolPath';
 import { Polygon } from '../../MeshProcess/Polygons';
-import { asyncFor } from '../../../../shared/lib/array-async';
 
 export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
     constructor(modelInfo) {
@@ -659,7 +658,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         }
 
         if (this.smoothY) {
-            await asyncFor(1, slicerLayers.length - 1, 1, (i) => {
+            await this.modelInfo.taskAsyncFor(1, slicerLayers.length - 1, 1, (i) => {
                 const slicerLayer = slicerLayers[i];
                 const tan = Math.tan(this.toolAngle / 2 / 180 * Math.PI);
                 const offset = Math.abs(slicerLayer.z - slicerLayers[i - 1].z) / tan;
@@ -670,7 +669,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 this.emitProgress(0.2 + (i / (slicerLayer.length - 1)) * 0.2);
             });
 
-            await asyncFor(slicerLayers.length - 2, 0, -1, (i) => {
+            await this.modelInfo.taskAsyncFor(slicerLayers.length - 2, 0, -1, (i) => {
                 const slicerLayer = slicerLayers[i];
                 const tan = Math.tan(this.toolAngle / 2 / 180 * Math.PI);
                 const offset = Math.abs(slicerLayer.z - slicerLayers[i + 1].z) / tan;
@@ -684,7 +683,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         const p = this.progress;
 
 
-        await asyncFor(0, slicerLayers.length - 1, 1, (i) => {
+        await this.modelInfo.taskAsyncFor(0, slicerLayers.length - 1, 1, (i) => {
             this._generateSlicerLayerToolPath(slicerLayers, i);
             this.emitProgress((1 - p) * (i / slicerLayers.length) + p);
         });
