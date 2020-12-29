@@ -10,7 +10,7 @@ import styles from './index.styl';
 
 const MotionButtonGroup = (props) => {
     const { state, actions } = props;
-    const { canClick } = state;
+    const { canClick, workPosition } = state;
 
     return (
         <div className={styles['motion-controls']}>
@@ -51,7 +51,13 @@ const MotionButtonGroup = (props) => {
                             type="button"
                             className="sm-btn btn-sm btn-outline-secondary"
                             onClick={() => {
-                                actions.move({ x: 0, y: 0, z: 0, b: 0 });
+                                if (workPosition.z > 0) {
+                                    actions.move({ x: 0, y: 0, b: 0 });
+                                    actions.move({ z: 0 });
+                                } else {
+                                    actions.move({ z: 0 });
+                                    actions.move({ x: 0, y: 0, b: 0 });
+                                }
                             }}
                             disabled={!canClick}
                         >
