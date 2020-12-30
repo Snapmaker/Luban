@@ -95,14 +95,6 @@ class FirmwareTool extends PureComponent {
                             onChange={actions.onChangeModuleFile}
                         />
                     </li>
-                    {/* <li className={styles.wrapper}>
-                        {i18n._('version number')}
-                        <TextInput
-                            className={styles.versionInput}
-                            value={state.buildVersion}
-                            onChange={actions.changeVersion}
-                        />
-                    </li>*/}
                 </ul>
                 <div className={styles.buildButton}>
                     <button

@@ -112,7 +112,12 @@
         },
         "magic_mesh_surface_mode": {
             "label": "Surface Mode",
-            "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces."
+            "description": "Treat the model as a surface only, a volume, or volumes with loose surfaces. The normal print mode only prints enclosed volumes. \"Surface\" prints a single wall tracing the mesh surface with no infill and no top/bottom skin. \"Both\" prints enclosed volumes like normal and any remaining polygons as surfaces.",
+            "options": {
+                "normal": "Normal",
+                "surface": "Surface",
+                "both": "Both"
+            }
         },
         "magic_spiralize": {
             "label": "Spiralize Outer Contour",
@@ -258,7 +263,11 @@
         },
         "support_type": {
             "label": "Support Placement",
-            "description": "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model."
+            "description": "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model.",
+            "options": {
+                "buildplate": "Touching Heated Bed",
+                "everywhere": "Everywhere"
+            }
         },
         "support_wall_count": {
             "default_value": 0

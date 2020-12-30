@@ -151,6 +151,17 @@ const curaFields = [
     'support_infill_rate'
 ];
 
+const CURA_CATEGORIES = [
+    'Quality',
+    'Shell',
+    'Infill',
+    'Speed',
+    'Retract & Z Hop',
+    'Surface',
+    'Heated Bed Adhesion Type',
+    'Support'
+];
+
 function customTransform(file, enc, done) {
     const parser = this.parser;
     const content = fs.readFileSync(file.path, enc);
@@ -176,6 +187,10 @@ function customTransform(file, enc, done) {
         };
 
         walk('root', curaConfig);
+
+        for (const word of CURA_CATEGORIES) {
+            parser.set(word);
+        }
     }
 
     done();
