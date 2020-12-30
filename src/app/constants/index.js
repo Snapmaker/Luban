@@ -38,7 +38,7 @@ export const MODAL_EDIT_MACRO = 'edit';
 export const MODAL_RUN_MACRO = 'run';
 
 // Filter
-export const FILTER_SPEED_FAST = 'Fast';
+export const FILTER_SPEED_HIGH = 'High';
 export const FILTER_SPEED_MEDIUM = 'Medium';
 export const FILTER_SPEED_LOW = 'Low';
 

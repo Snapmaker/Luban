@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import styles from './index.styl';
 import {
-    FILTER_SPEED_FAST,
+    FILTER_SPEED_HIGH,
     FILTER_SPEED_MEDIUM,
     FILTER_SPEED_LOW
 } from '../../constants';
@@ -17,7 +17,7 @@ class Filter extends PureComponent {
 
     state = {
         isFilterEnable: true,
-        workSpeed: FILTER_SPEED_FAST,
+        workSpeed: FILTER_SPEED_HIGH,
         filterLife: 0
     };
 
@@ -30,7 +30,7 @@ class Filter extends PureComponent {
         onChangeFilterSpeed: (workSpeed) => {
             // todo remove this test
             let speed;
-            if (workSpeed === FILTER_SPEED_FAST) {
+            if (workSpeed === FILTER_SPEED_HIGH) {
                 speed = 2;
             }
             if (workSpeed === FILTER_SPEED_MEDIUM) {
@@ -106,12 +106,12 @@ class Filter extends PureComponent {
                                 disabled={!isFilterEnable}
                                 type="button"
                                 className={classNames(
-                                    (workSpeed === FILTER_SPEED_FAST) ? styles.active : styles.passive,
+                                    (workSpeed === FILTER_SPEED_HIGH) ? styles.active : styles.passive,
                                     (!isFilterEnable) ? styles.disabled : null
                                 )}
-                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_FAST)}
+                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_HIGH)}
                             >
-                                {i18n._('Fast')}
+                                {i18n._('High')}
                             </button>
                         </span>
                     </div>
