@@ -459,7 +459,8 @@ class ModelGroup extends EventEmitter {
         const maxObjectPosition = new Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         const minObjectPosition = new Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         this.selectedGroup.children.forEach((meshObject) => {
-            const position = meshObject.getWorldPosition();
+            const position = new Vector3();
+            meshObject.getWorldPosition(position);
             maxObjectPosition.x = Math.max(position.x, maxObjectPosition.x);
             maxObjectPosition.y = Math.max(position.y, maxObjectPosition.y);
             maxObjectPosition.z = Math.max(position.z, maxObjectPosition.z);
@@ -668,7 +669,8 @@ class ModelGroup extends EventEmitter {
             const children = [...this.selectedGroup.children];
             children.map(obj => ThreeUtils.removeObjectParent(obj));
             // only make the diff translation
-            const oldPosition = this.selectedGroup.getWorldPosition();
+            const oldPosition = new Vector3();
+            this.selectedGroup.getWorldPosition(oldPosition);
             const matrix = new Matrix4().makeTranslation(p.x - oldPosition.x, p.y - oldPosition.y, p.z - oldPosition.z);
             ThreeUtils.applyObjectMatrix(this.selectedGroup, matrix);
             children.map(obj => ThreeUtils.setObjectParent(obj, this.selectedGroup));
