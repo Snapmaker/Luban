@@ -7,7 +7,7 @@ import {
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
     CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI,
-    DATA_PREFIX,
+    DATA_PREFIX, HEAD_CNC, HEAD_LASER,
     LASER_MOCK_PLATE_HEIGHT,
     MACHINE_HEAD_TYPE,
     MACHINE_SERIES,
@@ -223,9 +223,11 @@ export const actions = {
                        || machineState.workPosition.y !== pos.y
                        || machineState.workPosition.z !== pos.z
                        || machineState.workPosition.b !== pos.b) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: true
-                        }));
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -237,9 +239,11 @@ export const actions = {
                     if (machineState.workPosition.x !== pos.x
                        || machineState.workPosition.y !== pos.y
                        || machineState.workPosition.z !== pos.z) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: false
-                        }));
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -580,9 +584,11 @@ export const actions = {
                        || Number(workPosition.y) !== y
                        || Number(workPosition.z) !== z
                        || Number(workPosition.b) !== b) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: true
-                        }));
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
@@ -598,9 +604,11 @@ export const actions = {
                     if (Number(workPosition.x) !== x
                        || Number(workPosition.y) !== y
                        || Number(workPosition.z) !== z) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: false
-                        }));
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
