@@ -5,7 +5,6 @@ import Normalizer from './Normalizer';
 import { round } from '../../../shared/lib/utils';
 import { CNC_IMAGE_NEGATIVE_RANGE_FIELD } from '../../constants';
 import XToBToolPath from '../ToolPath/XToBToolPath';
-import { asyncFor } from '../../../shared/lib/array-async';
 
 const OVERLAP_RATE = 0.5;
 const MAX_DENSITY = 20;
@@ -430,7 +429,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             let isOrder = true;
             const zState = new ZState();
 
-            await asyncFor(0, this.targetHeight - 1, 1, (j) => {
+            await this.modelInfo.taskAsyncFor(0, this.targetHeight - 1, 1, (j) => {
                 const gY = normalizer.y(this.targetHeight - 1 - j);
 
                 if (zMin[j] >= curDepth + this.stepDown) {
