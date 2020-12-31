@@ -170,6 +170,25 @@
         },
         "conical_overhang_angle": {
             "description": "The maximum angle of overhangs after the they have been made printable. At a value of 0° all overhangs are replaced by a piece of model connected to the heated bed, 90° will not change the model in any way."
+        },
+        "support":{
+            "children":{
+                "support_enable":{
+                    "label": "Generate Auto Support"
+                },
+                "support_pattern":{
+                    "enabled": true
+                },
+                "support_infill_rate":{
+                    "enabled": true
+                },
+                "support_z_distance":{
+                    "enabled": true
+                },
+                "support_angle":{
+                    "enabled": true
+                }
+            }
         }
     }
 }
