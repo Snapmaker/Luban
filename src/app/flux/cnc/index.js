@@ -10,6 +10,7 @@ import {
 } from '../actionType';
 import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
 import { PAGE_EDITOR, CNC_TOOL_SNAP_V_BIT_CONFIG } from '../../constants';
+import { machineStore } from '../../store/local-storage';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
@@ -145,6 +146,11 @@ export const actions = {
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
+
+        const materials = machineStore.get('cnc.materials');
+        if (materials) {
+            dispatch(editorActions.updateMaterials('cnc', materials));
+        }
     },
 
     changeToolParams: (toolParams) => {
