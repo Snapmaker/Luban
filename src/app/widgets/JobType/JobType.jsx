@@ -39,7 +39,7 @@ class JobType extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        this.props.setDisplay(this.props.use4Axis && nextProps.page === PAGE_EDITOR);
+        this.props.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
     }
 
     render() {

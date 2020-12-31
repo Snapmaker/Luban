@@ -13,6 +13,7 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
+import { machineStore } from '../../store/local-storage';
 
 
 const initModelGroup = new ModelGroup('laser');
@@ -135,6 +136,11 @@ export const actions = {
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
+
+        const materials = machineStore.get('laser.materials');
+        if (materials) {
+            dispatch(editorActions.updateMaterials('laser', materials));
+        }
     },
 
     setBackgroundEnabled: (enabled) => {

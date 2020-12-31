@@ -67,13 +67,6 @@ export const actions = {
 
     ...baseActions,
 
-    init: (headType) => (dispatch) => {
-        const materials = machineStore.get(`${headType}.materials`);
-        if (materials) {
-            dispatch(actions.updateMaterials(headType, materials));
-        }
-    },
-
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
