@@ -161,7 +161,7 @@ class VisualizerModelTransformation extends PureComponent {
         const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true;
         }));
-        const supportDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+        const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
             return model.visible === true && !model.supportTag;
         }));
 
@@ -216,15 +216,15 @@ class VisualizerModelTransformation extends PureComponent {
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-rotate'],
-                            { [styles.disabled]: transformDisabled || supportDisabled },
+                            { [styles.disabled]: transformDisabled || isSupportSelected },
                             {
-                                [styles.selected]: !(transformDisabled || supportDisabled) && transformMode === 'rotate'
+                                [styles.selected]: !(transformDisabled || isSupportSelected) && transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('rotate');
                         }}
-                        disabled={transformDisabled || supportDisabled}
+                        disabled={transformDisabled || isSupportSelected}
                     />
                     <Anchor
                         componentClass="button"

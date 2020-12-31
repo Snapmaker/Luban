@@ -462,7 +462,7 @@ class Model {
 
     computeBoundingBox() {
         if (this.sourceType === '3d') {
-            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
+            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject, !this.supportTag);
         } else {
             const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
             const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
@@ -791,14 +791,15 @@ class Model {
 
     generateSupportGeometry() {
         const target = this.target;
-        this.computeBoundingBox();
-        const bbox = this.boundingBox;
-        const center = new THREE.Vector3(bbox.min.x + (bbox.max.x - bbox.min.x) / 2, bbox.min.y + (bbox.max.y - bbox.min.y) / 2, 0);
+        const center = new THREE.Vector3();
+        this.meshObject.getWorldPosition(center);
+        center.setZ(0);
 
         const rayDirection = new THREE.Vector3(0, 0, 1);
         const size = this.supportSize;
         const raycaster = new THREE.Raycaster(center, rayDirection);
         const intersects = raycaster.intersectObject(target.meshObject, true);
+
         let intersect = intersects[0];
         if (intersects.length >= 2) {
             intersect = intersects[intersects.length - 2];
@@ -809,12 +810,12 @@ class Model {
             this.isInitSupport = false;
             height = intersect.point.z;
         }
+
         const geometry = ThreeUtils.generateSupportBoxGeometry(size.x, size.y, height);
 
         geometry.computeVertexNormals();
 
         this.meshObject.geometry = geometry;
-        this.computeBoundingBox();
     }
 
     setVertexColors() {
