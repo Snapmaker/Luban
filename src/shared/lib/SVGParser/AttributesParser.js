@@ -222,12 +222,12 @@ class AttributesParser {
         }
         // make a copy of parentAttributes
         attributes.xform = [1, 0, 0, 1, 0, 0];
+        // Regardless of whether 'node.$' is exited, 'xform' in 'attributes' must be applied to 'node' element
+        xformMultiply(attributes.xform, parentAttributes.xform);
 
         if (!node.$) {
             return attributes;
         }
-
-        xformMultiply(attributes.xform, parentAttributes.xform);
 
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
