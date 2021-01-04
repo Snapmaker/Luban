@@ -16,6 +16,7 @@ class SVGEditor extends PureComponent {
         SVGActions: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
+        use3DVisualizer: PropTypes.bool,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -124,7 +125,9 @@ class SVGEditor extends PureComponent {
                     />
 
                 </div>
-                <Cnc3DVisualizer />
+                {this.props.use3DVisualizer && (
+                    <Cnc3DVisualizer />
+                )}
             </div>
         );
     }

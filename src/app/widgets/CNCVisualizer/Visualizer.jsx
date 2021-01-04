@@ -359,6 +359,7 @@ class Visualizer extends Component {
                         onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
+                        use3DVisualizer
                     />
                 </div>
                 <div

@@ -74,8 +74,7 @@ const set4AxisMeshState = async (mesh, transformation, materials) => {
         }
     );
 
-    const size = getMeshSize(mesh);
-    const radius = Math.sqrt(size.x ** 2 + size.y ** 2) / 2;
+    const radius = transformation.width / Math.PI / 2;
     // const meshCylinder = new Mesh(
     //     new CylinderGeometry(radius, radius, size.z, 64),
     //     new MeshPhongMaterial({
