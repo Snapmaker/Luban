@@ -17,7 +17,6 @@ class ModelGroup extends EventEmitter {
         this.headType = headType;
         // this.object = new Object3D();
         this.object = new Group();
-        this.showObject = new Group();
 
         this.models = [];
 
@@ -388,9 +387,6 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    addHiddenMeshObjects() {
-        this.showObject.children.splice(0);
-    }
 
     setConvexGeometry(uploadName, convexGeometry) {
         const models = this.models.filter(m => m.uploadName === uploadName);

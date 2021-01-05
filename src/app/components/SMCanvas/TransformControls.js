@@ -95,18 +95,6 @@ class TransformControls extends Object3D {
         this.destroyDefaults();
     }
 
-    calculateScalePosition(originalPosition, centerPosition, eVec) {
-        const positionX = centerPosition.x + (originalPosition.x - centerPosition.x) * eVec.x;
-        const positionY = centerPosition.y + (originalPosition.y - centerPosition.y) * eVec.y;
-        const positionZ = centerPosition.z + (originalPosition.z - centerPosition.z) * eVec.z;
-        return {
-            x: positionX,
-            y: positionY,
-            z: positionZ
-        };
-    }
-
-
     createPeripheral(definitions) {
         const peripheral = new Object3D();
 
