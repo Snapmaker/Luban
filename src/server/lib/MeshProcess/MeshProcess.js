@@ -143,10 +143,19 @@ export class MeshProcess {
         const mesh = this.mesh;
 
         if (this.isRotate) {
-            const r = Vector2.length({
-                x: mesh.aabb.length.x / 2,
-                y: mesh.aabb.length.y / 2
-            });
+            const center = {
+                x: (mesh.aabb.max.x + mesh.aabb.min.x) / 2,
+                y: (mesh.aabb.max.y + mesh.aabb.min.y) / 2
+            };
+            let r2 = 0;
+            for (const vertex of mesh.vertices) {
+                r2 = Math.max(Vector2.length2({
+                    x: vertex.p.x - center.x,
+                    y: vertex.p.y - center.y
+                }), r2);
+            }
+
+            const r = Math.sqrt(r2);
 
             const width = round(r * Math.PI * 2, 2);
             const height = this.mesh.aabb.length.z;
@@ -159,8 +168,7 @@ export class MeshProcess {
     }
 
     convertTo3AxisImage() {
-        const width = this.mesh.aabb.length.x;
-        const height = this.mesh.aabb.length.z;
+        const { width, height } = this.getWidthAndHeight();
 
         const layerThickness = 1 / this.sliceDensity;
         const initialLayerThickness = layerThickness / 2;
@@ -246,13 +254,9 @@ export class MeshProcess {
     }
 
     convertTo4AxisImage() {
-        const r = Vector2.length({
-            x: this.mesh.aabb.length.x / 2,
-            y: this.mesh.aabb.length.y / 2
-        });
+        const { width, height } = this.getWidthAndHeight();
 
-        const width = round(r * Math.PI * 2, 2);
-        const height = this.mesh.aabb.length.z;
+        const r = width / (Math.PI * 2);
 
         const layerThickness = 1 / this.sliceDensity;
         const initialLayerThickness = layerThickness / 2;
