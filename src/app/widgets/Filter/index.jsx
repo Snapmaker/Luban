@@ -11,7 +11,8 @@ import i18n from '../../lib/i18n';
 class FilterWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+        setDisplay: PropTypes.func.isRequired
     };
 
     state = {
@@ -25,15 +26,12 @@ class FilterWidget extends PureComponent {
         this.props.setTitle(i18n._('Filter'));
     }
 
-    componentDidMount() {
-    }
-
     render() {
-        console.log('xx1xx', this.props.widgetId);
         return (
             <div>
                 <Filter
                     widgetId={this.props.widgetId}
+                    setDisplay={this.props.setDisplay}
                 />
             </div>
         );

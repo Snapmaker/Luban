@@ -296,12 +296,17 @@ export const actions = {
                 }));
             },
             'Marlin:settings': (options) => {
-                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0 } = options.settings;
+                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
+                    airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = options.settings;
+                console.log('opt', options);
                 dispatch(baseActions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,
                     enclosureFan,
-                    enclosureLight
+                    enclosureLight,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth
                 }));
             },
             'serialport:open': (options) => {
@@ -582,6 +587,9 @@ export const actions = {
                     isEnclosureDoorOpen,
                     headType,
                     heatedBedTargetTemperature,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth,
                     isEmergencyStopped
                 } = result.data;
                 if (isEmergencyStopped) {
@@ -602,7 +610,10 @@ export const actions = {
                     isEnclosureDoorOpen: isEnclosureDoorOpen,
                     doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
-                    isEmergencyStopped: isEmergencyStopped
+                    isEmergencyStopped: isEmergencyStopped,
+                    airPurifierSwitch: airPurifierSwitch,
+                    airPurifierFanSpeed: airPurifierFanSpeed,
+                    airPurifierFilterHealth: airPurifierFilterHealth
                 }));
                 // make 'workPosition' value as Number
                 if (!(_.isUndefined(b))) {

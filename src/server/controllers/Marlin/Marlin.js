@@ -287,6 +287,68 @@ class MarlinReplyParserEnclosureFanPower {
     }
 }
 
+class MarlinReplyParserPurifierFanWork {
+    static parse(line) {
+        const r = line.match(/^Fan work: (0|1)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserPurifierFanWork,
+            payload: {
+                airPurifierSwitch: r[1] === '1'
+            }
+        };
+    }
+}
+
+class MarlinReplyParserPurifierFanSpeed {
+    static parse(line) {
+        const r = line.match(/^Fan gears: ([0-3])$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserPurifierFanSpeed,
+            payload: {
+                airPurifierFanSpeed: Number(r[1])
+            }
+        };
+    }
+}
+
+class MarlinReplyParserPurifierLifetime {
+    static parse(line) {
+        const r = line.match(/^lifetime:(.*)$/);
+        if (!r) {
+            return null;
+        }
+        let lifetimeState;
+        switch (r[1]) {
+            case 'high':
+                lifetimeState = 2;
+                break;
+            case 'center':
+                lifetimeState = 1;
+                break;
+            case 'low':
+                lifetimeState = 0;
+                break;
+            default:
+                lifetimeState = undefined;
+        }
+
+        return {
+            type: MarlinReplyParserPurifierLifetime,
+            payload: {
+                airPurifierFilterHealth: lifetimeState
+            }
+        };
+    }
+}
+
 class MarlinLineParserResultStart {
     // start
     static parse(line) {
@@ -569,6 +631,10 @@ class MarlinLineParser {
             MarlinReplyParserEnclosureDoor,
             MarlinReplyParserEnclosureFanPower,
             MarlinReplyParserEnclosureLightPower,
+            // M1011
+            MarlinReplyParserPurifierFanWork,
+            MarlinReplyParserPurifierFanSpeed,
+            MarlinReplyParserPurifierLifetime,
 
             // start
             MarlinLineParserResultStart,
@@ -682,7 +748,11 @@ class Marlin extends events.EventEmitter {
         enclosureDoor: false,
         enclosureOnline: false,
         enclosureLight: 0,
-        enclosureFan: 0
+        enclosureFan: 0,
+
+        airPurifierSwitch: undefined,
+        airPurifierFanSpeed: 3,
+        airPurifierFilterHealth: 2
     };
 
     parser = new MarlinLineParser();
@@ -778,6 +848,21 @@ class Marlin extends events.EventEmitter {
                 this.set({ enclosureDoor: payload.enclosureDoor });
             }
             this.emit('enclosure', payload);
+        } else if (type === MarlinReplyParserPurifierFanWork) {
+            if (this.settings.airPurifierSwitch !== payload.airPurifierSwitch) {
+                this.set({ airPurifierSwitch: payload.airPurifierSwitch });
+            }
+            this.emit('purifier', payload);
+        } else if (type === MarlinReplyParserPurifierFanSpeed) {
+            if (this.settings.airPurifierFanSpeed !== payload.airPurifierFanSpeed) {
+                this.set({ airPurifierFanSpeed: payload.airPurifierFanSpeed });
+            }
+            this.emit('purifier', payload);
+        } else if (type === MarlinReplyParserPurifierLifetime) {
+            if (this.settings.airPurifierFilterHealth !== payload.airPurifierFilterHealth) {
+                this.set({ airPurifierFilterHealth: payload.airPurifierFilterHealth });
+            }
+            this.emit('purifier', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
         } else if (type === MarlinReplyParserEmergencyStop) {

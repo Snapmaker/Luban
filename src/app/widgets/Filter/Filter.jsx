@@ -1,4 +1,4 @@
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
@@ -9,45 +9,104 @@ import {
     FILTER_SPEED_LOW
 } from '../../constants';
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
+import { actions as machineActions } from '../../flux/machine';
 
 class Filter extends PureComponent {
     static propTypes = {
-        // redux
+        isConnected: PropTypes.bool.isRequired,
+        setDisplay: PropTypes.func.isRequired,
+        server: PropTypes.object.isRequired,
+        connectionType: PropTypes.string.isRequired,
+        executeGcode: PropTypes.func.isRequired,
+        airPurifierSwitch: PropTypes.bool,
+        airPurifierFanSpeed: PropTypes.number,
+        airPurifierFilterHealth: PropTypes.number
     };
 
     state = {
         isFilterEnable: true,
         workSpeed: FILTER_SPEED_HIGH,
-        filterLife: 0
+        filterLife: 2
     };
 
     actions = {
         onHandleFilterEnabled: () => {
+            const { isFilterEnable, workSpeed } = this.state;
+            if (this.props.connectionType === 'wifi') { // todo, 'wifi'
+                this.props.server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
+                    if (errMsg) {
+                        log.error(errMsg);
+                        return;
+                    }
+                    if (res) {
+                        this.setState({
+                            isFilterEnable: res.airPurifierSwitch
+                        });
+                    }
+                });
+            } else {
+                this.props.executeGcode(`M1011 F${isFilterEnable ? 0 : workSpeed};`);
+            }
             this.setState({
                 isFilterEnable: !this.state.isFilterEnable
             });
         },
         onChangeFilterSpeed: (workSpeed) => {
-            // todo remove this test
-            let speed;
-            if (workSpeed === FILTER_SPEED_HIGH) {
-                speed = 2;
+            if (this.props.connectionType === 'wifi') { // todo, 'wifi'
+                this.props.server.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
+                    if (errMsg) {
+                        log.error(errMsg);
+                        return;
+                    }
+                    if (res) {
+                        this.setState({
+                            workSpeed: res.airPurifierFanSpeed
+                        });
+                    }
+                });
+            } else {
+                this.props.executeGcode(`M1011 F${workSpeed};`);
             }
-            if (workSpeed === FILTER_SPEED_MEDIUM) {
-                speed = 1;
-            }
-            if (workSpeed === FILTER_SPEED_LOW) {
-                speed = 0;
-            }
-
-            //test
             this.setState({
-                workSpeed: workSpeed,
-                filterLife: speed // todo remove it
+                workSpeed: workSpeed
             });
         }
     };
 
+    componentDidMount() {
+    }
+
+    componentWillReceiveProps(nextProps) {
+        console.log('next', nextProps);
+        if (!nextProps.isConnected) {
+            this.props.setDisplay(false);
+            return;
+        }
+        if (nextProps.airPurifierSwitch === undefined) {
+            this.props.setDisplay(false);
+            return;
+        }
+        if (nextProps.airPurifierSwitch !== undefined) {
+            this.props.setDisplay(true);
+        }
+
+        if (nextProps.airPurifierSwitch !== this.props.airPurifierSwitch) {
+            this.setState({
+                isFilterEnable: nextProps.airPurifierSwitch
+            });
+        }
+        if (nextProps.airPurifierFanSpeed !== this.props.airPurifierFanSpeed) {
+            this.setState({
+                workSpeed: nextProps.airPurifierFanSpeed
+            });
+        }
+        if (nextProps.airPurifierFilterHealth !== this.props.airPurifierFilterHealth) {
+            this.setState({
+                filterLife: nextProps.airPurifierFilterHealth
+            });
+        }
+    }
 
     render() {
         const { isFilterEnable, workSpeed, filterLife } = this.state;
@@ -154,17 +213,20 @@ class Filter extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { workflowState, workflowStatus, isConnected } = state.machine;
-
+    const { isConnected, server, connectionType, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
     return {
         isConnected,
-        workflowState,
-        workflowStatus
+        server,
+        connectionType,
+        airPurifierSwitch,
+        airPurifierFanSpeed,
+        airPurifierFilterHealth
     };
 };
 
-const mapDispatchToProps = () => {
+const mapDispatchToProps = (dispatch) => {
     return {
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
     };
 };
 

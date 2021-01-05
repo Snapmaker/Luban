@@ -73,7 +73,10 @@ export class Server extends events.EventEmitter {
                 elapsedTime: 0,
                 remainingTime: 0
             },
-            isEmergencyStopped: false
+            isEmergencyStopped: false,
+            airPurifierSwitch: undefined,
+            airPurifierFanSpeed: 1,
+            airPurifierFilterHealth: 0
         };
     }
 
@@ -224,7 +227,10 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
                 isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
                 isNotNull(data.isEmergencyStopped) && (this.state.isEmergencyStopped = data.isEmergencyStopped);
-
+                // this state controls filter widget disable, undefined
+                this.state.airPurifierSwitch = data.airPurifierSwitch;
+                isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
+                isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
 
                 this._updateGcodePrintingInfo(data);
 
@@ -474,7 +480,10 @@ export class Server extends events.EventEmitter {
             heatedBedTemperature: this.state.heatedBedTemperature,
             heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
             gcodePrintingInfo: this.state.gcodePrintingInfo,
-            isEmergencyStopped: this.state.isEmergencyStopped
+            isEmergencyStopped: this.state.isEmergencyStopped,
+            airPurifierSwitch: this.state.airPurifierSwitch,
+            airPurifierFanSpeed: this.state.airPurifierFanSpeed,
+            airPurifierFilterHealth: this.state.airPurifierFilterHealth
         };
     };
 
@@ -609,6 +618,30 @@ export class Server extends events.EventEmitter {
             .post(api)
             .send(`token=${this.token}`)
             .send(`isDoorEnabled=${enabled}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    };
+
+    setFilterSwitch = (enable, callback) => {
+        const api = `${this.host}/api/v1/air_purifier_switch`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`switch=${enable}`)
+            .end((err, res) => {
+                const { msg, data } = this._getResult(err, res);
+                callback && callback(msg, data);
+            });
+    }
+
+    setFilterWorkSpeed = (workSpeed, callback) => {
+        const api = `${this.host}/api/v1/air_purifier_fan_speed`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`fan_speed=${workSpeed}`)
             .end((err, res) => {
                 const { msg, data } = this._getResult(err, res);
                 callback && callback(msg, data);
