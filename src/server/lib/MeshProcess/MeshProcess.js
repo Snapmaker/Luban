@@ -83,9 +83,9 @@ const getPointByLineAndAngle = (start, end, angle) => {
 // eslint-disable-next-line no-unused-vars
 const writeSvg = (width, height, paths, outputFile, p = '') => {
     let d = '';
-    for (const path of paths) {
+    for (const eachPath of paths) {
         d += 'M';
-        for (const point of path) {
+        for (const point of eachPath) {
             d += `${point.x} ${point.y} `;
         }
     }
@@ -223,7 +223,7 @@ export class MeshProcess {
         const maxY = this.mesh.aabb.max.y;
         const grayRange = this.maxGray - this.minGray;
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).slice(0, -4)}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -313,7 +313,7 @@ export class MeshProcess {
             }
         }
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).slice(0, -4)}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
