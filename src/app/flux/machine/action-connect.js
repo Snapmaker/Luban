@@ -1,6 +1,6 @@
 import includes from 'lodash/includes';
 import isInteger from 'lodash/isInteger';
-
+// import { Server } from './Server';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import { machineStore } from '../../store/local-storage';
 
@@ -36,8 +36,17 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
  * Set selected server.
  *
  * Update state only, we will save the server when connection established.
+ * If 'server' is not found in 'servers' list, add it and update state
  */
-const setSelectedServer = (server) => (dispatch) => {
+const setSelectedServer = (server) => (dispatch, getState) => {
+    const { servers } = getState().machine;
+
+    const find = servers.find(v => v.equals(server));
+    if (!find) {
+        const newServers = servers.slice(0);
+        newServers.push(server);
+        dispatch(baseActions.updateState({ servers: newServers }));
+    }
     dispatch(baseActions.updateState({ server }));
 };
 
