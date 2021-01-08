@@ -4,10 +4,8 @@ import { connect } from 'react-redux';
 
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
-import Modal from '../../components/Modal';
-import SvgTrace from '../CncLaserShared/SvgTrace';
 import TextParameters from '../CncLaserShared/TextParameters';
-import Transformation from '../CncLaserShared/Transformation';
+import TransformationSection from '../CncLaserShared/TransformationSection';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
@@ -32,7 +30,6 @@ class LaserParameters extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
-        transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         headType: PropTypes.string,
@@ -45,21 +42,19 @@ class LaserParameters extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired,
-        togglePage: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
 
         // operator functions
-        modifyText: PropTypes.func.isRequired
+        modifyText: PropTypes.func.isRequired,
+
+        switchToPage: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
 
     state = {
         uploadMode: '',
-        from: 'laser',
-        mode: '', // bw, greyscale, vector
         accept: '',
         options: {
             originalName: '',
@@ -71,23 +66,17 @@ class LaserParameters extends PureComponent {
             iterations: 1,
             colorRange: 15,
             numberOfObjects: 2
-        },
-        modalSetting: {
-            width: 640,
-            height: 640
-        },
-        traceFilenames: [],
-        status: 'IDLE',
-        showModal: false
+        }
     };
 
     actions = {
         onChangeFile: (event) => {
             const file = event.target.files[0];
 
-            const uploadMode = this.state.uploadMode;
-            this.props.togglePage(PAGE_EDITOR);
+            // Switch to PAGE_EDITOR page if new image being uploaded
+            this.props.switchToPage(PAGE_EDITOR);
 
+            const uploadMode = this.state.uploadMode;
             if (uploadMode === 'greyscale') {
                 this.props.setAutoPreview(false);
             }
@@ -105,19 +94,6 @@ class LaserParameters extends PureComponent {
                     ...this.state.options,
                     ...options
                 }
-            });
-        },
-        updateModalSetting: (setting) => {
-            this.setState({
-                modalSetting: {
-                    ...this.state.modalSetting,
-                    ...setting
-                }
-            });
-        },
-        hideModal: () => {
-            this.setState({
-                showModal: false
             });
         }
     };
@@ -148,17 +124,16 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelArray, selectedModelVisible, modelGroup, sourceType, mode,
+            selectedModelArray, selectedModelVisible, sourceType, mode,
             updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
-            onModelAfterTransform, headType, updateSelectedModelUniformScalingState, transformation,
+            headType, updateSelectedModelUniformScalingState,
             modifyText
         } = this.props;
 
         const actions = this.actions;
-        const { width, height } = this.state.modalSetting;
 
         const isEditor = this.props.page === PAGE_EDITOR;
         const isProcess = this.props.page === PAGE_PROCESS;
@@ -178,32 +153,10 @@ class LaserParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
-                {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal
-                        style={{ width: `${width}px`, height: `${height}px` }}
-                        size="lg"
-                        onClose={this.actions.hideModal}
-                    >
-                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                            <SvgTrace
-                                state={this.state}
-                                from={this.state.from}
-                                traceFilenames={this.state.traceFilenames}
-                                status={this.state.status}
-                                actions={this.actions}
-                            />
-                        </Modal.Body>
-                    </Modal>
-                )}
+                {/* Editor: Transformation Section */}
                 {isEditor && (
-                    <Transformation
-                        selectedModelArray={selectedModelArray}
-                        selectedModelVisible={selectedModelVisible}
-                        modelGroup={modelGroup}
-                        sourceType={sourceType}
-                        transformation={transformation}
+                    <TransformationSection
                         headType={headType}
-                        onModelAfterTransform={onModelAfterTransform}
                         updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
@@ -269,28 +222,18 @@ const mapStateToProps = (state) => {
         sourceType: '',
         mode: '',
         config: {},
-        visible: true,
-        transformation: {
-            rotationZ: 0,
-            width: 0,
-            height: 0,
-            positionX: 0,
-            positionY: 0,
-            flip: 0
-        }
+        visible: true
     });
     const {
         mode,
         sourceType,
         showOrigin,
-        transformation,
         config,
         visible
     } = selectedModel;
     return {
         page,
         printOrder,
-        transformation,
         gcodeConfig,
         selectedModelArray,
         selectedModel,
@@ -306,7 +249,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        togglePage: (page) => dispatch(editorActions.togglePage('laser', page)),
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
@@ -316,10 +258,11 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
-        onModelAfterTransform: () => {},
         setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
 
-        modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options))
+        modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options)),
+
+        switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))
     };
 };
 

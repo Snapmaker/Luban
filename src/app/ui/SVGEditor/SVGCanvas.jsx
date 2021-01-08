@@ -78,14 +78,24 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
+
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
-        onResizeElement: PropTypes.func.isRequired,
-        onAfterResizeElement: PropTypes.func.isRequired,
-        onMoveElement: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
+
+        elementActions: PropTypes.shape({
+            moveElementsStart: PropTypes.func.isRequired,
+            moveElements: PropTypes.func.isRequired,
+            moveElementsFinish: PropTypes.func.isRequired,
+            resizeElementsStart: PropTypes.func.isRequired,
+            resizeElements: PropTypes.func.isRequired,
+            resizeElementsFinish: PropTypes.func.isRequired,
+            rotateElementsStart: PropTypes.func.isRequired,
+            rotateElements: PropTypes.func.isRequired,
+            rotateElementsFinish: PropTypes.func.isRequired
+        }).isRequired,
+
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
         scale: PropTypes.number.isRequired,
@@ -246,6 +256,7 @@ class SVGCanvas extends PureComponent {
             x: 0,
             y: 0,
             overflow: 'visible',
+            preserveAspectRatio: 'none',
             xmlns: NS.SVG
         });
 
@@ -356,7 +367,7 @@ class SVGCanvas extends PureComponent {
             const gripType = grip.getAttribute('data-type');
             if (gripType === 'resize') {
                 this.mode = 'resize';
-                this.resizeMode = grip.getAttribute('data-dir');
+                draw.resizeMode = grip.getAttribute('data-dir');
             } else if (gripType === 'rotate') {
                 this.mode = 'rotate';
             }
@@ -367,23 +378,6 @@ class SVGCanvas extends PureComponent {
         }
 
         switch (this.mode) {
-            case 'move': {
-                const transform = this.svgContainer.createSVGTransform();
-                transform.setTranslate(0, 0);
-                this.svgContentGroup.translateSelectedElementsOnMouseDown();
-                this.svgContentGroup.translateSelectorOnMouseDown(transform);
-
-                draw.started = true;
-                draw.startX = x;
-                draw.startY = y;
-
-                this.resizeMode = 'none';
-                if (rightClick) {
-                    draw.started = false;
-                }
-                break;
-            }
-            // fall through
             case 'select': {
                 if (mouseTarget && mouseTarget !== this.svgContainer) {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
@@ -395,6 +389,7 @@ class SVGCanvas extends PureComponent {
                         this.addToSelection([mouseTarget]);
                     }
 
+                    /*
                     for (const elem of this.svgContentGroup.selectedElements) {
                         const transformList = getTransformList(elem);
 
@@ -407,9 +402,34 @@ class SVGCanvas extends PureComponent {
                             transformList.appendItem(transform);
                         }
                     }
+                    */
                 } else {
                     this.clearSelection();
                 }
+                break;
+            }
+            case 'move': {
+                draw.started = true;
+                draw.startX = x;
+                draw.startY = y;
+
+                // draw.resizeMode = 'none';
+
+                // TODO: add docs on right click handling, why set started = false
+                if (rightClick) {
+                    draw.started = false;
+                }
+
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.moveElementsStart(elements);
+
+                /* TODO: remove
+                const transform = this.svgContainer.createSVGTransform();
+                transform.setTranslate(0, 0);
+                this.svgContentGroup.translateSelectedElementsOnMouseDown();
+                this.svgContentGroup.translateSelectorOnMouseDown(transform);
+                */
+
                 break;
             }
             case 'resize': {
@@ -417,21 +437,33 @@ class SVGCanvas extends PureComponent {
                 draw.startX = x;
                 draw.startY = y;
 
-                draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
+                // TODO: resize multiple elements
+                const elements = this.svgContentGroup.selectedElements;
+                if (elements.length !== 1) {
+                    break;
+                }
 
-                // const transformList = getTransformList(selected);
-                // const hasMatrix = hasMatrixTransform(transformList);
+                const element = elements[0];
 
-                // if (hasMatrix) {
-                //     const pos = getRotationAngle(selected) ? 1 : 0;
-                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                //     transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
-                // } else {
-                //     transformList.appendItem(this.svgContainer.createSVGTransform());
-                //     transformList.appendItem(this.svgContainer.createSVGTransform());
-                //     transformList.appendItem(this.svgContainer.createSVGTransform());
-                // }
+                // TODO: Save [bbox, center, matrix, scale] on element
+                draw.bbox = element.getBBox();
+                draw.center = {
+                    x: draw.bbox.x + draw.bbox.width / 2,
+                    y: draw.bbox.y + draw.bbox.height / 2
+                };
+
+                // Save matrix before scaling
+                const cloned = element.cloneNode();
+                const clonedTransformList = cloned.transform.baseVal;
+                draw.matrix = clonedTransformList.consolidate().matrix;
+
+                // Save scale ratio before scaling
+                const transformList = element.transform.baseVal;
+                const scale = transformList.getItem(2);
+                draw.scaleX = scale.matrix.a;
+                draw.scaleY = scale.matrix.d;
+
+                this.props.elementActions.resizeElementsStart(elements);
 
                 break;
             }
@@ -439,20 +471,16 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
+
+                const bbox = this.svgContentGroup.getSelectedElementsBBox();
                 draw.startAngle = this.svgContentGroup.getElementAngel(); // FIXME: angle
 
-                draw.bbox = this.svgContentGroup.getSelectedElementsBBox();
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                draw.center = { x: cx, y: cy };
 
-                // const transform = this.svgContainer.createSVGTransform();
-                // transform.setTranslate(0, 0);
-                this.svgContentGroup.rotateSelectedElementsOnMouseDown();
-                this.svgContentGroup.rotateSelectorOnMouseDown();
-                // const transformList = getTransformList(selected);
-                // const angle = getRotationAngle(selected);
-
-                // if (!angle) {
-                //     transformList.appendItem(this.svgContainer.createSVGTransform());
-                // }
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.rotateElementsStart(elements, { cx, cy });
 
                 break;
             }
@@ -632,6 +660,114 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
         const element = this.svgContentGroup.findSVGElement(this.svgContentGroup.getId());
 
+
+        switch (this.mode) {
+            case 'move': {
+                const dx = x - draw.startX;
+                const dy = y - draw.startY;
+                if (dx === 0 && dy === 0) {
+                    break;
+                }
+
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.moveElements(elements, { dx, dy });
+
+                /* TODO: remove
+                const transform = this.svgContainer.createSVGTransform();
+                transform.setTranslate(dx, dy);
+                this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
+
+                const transformBox = this.svgContainer.createSVGTransform();
+                const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
+                transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
+                this.svgContentGroup.translateSelectorOnMouseMove(transform);
+                */
+                return;
+            }
+            case 'resize': {
+                // TODO: resize multiple elements
+                const elements = this.svgContentGroup.selectedElements;
+                if (elements.length !== 1) {
+                    break;
+                }
+
+                const startPoint = { x: draw.startX, y: draw.startY };
+                const endPoint = { x: pt.x, y: pt.y };
+
+                // Convert points for axis-aligned bbox to calculate scale ratio
+                const elementMatrixInverse = draw.matrix.inverse();
+
+                const startPointOrigin = transformPoint(startPoint, elementMatrixInverse);
+                const endPointOrigin = transformPoint(endPoint, elementMatrixInverse);
+
+                const centerPointOrigin = draw.center;
+                const { width, height } = draw.bbox;
+
+                // direction factor
+                let widthFactor = 0;
+                if (draw.resizeMode.includes('e')) {
+                    widthFactor = 1;
+                } else if (draw.resizeMode.includes('w')) {
+                    widthFactor = -1;
+                }
+
+                let heightFactor = 0;
+                if (draw.resizeMode.includes('s')) {
+                    heightFactor = 1;
+                } else if (draw.resizeMode.includes('n')) {
+                    heightFactor = -1;
+                }
+
+                // TODO: consider uniformScaling
+                const scaleX = (width + (endPointOrigin.x - startPointOrigin.x) * widthFactor) / width;
+                const scaleY = (height + (endPointOrigin.y - startPointOrigin.y) * heightFactor) / height;
+
+                // calculate new center point
+                const centerPointAfter = {
+                    x: centerPointOrigin.x + (endPoint.x - startPoint.x) / 2 * (widthFactor !== 0),
+                    y: centerPointOrigin.y + (endPoint.y - startPoint.y) / 2 * (heightFactor !== 0)
+                };
+
+                const newScaleX = draw.scaleX * scaleX;
+                const newScaleY = draw.scaleY * scaleY;
+
+                this.props.elementActions.resizeElements(elements, {
+                    scaleX: newScaleX,
+                    scaleY: newScaleY,
+                    centerX: centerPointAfter.x,
+                    centerY: centerPointAfter.y
+                });
+
+                /*
+                this.props.elementActions.resizeElements(elements, {
+                    resizeDir: this.resizeMode,
+                    resizeFrom: { x: draw.startX, y: draw.startY },
+                    resizeTo: { x: pt.x, y: pt.y },
+                    isUniformScaling: event.shiftKey
+                });
+                */
+
+                return;
+            }
+            case 'rotate': {
+                const center = draw.center;
+
+                // calculate handle angle (in degree)
+                const handleAngle = Math.atan2(y - center.y, x - center.x) / Math.PI * 180;
+
+                // convert handle angle to SVG angle (X axis positive is 0°)
+                const rotateAngle = (handleAngle + 90) % 360;
+                const deltaAngle = (rotateAngle - draw.startAngle) % 360;
+
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.rotateElements(elements, { deltaAngle, cx: center.x, cy: center.y });
+
+                return;
+            }
+            default:
+                break;
+        }
+
         switch (this.mode) {
             case 'select': {
                 // TODO select with drawing box
@@ -652,65 +788,6 @@ class SVGCanvas extends PureComponent {
                 //     width,
                 //     height
                 // });
-                break;
-            }
-            case 'move': {
-                const dx = x - draw.startX;
-                const dy = y - draw.startY;
-                if (dx === 0 && dy === 0) {
-                    break;
-                }
-                const transform = this.svgContainer.createSVGTransform();
-                transform.setTranslate(dx, dy);
-                this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-                const transformBox = this.svgContainer.createSVGTransform();
-                const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
-                transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
-                this.svgContentGroup.translateSelectorOnMouseMove(transform);
-
-                break;
-            }
-            case 'resize': {
-                // TODO: resize multiple elements
-                if (this.svgContentGroup.selectedElements.length !== 1) {
-                    break;
-                }
-
-                const selectedElement = this.svgContentGroup.selectedElements[0];
-
-                this.props.onResizeElement(selectedElement, {
-                    resizeDir: this.resizeMode,
-                    resizeFrom: { x: draw.startX, y: draw.startY },
-                    resizeTo: pt,
-                    isUniformScaling: event.shiftKey
-                });
-
-                break;
-            }
-            case 'rotate': {
-                const bbox = draw.bbox;
-                const cx = bbox.x + bbox.width / 2;
-                const cy = bbox.y + bbox.height / 2;
-
-                // angleOld = angle rotate
-                // angle0 = angle to X axis (right, positive)
-                // angle1 = angle to Y axis (up, negative)
-                // angle2 = new angle rotate
-                const angleOld = draw.startAngle;
-                let angle = Math.atan2(y - cy, x - cx);
-                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-
-                angle = (angle - angleOld + 540) % 360 - 180;
-                // rotate box
-                const rotateBox = this.svgContainer.createSVGTransform();
-                rotateBox.setRotate(angle, cx, cy);
-                this.svgContentGroup.rotateSelectorOnMouseMove(rotateBox);
-
-                const rotateElements = this.svgContainer.createSVGTransform();
-                rotateElements.setRotate(angle, cx, cy);
-                this.svgContentGroup.rotateSelectedElementsOnMouseMove(rotateElements);
-
                 break;
             }
             case 'panMove': {
@@ -855,15 +932,34 @@ class SVGCanvas extends PureComponent {
                 return; // note this is not break
             }
 
-            case 'resize': {
-                if (this.svgContentGroup.selectedElements.length !== 1) {
-                    break;
-                }
-
-                const selectedElement = this.svgContentGroup.selectedElements[0];
-                this.props.onAfterResizeElement(selectedElement);
+            // being moved
+            case 'move': {
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.moveElementsFinish(elements);
 
                 // set back to select mode
+                this.setMode('select');
+                return; // note that this is return
+            }
+
+            // being resized
+            case 'resize': {
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.resizeElementsFinish(elements);
+
+                // set back to select mode
+                this.setMode('select');
+                return;
+            }
+
+            case 'rotate': {
+                const elements = this.svgContentGroup.selectedElements;
+                this.props.elementActions.rotateElementsFinish(elements);
+
+                // TODO: Workaround here, reselect elements to avoid miscalculation of transformations
+                // Re-select all elements to give items axis aligned selector
+                this.selectOnly(elements);
+
                 this.setMode('select');
                 return;
             }
@@ -874,43 +970,6 @@ class SVGCanvas extends PureComponent {
                 if (!success) {
                     this.setMode('select');
                 }
-                return;
-            }
-
-            case 'move': { // being moved
-                const dx = x - draw.startX;
-                const dy = y - draw.startY;
-                if (dx === 0 && dy === 0) {
-                    this.setMode('select');
-                    return;
-                }
-
-                this.props.onMoveElement(null, { dx, dy });
-
-                this.setMode('select');
-                return; // note that this is return
-            }
-
-            case 'rotate': {
-                const bbox = draw.bbox;
-                const cx = bbox.x + bbox.width / 2;
-                const cy = bbox.y + bbox.height / 2;
-
-                // angleOld = angle rotate
-                // angle0 = angle to X axis (right, positive)
-                // angle1 = angle to Y axis (up, negative)
-                // angle2 = new angle rotate
-                const angleOld = draw.startAngle;
-                let angle = Math.atan2(y - cy, x - cx);
-                angle = (angle / Math.PI * 180 + 270) % 360 - 180;
-
-                angle = (angle - angleOld + 540) % 360 - 180;
-
-                this.props.onRotateElement(null, { angle, cx, cy });
-
-                // TODO: Workaround here, reselect elements to avoid miscalculation of transformations
-                this.selectOnly(this.svgContentGroup.selectedElements);
-                this.setMode('select');
                 return;
             }
 
@@ -1451,6 +1510,8 @@ class SVGCanvas extends PureComponent {
 
     render() {
         const { className = '' } = this.props;
+
+        console.log('render()', this.props.elementActions);
 
         return (
             <React.Fragment>

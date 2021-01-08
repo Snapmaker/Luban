@@ -38,7 +38,7 @@ class Output extends PureComponent {
         setAutoPreview: PropTypes.func.isRequired,
         updateWidgetState: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
-        togglePage: PropTypes.func.isRequired
+        switchToPage: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -80,7 +80,7 @@ class Output extends PureComponent {
         },
         onProcess: () => {
             if (this.props.page === PAGE_EDITOR) {
-                this.props.togglePage(PAGE_PROCESS);
+                this.props.switchToPage(PAGE_PROCESS);
             } else {
                 this.props.manualPreview();
             }
@@ -222,7 +222,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
     const { widgetId, headType } = ownProps;
     return {
-        togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),
+        switchToPage: (page) => dispatch(editorActions.switchToPage(headType, page)),
         generateGcode: (thumbnail) => dispatch(editorActions.generateGcode(headType, thumbnail)),
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         manualPreview: () => dispatch(editorActions.manualPreview(headType, true)),

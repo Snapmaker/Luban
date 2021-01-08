@@ -176,6 +176,26 @@ class SvgModel {
         return this.elem.nodeName;
     }
 
+    get x() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(0);
+        return transform.matrix.e;
+    }
+
+    get y() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(0);
+        return transform.matrix.f;
+    }
+
+    get logicalX() {
+        return this.x - this.size.x;
+    }
+
+    get logicalY() {
+        return -this.y + this.size.y;
+    }
+
     setRelatedModel(relatedModel, update = true) {
         this.relatedModel = relatedModel;
         update && this.onUpdate();
@@ -321,13 +341,19 @@ class SvgModel {
         return res.body.uploadName;
     }
 
+    static getTransformList(elem) {
+        const transform = elem.transform;
+        if (!transform) {
+            elem.setAttribute('transform', 'translate(0,0)');
+        }
+        return elem.transform.baseVal;
+    }
+
     elemTransformList() {
         const transform = this.elem.transform;
         if (!transform) {
             this.elem.setAttribute('transform', 'translate(0,0)');
         }
-        // todo, error create a <undefined> elem
-        // console.log('----error----', this.modelGroup, transform, this.elem, this.elem.transform);
         return this.elem.transform.baseVal;
     }
 
@@ -336,6 +362,7 @@ class SvgModel {
         const { config, transformation, uploadName, width, height } = this.relatedModel;
         const href = `${DATA_PREFIX}/${uploadName}`;
         const { positionX, positionY } = transformation;
+
         for (const key of Object.keys(config)) {
             if (key === 'text') {
                 elem.textContent = config[key];
@@ -394,9 +421,264 @@ class SvgModel {
         this.refreshElemAttrs();
     }
 
+    static getElementTransform(element) {
+        const { x, y, width, height } = element.getBBox();
+
+        const transformList = SvgModel.getTransformList(element);
+
+        const scaleX = transformList.getItem(2).matrix.a;
+        const scaleY = transformList.getItem(2).matrix.d;
+        const angle = transformList.getItem(1).angle;
+
+        return {
+            x: x + width / 2,
+            y: y + height / 2,
+            width,
+            height,
+            scaleX,
+            scaleY,
+            angle
+        };
+    }
+
+    static initializeElementTransform(element) {
+        // if (element.transform) {
+        //     return;
+        // }
+
+        // element.setAttribute('transform', 'translate(0,0)');
+
+        const { x, y, width, height } = element.getBBox();
+
+        const center = svg.createSVGPoint();
+        center.x = x + width / 2;
+        center.y = y + height / 2;
+
+        SvgModel.recalculateElementAttributes(element, {
+            x: x + width / 2,
+            y: y + height / 2,
+            width,
+            height,
+            scaleX: 1,
+            scaleY: 1,
+            angle: 0
+        });
+    }
+
+    /**
+     * On transform complete, normalize transform list.
+     */
+    static completeElementTransform(element) {
+        // normalize transform list
+        const transformList = SvgModel.getTransformList(element);
+
+        // TODO: remove console logs
+        /*
+        console.log('completeElementTransform() for', element);
+        console.log('completeElementTransform(), list transform list:');
+        for (let i = 0; i < transformList.length; i++) {
+            const t = transformList.getItem(i);
+            console.log('completeElementTransform(), transform ', i, t);
+
+            if (t.type === 2) {
+                console.log('completeElementTransform(), translate [x y] =', t.matrix.e, t.matrix.f);
+            } else if (t.type === 3) {
+                console.log('completeElementTransform(), scale [x y] =', t.matrix.a, t.matrix.d);
+            } else if (t.type === 4) {
+                // console.log('onTransformComplete(), scale [x y] = ', t.matrix.a, t.matrix.d);
+                console.log('completeElementTransform(), angle =', t.angle);
+            }
+        }
+        */
+
+        // derive transform action(s) from transform list
+        function inferTransformType(svgTransformList) {
+            if (svgTransformList.length === 5) {
+                const t = svgTransformList.getItem(0);
+                if (t.type === 2) {
+                    return 'move';
+                } else {
+                    return 'rotate';
+                }
+            } else {
+                return 'resize';
+            }
+        }
+
+        const transformType = inferTransformType(transformList);
+        if (transformType === 'move') {
+            // move action
+            // [T][T][R][S][T]
+            const { x, y, width, height } = element.getBBox();
+
+            const angle = transformList.getItem(2).angle;
+            const scaleX = transformList.getItem(3).matrix.a;
+            const scaleY = transformList.getItem(3).matrix.d;
+
+            const transform = transformList.consolidate();
+            const matrix = transform.matrix;
+
+            const center = svg.createSVGPoint();
+            center.x = x + width / 2;
+            center.y = y + height / 2;
+
+            const newCenter = center.matrixTransform(matrix);
+
+            const t = {
+                x: newCenter.x,
+                y: newCenter.y,
+                width: width,
+                height: height,
+                scaleX,
+                scaleY,
+                angle
+            };
+
+            SvgModel.recalculateElementAttributes(element, t);
+        } else if (transformType === 'resize') {
+            // resize action
+            // [T][R][S][T]
+            const { x, y, width, height } = element.getBBox();
+
+            const angle = transformList.getItem(1).angle;
+            const scaleX = transformList.getItem(2).matrix.a;
+            const scaleY = transformList.getItem(2).matrix.d;
+
+            const transform = transformList.consolidate();
+            const matrix = transform.matrix;
+
+            const center = svg.createSVGPoint();
+            center.x = x + width / 2;
+            center.y = y + height / 2;
+
+            const newCenter = center.matrixTransform(matrix);
+
+            const t = {
+                x: newCenter.x,
+                y: newCenter.y,
+                width,
+                height,
+                scaleX,
+                scaleY,
+                angle
+            };
+
+            SvgModel.recalculateElementAttributes(element, t);
+        } else {
+            // rotate action
+            // [R][T][R][S][T]
+            const { x, y, width, height } = element.getBBox();
+
+            const rotateAngle = transformList.getItem(0).angle;
+
+            const angle = transformList.getItem(2).angle;
+            const scaleX = transformList.getItem(3).matrix.a;
+            const scaleY = transformList.getItem(3).matrix.d;
+
+            const transform = transformList.consolidate();
+            const matrix = transform.matrix;
+
+            const center = svg.createSVGPoint();
+            center.x = x + width / 2;
+            center.y = y + height / 2;
+
+            const newCenter = center.matrixTransform(matrix);
+
+            const t = {
+                x: newCenter.x,
+                y: newCenter.y,
+                width,
+                height,
+                scaleX,
+                scaleY,
+                angle: angle + rotateAngle
+            };
+
+            SvgModel.recalculateElementAttributes(element, t);
+        }
+
+        // emit event?
+    }
+
+    static recalculateElementAttributes(element, t) {
+        const { x, y, width = 0, height = 0, angle } = t;
+        let { scaleX, scaleY } = t;
+
+        // console.log('recalculateElementAttributes(), [x, y] =', x, y);
+        // console.log('recalculateElementAttributes(), t =', t);
+        // console.log('recalculateElementAttributes(), angle =', angle);
+        // console.log('recalculateElementAttributes(), scale =', scaleX, scaleY);
+
+        switch (element.nodeName) {
+            case 'ellipse': {
+                element.setAttribute('cx', x);
+                element.setAttribute('cy', y);
+                element.setAttribute('rx', width / 2);
+                element.setAttribute('ry', height / 2);
+                break;
+            }
+            case 'image': {
+                element.setAttribute('x', x - width / 2);
+                element.setAttribute('y', y - height / 2);
+                element.setAttribute('width', width);
+                element.setAttribute('height', height);
+                break;
+            }
+            case 'rect': {
+                element.setAttribute('x', x - width * scaleX / 2);
+                element.setAttribute('y', y - height * scaleY / 2);
+                element.setAttribute('width', width * scaleX);
+                element.setAttribute('height', height * scaleY);
+                scaleX = 1;
+                scaleY = 1;
+                break;
+            }
+            case 'text': {
+                // text uses base line as y
+                const baselineOffsetY = element.getAttribute('y') - element.getBBox().y;
+                element.setAttribute('x', x - width / 2);
+                element.setAttribute('y', y - height / 2 + baselineOffsetY);
+                break;
+            }
+            default:
+                break;
+        }
+
+        SvgModel.recalculateElementTransformList(element, { x, y, scaleX, scaleY, angle });
+    }
+
+    static recalculateElementTransformList(element, t) {
+        const { x, y, scaleX, scaleY, angle } = t;
+        const transformList = SvgModel.getTransformList(element);
+
+        transformList.clear();
+
+        // [T]
+        const translateToOrigin = svg.createSVGTransform();
+        translateToOrigin.setTranslate(-x, -y);
+        transformList.appendItem(translateToOrigin);
+
+        // [S][T]
+        const scale = svg.createSVGTransform();
+        scale.setScale(scaleX, scaleY);
+        transformList.insertItemBefore(scale, 0);
+
+        // [R][S][T]
+        const rotate = svg.createSVGTransform();
+        rotate.setRotate(angle, 0, 0);
+        transformList.insertItemBefore(rotate, 0);
+
+        // [T][R][S][T]
+        const translateToPosition = svg.createSVGTransform();
+        translateToPosition.setTranslate(x, y);
+        transformList.insertItemBefore(translateToPosition, 0);
+    }
+
     onUpdate() {
         const transform = this.elemTransform();
         if (!transform) return;
+
+        console.log('onUpdate(), transform =', transform);
 
         const { width, height } = this.relatedModel;
         const { bbox: { x, y }, scaleX, scaleY, translateX, translateY, rotationAngle } = transform;
@@ -442,6 +724,7 @@ class SvgModel {
         };
 
         // remap will reset all transforms
+        // Reset scale to 1, which resets the border to 1
         if (this.type === 'path') {
             const d = remapPath(this.elem, remap, scaleW, scaleH);
             attrs.config.d = d;
@@ -453,6 +736,7 @@ class SvgModel {
             this.updateSource();
         }
         if (this.type === 'rect') {
+            /*
             attrs.transformation.scaleX = 1;
             attrs.transformation.scaleY = 1;
             attrs.width *= Math.abs(scaleX);
@@ -460,6 +744,7 @@ class SvgModel {
             this.elem.setAttribute('width', attrs.transformation.width);
             this.elem.setAttribute('height', attrs.transformation.height);
             this.updateSource();
+            */
         }
         if (this.type === 'ellipse') {
             attrs.transformation.scaleX = 1;
@@ -473,7 +758,6 @@ class SvgModel {
 
         this.relatedModel.updateAndRefresh(attrs);
     }
-
 
     elemTransform() {
         // bbox translate, scale, rotation
@@ -524,21 +808,7 @@ class SvgModel {
         return transform;
     }
 
-    /**
-     *
-     * @param resizeDir
-     *      nw: null,
-     *        n: null,
-     *        ne: null,
-     *        e: null,
-     *        se: null,
-     *        s: null,
-     *        sw: null,
-     *        w: null
-     * @param resizeFrom
-     * @param resizeTo
-     * @param isUniformScaling
-     */
+    /*
     elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
         let clonedElem = this.elem.cloneNode();
         const transformList = clonedElem.transform.baseVal;
@@ -564,7 +834,9 @@ class SvgModel {
         // resize model from ptFrom to ptTo base the center ptFixed
         const ptFrom = transformPoint(resizeFrom, matrixInverse);
         const ptTo = transformPoint(resizeTo, matrixInverse);
+
         const ptFixed = { x, y };
+
         if (ptFrom.x > x + width / 3) ptFixed.x -= width / 2;
         if (ptFrom.x < x - width / 3) ptFixed.x += width / 2;
         if (ptFrom.y > y + height / 3) ptFixed.y -= height / 2;
@@ -609,6 +881,7 @@ class SvgModel {
         const trans = list.getItem(0);
         trans.setTranslate(x - tx, y - ty);
     }
+    */
 
     pointModelToSvg({ x, y }) {
         return { x: this.size.x + x, y: this.size.y - y };
