@@ -33,8 +33,8 @@ class ConfigRasterVector extends PureComponent {
         onChangeTurdSize: (turdSize) => {
             this.props.updateSelectedModelConfig({ turdSize });
         },
-        onToggleInvert: (event) => {
-            this.props.updateSelectedModelConfig({ invert: event.target.checked });
+        onToggleInvert: () => {
+            this.props.updateSelectedModelConfig({ invert: !this.props.invert });
         }
     };
 
