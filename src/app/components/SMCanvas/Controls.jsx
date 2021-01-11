@@ -44,6 +44,8 @@ class Controls extends EventEmitter {
 
     state = STATE.NONE;
 
+    prevState = null;
+
     // "target" is where the camera orbits around
     target = new THREE.Vector3();
 
@@ -385,6 +387,7 @@ class Controls extends EventEmitter {
                 if (isRightClick) {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
+
                         if (objectIndex === -1) {
                             selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
                         }
@@ -405,7 +408,7 @@ class Controls extends EventEmitter {
                 if (isRightClick) {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                        if (objectIndex === -1) {
+                        if (objectIndex === -1 && intersect.object.parent.parent !== this.selectedGroup) {
                             selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
                         }
                     } else {
@@ -517,6 +520,7 @@ class Controls extends EventEmitter {
 
     stopSupportMode() {
         this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
     }
 
     updateCamera() {
