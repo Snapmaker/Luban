@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import PropTypes from 'prop-types';
 
+import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
@@ -51,11 +52,10 @@ class Thumbnail extends PureComponent {
         this.object = this.props.modelGroup.object.clone();
 
         // calculate center point
-        const boundingBox = this.props.modelGroup.getAllBoundingBox();
+        const boundingBox = ThreeUtils.computeBoundingBox(this.object);
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const z = (boundingBox.max.z + boundingBox.min.z) / 2;
-
         for (const child of this.object.children) {
             child.position.x -= x;
             child.position.y -= y;

@@ -2,10 +2,10 @@ import React, { PureComponent } from 'react';
 import { Color, HemisphereLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import PropTypes from 'prop-types';
 
+import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired,
         toolPathModelGroup: PropTypes.object.isRequired
         // thumbnail: PropTypes.string.isRequired
     };
@@ -69,7 +69,7 @@ class Thumbnail extends PureComponent {
 
         this.object = this.props.toolPathModelGroup.toolPathObjs.clone();
         this.object.visible = true;
-        const boundingBox = this.props.modelGroup.getAllBoundingBox();
+        const boundingBox = ThreeUtils.computeBoundingBox(this.object);
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;
         const x = (boundingBox.max.x + boundingBox.min.x) / 2;
         const z = 0;

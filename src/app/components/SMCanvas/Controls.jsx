@@ -387,7 +387,6 @@ class Controls extends EventEmitter {
                 if (isRightClick) {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-
                         if (objectIndex === -1) {
                             selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
                         }
@@ -408,7 +407,7 @@ class Controls extends EventEmitter {
                 if (isRightClick) {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
-                        if (objectIndex === -1 && intersect.object.parent.parent !== this.selectedGroup) {
+                        if (objectIndex === -1) {
                             selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
                         }
                     } else {
