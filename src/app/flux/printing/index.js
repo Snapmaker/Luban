@@ -1080,6 +1080,14 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+    AutoRotateSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.AutoRotateSelectedModel();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
     // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
