@@ -594,6 +594,50 @@ class Model {
         return clone;
     }
 
+    autoRotate() {
+        if (this.sourceType !== '3d') {
+            return;
+        }
+
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
+        this.meshObject.updateMatrixWorld();
+
+        // TODO: how about do not use matrix to speed up
+        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld);
+        const maxArea = Math.max.apply(null, areas);
+        const bigPlanes = { planes: null, areas: [] };
+        bigPlanes.planes = planes.filter((p, idx) => {
+            const isBig = areas[idx] > maxArea * 0.1;
+            isBig && bigPlanes.areas.push(areas[idx]);
+            return isBig;
+        });
+        const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
+
+        let targetPlane;
+        // = bigPlanes.planes.find(p => p.normal.angleTo(xyPlaneNormal) < Math.PI / 180);
+        if (!targetPlane) {
+            const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes);
+            // console.log(bigPlanes, objPlanes);
+            targetPlane = bigPlanes.planes.reduce((prev, plane, idx) => {
+                // const rate = objPlanes.areas[idx] / bigPlanes.areas[idx];
+                // if (!prev) return { plane, rate };
+                // return rate > prev.rate ? { plane, rate } : prev;
+                const area = objPlanes.areas[idx];
+                if (!prev) return { plane, area };
+                return area > prev.area ? { plane, area } : prev;
+            }, null);
+
+
+            // WARNING: applyQuternion DONT update Matrix...
+            this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(targetPlane.plane.normal, xyPlaneNormal));
+            this.meshObject.updateMatrix();
+
+            this.stickToPlate();
+        }
+        this.onTransform();
+        revertParent();
+    }
+
     layFlat() {
         if (this.sourceType !== '3d') {
             return;

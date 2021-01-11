@@ -818,6 +818,20 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
+    AutoRotateSelectedModel() {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
+            return null;
+        }
+
+        selected.forEach((item) => {
+            item.autoRotate();
+            item.computeBoundingBox();
+        });
+
+        return this.getState();
+    }
+
     onModelTransform() {
         // this.selectedModelIDArray.splice(0);
         this.selectedModelArray.forEach((item) => {

@@ -45,6 +45,7 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         saveSupport: PropTypes.func.isRequired,
         clearAllManualSupport: PropTypes.func.isRequired,
+        AutoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -146,6 +147,9 @@ class Visualizer extends PureComponent {
                     break;
             }
         },
+        AutoRotateSelectedModel: () => {
+            this.props.AutoRotateSelectedModel();
+        },
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
         },
@@ -153,19 +157,6 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         }
-        // startSupportMode: () => {
-        //     this.canvas.current.controls.startSupportMode();
-        // },
-        // clearSelectedSupport: () => {
-        //     const { modelGroup } = this.props;
-        //     const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
-        //     if (isSupportSelected) {
-        //         modelGroup.removeSelectedModel();
-        //     }
-        // },
-        // clearAllManualSupport: () => {
-        //     this.props.modelGroup.removeAllManualSupport();
-        // }
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
@@ -418,6 +409,12 @@ class Visualizer extends PureComponent {
                                 onClick: this.actions.layFlatSelectedModel
                             },
                             {
+                                type: 'item',
+                                label: i18n._('Auto Rotate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.AutoRotateSelectedModel
+                            },
+                            {
                                 type: 'subMenu',
                                 label: i18n._('Mirror Selected Model'),
                                 disabled: !isModelSelected,
@@ -438,6 +435,7 @@ class Visualizer extends PureComponent {
                                         onClick: () => this.actions.mirrorSelectedModel('Z')
                                     }
                                 ]
+
                             },
                             {
                                 type: 'separator'
@@ -516,6 +514,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
+    AutoRotateSelectedModel: () => dispatch(printingActions.AutoRotateSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))
