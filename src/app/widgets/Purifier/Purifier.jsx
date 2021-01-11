@@ -4,15 +4,15 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import styles from './index.styl';
 import {
-    FILTER_SPEED_HIGH,
-    FILTER_SPEED_MEDIUM,
-    FILTER_SPEED_LOW
+    SPEED_HIGH,
+    SPEED_MEDIUM,
+    SPEED_LOW
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import { actions as machineActions } from '../../flux/machine';
 
-class Filter extends PureComponent {
+class Purifier extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
         setDisplay: PropTypes.func.isRequired,
@@ -26,7 +26,7 @@ class Filter extends PureComponent {
 
     state = {
         isFilterEnable: true,
-        workSpeed: FILTER_SPEED_HIGH,
+        workSpeed: SPEED_HIGH,
         filterLife: 2
     };
 
@@ -66,7 +66,9 @@ class Filter extends PureComponent {
                     }
                 });
             } else {
-                this.props.executeGcode(`M1011 F${workSpeed};`);
+                if (this.state.isFilterEnable) {
+                    this.props.executeGcode(`M1011 F${workSpeed};`);
+                }
             }
             this.setState({
                 workSpeed: workSpeed
@@ -91,17 +93,17 @@ class Filter extends PureComponent {
             this.props.setDisplay(true);
         }
 
-        if (nextProps.airPurifierSwitch !== this.props.airPurifierSwitch) {
+        if (nextProps.airPurifierSwitch !== this.state.isFilterEnable) {
             this.setState({
                 isFilterEnable: nextProps.airPurifierSwitch
             });
         }
-        if (nextProps.airPurifierFanSpeed !== this.props.airPurifierFanSpeed) {
+        if (nextProps.airPurifierFanSpeed !== this.state.workSpeed) {
             this.setState({
                 workSpeed: nextProps.airPurifierFanSpeed
             });
         }
-        if (nextProps.airPurifierFilterHealth !== this.props.airPurifierFilterHealth) {
+        if (nextProps.airPurifierFilterHealth !== this.state.filterLife) {
             this.setState({
                 filterLife: nextProps.airPurifierFilterHealth
             });
@@ -114,7 +116,7 @@ class Filter extends PureComponent {
             <div>
                 <div className="sm-parameter-container">
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('Filter')}</span>
+                        <span className="sm-parameter-row__label-lg">{i18n._('Switch')}</span>
                         <button
                             type="button"
                             className={classNames(
@@ -140,35 +142,29 @@ class Filter extends PureComponent {
                             )}
                         >
                             <button
-                                disabled={!isFilterEnable}
                                 type="button"
                                 className={classNames(
-                                    (workSpeed === FILTER_SPEED_LOW) ? styles.active : styles.passive,
-                                    (!isFilterEnable) ? styles.disabled : null
+                                    (workSpeed === SPEED_LOW) ? styles.active : styles.passive,
                                 )}
-                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_LOW)}
+                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_LOW)}
                             >
                                 {i18n._('Low')}
                             </button>
                             <button
-                                disabled={!isFilterEnable}
                                 type="button"
                                 className={classNames(
-                                    (workSpeed === FILTER_SPEED_MEDIUM) ? styles.active : styles.passive,
-                                    (!isFilterEnable) ? styles.disabled : null
+                                    (workSpeed === SPEED_MEDIUM) ? styles.active : styles.passive,
                                 )}
-                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_MEDIUM)}
+                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_MEDIUM)}
                             >
                                 {i18n._('Medium')}
                             </button>
                             <button
-                                disabled={!isFilterEnable}
                                 type="button"
                                 className={classNames(
-                                    (workSpeed === FILTER_SPEED_HIGH) ? styles.active : styles.passive,
-                                    (!isFilterEnable) ? styles.disabled : null
+                                    (workSpeed === SPEED_HIGH) ? styles.active : styles.passive,
                                 )}
-                                onClick={() => this.actions.onChangeFilterSpeed(FILTER_SPEED_HIGH)}
+                                onClick={() => this.actions.onChangeFilterSpeed(SPEED_HIGH)}
                             >
                                 {i18n._('High')}
                             </button>
@@ -230,4 +226,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Filter);
+export default connect(mapStateToProps, mapDispatchToProps)(Purifier);

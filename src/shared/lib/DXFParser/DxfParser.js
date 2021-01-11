@@ -142,7 +142,7 @@ DxfParser.prototype._parse = function _parse(dxfString) {
             } else if (curr.code === 9) {
                 if (currVarName) header[currVarName] = currVarValue;
                 currVarName = curr.value;
-                // Filter here for particular variables we are interested in
+                // Purifier here for particular variables we are interested in
             } else {
                 if (curr.code === 10) {
                     currVarValue = { x: curr.value };

@@ -552,7 +552,7 @@ class DeveloperPanel extends PureComponent {
                             eventKey="filter"
                             title={i18n._('Filter')}
                         >
-                            <p>{i18n._('Message Filter')}</p>
+                            <p>{i18n._('Message Purifier')}</p>
                             <input
                                 style={{ width: '100%', backgroundColor: '#ffffff', color: '#000000' }}
                                 type="text"
