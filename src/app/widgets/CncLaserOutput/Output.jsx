@@ -125,7 +125,7 @@ class Output extends PureComponent {
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {isProcess ? i18n._('ToolPath') : i18n._('Process')}
+                        {isProcess ? i18n._('Tool Path') : i18n._('Process')}
                     </button>
                     {isProcess && (
                         <div>

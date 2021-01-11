@@ -35,7 +35,7 @@ const Update = {
                 type: 'info',
                 buttons: [i18n._('Later'), i18n._('Download now')],
                 defaultId: 1,
-                checkboxLabel: i18n._('Automatically check for update'),
+                checkboxLabel: i18n._('Automatically check for updates'),
                 checkboxChecked: shouldCheckForUpdate,
                 title: i18n._('Update Snapmaker Luban'),
                 message: i18n._(`Snapmaker Luban ${releaseName} Update`),

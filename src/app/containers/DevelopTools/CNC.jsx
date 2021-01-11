@@ -31,7 +31,7 @@ class CNC extends PureComponent {
                     <p>{i18n._('CNC')}</p>
                     <ul style={{ listStyle: 'none' }}>
                         <li>
-                            <p className={styles['title-row']}>{i18n._('current RPM')}</p>
+                            <p className={styles['title-row']}>{i18n._('Current RPM')}</p>
                             <p className={styles['title-row']}>{spindleSpeed | null}</p>
                         </li>
                         <li>
