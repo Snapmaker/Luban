@@ -187,7 +187,7 @@ const JogDistance = (props) => {
             </div>
             {workPosition.isFourAxis && (
                 <div className={styles['jog-distance-control']}>
-                    <p style={{ marginTop: '5px', marginBottom: '5px' }}>{i18n._('B Axis Angle of Rotation')}</p>
+                    <p style={{ marginTop: '5px', marginBottom: '5px' }}>{i18n._('B-axis Angle of Rotation')}</p>
                     <div className="row no-gutters">
                         <div className="col-12">
                             <div className="input-group no-gutters">

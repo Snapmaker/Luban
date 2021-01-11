@@ -7,7 +7,14 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as textActions } from '../../flux/text';
 import TipTrigger from '../../components/TipTrigger';
-import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
+import {
+    DIRECTION_BACK,
+    DIRECTION_DOWN,
+    DIRECTION_FRONT,
+    DIRECTION_LEFT,
+    DIRECTION_RIGHT,
+    DIRECTION_UP
+} from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
 
 class Image3dParameters extends PureComponent {
@@ -112,19 +119,8 @@ class Image3dParameters extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const { fonts } = state.text;
-    const fontOptions = fonts.map((font) => ({
-        label: font.displayName,
-        value: font.fontFamily
-    }));
-    fontOptions.unshift({
-        label: `+ ${i18n._('Add Fonts')}`,
-        value: 'AddFonts'
-    });
-    return {
-        fontOptions
-    };
+const mapStateToProps = () => {
+    return {};
 };
 
 const mapDispatchToProps = (dispatch) => {

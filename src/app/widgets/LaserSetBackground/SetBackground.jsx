@@ -2,6 +2,7 @@ import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { Trans } from 'react-i18next';
 
 import { EXPERIMENTAL_LASER_CAMERA } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -91,7 +92,11 @@ class SetBackground extends PureComponent {
 
             modal({
                 title: i18n._('Information'),
-                body: i18n._('Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
+                body: (
+                    <Trans>
+                        Laser module is not connected. Please make sure it is installed properly, and then connect to your Snapmaker via <b>Connection</b>.
+                    </Trans>
+                )
             });
             return false;
         },

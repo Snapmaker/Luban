@@ -25,8 +25,8 @@ const Instructions = ({ onClose }) => {
                 >
                     <p>
                         <Trans>
-                            The Camera Aid Background feature enables you to place the material and the image to be
-                            engraved together and adjust their position on the software by using a phone with a camera.
+                            Camera Capture allows you to place the material and the image to be engraved together
+                            and adjust their position on the software by using a phone with a camera.
                             It helps to engrave the image on your material in a much more accurate way.
                         </Trans>
                     </p>
@@ -34,12 +34,12 @@ const Instructions = ({ onClose }) => {
                     <ol>
                         <li>
                             <Trans>
-                                1. Place a piece of paper or wood sheet on the Engraving & Carving Platform.
+                                1. Place a piece of paper or wood sheet on the platform.
                             </Trans>
                         </li>
                         <li>
                             <Trans>
-                                2. Set the work origin as how you did before.
+                                2. Set the work origin again.
                             </Trans>
                         </li>
                         <li>
@@ -74,7 +74,7 @@ const Instructions = ({ onClose }) => {
                             <li>{i18n._('Send the photo to your computer.')}</li>
                             <li>
                                 <Trans>
-                                    On the software, click <b>Next</b>. Click <b>Upload</b> to upload the photo.
+                                    Click <b>Next</b>. Click <b>Upload</b> to upload the photo.
                                     Move the four corners of the dashed box to overlap the four corners of the engraved
                                     square.
                                 </Trans>
@@ -110,8 +110,7 @@ const Instructions = ({ onClose }) => {
                     <ol>
                         <li>
                             <Trans>
-                                5. Add the image or text you need to engrave on the background and complete the settings
-                                based on your needs.
+                                5. Add the image or text you need to engrave on the background and adjust the settings.
                             </Trans>
                         </li>
                         <img
