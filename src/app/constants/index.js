@@ -269,8 +269,8 @@ export const MACHINE_SERIES = {
                 z: 145
             },
             laserSize: {
-                x: 166,
-                y: 168,
+                x: 167,
+                y: 165,
                 z: 150
             }
         },
@@ -305,7 +305,7 @@ export const MACHINE_SERIES = {
             },
             laserSize: {
                 x: 345,
-                y: 360,
+                y: 357,
                 z: 334
             }
         },
