@@ -80,7 +80,6 @@ class Purifier extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('next', nextProps);
         if (!nextProps.isConnected) {
             this.props.setDisplay(false);
             return;
