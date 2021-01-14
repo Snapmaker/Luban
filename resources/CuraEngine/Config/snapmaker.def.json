@@ -324,7 +324,6 @@
         "wall_thickness": {
             "label": "Wall Thickness",
             "description": "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls."
->>>>>>> 3c90779c... Improvement: Update i18n translations for zh-cn (#696)
         }
     }
 }
