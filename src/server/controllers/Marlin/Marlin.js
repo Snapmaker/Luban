@@ -321,7 +321,7 @@ class MarlinReplyParserPurifierFanSpeed {
 
 class MarlinReplyParserPurifierLifetime {
     static parse(line) {
-        const r = line.match(/^lifetime:(.*)$/);
+        const r = line.match(/^Filter lifetime:(.*)$/);
         if (!r) {
             return null;
         }
@@ -345,6 +345,19 @@ class MarlinReplyParserPurifierLifetime {
             payload: {
                 airPurifierFilterHealth: lifetimeState
             }
+        };
+    }
+}
+
+class MarlinReplyParserPurifierOthers {
+    static parse(line) {
+        const r = line.match(/^Fan (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserPurifierOthers,
+            payload: {}
         };
     }
 }
@@ -635,6 +648,7 @@ class MarlinLineParser {
             MarlinReplyParserPurifierFanWork,
             MarlinReplyParserPurifierFanSpeed,
             MarlinReplyParserPurifierLifetime,
+            MarlinReplyParserPurifierOthers,
 
             // start
             MarlinLineParserResultStart,
