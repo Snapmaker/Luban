@@ -247,7 +247,7 @@ class WifiConnection extends PureComponent {
         } else {
             find = servers.find(v => v.name === server.name && v.address === server.address);
         }
-        if (find && find !== server) {
+        if (find) {
             this.setState({
                 server: find
             });
