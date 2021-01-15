@@ -294,7 +294,7 @@
                     "label": "Support Overhang Angle",
                     "description": "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.",
                     "enabled": true
-                },
+                }
             }
         },
         "speed_topbottom": {
