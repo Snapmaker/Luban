@@ -93,7 +93,7 @@ class Image3dParameters extends PureComponent {
                     <React.Fragment>
                         <TipTrigger
                             title={i18n._('Projection Direction')}
-                            content={i18n._('Select the orientation of the model\'s projection direction')}
+                            content={i18n._('Select the model\'s projection orientation.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Projection Direction')}</span>
