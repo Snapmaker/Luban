@@ -164,7 +164,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasAnyModelVisible() {
-        return this.models.some((model) => model.visible);
+        return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
 
     hideSelectedModel() {
@@ -704,12 +704,10 @@ class ModelGroup extends EventEmitter {
     arrangeAllModels() {
         // this.removeSelectedObjectParentMatrix();
         this.resetSelectedObjectScaleAndRotation();
-        const models = this.getModels();
+        const models = this.getModels().filter(m => !m.supportTag);
         for (const model of models) {
-            this.object.remove(model.meshObject);
-            this.selectedGroup.remove(model.meshObject);
+            ThreeUtils.removeObjectParent(model.meshObject);
         }
-        this.models.splice(0);
 
         for (const model of models) {
             model.stickToPlate();
@@ -719,11 +717,10 @@ class ModelGroup extends EventEmitter {
             model.meshObject.position.x = point.x;
             model.meshObject.position.y = point.y;
             model.meshObject.updateMatrix();
-            // this.add(model);
-            this.models.push(model);
+
             this.object.add(model.meshObject);
             if (this.selectedModelIDArray.includes(model.modelID)) {
-                this.selectedGroup.add(model.meshObject);
+                ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
             }
         }
         // this.applySelectedObjectParentMatrix();
