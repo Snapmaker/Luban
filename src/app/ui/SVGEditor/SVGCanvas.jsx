@@ -1511,8 +1511,6 @@ class SVGCanvas extends PureComponent {
     render() {
         const { className = '' } = this.props;
 
-        console.log('render()', this.props.elementActions);
-
         return (
             <React.Fragment>
                 <div ref={this.node} className={className} />

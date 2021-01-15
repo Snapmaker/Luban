@@ -71,13 +71,13 @@ class VisualizerModelTransformation extends PureComponent {
                         transformation.positionY = value;
                         break;
                     case 'scaleX':
-                        transformation.scaleX = value;
+                        transformation.scaleX = (this.props.transformation.scaleX > 0 ? value : -value);
                         break;
                     case 'scaleY':
-                        transformation.scaleY = value;
+                        transformation.scaleY = (this.props.transformation.scaleY > 0 ? value : -value);
                         break;
                     case 'scaleZ':
-                        transformation.scaleZ = value;
+                        transformation.scaleZ = (this.props.transformation.scaleZ > 0 ? value : -value);
                         break;
                     case 'rotateX':
                         transformation.rotationX = value;
@@ -172,9 +172,9 @@ class VisualizerModelTransformation extends PureComponent {
             rotateX = Number(toFixed(THREE.Math.radToDeg(transformation.rotationX), 1));
             rotateY = Number(toFixed(THREE.Math.radToDeg(transformation.rotationY), 1));
             rotateZ = Number(toFixed(THREE.Math.radToDeg(transformation.rotationZ), 1));
-            scaleXPercent = Number(toFixed((transformation.scaleX * 100), 1));
-            scaleYPercent = Number(toFixed((transformation.scaleY * 100), 1));
-            scaleZPercent = Number(toFixed((transformation.scaleZ * 100), 1));
+            scaleXPercent = Number(toFixed((Math.abs(transformation.scaleX) * 100), 1));
+            scaleYPercent = Number(toFixed((Math.abs(transformation.scaleY) * 100), 1));
+            scaleZPercent = Number(toFixed((Math.abs(transformation.scaleZ) * 100), 1));
             uniformScalingState = transformation.uniformScalingState;
         }
 
