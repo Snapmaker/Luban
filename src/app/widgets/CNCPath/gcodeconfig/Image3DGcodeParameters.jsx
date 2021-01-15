@@ -66,10 +66,10 @@ class Image3DGcodeParameters extends PureComponent {
 
         const sliceModeOptions = [{
             value: CNC_MESH_SLICE_MODE_ROTATION,
-            label: CNC_MESH_SLICE_MODE_ROTATION
+            label: i18n._('Rotation')
         }, {
             value: CNC_MESH_SLICE_MODE_LINKAGE,
-            label: CNC_MESH_SLICE_MODE_LINKAGE
+            label: i18n._('Linkage')
         }
         ];
 
@@ -115,8 +115,8 @@ class Image3DGcodeParameters extends PureComponent {
                             {isRotate && (
                                 <React.Fragment>
                                     <TipTrigger
-                                        title={i18n._('Slice Mode')}
-                                        content={i18n._('Select the slice mode of the mesh tool path')}
+                                        title={i18n._('Slicing Mode')}
+                                        content={i18n._('Select the slicing mode of the mesh tool path')}
                                     >
                                         <div className="sm-parameter-row">
                                             <span className="sm-parameter-row__label">{i18n._('Slice Mode')}</span>
@@ -136,7 +136,7 @@ class Image3DGcodeParameters extends PureComponent {
                             )}
                             {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Smooth Y')}</span>
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Y Smoothing')}</span>
                                     <input
                                         disabled={disabled}
                                         type="checkbox"
