@@ -349,14 +349,14 @@ class MarlinReplyParserPurifierLifetime {
     }
 }
 
-class MarlinReplyParserPurifierOthers {
+class MarlinReplyParserGetPurifierOthers {
     static parse(line) {
         const r = line.match(/^Fan (.*)$/);
         if (!r) {
             return null;
         }
         return {
-            type: MarlinReplyParserPurifierOthers,
+            type: MarlinReplyParserGetPurifierOthers,
             payload: {}
         };
     }
@@ -648,7 +648,7 @@ class MarlinLineParser {
             MarlinReplyParserPurifierFanWork,
             MarlinReplyParserPurifierFanSpeed,
             MarlinReplyParserPurifierLifetime,
-            MarlinReplyParserPurifierOthers,
+            MarlinReplyParserGetPurifierOthers,
 
             // start
             MarlinLineParserResultStart,
@@ -876,6 +876,8 @@ class Marlin extends events.EventEmitter {
             if (this.settings.airPurifierFilterHealth !== payload.airPurifierFilterHealth) {
                 this.set({ airPurifierFilterHealth: payload.airPurifierFilterHealth });
             }
+            this.emit('purifier', payload);
+        } else if (type === MarlinReplyParserGetPurifierOthers) {
             this.emit('purifier', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
