@@ -492,7 +492,7 @@ export const CaseConfigFourAxis = [
     },
     {
         tag: 'cnc',
-        title: 'Rotary CNC Carved Chess',
+        title: 'Rotary CNC Carved Chess Piece',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
             diameter: 35,
@@ -533,7 +533,7 @@ export const CaseConfigFourAxis = [
 
     {
         tag: 'cnc',
-        title: '4-Axis Linkage CNC Carved Lion',
+        title: '4-axis Linkage CNC Carved Lion',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
             diameter: 35,

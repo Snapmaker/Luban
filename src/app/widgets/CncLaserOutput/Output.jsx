@@ -125,7 +125,7 @@ class Output extends PureComponent {
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
-                        {isProcess ? i18n._('Tool Path') : i18n._('Process')}
+                        {isProcess ? i18n._('Preview Tool Path') : i18n._('Process')}
                     </button>
                     {isProcess && (
                         <div>
@@ -134,7 +134,7 @@ class Output extends PureComponent {
                                 content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto ToolPath Preview')}</span>
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto Tool Path Preview')}</span>
                                     <input
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
@@ -152,7 +152,7 @@ class Output extends PureComponent {
                                     onClick={this.actions.onSimulation}
                                     style={{ display: 'block', width: '100%' }}
                                 >
-                                    {i18n._('Simulation')}
+                                    {i18n._('Simulate')}
                                 </button>
                             )}
                             <button

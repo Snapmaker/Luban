@@ -268,7 +268,7 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PROCESSING_IMAGE:
                 return i18n._('Processing object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
-                return i18n._('Process object successfully.');
+                return i18n._('Processed object successfully.');
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
                 return i18n._('Failed to process object.');
             default:
