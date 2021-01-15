@@ -224,7 +224,7 @@ const createWindow = async () => {
         cleanAllRecentFiles();
     });
 
-    ipcMain.on('add-recent-file', (file) => {
+    ipcMain.on('add-recent-file', (event, file) => {
         addRecentFile(file);
     });
 
