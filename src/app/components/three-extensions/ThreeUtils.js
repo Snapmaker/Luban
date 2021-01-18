@@ -255,10 +255,6 @@ const ThreeUtils = {
             return lastBbox;
         };
     }()),
-    isSimilarPlanes(p1, p2) {
-        return Math.abs(p1.constant - p2.constant) < 0.05
-        && p1.normal.angleTo(p2.normal) < 1 / Math.PI;
-    },
     computeGeometryPlanes(geometry, matrix, allPlanes = []) {
         if (!geometry.isBufferGeometry) {
             geometry = new THREE.BufferGeometry().fromGeometry(geometry);
@@ -267,15 +263,22 @@ const ThreeUtils = {
         }
         geometry.applyMatrix(matrix);
 
-        let addNewPlanes = true;
+        let baseMode = true;
         let planes = [];
         let areas = [];
+        let supportVolumes = [];
         // if allPlanes provided, then do not add new planes into planes
         // this can speed up geometry computing
         if (allPlanes.length) {
-            addNewPlanes = false;
+            baseMode = false;
             planes = [...allPlanes];
             areas = new Array(planes.length).fill(0);
+            supportVolumes = new Array(planes.length).fill(0);
+        }
+
+        function isSimilarPlanes(p1, p2) {
+            return Math.abs(p1.constant - p2.constant) < 0.05
+            && p1.normal.angleTo(p2.normal) * 180 / Math.PI < 1;
         }
 
         const positions = geometry.getAttribute('position').array;
@@ -284,24 +287,43 @@ const ThreeUtils = {
         const c = new THREE.Vector3();
         const triangle = new THREE.Triangle();
         const plane = new THREE.Plane();
+        const tmpVector = new THREE.Vector3();
 
-        for (let i = 0; i < positions.length; i += 9) {
+        for (let i = 0, len = positions.length; i < len; i += 9) {
             a.fromArray(positions, i);
             b.fromArray(positions, i + 3);
             c.fromArray(positions, i + 6);
             triangle.set(a, b, c);
             triangle.getPlane(plane);
             const area = triangle.getArea();
-            // TODO: compute support space
-            const idx = planes.findIndex(p => ThreeUtils.isSimilarPlanes(p, plane));
-            if (idx !== -1) {
-                areas[idx] += area;
-            } else if (addNewPlanes) {
-                planes.push(new THREE.Plane().copy(plane));
-                areas.push(area);
+            // skip tiny triangles
+            if (area < 0.1) continue;
+
+            if (baseMode) {
+                const idx = planes.findIndex(p => isSimilarPlanes(p, plane));
+                if (idx !== -1) {
+                    areas[idx] += area;
+                } else {
+                    planes.push(new THREE.Plane().copy(plane));
+                    areas.push(area);
+                }
+            } else {
+                // eslint-disable-next-line no-shadow
+                for (let idx = 0, len = planes.length; idx < len; idx++) {
+                    const targetPlane = planes[idx];
+                    const angle = plane.normal.angleTo(targetPlane.normal) * 180 / Math.PI;
+                    if (angle < 1 && Math.abs(plane.constant - targetPlane.constant) < 0.05) {
+                        areas[idx] += area;
+                    } else if (angle < 80) {
+                        tmpVector.addVectors(a, b).multiplyScalar(0.5).add(c).multiplyScalar(0.5);
+                        const volume = area * Math.cos(angle * Math.PI / 180) * Math.abs(targetPlane.distanceToPoint(tmpVector));
+                        supportVolumes[idx] += volume;
+                    }
+                }
             }
         }
-        return { planes, areas };
+
+        return { planes, areas, supportVolumes };
     }
 };
 

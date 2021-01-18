@@ -1079,9 +1079,9 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-    AutoRotateSelectedModel: () => (dispatch, getState) => {
+    autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.AutoRotateSelectedModel();
+        const modelState = modelGroup.autoRotateSelectedModel();
         dispatch(actions.updateState(modelState));
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());

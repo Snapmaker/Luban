@@ -45,7 +45,7 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         saveSupport: PropTypes.func.isRequired,
         clearAllManualSupport: PropTypes.func.isRequired,
-        AutoRotateSelectedModel: PropTypes.func.isRequired,
+        autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -147,8 +147,8 @@ class Visualizer extends PureComponent {
                     break;
             }
         },
-        AutoRotateSelectedModel: () => {
-            this.props.AutoRotateSelectedModel();
+        autoRotateSelectedModel: () => {
+            this.props.autoRotateSelectedModel();
         },
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
@@ -412,7 +412,7 @@ class Visualizer extends PureComponent {
                                 type: 'item',
                                 label: i18n._('Auto Rotate Selected Model'),
                                 disabled: !isModelSelected,
-                                onClick: this.actions.AutoRotateSelectedModel
+                                onClick: this.actions.autoRotateSelectedModel
                             },
                             {
                                 type: 'subMenu',
@@ -514,7 +514,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
-    AutoRotateSelectedModel: () => dispatch(printingActions.AutoRotateSelectedModel()),
+    autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))

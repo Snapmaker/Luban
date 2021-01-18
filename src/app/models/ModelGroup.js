@@ -818,7 +818,7 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
-    AutoRotateSelectedModel() {
+    autoRotateSelectedModel() {
         const selected = this.getSelectedModelArray();
         if (selected.length === 0) {
             return null;
