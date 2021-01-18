@@ -44,6 +44,8 @@ class Controls extends EventEmitter {
 
     state = STATE.NONE;
 
+    prevState = null;
+
     // "target" is where the camera orbits around
     target = new THREE.Vector3();
 
@@ -517,6 +519,7 @@ class Controls extends EventEmitter {
 
     stopSupportMode() {
         this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
     }
 
     updateCamera() {

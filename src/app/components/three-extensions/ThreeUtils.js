@@ -199,7 +199,7 @@ const ThreeUtils = {
             let cache = caches[obj.uuid];
             if (!cache) {
                 cache = {
-                    geometry: obj.isMesh && obj.geometry.clone(),
+                    geometry: obj.geometry && obj.geometry.clone(),
                     lastMatrix: new THREE.Matrix4(),
                     lastBbox: new THREE.Box3().copy(initialBox)
                 };
@@ -210,7 +210,7 @@ const ThreeUtils = {
             }
             const { geometry, lastMatrix, lastBbox } = cache;
 
-            if (obj.isMesh) {
+            if (obj.geometry) {
                 obj.updateMatrixWorld();
                 if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld)) {
                     geometry.applyMatrix(obj.matrixWorld);
