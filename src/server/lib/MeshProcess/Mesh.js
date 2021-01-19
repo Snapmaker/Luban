@@ -4,6 +4,7 @@ import { Vector3 } from '../../../shared/lib/math/Vector3';
 import { STLParse } from '../../../shared/lib/STLParse/STLParse';
 import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
+import Coordinate from './Coordinate';
 
 const VERTEX_MELD_DISTANCE = 0.03;
 
@@ -11,29 +12,25 @@ const pointHash = (p) => {
     return (p.x / VERTEX_MELD_DISTANCE) ^ ((p.y / VERTEX_MELD_DISTANCE) << 10) ^ ((p.z / VERTEX_MELD_DISTANCE) << 20);
 };
 
-const modifyCoordinateSystem = (p, propCoordinates, nextCoordinates) => {
+const modifyCoordinateSystem = (p, propCoordinate, nextCoordinate) => {
     const { x, y, z } = p;
     const v = {};
-    v[propCoordinates.x] = x * propCoordinates.xSymbol;
-    v[propCoordinates.y] = y * propCoordinates.ySymbol;
-    v[propCoordinates.z] = z * propCoordinates.zSymbol;
+    v[propCoordinate.xK()] = x * propCoordinate.xS();
+    v[propCoordinate.yK()] = y * propCoordinate.yS();
+    v[propCoordinate.zK()] = z * propCoordinate.zS();
 
-    p.x = v[nextCoordinates.x] * nextCoordinates.xSymbol;
-    p.y = v[nextCoordinates.y] * nextCoordinates.ySymbol;
-    p.z = v[nextCoordinates.z] * nextCoordinates.zSymbol;
+    p.x = v[nextCoordinate.xK()] * nextCoordinate.xS();
+    p.y = v[nextCoordinate.yK()] * nextCoordinate.yS();
+    p.z = v[nextCoordinate.zK()] * nextCoordinate.zS();
 };
 
 const surfaceOptions = {
-    [DIRECTION_FRONT]: { x: 'x', y: 'y', z: 'z', xSymbol: 1, ySymbol: 1, zSymbol: 1 },
-    [DIRECTION_BACK]: { x: 'x', y: 'y', z: 'z', xSymbol: -1, ySymbol: -1, zSymbol: 1 },
-    [DIRECTION_LEFT]: { x: 'y', y: 'x', z: 'z', xSymbol: -1, ySymbol: 1, zSymbol: 1 },
-    [DIRECTION_RIGHT]: { x: 'y', y: 'x', z: 'z', xSymbol: 1, ySymbol: -1, zSymbol: 1 },
-    [DIRECTION_UP]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: -1, zSymbol: 1 },
-    [DIRECTION_DOWN]: { x: 'x', y: 'z', z: 'y', xSymbol: 1, ySymbol: 1, zSymbol: -1 }
-};
-
-const isEqualCoordinateSystem = (c1, c2) => {
-    return c1.x === c2.x && c1.y === c2.y && c1.z === c2.z && c1.xSymbol === c2.xSymbol && c1.ySymbol === c2.ySymbol && c1.zSymbol === c2.zSymbol;
+    [DIRECTION_FRONT]: { x: 'x', y: 'y', z: 'z' },
+    [DIRECTION_BACK]: { x: '-x', y: '-y', z: 'z' },
+    [DIRECTION_LEFT]: { x: '-y', y: 'x', z: 'z' },
+    [DIRECTION_RIGHT]: { x: 'y', y: '-x', z: 'z' },
+    [DIRECTION_UP]: { x: 'x', y: '-z', z: 'y' },
+    [DIRECTION_DOWN]: { x: 'x', y: 'z', z: '-y' }
 };
 
 export class Mesh {
@@ -49,37 +46,11 @@ export class Mesh {
 
     aabb = new AABB3D();
 
-    coordinates = {
-        x: 'x',
-        y: 'y',
-        z: 'z',
-        xSymbol: 1,
-        ySymbol: 1,
-        zSymbol: 1
-    }
+    coordinate = new Coordinate();
 
     constructor(settings) {
         this.settings = settings;
     }
-
-    // getVector3ByPlane(v) {
-    //     if (this.plane === PLANE_XY) {
-    //         return v;
-    //     } else if (this.plane === PLANE_YZ) {
-    //         return {
-    //             x: v.y,
-    //             y: v.z,
-    //             z: v.x
-    //         };
-    //     } else if (this.plane === PLANE_XZ) {
-    //         return {
-    //             x: v.x,
-    //             y: v.z,
-    //             z: v.y
-    //         };
-    //     }
-    //     return v;
-    // }
 
     static loadSTLFile(filePath) {
         const mesh = new Mesh();
@@ -207,49 +178,28 @@ export class Mesh {
         this.setCoordinateSystem(surfaceOptions[direction]);
     }
 
-    addCoordinateSystem(coordinates) {
-        const nCoordinates = {};
-        if (coordinates.x) {
-            nCoordinates[coordinates.x] = this.coordinates.x;
-        }
-        if (coordinates.y) {
-            nCoordinates[coordinates.y] = this.coordinates.y;
-        }
-        if (coordinates.z) {
-            nCoordinates[coordinates.z] = this.coordinates.z;
-        }
-        if (coordinates.xSymbol === -1) {
-            nCoordinates.xSymbol = -this.coordinates.xSymbol;
-        }
-        if (coordinates.ySymbol === -1) {
-            nCoordinates.ySymbol = -this.coordinates.ySymbol;
-        }
-        if (coordinates.zSymbol === -1) {
-            nCoordinates.zSymbol = -this.coordinates.zSymbol;
-        }
-        this.setCoordinateSystem(nCoordinates);
+    addCoordinateSystem(coordinate) {
+        const nCoordinate = new Coordinate(this.coordinate).add(coordinate);
+        this.setCoordinateSystem(nCoordinate);
     }
 
-    setCoordinateSystem(coordinates) {
-        const nCoordinate = {
-            ...this.coordinates,
-            ...coordinates
-        };
+    setCoordinateSystem(coordinate) {
+        const nCoordinate = new Coordinate(this.coordinate).set(coordinate);
 
-        if (isEqualCoordinateSystem(nCoordinate, this.coordinates)) {
+        if (nCoordinate.isEqual(this.coordinate)) {
             return;
         }
 
         for (const vertex of this.vertices) {
-            modifyCoordinateSystem(vertex.p, this.coordinates, nCoordinate);
+            modifyCoordinateSystem(vertex.p, this.coordinate, nCoordinate);
         }
-        modifyCoordinateSystem(this.aabb.max, this.coordinates, nCoordinate);
-        modifyCoordinateSystem(this.aabb.min, this.coordinates, nCoordinate);
-        modifyCoordinateSystem(this.aabb.length, this.coordinates, nCoordinate);
+        modifyCoordinateSystem(this.aabb.max, this.coordinate, nCoordinate);
+        modifyCoordinateSystem(this.aabb.min, this.coordinate, nCoordinate);
+        modifyCoordinateSystem(this.aabb.length, this.coordinate, nCoordinate);
 
         this.aabb.alterCoordinateSystem();
 
-        this.coordinates = nCoordinate;
+        this.coordinate = nCoordinate;
     }
 
     finish() {
