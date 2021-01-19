@@ -1149,7 +1149,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasModel() {
-        return this.getModels().length > 0;
+        return this.getModels().filter(v => v.visible).length > 0;
     }
 
     // not include p1, p2

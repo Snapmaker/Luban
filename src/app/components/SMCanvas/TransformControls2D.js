@@ -294,7 +294,8 @@ class TransformControls2D extends Object3D {
                 break;
             }
             default:
-                break;
+                // If no event is displayed for the selected object, the operation is returned to STATE.PAN
+                return false;
         }
 
         this.dragging = true;

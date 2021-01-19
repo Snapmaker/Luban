@@ -85,6 +85,9 @@ class ToolPathModelGroup {
             this.toolPathObjs.remove(model.toolPathObj3D);
         }
         this.toolPathModels = [];
+
+        this.viewPathObjs.remove(this.viewPathObj);
+        this.showToolPathObjs();
     }
 
     // addToSelectToolPathModel(toolPathModels) {

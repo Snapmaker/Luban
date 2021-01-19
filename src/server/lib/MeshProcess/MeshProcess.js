@@ -353,10 +353,10 @@ export class MeshProcess {
     _setDirection() {
         this.mesh.setDirection(this.direction);
         if ((this.flip & 1) > 0) {
-            this.mesh.addCoordinateSystem({ zSymbol: -1 });
+            this.mesh.addCoordinateSystem({ z: '-z' });
         }
         if ((this.flip & 2) > 0) {
-            this.mesh.addCoordinateSystem({ xSymbol: -1 });
+            this.mesh.addCoordinateSystem({ x: '-x' });
         }
     }
 
@@ -370,7 +370,7 @@ export class MeshProcess {
             });
             return this.convertTo4AxisImage();
         } else {
-            this.mesh.addCoordinateSystem({ ySymbol: -1 });
+            this.mesh.addCoordinateSystem({ y: '-y' });
             this.mesh.offset({
                 x: -this.mesh.aabb.min.x,
                 y: -this.mesh.aabb.min.y,
