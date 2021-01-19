@@ -816,6 +816,7 @@ class Model {
         geometry.computeVertexNormals();
 
         this.meshObject.geometry = geometry;
+        this.computeBoundingBox();
     }
 
     setVertexColors() {
