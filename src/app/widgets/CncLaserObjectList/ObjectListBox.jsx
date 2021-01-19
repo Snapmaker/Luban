@@ -8,6 +8,7 @@ import { actions as editorActions } from '../../flux/editor';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
+import { limitStringLength } from '../../lib/normalize-range';
 
 class ObjectListBox extends PureComponent {
     static propTypes = {
@@ -47,13 +48,6 @@ class ObjectListBox extends PureComponent {
             } else {
                 this.props.showSelectedModel(model);
             }
-        },
-        limitTheLengthOfDisplayName: (name) => {
-            let newName = name;
-            if (newName.length > 36) {
-                newName = `${newName.slice(0, 24)}...${newName.slice(-9)}`;
-            }
-            return newName;
         }
     };
 
@@ -82,7 +76,7 @@ class ObjectListBox extends PureComponent {
                     {modelGroup.models.map((model) => {
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
-                        const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
+                        const displayModelName = limitStringLength(modelName, 36);
                         const modelIcon = () => {
                             if (taskInfo.sourceType === 'text') {
                                 return styles.iconText;

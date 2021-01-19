@@ -14,6 +14,7 @@ import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
+import { limitStringLength } from '../../lib/normalize-range';
 
 const SUBCATEGORY = 'CncConfig';
 
@@ -289,23 +290,25 @@ class PrintingManager extends PureComponent {
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
+                                            const displayCategory = limitStringLength(i18n._(option.category), 28);
                                             return (
                                                 <li key={`${option.definitionId}`}>
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: isCategorySelected && this.actions.isCategorySelectedNow(option.definitionId) })}
                                                         onClick={() => this.actions.onSelectToolCategory(option.definitionId)}
                                                     >
-                                                        {i18n._(option.category)}
+                                                        {displayCategory}
                                                     </Anchor>
                                                     <ul style={{ listStyle: 'none' }}>
                                                         { option.nameArray.map(singleName => {
+                                                            const displayName = limitStringLength(i18n._(singleName), 24);
                                                             return (
                                                                 <li key={`${singleName}`}>
                                                                     <Anchor
                                                                         className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.definitionId, singleName) })}
                                                                         onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
                                                                     >
-                                                                        {i18n._(singleName)}
+                                                                        {displayName}
                                                                     </Anchor>
                                                                 </li>
                                                             );
