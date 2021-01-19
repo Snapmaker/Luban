@@ -911,12 +911,15 @@ class ModelGroup extends EventEmitter {
      *
      * Note that this function is used for 3DP only.
      *
+     * Note that when newUniformScalingState is used to mirror and to reset
+     *
      * TODO: Laser and CNC was moved to somewhere else.
      *
      * @param transformation
      */
-    updateSelectedGroupTransformation(transformation, withoutUniformScalingState = false) {
+    updateSelectedGroupTransformation(transformation, newUniformScalingState) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+        const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
 
         // todo, width and height use for 2d
         if (width !== undefined) {
@@ -933,7 +936,7 @@ class ModelGroup extends EventEmitter {
             this.selectedGroup.position.setY(positionY);
         }
         // Note that this is new value, but not a proportion, not to change pls.
-        if (!withoutUniformScalingState && this.selectedGroup.uniformScalingState === true) {
+        if (shouldUniformScale) {
             if (scaleX !== undefined && this.shouldApplyScaleToObjects(scaleX, scaleX, scaleX)) {
                 const { x, y, z } = this.selectedGroup.scale;
                 this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);

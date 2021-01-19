@@ -113,7 +113,7 @@ class Visualizer extends PureComponent {
                 rotationX: 0,
                 rotationY: 0,
                 rotationZ: 0
-            }, true);
+            }, false);
             this.props.onModelAfterTransform();
         },
         clearBuildPlate: () => {
@@ -130,17 +130,17 @@ class Visualizer extends PureComponent {
                 case 'X':
                     this.props.updateSelectedModelTransformation({
                         scaleX: this.props.transformation.scaleX * -1
-                    }, true);
+                    }, false);
                     break;
                 case 'Y':
                     this.props.updateSelectedModelTransformation({
                         scaleY: this.props.transformation.scaleY * -1
-                    }, true);
+                    }, false);
                     break;
                 case 'Z':
                     this.props.updateSelectedModelTransformation({
                         scaleZ: this.props.transformation.scaleZ * -1
-                    }, true);
+                    }, false);
                     break;
                 default:
                     break;
@@ -513,7 +513,7 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation, updateSelectedModelTransformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation, updateSelectedModelTransformation)),
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
