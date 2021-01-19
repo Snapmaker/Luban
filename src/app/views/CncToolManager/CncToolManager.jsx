@@ -290,7 +290,7 @@ class PrintingManager extends PureComponent {
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
-                                            const displayCategory = limitStringLength(i18n._(option.category), 28, 18);
+                                            const displayCategory = limitStringLength(i18n._(option.category), 28);
                                             return (
                                                 <li key={`${option.definitionId}`}>
                                                     <Anchor
@@ -301,7 +301,7 @@ class PrintingManager extends PureComponent {
                                                     </Anchor>
                                                     <ul style={{ listStyle: 'none' }}>
                                                         { option.nameArray.map(singleName => {
-                                                            const displayName = limitStringLength(i18n._(singleName), 24, 14);
+                                                            const displayName = limitStringLength(i18n._(singleName), 24);
                                                             return (
                                                                 <li key={`${singleName}`}>
                                                                     <Anchor

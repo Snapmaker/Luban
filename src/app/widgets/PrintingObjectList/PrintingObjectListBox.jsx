@@ -50,7 +50,7 @@ class PrintingObjectListBox extends PureComponent {
             <div className={styles['object-list-box']}>
                 {(modelGroup.models) && modelGroup.models.filter(model => !model.supportTag).map((model) => {
                     const modelName = path.basename(model.modelName);
-                    const displayModelName = limitStringLength(modelName, 36, 24);
+                    const displayModelName = limitStringLength(modelName, 36);
                     return (
                         <TipTrigger
                             key={model.modelID}

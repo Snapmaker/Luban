@@ -18,10 +18,11 @@ export const test = (value, min, max, minExclusive, maxExclusive) => {
     );
 };
 
-export const limitStringLength = (string, maxLenght, prefixLength) => {
+export const limitStringLength = (string, maxLength) => {
     const length = string.length;
-    if (length > maxLenght) {
-        string = `${string.slice(0, prefixLength)}...${string.slice(prefixLength + 3 - maxLenght)}`;
+    if (length > maxLength && maxLength > 4) {
+        const prefixLength = maxLength > 10 ? maxLength - 10 : 1;
+        string = `${string.slice(0, prefixLength)}...${string.slice(prefixLength + 3 - maxLength)}`;
     }
     return string;
 };

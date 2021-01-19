@@ -76,7 +76,7 @@ class ObjectListBox extends PureComponent {
                     {modelGroup.models.map((model) => {
                         const taskInfo = model.getTaskInfo();
                         const modelName = taskInfo.modelName;
-                        const displayModelName = limitStringLength(modelName, 36, 24);
+                        const displayModelName = limitStringLength(modelName, 36);
                         const modelIcon = () => {
                             if (taskInfo.sourceType === 'text') {
                                 return styles.iconText;

@@ -449,7 +449,7 @@ class PrintingManager extends PureComponent {
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         { managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {
-                                            const displayName = limitStringLength(i18n._(option.label), 24, 14);
+                                            const displayName = limitStringLength(i18n._(option.label), 24);
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
@@ -462,7 +462,7 @@ class PrintingManager extends PureComponent {
                                             );
                                         }))}
                                         { managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (qualityDefinitionOptions.map((option) => {
-                                            const displayName = limitStringLength(i18n._(option.label), 24, 14);
+                                            const displayName = limitStringLength(i18n._(option.label), 24);
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
