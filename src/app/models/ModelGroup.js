@@ -937,17 +937,23 @@ class ModelGroup extends EventEmitter {
         }
         // Note that this is new value, but not a proportion, not to change pls.
         if (shouldUniformScale) {
-            if (scaleX !== undefined && this.shouldApplyScaleToObjects(scaleX, scaleX, scaleX)) {
+            if (scaleX !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);
+                if (this.shouldApplyScaleToObjects(scaleX, scaleX * y / x, scaleX * z / x)) {
+                    this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);
+                }
             }
-            if (scaleY !== undefined && this.shouldApplyScaleToObjects(scaleY, scaleY, scaleY)) {
+            if (scaleY !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                this.selectedGroup.scale.set(scaleY * x / y, scaleY, scaleY * z / y);
+                if (this.shouldApplyScaleToObjects(scaleY * x / y, scaleY, scaleY * z / y)) {
+                    this.selectedGroup.scale.set(scaleY * x / y, scaleY, scaleY * z / y);
+                }
             }
-            if (scaleZ !== undefined && this.shouldApplyScaleToObjects(scaleZ, scaleZ, scaleZ)) {
+            if (scaleZ !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                this.selectedGroup.scale.set(scaleZ * x / z, scaleZ * y / z, scaleZ);
+                if (this.shouldApplyScaleToObjects(scaleZ * x / z, scaleZ * y / z, scaleZ)) {
+                    this.selectedGroup.scale.set(scaleZ * x / z, scaleZ * y / z, scaleZ);
+                }
             }
         } else {
             if (scaleX !== undefined) {
