@@ -1,4 +1,9 @@
-import { CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_S_F_S } from '../../constants';
+import {
+    CNC_TOOL_SNAP_FLAT_END_MILL,
+    CNC_TOOL_SNAP_V_BIT,
+    CNC_TOOL_SNAP_S_F_S,
+    CNC_MESH_SLICE_MODE_LINKAGE
+} from '../../constants';
 
 export const CaseConfigOriginal = [
     {
@@ -453,11 +458,7 @@ export const CaseConfigFourAxis = [
         tag: 'laser',
         title: 'Rotary Laser Engraved Lion',
         materials: {
-            diameter: 40,
-            fixtureLength: 20,
-            isCW: true,
-            isRotate: true,
-            length: 70
+            isRotate: true
         },
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
@@ -485,8 +486,8 @@ export const CaseConfigFourAxis = [
             positionX: 0,
             positionY: 34.8,
             rotationZ: 0, // 90 / 180 * Math.PI
-            width: 53.1,
-            height: 69.2,
+            width: 46,
+            height: 60,
             flip: 0
         }
     },
@@ -495,11 +496,7 @@ export const CaseConfigFourAxis = [
         title: 'Rotary CNC Carved Chess Piece',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
-            diameter: 35,
-            fixtureLength: 20,
-            isCW: true,
-            isRotate: true,
-            length: 75
+            isRotate: true
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-A250&A350.png',
         pathConfig: {
@@ -524,10 +521,10 @@ export const CaseConfigFourAxis = [
         },
         caseTransformation: {
             positionX: 0,
-            positionY: 20.1,
+            positionY: 25,
             rotationZ: 0,
             width: 110,
-            height: 54
+            height: 50
         }
     },
 
@@ -536,11 +533,7 @@ export const CaseConfigFourAxis = [
         title: '4-axis Linkage CNC Carved Lion',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
-            diameter: 35,
-            fixtureLength: 20,
-            isCW: true,
-            isRotate: true,
-            length: 75
+            isRotate: true
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
         pathConfig: {
@@ -555,6 +548,7 @@ export const CaseConfigFourAxis = [
             },
             gcodeConfig: {
                 toolSnap: CNC_TOOL_SNAP_S_F_S,
+                sliceMode: CNC_MESH_SLICE_MODE_LINKAGE,
                 stepDown: 17.5,
                 safetyHeight: 1,
                 stopHeight: 10,
@@ -565,10 +559,10 @@ export const CaseConfigFourAxis = [
         },
         caseTransformation: {
             positionX: 0,
-            positionY: 22.5,
+            positionY: 25,
             rotationZ: 0,
             width: 110,
-            height: 51
+            height: 50
         }
     }
 ];
