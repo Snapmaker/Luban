@@ -42,13 +42,13 @@ STLBinaryExporter.prototype = {
 				if ( ! ( geometry instanceof THREE.Geometry ) ) return;
 				triangles += geometry.faces.length;
 
-                object.updateMatrix();
+                object.updateMatrixWorld();
 
 				objects.push( {
 
 					geometry: geometry,
-                    // matrix: object.matrixWorld
-					matrix: object.matrix
+                    matrix: object.matrixWorld
+					// matrix: object.matrix
 
 				} );
 

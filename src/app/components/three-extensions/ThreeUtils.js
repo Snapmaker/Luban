@@ -205,7 +205,7 @@ const ThreeUtils = {
                 };
                 caches[obj.uuid] = cache;
             }
-            if(!useCacheGeometry) {
+            if(obj.geometry && !useCacheGeometry) {
                 cache.geometry = obj.geometry.clone();
             }
             const { geometry, lastMatrix, lastBbox } = cache;
