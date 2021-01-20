@@ -221,7 +221,7 @@ export const actions = {
                 stage: PRINTING_STAGE.SLICE_SUCCEED,
                 progress: 1
             }));
-            modelGroup.removeSelectedObjectParentMatrix();
+
             modelGroup.unselectAllModels();
             dispatch(actions.loadGcode(gcodeFilename));
         });
@@ -752,7 +752,6 @@ export const actions = {
         if (!hasModel) {
             return;
         }
-        modelGroup.removeSelectedObjectParentMatrix();
         modelGroup.unselectAllModels();
         // Info user that slice has started
         dispatch(actions.updateState({
