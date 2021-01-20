@@ -896,9 +896,9 @@ class ModelGroup extends EventEmitter {
 
     shouldApplyScaleToObjects(scaleX, scaleY, scaleZ) {
         return this.selectedGroup.children.every((meshObject) => {
-            if (scaleX * meshObject.scale.x < 0.01
-              || scaleY * meshObject.scale.y < 0.01
-              || scaleZ * meshObject.scale.z < 0.01
+            if (Math.abs(scaleX * meshObject.scale.x) < 0.01
+              || Math.abs(scaleY * meshObject.scale.y) < 0.01
+              || Math.abs(scaleZ * meshObject.scale.z) < 0.01
             ) {
                 return false; // should disable
             }
@@ -911,12 +911,15 @@ class ModelGroup extends EventEmitter {
      *
      * Note that this function is used for 3DP only.
      *
+     * Note that when newUniformScalingState is used to mirror and to reset
+     *
      * TODO: Laser and CNC was moved to somewhere else.
      *
      * @param transformation
      */
-    updateSelectedGroupTransformation(transformation) {
+    updateSelectedGroupTransformation(transformation, newUniformScalingState) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+        const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
 
         // todo, width and height use for 2d
         if (width !== undefined) {
@@ -932,20 +935,30 @@ class ModelGroup extends EventEmitter {
         if (positionY !== undefined) {
             this.selectedGroup.position.setY(positionY);
         }
-        if (this.selectedGroup.uniformScalingState === true) {
-            if (scaleX !== undefined && this.shouldApplyScaleToObjects(scaleX, scaleX, scaleX)) {
-                this.selectedGroup.scale.set(scaleX, scaleX, scaleX);
+        // Note that this is new value, but not a proportion, not to change pls.
+        if (shouldUniformScale) {
+            if (scaleX !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleX, scaleX * y / x, scaleX * z / x)) {
+                    this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);
+                }
             }
-            if (scaleY !== undefined && this.shouldApplyScaleToObjects(scaleY, scaleY, scaleY)) {
-                this.selectedGroup.scale.set(scaleY, scaleY, scaleY);
+            if (scaleY !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleY * x / y, scaleY, scaleY * z / y)) {
+                    this.selectedGroup.scale.set(scaleY * x / y, scaleY, scaleY * z / y);
+                }
             }
-            if (scaleZ !== undefined && this.shouldApplyScaleToObjects(scaleZ, scaleZ, scaleZ)) {
-                this.selectedGroup.scale.set(scaleZ, scaleZ, scaleZ);
+            if (scaleZ !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleZ * x / z, scaleZ * y / z, scaleZ)) {
+                    this.selectedGroup.scale.set(scaleZ * x / z, scaleZ * y / z, scaleZ);
+                }
             }
         } else {
             if (scaleX !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleX * meshObject.scale.x < 0.01
+                    if (Math.abs(scaleX * meshObject.scale.x) < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -957,7 +970,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleY !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleY * meshObject.scale.y < 0.01
+                    if (Math.abs(scaleY * meshObject.scale.y) < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -969,7 +982,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleZ !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleZ * meshObject.scale.z < 0.01
+                    if (Math.abs(scaleZ * meshObject.scale.z) < 0.01
                     ) {
                         return false; // should disable
                     }

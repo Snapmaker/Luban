@@ -25,6 +25,7 @@ class Visualizer extends PureComponent {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         selectedModelArray: PropTypes.array,
+        transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -112,7 +113,7 @@ class Visualizer extends PureComponent {
                 rotationX: 0,
                 rotationY: 0,
                 rotationZ: 0
-            });
+            }, false);
             this.props.onModelAfterTransform();
         },
         clearBuildPlate: () => {
@@ -123,6 +124,27 @@ class Visualizer extends PureComponent {
         },
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
+        },
+        mirrorSelectedModel: (value) => {
+            switch (value) {
+                case 'X':
+                    this.props.updateSelectedModelTransformation({
+                        scaleX: this.props.transformation.scaleX * -1
+                    }, false);
+                    break;
+                case 'Y':
+                    this.props.updateSelectedModelTransformation({
+                        scaleY: this.props.transformation.scaleY * -1
+                    }, false);
+                    break;
+                case 'Z':
+                    this.props.updateSelectedModelTransformation({
+                        scaleZ: this.props.transformation.scaleZ * -1
+                    }, false);
+                    break;
+                default:
+                    break;
+            }
         },
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
@@ -396,6 +418,28 @@ class Visualizer extends PureComponent {
                                 onClick: this.actions.layFlatSelectedModel
                             },
                             {
+                                type: 'subMenu',
+                                label: i18n._('Mirror Selected Model'),
+                                disabled: !isModelSelected,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('X Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('X')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Y Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('Y')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Z Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('Z')
+                                    }
+                                ]
+                            },
+                            {
                                 type: 'separator'
                             },
                             {
@@ -451,6 +495,7 @@ const mapStateToProps = (state) => {
         size,
         allModel: modelGroup.models,
         selectedModelArray: modelGroup.selectedModelArray,
+        transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -468,7 +513,7 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
