@@ -24,10 +24,15 @@ export class Server extends events.EventEmitter {
         super();
         this.name = name;
         this.address = address;
+        this.token = '';
         this.port = port || 8080;
         this.model = model || 'Unknown Model';
         this.selected = false;
         this._stateInit();
+    }
+
+    setToken(token) {
+        this.token = token;
     }
 
     _stateInit() {
@@ -91,17 +96,18 @@ export class Server extends events.EventEmitter {
         return false;
     }
 
-    open = (token = '', callback) => {
+    open = (callback) => {
         const api = `${this.host}/api/v1/connect`;
         request
             .post(api)
             .timeout(3000)
-            .send(token ? `token=${token}` : '')
+            .send(this.token ? `token=${this.token}` : '')
             .end((err, res) => {
                 const { msg, data, code, text } = this._getResult(err, res);
 
-                if (token && code === 403) {
-                    this.open('', callback);
+                if (this.token && code === 403) {
+                    this.token = '';
+                    this.open(callback);
                 }
                 if (msg) {
                     callback({ message: msg, status: code }, data, text);
@@ -116,7 +122,8 @@ export class Server extends events.EventEmitter {
                     this.state.series = data.series;
                     this.state.headType = data.headType;
                 }
-                this.token || (this.token = data.token);
+
+                this.token = data.token;
                 this.waitConfirm = true;
                 this.startRequestStatus();
                 callback(null, data);

@@ -96,9 +96,11 @@ class WifiServerManager extends EventEmitter {
             }
         }
 
+        // debounce to avoid multiple sequential calls
+        // Note: 500ms reaction time, 3000ms is too long.
         setTimeout(() => {
             this.refreshing = false;
-        }, 3000);
+        }, 500);
     };
 
     onConnection = (socket) => {

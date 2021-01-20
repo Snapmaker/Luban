@@ -11,6 +11,8 @@ import {
     LASER_MOCK_PLATE_HEIGHT,
     MACHINE_HEAD_TYPE,
     MACHINE_SERIES,
+    HEAD_CNC,
+    HEAD_LASER,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATUS_IDLE,
     WORKFLOW_STATUS_PAUSED,
@@ -38,25 +40,34 @@ import connectActions from './action-connect';
 
 const INITIAL_STATE = {
     // region server discover
+    // HTTP connection
+    //  - servers: HTTP servers on Snapmaker 2.0
+    //  - serverDiscovering: discover state
     servers: [],
     serverDiscovering: false,
     // endregion
 
     // region Connection
+    // connection state
+    //  - type: serial port or Wi-Fi
+    //  - status: Idle / Connecting / Connected
+    //  - timeout: connect timeout (for Wi-Fi connection)
     connectionType: CONNECTION_TYPE_WIFI,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
 
     server: ABSENT_OBJECT,
-    serverToken: '',
-    serverAddress: '',
+    savedServerAddress: '',
+    savedServerToken: '',
     manualIp: '',
 
     isOpen: false,
     isConnected: false,
     workflowStatus: WORKFLOW_STATUS_UNKNOWN,
 
-    // Serial port
+    // serial port related
+    //  - ports: all serial ports available
+    //  - port: serial port selected
     port: controller.port || '',
     ports: [],
     // endregion
@@ -171,22 +182,29 @@ export const actions = {
         }
     },
 
+    /**
+     * Initialize connection related state.
+     */
     __initConnection: (dispatch) => {
-        // Connection
-
+        // Wi-Fi server
         const serverAddress = machineStore.get('server.address') || '';
         const serverToken = machineStore.get('server.token') || '';
         const manualIp = machineStore.get('manualIp') || '';
+
+        // serial port
         const machinePort = machineStore.get('port') || '';
 
         dispatch(baseActions.updateState({
-            serverToken: serverToken,
-            serverAddress: serverAddress,
+            savedServerAddress: serverAddress,
+            savedServerToken: serverToken,
             port: machinePort,
             manualIp: manualIp
         }));
     },
 
+    /**
+     * Initialize machine related attributes, series, machine size, etc.
+     */
     __initMachineStatus: (dispatch) => {
         // Machine
         const { series = INITIAL_STATE.series, size = INITIAL_STATE.size, laserSize = INITIAL_STATE.laserSize } = machineStore.get('machine') || {};
@@ -220,12 +238,15 @@ export const actions = {
 
                 if (pos.isFourAxis) {
                     if (machineState.workPosition.x !== pos.x
-                       || machineState.workPosition.y !== pos.y
-                       || machineState.workPosition.z !== pos.z
-                       || machineState.workPosition.b !== pos.b) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: true
-                        }));
+                        || machineState.workPosition.y !== pos.y
+                        || machineState.workPosition.z !== pos.z
+                        || machineState.workPosition.b !== pos.b) {
+                        // TODO: Set `isRotate` only once.
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -235,11 +256,14 @@ export const actions = {
                     }
                 } else {
                     if (machineState.workPosition.x !== pos.x
-                       || machineState.workPosition.y !== pos.y
-                       || machineState.workPosition.z !== pos.z) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: false
-                        }));
+                        || machineState.workPosition.y !== pos.y
+                        || machineState.workPosition.z !== pos.z) {
+                        // TODO: Set `isRotate` only once.
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 ...machineState.workPosition,
@@ -448,8 +472,11 @@ export const actions = {
         dispatch(baseActions.updateState({ materialThickness }));
     },
 
+    /**
+     * Open HTTP server.
+     */
     openServer: (callback) => (dispatch, getState) => {
-        const { server, serverToken, isOpen } = getState().machine;
+        const { server, isOpen, savedServerAddress, savedServerToken } = getState().machine;
         if (isOpen) {
             return;
         }
@@ -458,16 +485,19 @@ export const actions = {
             isEmergencyStopped: false
         }));
 
-        server.open(serverToken, (err, data, text) => {
+        // Use saved token when connecting
+        if (server.address === savedServerAddress) {
+            server.setToken(savedServerToken);
+        }
+
+        server.open((err, data, text) => {
             if (err) {
                 callback && callback(err, data, text);
                 return;
             }
 
-            const { token } = data;
-
             dispatch(connectActions.setServerAddress(server.address));
-            dispatch(connectActions.setServerToken(token));
+            dispatch(connectActions.setServerToken(server.token));
 
             dispatch(baseActions.updateState({
                 isOpen: true,
@@ -577,12 +607,15 @@ export const actions = {
                 // make 'workPosition' value as Number
                 if (!(_.isUndefined(b))) {
                     if (Number(workPosition.x) !== x
-                       || Number(workPosition.y) !== y
-                       || Number(workPosition.z) !== z
-                       || Number(workPosition.b) !== b) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: true
-                        }));
+                        || Number(workPosition.y) !== y
+                        || Number(workPosition.z) !== z
+                        || Number(workPosition.b) !== b) {
+                        // TODO: Set `isRotate` only once.
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: true
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
@@ -596,11 +629,14 @@ export const actions = {
                     }
                 } else {
                     if (Number(workPosition.x) !== x
-                       || Number(workPosition.y) !== y
-                       || Number(workPosition.z) !== z) {
-                        dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
-                            isRotate: false
-                        }));
+                        || Number(workPosition.y) !== y
+                        || Number(workPosition.z) !== z) {
+                        // TODO: Set `isRotate` only once.
+                        if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                            dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
+                                isRotate: false
+                            }));
+                        }
                         dispatch(baseActions.updateState({
                             workPosition: {
                                 x: `${x.toFixed(3)}`,
