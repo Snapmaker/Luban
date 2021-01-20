@@ -23,7 +23,7 @@ const INITIAL_STATE = {
     materials: {
         isRotate: false,
         diameter: 35,
-        length: 75,
+        length: 70,
         fixtureLength: 20,
         x: 0,
         y: 0,
