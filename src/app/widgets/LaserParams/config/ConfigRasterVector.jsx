@@ -84,7 +84,7 @@ class ConfigRasterVector extends PureComponent {
                                     <Slider
                                         disabled={disabled}
                                         className="sm-parameter-row__slider"
-                                        defaultValue={vectorThreshold}
+                                        value={vectorThreshold}
                                         min={0}
                                         max={255}
                                         step={1}
