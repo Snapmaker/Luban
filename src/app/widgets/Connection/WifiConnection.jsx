@@ -46,12 +46,13 @@ class WifiConnection extends PureComponent {
 
         server: PropTypes.object.isRequired,
         manualIp: PropTypes.string,
-        serverAddress: PropTypes.string,
+        savedServerAddress: PropTypes.string.isRequired,
 
         setSelectedServer: PropTypes.func.isRequired,
         setManualIP: PropTypes.func.isRequired,
 
         // TODO
+        addServer: PropTypes.func.isRequired,
         openServer: PropTypes.func.isRequired,
         closeServer: PropTypes.func.isRequired,
 
@@ -96,6 +97,8 @@ class WifiConnection extends PureComponent {
             }
         },
         openServer: () => {
+            const { server } = this.state;
+            this.props.setSelectedServer(server);
             this.props.openServer((err, data, text) => {
                 if (err) {
                     this.actions.showWifiError(err, text);
@@ -191,9 +194,15 @@ class WifiConnection extends PureComponent {
                         this.actions.onCloseManualWiFi();
 
                         this.props.setManualIP(text);
-                        const server = new Server('Manual', text);
-                        this.props.setSelectedServer(server);
-                        this.props.openServer();
+                        const newServer = new Server('Manual', text);
+
+                        // Try add new server
+                        const server = this.props.addServer(newServer);
+
+                        // set state server and then open it
+                        this.setState({ server }, () => {
+                            this.actions.openServer();
+                        });
                     }
                 }
             });
@@ -216,7 +225,7 @@ class WifiConnection extends PureComponent {
     componentWillReceiveProps(nextProps) {
         // Simply compare 2 arrays
         if (nextProps.servers !== this.props.servers) {
-            this.autoSetServer(nextProps.servers);
+            this.autoSetServer(nextProps.servers, nextProps.server);
         }
 
         if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
@@ -237,29 +246,29 @@ class WifiConnection extends PureComponent {
      * as `this.state.server`. If no matches found, set the first object as server.
      * `this.state.server` is used to be displayed in in dropdown menu.
      *
-     * @param servers list of server objects
+     * @param servers - list of server objects
+     * @param server - selected server
      */
-    autoSetServer(servers) {
-        const { server, serverAddress } = this.props;
+    autoSetServer(servers, server) {
+        const { savedServerAddress } = this.props;
         let find;
-        if (serverAddress) {
-            find = servers.find(v => v.address === serverAddress);
-        } else {
+        if (server !== ABSENT_OBJECT) {
             find = servers.find(v => v.name === server.name && v.address === server.address);
+        } else {
+            // If no server selected, we select server based on saved server address
+            find = servers.find(v => v.address === savedServerAddress);
         }
+
         if (find) {
             this.setState({
                 server: find
             });
-            this.props.setSelectedServer(find);
-        }
-
-        // Default select first server
-        if (!find && servers.length) {
+        } else if (servers.length > 0) {
+            // Default select first server
+            const firstServer = servers[0];
             this.setState({
-                server: servers[0]
+                server: firstServer
             });
-            this.props.setSelectedServer(servers[0]);
         }
     }
 
@@ -457,7 +466,7 @@ const mapStateToProps = (state) => {
         connectionType,
         connectionStatus,
         server,
-        serverAddress,
+        savedServerAddress,
         manualIp,
         // machine status
         headType, workflowStatus, isOpen, isConnected
@@ -472,7 +481,7 @@ const mapStateToProps = (state) => {
 
         server,
         manualIp,
-        serverAddress,
+        savedServerAddress,
 
         // machine status
         headType,
@@ -484,6 +493,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
     discoverSnapmakerServers: () => dispatch(machineActions.discover.discoverSnapmakerServers()),
+    addServer: (server) => dispatch(machineActions.connect.addServer(server)),
     openServer: (callback) => dispatch(machineActions.openServer(callback)),
     closeServer: (state) => dispatch(machineActions.closeServer(state)),
     setSelectedServer: (server) => dispatch(machineActions.connect.setSelectedServer(server)),
