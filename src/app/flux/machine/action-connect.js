@@ -41,23 +41,47 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
 const setSelectedServer = (server) => (dispatch, getState) => {
     const { servers } = getState().machine;
 
-    const find = servers.find(v => v.equals(server));
-    if (!find) {
+    // We can assume that server must be found on server list
+    const find = servers.find(s => s.address === server.address);
+    if (find) {
+        // Update server selected
+        dispatch(baseActions.updateState({ server: find }));
+    }
+};
+
+/**
+ * Add new server.
+ *
+ * @param server - server to be added.
+ * @returns The new added server or an old server if it already exists.
+ */
+const addServer = (server) => (dispatch, getState) => {
+    const { servers } = getState().machine;
+
+    const find = servers.find(s => s.address === server.address);
+
+    if (find) {
+        return find;
+    } else {
         const newServers = servers.slice(0);
         newServers.push(server);
-        dispatch(baseActions.updateState({ servers: newServers }));
+
+        dispatch(baseActions.updateState({
+            servers: newServers
+        }));
+
+        return server;
     }
-    dispatch(baseActions.updateState({ server }));
 };
 
 const setServerAddress = (serverAddress) => (dispatch) => {
-    dispatch(baseActions.updateState({ serverAddress: serverAddress }));
+    dispatch(baseActions.updateState({ savedServerAddress: serverAddress }));
 
     machineStore.set('server.address', serverAddress);
 };
 
 const setServerToken = (token) => (dispatch) => {
-    dispatch(baseActions.updateState({ serverToken: token }));
+    dispatch(baseActions.updateState({ savedServerToken: token }));
 
     machineStore.set('server.token', token);
 };
@@ -81,6 +105,7 @@ export default {
     setConnectionType,
     setConnectionTimeout,
 
+    addServer,
     setSelectedServer,
 
     setMachineSerialPort,
