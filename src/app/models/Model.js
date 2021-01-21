@@ -663,7 +663,6 @@ class Model {
     }
 
     async updateAndRefresh({ transformation, config, ...others }) {
-        console.log('updateAndRefresh(), transformation, config');
         if (transformation) {
             this.updateTransformation(transformation);
         }

@@ -89,7 +89,7 @@ export const actions = {
                     // use arrow keys to move models
                     // on keyUp listener is in SVGCanvas
                     let dx = 0, dy = 0;
-                    const step = 0.1;
+                    const step = 10;
                     switch (e.key) {
                         case 'ArrowUp':
                             dy += -step;

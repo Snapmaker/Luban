@@ -761,7 +761,7 @@ class SVGActionsFactory {
         // TODO: refactor this
         // const transform = svg.createSVGTransform();
         // transform.setTranslate(dx, dy);
-        this.svgContentGroup.moveSelector(elements, { dx, dy });
+        this.svgContentGroup.moveSelector({ dx, dy });
     }
 
     /**
@@ -819,9 +819,7 @@ class SVGActionsFactory {
      *
      * @param elements - List of SVGElement
      */
-    resizeElementsStart(elements) {
-        console.log('resize elements start', elements);
-
+    resizeElementsStart() {
         // Do nothing
         this.svgContentGroup.resizeSelectorStart();
     }
@@ -981,10 +979,6 @@ class SVGActionsFactory {
      * Rotate elements finish.
      */
     rotateElementsFinish(elements) {
-        // TODO:
-        console.log('rotate elements finish', elements);
-        // this.updateSelectedModelsByTransformation({ deltaAngle: angle });
-
         for (const element of elements) {
             SvgModel.completeElementTransform(element);
         }
@@ -1185,8 +1179,17 @@ class SVGActionsFactory {
      * move selected elements by arrow key on key up
      */
     onMovingByArrowKeyUp() {
-        const dx = this.onKeyMovingValue.x, dy = this.onKeyMovingValue.y;
-        this.updateSelectedModelsByTransformation({ dx, dy });
+        const elements = this.getSelectedElements();
+        for (const element of elements) {
+            SvgModel.completeElementTransform(element);
+        }
+
+        // update selector
+        this.svgContentGroup.moveSelectorFinish(elements);
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this.setSelectedElementsTransformation(t);
+
         this.onKeyMovingValue.x = 0;
         this.onKeyMovingValue.y = 0;
     }

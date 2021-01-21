@@ -336,8 +336,6 @@ class SvgModel {
             formData.append('image', file);
             res = await api.uploadImage(formData);
         }
-
-        // console.log(content, URL.createObjectURL(blob));
         return res.body.uploadName;
     }
 
@@ -472,25 +470,6 @@ class SvgModel {
         // normalize transform list
         const transformList = SvgModel.getTransformList(element);
 
-        // TODO: remove console logs
-        /*
-        console.log('completeElementTransform() for', element);
-        console.log('completeElementTransform(), list transform list:');
-        for (let i = 0; i < transformList.length; i++) {
-            const t = transformList.getItem(i);
-            console.log('completeElementTransform(), transform ', i, t);
-
-            if (t.type === 2) {
-                console.log('completeElementTransform(), translate [x y] =', t.matrix.e, t.matrix.f);
-            } else if (t.type === 3) {
-                console.log('completeElementTransform(), scale [x y] =', t.matrix.a, t.matrix.d);
-            } else if (t.type === 4) {
-                // console.log('onTransformComplete(), scale [x y] = ', t.matrix.a, t.matrix.d);
-                console.log('completeElementTransform(), angle =', t.angle);
-            }
-        }
-        */
-
         // derive transform action(s) from transform list
         function inferTransformType(svgTransformList) {
             if (svgTransformList.length === 5) {
@@ -604,11 +583,6 @@ class SvgModel {
         const { x, y, width = 0, height = 0, angle } = t;
         let { scaleX, scaleY } = t;
 
-        // console.log('recalculateElementAttributes(), [x, y] =', x, y);
-        // console.log('recalculateElementAttributes(), t =', t);
-        // console.log('recalculateElementAttributes(), angle =', angle);
-        // console.log('recalculateElementAttributes(), scale =', scaleX, scaleY);
-
         switch (element.nodeName) {
             case 'ellipse': {
                 element.setAttribute('cx', x);
@@ -677,8 +651,6 @@ class SvgModel {
     onUpdate() {
         const transform = this.elemTransform();
         if (!transform) return;
-
-        console.log('onUpdate(), transform =', transform);
 
         const { width, height } = this.relatedModel;
         const { bbox: { x, y }, scaleX, scaleY, translateX, translateY, rotationAngle } = transform;
