@@ -683,6 +683,7 @@ class ModelGroup extends EventEmitter {
                 ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
             }
         }
+        this.prepareSelectedGroup();
 
         return this.getStateAndUpdateBoundingBox();
     }
