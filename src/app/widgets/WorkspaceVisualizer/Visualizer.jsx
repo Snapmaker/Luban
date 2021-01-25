@@ -704,7 +704,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}
-                        autoFocus={this.actions.autoFocus}
+                        toFront={this.actions.autoFocus}
                     />
                 </div>
 
