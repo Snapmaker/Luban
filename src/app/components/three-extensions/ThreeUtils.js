@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable func-names */
 import * as THREE from 'three';
 
 const ThreeUtils = {
@@ -194,40 +194,61 @@ const ThreeUtils = {
     computeBoundingBox: (function () {
         const caches = {};
         const initialBox = new THREE.Box3();
-        const tmpMatrix = new THREE.Matrix4();
-        return function computeBoundingBox(obj, useCacheGeometry = true) {
+
+        let i, l;
+        const v1 = new THREE.Vector3();
+        function compute(node, box) {
+            const geometry = node.geometry;
+
+            if (geometry !== undefined) {
+                if (geometry.isGeometry) {
+                    const vertices = geometry.vertices;
+
+                    for (i = 0, l = vertices.length; i < l; i++) {
+                        v1.copy(vertices[i]);
+                        v1.applyMatrix4(node.matrixWorld);
+
+                        box.expandByPoint(v1);
+                    }
+                } else if (geometry.isBufferGeometry) {
+                    const attribute = geometry.attributes.position;
+
+                    if (attribute !== undefined) {
+                        for (i = 0, l = attribute.count; i < l; i++) {
+                            v1.fromBufferAttribute(attribute, i).applyMatrix4(node.matrixWorld);
+
+                            box.expandByPoint(v1);
+                        }
+                    }
+                }
+            }
+        }
+
+        return function computeBoundingBox(obj) {
             let cache = caches[obj.uuid];
             if (!cache) {
                 cache = {
-                    geometry: obj.geometry && obj.geometry.clone(),
                     lastMatrix: new THREE.Matrix4(),
-                    lastBbox: new THREE.Box3().copy(initialBox)
+                    lastBbox: new THREE.Box3()
                 };
                 caches[obj.uuid] = cache;
             }
-            if(obj.geometry && !useCacheGeometry) {
-                cache.geometry = obj.geometry.clone();
-            }
-            const { geometry, lastMatrix, lastBbox } = cache;
+            const { lastMatrix, lastBbox } = cache;
 
+            obj.updateMatrixWorld();
             if (obj.geometry) {
-                obj.updateMatrixWorld();
                 if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld)) {
-                    geometry.applyMatrix(obj.matrixWorld);
-                    if(!geometry.boundingBox) {
-                        geometry.computeBoundingBox();
-                    }
-                    lastBbox.copy(geometry.boundingBox);
+                    lastBbox.copy(initialBox);
+                    compute(obj, lastBbox);
                     lastMatrix.copy(obj.matrixWorld);
-                    geometry.applyMatrix(tmpMatrix.getInverse(obj.matrixWorld));
                 }
             } else {
                 lastBbox.copy(initialBox);
             }
 
             for (const child of obj.children) {
-                const cBBox = ThreeUtils.computeBoundingBox(child, useCacheGeometry);
-                if(!cBBox.isEmpty()){
+                const cBBox = ThreeUtils.computeBoundingBox(child);
+                if (!cBBox.isEmpty()) {
                     lastBbox.expandByPoint(cBBox.min).expandByPoint(cBBox.max);
                 }
             }

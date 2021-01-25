@@ -465,7 +465,7 @@ class Model {
 
     computeBoundingBox() {
         if (this.sourceType === '3d') {
-            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject, !this.supportTag);
+            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
         } else {
             const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
             const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
