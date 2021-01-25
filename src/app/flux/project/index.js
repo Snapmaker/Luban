@@ -213,7 +213,6 @@ export const actions = {
 
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
-        console.log(openedFile); // log here to detect a bug cannot recover
         UniApi.File.save(openedFile.path, tmpFile);
     },
 
@@ -263,7 +262,7 @@ export const actions = {
 
         if (modState.modelGroup.hasModel()) {
             await dispatch(actions.save(headType, opts));
-            await dispatch(actions.updateState({ openedFile: undefined }));
+            await dispatch(actions.updateState(headType, { openedFile: undefined }));
         }
 
         if (headType === HEAD_3DP) {
