@@ -163,7 +163,7 @@ class Enclosure extends PureComponent {
             <div>
                 <div className="sm-parameter-container">
                     <div className="sm-parameter-row">
-                        <span className="sm-parameter-row__label-lg">{i18n._('LED Strip')}</span>
+                        <span className="sm-parameter-row__label-lg">{i18n._('LED Strip')}</span>
                         <button
                             type="button"
                             className={led ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
