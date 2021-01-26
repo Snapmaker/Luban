@@ -623,7 +623,7 @@
     "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.": "Grosor de las paredes en dirección horizontal. Este valor dividido por el ancho de la línea de pared define el número de paredes.",
     "This action cannot be undone. Are you sure you want to stop the job?": "",
     "This field is required.": "Este campo es obligatorio.",
-    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.",
+    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
     "Threshold": "",
     "Timeout": "",
     "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.": "",

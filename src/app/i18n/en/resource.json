@@ -623,7 +623,7 @@
     "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.": "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.",
     "This action cannot be undone. Are you sure you want to stop the job?": "This action cannot be undone. Are you sure you want to stop the job?",
     "This field is required.": "This field is required.",
-    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.",
+    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
     "Threshold": "Threshold",
     "Timeout": "Timeout",
     "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.": "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.",

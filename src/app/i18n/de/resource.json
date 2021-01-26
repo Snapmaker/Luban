@@ -623,7 +623,7 @@
     "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.": "Die Dicke der Wände in horizontaler Richtung. Dieser Wert geteilt durch die Wandliniendicke bestimmt die Anzahl der Wände.",
     "This action cannot be undone. Are you sure you want to stop the job?": "Dies kann nicht rückgängig gemacht werden. Sicher dass der Job angehalten werden soll?",
     "This field is required.": "Dieses Feld wird benötigt.",
-    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.",
+    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
     "Threshold": "",
     "Timeout": "",
     "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.": "Um fortzufahren, muss die Maschine in ihre Ausgangsposition gehen. Bei der Referenzfahrt werden die X-, Y- und Z-Achsen an die vordefinierten Positionen verschoben, die als Referenzpunkte verwendet werden.",

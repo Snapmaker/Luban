@@ -623,7 +623,7 @@
     "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.": "水平方向的壁厚度。 此值除以壁线宽度定义壁数量。",
     "This action cannot be undone. Are you sure you want to stop the job?": "此操作无法撤销。你确定要停止工作吗？",
     "This field is required.": "这是必填字段。",
-    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.",
+    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
     "Threshold": "阈值",
     "Timeout": "连接超时",
     "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.": "如要继续，机器需要返回原位，即 X、Y、Z 轴的初始位置。",

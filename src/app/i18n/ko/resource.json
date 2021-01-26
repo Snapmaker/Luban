@@ -623,7 +623,7 @@
     "The thickness of the walls in the horizontal direction. This value divided by the wall line width defines the number of walls.": "가로 방향의 벽 두께입니다. 이 값을 벽 선 너비로 나눈 값은 벽의 수 입니다.",
     "This action cannot be undone. Are you sure you want to stop the job?": "",
     "This field is required.": "해당 필드는 필수항목입니다.",
-    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before any further instructions.",
+    "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
     "Threshold": "",
     "Timeout": "",
     "To continue, the machine needs to go to its home position. Homing works by moving X, Y, Z axes to the pre-defined positions, which will be used as the reference points.": "",
