@@ -154,7 +154,6 @@ class TaskManager extends EventEmitter {
     }
 
     addTask(task) {
-        console.log('task', task);
         this.tasks.forEach(t => {
             if (t.equal(task)) {
                 t.taskStatus = TASK_STATUS_DEPRECATED;

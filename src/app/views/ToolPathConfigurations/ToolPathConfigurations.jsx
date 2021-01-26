@@ -85,7 +85,6 @@ class ToolPathConfigurations extends PureComponent {
                     ...option
                 }
             };
-            console.log('updateGcodeConfig', this.state.toolPath, nToolPath, option);
             this.setState({
                 toolPath: nToolPath
             });
@@ -108,12 +107,10 @@ class ToolPathConfigurations extends PureComponent {
             this.setState({
                 toolPath: _.cloneDeep(nextProps.updatingToolPath)
             });
-            console.log('componentWillReceiveProps', nextProps.updatingToolPath, _.cloneDeep(nextProps.updatingToolPath));
         }
     }
 
     render() {
-        console.log(this.props.headType === HEAD_LASER, this.state.toolPath);
         if (!this.state.toolPath) {
             return null;
         }

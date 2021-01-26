@@ -35,8 +35,6 @@ class LaserParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
 
-        console.log('LaserParameters');
-
         return (
             <React.Fragment>
                 <div className="sm-parameter-container">
