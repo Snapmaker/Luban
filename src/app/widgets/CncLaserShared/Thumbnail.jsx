@@ -6,8 +6,7 @@ import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
-        toolPathModelGroup: PropTypes.object.isRequired
-        // thumbnail: PropTypes.string.isRequired
+        toolPathGroup: PropTypes.object.isRequired
     };
 
     state = {
@@ -67,7 +66,7 @@ class Thumbnail extends PureComponent {
     getThumbnail() {
         this.object && (this.scene.remove(this.object));
 
-        this.object = this.props.toolPathModelGroup.toolPathObjs.clone();
+        this.object = this.props.toolPathGroup.getThumbnailObject();
         this.object.visible = true;
         const boundingBox = ThreeUtils.computeBoundingBox(this.object);
         const y = (boundingBox.max.y + boundingBox.min.y) / 2;

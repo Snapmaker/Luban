@@ -2,13 +2,13 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
-import { actions as editorActions } from '../../flux/editor';
-import modal from '../../lib/modal';
-import i18n from '../../lib/i18n';
-import TipTrigger from '../../components/TipTrigger';
-import { limitStringLength } from '../../lib/normalize-range';
+import { limitStringLength } from '../../../lib/normalize-range';
+import Anchor from '../../../components/Anchor';
+import styles from '../styles.styl';
+import { actions as editorActions } from '../../../flux/editor';
+import modal from '../../../lib/modal';
+import i18n from '../../../lib/i18n';
+import TipTrigger from '../../../components/TipTrigger';
 
 class ObjectListBox extends PureComponent {
     static propTypes = {
@@ -19,7 +19,6 @@ class ObjectListBox extends PureComponent {
 
         modelGroup: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
-        // toolPathModelGroup: PropTypes.object.isRequired,
         previewFailed: PropTypes.bool.isRequired
     };
 
@@ -136,7 +135,7 @@ class ObjectListBox extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
-    const { page, previewFailed, modelGroup, toolPathModelGroup } = state[ownProps.headType];
+    const { page, previewFailed, modelGroup } = state[ownProps.headType];
     const { selectedModelArray } = modelGroup;
     const { headType } = ownProps;
     return {
@@ -145,7 +144,6 @@ const mapStateToProps = (state, ownProps) => {
         page,
         modelGroup,
         selectedModelArray,
-        toolPathModelGroup,
         workflowState,
         previewFailed
         // modelVisible: modelGroup.getSelectedModel().visible

@@ -6,14 +6,10 @@ import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import TextParameters from '../CncLaserShared/TextParameters';
 import TransformationSection from '../CncLaserShared/TransformationSection';
-import GcodeParameters from '../CncLaserShared/GcodeParameters';
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { PAGE_EDITOR } from '../../constants';
+
 
 import ImageProcessMode from './ImageProcessMode';
-import GcodeConfigVector from './gcodeconfig/GcodeConfigVector';
-import GcodeConfigRasterBW from './gcodeconfig/GcodeConfigRasterBW';
-import GcodeConfigGreyscale from './gcodeconfig/GcodeConfigGreyscale';
-// import GcodeConfigRasterVector from './gcodeconfig/GcodeConfigRasterVector';
 import { actions as editorActions } from '../../flux/editor';
 
 class LaserParameters extends PureComponent {
@@ -30,8 +26,6 @@ class LaserParameters extends PureComponent {
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
-        gcodeConfig: PropTypes.object.isRequired,
-        printOrder: PropTypes.number.isRequired,
         headType: PropTypes.string,
 
         setDisplay: PropTypes.func.isRequired,
@@ -39,10 +33,7 @@ class LaserParameters extends PureComponent {
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
-        updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
-        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
 
         // operator functions
@@ -77,9 +68,6 @@ class LaserParameters extends PureComponent {
             this.props.switchToPage(PAGE_EDITOR);
 
             const uploadMode = this.state.uploadMode;
-            if (uploadMode === 'greyscale') {
-                this.props.setAutoPreview(false);
-            }
 
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
@@ -105,7 +93,7 @@ class LaserParameters extends PureComponent {
 
     componentDidMount() {
         const { modelGroup } = this.props;
-        if (modelGroup.getSelectedModelArray().length > 0) {
+        if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
             this.props.setDisplay(true);
         } else {
             this.props.setDisplay(false);
@@ -114,7 +102,7 @@ class LaserParameters extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         const { modelGroup } = nextProps;
-        if (modelGroup.getSelectedModelArray().length > 0) {
+        if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
             this.props.setDisplay(true);
         } else {
             this.props.setDisplay(false);
@@ -126,8 +114,7 @@ class LaserParameters extends PureComponent {
         const {
             selectedModelArray, selectedModelVisible, sourceType, mode,
             updateSelectedModelTransformation,
-            gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config,
+            config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
             modifyText
@@ -136,10 +123,6 @@ class LaserParameters extends PureComponent {
         const actions = this.actions;
 
         const isEditor = this.props.page === PAGE_EDITOR;
-        const isProcess = this.props.page === PAGE_PROCESS;
-        const isBW = (mode === 'bw' || mode === 'halftone');
-        const isGreyscale = (mode === 'greyscale');
-        const isVector = mode === 'vector';
         const isTextVector = (config.svgNodeName === 'text');
         const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
 
@@ -180,41 +163,13 @@ class LaserParameters extends PureComponent {
                         modifyText={modifyText}
                     />
                 )}
-                {isProcess && isBW && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigRasterBW disabled={!selectedModelVisible} />
-                )}
-                {isProcess && isGreyscale && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigGreyscale disabled={!selectedModelVisible} />
-                )}
-                {isProcess && (isVector || isTextVector) && (selectedModelArray && selectedModelArray.length === 1) && (
-                    <GcodeConfigVector disabled={!selectedModelVisible} />
-                )}
-
-                {isProcess && (
-                    <GcodeParameters
-                        selectedModelVisible={selectedModelVisible}
-                        selectedModelArray={selectedModelArray}
-                        printOrder={printOrder}
-                        gcodeConfig={gcodeConfig}
-                        updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                        updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                        paramsDescs={
-                            {
-                                jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
-                                workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
-                                dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
-                            }
-                        }
-                    />
-                )}
             </React.Fragment>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { page, modelGroup, toolPathModelGroup, printOrder } = state.laser;
-    const gcodeConfig = toolPathModelGroup.getSelectedModel().gcodeConfig;
+    const { page, modelGroup, printOrder } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModel = ((selectedModelArray && selectedModelArray.length > 0) ? selectedModelArray[0] : {
         // modelGroup.mockModel
@@ -234,7 +189,6 @@ const mapStateToProps = (state) => {
     return {
         page,
         printOrder,
-        gcodeConfig,
         selectedModelArray,
         selectedModel,
         // todo, next version fix like selectedModelID
@@ -254,14 +208,10 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(editorActions.updateSelectedModelGcodeConfig('laser', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(editorActions.updateSelectedModelPrintOrder('laser', printOrder)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
-        setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
-
+        onModelAfterTransform: () => {},
         modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options)),
-
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))
     };
 };

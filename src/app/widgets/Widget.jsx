@@ -12,7 +12,6 @@ import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
 import LaserSetBackground from './LaserSetBackground';
 import LaserTestFocusWidget from './LaserTestFocus';
-import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CncLaserOutputWidget from './CncLaserOutput';
 import PrintingMaterialWidget from './PrintingMaterial';
@@ -20,9 +19,10 @@ import PrintingConfigurationsWidget from './PrintingConfigurations';
 import PrintingOutputWidget from './PrintingOutput';
 import WifiTransport from './WifiTransport';
 import EnclosureWidget from './Enclosure';
-import CncLaserObjectList from './CncLaserObjectList';
+import CncLaserObjectList from './CncLaserList';
 import PrintingObjectList from './PrintingObjectList';
 import JobType from './JobType';
+import CreateToolPath from './CncLaserToolPath';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -46,11 +46,11 @@ const getWidgetByName = (name) => {
         'laser-output': CncLaserOutputWidget,
         'laser-set-background': LaserSetBackground,
         'laser-test-focus': LaserTestFocusWidget,
-        'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,
         'cnc-output': CncLaserOutputWidget,
         'cnc-laser-object-list': CncLaserObjectList,
-        'job-type': JobType
+        'job-type': JobType,
+        'create-toolpath': CreateToolPath
     }[name];
     if (!Widget) {
         throw new Error(`Unknown Widget ${name}`);

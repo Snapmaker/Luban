@@ -30,6 +30,25 @@ export const round = (d, n) => {
     }
 };
 
+export const toHump = (name) => {
+    return name.replace(/_(\w)/g, (all, letter) => {
+        return letter.toUpperCase();
+    });
+};
+
+export const toLine = (value) => {
+    return value.replace(/([A-Z])/g, '_$1').toLowerCase();
+};
+
+export const getIndexByValue = (array, value) => {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i] === value) {
+            return i;
+        }
+    }
+    return -1;
+};
+
 export const isNull = (d) => {
     return _.isNull(d) || _.isUndefined(d);
 };

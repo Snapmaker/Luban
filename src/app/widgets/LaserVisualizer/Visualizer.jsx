@@ -13,13 +13,14 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
+import { actions as editorActions } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import { PAGE_EDITOR } from '../../constants';
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
+import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
 
 function humanReadableTime(t) {
@@ -45,7 +46,8 @@ class Visualizer extends Component {
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
-        toolPathModelGroup: PropTypes.object.isRequired,
+        toolPathGroup: PropTypes.object.isRequired,
+        showToolPathGroup: PropTypes.bool.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
@@ -249,6 +251,14 @@ class Visualizer extends Component {
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
+
+        if (nextProps.showToolPathGroup !== this.props.showToolPathGroup) {
+            if (nextProps.showToolPathGroup === true) {
+                this.canvas.current.controls.disableClick();
+            } else {
+                this.canvas.current.controls.enableClick();
+            }
+        }
     }
 
     getNotice() {
@@ -355,7 +365,7 @@ class Visualizer extends Component {
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
-                        toolPathModelGroupObject={this.props.toolPathModelGroup.object}
+                        toolPathGroupObject={this.props.toolPathGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
@@ -512,7 +522,7 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
-    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
+    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, showToolPathGroup, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
 
     return {
@@ -526,7 +536,8 @@ const mapStateToProps = (state) => {
         selectedModelID,
         svgModelGroup,
         modelGroup,
-        toolPathModelGroup,
+        toolPathGroup,
+        showToolPathGroup,
         selectedModelArray,
         // model,
         backgroundGroup: background.group,

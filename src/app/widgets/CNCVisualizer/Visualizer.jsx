@@ -14,11 +14,12 @@ import Space from '../../components/Space';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
+import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import { PAGE_EDITOR } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
+import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
 
 function humanReadableTime(t) {
@@ -44,7 +45,8 @@ class Visualizer extends Component {
         selectedModelArray: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
-        toolPathModelGroup: PropTypes.object.isRequired,
+        toolPathGroup: PropTypes.object.isRequired,
+        showToolPathGroup: PropTypes.bool.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
@@ -232,6 +234,14 @@ class Visualizer extends Component {
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
+
+        if (nextProps.showToolPathGroup !== this.props.showToolPathGroup) {
+            if (nextProps.showToolPathGroup === true) {
+                this.canvas.current.controls.disableClick();
+            } else {
+                this.canvas.current.controls.enableClick();
+            }
+        }
     }
 
     getNotice() {
@@ -378,7 +388,7 @@ class Visualizer extends Component {
                         canOperateModel={false}
                         size={this.props.size}
                         modelGroup={this.props.modelGroup}
-                        toolPathModelGroupObject={this.props.toolPathModelGroup.object}
+                        toolPathGroupObject={this.props.toolPathGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
@@ -531,7 +541,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
-    const { page, materials, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
+    const { page, materials, modelGroup, toolPathGroup, showToolPathGroup, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
 
@@ -544,7 +554,8 @@ const mapStateToProps = (state) => {
         // model,
         modelGroup,
         SVGActions,
-        toolPathModelGroup,
+        showToolPathGroup,
+        toolPathGroup,
         selectedModelArray,
         selectedModelID,
         hasModel,

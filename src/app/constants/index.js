@@ -394,3 +394,7 @@ export const DIRECTION_DOWN = 'down';
 export const CNC_MESH_SLICE_MODE_ROTATION = 'rotation';
 export const CNC_MESH_SLICE_MODE_LINKAGE = 'linkage';
 export const CNC_MESH_SLICE_MODE_MULTI_DIRECTION = 'multi face';
+
+export const TOOLPATH_TYPE_IMAGE = 'image';
+export const TOOLPATH_TYPE_VECTOR = 'vector';
+export const TOOLPATH_TYPE_SCULPT = 'sculpt';

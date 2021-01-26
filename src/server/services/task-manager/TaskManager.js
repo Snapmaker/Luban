@@ -21,8 +21,9 @@ export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
 export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
 
 export class Task {
-    constructor(taskId, socket, data, taskType, headType) {
+    constructor(taskId, socket, data, taskType, headType, modelId = '') {
         this.taskId = taskId;
+        this.modelId = modelId;
         this.socket = socket;
         this.data = data;
         this.taskType = taskType;
@@ -33,7 +34,7 @@ export class Task {
     }
 
     equal(task) {
-        return task && task.taskId === this.taskId && task.taskType === this.taskType;
+        return task && task.taskId === this.taskId && task.taskType === this.taskType && task.modelId === this.modelId;
     }
 
     getData() {
@@ -153,6 +154,7 @@ class TaskManager extends EventEmitter {
     }
 
     addTask(task) {
+        console.log('task', task);
         this.tasks.forEach(t => {
             if (t.equal(task)) {
                 t.taskStatus = TASK_STATUS_DEPRECATED;

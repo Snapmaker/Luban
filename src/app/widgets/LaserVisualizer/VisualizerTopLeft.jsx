@@ -14,7 +14,6 @@ class VisualizerTopLeft extends PureComponent {
         undo: PropTypes.func.isRequired,
         redo: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired
     };
 
@@ -36,9 +35,6 @@ class VisualizerTopLeft extends PureComponent {
             // Switch to PAGE_EDITOR page if new image being uploaded
             this.props.switchToPage(PAGE_EDITOR);
 
-            if (uploadMode === 'greyscale') {
-                this.props.setAutoPreview(false);
-            }
             this.props.uploadImage(file, uploadMode, () => {
                 modal({
                     title: i18n._('Parse Error'),
@@ -99,7 +95,6 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     undo: () => dispatch(editorActions.undo('laser')),
     redo: () => dispatch(editorActions.redo('laser')),
-    setAutoPreview: (value) => dispatch(editorActions.setAutoPreview('laser', value)),
     uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
     switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))
 });

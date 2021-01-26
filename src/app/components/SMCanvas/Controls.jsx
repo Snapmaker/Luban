@@ -96,6 +96,8 @@ class Controls extends EventEmitter {
     // Track if mouse moved during "mousedown" to "mouseup".
     mouseDownPosition = null;
 
+    clickEnabled = true;
+
     constructor(sourceType, camera, group, domElement, onScale, onPan, supportActions) {
         super();
 
@@ -349,18 +351,29 @@ class Controls extends EventEmitter {
         // document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
     };
 
+    disableClick() {
+        console.log('disableClick');
+        this.clickEnabled = false;
+
+        this.transformControl.detach();
+        this.emit(EVENTS.SELECT_OBJECTS, null, SELECTEVENT.UNSELECT);
+    }
+
+    enableClick() {
+        this.clickEnabled = true;
+    }
+
     /**
      * Trigger by mouse event "mousedown" + "mouseup", Check if a new object is selected.
      *
      * @param event
      */
     onClick = (event, isRightClick = false) => {
-        // todo, to fix workspace not rotate
-        if (!this.selectedGroup) {
-            return;
-        }
         if (this.state === STATE.SUPPORT) {
             this.supportActions.saveSupport();
+            return;
+        }
+        if (!this.clickEnabled) {
             return;
         }
         const mousePosition = this.getMouseCoord(event);
@@ -432,7 +445,7 @@ class Controls extends EventEmitter {
             } else {
                 // FIXME: temporary solution
                 if (intersect) {
-                    this.transformControl.attach(intersect.object);
+                    this.transformControl.attach(intersect.object, selectEvent);
                 } else {
                     this.transformControl.detach();
                 }
@@ -494,11 +507,11 @@ class Controls extends EventEmitter {
     setSelectableObjects(objects) {
         this.selectableObjects = objects;
     }
-
-    setShouldForbidSelect(shouldForbidSelect) {
-        this.shouldForbidSelect = shouldForbidSelect;
-        this.transformControl.updateFramePeripheralVisible(!shouldForbidSelect);
-    }
+    //
+    // setShouldForbidSelect(shouldForbidSelect) {
+    //     this.shouldForbidSelect = shouldForbidSelect;
+    //     // this.transformControl.updateFramePeripheralVisible(!shouldForbidSelect);
+    // }
 
     updateBoundingBox() {
         this.transformControl.updateBoundingBox();

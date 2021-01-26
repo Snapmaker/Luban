@@ -237,6 +237,7 @@ class SerialPortClient {
     }
 
     commitToolPathTask(task) {
+        console.log('socketController commit', task);
         socketController.emit('taskCommit:generateToolPath', task);
     }
 

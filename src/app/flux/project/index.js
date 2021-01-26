@@ -123,7 +123,7 @@ export const actions = {
         // await dispatch(modActions.init(envHeadType));
         modState.modelGroup.removeAllModels();
 
-        modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
+        // modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         const { models, materials, ...restState } = envObj;
 
@@ -270,7 +270,7 @@ export const actions = {
             await dispatch(printingActions.initSize());
         }
 
-        modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
+        // modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
