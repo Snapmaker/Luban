@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { controller } from '../lib/controller';
 import { DATA_PREFIX } from '../constants';
 import { generateToolPathObject3D } from '../flux/generator';
-import { FAILED, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
+import { FAILED, getToolPathType, IDLE, RUNNING, SUCCESS, WARNING } from './utils';
 
 class ToolPath {
     id;
@@ -55,7 +55,8 @@ class ToolPath {
         this.gcodeConfig = { ...gcodeConfig };
         this.toolParams = { ...toolParams };
         this.modelGroup = modelGroup;
-        this.lastConfigJson = JSON.stringify({ gcodeConfig: this.gcodeConfig, toolParams: this.toolParams });
+
+        this.checkoutToolPathStatus();
     }
 
     getState() {
@@ -98,18 +99,15 @@ class ToolPath {
             ...toolParams
         };
 
-        const configJson = JSON.stringify({ gcodeConfig: this.gcodeConfig, toolParams: this.toolParams });
-        if (this.lastConfigJson !== configJson) {
-            this.status = WARNING;
-            this.lastConfigJson = configJson;
-        }
+        this.checkoutToolPathStatus();
     }
 
     _getToolPathFiles() {
         return this.modelIDs.map(v => this.modelMap.get(v).toolPathFile);
     }
 
-    _getSelectModels() {
+    _getModels() {
+        console.log('this.modelGroup', this.modelGroup);
         const models = this.modelGroup.getModels();
         return models.filter(model => _.includes(this.modelIDs, model.modelID));
     }
@@ -118,10 +116,19 @@ class ToolPath {
      * Commit generate tool path task to server
      */
     commitGenerateToolPath(options) {
-        const taskInfos = this.getSelectModelsAndToolPathInfo(options);
+        if (this.status === FAILED) {
+            this.clearModelObjects();
+            return;
+        }
+
+        const { materials } = options;
+
+        const taskInfos = this.getSelectModelsAndToolPathInfo();
 
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
+
+            taskInfo.materials = materials;
 
             const task = {
                 taskId: this.id,
@@ -129,6 +136,7 @@ class ToolPath {
                 headType: this.headType,
                 data: taskInfo
             };
+
             controller.commitToolPathTask(task);
 
             this.modelMap.get(taskInfo.modelID).status = RUNNING;
@@ -136,18 +144,36 @@ class ToolPath {
         this.checkoutStatus();
     }
 
-    getSelectModelsAndToolPathInfo(options) {
-        const { materials } = options;
+    _getModelTaskInfos() {
+        const selectModels = this._getModels();
+        const modelInfos = selectModels
+            .map(v => v.getTaskInfo())
+            .map(v => {
+                return {
+                    modelID: v.modelID,
+                    headType: v.headType,
+                    sourceType: v.sourceType,
+                    mode: v.mode,
+                    sourceHeight: v.sourceHeight,
+                    sourceWidth: v.sourceWidth,
+                    originalName: v.originalName,
+                    uploadName: v.uploadName,
+                    processImageName: v.processImageName,
+                    transformation: v.transformation,
+                    config: v.config
+                };
+            });
+        return modelInfos;
+    }
 
-        const selectModels = this._getSelectModels();
-        const modelInfos = selectModels.map(v => v.getTaskInfo());
+    getSelectModelsAndToolPathInfo() {
+        const modelInfos = this._getModelTaskInfos();
 
         for (let i = 0; i < modelInfos.length; i++) {
             modelInfos[i] = {
                 ...modelInfos[i],
                 gcodeConfig: this.gcodeConfig,
-                toolParams: this.toolParams,
-                materials
+                toolParams: this.toolParams
             };
         }
 
@@ -203,6 +229,29 @@ class ToolPath {
         }
     }
 
+    checkoutToolPathStatus() {
+        const taskInfos = this.getSelectModelsAndToolPathInfo();
+
+        if (!taskInfos || taskInfos.length === 0) {
+            console.error('The models of tool path is empty');
+            this.status = FAILED;
+        }
+
+        const types = getToolPathType(taskInfos);
+        if (types.length !== 1 || types[0] !== this.type) {
+            console.error('Inconsistent models types for tool path');
+            this.status = FAILED;
+            return;
+        }
+
+        const lastConfigJson = JSON.stringify(taskInfos);
+
+        if (this.lastConfigJson !== lastConfigJson) {
+            this.status = WARNING;
+            this.lastConfigJson = lastConfigJson;
+        }
+    }
+
     loadToolPathFile(filename) {
         const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
         return new Promise((resolve) => {
@@ -221,6 +270,13 @@ class ToolPath {
         for (const value of this.modelMap.values()) {
             value.meshObj && this.object.remove(value.meshObj);
             value.status = WARNING;
+        }
+    }
+
+    clearModelObjects() {
+        for (const value of this.modelMap.values()) {
+            this.object.remove(value.meshObj);
+            value.meshObj = null;
         }
     }
 }

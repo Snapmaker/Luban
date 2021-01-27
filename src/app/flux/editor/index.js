@@ -1166,11 +1166,9 @@ export const actions = {
      **************************************************************************/
 
     __synchronizeElements: (headType) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, toolPathGroup } = getState()[headType];
 
         const selectedElements = SVGActions.getSelectedElements();
-
-        console.log('synchronize elements', selectedElements);
 
         // Convert position from SVG coordinate to logical coordinate
         // TODO: Convert in SVGActions, and update here
@@ -1198,6 +1196,8 @@ export const actions = {
 
             model.updateTransformation(transformation);
         }
+
+        toolPathGroup.checkoutToolPathStatus();
     },
 
     /**

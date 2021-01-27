@@ -145,6 +145,7 @@ class ToolPathGroup {
             headType: this.headType,
             type,
             modelIDs: this.selectedModelIDs,
+            modelGroup: this.modelGroup,
             gcodeConfig
         }).getState();
         // this.toolPaths.push(toolPathModel);
@@ -316,12 +317,16 @@ class ToolPathGroup {
     }
 
     getCommitGenerateViewPathInfos(options) {
+        const { materials } = options;
+
         const infos = [];
         const modelIds = [];
         for (const toolPath of this.toolPaths) {
-            const taskInfos = toolPath.getSelectModelsAndToolPathInfo(options);
+            const taskInfos = toolPath.getSelectModelsAndToolPathInfo();
 
             for (const taskInfo of taskInfos) {
+                taskInfo.materials = materials;
+
                 if (!modelIds.includes(taskInfo.modelID)) {
                     infos.push(taskInfo);
                     modelIds.push(taskInfo.modelID);
@@ -355,6 +360,12 @@ class ToolPathGroup {
                 }
             );
         });
+    }
+
+    checkoutToolPathStatus() {
+        for (const toolPath of this.toolPaths) {
+            toolPath.checkoutToolPathStatus();
+        }
     }
 }
 

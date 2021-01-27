@@ -352,7 +352,6 @@ class Controls extends EventEmitter {
     };
 
     disableClick() {
-        console.log('disableClick');
         this.clickEnabled = false;
 
         this.transformControl.detach();
