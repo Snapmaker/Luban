@@ -780,6 +780,43 @@ class SVGActionsFactory {
         this.setSelectedElementsTransformation(t);
     }
 
+    /**
+     * move selected elements by arrow key on key down
+     */
+    moveElementsOnArrowKeyDown(elements, { dx, dy }) {
+        // Key move start
+        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
+            if (elements === null) {
+                this.moveElementsStart(this.getSelectedElements());
+            } else {
+                this.moveElementsStart(elements);
+            }
+        }
+
+        // replace key move
+        this.onKeyMovingValue.x += dx;
+        this.onKeyMovingValue.y += dy;
+        if (elements === null) {
+            this.moveElements(this.getSelectedElements(), {
+                dx: this.onKeyMovingValue.x,
+                dy: this.onKeyMovingValue.y
+            });
+        } else {
+            this.moveElements(elements, { dx, dy });
+        }
+    }
+
+    /**
+     * move selected elements by arrow key on key up
+     */
+    moveElementsOnArrowKeyUp() {
+        const elements = this.getSelectedElements();
+        this.moveElementsFinish(elements);
+
+        this.onKeyMovingValue.x = 0;
+        this.onKeyMovingValue.y = 0;
+    }
+
     moveElementsImmediately(elements, { newX, newY }) {
         for (const element of elements) {
             const { x, y, width, height } = element.getBBox();
@@ -820,6 +857,7 @@ class SVGActionsFactory {
      * @param elements - List of SVGElement
      */
     resizeElementsStart(elements) {
+        // TODO
         console.log('resize elements start', elements);
 
         // Do nothing
@@ -981,10 +1019,6 @@ class SVGActionsFactory {
      * Rotate elements finish.
      */
     rotateElementsFinish(elements) {
-        // TODO:
-        console.log('rotate elements finish', elements);
-        // this.updateSelectedModelsByTransformation({ deltaAngle: angle });
-
         for (const element of elements) {
             SvgModel.completeElementTransform(element);
         }
@@ -1153,42 +1187,6 @@ class SVGActionsFactory {
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
         this.resetSelection();
-    }
-
-    /**
-     * move selected elements by arrow key on key down
-     */
-    onMovingByArrowKeyDown({ dx, dy }) {
-        const transform = svg.createSVGTransform();
-
-        // Key move start
-        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
-            transform.setTranslate(0, 0);
-            this.svgContentGroup.moveSelectorStart();
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
-        }
-
-        // replace key move
-        this.onKeyMovingValue.x += dx;
-        this.onKeyMovingValue.y += dy;
-        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
-
-        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-        this.svgContentGroup.moveSelector({
-            dx: this.onKeyMovingValue.x,
-            dy: this.onKeyMovingValue.y
-        });
-    }
-
-    /**
-     * move selected elements by arrow key on key up
-     */
-    onMovingByArrowKeyUp() {
-        const dx = this.onKeyMovingValue.x, dy = this.onKeyMovingValue.y;
-        this.updateSelectedModelsByTransformation({ dx, dy });
-        this.onKeyMovingValue.x = 0;
-        this.onKeyMovingValue.y = 0;
     }
 }
 

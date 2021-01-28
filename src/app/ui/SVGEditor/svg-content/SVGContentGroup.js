@@ -167,14 +167,12 @@ class SVGContentGroup {
      */
     // after element transform
     resetSelection(size, transformation) {
-        console.log('resetSelection(), tl.length =', this.operatorPoints.transform.baseVal.length);
         // Resize grip of each selected element, and get their whole position and size
         const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
 
         // Update operator points
         this.setSelectorTransformList(size, transformation);
 
-        console.log('resetSelection(), tl.length =', this.operatorPoints.transform.baseVal.length);
         return posAndSize;
     }
 
@@ -414,6 +412,8 @@ class SVGContentGroup {
     }
 
     moveSelector(elements, { dx, dy }) { // change the new transform
+        // TODO
+        console.log('move selector', elements);
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
 
         const transform = this.svgContent.createSVGTransform();

@@ -1073,12 +1073,12 @@ export const actions = {
     /**
      * Move elements on key down
      */
-    moveElementsOnKeyDown: (headType, { dx, dy }) => (dispatch, getState) => {
+    moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
         const { page, SVGActions } = getState()[headType];
         if (page === PAGE_PROCESS) {
             return;
         }
-        SVGActions.onMovingByArrowKeyDown({ dx, dy });
+        SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
     },
 
     /**
@@ -1086,7 +1086,7 @@ export const actions = {
      */
     moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
-        SVGActions.onMovingByArrowKeyUp();
+        SVGActions.moveElementsOnArrowKeyUp();
         dispatch(actions.resetProcessState(headType));
     },
 
