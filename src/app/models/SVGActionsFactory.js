@@ -784,26 +784,26 @@ class SVGActionsFactory {
      * move selected elements by arrow key on key down
      */
     moveElementsOnArrowKeyDown(elements, { dx, dy }) {
-        const transform = svg.createSVGTransform();
-
         // Key move start
         if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
-            transform.setTranslate(0, 0);
-            this.svgContentGroup.moveSelectorStart();
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
+            if (elements === null) {
+                this.moveElementsStart(this.getSelectedElements());
+            } else {
+                this.moveElementsStart(elements);
+            }
         }
 
         // replace key move
         this.onKeyMovingValue.x += dx;
         this.onKeyMovingValue.y += dy;
-        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
-
-        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-        this.svgContentGroup.moveSelector(elements, {
-            dx: this.onKeyMovingValue.x,
-            dy: this.onKeyMovingValue.y
-        });
+        if (elements === null) {
+            this.moveElements(this.getSelectedElements(), {
+                dx: this.onKeyMovingValue.x,
+                dy: this.onKeyMovingValue.y
+            });
+        } else {
+            this.moveElements(elements, { dx, dy });
+        }
     }
 
     /**
@@ -811,15 +811,7 @@ class SVGActionsFactory {
      */
     moveElementsOnArrowKeyUp() {
         const elements = this.getSelectedElements();
-        for (const element of elements) {
-            SvgModel.completeElementTransform(element);
-        }
-
-        // update selector
-        this.svgContentGroup.moveSelectorFinish(elements);
-        // update t
-        const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this.moveElementsFinish(elements);
 
         this.onKeyMovingValue.x = 0;
         this.onKeyMovingValue.y = 0;
