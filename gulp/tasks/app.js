@@ -28,7 +28,7 @@ export function appCopyProduction() {
     ];
 
     return gulp.src(files, { base: 'src/app' })
-        .pipe(gulp.dest('dist/Snapmakerjs/app'));
+        .pipe(gulp.dest('dist/Luban/app'));
 }
 
 

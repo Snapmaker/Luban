@@ -4,7 +4,7 @@
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
-  "main": "./dist/Snapmakerjs/server-cli.js",
+  "main": "./dist/Luban/server-cli.js",
   "bin": {
     "luban": "bin/cli"
   },
@@ -41,7 +41,7 @@
     "build:win-ia32": "bash -c 'build/electron-builder.sh --win --ia32'",
     "build:win-x64": "bash -c 'build/electron-builder.sh --win --x64'",
     "clean": "bash -c 'rm -rf ./dist ./output'",
-    "start-electron": "electron ./dist/Snapmakerjs/main",
+    "start-electron": "electron ./dist/Luban/main",
     "start-dev": "gulp serverStartDevelopment",
     "start-prod": "cross-env NODE_ENV=production ./bin/cli",
     "dev": "npm run build-dev && npm run start-dev",
@@ -61,7 +61,7 @@
     "directories": {
       "buildResources": "build",
       "output": "output",
-      "app": "dist/Snapmakerjs"
+      "app": "dist/Luban"
     },
     "publish": [
       {
