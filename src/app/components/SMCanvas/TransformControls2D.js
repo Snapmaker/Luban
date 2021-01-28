@@ -1,20 +1,16 @@
 import {
-    DoubleSide,
     Vector3, Quaternion,
-    Object3D, Raycaster,
-    Geometry, PlaneGeometry,
-    LineDashedMaterial, MeshBasicMaterial,
-    Line, Mesh
+    Object3D, Raycaster
 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 import { isZero } from '../../../shared/lib/utils';
+import Peripheral from './Peripheral';
+import { SELECTEVENT } from '../../constants';
 
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
-
-const BLUE = 0x00b7ee;
 
 /**
  * TransformControls2D
@@ -33,7 +29,9 @@ const BLUE = 0x00b7ee;
 class TransformControls2D extends Object3D {
     camera = null;
 
-    object = null;
+    objects = [];
+
+    peripherals = [];
 
     mode = null;
 
@@ -69,44 +67,44 @@ class TransformControls2D extends Object3D {
         this.camera = camera;
         this.visible = false;
 
-        this.initFramePeripherals();
-        this.initTranslatePeripherals();
+        // this.initFramePeripherals();
+        // this.initTranslatePeripherals();
         // this.initRotatePeripherals();
         // this.initScalePeripherals();
     }
 
-    createPeripheral(definitions) {
-        const peripheral = new Object3D();
-
-        for (const definition of definitions) {
-            const [label, object, position, rotation, scale] = definition;
-            object.label = label;
-
-            if (position) {
-                object.position.set(position[0], position[1], position[2]);
-            }
-
-            if (rotation) {
-                object.rotation.set(rotation[0], rotation[1], rotation[2]);
-            }
-
-            if (scale) {
-                object.scale.set(scale[0], scale[1], scale[2]);
-            }
-
-            // place the geometry natural at origin
-            object.updateMatrix();
-            object.geometry.applyMatrix(object.matrix);
-
-            object.position.set(0, 0, 0);
-            object.rotation.set(0, 0, 0);
-            object.scale.set(1, 1, 1);
-
-            peripheral.add(object);
-        }
-
-        return peripheral;
-    }
+    // createPeripheral(definitions) {
+    //     const peripheral = new Object3D();
+    //
+    //     for (const definition of definitions) {
+    //         const [label, object, position, rotation, scale] = definition;
+    //         object.label = label;
+    //
+    //         if (position) {
+    //             object.position.set(position[0], position[1], position[2]);
+    //         }
+    //
+    //         if (rotation) {
+    //             object.rotation.set(rotation[0], rotation[1], rotation[2]);
+    //         }
+    //
+    //         if (scale) {
+    //             object.scale.set(scale[0], scale[1], scale[2]);
+    //         }
+    //
+    //         // place the geometry natural at origin
+    //         object.updateMatrix();
+    //         object.geometry.applyMatrix(object.matrix);
+    //
+    //         object.position.set(0, 0, 0);
+    //         object.rotation.set(0, 0, 0);
+    //         object.scale.set(1, 1, 1);
+    //
+    //         peripheral.add(object);
+    //     }
+    //
+    //     return peripheral;
+    // }
 
     initDefaults() {
         this.defaults = {};
@@ -116,98 +114,98 @@ class TransformControls2D extends Object3D {
         this.defaults = null;
     }
 
-    initFramePeripherals() {
-        // dashed line frame
-        const geometry = new Geometry();
-        // FIXME: preset vertices, or dynamic update will not work. (three.js bug?)
-        const points = [];
-        points.push(new Vector3(0, 0, 0));
-        points.push(new Vector3(0, 0, 0));
-        points.push(new Vector3(0, 0, 0));
-        points.push(new Vector3(0, 0, 0));
-        points.push(new Vector3(0, 0, 0));
+    // initFramePeripherals() {
+    //     // dashed line frame
+    //     const geometry = new Geometry();
+    //     // FIXME: preset vertices, or dynamic update will not work. (three.js bug?)
+    //     const points = [];
+    //     points.push(new Vector3(0, 0, 0));
+    //     points.push(new Vector3(0, 0, 0));
+    //     points.push(new Vector3(0, 0, 0));
+    //     points.push(new Vector3(0, 0, 0));
+    //     points.push(new Vector3(0, 0, 0));
+    //
+    //     geometry.vertices = points;
+    //
+    //     const material = new LineDashedMaterial({
+    //         color: BLUE,
+    //         dashSize: 2,
+    //         gapSize: 1
+    //     });
+    //     const frame = new Line(geometry, material);
+    //     // frame.computeLineDistances(); // ?
+    //
+    //     this.framePeripheral = this.createPeripheral([
+    //         ['frame', frame]
+    //     ]);
+    //     this.add(this.framePeripheral);
+    // }
 
-        geometry.vertices = points;
+    // initTranslatePeripherals() {
+    //     // translate
+    //     const plane = new Mesh(
+    //         new PlaneGeometry(1, 1),
+    //         new MeshBasicMaterial({
+    //             wireframe: false,
+    //             visible: false,
+    //             side: DoubleSide,
+    //             transparent: true,
+    //             opacity: 0.5
+    //         })
+    //     );
+    //
+    //     this.translatePeripheral = this.createPeripheral([
+    //         ['translate', plane]
+    //     ]);
+    //     this.add(this.translatePeripheral);
+    //
+    //     this.pickers.push(this.translatePeripheral);
+    // }
 
-        const material = new LineDashedMaterial({
-            color: BLUE,
-            dashSize: 2,
-            gapSize: 1
-        });
-        const frame = new Line(geometry, material);
-        // frame.computeLineDistances(); // ?
-
-        this.framePeripheral = this.createPeripheral([
-            ['frame', frame]
-        ]);
-        this.add(this.framePeripheral);
-    }
-
-    initTranslatePeripherals() {
-        // translate
-        const plane = new Mesh(
-            new PlaneGeometry(1, 1),
-            new MeshBasicMaterial({
-                wireframe: false,
-                visible: false,
-                side: DoubleSide,
-                transparent: true,
-                opacity: 0.5
-            })
-        );
-
-        this.translatePeripheral = this.createPeripheral([
-            ['translate', plane]
-        ]);
-        this.add(this.translatePeripheral);
-
-        this.pickers.push(this.translatePeripheral);
-    }
-
-    updateMatrixWorld(force) {
-        if (this.object) {
-            // object
-            const objectPosition = new Vector3();
-            const objectQuaternion = new Quaternion();
-            const objectScale = new Vector3();
-
-            this.object.updateMatrixWorld();
-            this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
-
-            const size = ThreeUtils.getGeometrySize(this.object.geometry, true);
-            const width = size.x * objectScale.x;
-            const height = size.y * objectScale.y;
-
-            // const eyeDistance = this.camera.position.z;
-
-            // Update peripherals
-            const peripherals = [this.framePeripheral, this.translatePeripheral];
-            for (const peripheral of peripherals) {
-                peripheral.position.copy(objectPosition);
-                peripheral.position.z = 0.1;
-                peripheral.quaternion.copy(objectQuaternion);
-            }
-
-            { // this.framePeripheral
-                const offset = 0;
-                const line = this.framePeripheral.children[0];
-                const geometry = line.geometry; // new THREE.Geometry();
-                geometry.vertices = [];
-                geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
-                geometry.vertices.push(new Vector3(-width / 2 - offset, height / 2 + offset, 0));
-                geometry.vertices.push(new Vector3(-width / 2 - offset, -height / 2 - offset, 0));
-                geometry.vertices.push(new Vector3(width / 2 + offset, -height / 2 - offset, 0));
-                geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
-                geometry.verticesNeedUpdate = true;
-                line.computeLineDistances();
-            }
-
-            // translate
-            this.translatePeripheral.scale.set(width, height, 1);
-        }
-
-        super.updateMatrixWorld(force);
-    }
+    // updateMatrixWorld(force) {
+    //     if (this.object) {
+    //         // object
+    //         const objectPosition = new Vector3();
+    //         const objectQuaternion = new Quaternion();
+    //         const objectScale = new Vector3();
+    //
+    //         this.object.updateMatrixWorld();
+    //         this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
+    //
+    //         const size = ThreeUtils.getGeometrySize(this.object.geometry, true);
+    //         const width = size.x * objectScale.x;
+    //         const height = size.y * objectScale.y;
+    //
+    //         // const eyeDistance = this.camera.position.z;
+    //
+    //         // Update peripherals
+    //         const peripherals = [this.framePeripheral, this.translatePeripheral];
+    //         for (const peripheral of peripherals) {
+    //             peripheral.position.copy(objectPosition);
+    //             peripheral.position.z = 0.1;
+    //             peripheral.quaternion.copy(objectQuaternion);
+    //         }
+    //
+    //         { // this.framePeripheral
+    //             const offset = 0;
+    //             const line = this.framePeripheral.children[0];
+    //             const geometry = line.geometry; // new THREE.Geometry();
+    //             geometry.vertices = [];
+    //             geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
+    //             geometry.vertices.push(new Vector3(-width / 2 - offset, height / 2 + offset, 0));
+    //             geometry.vertices.push(new Vector3(-width / 2 - offset, -height / 2 - offset, 0));
+    //             geometry.vertices.push(new Vector3(width / 2 + offset, -height / 2 - offset, 0));
+    //             geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
+    //             geometry.verticesNeedUpdate = true;
+    //             line.computeLineDistances();
+    //         }
+    //
+    //         // translate
+    //         this.translatePeripheral.scale.set(width, height, 1);
+    //     }
+    //
+    //     super.updateMatrixWorld(force);
+    // }
 
     updateMouseCursor() {
         /*
@@ -222,14 +220,34 @@ class TransformControls2D extends Object3D {
         */
     }
 
-    attach(object) {
-        this.object = object;
+    attach(object, selectEvent) {
+        if (!selectEvent) {
+            return;
+        }
+        if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
+            for (const peripheral of this.peripherals) {
+                this.remove(peripheral);
+            }
+            this.objects = [];
+            this.peripherals = [];
+        }
+
+        this.objects.push(object);
+        const peripheral = new Peripheral(object);
+        this.peripherals.push(peripheral);
+        this.add(peripheral);
         this.visible = true;
+
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
     detach() {
-        this.object = null;
+        for (const peripheral of this.peripherals) {
+            this.remove(peripheral);
+        }
+        this.objects = [];
+        this.peripherals = [];
+
         this.visible = false;
         if (this.mode) {
             this.mode = null;
@@ -238,10 +256,10 @@ class TransformControls2D extends Object3D {
         this.dispatchEvent(EVENTS.UPDATE);
     }
 
-    updateFramePeripheralVisible(visible) {
-        this.framePeripheral.visible = visible;
-        this.dispatchEvent(EVENTS.UPDATE);
-    }
+    // updateFramePeripheralVisible(visible) {
+    //     this.framePeripheral.visible = visible;
+    //     this.dispatchEvent(EVENTS.UPDATE);
+    // }
 
 
     onMouseHover(coord) {

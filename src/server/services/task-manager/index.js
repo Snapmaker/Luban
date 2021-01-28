@@ -20,7 +20,7 @@ const stop = () => {
 };
 
 const addGenerateToolPathTask = (socket, task) => {
-    instance.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_GENERATE_TOOLPATH, task.headType));
+    instance.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_GENERATE_TOOLPATH, task.headType, task.modelId));
 };
 
 const addGenerateGcodeTask = (socket, task) => {

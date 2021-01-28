@@ -6,17 +6,6 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 
-export const checkIsAllModelsPreviewed = (modelGroup, toolPathModelGroup) => {
-    if (modelGroup.getModels().length === 0) {
-        return false;
-    }
-
-    if (toolPathModelGroup.allNotHidedToolPathModelsArePreviewed()) {
-        return true;
-    }
-    return false;
-};
-
 /**
  * 1 pt = 1/72 inch
  * 1 inch = 25.4mm
@@ -48,9 +37,16 @@ export const computeTransformationSizeForTextVector = (text, fontSize, lineHeigh
     };
 };
 
+const checkHeadType = (headType) => {
+    if (!['laser', 'cnc'].includes(headType)) {
+        console.error('headType is error', headType);
+    }
+};
+
 
 export const baseActions = {
     updateState: (headType, state) => {
+        checkHeadType(headType);
         return {
             type: ACTION_UPDATE_STATE,
             headType,
@@ -59,6 +55,7 @@ export const baseActions = {
     },
 
     updateTransformation: (headType, transformation) => {
+        checkHeadType(headType);
         return {
             type: ACTION_UPDATE_TRANSFORMATION,
             headType,
@@ -67,6 +64,7 @@ export const baseActions = {
     },
 
     updateGcodeConfig: (headType, gcodeConfig) => {
+        checkHeadType(headType);
         return {
             type: ACTION_UPDATE_GCODE_CONFIG,
             headType,
@@ -75,6 +73,7 @@ export const baseActions = {
     },
 
     updateConfig: (headType, config) => {
+        checkHeadType(headType);
         return {
             type: ACTION_UPDATE_CONFIG,
             headType,
@@ -84,6 +83,7 @@ export const baseActions = {
 
     // Model configurations
     resetCalculatedState: (headType) => {
+        checkHeadType(headType);
         return {
             type: ACTION_RESET_CALCULATED_STATE,
             headType
@@ -91,6 +91,7 @@ export const baseActions = {
     },
 
     render: (headType) => (dispatch) => {
+        checkHeadType(headType);
         dispatch(baseActions.updateState(headType, {
             renderingTimestamp: +new Date()
         }));

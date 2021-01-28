@@ -56,7 +56,7 @@ class WidgetState {
 }
 
 // Create widget with default layout (minimize + fullscreen)
-function createDefaultWidget(WrappedWidget) {
+function createDefaultWidget(WrappedWidget, WrappedFooter) {
     const mapStateToProps = (state, ownProps) => {
         const { widgets } = state.widget;
         const { widgetId } = ownProps;
@@ -187,6 +187,13 @@ function createDefaultWidget(WrappedWidget) {
                             setControlButtons={actions.setControlButtons}
                         />
                     </Widget.Content>
+                    {WrappedFooter && (
+                        <Widget.Footer>
+                            <WrappedFooter
+                                headType={headType}
+                            />
+                        </Widget.Footer>
+                    )}
                 </Widget>
             );
         }

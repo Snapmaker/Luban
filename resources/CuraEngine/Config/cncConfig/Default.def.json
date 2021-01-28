@@ -47,7 +47,7 @@
                     "unit": "mm/min",
                     "label": "Plunge Speed"
                 },
-                "stepdown": {
+                "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
@@ -107,7 +107,7 @@
                     "unit": "mm/min",
                     "label": "Plunge Speed"
                 },
-                "stepdown": {
+                "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
@@ -167,7 +167,7 @@
                     "unit": "mm/min",
                     "label": "Plunge Speed"
                 },
-                "stepdown": {
+                "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
@@ -227,7 +227,7 @@
                     "unit": "mm/min",
                     "label": "Plunge Speed"
                 },
-                "stepdown": {
+                "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",

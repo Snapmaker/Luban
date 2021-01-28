@@ -74,12 +74,12 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
     }
 };
 
-export const generateGcode = (modelInfos, onProgress) => {
-    if (!modelInfos && !_.isArray(modelInfos) && modelInfos.length === 0) {
+export const generateGcode = (toolPaths, onProgress) => {
+    if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
-    const { headType } = modelInfos[0];
+    const { headType } = toolPaths[0];
     if (!_.includes(['laser', 'cnc'], headType)) {
         return Promise.reject(new Error(`Unsupported type: ${headType}`));
     }
@@ -91,8 +91,8 @@ export const generateGcode = (modelInfos, onProgress) => {
 
     let boundingBox = null;
 
-    const { uploadName } = modelInfos[0];
-    const outputFilename = pathWithRandomSuffix(path.parse(uploadName).name + suffix);
+    const { baseName } = toolPaths[0];
+    const outputFilename = pathWithRandomSuffix(path.parse(baseName).name + suffix);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     const outputFilePathTmp = `${outputFilePath}.tmp`;
 
@@ -101,60 +101,64 @@ export const generateGcode = (modelInfos, onProgress) => {
     let isRotate;
     let diameter;
 
-    for (let i = 0; i < modelInfos.length; i++) {
-        const modelInfo = modelInfos[i];
-        const { toolPathFilename, gcodeConfig, mode } = modelInfo;
-        const toolPathFilePath = `${DataStorage.tmpDir}/${toolPathFilename}`;
-        const data = fs.readFileSync(toolPathFilePath, 'utf8');
-        const toolPathObj = JSON.parse(data);
+    for (let i = 0; i < toolPaths.length; i++) {
+        const toolPath = toolPaths[i];
+        const { toolPathFiles, gcodeConfig } = toolPath;
 
-        const gcodeGenerator = new GcodeGenerator();
-        let gcodeLines;
-        if (headType === 'laser') {
-            gcodeLines = gcodeGenerator.parseAsLaser(toolPathObj, gcodeConfig);
-        } else {
-            gcodeLines = gcodeGenerator.parseAsCNC(toolPathObj, gcodeConfig);
+        for (let j = 0; j < toolPathFiles.length; j++) {
+            const toolPathFilePath = `${DataStorage.tmpDir}/${toolPathFiles[j]}`;
+            const data = fs.readFileSync(toolPathFilePath, 'utf8');
+            const toolPathObj = JSON.parse(data);
+
+            const gcodeGenerator = new GcodeGenerator();
+            let gcodeLines;
+            if (headType === 'laser') {
+                gcodeLines = gcodeGenerator.parseAsLaser(toolPathObj, gcodeConfig);
+            } else {
+                gcodeLines = gcodeGenerator.parseAsCNC(toolPathObj, gcodeConfig);
+            }
+
+            const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
+
+            if (i > 0 || j > 0) {
+                const header = '\n'
+                    + ';Header Start\n'
+                    + `;renderMethod: ${renderMethod}\n`
+                    + ';Header End'
+                    + '\n';
+                writeStream.write(header);
+                fileTotalLines += header.split('\n').length;
+            }
+
+            fileTotalLines += gcodeLines.length;
+
+            writeStream.write(gcodeLines.join('\n'));
+
+            estimatedTime += toolPathObj.estimatedTime;
+            if (gcodeConfig.multiPassEnabled) {
+                estimatedTime *= gcodeConfig.multiPasses;
+            }
+
+            isRotate = toolPathObj.isRotate;
+            diameter = toolPathObj.diameter;
+
+            if (boundingBox === null) {
+                boundingBox = toolPathObj.boundingBox;
+            } else {
+                boundingBox.max.x = Math.max(boundingBox.max.x, toolPathObj.boundingBox.max.x);
+                boundingBox.max.y = Math.max(boundingBox.max.y, toolPathObj.boundingBox.max.y);
+                boundingBox.min.x = Math.min(boundingBox.min.x, toolPathObj.boundingBox.min.x);
+                boundingBox.min.y = Math.min(boundingBox.min.y, toolPathObj.boundingBox.min.y);
+            }
+
+            checkoutBoundingBoxIsNull(boundingBox);
         }
 
-        const renderMethod = mode === 'greyscale' && gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
-
-        if (i > 0) {
-            const header = '\n'
-                + ';Header Start\n'
-                + `;renderMethod: ${renderMethod}\n`
-                + ';Header End'
-                + '\n';
-            writeStream.write(header);
-            fileTotalLines += header.split('\n').length;
-        }
-        fileTotalLines += gcodeLines.length;
-
-        writeStream.write(gcodeLines.join('\n'));
-
-        estimatedTime += toolPathObj.estimatedTime;
-        if (gcodeConfig.multiPassEnabled) {
-            estimatedTime *= gcodeConfig.multiPasses;
-        }
-
-        isRotate = toolPathObj.isRotate;
-        diameter = toolPathObj.diameter;
-
-        if (boundingBox === null) {
-            boundingBox = toolPathObj.boundingBox;
-        } else {
-            boundingBox.max.x = Math.max(boundingBox.max.x, toolPathObj.boundingBox.max.x);
-            boundingBox.max.y = Math.max(boundingBox.max.y, toolPathObj.boundingBox.max.y);
-            boundingBox.min.x = Math.min(boundingBox.min.x, toolPathObj.boundingBox.min.x);
-            boundingBox.min.y = Math.min(boundingBox.min.y, toolPathObj.boundingBox.min.y);
-        }
-
-        checkoutBoundingBoxIsNull(boundingBox);
-
-        onProgress((i + 1) / modelInfos.length);
+        onProgress((i + 1) / toolPathFiles.length);
     }
 
-    const { gcodeConfig, thumbnail, mode } = modelInfos[0];
-    const renderMethod = mode === 'greyscale' && gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
+    const { gcodeConfig, thumbnail } = toolPaths[0];
+    const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
 
     const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 
@@ -182,7 +186,6 @@ export const generateGcode = (modelInfos, onProgress) => {
     fileTotalLines += headerStart.split('\n').length - 1;
 
     headerStart = headerStart.replace(/fileTotalLines/g, fileTotalLines);
-
 
     writeStream.end();
 
