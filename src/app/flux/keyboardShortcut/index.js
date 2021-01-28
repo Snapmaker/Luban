@@ -106,7 +106,8 @@ export const actions = {
                         default:
                             break;
                     }
-                    dispatch(editorActions.moveElementsOnKeyDown(from, { dx, dy }));
+                    // elements === null means move selected elements
+                    dispatch(editorActions.moveElementsOnKeyDown(from, null, { dx, dy }));
                 }
                 if (from === '3dp') {
                     const { layerCountDisplayed } = getState().printing;

@@ -761,7 +761,7 @@ class SVGActionsFactory {
         // TODO: refactor this
         // const transform = svg.createSVGTransform();
         // transform.setTranslate(dx, dy);
-        this.svgContentGroup.moveSelector({ dx, dy });
+        this.svgContentGroup.moveSelector(elements, { dx, dy });
     }
 
     /**
@@ -778,6 +778,51 @@ class SVGActionsFactory {
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
         this.setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * move selected elements by arrow key on key down
+     */
+    moveElementsOnArrowKeyDown(elements, { dx, dy }) {
+        const transform = svg.createSVGTransform();
+
+        // Key move start
+        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
+            transform.setTranslate(0, 0);
+            this.svgContentGroup.moveSelectorStart();
+            this.svgContentGroup.translateSelectedElementsOnMouseDown();
+        }
+
+        // replace key move
+        this.onKeyMovingValue.x += dx;
+        this.onKeyMovingValue.y += dy;
+        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
+
+        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
+
+        this.svgContentGroup.moveSelector(elements, {
+            dx: this.onKeyMovingValue.x,
+            dy: this.onKeyMovingValue.y
+        });
+    }
+
+    /**
+     * move selected elements by arrow key on key up
+     */
+    moveElementsOnArrowKeyUp() {
+        const elements = this.getSelectedElements();
+        for (const element of elements) {
+            SvgModel.completeElementTransform(element);
+        }
+
+        // update selector
+        this.svgContentGroup.moveSelectorFinish(elements);
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this.setSelectedElementsTransformation(t);
+
+        this.onKeyMovingValue.x = 0;
+        this.onKeyMovingValue.y = 0;
     }
 
     moveElementsImmediately(elements, { newX, newY }) {
@@ -819,7 +864,10 @@ class SVGActionsFactory {
      *
      * @param elements - List of SVGElement
      */
-    resizeElementsStart() {
+    resizeElementsStart(elements) {
+        // TODO
+        console.log('resize elements start', elements);
+
         // Do nothing
         this.svgContentGroup.resizeSelectorStart();
     }
@@ -1147,51 +1195,6 @@ class SVGActionsFactory {
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
         this.resetSelection();
-    }
-
-    /**
-     * move selected elements by arrow key on key down
-     */
-    onMovingByArrowKeyDown({ dx, dy }) {
-        const transform = svg.createSVGTransform();
-
-        // Key move start
-        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
-            transform.setTranslate(0, 0);
-            this.svgContentGroup.moveSelectorStart();
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
-        }
-
-        // replace key move
-        this.onKeyMovingValue.x += dx;
-        this.onKeyMovingValue.y += dy;
-        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
-
-        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-        this.svgContentGroup.moveSelector({
-            dx: this.onKeyMovingValue.x,
-            dy: this.onKeyMovingValue.y
-        });
-    }
-
-    /**
-     * move selected elements by arrow key on key up
-     */
-    onMovingByArrowKeyUp() {
-        const elements = this.getSelectedElements();
-        for (const element of elements) {
-            SvgModel.completeElementTransform(element);
-        }
-
-        // update selector
-        this.svgContentGroup.moveSelectorFinish(elements);
-        // update t
-        const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
-
-        this.onKeyMovingValue.x = 0;
-        this.onKeyMovingValue.y = 0;
     }
 }
 

@@ -411,7 +411,9 @@ class SVGContentGroup {
         transformList.insertItemBefore(transform, 0);
     }
 
-    moveSelector({ dx, dy }) { // change the new transform
+    moveSelector(elements, { dx, dy }) { // change the new transform
+        // TODO
+        console.log('move selector', elements);
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
 
         const transform = this.svgContent.createSVGTransform();
