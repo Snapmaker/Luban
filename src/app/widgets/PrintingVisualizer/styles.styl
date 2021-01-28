@@ -120,6 +120,15 @@ $visualizer-padding = 10px
         background-repeat: no-repeat
         background-position: center
         background-size: 48px 48px
+        color: #808080
+
+        .text
+            margin-top: 40px
+            font-size: 10px
+            letter-spacing: -0.4px
+
+        &:disabled
+            color: #E3E3E3
 
         &.operation-move
             border-top-left-radius: $border-radius
@@ -127,21 +136,18 @@ $visualizer-padding = 10px
             background-image: url('/images/48x48/icon-move-normal-48x48.png')
 
             &:disabled
-                background-color: $background-color
                 background-image: url('/images/48x48/icon-move-disabled-48x48.png')
 
         &.operation-scale
             background-image: url('/images/48x48/icon-scale-normal-48x48.png')
 
             &:disabled
-                background-color: $background-color
                 background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
 
         &.operation-rotate
             background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
 
             &:disabled
-                background-color: $background-color
                 background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
 
         &.operation-support
@@ -150,12 +156,12 @@ $visualizer-padding = 10px
             background-image: url('/images/48x48/icon-support-normal-48x48.png')
 
             &:disabled
-                background-color: $background-color
                 background-image: url('/images/48x48/icon-support-disabled-48x48.png')
 
         &:hover,
         &.selected
             background-color: $blue-color
+            color: #FAFAFA
 
             &.operation-move
                 background-image: url('/images/48x48/icon-move-hover-48x48.png')
