@@ -104,6 +104,7 @@ STLLoader.prototype = {
 
 		}
 
+        // TODO: loading file over 480M will crash because of memory limit
 		function parseBinary( data, onProgress ) {
 			var reader = new DataView( data );
 			var faces = reader.getUint32( 80, true );
