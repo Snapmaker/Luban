@@ -683,14 +683,14 @@ export const actions = {
     },
 
     close: (options, isEmergencyStopped) => (dispatch, getState) => {
-        const { port } = options;
         const state = getState().machine;
         const ports = [...state.ports];
-        const portIndex = ports.indexOf(port);
-        if (portIndex !== -1) {
-            ports.splice(portIndex, 1);
-        }
         if (!isEmpty(ports)) {
+            const { port } = options;
+            const portIndex = ports.indexOf(port);
+            if (portIndex !== -1) {
+                ports.splice(portIndex, 1);
+            }
             // this.port = ports[0];
             dispatch(baseActions.updateState({
                 port: ports[0],
