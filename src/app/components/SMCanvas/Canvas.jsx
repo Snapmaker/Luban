@@ -219,6 +219,9 @@ class Canvas extends Component {
 
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement, this.onScale, this.onChangeTarget,
             this.props.supportActions);
+        if (sourceType === '3D') {
+            this.controls.setZoomToCursor(true);
+        }
         this.controls.canOperateModel = this.props.canOperateModel;
         this.setCamera(this.cameraInitialPosition, this.initialTarget);
 
