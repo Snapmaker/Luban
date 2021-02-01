@@ -8,6 +8,7 @@ import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';
 import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
+import { transformListToTransform, transformBox } from '../ui/SVGEditor/element-transform';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -36,6 +37,32 @@ function getTransformList(elem) {
     }
     return elem.transform.baseVal;
 }
+
+/*
+// TODO: copied from element-transform, put it as util function
+function transformBox(x, y, w, h, m) {
+    const topLeft = transformPoint({ x, y }, m);
+    const topRight = transformPoint({ x: x + w, y }, m);
+    const bottomLeft = transformPoint({ x, y: y + h }, m);
+    const bottomRight = transformPoint({ x: x + w, y: y + h }, m);
+
+    const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+    const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+    return {
+        tl: topLeft,
+        tr: topRight,
+        bl: bottomLeft,
+        br: bottomRight,
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+    };
+}
+*/
 
 
 class SVGActionsFactory {
@@ -607,12 +634,14 @@ class SVGActionsFactory {
             }
         }
 
-        // this.resetSelection();
-        this._resetSelector(elements);
+        const selectedElements = this.svgContentGroup.selectedElements;
+
+        // update selector
+        this._resetSelector(selectedElements);
 
         // update t
-        const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        const t = SVGActionsFactory.calculateElementsTransformation(selectedElements);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -637,11 +666,23 @@ class SVGActionsFactory {
         return this.selectedSvgModels;
     }
 
+    /**
+     * Get selected elements transformation.
+     * This is readonly from outside of the class.
+     *
+     * @returns {{scaleX: number, scaleY: number, x: number, width: number, y: number, angle: number, height: number}}
+     */
     getSelectedElementsTransformation() {
         return this.selectedElementsTransformation;
     }
 
-    setSelectedElementsTransformation(t) {
+    /**
+     * Update internal cached variable `selectedElementsTransformation` to `t`.
+     *
+     * @param t
+     * @private
+     */
+    _setSelectedElementsTransformation(t) {
         this.selectedElementsTransformation = t;
     }
 
@@ -688,11 +729,41 @@ class SVGActionsFactory {
             //   four corners (control points) to calculate bounding box of selected elements. it's
             //   AABB of OBBs, not AABB of contents.
             // TODO: duplicate work of OBB calculation.
+
+            // calculate AABB
+            let minX = Number.MAX_VALUE;
+            let minY = Number.MAX_VALUE;
+            let maxX = -Number.MAX_VALUE;
+            let maxY = -Number.MAX_VALUE;
+
+            for (const element of elements) {
+                const { x, y, width, height } = element.getBBox();
+
+                const transformList = getTransformList(element);
+                const transform = transformListToTransform(transformList);
+
+                const box = transformBox(x, y, width, height, transform.matrix); // OBB
+
+                minX = Math.min(minX, box.tl.x, box.tr.x, box.bl.x, box.br.x);
+                maxX = Math.max(maxX, box.tl.x, box.tr.x, box.bl.x, box.br.x);
+
+                minY = Math.min(minY, box.tl.y, box.tr.y, box.bl.y, box.br.y);
+                maxY = Math.max(maxY, box.tl.y, box.tr.y, box.bl.y, box.br.y);
+            }
+
+            // calculate combined t (AABB)
+            const center = {
+                x: (minX + maxX) / 2,
+                y: (minY + maxY) / 2
+            };
+            const combinedWidth = maxX - minX;
+            const combinedHeight = maxY - minY;
+
             return {
-                x: 0,
-                y: 0,
-                width: 0,
-                height: 0,
+                x: center.x,
+                y: center.y,
+                width: combinedWidth,
+                height: combinedHeight,
                 scaleX: 1,
                 scaleY: 1,
                 angle: 0
@@ -717,7 +788,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation([]);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -777,7 +848,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -818,7 +889,12 @@ class SVGActionsFactory {
     }
 
     moveElementsImmediately(elements, { newX, newY }) {
-        for (const element of elements) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
             const { x, y, width, height } = element.getBBox();
 
             newX = newX === undefined ? x + width / 2 : newX;
@@ -839,6 +915,36 @@ class SVGActionsFactory {
                 scaleY,
                 angle
             });
+        } else {
+            const t = SVGActionsFactory.calculateElementsTransformation(elements);
+
+            // new center
+            newX = newX === undefined ? t.x : newX;
+            newY = newY === undefined ? t.y : newY;
+
+            // Move each element by (new center - old center)
+            // Note that multi-model can be unified with
+            for (const element of elements) {
+                const { width, height } = element.getBBox();
+
+                const transformList = SvgModel.getTransformList(element);
+
+                const moveX = transformList.getItem(0).matrix.e;
+                const moveY = transformList.getItem(0).matrix.f;
+                const angle = transformList.getItem(1).angle;
+                const scaleX = transformList.getItem(2).matrix.a;
+                const scaleY = transformList.getItem(2).matrix.d;
+
+                SvgModel.recalculateElementAttributes(element, {
+                    x: moveX + (newX - t.x),
+                    y: moveY + (newY - t.y),
+                    width,
+                    height,
+                    scaleX,
+                    scaleY,
+                    angle
+                });
+            }
         }
 
         // update selector
@@ -846,7 +952,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -856,10 +962,8 @@ class SVGActionsFactory {
      *
      * @param elements - List of SVGElement
      */
-    resizeElementsStart(elements) {
-        // TODO
-        console.log('resize elements start', elements);
-
+    // resizeElementsStart(elements) {
+    resizeElementsStart() {
         // Do nothing
         this.svgContentGroup.resizeSelectorStart();
     }
@@ -928,7 +1032,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -939,7 +1043,13 @@ class SVGActionsFactory {
      * @param newHeight
      */
     resizeElementsImmediately(elements, { newWidth, newHeight }) {
-        for (const element of elements) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+
             const transformList = SvgModel.getTransformList(element);
             const angle = transformList.getItem(1).angle;
             const scaleX = transformList.getItem(2).matrix.a;
@@ -959,6 +1069,8 @@ class SVGActionsFactory {
                 scaleY: newHeight / height,
                 angle
             });
+        } else {
+            // not supported
         }
 
         // update selector
@@ -966,7 +1078,63 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Flip elements horizontally.
+     *
+     * @param elements
+     */
+    flipElementsHorizontally(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = scaleTransform.matrix.a;
+            const scaleY = scaleTransform.matrix.d;
+
+            scaleTransform.setScale(-scaleX, scaleY);
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Flip elements vertically.
+     *
+     * @param elements
+     */
+    flipElementsVertically(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = scaleTransform.matrix.a;
+            const scaleY = scaleTransform.matrix.d;
+
+            scaleTransform.setScale(scaleX, -scaleY);
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -1028,7 +1196,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
         /*
         for (const svgModel of selectedModels) {
             const elem = svgModel.elem;
@@ -1110,7 +1278,7 @@ class SVGActionsFactory {
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
-        this.setSelectedElementsTransformation(t);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**

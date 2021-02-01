@@ -914,6 +914,8 @@ export const actions = {
     selectElements: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
         SVGActions.selectElements(elements);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -968,6 +970,26 @@ export const actions = {
     },
 
     /**
+     * Move elements on key down (⬇).
+     */
+    moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
+        const { page, SVGActions } = getState()[headType];
+        if (page === PAGE_PROCESS) {
+            return;
+        }
+        SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
+    },
+
+    /**
+     * Move elements on key up (⬆).
+     */
+    moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.moveElementsOnArrowKeyUp();
+        dispatch(actions.resetProcessState(headType));
+    },
+
+    /**
      * Resize elements start.
      */
     resizeElementsStart: (headType, elements, options) => (dispatch, getState) => {
@@ -1013,6 +1035,32 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.resizeElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Flip elements horizontally.
+     *
+     * Note that only support flip one element.
+     */
+    flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.flipElementsHorizontally(elements);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Flip elements vertically.
+     *
+     * Note that only support flip one element.
+     */
+    flipElementsVertically: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.flipElementsVertically(elements);
 
         dispatch(baseActions.render(headType));
     },
@@ -1068,26 +1116,6 @@ export const actions = {
         SVGActions.rotateElementsImmediately(elements, options);
 
         dispatch(baseActions.render(headType));
-    },
-
-    /**
-     * Move elements on key down
-     */
-    moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
-        const { page, SVGActions } = getState()[headType];
-        if (page === PAGE_PROCESS) {
-            return;
-        }
-        SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
-    },
-
-    /**
-     * Move elements on key up
-     */
-    moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        SVGActions.moveElementsOnArrowKeyUp();
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**

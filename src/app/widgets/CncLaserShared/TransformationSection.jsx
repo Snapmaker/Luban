@@ -42,6 +42,8 @@ class TransformationSection extends PureComponent {
         elementActions: PropTypes.shape({
             moveElementsImmediately: PropTypes.func.isRequired,
             resizeElementsImmediately: PropTypes.func.isRequired,
+            flipElementsHorizontally: PropTypes.func.isRequired,
+            flipElementsVertically: PropTypes.func.isRequired,
             rotateElementsImmediately: PropTypes.func.isRequired
         }),
 
@@ -59,10 +61,9 @@ class TransformationSection extends PureComponent {
             uniformScalingState: PropTypes.bool
         }),
 
-        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        // updateSelectedModelTransformation: PropTypes.func.isRequired,
         // updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired
-        // onModelAfterTransform: PropTypes.func.isRequired,
     };
 
     state = {
@@ -117,23 +118,22 @@ class TransformationSection extends PureComponent {
 
         onChangeLogicalAngle: (logicalAngle) => {
             const newAngle = -logicalAngle;
-            // const rotationZ = degree * Math.PI / 180;
-            // this.props.updateSelectedModelTransformation({ rotationZ });
             const elements = this.props.selectedElements;
             this.props.elementActions.rotateElementsImmediately(elements, { newAngle });
         },
 
-        onChangeFlip: (key) => {
-            const selectedModelArray = this.props.selectedModelArray;
-            if (selectedModelArray && selectedModelArray.length === 1) {
-                this.props.updateSelectedModelTransformation({ [key]: selectedModelArray[0].transformation[key] * -1 });
-            }
+        onFlipHorizontally: () => {
+            const elements = this.props.selectedElements;
+            this.props.elementActions.flipElementsHorizontally(elements);
         },
+
+        onFlipVertically: () => {
+            const elements = this.props.selectedElements;
+            this.props.elementActions.flipElementsVertically(elements);
+        },
+
         onChangeUniformScalingState: (uniformScalingState) => {
             this.props.updateSelectedModelUniformScalingState({ uniformScalingState });
-        },
-        onModelAfterTransform: () => {
-            // this.props.onModelAfterTransform();
         }
     };
 
@@ -159,6 +159,7 @@ class TransformationSection extends PureComponent {
         const { uniformScalingState = false } = transformation;
 
         const canResize = (sourceType !== 'text' && selectedModelArray.length === 1);
+        const canRotate = (selectedModelArray.length === 1);
 
         const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
         const actions = this.actions;
@@ -192,7 +193,6 @@ class TransformationSection extends PureComponent {
                                 max={size.x}
                                 onChange={(value) => {
                                     actions.onChangeLogicalX(value);
-                                    // actions.onModelAfterTransform();
                                 }}
                             />
                             <span
@@ -216,10 +216,7 @@ class TransformationSection extends PureComponent {
                                 value={toFixed(logicalY, 1)}
                                 min={-size.y}
                                 max={size.y}
-                                onChange={(value) => {
-                                    actions.onChangeLogicalY(value);
-                                    // actions.onModelAfterTransform();
-                                }}
+                                onChange={actions.onChangeLogicalY}
                             />
                             <span
                                 className={styles['input-box-inner-text']}
@@ -242,7 +239,6 @@ class TransformationSection extends PureComponent {
                                     max={size.x}
                                     onChange={(value) => {
                                         actions.onChangeWidth(value);
-                                        // actions.onModelAfterTransform();
                                     }}
                                 />
                                 <span
@@ -265,7 +261,6 @@ class TransformationSection extends PureComponent {
                                     }}
                                     onClick={() => {
                                         actions.onChangeUniformScalingState(!uniformScalingState);
-                                        actions.onModelAfterTransform();
                                     }}
                                 />
                                 <Input
@@ -274,10 +269,7 @@ class TransformationSection extends PureComponent {
                                     value={toFixed(logicalHeight, 1)}
                                     min={1}
                                     max={size.y}
-                                    onChange={(value) => {
-                                        actions.onChangeHeight(value);
-                                        // actions.onModelAfterTransform();
-                                    }}
+                                    onChange={actions.onChangeHeight}
                                 />
                                 <span
                                     className={styles['input-box-inner-text']}
@@ -295,13 +287,10 @@ class TransformationSection extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
                                 <DegreeInput
                                     className={styles['input-box-left']}
-                                    disabled={!selectedNotHide}
+                                    disabled={!selectedNotHide || !canRotate}
                                     value={toFixed(logicalAngle, 1)}
                                     suffix="°"
-                                    onChange={(value) => {
-                                        actions.onChangeLogicalAngle(value);
-                                        // actions.onModelAfterTransform();
-                                    }}
+                                    onChange={actions.onChangeLogicalAngle}
                                 />
                                 <span
                                     className={styles['description-text']}
@@ -312,10 +301,7 @@ class TransformationSection extends PureComponent {
                                         type="button"
                                         disabled={!selectedNotHide}
                                         className={styles.icon_flip_vertically}
-                                        onClick={() => {
-                                            actions.onChangeFlip('scaleX');
-                                            actions.onModelAfterTransform();
-                                        }}
+                                        onClick={actions.onFlipHorizontally}
                                     />
                                 )}
                                 {selectedModelArray.length === 1 && (
@@ -329,10 +315,7 @@ class TransformationSection extends PureComponent {
                                         type="button"
                                         disabled={!selectedNotHide}
                                         className={styles.icon_flip_horizontal}
-                                        onClick={() => {
-                                            actions.onChangeFlip('scaleY');
-                                            actions.onModelAfterTransform();
-                                        }}
+                                        onClick={actions.onFlipVertically}
                                     />
                                 )}
                             </div>
@@ -378,6 +361,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         elementActions: {
             moveElementsImmediately: (elements, options) => dispatch(editorActions.moveElementsImmediately(headType, elements, options)),
             resizeElementsImmediately: (elements, options) => dispatch(editorActions.resizeElementsImmediately(headType, elements, options)),
+            flipElementsHorizontally: (elements, options) => dispatch(editorActions.flipElementsHorizontally(headType, elements, options)),
+            flipElementsVertically: (elements, options) => dispatch(editorActions.flipElementsVertically(headType, elements, options)),
             rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately(headType, elements, options))
         }
     };

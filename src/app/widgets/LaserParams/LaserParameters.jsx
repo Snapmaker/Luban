@@ -207,7 +207,6 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
-        updateSelectedModelFlip: (params) => dispatch(editorActions.updateSelectedModelFlip('laser', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
         onModelAfterTransform: () => {},

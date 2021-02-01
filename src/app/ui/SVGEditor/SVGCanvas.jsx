@@ -382,10 +382,11 @@ class SVGCanvas extends PureComponent {
                 if (mouseTarget && mouseTarget !== this.svgContainer) {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                         && mouseTarget.id !== 'printable-area-group') {
-                        // TODO: deal with shift key (multi-select)
+                        // without shift key, we regard the action as new select
                         if (!event.shiftKey) {
                             this.clearSelection();
                         }
+
                         this.addToSelection([mouseTarget]);
                     }
 
