@@ -46,7 +46,7 @@ class ImageProcessMode extends PureComponent {
             <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
                     <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Processing Mode')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Processing Mode')}</span>
                     <span className={classNames(
                         'fa',
                         this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',

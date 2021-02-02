@@ -164,7 +164,7 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
         ]
     },
     {
-        name: 'Heated Bed Adhesion Type',
+        name: 'Heated Bed Adhesion Type',
         fields: [
             'adhesion_type',
             'skirt_line_count',

@@ -133,7 +133,7 @@ class Printing extends PureComponent {
                                 {isLaserPrintAutoMode && laserFocalLength && (
                                     <div>
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Laser Focus')}</span>
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Laser Height')}</span>
                                             <span
                                                 className="sm-parameter-row__input"
                                                 style={{

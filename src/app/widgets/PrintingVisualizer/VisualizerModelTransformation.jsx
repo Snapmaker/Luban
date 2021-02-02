@@ -12,7 +12,6 @@ import styles from './styles.styl';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as printingActions } from '../../flux/printing';
 
-
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
@@ -195,7 +194,15 @@ class VisualizerModelTransformation extends PureComponent {
                             actions.setTransformMode('translate');
                         }}
                         disabled={transformDisabled}
-                    />
+                    >
+                        <div className={classNames(
+                            styles.text,
+                            { [styles.disabled]: transformDisabled }
+                        )}
+                        >
+                            {i18n._('MOVE')}
+                        </div>
+                    </Anchor>
                     <Anchor
                         componentClass="button"
                         className={classNames(
@@ -210,7 +217,15 @@ class VisualizerModelTransformation extends PureComponent {
                             actions.setTransformMode('scale');
                         }}
                         disabled={transformDisabled}
-                    />
+                    >
+                        <div className={classNames(
+                            styles.text,
+                            { [styles.disabled]: (transformDisabled) }
+                        )}
+                        >
+                            {i18n._('SCALE')}
+                        </div>
+                    </Anchor>
                     <Anchor
                         componentClass="button"
                         className={classNames(
@@ -225,7 +240,15 @@ class VisualizerModelTransformation extends PureComponent {
                             actions.setTransformMode('rotate');
                         }}
                         disabled={transformDisabled || isSupportSelected}
-                    />
+                    >
+                        <div className={classNames(
+                            styles.text,
+                            { [styles.disabled]: transformDisabled || isSupportSelected }
+                        )}
+                        >
+                            {i18n._('ROTATE')}
+                        </div>
+                    </Anchor>
                     <Anchor
                         componentClass="button"
                         className={classNames(
@@ -240,7 +263,15 @@ class VisualizerModelTransformation extends PureComponent {
                             actions.setTransformMode('support');
                         }}
                         disabled={supportDisabled}
-                    />
+                    >
+                        <div className={classNames(
+                            styles.text,
+                            { [styles.disabled]: supportDisabled }
+                        )}
+                        >
+                            {i18n._('SUPPORT')}
+                        </div>
+                    </Anchor>
                 </div>
                 {!transformDisabled && transformMode === 'translate' && (
                     <div className={classNames(styles.panel, styles['move-panel'])}>

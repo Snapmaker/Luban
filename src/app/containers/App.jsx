@@ -209,7 +209,7 @@ class App extends PureComponent {
                                 >
                                     Read This First - Safety Information
                                 </a>
-                                before any further instructions.
+                                before proceeding.
                             </Trans>
                         </div>
                     ),
