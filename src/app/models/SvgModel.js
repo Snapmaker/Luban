@@ -506,8 +506,8 @@ class SvgModel {
             const t = {
                 x: newCenter.x,
                 y: newCenter.y,
-                width: width,
-                height: height,
+                width,
+                height,
                 scaleX,
                 scaleY,
                 angle

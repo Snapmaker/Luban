@@ -31,7 +31,6 @@ class LaserParameters extends PureComponent {
         setDisplay: PropTypes.func.isRequired,
 
         uploadImage: PropTypes.func.isRequired,
-        updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
         changeSelectedModelShowOrigin: PropTypes.func.isRequired,
@@ -113,7 +112,6 @@ class LaserParameters extends PureComponent {
         const { accept } = this.state;
         const {
             selectedModelArray, selectedModelVisible, sourceType, mode,
-            updateSelectedModelTransformation,
             config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
@@ -140,7 +138,6 @@ class LaserParameters extends PureComponent {
                 {isEditor && (
                     <TransformationSection
                         headType={headType}
-                        updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
@@ -205,7 +202,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
-        updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('laser', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
         changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),

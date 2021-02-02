@@ -61,8 +61,6 @@ class TransformationSection extends PureComponent {
             uniformScalingState: PropTypes.bool
         }),
 
-        // updateSelectedModelTransformation: PropTypes.func.isRequired,
-        // updateSelectedModelFlip: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired
     };
 
@@ -94,7 +92,7 @@ class TransformationSection extends PureComponent {
                 // TODO: save uniformScalingState in SVGModel
                 if (this.props.transformation.uniformScalingState) {
                     const { width, height, scaleX, scaleY } = this.props.selectedElementsTransformation;
-                    const newHeight = height * scaleY * (newWidth / width / scaleX);
+                    const newHeight = height * Math.abs(scaleY) * (newWidth / width / Math.abs(scaleX));
                     this.props.elementActions.resizeElementsImmediately(elements, { newWidth, newHeight });
                 } else {
                     this.props.elementActions.resizeElementsImmediately(elements, { newWidth });
@@ -108,7 +106,7 @@ class TransformationSection extends PureComponent {
                 // TODO: save uniformScalingState in SVGModel
                 if (this.props.transformation.uniformScalingState) {
                     const { width, height, scaleX, scaleY } = this.props.selectedElementsTransformation;
-                    const newWidth = width * scaleX * (newHeight / height / scaleY);
+                    const newWidth = width * Math.abs(scaleX) * (newHeight / height / Math.abs(scaleY));
                     this.props.elementActions.resizeElementsImmediately(elements, { newWidth, newHeight });
                 } else {
                     this.props.elementActions.resizeElementsImmediately(elements, { newHeight });
@@ -152,8 +150,8 @@ class TransformationSection extends PureComponent {
         // calculate logical transformation
         // TODO: convert positions in flux
         const { x: logicalX, y: logicalY } = this.convertSVGPointToLogicalPoint({ x, y }, size);
-        const logicalWidth = width * scaleX;
-        const logicalHeight = height * scaleY;
+        const logicalWidth = width * Math.abs(scaleX);
+        const logicalHeight = height * Math.abs(scaleY);
         const logicalAngle = -angle;
 
         const { uniformScalingState = false } = transformation;

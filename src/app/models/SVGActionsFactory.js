@@ -1057,16 +1057,19 @@ class SVGActionsFactory {
 
             const { x, y, width, height } = element.getBBox();
 
-            newWidth = newWidth === undefined ? width * scaleX : newWidth;
-            newHeight = newHeight === undefined ? height * scaleY : newHeight;
+            newWidth = newWidth === undefined ? width * Math.abs(scaleX) : newWidth;
+            newHeight = newHeight === undefined ? height * Math.abs(scaleY) : newHeight;
+
+            const signScaleX = scaleX > 0 ? 1 : -1;
+            const signScaleY = scaleY > 0 ? 1 : -1;
 
             SvgModel.recalculateElementAttributes(element, {
                 x: x + width / 2,
                 y: y + height / 2,
                 width,
                 height,
-                scaleX: newWidth / width,
-                scaleY: newHeight / height,
+                scaleX: newWidth / width * signScaleX,
+                scaleY: newHeight / height * signScaleY,
                 angle
             });
         } else {
@@ -1253,7 +1256,13 @@ class SVGActionsFactory {
      * @param newAngle
      */
     rotateElementsImmediately(elements, { newAngle }) {
-        for (const element of elements) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+
             const transformList = SvgModel.getTransformList(element);
 
             // const angle = transformList.getItem(1).angle;
@@ -1271,6 +1280,8 @@ class SVGActionsFactory {
                 scaleY,
                 angle: newAngle
             });
+        } else {
+            // not supported yet
         }
 
         // update selector
