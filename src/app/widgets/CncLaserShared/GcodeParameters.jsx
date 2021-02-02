@@ -108,7 +108,7 @@ class GcodeParameters extends PureComponent {
                 {this.state.expanded && (
                     <React.Fragment>
                         <TipTrigger
-                            title={i18n._('Processing Order')}
+                            title={i18n._('Processing Order')}
                             content={i18n._('When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.')}
                         >
                             <div className="sm-parameter-row">
