@@ -161,13 +161,18 @@ const convertOneLineTextToSvg = async (options) => {
     let estimatedFontSize = Math.round(size / 72 * 25.4 * 40);
     const originPath = fontObj.getPath(text, 0, 0, estimatedFontSize);
     const bbox = originPath.getBoundingBox();
+
     // draw text at x=0 will get bbox.x1>0
     // we should calculate width including gaps of both side
+    // TODO: Behavior of SVG text and opentype calculation are different, use of
+    //   bbox.x1 as evaluation of text padding is not accurate. To really solve
+    //   this problem, we need deeper understanding on how SVG text is rendered.
     const width = (bbox.x2 - bbox.x1) + bbox.x1 * 2;
+
     const scale = sourceWidth / width;
     estimatedFontSize *= scale;
     const x = 0;
-    const y = (unitsPerEm + descender) / unitsPerEm * sourceHeight;
+    const y = (unitsPerEm + descender) / unitsPerEm * sourceHeight + 1; // hardcoded 1
 
     const fullPath = new opentype.Path();
     const p = fontObj.getPath(text, x, y, Math.floor(estimatedFontSize));
