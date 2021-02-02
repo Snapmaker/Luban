@@ -289,7 +289,7 @@ class MarlinReplyParserEnclosureFanPower {
 
 class MarlinReplyParserPurifierFanWork {
     static parse(line) {
-        const r = line.match(/^Fan work: (0|1)$/);
+        const r = line.match(/^Purifier Fan work: (0|1)$/);
         if (!r) {
             return null;
         }
@@ -305,7 +305,14 @@ class MarlinReplyParserPurifierFanWork {
 
 class MarlinReplyParserPurifierFanSpeed {
     static parse(line) {
-        const r = line.match(/^Fan gears: ([0-3])$/);
+        const r = line.match(/^Purifier Fan gears: ([0-3])$/);
+        /*
+            the number [0-3] means fan speed level
+            0: close
+            1: low
+            2: medium
+            3: high
+         */
         if (!r) {
             return null;
         }
@@ -321,16 +328,16 @@ class MarlinReplyParserPurifierFanSpeed {
 
 class MarlinReplyParserPurifierLifetime {
     static parse(line) {
-        const r = line.match(/^Filter lifetime:(.*)$/);
+        const r = line.match(/^Purifier Filter lifetime:(.*)$/);
         if (!r) {
             return null;
         }
         let lifetimeState;
         switch (r[1]) {
-            case 'high':
+            case 'normal':
                 lifetimeState = 2;
                 break;
-            case 'center':
+            case 'medium':
                 lifetimeState = 1;
                 break;
             case 'low':
@@ -351,7 +358,7 @@ class MarlinReplyParserPurifierLifetime {
 
 class MarlinReplyParserGetPurifierOthers {
     static parse(line) {
-        const r = line.match(/^Fan (.*)$/);
+        const r = line.match(/^Purifier Fan (.*)$/);
         if (!r) {
             return null;
         }
