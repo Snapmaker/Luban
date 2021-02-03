@@ -9,7 +9,7 @@ import {
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
-import { PAGE_EDITOR, HEAD_CNC } from '../../constants';
+import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL } from '../../constants';
 import definitionManager from './DefinitionManager';
 import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
@@ -39,7 +39,7 @@ const INITIAL_STATE = {
 
     modelGroup: initModelGroup,
 
-    showToolPathGroup: false,
+    displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'cnc'),
     updatingToolPath: null,
 

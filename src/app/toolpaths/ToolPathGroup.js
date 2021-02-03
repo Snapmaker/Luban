@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as THREE from 'three';
 import ToolPath from './ToolPath';
 import { createToolPathName, getToolPathType, SUCCESS, WARNING } from './utils';
@@ -10,8 +9,6 @@ class ToolPathGroup {
     toolPaths = [];
 
     selectedToolPathId = '';
-
-    selectedModelIDs = [];
 
     modelGroup;
 
@@ -65,18 +62,6 @@ class ToolPathGroup {
         this.updatedCallback = updatedCallback;
     }
 
-    setSelectedModelIDs(modelIDs = []) {
-        this.selectedModelIDs = modelIDs.map(v => v);
-        this._updated();
-    }
-
-    addSelectedModelIDs(modelIDs = []) {
-        for (const modelID of modelIDs) {
-            this.selectedModelIDs.push(modelID);
-        }
-        this._updated();
-    }
-
     selectToolPathId(toolPathId) {
         if (this.selectedToolPathId === toolPathId) {
             this.selectedToolPathId = '';
@@ -87,18 +72,7 @@ class ToolPathGroup {
     }
 
     getToolPathTypes() {
-        return getToolPathType(this._getSelectedModels());
-    }
-
-    _getSelectedModels() {
-        const models = this.modelGroup.getModels();
-
-        return models.filter(model => _.includes(this.selectedModelIDs, model.modelID));
-    }
-
-    removeSelectedModelIDs(modelIDs = []) {
-        this.selectedModelIDs = this.selectedModelIDs.filter(v => !_.includes(modelIDs, v));
-        this._updated();
+        return getToolPathType(this.modelGroup.getSelectedToolPathModels());
     }
 
     _getToolPaths() {
@@ -121,7 +95,7 @@ class ToolPathGroup {
     createToolPath(options) {
         const { materials } = options;
 
-        const models = this._getSelectedModels();
+        const models = this.modelGroup.getSelectedToolPathModels();
 
         if (models.length === 0) {
             return null;
@@ -144,7 +118,7 @@ class ToolPathGroup {
             baseName: models[0].uploadName,
             headType: this.headType,
             type,
-            modelIDs: this.selectedModelIDs,
+            modelIDs: this.modelGroup.selectedToolPathModelIDs,
             modelGroup: this.modelGroup,
             gcodeConfig
         }).getState();
@@ -154,20 +128,20 @@ class ToolPathGroup {
     }
 
     saveToolPath(toolPathInfo, options) {
-        const toolPath = this._getToolPath(toolPathInfo.id);
+        let toolPath = this._getToolPath(toolPathInfo.id);
         if (toolPath) {
             toolPath.updateState(toolPathInfo);
         } else {
-            const nToolPath = new ToolPath({
+            toolPath = new ToolPath({
                 ...toolPathInfo,
                 modelGroup: this.modelGroup
             });
-            this.toolPaths.push(nToolPath);
-            this.toolPathObjects.add(nToolPath.object);
+            this.toolPaths.push(toolPath);
+            this.toolPathObjects.add(toolPath.object);
 
-            this.selectedToolPathId = nToolPath.id;
-            nToolPath.commitGenerateToolPath(options);
+            this.selectedToolPathId = toolPath.id;
         }
+        toolPath.commitGenerateToolPath(options);
     }
 
     toolPathToUp(toolPathId) {
@@ -229,10 +203,11 @@ class ToolPathGroup {
         this._updated();
     }
 
-    updateToolPath(toolPathId, newState) {
+    updateToolPath(toolPathId, newState, options) {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
             toolPath.updateState(newState);
+            toolPath.commitGenerateToolPath(options);
         }
 
         this._updated();

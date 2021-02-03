@@ -11,7 +11,7 @@ import {
     sizeModelByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT, DATA_PREFIX, EPSILON } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX, EPSILON } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
@@ -375,27 +375,6 @@ export const actions = {
 
         // todo, donot reset here
         SVGActions.resetSelection();
-    },
-
-    // todo, select model by toolPathModel ??? meshObject ???
-    selectModelInProcess: (headType, intersect, selectEvent) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
-
-        if (!intersect) {
-            toolPathGroup.setSelectedModelIDs([]);
-        } else {
-            const model = modelGroup.getSelectedModelByIntersect(intersect);
-
-            if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
-                toolPathGroup.setSelectedModelIDs([model.modelID]);
-            } else if (selectEvent === SELECTEVENT.ADDSELECT) {
-                toolPathGroup.addSelectedModelIDs([model.modelID]);
-            } else if (selectEvent === SELECTEVENT.REMOVESELECT) {
-                toolPathGroup.removeSelectedModelIDs([model.modelID]);
-            } else {
-                toolPathGroup.setSelectedModelIDs([]);
-            }
-        }
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {

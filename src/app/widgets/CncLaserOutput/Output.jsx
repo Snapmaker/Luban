@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -23,7 +23,7 @@ class Output extends PureComponent {
         toolPathGroup: PropTypes.object.isRequired,
         canGenerateGcode: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool,
-        showToolPathGroup: PropTypes.bool.isRequired,
+        displayedType: PropTypes.string.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         isGcodeGenerating: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
@@ -73,7 +73,7 @@ class Output extends PureComponent {
             this.props.commitGenerateViewPath();
         },
         showAndHideToolPathObject: () => {
-            if (this.props.showToolPathGroup) {
+            if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.props.showModelGroupObject();
             } else {
                 this.props.showToolPathGroupObject();
@@ -97,7 +97,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, headType, showToolPathGroup } = this.props;
+        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, headType, displayedType } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
         const isCNC = headType === 'cnc';
@@ -122,7 +122,7 @@ class Output extends PureComponent {
                             onClick={this.actions.showAndHideToolPathObject}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                         >
-                            {showToolPathGroup ? i18n._('Hide Toolpath') : i18n._('Show Toolpath')}
+                            {displayedType === DISPLAYED_TYPE_TOOLPATH ? i18n._('Hide Toolpath') : i18n._('Show Toolpath')}
                         </button>
                     )}
                     {isProcess && (
@@ -184,7 +184,7 @@ const mapStateToProps = (state, ownProps) => {
     const { widgets } = state.widget;
     const { widgetId, headType } = ownProps;
     const { page, isGcodeGenerating,
-        previewFailed, modelGroup, toolPathGroup, showToolPathGroup, gcodeFile } = state[headType];
+        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
 
@@ -193,7 +193,7 @@ const mapStateToProps = (state, ownProps) => {
         headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
-        showToolPathGroup,
+        displayedType,
         toolPathGroup,
         canGenerateGcode,
         isGcodeGenerating,

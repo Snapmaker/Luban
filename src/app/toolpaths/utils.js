@@ -73,7 +73,7 @@ export const getToolPathType = (models) => {
 let count = 1;
 
 export const createToolPathName = () => {
-    return `toolPath${count++}`;
+    return `Toolpath${count++}`;
 };
 
 export const IDLE = 'idle';

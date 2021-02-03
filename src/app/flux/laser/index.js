@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { DATA_PREFIX, HEAD_LASER, PAGE_EDITOR } from '../../constants';
+import { DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 
@@ -38,7 +38,7 @@ const INITIAL_STATE = {
     modelGroup: initModelGroup,
     SVGActions: new SVGActionsFactory(initModelGroup),
 
-    showToolPathGroup: false,
+    displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),
     updatingToolPath: null,
 

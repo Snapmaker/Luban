@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Select from 'react-select';
 import { connect } from 'react-redux';
+import Slider from 'rc-slider';
 import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import i18n from '../../../lib/i18n';
-import { TextInput } from '../../../components/Input';
+import { NumberInput as Input, TextInput } from '../../../components/Input';
 import widgetStyles from '../../../widgets/styles.styl';
 import ToolParameters from './ToolParameters';
 import TipTrigger from '../../../components/TipTrigger';
@@ -42,7 +43,7 @@ class CncParameters extends PureComponent {
 
         const { name, type, gcodeConfig } = toolPath;
 
-        const { pathType, sliceMode, smoothY } = gcodeConfig;
+        const { pathType, sliceMode, smoothY, fillDensity } = gcodeConfig;
 
         const { isRotate } = materials;
 
@@ -128,6 +129,30 @@ class CncParameters extends PureComponent {
                                     />
                                 </div>
                             </TipTrigger>
+                            {pathType === 'pocket' && (
+                                <TipTrigger
+                                    title={i18n._('Fill Density')}
+                                    content={i18n._('Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.')}
+                                >
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
+                                        <Input
+                                            className="sm-parameter-row__slider-input"
+                                            value={fillDensity}
+                                            min={1}
+                                            max={20}
+                                            onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
+                                        />
+                                        <Slider
+                                            className="sm-parameter-row__slider"
+                                            value={fillDensity}
+                                            min={1}
+                                            max={20}
+                                            onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
+                                        />
+                                    </div>
+                                </TipTrigger>
+                            )}
                         </div>
                     )}
                     {isImage && (

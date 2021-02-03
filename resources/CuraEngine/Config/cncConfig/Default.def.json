@@ -31,34 +31,39 @@
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Jog Speed"
+                    "label": "Jog Speed",
+                    "description": "Determines how fast the tool moves when it’s not carving."
                 },
                 "work_speed": {
                     "default_value": 300,
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Work Speed"
+                    "label": "Work Speed",
+                    "description": "Determines how fast the tool feeds into the material."
                 },
                 "plunge_speed": {
                     "default_value": 300,
                     "min": 0.1,
                     "max": 1000,
                     "unit": "mm/min",
-                    "label": "Plunge Speed"
+                    "label": "Plunge Speed",
+                    "description": "Determines how fast the tool moves on the material."
                 },
                 "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
-                    "label": "Step Down"
+                    "label": "Step Down",
+                    "description": "Enter the depth of each carving step."
                 },
                 "density": {
                     "default_value": 5,
                     "min": 0.01,
                     "max": 20,
                     "unit": "dot/mm",
-                    "label": "Density"
+                    "label": "Density",
+                    "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
                 }
             }
         },
@@ -91,34 +96,39 @@
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Jog Speed"
+                    "label": "Jog Speed",
+                    "description": "Determines how fast the tool moves when it’s not carving."
                 },
                 "work_speed": {
                     "default_value": 300,
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Work Speed"
+                    "label": "Work Speed",
+                    "description": "Determines how fast the tool feeds into the material."
                 },
                 "plunge_speed": {
                     "default_value": 300,
                     "min": 0.1,
                     "max": 1000,
                     "unit": "mm/min",
-                    "label": "Plunge Speed"
+                    "label": "Plunge Speed",
+                    "description": "Determines how fast the tool moves on the material."
                 },
                 "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
-                    "label": "Step Down"
+                    "label": "Step Down",
+                    "description": "Enter the depth of each carving step."
                 },
                 "density": {
                     "default_value": 5,
                     "min": 0.01,
                     "max": 20,
                     "unit": "dot/mm",
-                    "label": "Density"
+                    "label": "Density",
+                    "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
                 }
             }
         },
@@ -151,34 +161,39 @@
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Jog Speed"
+                    "label": "Jog Speed",
+                    "description": "Determines how fast the tool moves when it’s not carving."
                 },
                 "work_speed": {
                     "default_value": 300,
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Work Speed"
+                    "label": "Work Speed",
+                    "description": "Determines how fast the tool feeds into the material."
                 },
                 "plunge_speed": {
                     "default_value": 300,
                     "min": 0.1,
                     "max": 1000,
                     "unit": "mm/min",
-                    "label": "Plunge Speed"
+                    "label": "Plunge Speed",
+                    "description": "Determines how fast the tool moves on the material."
                 },
                 "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
-                    "label": "Step Down"
+                    "label": "Step Down",
+                    "description": "Enter the depth of each carving step."
                 },
                 "density": {
                     "default_value": 5,
                     "min": 0.01,
                     "max": 20,
                     "unit": "dot/mm",
-                    "label": "Density"
+                    "label": "Density",
+                    "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
                 }
             }
         },
@@ -211,34 +226,39 @@
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Jog Speed"
+                    "label": "Jog Speed",
+                    "description": "Determines how fast the tool moves when it’s not carving."
                 },
                 "work_speed": {
                     "default_value": 300,
                     "min": 1,
                     "max": 6000,
                     "unit": "mm/min",
-                    "label": "Work Speed"
+                    "label": "Work Speed",
+                    "description": "Determines how fast the tool feeds into the material."
                 },
                 "plunge_speed": {
                     "default_value": 300,
                     "min": 0.1,
                     "max": 1000,
                     "unit": "mm/min",
-                    "label": "Plunge Speed"
+                    "label": "Plunge Speed",
+                    "description": "Determines how fast the tool moves on the material."
                 },
                 "step_down": {
                     "default_value": 0.5,
                     "min": 0.01,
                     "unit": "mm",
-                    "label": "Step Down"
+                    "label": "Step Down",
+                    "description": "Enter the depth of each carving step."
                 },
                 "density": {
                     "default_value": 5,
                     "min": 0.01,
                     "max": 20,
                     "unit": "dot/mm",
-                    "label": "Density"
+                    "label": "Density",
+                    "description": "Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally."
                 }
             }
         }

@@ -2,6 +2,7 @@ import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, Doubl
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
+import _ from 'lodash';
 import Model from './Model';
 import { SELECTEVENT } from '../constants';
 
@@ -31,6 +32,9 @@ class ModelGroup extends EventEmitter {
 
         this.candidatePoints = null;
         this._bbox = null;
+
+        // The selectedToolPathModelIDs is used to generate the toolpath
+        this.selectedToolPathModelIDs = [];
     }
 
     setMaterials(materials) {
@@ -1360,6 +1364,36 @@ class ModelGroup extends EventEmitter {
             }
             count++;
         }
+    }
+
+    /**
+     * Set selected modelIDs to create tool path.
+     * @param modelIDs
+     */
+    setSelectedToolPathModelIDs(modelIDs = []) {
+        this.selectedToolPathModelIDs = modelIDs.map(v => v);
+        this.modelChanged();
+    }
+
+    addSelectedToolPathModelIDs(modelIDs = []) {
+        for (const modelID of modelIDs) {
+            this.selectedToolPathModelIDs.push(modelID);
+        }
+        this.modelChanged();
+    }
+
+    removeSelectedToolPathModelIDs(modelIDs = []) {
+        this.selectedToolPathModelIDs = this.selectedToolPathModelIDs.filter(v => !_.includes(modelIDs, v));
+        this.modelChanged();
+    }
+
+    getSelectedToolPathModels() {
+        return this.models.filter(model => _.includes(this.selectedToolPathModelIDs, model.modelID));
+    }
+
+    setAllSelectedToolPathModelIDs() {
+        this.selectedToolPathModelIDs = this.models.map(v => v.modelID);
+        this.modelChanged();
     }
 }
 
