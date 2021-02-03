@@ -594,6 +594,69 @@ class Model {
         return clone;
     }
 
+    /**
+     * Find the best fit direction, and rotate the model
+     * step1. get big planes of convex geometry
+     * step2. calculate area, support volumes of each big plane
+     * step3. find the best fit plane using formula below
+     */
+    autoRotate() {
+        if (this.sourceType !== '3d' || !this.convexGeometry) {
+            return;
+        }
+
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
+        this.meshObject.updateMatrixWorld();
+
+        // TODO: how about do not use matrix to speed up
+        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld);
+        const maxArea = Math.max.apply(null, areas);
+        const bigPlanes = { planes: null, areas: [] };
+        bigPlanes.planes = planes.filter((p, idx) => {
+            // filter big planes, 0.1 can be change to improve perfomance
+            const isBig = areas[idx] > maxArea * 0.1;
+            isBig && bigPlanes.areas.push(areas[idx]);
+            return isBig;
+        });
+
+        if (!bigPlanes.planes.length) return;
+
+        const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes);
+
+        let targetPlane;
+        const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
+        // if has a direction without support, choose it
+        if (minSupportVolume < 1) {
+            const idx = objPlanes.supportVolumes.findIndex(i => i === minSupportVolume);
+            targetPlane = objPlanes.planes[idx];
+        }
+
+        if (!targetPlane) {
+            const rates = [];
+            for (let idx = 0, len = bigPlanes.planes.length; idx < len; idx++) {
+                // update rate formula to improve performance
+                rates.push(
+                    objPlanes.areas[idx]
+                    * (objPlanes.areas[idx] / bigPlanes.areas[idx])
+                    * (minSupportVolume / objPlanes.supportVolumes[idx])
+                );
+            }
+
+            const maxRate = Math.max.apply(null, rates);
+            const idx = rates.findIndex(r => r === maxRate);
+            targetPlane = bigPlanes.planes[idx];
+        }
+
+        // WARNING: applyQuternion DONT update Matrix...
+        this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(targetPlane.normal, xyPlaneNormal));
+        this.meshObject.updateMatrix();
+
+        this.stickToPlate();
+        this.onTransform();
+        revertParent();
+    }
+
     layFlat() {
         if (this.sourceType !== '3d') {
             return;
