@@ -16,13 +16,15 @@ class Purifier extends PureComponent {
     static propTypes = {
         isConnected: PropTypes.bool.isRequired,
         setDisplay: PropTypes.func.isRequired,
-        server: PropTypes.object.isRequired,
         connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
-        airPurifier: PropTypes.bool,
-        airPurifierSwitch: PropTypes.bool,
-        airPurifierFanSpeed: PropTypes.number,
-        airPurifierFilterHealth: PropTypes.number
+        airPurifier: PropTypes.bool.isRequired,
+        airPurifierSwitch: PropTypes.bool.isRequired,
+        airPurifierFanSpeed: PropTypes.number.isRequired,
+        airPurifierFilterHealth: PropTypes.number.isRequired,
+
+        setFilterSwitch: PropTypes.func.isRequired,
+        setFilterWorkSpeed: PropTypes.func.isRequired
     };
 
     state = {
@@ -34,8 +36,8 @@ class Purifier extends PureComponent {
     actions = {
         onHandleFilterEnabled: () => {
             const { isFilterEnable, workSpeed } = this.state;
-            if (this.props.connectionType === 'wifi') { // todo, 'wifi'
-                this.props.server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
+            if (this.props.connectionType === 'wifi') {
+                this.props.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -54,8 +56,8 @@ class Purifier extends PureComponent {
             });
         },
         onChangeFilterSpeed: (workSpeed) => {
-            if (this.props.connectionType === 'wifi') { // todo, 'wifi'
-                this.props.server.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
+            if (this.props.connectionType === 'wifi') {
+                this.props.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -210,13 +212,15 @@ class Purifier extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { isConnected, server, connectionType, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
+    const { setFilterSwitch, setFilterWorkSpeed } = server;
     return {
         isConnected,
-        server,
         connectionType,
         airPurifierSwitch,
         airPurifierFanSpeed,
-        airPurifierFilterHealth
+        airPurifierFilterHealth,
+        setFilterSwitch,
+        setFilterWorkSpeed
     };
 };
 
