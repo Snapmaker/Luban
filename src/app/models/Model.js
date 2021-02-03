@@ -43,10 +43,10 @@ class Model {
 
         this.limitSize = limitSize;
 
-        const geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
+        const material = modelInfo.material || new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
-        this.meshObject = new THREE.Mesh(geometry, material);
+        this.meshObject = new THREE.Mesh(this.geometry, material);
 
         this.modelID = modelID;
         this.modelName = modelName ?? 'unnamed';
@@ -95,6 +95,10 @@ class Model {
 
         this.lastToolPathStr = null;
         this.isToolPath = false;
+
+        if (modelInfo.convexGeometry) {
+            this.setConvexGeometry(modelInfo.convexGeometry);
+        }
     }
 
     get visible() {
@@ -570,11 +574,7 @@ class Model {
      * @returns {Model}
      */
     clone(modelGroup) {
-        const clone = new Model({
-            ...this,
-            geometry: this.meshObject.geometry.clone(),
-            material: this.meshObject.material.clone()
-        }, modelGroup);
+        const clone = new Model({ ...this }, modelGroup);
         clone.originModelID = this.modelID;
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
@@ -582,13 +582,6 @@ class Model {
         this.meshObject.updateMatrixWorld();
 
         clone.setMatrix(this.meshObject.matrixWorld);
-
-        // copy convex geometry as well
-        if (this.sourceType === '3d') {
-            if (this.convexGeometry) {
-                clone.convexGeometry = this.convexGeometry.clone();
-            }
-        }
 
         return clone;
     }
@@ -737,7 +730,7 @@ class Model {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
             transformation, processImageName
         } = this;
         return {
@@ -751,8 +744,6 @@ class Model {
             uploadName,
             config,
             mode,
-            geometry,
-            material,
             transformation,
             processImageName
         };
