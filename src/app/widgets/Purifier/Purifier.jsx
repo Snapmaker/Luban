@@ -19,6 +19,7 @@ class Purifier extends PureComponent {
         server: PropTypes.object.isRequired,
         connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
+        airPurifier: PropTypes.bool,
         airPurifierSwitch: PropTypes.bool,
         airPurifierFanSpeed: PropTypes.number,
         airPurifierFilterHealth: PropTypes.number
@@ -84,11 +85,11 @@ class Purifier extends PureComponent {
             this.props.setDisplay(false);
             return;
         }
-        if (nextProps.airPurifierSwitch === undefined) {
+        if (nextProps.airPurifier) {
             this.props.setDisplay(false);
             return;
         }
-        if (nextProps.airPurifierSwitch !== undefined) {
+        if (!nextProps.airPurifier) {
             this.props.setDisplay(true);
         }
 

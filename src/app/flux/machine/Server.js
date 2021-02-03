@@ -74,7 +74,8 @@ export class Server extends events.EventEmitter {
                 remainingTime: 0
             },
             isEmergencyStopped: false,
-            airPurifierSwitch: undefined,
+            airPurifier: false,
+            airPurifierSwitch: false,
             airPurifierFanSpeed: 1,
             airPurifierFilterHealth: 0
         };
@@ -227,8 +228,9 @@ export class Server extends events.EventEmitter {
                 isNotNull(data.isEnclosureDoorOpen) && (this.state.isEnclosureDoorOpen = data.isEnclosureDoorOpen);
                 isNotNull(data.doorSwitchCount) && (this.state.doorSwitchCount = data.doorSwitchCount);
                 isNotNull(data.isEmergencyStopped) && (this.state.isEmergencyStopped = data.isEmergencyStopped);
-                // this state controls filter widget disable, undefined
-                this.state.airPurifierSwitch = data.airPurifierSwitch;
+                // this state controls filter widget disable
+                this.state.airPurifier = isNotNull(data.airPurifierSwitch);
+                isNotNull(data.airPurifierSwitch) && (this.state.airPurifierSwitch = data.airPurifierSwitch);
                 isNotNull(data.airPurifierFanSpeed) && (this.state.airPurifierFanSpeed = data.airPurifierFanSpeed);
                 isNotNull(data.airPurifierFilterHealth) && (this.state.airPurifierFilterHealth = data.airPurifierFilterHealth);
 
@@ -481,6 +483,7 @@ export class Server extends events.EventEmitter {
             heatedBedTargetTemperature: this.state.heatedBedTargetTemperature,
             gcodePrintingInfo: this.state.gcodePrintingInfo,
             isEmergencyStopped: this.state.isEmergencyStopped,
+            airPurifier: this.state.airPurifier,
             airPurifierSwitch: this.state.airPurifierSwitch,
             airPurifierFanSpeed: this.state.airPurifierFanSpeed,
             airPurifierFilterHealth: this.state.airPurifierFilterHealth

@@ -297,12 +297,13 @@ export const actions = {
             },
             'Marlin:settings': (options) => {
                 const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
-                    airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = options.settings;
+                    airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = options.settings;
                 dispatch(baseActions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,
                     enclosureFan,
                     enclosureLight,
+                    airPurifier,
                     airPurifierSwitch,
                     airPurifierFanSpeed,
                     airPurifierFilterHealth
@@ -586,6 +587,7 @@ export const actions = {
                     isEnclosureDoorOpen,
                     headType,
                     heatedBedTargetTemperature,
+                    airPurifier,
                     airPurifierSwitch,
                     airPurifierFanSpeed,
                     airPurifierFilterHealth,
@@ -610,6 +612,7 @@ export const actions = {
                     doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
                     isEmergencyStopped: isEmergencyStopped,
+                    airPurifier: airPurifier,
                     airPurifierSwitch: airPurifierSwitch,
                     airPurifierFanSpeed: airPurifierFanSpeed,
                     airPurifierFilterHealth: airPurifierFilterHealth

@@ -771,7 +771,8 @@ class Marlin extends events.EventEmitter {
         enclosureLight: 0,
         enclosureFan: 0,
 
-        airPurifierSwitch: undefined,
+        airPurifier: false,
+        airPurifierSwitch: false,
         airPurifierFanSpeed: 3,
         airPurifierFilterHealth: 2
     };
@@ -870,6 +871,9 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('enclosure', payload);
         } else if (type === MarlinReplyParserPurifierFanWork) {
+            if (this.settings.airPurifier !== (payload.airPurifierSwitch !== undefined)) {
+                this.set({ airPurifier: (payload.airPurifierSwitch !== undefined) });
+            }
             if (this.settings.airPurifierSwitch !== payload.airPurifierSwitch) {
                 this.set({ airPurifierSwitch: payload.airPurifierSwitch });
             }
