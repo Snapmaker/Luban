@@ -585,7 +585,9 @@ export const actions = {
                     isEmergencyStopped
                 } = result.data;
                 if (isEmergencyStopped) {
-                    dispatch(actions.close(null, true));
+                    dispatch(baseActions.updateState({
+                        isEmergencyStopped
+                    }));
                     server.close(() => {
                         dispatch(actions.resetMachineState());
                     });
