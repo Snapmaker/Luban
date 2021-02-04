@@ -53,12 +53,13 @@ Or you can clone this repository, then follow the instructions in "**Development
 
 ### Setup development environment (Ubuntu)
 
-Install dependencies for Linux builds. `binutils` is used for .deb builds, `rpm` is used for .rpm builds.
+Install dependencies for Linux builds. `binutils` is used for .deb builds, `rpm` is used for .rpm builds, `libfontconfig-dev` is needed for font-manager. 
 
 ```Bash
 > sudo apt install libgconf-2-4
 > sudo apt install binutils
 > sudo apt install rpm
+> sudo apt install libfontconfig-dev
 ```
 
 ### Setup Node.js environment
