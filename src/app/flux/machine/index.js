@@ -296,12 +296,17 @@ export const actions = {
                 }));
             },
             'Marlin:settings': (options) => {
-                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0 } = options.settings;
+                const { enclosureDoorDetection, enclosureOnline, enclosureFan = 0, enclosureLight = 0,
+                    airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = options.settings;
                 dispatch(baseActions.updateState({
                     enclosureDoorDetection,
                     enclosureOnline,
                     enclosureFan,
-                    enclosureLight
+                    enclosureLight,
+                    airPurifier,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth
                 }));
             },
             'serialport:open': (options) => {
@@ -582,6 +587,10 @@ export const actions = {
                     isEnclosureDoorOpen,
                     headType,
                     heatedBedTargetTemperature,
+                    airPurifier,
+                    airPurifierSwitch,
+                    airPurifierFanSpeed,
+                    airPurifierFilterHealth,
                     isEmergencyStopped
                 } = result.data;
                 if (isEmergencyStopped) {
@@ -602,7 +611,11 @@ export const actions = {
                     isEnclosureDoorOpen: isEnclosureDoorOpen,
                     doorSwitchCount: doorSwitchCount,
                     heatedBedTargetTemperature: heatedBedTargetTemperature,
-                    isEmergencyStopped: isEmergencyStopped
+                    isEmergencyStopped: isEmergencyStopped,
+                    airPurifier: airPurifier,
+                    airPurifierSwitch: airPurifierSwitch,
+                    airPurifierFanSpeed: airPurifierFanSpeed,
+                    airPurifierFilterHealth: airPurifierFilterHealth
                 }));
                 // make 'workPosition' value as Number
                 if (!(_.isUndefined(b))) {

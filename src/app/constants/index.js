@@ -37,6 +37,11 @@ export const MODAL_ADD_MACRO = 'add';
 export const MODAL_EDIT_MACRO = 'edit';
 export const MODAL_RUN_MACRO = 'run';
 
+// Purifier
+export const SPEED_HIGH = 3;
+export const SPEED_MEDIUM = 2;
+export const SPEED_LOW = 1;
+
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;

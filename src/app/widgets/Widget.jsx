@@ -6,6 +6,7 @@ import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import MacroWidget from './Macro';
+import PurifierWidget from './Purifier';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
@@ -33,6 +34,7 @@ const getWidgetByName = (name) => {
         'gcode': GCodeWidget,
         'macro': MacroWidget,
         'macroPanel': MacroWidget,
+        'purifier': PurifierWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
