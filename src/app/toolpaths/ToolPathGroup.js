@@ -68,6 +68,13 @@ class ToolPathGroup {
         } else {
             this.selectedToolPathId = toolPathId;
         }
+        // this.toolPaths.forEach((item) => {
+        //     if (item.id === toolPathId) {
+        //         item.isSelected = true;
+        //     } else {
+        //         item.isSelected = false;
+        //     }
+        // });
         this._updated();
     }
 
@@ -198,6 +205,11 @@ class ToolPathGroup {
     commitToolPath(toolPathId, options) {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
+            // if (this.selectedToolPathId === toolPathId) {
+            //     toolPath.isSelected = true;
+            // } else {
+            //     toolPath.isSelected = false;
+            // }
             toolPath.commitGenerateToolPath(options);
         }
         this._updated();

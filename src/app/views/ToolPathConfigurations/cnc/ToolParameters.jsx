@@ -17,7 +17,7 @@ class ToolParameters extends PureComponent {
         toolDefinitions: PropTypes.array.isRequired,
         activeToolDefinition: PropTypes.object.isRequired,
         toolPath: PropTypes.object.isRequired,
-
+        isModifiedDefinition: PropTypes.bool.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
 
         changeActiveToolListDefinition: PropTypes.func.isRequired,
@@ -61,6 +61,9 @@ class ToolParameters extends PureComponent {
                     <div className="sm-parameter-container">
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Material & Tool')}</span>
+                            {(this.props.isModifiedDefinition
+                                && <span>*</span>
+                            )}
                             <Select
                                 style={{
                                     right: '32px'

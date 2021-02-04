@@ -237,7 +237,9 @@ export const removeEnv = async (req, res) => {
 export const saveEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
-    const envDir = `${DataStorage.envDir}/${config.headType}`;
+    const machineInfo = config.machineInfo;
+    const envDir = `${DataStorage.envDir}/${machineInfo.headType}`;
+    // TODO: not just remove the category but only change the file when model changed
     rmDir(envDir, false);
 
     const result = await new Promise((resolve, reject) => {
@@ -254,9 +256,11 @@ export const saveEnv = async (req, res) => {
         });
     });
     config.models.forEach((model) => {
-        const { originalName, uploadName } = model;
+        // why copy all not just 'uploadName'
+        const { uploadName } = model;
+        // const { originalName, uploadName } = model;
 
-        copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
+        // copyFileSync(`${DataStorage.tmpDir}/${originalName}`, `${envDir}/${originalName}`);
         copyFileSync(`${DataStorage.tmpDir}/${uploadName}`, `${envDir}/${uploadName}`);
     });
     if (config.defaultMaterialId && /^material.([0-9_]+)$/.test(config.defaultMaterialId)) {
@@ -291,7 +295,8 @@ export const getEnv = async (req, res) => {
 export const recoverEnv = async (req, res) => {
     const { content } = req.body;
     const config = JSON.parse(content);
-    const envDir = `${DataStorage.envDir}/${config.headType}`;
+    const machineInfo = config.machineInfo;
+    const envDir = `${DataStorage.envDir}/${machineInfo.headType}`;
     config.models.forEach((model) => {
         const { originalName, uploadName } = model;
 

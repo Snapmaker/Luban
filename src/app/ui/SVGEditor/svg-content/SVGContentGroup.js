@@ -481,7 +481,7 @@ class SVGContentGroup {
     getElementAngel(element) { // get angleOld for elements rotation
         if (!element) {
             if (this.selectedElements.length !== 1) {
-                //TODO: for multi-rotate, angleOld maybe not 0
+                // TODO: for multi-rotate, angleOld maybe not 0
                 return 0;
             }
             element = this.selectedElements[0];
