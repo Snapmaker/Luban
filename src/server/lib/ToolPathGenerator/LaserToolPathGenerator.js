@@ -375,8 +375,8 @@ class LaserToolPathGenerator extends EventEmitter {
         const { transformation, gcodeConfig } = modelInfo;
         const { fillEnabled, fillDensity, optimizePath } = gcodeConfig;
         const { fixedPowerEnabled, fixedPower, workSpeed, jogSpeed } = gcodeConfig;
-        const originWidth = modelInfo.sourceWidth;
-        const originHeight = modelInfo.sourceHeight;
+        const originWidth = svg.width;
+        const originHeight = svg.height;
         const targetWidth = transformation.width;
         const targetHeight = transformation.height;
 
