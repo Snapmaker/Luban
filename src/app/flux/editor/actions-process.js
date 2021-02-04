@@ -2,6 +2,7 @@ import uuid from 'uuid';
 import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { CNC_LASER_STAGE } from './utils';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, SELECTEVENT } from '../../constants';
 
 export const processActions = {
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
@@ -9,7 +10,7 @@ export const processActions = {
         modelGroup.hideAllModelsObj3D();
         toolPathGroup.show();
         dispatch(baseActions.updateState(headType, {
-            showToolPathGroup: true
+            displayedType: DISPLAYED_TYPE_TOOLPATH
         }));
         dispatch(baseActions.render(headType));
     },
@@ -19,9 +20,34 @@ export const processActions = {
         modelGroup.showAllModelsObj3D();
         toolPathGroup.hide();
         dispatch(baseActions.updateState(headType, {
-            showToolPathGroup: false
+            displayedType: DISPLAYED_TYPE_MODEL
         }));
         dispatch(baseActions.render(headType));
+    },
+
+    selectModelInProcess: (headType, intersect, selectEvent) => (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+
+        if (!intersect) {
+            modelGroup.setSelectedToolPathModelIDs([]);
+        } else {
+            const model = modelGroup.getSelectedModelByIntersect(intersect);
+
+            if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
+                modelGroup.setSelectedToolPathModelIDs([model.modelID]);
+            } else if (selectEvent === SELECTEVENT.ADDSELECT) {
+                modelGroup.addSelectedToolPathModelIDs([model.modelID]);
+            } else if (selectEvent === SELECTEVENT.REMOVESELECT) {
+                modelGroup.removeSelectedToolPathModelIDs([model.modelID]);
+            } else {
+                modelGroup.setSelectedToolPathModelIDs([]);
+            }
+        }
+    },
+
+    selectAllToolPathModels: (headType) => (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
+        modelGroup.setAllSelectedToolPathModelIDs();
     },
 
     createToolPath: (headType) => (dispatch, getState) => {
@@ -58,7 +84,7 @@ export const processActions = {
         const { toolPathGroup, materials } = getState()[headType];
 
         if (toolPathGroup.getToolPath(toolPath.id)) {
-            toolPathGroup.updateToolPath(toolPath.id, toolPath);
+            toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
             toolPathGroup.saveToolPath(toolPath, { materials });
             dispatch(processActions.showToolPathGroupObject(headType));
@@ -69,8 +95,8 @@ export const processActions = {
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
-        toolPathGroup.updateToolPath(toolPathId, newState);
+        const { toolPathGroup, materials } = getState()[headType];
+        toolPathGroup.updateToolPath(toolPathId, newState, { materials });
     },
 
     toolPathToUp: (headType, toolPathId) => (dispatch, getState) => {
@@ -91,11 +117,26 @@ export const processActions = {
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup, materials } = getState()[headType];
         toolPathGroup.commitToolPath(toolPathId, { materials });
+        dispatch(baseActions.updateState(headType, {
+            stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+            progress: 0
+        }));
     },
 
     onGenerateToolPath: (headType, taskResult) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.onGenerateToolPath(taskResult);
+        if (taskResult.taskStatus === 'failed') {
+            dispatch(baseActions.updateState(headType, {
+                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
+                progress: 1
+            }));
+        } else {
+            dispatch(baseActions.updateState(headType, {
+                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
+                progress: 1
+            }));
+        }
     },
 
     /**

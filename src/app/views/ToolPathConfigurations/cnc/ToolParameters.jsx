@@ -95,6 +95,7 @@ class ToolParameters extends PureComponent {
                             const unit = setting.unit;
                             const min = setting.min || 0;
                             const max = setting.max || 6000;
+                            const content = setting.description || '';
 
                             const isToolParams = (k) => {
                                 return _.includes(['angle', 'shaft_diameter', 'diameter'], k);
@@ -106,7 +107,10 @@ class ToolParameters extends PureComponent {
 
                             return (
                                 <div key={key} className="sm-parameter-row">
-                                    <TipTrigger>
+                                    <TipTrigger
+                                        title={i18n._(label)}
+                                        content={i18n._(content)}
+                                    >
                                         <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
                                         <Input
                                             className="sm-parameter-row__input"

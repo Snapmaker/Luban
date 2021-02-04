@@ -17,7 +17,8 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
-import { PAGE_EDITOR } from '../../constants';
+// eslint-disable-next-line no-unused-vars
+import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
@@ -43,10 +44,11 @@ class Visualizer extends Component {
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
+        selectedToolPathModels: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
-        showToolPathGroup: PropTypes.bool.isRequired,
+        displayedType: PropTypes.string.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
@@ -235,11 +237,17 @@ class Visualizer extends Component {
             this.canvas.current.renderScene();
         }
 
-        if (nextProps.showToolPathGroup !== this.props.showToolPathGroup) {
-            if (nextProps.showToolPathGroup === true) {
+        if (nextProps.displayedType !== this.props.displayedType) {
+            if (nextProps.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.canvas.current.controls.disableClick();
             } else {
                 this.canvas.current.controls.enableClick();
+            }
+        }
+
+        if (nextProps.selectedToolPathModels.length !== this.props.selectedToolPathModels.length) {
+            for (const selectedToolPathModel of nextProps.selectedToolPathModels) {
+                this.canvas.current.controls.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
             }
         }
     }
@@ -541,9 +549,10 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
-    const { page, materials, modelGroup, toolPathGroup, showToolPathGroup, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
+    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
+    const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
         page,
@@ -554,9 +563,10 @@ const mapStateToProps = (state) => {
         // model,
         modelGroup,
         SVGActions,
-        showToolPathGroup,
+        displayedType,
         toolPathGroup,
         selectedModelArray,
+        selectedToolPathModels,
         selectedModelID,
         hasModel,
         renderingTimestamp,

@@ -17,7 +17,7 @@ import { actions as editorActions } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
-import { PAGE_EDITOR } from '../../constants';
+import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR } from '../../constants';
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
@@ -47,7 +47,7 @@ class Visualizer extends Component {
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
-        showToolPathGroup: PropTypes.bool.isRequired,
+        displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
@@ -252,8 +252,8 @@ class Visualizer extends Component {
             this.canvas.current.renderScene();
         }
 
-        if (nextProps.showToolPathGroup !== this.props.showToolPathGroup) {
-            if (nextProps.showToolPathGroup === true) {
+        if (nextProps.displayedType !== this.props.displayedType) {
+            if (nextProps.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.canvas.current.controls.disableClick();
             } else {
                 this.canvas.current.controls.enableClick();
@@ -522,7 +522,7 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
-    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, showToolPathGroup, renderingTimestamp, stage, progress } = state.laser;
+    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
 
     return {
@@ -537,7 +537,7 @@ const mapStateToProps = (state) => {
         svgModelGroup,
         modelGroup,
         toolPathGroup,
-        showToolPathGroup,
+        displayedType,
         selectedModelArray,
         // model,
         backgroundGroup: background.group,

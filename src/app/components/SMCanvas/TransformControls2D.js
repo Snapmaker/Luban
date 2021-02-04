@@ -230,12 +230,25 @@ class TransformControls2D extends Object3D {
             }
             this.objects = [];
             this.peripherals = [];
+
+            this.objects.push(object);
+            const peripheral = new Peripheral(object);
+            this.peripherals.push(peripheral);
+            this.add(peripheral);
+        } else if (selectEvent === SELECTEVENT.ADDSELECT) {
+            if (!this.objects.includes(object)) {
+                this.objects.push(object);
+                const peripheral = new Peripheral(object);
+                this.peripherals.push(peripheral);
+                this.add(peripheral);
+            } else {
+                const index = this.objects.findIndex(o => o === object);
+                this.objects.splice(index, 1);
+                const removePeripherals = this.peripherals.splice(index, 1);
+                this.remove(removePeripherals[0]);
+            }
         }
 
-        this.objects.push(object);
-        const peripheral = new Peripheral(object);
-        this.peripherals.push(peripheral);
-        this.add(peripheral);
         this.visible = true;
 
         this.dispatchEvent(EVENTS.UPDATE);

@@ -121,7 +121,7 @@ const defaultGcodeConfigs = {
         direction: 'Horizontal',
         movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
         density: 7,
-        jogSpeed: 1500,
+        jogSpeed: ABSENT_VALUE,
         workSpeed: 2500,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: 5,
@@ -133,12 +133,12 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
         direction: 'Horizontal',
-        movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
-        dwellTime: 5,
+        dwellTime: ABSENT_VALUE,
         fixedPowerEnabled: false,
         fixedPower: 50,
         multiPassEnabled: false,
@@ -147,12 +147,12 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
         direction: 'Horizontal',
-        movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
-        dwellTime: 5,
+        dwellTime: ABSENT_VALUE,
         fixedPowerEnabled: false,
         fixedPower: 50,
         multiPassEnabled: false,

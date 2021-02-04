@@ -107,7 +107,6 @@ class ToolPath {
     }
 
     _getModels() {
-        console.log('this.modelGroup', this.modelGroup);
         const models = this.modelGroup.getModels();
         return models.filter(model => _.includes(this.modelIDs, model.modelID));
     }

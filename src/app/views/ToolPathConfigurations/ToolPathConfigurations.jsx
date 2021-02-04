@@ -119,7 +119,7 @@ class ToolPathConfigurations extends PureComponent {
             <React.Fragment>
                 <Modal
                     className={classNames(styles['manager-body'])}
-                    style={{ width: '360px', height: '614px' }}
+                    style={{ width: '360px', height: '614px', paddingBottom: '0px' }}
                     size="lg"
                     onClose={this.actions.cancelUpdateToolPath}
                 >

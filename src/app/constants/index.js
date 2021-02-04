@@ -403,3 +403,6 @@ export const CNC_MESH_SLICE_MODE_MULTI_DIRECTION = 'multi face';
 export const TOOLPATH_TYPE_IMAGE = 'image';
 export const TOOLPATH_TYPE_VECTOR = 'vector';
 export const TOOLPATH_TYPE_SCULPT = 'sculpt';
+
+export const DISPLAYED_TYPE_MODEL = 'model';
+export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';

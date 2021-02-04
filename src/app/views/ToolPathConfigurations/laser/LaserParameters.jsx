@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Select from 'react-select';
-import { TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../constants';
+import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import { TextInput } from '../../../components/Input';
 import widgetStyles from '../../../widgets/styles.styl';
@@ -21,6 +21,23 @@ class LaserParameters extends PureComponent {
     };
 
     actions = {
+        onChangeMovementMode: (options) => {
+            if (options.value === 'greyscale-line') {
+                this.props.updateGcodeConfig({
+                    dwellTime: ABSENT_VALUE,
+                    jogSpeed: 1500,
+                    workSpeed: 500,
+                    movementMode: options.value
+                });
+            } else if (options.value === 'greyscale-dot') {
+                this.props.updateGcodeConfig({
+                    dwellTime: 42,
+                    jogSpeed: ABSENT_VALUE,
+                    workSpeed: 1500,
+                    movementMode: options.value
+                });
+            }
+        }
     };
 
     render() {

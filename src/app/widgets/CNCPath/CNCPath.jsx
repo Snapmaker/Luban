@@ -51,7 +51,7 @@ class CNCPath extends PureComponent {
 
     componentDidMount() {
         const { modelGroup } = this.props;
-        if (modelGroup.getSelectedModelArray().length > 0) {
+        if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
             this.props.setDisplay(true);
         } else {
             this.props.setDisplay(false);
@@ -60,7 +60,7 @@ class CNCPath extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         const { modelGroup } = nextProps;
-        if (modelGroup.getSelectedModelArray().length > 0) {
+        if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
             this.props.setDisplay(true);
         } else {
             this.props.setDisplay(false);
