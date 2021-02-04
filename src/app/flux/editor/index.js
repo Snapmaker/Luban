@@ -538,10 +538,11 @@ export const actions = {
 
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { page, modelGroup } = getState()[headType];
+        const { page, modelGroup, toolPathModelGroup } = getState()[headType];
         if (page === PAGE_PROCESS) return;
 
-        const { originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
+        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
+        const { gcodeConfig } = toolPathModelGroup.getSelectedModel();
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, gcodeConfig, transformation));
         dispatch(actions.resetProcessState(headType));

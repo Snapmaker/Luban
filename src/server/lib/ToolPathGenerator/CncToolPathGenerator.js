@@ -168,27 +168,27 @@ export default class CNCToolPathGenerator extends EventEmitter {
     }
 
     _processSVG(svg, modelInfo) {
-        const { transformation, sourceHeight, sourceType, sourceWidth, gcodeConfig, toolParams } = modelInfo;
+        const { transformation, sourceType, gcodeConfig, toolParams } = modelInfo;
 
         const { pathType = 'path', targetDepth, fillEnabled, fillDensity } = gcodeConfig;
         const { toolDiameter, toolAngle, toolShaftDiameter } = toolParams;
 
         const { scaleX, scaleY } = transformation;
 
-        const originHeight = sourceHeight;
-        const originWidth = sourceWidth;
+        const originWidth = svg.width;
+        const originHeight = svg.height;
         const targetHeight = transformation.height;
         const targetWidth = transformation.width;
 
         // rotation: degree and counter-clockwise
         const rotationZ = transformation.rotationZ;
-        const flipFlag = transformation.flip;
+        // const flipFlag = transformation.flip;
 
         if (sourceType !== 'dxf') {
             flip(svg, 1);
         }
 
-        flip(svg, flipFlag);
+        // flip(svg, flipFlag);
         scale(svg, {
             x: (scaleX > 0 ? 1 : -1) * targetWidth / originWidth,
             y: (scaleY > 0 ? 1 : -1) * targetHeight / originHeight
