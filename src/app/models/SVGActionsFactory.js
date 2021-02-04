@@ -713,8 +713,8 @@ class SVGActionsFactory {
             width,
             height,
             transformation: {
-                width,
-                height
+                width: width * model.transformation.scaleX,
+                height: height * model.transformation.scaleY
             }
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
