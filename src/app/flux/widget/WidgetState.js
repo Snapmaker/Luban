@@ -19,7 +19,7 @@ const DEFAULT_STATE = {
         right: {
             show: true,
             widgets: [
-                'wifi-transport', 'enclosure', 'control', 'macro', 'gcode'
+                'wifi-transport', 'enclosure', 'purifier', 'control', 'macro', 'gcode'
             ]
         }
     },
@@ -30,12 +30,12 @@ const DEFAULT_STATE = {
     },
     laser: {
         default: {
-            widgets: ['job-type', 'cnc-laser-object-list', 'laser-set-background', 'laser-params', 'laser-output']
+            widgets: ['job-type', 'laser-set-background', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
         }
     },
     cnc: {
         default: {
-            widgets: ['job-type', 'cnc-laser-object-list', 'cnc-tool', 'cnc-path', 'cnc-output']
+            widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'cnc-path', 'cnc-output']
         }
     },
     developerPanel: {
@@ -187,21 +187,21 @@ const SERIES_STATES = {
     A150: {
         laser: {
             default: {
-                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     },
     A250: {
         laser: {
             default: {
-                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     },
     A350: {
         laser: {
             default: {
-                widgets: ['job-type', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
             }
         }
     }

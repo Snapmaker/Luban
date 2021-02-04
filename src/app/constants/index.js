@@ -37,6 +37,11 @@ export const MODAL_ADD_MACRO = 'add';
 export const MODAL_EDIT_MACRO = 'edit';
 export const MODAL_RUN_MACRO = 'run';
 
+// Purifier
+export const SPEED_HIGH = 3;
+export const SPEED_MEDIUM = 2;
+export const SPEED_LOW = 1;
+
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
@@ -269,8 +274,8 @@ export const MACHINE_SERIES = {
                 z: 145
             },
             laserSize: {
-                x: 166,
-                y: 168,
+                x: 167,
+                y: 165,
                 z: 150
             }
         },
@@ -305,7 +310,7 @@ export const MACHINE_SERIES = {
             },
             laserSize: {
                 x: 345,
-                y: 360,
+                y: 357,
                 z: 334
             }
         },
@@ -394,3 +399,10 @@ export const DIRECTION_DOWN = 'down';
 export const CNC_MESH_SLICE_MODE_ROTATION = 'rotation';
 export const CNC_MESH_SLICE_MODE_LINKAGE = 'linkage';
 export const CNC_MESH_SLICE_MODE_MULTI_DIRECTION = 'multi face';
+
+export const TOOLPATH_TYPE_IMAGE = 'image';
+export const TOOLPATH_TYPE_VECTOR = 'vector';
+export const TOOLPATH_TYPE_SCULPT = 'sculpt';
+
+export const DISPLAYED_TYPE_MODEL = 'model';
+export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';

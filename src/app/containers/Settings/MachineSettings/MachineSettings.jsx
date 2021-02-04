@@ -282,12 +282,12 @@ class MachineSettings extends PureComponent {
                 </div>
                 <p className={styles['form-title']}>{i18n._('Module')}</p>
                 <div className={styles['form-group']}>
-                    <span>{i18n._('Z-Axis Module')}</span>
+                    <span>{i18n._('Z-Axis Extension Module')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <Select
                             clearable={false}
                             searchable={false}
-                            name={i18n._('Z-Axis Module')}
+                            name={i18n._('Z-Axis Extension Module')}
                             options={zAxisModuleOptions}
                             value={zAxisModule}
                             onChange={this.actions.onChangeZAxisModuleState}

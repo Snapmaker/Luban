@@ -215,7 +215,7 @@ class CaseLibrary extends PureComponent {
                                         disabled={this.props.isConnected && this.props.headType !== config.tag}
                                         onClick={() => this.loadThreeAxisCase(config)}
                                     >
-                                        {i18n._('load')}
+                                        {i18n._('Load')}
                                     </button>
                                 </div>
                             );
@@ -248,10 +248,10 @@ class CaseLibrary extends PureComponent {
                                                     'sm-btn-default',
                                                     styles.load,
                                                 )}
-                                                disabled={this.props.isConnected && (this.props.series === MACHINE_SERIES.A150.value || this.props.series === MACHINE_SERIES.ORIGINAL.value) && this.props.headType !== config.tag}
+                                                disabled={this.props.isConnected && ((this.props.series === MACHINE_SERIES.A150.value || this.props.series === MACHINE_SERIES.ORIGINAL.value) || this.props.headType !== config.tag)}
                                                 onClick={() => this.loadFourAxisCase(config)}
                                             >
-                                                {i18n._(config.loadText || 'load')}
+                                                {i18n._('Load')}
                                             </button>
                                         </div>
                                     );

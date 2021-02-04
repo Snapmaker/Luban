@@ -90,9 +90,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateGcodeGreyscale(modelInfo, modelPath) {
-        const { gcodeConfigPlaceholder, config, gcodeConfig } = modelInfo;
-        const { fixedPowerEnabled, fixedPower, workSpeed } = gcodeConfig;
-        const { dwellTime } = gcodeConfigPlaceholder;
+        const { config, gcodeConfig } = modelInfo;
+        const { dwellTime, fixedPowerEnabled, fixedPower, workSpeed } = gcodeConfig;
         const { bwThreshold } = config;
 
         const img = await Jimp.read(modelPath);

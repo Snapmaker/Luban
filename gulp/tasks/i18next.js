@@ -104,6 +104,7 @@ const appConfig = {
     }
 };
 
+// configuration fields that are displayed in config panel
 const curaFields = [
     'material_diameter',
     'material_flow',
@@ -150,13 +151,24 @@ const curaFields = [
     'support_infill_rate'
 ];
 
+const CURA_CATEGORIES = [
+    'Quality',
+    'Shell',
+    'Infill',
+    'Speed',
+    'Retract & Z Hop',
+    'Surface',
+    'Heated Bed Adhesion Type',
+    'Support'
+];
+
 function customTransform(file, enc, done) {
     const parser = this.parser;
     const content = fs.readFileSync(file.path, enc);
-    const extname = path.extname(file.path);
+    const basename = path.basename(file.path);
 
     // Extract descriptions from Cura config file
-    if (extname === '.json') {
+    if (basename === 'snapmaker.def.json') {
         const curaConfig = JSON.parse(content);
 
         const walk = (name, node) => {
@@ -175,6 +187,10 @@ function customTransform(file, enc, done) {
         };
 
         walk('root', curaConfig);
+
+        for (const word of CURA_CATEGORIES) {
+            parser.set(word);
+        }
     }
 
     done();

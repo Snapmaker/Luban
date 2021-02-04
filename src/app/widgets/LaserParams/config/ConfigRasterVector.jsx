@@ -33,8 +33,8 @@ class ConfigRasterVector extends PureComponent {
         onChangeTurdSize: (turdSize) => {
             this.props.updateSelectedModelConfig({ turdSize });
         },
-        onToggleInvert: (event) => {
-            this.props.updateSelectedModelConfig({ invert: event.target.checked });
+        onToggleInvert: () => {
+            this.props.updateSelectedModelConfig({ invert: !this.props.invert });
         }
     };
 
@@ -84,7 +84,7 @@ class ConfigRasterVector extends PureComponent {
                                     <Slider
                                         disabled={disabled}
                                         className="sm-parameter-row__slider"
-                                        defaultValue={vectorThreshold}
+                                        value={vectorThreshold}
                                         min={0}
                                         max={255}
                                         step={1}

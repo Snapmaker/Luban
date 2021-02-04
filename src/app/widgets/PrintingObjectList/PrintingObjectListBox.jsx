@@ -9,7 +9,7 @@ import styles from './styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
-
+import { limitStringLength } from '../../lib/normalize-range';
 
 class PrintingObjectListBox extends PureComponent {
     static propTypes = {
@@ -35,13 +35,6 @@ class PrintingObjectListBox extends PureComponent {
             } else {
                 this.props.showSelectedModel();
             }
-        },
-        limitTheLengthOfDisplayName: (name) => {
-            let newName = name;
-            if (newName.length > 36) {
-                newName = `${newName.slice(0, 24)}...${newName.slice(-9)}`;
-            }
-            return newName;
         }
     };
 
@@ -57,10 +50,7 @@ class PrintingObjectListBox extends PureComponent {
             <div className={styles['object-list-box']}>
                 {(modelGroup.models) && modelGroup.models.filter(model => !model.supportTag).map((model) => {
                     const modelName = path.basename(model.modelName);
-                    const displayModelName = this.actions.limitTheLengthOfDisplayName(modelName);
-                    // const modelIcon = () => {
-                    //     return styles.iconShape;
-                    // };
+                    const displayModelName = limitStringLength(modelName, 36);
                     return (
                         <TipTrigger
                             key={model.modelID}

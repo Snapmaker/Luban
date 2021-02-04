@@ -118,9 +118,10 @@ const defaultGcodeConfigs = {
 
     // Laser
     [toKey(HEAD_LASER, PROCESS_MODE_GREYSCALE)]: {
+        direction: 'Horizontal',
         movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
         density: 7,
-        jogSpeed: 1500,
+        jogSpeed: ABSENT_VALUE,
         workSpeed: 2500,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: 5,
@@ -132,6 +133,7 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
         direction: 'Horizontal',
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,
@@ -145,6 +147,7 @@ const defaultGcodeConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
         direction: 'Horizontal',
+        movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 3000,
         workSpeed: 800,

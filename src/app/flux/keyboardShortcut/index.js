@@ -4,6 +4,7 @@ import { actions as editorActions } from '../editor';
 import {
     ACTION_UPDATE_STATE
 } from '../actionType';
+import { DISPLAYED_TYPE_MODEL, PAGE_PROCESS } from '../../constants';
 
 export const actions = {
     updateState: (from, state) => {
@@ -53,6 +54,10 @@ export const actions = {
                 if (from === '3dp') {
                     const { displayedType } = getState().printing;
                     displayedType === 'model' && (dispatch(printingActions.selectAllModels()));
+                }
+                if (from === 'laser' || from === 'cnc') {
+                    const { page, displayedType } = getState()[from];
+                    page === PAGE_PROCESS && displayedType === DISPLAYED_TYPE_MODEL && (dispatch(editorActions.selectAllToolPathModels(from)));
                 }
             },
             'COPY': () => {
@@ -106,7 +111,8 @@ export const actions = {
                         default:
                             break;
                     }
-                    dispatch(editorActions.moveElementsOnKeyDown(from, { dx, dy }));
+                    // elements === null means move selected elements
+                    dispatch(editorActions.moveElementsOnKeyDown(from, null, { dx, dy }));
                 }
                 if (from === '3dp') {
                     const { layerCountDisplayed } = getState().printing;

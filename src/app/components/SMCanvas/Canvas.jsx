@@ -27,7 +27,7 @@ class Canvas extends Component {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         transformSourceType: PropTypes.string, // 2D, 3D. Default is 3D
-        toolPathModelGroupObject: PropTypes.object,
+        toolPathGroupObject: PropTypes.object,
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
         cameraInitialTarget: PropTypes.object.isRequired,
@@ -71,7 +71,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.transformSourceType = this.props.transformSourceType || '3D'; // '3D' | '2D'
-        this.toolPathModelGroupObject = this.props.toolPathModelGroupObject;
+        this.toolPathGroupObject = this.props.toolPathGroupObject;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -101,7 +101,7 @@ class Canvas extends Component {
         this.group.add(this.printableArea);
         this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
         this.group.add(this.modelGroup.object);
-        this.toolPathModelGroupObject && this.group.add(this.toolPathModelGroupObject);
+        this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
 
@@ -123,13 +123,13 @@ class Canvas extends Component {
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
         }
-        if (this.props.toolPathModelGroupObject) {
-            if (this.props.toolPathModelGroupObject.isRotate && this.props.toolPathModelGroupObject.visible) {
-                this.controls.setShouldForbidSelect(true);
-            } else {
-                this.controls.setShouldForbidSelect(false);
-            }
-        }
+        // if (this.props.toolPathGroupObject) {
+        //     if (this.props.toolPathGroupObject.isRotate && this.props.toolPathGroupObject.visible) {
+        //         this.controls.setShouldForbidSelect(true);
+        //     } else {
+        //         this.controls.setShouldForbidSelect(false);
+        //     }
+        // }
     }
 
     componentWillUnmount() {

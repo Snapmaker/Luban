@@ -133,6 +133,43 @@ const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 // TODO: invest worker thread memory costs
 const gcodeRenderingWorker = new GcodeToBufferGeometryWorker();
 
+// avoid parallel loading of same file
+const createLoadModelWorker = (() => {
+    const runningTasks = {};
+    return (uploadPath, onMessage) => {
+        let task = runningTasks[uploadPath];
+        if (!task) {
+            task = {
+                worker: new LoadModelWorker(),
+                cbOnMessage: []
+            };
+            task.worker.postMessage({ uploadPath });
+            task.worker.onmessage = async (e) => {
+                const data = e.data;
+                const { type } = data;
+
+                switch (type) {
+                    case 'LOAD_MODEL_CONVEX':
+                    case 'LOAD_MODEL_FAILED':
+                        task.worker.terminate();
+                        delete runningTasks[uploadPath];
+                        break;
+                    default:
+                        break;
+                }
+                for (const fn of task.cbOnMessage) {
+                    if (typeof fn === 'function') {
+                        fn(e);
+                    }
+                }
+            };
+            runningTasks[uploadPath] = task;
+        }
+
+        task.cbOnMessage.push(onMessage);
+    };
+})();
+
 export const actions = {
     updateState: (state) => {
         return {
@@ -221,7 +258,7 @@ export const actions = {
                 stage: PRINTING_STAGE.SLICE_SUCCEED,
                 progress: 1
             }));
-            modelGroup.removeSelectedObjectParentMatrix();
+
             modelGroup.unselectAllModels();
             dispatch(actions.loadGcode(gcodeFilename));
         });
@@ -752,7 +789,6 @@ export const actions = {
         if (!hasModel) {
             return;
         }
-        modelGroup.removeSelectedObjectParentMatrix();
         modelGroup.unselectAllModels();
         // Info user that slice has started
         dispatch(actions.updateState({
@@ -921,9 +957,9 @@ export const actions = {
         dispatch(actions.displayModel());
     },
 
-    updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.updateSelectedGroupTransformation(transformation);
+        modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
@@ -1080,6 +1116,14 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+    autoRotateSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.autoRotateSelectedModel();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
     // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
@@ -1181,9 +1225,8 @@ export const actions = {
         const { modelGroup } = getState().printing;
         // const sourceType = '3d';
 
-        const worker = new LoadModelWorker();
-        worker.postMessage({ uploadPath });
-        worker.onmessage = async (e) => {
+
+        const onMessage = async (e) => {
             const data = e.data;
 
             const { type } = data;
@@ -1227,7 +1270,6 @@ export const actions = {
                     break;
                 }
                 case 'LOAD_MODEL_CONVEX': {
-                    worker.terminate();
                     const { positions } = data;
 
                     const convexGeometry = new THREE.BufferGeometry();
@@ -1248,7 +1290,6 @@ export const actions = {
                     break;
                 }
                 case 'LOAD_MODEL_FAILED': {
-                    worker.terminate();
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0
@@ -1259,6 +1300,7 @@ export const actions = {
                     break;
             }
         };
+        createLoadModelWorker(uploadPath, onMessage);
     }
 };
 

@@ -1,5 +1,3 @@
-// import EventEmitter from 'events';
-// import _ from 'lodash';
 import { DATA_PREFIX } from '../constants';
 import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
@@ -10,6 +8,7 @@ import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';
 import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
+import { transformListToTransform, transformBox } from '../ui/SVGEditor/element-transform';
 
 const coordGmModelToSvg = (size, transformation) => {
     // eslint-disable-next-line no-unused-vars
@@ -30,12 +29,58 @@ const coordGmModelToSvg = (size, transformation) => {
 const svg = document.createElementNS(NS.SVG, 'svg');
 
 
+// TODO: copied from element-transform, put it as util function
+function getTransformList(elem) {
+    const transform = elem.transform;
+    if (!transform) {
+        elem.setAttribute('transform', 'translate(0,0)');
+    }
+    return elem.transform.baseVal;
+}
+
+/*
+// TODO: copied from element-transform, put it as util function
+function transformBox(x, y, w, h, m) {
+    const topLeft = transformPoint({ x, y }, m);
+    const topRight = transformPoint({ x: x + w, y }, m);
+    const bottomLeft = transformPoint({ x, y: y + h }, m);
+    const bottomRight = transformPoint({ x: x + w, y: y + h }, m);
+
+    const minX = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const maxX = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+    const minY = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+    const maxY = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+    return {
+        tl: topLeft,
+        tr: topRight,
+        bl: bottomLeft,
+        br: bottomRight,
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+    };
+}
+*/
+
+
 class SVGActionsFactory {
     // event = new EventEmitter();
 
     svgModels = [];
 
     selectedSvgModels = [];
+
+    selectedElementsTransformation = {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        scaleX: 1,
+        scaleY: 1,
+        angle: 0
+    };
 
     // deviation of moving with arrow keys
     onKeyMovingValue = {
@@ -589,7 +634,145 @@ class SVGActionsFactory {
             }
         }
 
-        this.resetSelection();
+        const selectedElements = this.svgContentGroup.selectedElements;
+
+        // update selector
+        this._resetSelector(selectedElements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(selectedElements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Get selected elements.
+     *
+     * @returns {SVGElement[]} - returns list of selected elements.
+     */
+    getSelectedElements() {
+        if (this.svgContentGroup) {
+            return this.svgContentGroup.getSelectedElements();
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Get selected SVG models.
+     *
+     * @returns {SvgModel[]} - returns list of selected SVG models.
+     */
+    getSelectedSVGModels() {
+        return this.selectedSvgModels;
+    }
+
+    /**
+     * Get selected elements transformation.
+     * This is readonly from outside of the class.
+     *
+     * @returns {{scaleX: number, scaleY: number, x: number, width: number, y: number, angle: number, height: number}}
+     */
+    getSelectedElementsTransformation() {
+        return this.selectedElementsTransformation;
+    }
+
+    /**
+     * Update internal cached variable `selectedElementsTransformation` to `t`.
+     *
+     * @param t
+     * @private
+     */
+    _setSelectedElementsTransformation(t) {
+        this.selectedElementsTransformation = t;
+    }
+
+    static calculateElementsTransformation(elements) {
+        if (elements.length === 0) {
+            return {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+                scaleX: 1,
+                scaleY: 1,
+                angle: 0
+            };
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+
+            const { x, y, width, height } = element.getBBox();
+            const center = {
+                x: x + width / 2,
+                y: y + height / 2
+            };
+
+            const transformList = SvgModel.getTransformList(element);
+
+            // const transform = transformList.getItem(0);
+            const scaleX = transformList.getItem(2).matrix.a;
+            const scaleY = transformList.getItem(2).matrix.d;
+            const angle = transformList.getItem(1).angle;
+
+            return {
+                x: center.x,
+                y: center.y,
+                width,
+                height,
+                scaleX,
+                scaleY,
+                angle
+            };
+        } else {
+            // Note: old transformation calculation is in method OperatorPoints.resizeGrips(), it uses
+            //   four corners (control points) to calculate bounding box of selected elements. it's
+            //   AABB of OBBs, not AABB of contents.
+            // TODO: duplicate work of OBB calculation.
+
+            // calculate AABB
+            let minX = Number.MAX_VALUE;
+            let minY = Number.MAX_VALUE;
+            let maxX = -Number.MAX_VALUE;
+            let maxY = -Number.MAX_VALUE;
+
+            for (const element of elements) {
+                const { x, y, width, height } = element.getBBox();
+
+                const transformList = getTransformList(element);
+                const transform = transformListToTransform(transformList);
+
+                const box = transformBox(x, y, width, height, transform.matrix); // OBB
+
+                minX = Math.min(minX, box.tl.x, box.tr.x, box.bl.x, box.br.x);
+                maxX = Math.max(maxX, box.tl.x, box.tr.x, box.bl.x, box.br.x);
+
+                minY = Math.min(minY, box.tl.y, box.tr.y, box.bl.y, box.br.y);
+                maxY = Math.max(maxY, box.tl.y, box.tr.y, box.bl.y, box.br.y);
+            }
+
+            // calculate combined t (AABB)
+            const center = {
+                x: (minX + maxX) / 2,
+                y: (minY + maxY) / 2
+            };
+            const combinedWidth = maxX - minX;
+            const combinedHeight = maxY - minY;
+
+            return {
+                x: center.x,
+                y: center.y,
+                width: combinedWidth,
+                height: combinedHeight,
+                scaleX: 1,
+                scaleY: 1,
+                angle: 0
+            };
+        }
+    }
+
+    _resetSelector(elements) {
+        this.svgContentGroup.resetSelector(elements);
     }
 
     /**
@@ -602,47 +785,511 @@ class SVGActionsFactory {
 
         // FIXME: this will call render eventually.
         this.modelGroup.emptySelectedModelArray();
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation([]);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
-     * Resize element.
+     * Move elements start.
+     *
+     * Prepend [T = (0, 0)] to transform list, make transform list [T][T][R][S][T].
+     *
+     * @param elements - List of SVGElement
      */
-    resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
-        const svgModel = this.getSVGModelByElement(element);
+    moveElementsStart(elements) {
+        // Prepend [T] to transform list
+        for (const element of elements) {
+            const transformList = getTransformList(element);
 
-        svgModel.elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling });
+            const transform = svg.createSVGTransform();
+            transform.setTranslate(0, 0);
 
-        const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
+            transformList.insertItemBefore(transform, 0);
+        }
+
+        this.svgContentGroup.moveSelectorStart();
+    }
+
+    /**
+     * Move elements (moving).
+     *
+     * Modify the first [T] of transform list.
+     *
+     * @param elements - TODO
+     * @param dx - delta X since move start
+     * @param dy - delta Y since move start
+     */
+    moveElements(elements, { dx = 0, dy = 0 }) {
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = transformList.getItem(0);
+            transform.setTranslate(dx, dy);
+        }
+
+        // TODO: refactor this
+        // const transform = svg.createSVGTransform();
+        // transform.setTranslate(dx, dy);
+        this.svgContentGroup.moveSelector(elements, { dx, dy });
+    }
+
+    /**
+     * After Move elements.
+     */
+    moveElementsFinish(elements) {
+        for (const element of elements) {
+            SvgModel.completeElementTransform(element);
+        }
+
+        // update selector
+        this.svgContentGroup.moveSelectorFinish(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * move selected elements by arrow key on key down
+     */
+    moveElementsOnArrowKeyDown(elements, { dx, dy }) {
+        // Key move start
+        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
+            if (elements === null) {
+                this.moveElementsStart(this.getSelectedElements());
+            } else {
+                this.moveElementsStart(elements);
+            }
+        }
+
+        // replace key move
+        this.onKeyMovingValue.x += dx;
+        this.onKeyMovingValue.y += dy;
+        if (elements === null) {
+            this.moveElements(this.getSelectedElements(), {
+                dx: this.onKeyMovingValue.x,
+                dy: this.onKeyMovingValue.y
+            });
+        } else {
+            this.moveElements(elements, { dx, dy });
+        }
+    }
+
+    /**
+     * move selected elements by arrow key on key up
+     */
+    moveElementsOnArrowKeyUp() {
+        const elements = this.getSelectedElements();
+        this.moveElementsFinish(elements);
+
+        this.onKeyMovingValue.x = 0;
+        this.onKeyMovingValue.y = 0;
+    }
+
+    moveElementsImmediately(elements, { newX, newY }) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+            const { x, y, width, height } = element.getBBox();
+
+            newX = newX === undefined ? x + width / 2 : newX;
+            newY = newY === undefined ? y + height / 2 : newY;
+
+            const transformList = SvgModel.getTransformList(element);
+
+            const angle = transformList.getItem(1).angle;
+            const scaleX = transformList.getItem(2).matrix.a;
+            const scaleY = transformList.getItem(2).matrix.d;
+
+            SvgModel.recalculateElementAttributes(element, {
+                x: newX,
+                y: newY,
+                width,
+                height,
+                scaleX,
+                scaleY,
+                angle
+            });
+        } else {
+            const t = SVGActionsFactory.calculateElementsTransformation(elements);
+
+            // new center
+            newX = newX === undefined ? t.x : newX;
+            newY = newY === undefined ? t.y : newY;
+
+            // Move each element by (new center - old center)
+            // Note that multi-model can be unified with
+            for (const element of elements) {
+                const { width, height } = element.getBBox();
+
+                const transformList = SvgModel.getTransformList(element);
+
+                const moveX = transformList.getItem(0).matrix.e;
+                const moveY = transformList.getItem(0).matrix.f;
+                const angle = transformList.getItem(1).angle;
+                const scaleX = transformList.getItem(2).matrix.a;
+                const scaleY = transformList.getItem(2).matrix.d;
+
+                SvgModel.recalculateElementAttributes(element, {
+                    x: moveX + (newX - t.x),
+                    y: moveY + (newY - t.y),
+                    width,
+                    height,
+                    scaleX,
+                    scaleY,
+                    angle
+                });
+            }
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Resize elements start.
+     *
+     * Note that we only support resize on single element.
+     *
+     * @param elements - List of SVGElement
+     */
+    // resizeElementsStart(elements) {
+    resizeElementsStart() {
+        // Do nothing
+        this.svgContentGroup.resizeSelectorStart();
+    }
+
+    /**
+     * Resize elements (resizing).
+     *
+     * Modify scale ratio and center point.
+     *
+     * @param elements - List of SVGElement
+     * @param scaleX
+     * @param scaleY
+     * @param centerX
+     * @param centerY
+     */
+    resizeElements(elements, { scaleX, scaleY, centerX, centerY }) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        // TODO: Do scale on multiple models
+        const element = elements[0];
+
+        // Set scale and translate on transformList
+        // [T][R][S][T]
+        const transformList = getTransformList(element);
+
+        const scale = transformList.getItem(2);
+        scale.setScale(scaleX, scaleY);
+
+        const translate = transformList.getItem(0);
+        translate.setTranslate(centerX, centerY);
+
+        this.svgContentGroup.resizeSelector(elements, { scaleX, scaleY, centerX, centerY });
+
+        // const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(this.svgContentGroup.selectedElements);
+        /*
+        // TODO: refactor
         this.modelGroup.updateSelectedGroupTransformation({
             positionX: posAndSize.positionX - this.size.x,
             positionY: this.size.y - posAndSize.positionY,
             width: posAndSize.width,
             height: posAndSize.height
         });
+        */
     }
 
     /**
-     * Resize element.
+     * Resize elements finish.
+     *
+     * Normalize transform list (and element attributes).
+     *
+     * @param elements
      */
-    afterResizeElement(element) {
-        const svgModel = this.getSVGModelByElement(element);
-        svgModel.onUpdate();
+    resizeElementsFinish(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
 
-        this.updateSelectedModelsByTransformation({});
+        const element = elements[0];
+
+        SvgModel.completeElementTransform(element);
+
+        // update selector
+        this.svgContentGroup.resizeSelectorFinish(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
-     * Move element.
+     * Resize elements immediately.
+     *
+     * @param elements
+     * @param newWidth
+     * @param newHeight
      */
-    moveElement(element, { dx, dy }) {
-        this.updateSelectedModelsByTransformation({ dx, dy });
+    resizeElementsImmediately(elements, { newWidth, newHeight }) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+
+            const transformList = SvgModel.getTransformList(element);
+            const angle = transformList.getItem(1).angle;
+            const scaleX = transformList.getItem(2).matrix.a;
+            const scaleY = transformList.getItem(2).matrix.d;
+
+            const { x, y, width, height } = element.getBBox();
+
+            newWidth = newWidth === undefined ? width * Math.abs(scaleX) : newWidth;
+            newHeight = newHeight === undefined ? height * Math.abs(scaleY) : newHeight;
+
+            const signScaleX = scaleX > 0 ? 1 : -1;
+            const signScaleY = scaleY > 0 ? 1 : -1;
+
+            SvgModel.recalculateElementAttributes(element, {
+                x: x + width / 2,
+                y: y + height / 2,
+                width,
+                height,
+                scaleX: newWidth / width * signScaleX,
+                scaleY: newHeight / height * signScaleY,
+                angle
+            });
+        } else {
+            // not supported
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Flip elements horizontally.
+     *
+     * @param elements
+     */
+    flipElementsHorizontally(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = scaleTransform.matrix.a;
+            const scaleY = scaleTransform.matrix.d;
+
+            scaleTransform.setScale(-scaleX, scaleY);
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Flip elements vertically.
+     *
+     * @param elements
+     */
+    flipElementsVertically(elements) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = scaleTransform.matrix.a;
+            const scaleY = scaleTransform.matrix.d;
+
+            scaleTransform.setScale(scaleX, -scaleY);
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Rotate elements start.
+     *
+     * Prepend [R = (0, 0, 0)] to transform list, make transform list [R][T][R][S][T].
+     *
+     */
+    rotateElementsStart(elements, { cx, cy }) {
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = svg.createSVGTransform();
+            transform.setRotate(0, cx, cy);
+
+            transformList.insertItemBefore(transform, 0);
+        }
+
+        this.svgContentGroup.rotateSelectorStart();
     }
 
     /**
      * Rotate element.
      */
-    rotateElement(element, { angle, cx, cy }) {
-        this.updateSelectedModelsByTransformation({ cx, cy, deltaAngle: angle });
+    // rotateElement(element, { angle, cx, cy }) {
+    // }
+
+    /**
+     * Rotate elements (rotating).
+     *
+     * Modify rotate angle and center point.
+     *
+     * @param elements
+     * @param angle
+     * @param cx
+     * @param cy
+     */
+    rotateElements(elements, { deltaAngle, cx, cy }) {
+        for (const element of elements) {
+            const transformList = getTransformList(element);
+
+            const transform = transformList.getItem(0);
+            transform.setRotate(deltaAngle, cx, cy);
+        }
+
+        this.svgContentGroup.rotateSelector(elements, { deltaAngle, cx, cy });
+    }
+
+    /**
+     * Rotate elements finish.
+     */
+    rotateElementsFinish(elements) {
+        for (const element of elements) {
+            SvgModel.completeElementTransform(element);
+        }
+
+        // update selector
+        this.svgContentGroup.rotateSelectorFinish(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+        /*
+        for (const svgModel of selectedModels) {
+            const elem = svgModel.elem;
+
+            const rotateBox = svg.createSVGTransform();
+            rotateBox.setRotate(deviation.deltaAngle, deviation.cx, deviation.cy);
+
+            const startBbox = getBBox(elem);
+            const startCenter = svg.createSVGPoint();
+            startCenter.x = startBbox.x + startBbox.width / 2;
+            startCenter.y = startBbox.y + startBbox.height / 2;
+
+            const endCenter = startCenter.matrixTransform(rotateBox.matrix);
+            // why model new center?
+            const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+
+            const model = svgModel.relatedModel;
+            const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 540) % 360 - 180) * Math.PI / 180;
+            const positionX = modelNewCenter.x;
+            const positionY = modelNewCenter.y;
+
+            // <path> cannot use this
+            // because it has no xy
+            if (svgModel.type !== 'path') {
+                model.updateAndRefresh({
+                    transformation: {
+                        positionX: positionX,
+                        positionY: positionY,
+                        rotationZ: rotationZ
+                    }
+                });
+            } else {
+                // TODO: sometimes cannot move right position
+                model.updateAndRefresh({
+                    transformation: {
+                        rotationZ: rotationZ
+                    }
+                });
+
+                const transform = svg.createSVGTransform();
+                transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
+                const transformList = elem.transform.baseVal;
+                transformList.insertItemBefore(transform, 0);
+                svgModel.onUpdate();
+            }
+        }
+        */
+    }
+
+    /**
+     * Rotate elements immediately.
+     *
+     * @param elements
+     * @param newAngle
+     */
+    rotateElementsImmediately(elements, { newAngle }) {
+        if (!elements || elements.length === 0) {
+            return;
+        }
+
+        if (elements.length === 1) {
+            const element = elements[0];
+
+            const transformList = SvgModel.getTransformList(element);
+
+            // const angle = transformList.getItem(1).angle;
+            const scaleX = transformList.getItem(2).matrix.a;
+            const scaleY = transformList.getItem(2).matrix.d;
+
+            const { x, y, width, height } = element.getBBox();
+
+            SvgModel.recalculateElementAttributes(element, {
+                x: x + width / 2,
+                y: y + height / 2,
+                width,
+                height,
+                scaleX,
+                scaleY,
+                angle: newAngle
+            });
+        } else {
+            // not supported yet
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
     }
 
     /**
@@ -719,33 +1366,6 @@ class SVGActionsFactory {
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
         this.resetSelection();
-    }
-
-    /**
-     * move selected elements by arrow key on key down
-     */
-    onMovingByArrowKeyDown({ dx, dy }) {
-        const transform = svg.createSVGTransform();
-        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
-            transform.setTranslate(0, 0);
-            this.svgContentGroup.translateSelectorOnMouseDown(transform);
-            this.svgContentGroup.translateSelectedElementsOnMouseDown();
-        }
-        this.onKeyMovingValue.x += dx;
-        this.onKeyMovingValue.y += dy;
-        transform.setTranslate(this.onKeyMovingValue.x, this.onKeyMovingValue.y);
-        this.svgContentGroup.translateSelectorOnMouseMove(transform);
-        this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-    }
-
-    /**
-     * move selected elements by arrow key on key up
-     */
-    onMovingByArrowKeyUp() {
-        const dx = this.onKeyMovingValue.x, dy = this.onKeyMovingValue.y;
-        this.updateSelectedModelsByTransformation({ dx, dy });
-        this.onKeyMovingValue.x = 0;
-        this.onKeyMovingValue.y = 0;
     }
 }
 

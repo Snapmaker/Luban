@@ -16,6 +16,7 @@ class SVGEditor extends PureComponent {
         SVGActions: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
+        use3DVisualizer: PropTypes.bool,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -28,12 +29,20 @@ class SVGEditor extends PureComponent {
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
-        onResizeElement: PropTypes.func.isRequired,
-        onAfterResizeElement: PropTypes.func.isRequired,
-        onMoveElement: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+
+        elementActions: PropTypes.shape({
+            moveElementsStart: PropTypes.func.isRequired,
+            moveElements: PropTypes.func.isRequired,
+            moveElementsFinish: PropTypes.func.isRequired,
+            resizeElementsStart: PropTypes.func.isRequired,
+            resizeElements: PropTypes.func.isRequired,
+            resizeElementsFinish: PropTypes.func.isRequired,
+            rotateElementsStart: PropTypes.func.isRequired,
+            rotateElements: PropTypes.func.isRequired,
+            rotateElementsFinish: PropTypes.func.isRequired
+        }).isRequired,
 
         createText: PropTypes.func.isRequired
     };
@@ -109,12 +118,9 @@ class SVGEditor extends PureComponent {
                             onCreateElement={this.props.onCreateElement}
                             onSelectElements={this.props.onSelectElements}
                             onClearSelection={this.props.onClearSelection}
-                            onResizeElement={this.props.onResizeElement}
-                            onAfterResizeElement={this.props.onAfterResizeElement}
-                            onMoveElement={this.props.onMoveElement}
                             onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                            onRotateElement={this.props.onRotateElement}
                             updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
+                            elementActions={this.props.elementActions}
                         />
                     </div>
                     <SvgTool
@@ -124,7 +130,9 @@ class SVGEditor extends PureComponent {
                     />
 
                 </div>
-                <Cnc3DVisualizer />
+                {this.props.use3DVisualizer && (
+                    <Cnc3DVisualizer />
+                )}
             </div>
         );
     }

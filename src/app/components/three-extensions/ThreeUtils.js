@@ -1,8 +1,7 @@
-/* eslint-disable */
 import * as THREE from 'three';
 
 const ThreeUtils = {
-    getQuaternionBetweenVector3: function (v1, v2) {
+    getQuaternionBetweenVector3(v1, v2) {
         // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
         const cross = new THREE.Vector3();
         cross.crossVectors(v2, v1);
@@ -22,13 +21,13 @@ const ThreeUtils = {
     },
 
     // get matrix for rotating v2 to v1. Applying matrix to v2 can make v2 to parallels v1.
-    getRotateMatrixBetweenVector3: function (v1, v2) {
+    getRotateMatrixBetweenVector3(v1, v2) {
         const quaternion = ThreeUtils.getQuaternionBetweenVector3(v1, v2);
         const matrix4 = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
         return matrix4;
     },
 
-    getMouseXY: function (event, domElement) {
+    getMouseXY(event, domElement) {
         const rect = domElement.getBoundingClientRect();
         return new THREE.Vector2(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -37,25 +36,25 @@ const ThreeUtils = {
     },
 
     // get world info
-    getObjectWorldPosition: function (object) {
+    getObjectWorldPosition(object) {
         const result = new THREE.Vector3();
         object.getWorldPosition(result);
         return result;
     },
 
-    getObjectWorldQuaternion: function (object) {
+    getObjectWorldQuaternion(object) {
         const result = new THREE.Quaternion();
         object.getWorldQuaternion(result);
         return result;
     },
 
-    getObjectWorldScale: function (object) {
+    getObjectWorldScale(object) {
         const result = new THREE.Vector3();
         object.getWorldScale(result);
         return result;
     },
 
-    getEventWorldPosition: function (event, domElement, camera) {
+    getEventWorldPosition(event, domElement, camera) {
         const rect = domElement.getBoundingClientRect();
         const tempVector3 = new THREE.Vector3();
 
@@ -75,7 +74,7 @@ const ThreeUtils = {
     },
 
     // set world transformation
-    setObjectWorldPosition: function (object, position) {
+    setObjectWorldPosition(object, position) {
         const parent = object.parent;
         parent.updateMatrixWorld();
         const matrix = new THREE.Matrix4().getInverse(parent.matrixWorld);
@@ -83,19 +82,19 @@ const ThreeUtils = {
         object.position.copy(position);
     },
 
-    setObjectWorldScale: function (object, scale) {
+    setObjectWorldScale(object, scale) {
         const localScale = object.parent.worldToLocal(scale);
         object.scale.copy(localScale);
     },
 
-    setObjectWorldQuaternion: function (object, quaternion) {
+    setObjectWorldQuaternion(object, quaternion) {
         object.setRotationFromQuaternion(quaternion);
 
         const parentQuaternion = ThreeUtils.getObjectWorldQuaternion(object.parent);
         object.applyQuaternion(parentQuaternion.inverse());
     },
 
-    scaleObjectToWorldSize: function (object, targetSize, pivot) {
+    scaleObjectToWorldSize(object, targetSize, pivot) {
         const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
 
         const originPos = ThreeUtils.getObjectWorldPosition(object);
@@ -136,7 +135,7 @@ const ThreeUtils = {
         ThreeUtils.setObjectWorldPosition(object, newPos);
     },
 
-    getGeometrySize: function (geometry, is2D) {
+    getGeometrySize(geometry, is2D) {
         geometry.computeBoundingBox();
         const box = geometry.boundingBox;
         const size = new THREE.Vector3(
@@ -191,50 +190,141 @@ const ThreeUtils = {
         obj.applyMatrix(m);
         child.applyMatrix(new THREE.Matrix4().getInverse(m));
     },
+    // eslint-disable-next-line func-names
     computeBoundingBox: (function () {
         const caches = {};
         const initialBox = new THREE.Box3();
-        const tmpMatrix = new THREE.Matrix4();
-        return function computeBoundingBox(obj, useCacheGeometry = true) {
+
+        let i, l;
+        const v1 = new THREE.Vector3();
+        function compute(node, box) {
+            const geometry = node.geometry;
+
+            if (geometry !== undefined) {
+                if (geometry.isGeometry) {
+                    const vertices = geometry.vertices;
+
+                    for (i = 0, l = vertices.length; i < l; i++) {
+                        v1.copy(vertices[i]);
+                        v1.applyMatrix4(node.matrixWorld);
+
+                        box.expandByPoint(v1);
+                    }
+                } else if (geometry.isBufferGeometry) {
+                    const attribute = geometry.attributes.position;
+
+                    if (attribute !== undefined) {
+                        for (i = 0, l = attribute.count; i < l; i++) {
+                            v1.fromBufferAttribute(attribute, i).applyMatrix4(node.matrixWorld);
+
+                            box.expandByPoint(v1);
+                        }
+                    }
+                }
+            }
+        }
+
+        return function computeBoundingBox(obj) {
             let cache = caches[obj.uuid];
             if (!cache) {
                 cache = {
-                    geometry: obj.isMesh && obj.geometry.clone(),
                     lastMatrix: new THREE.Matrix4(),
-                    lastBbox: new THREE.Box3().copy(initialBox)
+                    lastBbox: new THREE.Box3()
                 };
                 caches[obj.uuid] = cache;
             }
-            if(!useCacheGeometry) {
-                cache.geometry = obj.geometry.clone();
-            }
-            const { geometry, lastMatrix, lastBbox } = cache;
+            const { lastMatrix, lastBbox } = cache;
 
-            if (obj.isMesh) {
-                obj.updateMatrixWorld();
+            obj.updateMatrixWorld();
+            if (obj.geometry) {
                 if (lastBbox.isEmpty() || !lastMatrix.equals(obj.matrixWorld)) {
-                    geometry.applyMatrix(obj.matrixWorld);
-                    if(!geometry.boundingBox) {
-                        geometry.computeBoundingBox();
-                    }
-                    lastBbox.copy(geometry.boundingBox);
+                    lastBbox.copy(initialBox);
+                    compute(obj, lastBbox);
                     lastMatrix.copy(obj.matrixWorld);
-                    geometry.applyMatrix(tmpMatrix.getInverse(obj.matrixWorld));
                 }
             } else {
                 lastBbox.copy(initialBox);
             }
 
             for (const child of obj.children) {
-                const cBBox = ThreeUtils.computeBoundingBox(child, useCacheGeometry);
-                if(!cBBox.isEmpty()){
+                const cBBox = ThreeUtils.computeBoundingBox(child);
+                if (!cBBox.isEmpty()) {
                     lastBbox.expandByPoint(cBBox.min).expandByPoint(cBBox.max);
                 }
             }
             return lastBbox;
         };
-    }())
+    }()),
+    computeGeometryPlanes(geometry, matrix, allPlanes = []) {
+        if (!geometry.isBufferGeometry) {
+            geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+        } else {
+            geometry = geometry.clone();
+        }
+        geometry.applyMatrix(matrix);
 
+        let baseMode = true;
+        let planes = [];
+        let areas = [];
+        let supportVolumes = [];
+        // if allPlanes provided, then do not add new planes into planes
+        // this can speed up geometry computing
+        if (allPlanes.length) {
+            baseMode = false;
+            planes = [...allPlanes];
+            areas = new Array(planes.length).fill(0);
+            supportVolumes = new Array(planes.length).fill(0);
+        }
+
+        function isSimilarPlanes(p1, p2) {
+            return Math.abs(p1.constant - p2.constant) < 0.05
+            && p1.normal.angleTo(p2.normal) * 180 / Math.PI < 1;
+        }
+
+        const positions = geometry.getAttribute('position').array;
+        const a = new THREE.Vector3();
+        const b = new THREE.Vector3();
+        const c = new THREE.Vector3();
+        const triangle = new THREE.Triangle();
+        const plane = new THREE.Plane();
+        const tmpVector = new THREE.Vector3();
+
+        for (let i = 0, len = positions.length; i < len; i += 9) {
+            a.fromArray(positions, i);
+            b.fromArray(positions, i + 3);
+            c.fromArray(positions, i + 6);
+            triangle.set(a, b, c);
+            triangle.getPlane(plane);
+            const area = triangle.getArea();
+            // skip tiny triangles
+            if (area < 0.1) continue;
+
+            if (baseMode) {
+                const idx = planes.findIndex(p => isSimilarPlanes(p, plane));
+                if (idx !== -1) {
+                    areas[idx] += area;
+                } else {
+                    planes.push(new THREE.Plane().copy(plane));
+                    areas.push(area);
+                }
+            } else {
+                // eslint-disable-next-line no-shadow
+                for (let idx = 0, len = planes.length; idx < len; idx++) {
+                    const targetPlane = planes[idx];
+                    const angle = plane.normal.angleTo(targetPlane.normal) * 180 / Math.PI;
+                    if (angle < 1 && Math.abs(plane.constant - targetPlane.constant) < 0.05) {
+                        areas[idx] += area;
+                    } else if (angle < 80) {
+                        tmpVector.addVectors(a, b).multiplyScalar(0.5).add(c).multiplyScalar(0.5);
+                        const volume = area * Math.cos(angle * Math.PI / 180) * Math.abs(targetPlane.distanceToPoint(tmpVector));
+                        supportVolumes[idx] += volume;
+                    }
+                }
+            }
+        }
+
+        return { planes, areas, supportVolumes };
+    }
 };
 
 export default ThreeUtils;

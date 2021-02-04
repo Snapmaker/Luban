@@ -123,7 +123,11 @@ class ExtractSquareTrace extends PureComponent {
                 });
                 length = 4;
             } else {
-                centerDis = 100;
+                if (this.props.series === MACHINE_SERIES.A250.value) {
+                    centerDis = 90;
+                } else {
+                    centerDis = 106;
+                }
                 for (let j = 1; j >= -1; j--) {
                     if (j === 1 || j === -1) {
                         for (let i = -1; i <= 1; i++) {
@@ -439,7 +443,7 @@ class ExtractSquareTrace extends PureComponent {
                         {i18n._('Camera Capture')}
                     </div>
                     <div style={{ margin: '1rem 0' }}>
-                        {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of Camera Calibration affects how the captured image is mapped with machine coordinates. If you have reinstalled the laser module, please redo Camera Calibration on the touch screen before proceeding.')}
+                        {i18n._('The camera on the laser module captures images of the work area, and stitch them together as the background. The accuracy of Camera Calibration affects how the captured image is mapped with machine coordinates. If you have reinstalled the laser module, please redo Camera Calibration on the touchscreen before proceeding.')}
                     </div>
                     <div
                         className={styles['photo-display']}

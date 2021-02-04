@@ -619,7 +619,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
 
         const mesh = meshProcess.mesh;
 
-        mesh.addCoordinateSystem({ ySymbol: -1 });
+        mesh.addCoordinateSystem({ y: '-y' });
 
         const { width, height } = meshProcess.getWidthAndHeight();
         if (this.transformation.width && this.transformation.height) {
@@ -657,7 +657,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             delete slicerLayer.openPolygons;
         }
 
-        if (this.smoothY) {
+        if (this.toolAngle < 60 && this.smoothY) {
             await this.modelInfo.taskAsyncFor(1, slicerLayers.length - 1, 1, (i) => {
                 const slicerLayer = slicerLayers[i];
                 const tan = Math.tan(this.toolAngle / 2 / 180 * Math.PI);

@@ -5,7 +5,7 @@ import { withRouter } from 'react-router-dom';
 import classNames from 'classnames';
 import styles from './styles.styl';
 import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
-import { actions as cncLaserActions } from '../../flux/editor';
+import { actions as editorActions } from '../../flux/editor';
 import i18n from '../../lib/i18n';
 
 
@@ -15,18 +15,26 @@ class PageControl extends Component {
         page: PropTypes.string,
         from: PropTypes.string,
 
-        togglePage: PropTypes.func.isRequired
+        switchToPage: PropTypes.func.isRequired
     };
 
-    actions= {
-
+    actions = {
+        switchToPageEditor: () => {
+            const { from } = this.props;
+            this.props.switchToPage(from, PAGE_EDITOR);
+        },
+        switchToPageProcess: () => {
+            const { from } = this.props;
+            this.props.switchToPage(from, PAGE_PROCESS);
+        }
     };
 
     render() {
-        const { page, from } = this.props;
+        const { page } = this.props;
         if (page === null) {
             return null;
         }
+
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
 
@@ -36,18 +44,16 @@ class PageControl extends Component {
                     <button
                         type="button"
                         className={classNames('btn', { [styles.selected]: isEditor })}
-                        onClick={() => {
-                            this.props.togglePage(from, PAGE_EDITOR);
-                        }}
-                    >{i18n._('Edit')}
+                        onClick={this.actions.switchToPageEditor}
+                    >
+                        {i18n._('Edit')}
                     </button>
                     <button
                         type="button"
                         className={classNames('btn', { [styles.selected]: isProcess })}
-                        onClick={() => {
-                            this.props.togglePage(from, PAGE_PROCESS);
-                        }}
-                    >{i18n._('Process')}
+                        onClick={this.actions.switchToPageProcess}
+                    >
+                        {i18n._('Process')}
                     </button>
                 </div>
             </div>
@@ -74,7 +80,7 @@ const mapStateToProps = (state, props) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        togglePage: (from, page) => dispatch(cncLaserActions.togglePage(from, page))
+        switchToPage: (from, page) => dispatch(editorActions.switchToPage(from, page))
     };
 };
 

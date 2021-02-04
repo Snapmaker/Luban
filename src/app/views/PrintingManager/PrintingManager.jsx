@@ -16,6 +16,7 @@ import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
+import { limitStringLength } from '../../lib/normalize-range';
 
 // checkbox and select
 const MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY = [
@@ -29,6 +30,7 @@ const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
     'magic_spiralize',
     'support_enable',
     'magic_mesh_surface_mode',
+    'retraction_hop_enabled',
     'adhesion_type',
     'support_type',
     'support_pattern'
@@ -447,25 +449,27 @@ class PrintingManager extends PureComponent {
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         { managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {
+                                            const displayName = limitStringLength(i18n._(option.label), 24);
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: this.actions.isMaterialSelectedForManager(option) })}
                                                         onClick={() => this.actions.onSelectMaterialTypeNotUpdate(option.value)}
                                                     >
-                                                        {i18n._(option.label)}
+                                                        {displayName}
                                                     </Anchor>
                                                 </li>
                                             );
                                         }))}
                                         { managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (qualityDefinitionOptions.map((option) => {
+                                            const displayName = limitStringLength(i18n._(option.label), 24);
                                             return (
                                                 <li key={`${option.value}`}>
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: this.actions.isQualitySelectedForManager(option) })}
                                                         onClick={() => this.actions.onSelectQualityTypeById(option.value)}
                                                     >
-                                                        {i18n._(option.label)}
+                                                        {displayName}
                                                     </Anchor>
                                                 </li>
                                             );

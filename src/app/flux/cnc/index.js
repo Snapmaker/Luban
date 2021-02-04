@@ -1,20 +1,19 @@
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
-import ToolPathModelGroup from '../../models/ToolPathModelGroup';
-import { controller } from '../../lib/controller';
 import api from '../../api';
 import {
-    ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
-    ACTION_UPDATE_GCODE_CONFIG,
+    ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
-import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
-import { PAGE_EDITOR, CNC_TOOL_SNAP_V_BIT_CONFIG } from '../../constants';
+import { actions as editorActions } from '../editor';
+import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL } from '../../constants';
 import definitionManager from './DefinitionManager';
 import { machineStore } from '../../store/local-storage';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
+import { CNC_LASER_STAGE } from '../editor/utils';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
@@ -24,7 +23,7 @@ const INITIAL_STATE = {
     materials: {
         isRotate: false,
         diameter: 35,
-        length: 75,
+        length: 70,
         fixtureLength: 20,
         x: 0,
         y: 0,
@@ -39,10 +38,13 @@ const INITIAL_STATE = {
     target: null,
 
     modelGroup: initModelGroup,
-    toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
+
+    displayedType: DISPLAYED_TYPE_MODEL,
+    toolPathGroup: new ToolPathGroup(initModelGroup, 'cnc'),
+    updatingToolPath: null,
+
     SVGActions: new SVGActionsFactory(initModelGroup),
 
-    isAllModelsPreviewed: false,
     isGcodeGenerating: false,
     gcodeFile: null,
 
@@ -53,19 +55,11 @@ const INITIAL_STATE = {
     mode: '', // bw, greyscale, vector
     showOrigin: null,
 
-    printOrder: 1,
     transformation: {},
     transformationUpdateTime: new Date().getTime(),
 
-    gcodeConfig: {},
     config: {},
 
-    toolSnap: '',
-    toolParams: {
-        toolDiameter: CNC_TOOL_SNAP_V_BIT_CONFIG.diameter, // tool diameter (in mm)
-        toolAngle: CNC_TOOL_SNAP_V_BIT_CONFIG.angle, // tool angle (in degree, defaults to 30° for V-Bit)，
-        toolShaftDiameter: CNC_TOOL_SNAP_V_BIT_CONFIG.shaftDiameter // tool angle (in degree, defaults to 30° for V-Bit)
-    },
     toolDefinitions: [],
     activeToolListDefinition: null,
     showCncToolManager: false,
@@ -93,76 +87,15 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
-    init: () => async (dispatch, getState) => {
-        const { modelGroup } = getState().cnc;
-        modelGroup.setDataChangedCallback(() => {
-            dispatch(editorActions.render('cnc'));
-        });
+    init: () => async (dispatch) => {
+        dispatch(editorActions._init(HEAD_CNC));
+
         await definitionManager.init();
 
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: definitionManager.toolDefinitions,
             activeToolListDefinition: definitionManager.activeToolListDefinition
         }));
-
-        // TODO: not yet to clear old events before regist
-        const controllerEvents = {
-            'taskProgress:generateToolPath': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.updateState('cnc', {
-                        progress: taskResult.progress
-                    }));
-                }
-            },
-            'taskCompleted:generateToolPath': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.onReceiveTaskResult('cnc', taskResult));
-                }
-            },
-
-            'taskProgress:generateGcode': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.updateState('cnc', {
-                        progress: taskResult.progress
-                    }));
-                }
-            },
-            'taskCompleted:generateGcode': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.onReceiveGcodeTaskResult('cnc', taskResult));
-                }
-            },
-            'taskCompleted:processImage': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.onReceiveProcessImageTaskResult('cnc', taskResult));
-                }
-            },
-            'taskProgress:generateViewPath': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.updateState('cnc', {
-                        progress: taskResult.progress
-                    }));
-                }
-            },
-            'taskCompleted:generateViewPath': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    if (taskResult.headType === 'cnc') {
-                        dispatch(editorActions.onReceiveViewPathTaskResult('cnc', taskResult));
-                    }
-                }
-            },
-            'taskProgress:processImage': (taskResult) => {
-                if (taskResult.headType === 'cnc') {
-                    dispatch(editorActions.updateState('cnc', {
-                        progress: taskResult.progress
-                    }));
-                }
-            }
-        };
-
-        Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
-        });
 
         const materials = machineStore.get('cnc.materials');
         if (materials) {
@@ -333,20 +266,10 @@ export default function reducer(state = INITIAL_STATE, action) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
             }
-            case ACTION_RESET_CALCULATED_STATE: {
-                return Object.assign({}, state, {
-                    isAllModelsPreviewed: false
-                });
-            }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {
                     transformation: { ...state.transformation, ...action.transformation },
                     transformationUpdateTime: +new Date()
-                });
-            }
-            case ACTION_UPDATE_GCODE_CONFIG: {
-                return Object.assign({}, state, {
-                    gcodeConfig: { ...state.gcodeConfig, ...action.gcodeConfig }
                 });
             }
             case ACTION_UPDATE_CONFIG: {

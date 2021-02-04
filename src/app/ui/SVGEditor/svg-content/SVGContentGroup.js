@@ -4,6 +4,7 @@ import { NS } from '../lib/namespaces';
 import OperatorPoints from './OperatorPoints';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
+import SvgModel from '../../../models/SvgModel';
 
 class SVGContentGroup {
     counter = 0;
@@ -159,6 +160,11 @@ class SVGContentGroup {
         return posAndsize;
     }
 
+    /**
+     * Reset selection.
+     *
+     * TODO: remove
+     */
     // after element transform
     resetSelection(size, transformation) {
         // Resize grip of each selected element, and get their whole position and size
@@ -168,6 +174,43 @@ class SVGContentGroup {
         this.setSelectorTransformList(size, transformation);
 
         return posAndSize;
+    }
+
+    /**
+     * Reset selector of elements.
+     * Re-create grips based on selected elements.
+     *
+     * TODO: refactor this method to distinguish two different reset strategies.
+     */
+    resetSelector(elements) {
+        if (elements.length === 1) {
+            // keep rotation if only one element selected
+            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
+
+            const selectorElement = this.operatorPoints.operatorPointsGroup;
+            const element = elements[0];
+            const transformList = getTransformList(element);
+            const rotate = transformList.getItem(1);
+            SvgModel.recalculateElementTransformList(selectorElement, {
+                x: positionX,
+                y: positionY,
+                scaleX: 1,
+                scaleY: 1,
+                angle: rotate.angle
+            });
+        } else if (elements.length > 1) {
+            // re-create axis-aligned selector if multiple elements are selected
+            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
+
+            const selectorElement = this.operatorPoints.operatorPointsGroup;
+            SvgModel.recalculateElementTransformList(selectorElement, {
+                x: positionX,
+                y: positionY,
+                scaleX: 1,
+                scaleY: 1,
+                angle: 0
+            });
+        }
     }
 
     isElementOperator(elem) {
@@ -356,64 +399,83 @@ class SVGContentGroup {
         }
     }
 
-    // [T][R][S][T] -> [R][T][R][S][T]
-    rotateSelectedElementsOnMouseDown() {
-        for (const elem of this.selectedElements) {
-            const transformList = getTransformList(elem);
-            const transform = this.svgContent.createSVGTransform();
-            transform.setRotate(0, 0, 0);
-            transformList.insertItemBefore(transform, 0);
-        }
-    }
-
-    rotateSelectedElementsOnMouseMove(transform) {
-        for (const elem of this.selectedElements) {
-            const transformList = getTransformList(elem);
-            transformList.replaceItem(transform, 0);
-        }
-    }
-
-    translateSelectorOnMouseDown(transform) { // add a new transform to list
+    /**
+     * Move selector start.
+     */
+    moveSelectorStart() {
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+
+        const transform = this.svgContent.createSVGTransform();
+        transform.setTranslate(0, 0);
+
         transformList.insertItemBefore(transform, 0);
     }
 
-    translateSelectorOnMouseMove(transform) { // change the new transform
+    moveSelector(elements, { dx, dy }) { // change the new transform
+        // TODO
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+
+        const transform = this.svgContent.createSVGTransform();
+        transform.setTranslate(dx, dy);
         transformList.replaceItem(transform, 0);
     }
 
-    rotateSelectorOnMouseDown() {
+    /**
+     * Move selector finish.
+     *
+     * Re-construct selector based on elements.
+     */
+    moveSelectorFinish(elements) {
+        // SvgModel.completeElementTransform(this.operatorPoints.operatorPointsGroup);
+        // reset selector
+        this.resetSelector(elements);
+    }
+
+    resizeSelectorStart() {
+        // Do nothing
+    }
+
+    // resizeSelector(elements, { scaleX, scaleY, centerX, centerY }) {
+    resizeSelector(elements) {
+        /*
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+
+        const scale = transformList.getItem(2);
+        scale.setScale(scaleX, scaleY);
+
+        const translate = transformList.getItem(0);
+        translate.setTranslate(centerX, centerY);
+        */
+
+        // Reset selector on every mouse move to ensure handle size unchanged.
+        this.resetSelector(elements);
+    }
+
+    resizeSelectorFinish(elements) {
+        this.resetSelector(elements);
+    }
+
+    /**
+     * Rotate selector start.
+     */
+    rotateSelectorStart() {
+        const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
+
         const transform = this.svgContent.createSVGTransform();
         transform.setRotate(0, 0, 0);
+
         transformList.insertItemBefore(transform, 0);
     }
 
-    rotateSelectorOnMouseMove(transform) {
+    rotateSelector(elements, { deltaAngle, cx, cy }) {
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
-        transformList.replaceItem(transform, 0);
+
+        const transform = transformList.getItem(0);
+        transform.setRotate(deltaAngle, cx, cy);
     }
 
-    transformSelectorOnMouseup() {
-    }
-
-
-    rotateSelectedElements(rotate) {
-        for (const elem of this.selectedElements) {
-            const transformList = getTransformList(elem);
-            const findIndex = (list, type) => {
-                for (let k = 0; k < list.length; k++) {
-                    if (list.getItem(k).type === type) {
-                        return k;
-                    }
-                }
-                return -1;
-            };
-            let idx = findIndex(transformList, 4);
-            if (idx === -1) idx = transformList.numberOfItems - 1;
-            transformList.replaceItem(rotate, idx);
-        }
+    rotateSelectorFinish(elements) {
+        this.resetSelector(elements);
     }
 
     getElementAngel(element) { // get angleOld for elements rotation

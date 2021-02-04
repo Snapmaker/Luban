@@ -6,7 +6,7 @@ import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import styles from './styles.styl';
 import { actions as editorActions } from '../../flux/editor';
-import { PAGE_EDITOR } from '../../constants';
+import { HEAD_CNC, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import { NumberInput as Input } from '../../components/Input';
 
 
@@ -14,6 +14,7 @@ class JobType extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
         setDisplay: PropTypes.func.isRequired,
+        headType: PropTypes.string.isRequired,
 
         page: PropTypes.string.isRequired,
 
@@ -34,7 +35,7 @@ class JobType extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Job Type & Size'));
+        this.props.setTitle(i18n._('Job Type'));
         this.props.setDisplay(this.props.use4Axis && this.props.page === PAGE_EDITOR);
     }
 
@@ -43,7 +44,7 @@ class JobType extends PureComponent {
     }
 
     render() {
-        const { size, materials } = this.props;
+        const { size, materials, headType } = this.props;
         const { isRotate, diameter, length } = materials;
 
         return (
@@ -87,17 +88,32 @@ class JobType extends PureComponent {
                 )}
                 {isRotate && (
                     <div>
-                        <img
-                            draggable="false"
-                            style={{
-                                margin: '8px 0px 0px 0px',
-                                width: '100%',
-                                maxWidth: '326px'
-                            }}
-                            src="images/cnc-laser/4axis.png"
-                            role="presentation"
-                            alt="4 Axis"
-                        />
+                        {headType === HEAD_CNC && (
+                            <img
+                                draggable="false"
+                                style={{
+                                    margin: '8px 0px 0px 0px',
+                                    width: '100%',
+                                    maxWidth: '326px'
+                                }}
+                                src="images/cnc-laser/cnc-4axis.png"
+                                role="presentation"
+                                alt="4 Axis"
+                            />
+                        )}
+                        {headType === HEAD_LASER && (
+                            <img
+                                draggable="false"
+                                style={{
+                                    margin: '8px 0px 0px 0px',
+                                    width: '100%',
+                                    maxWidth: '326px'
+                                }}
+                                src="images/cnc-laser/laser-4axis.png"
+                                role="presentation"
+                                alt="4 Axis"
+                            />
+                        )}
                         <div style={{
                             marginTop: '16px',
                             padding: '0px 15px 0px 15px'

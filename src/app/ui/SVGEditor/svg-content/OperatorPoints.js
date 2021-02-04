@@ -1,5 +1,6 @@
 import { createSVGElement, getBBox } from '../element-utils';
 import { transformBox, transformListToTransform, getTransformList, getRotationAngle, transformPoint } from '../element-transform';
+import SvgModel from '../../../models/SvgModel';
 
 const GRIP_RADIUS = 8;
 
@@ -69,7 +70,8 @@ class OperatorPoints {
                 id: 'operator-points-group'
             }
         });
-        this.resetTransformList();
+        // this.resetTransformList();
+        SvgModel.initializeElementTransform(this.operatorPointsGroup);
 
         this.svgFactory.getRoot().append(this.operatorPointsGroup);
         this.operatorPointsGroup.append(this.allSelectedElementsBox);
@@ -122,12 +124,15 @@ class OperatorPoints {
 
     updateScale(scale) { // just change the engineer scale
         this.scale = scale;
+
         this.rotateGripConnector.setAttribute('stroke-width', 1 / this.scale);
         const ny = this.rotateGripConnector.getAttribute('y1');
         this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
+
         this.rotateGrip.setAttribute('cy', ny - GRIP_RADIUS * 9.4 / this.scale);
         this.rotateGrip.setAttribute('r', GRIP_RADIUS / this.scale);
         this.rotateGrip.setAttribute('stroke-width', 2 / this.scale);
+
         for (const dir of Object.keys(this.operatorGrips)) {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('r', GRIP_RADIUS / this.scale);
@@ -183,23 +188,32 @@ class OperatorPoints {
         };
     }
 
+    /**
+     * TODO: Refactor this method
+     */
     _getElementBBoxAndRotation(element) {
+        // offset = stroke-width offset
         let offset = 0 / this.scale;
         if (element.getAttribute('stroke') !== 'none') {
             const strokeWidth = parseFloat(element.getAttribute('stroke-width')) || 0;
             offset += strokeWidth / 2;
         }
+
         const bbox = getBBox(element);
         const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
         const transformList = getTransformList(element);
         const transform = transformListToTransform(transformList);
         const transformedBox = transformBox(x, y, w, h, transform.matrix);
+
+        // calculate bounding box with offset
         let nx = transformedBox.x - offset;
         let ny = transformedBox.y - offset;
         let nw = transformedBox.width + offset * 2;
         let nh = transformedBox.height + offset * 2;
+
         const angle = getRotationAngle(element);
         const cx = nx + nw / 2, cy = ny + nh / 2;
+
         // rotate back to angle = 0
         // then rotate to element's rotation angle
         // because it show calculate for the offset
@@ -213,6 +227,8 @@ class OperatorPoints {
             nbox.tr = transformPoint(tr, rm);
             nbox.bl = transformPoint(bl, rm);
             nbox.br = transformPoint(br, rm);
+            // Note that offset should be rotated too
+            // TODO: optimize the rotation
             const minx = Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))) - offset;
             const miny = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))) - offset;
             const maxx = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))) + offset;
@@ -227,6 +243,9 @@ class OperatorPoints {
         };
     }
 
+    /**
+     * TODO: Refactor this method
+     */
     resizeGrips(elements) {
         for (const elemRect of this.selectedElementsBox) {
             elemRect.remove();
@@ -247,13 +266,18 @@ class OperatorPoints {
 
         let element = elements[0];
         let { nx, ny, nw, nh, angle, cx, cy } = this._getElementBBoxAndRotation(element);
-        let minX, minY, maxX, maxY;
+        let minX = Number.MAX_VALUE;
+        let minY = Number.MAX_VALUE;
+        let maxX = -Number.MAX_VALUE;
+        let maxY = -Number.MAX_VALUE;
+
         if (elements.length === 1) {
             minX = nx;
             minY = ny;
             maxX = nx + nw;
             maxY = ny + nh;
         } else {
+            /*
             let rotate = this.svgFactory.getRoot().createSVGTransform();
             rotate.setRotate(angle, cx, cy);
             let rm = rotate.matrix;
@@ -270,9 +294,11 @@ class OperatorPoints {
             minY = Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y)));
             maxX = Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x)));
             maxY = Math.max(nbox.tl.y, Math.max(nbox.tr.y, Math.max(nbox.bl.y, nbox.br.y)));
+            */
 
             for (element of elements) {
                 const boxAndRotation = this._getElementBBoxAndRotation(element);
+
                 nx = boxAndRotation.nx;
                 ny = boxAndRotation.ny;
                 nw = boxAndRotation.nw;
@@ -280,17 +306,22 @@ class OperatorPoints {
                 angle = boxAndRotation.angle;
                 cx = boxAndRotation.cx;
                 cy = boxAndRotation.cy;
-                rotate = this.svgFactory.getRoot().createSVGTransform();
+
+                const rotate = this.svgFactory.getRoot().createSVGTransform();
                 rotate.setRotate(angle, cx, cy);
-                rm = rotate.matrix;
-                tl = { x: nx, y: ny };
-                tr = { x: nx + nw, y: ny };
-                bl = { x: nx, y: ny + nh };
-                br = { x: nx + nw, y: ny + nh };
+
+                const rm = rotate.matrix;
+                const tl = { x: nx, y: ny };
+                const tr = { x: nx + nw, y: ny };
+                const bl = { x: nx, y: ny + nh };
+                const br = { x: nx + nw, y: ny + nh };
+
+                const nbox = {};
                 nbox.tl = transformPoint(tl, rm);
                 nbox.tr = transformPoint(tr, rm);
                 nbox.bl = transformPoint(bl, rm);
                 nbox.br = transformPoint(br, rm);
+
                 minX = Math.min(minX, Math.min(nbox.tl.x, Math.min(nbox.tr.x, Math.min(nbox.bl.x, nbox.br.x))));
                 minY = Math.min(minY, Math.min(nbox.tl.y, Math.min(nbox.tr.y, Math.min(nbox.bl.y, nbox.br.y))));
                 maxX = Math.max(maxX, Math.max(nbox.tl.x, Math.max(nbox.tr.x, Math.max(nbox.bl.x, nbox.br.x))));
@@ -312,6 +343,7 @@ class OperatorPoints {
                     L${nbox.br.x},${nbox.br.y}
                     L${nbox.bl.x},${nbox.bl.y} z`;
                 elemRect.setAttribute('d', dstr);
+
                 this.selectedElementsBox.push(elemRect);
                 this.operatorPointsGroup.append(elemRect);
             }

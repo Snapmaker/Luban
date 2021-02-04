@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import uuid from 'uuid';
+import includes from 'lodash/includes';
+
 import api from '../../api';
 import {
     checkParams,
@@ -9,14 +11,18 @@ import {
     sizeModelByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { baseActions, checkIsAllModelsPreviewed } from './base';
-import { PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SELECTEVENT, DATA_PREFIX, EPSILON } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX, EPSILON } from '../../constants';
+import { baseActions } from './actions-base';
+import { processActions } from './actions-process';
+
 
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
+import SvgModel from '../../models/SvgModel';
+import { CNC_LASER_STAGE } from './utils';
 
 const getCount = (() => {
     let count = 0;
@@ -42,32 +48,66 @@ const getSourceType = (fileName) => {
     return sourceType;
 };
 
-export const CNC_LASER_STAGE = {
-    EMPTY: 0,
-    GENERATING_TOOLPATH: 1,
-    GENERATE_TOOLPATH_SUCCESS: 2,
-    GENERATE_TOOLPATH_FAILED: 3,
-    PREVIEWING: 4,
-    PREVIEW_SUCCESS: 5,
-    PREVIEW_FAILED: 6,
-    RE_PREVIEW: 7,
-    GENERATING_GCODE: 8,
-    GENERATE_GCODE_SUCCESS: 9,
-    GENERATE_GCODE_FAILED: 10,
-    UPLOADING_IMAGE: 11,
-    UPLOAD_IMAGE_SUCCESS: 12,
-    UPLOAD_IMAGE_FAILED: 13,
-    PROCESSING_IMAGE: 14,
-    PROCESS_IMAGE_SUCCESS: 15,
-    PROCESS_IMAGE_FAILED: 16,
-    GENERATING_VIEWPATH: 17,
-    GENERATE_VIEWPATH_SUCCESS: 18,
-    GENERATE_VIEWPATH_FAILED: 19
-};
-
 export const actions = {
 
     ...baseActions,
+
+    ...processActions,
+
+    _init: (headType) => (dispatch, getState) => {
+        const { modelGroup, toolPathGroup } = getState()[headType];
+        modelGroup.setDataChangedCallback(() => {
+            dispatch(baseActions.render(headType));
+        });
+        toolPathGroup.setUpdatedCallBack(() => {
+            dispatch(baseActions.render(headType));
+        });
+        dispatch(actions.__initOnControllerEvents(headType));
+    },
+
+    __initOnControllerEvents: (headType) => {
+        return (dispatch) => {
+            ['processImage', 'generateToolPath', 'generateGcode', 'generateViewPath']
+                .forEach(key => {
+                    controller.on(`taskProgress:${key}`, (taskResult) => {
+                        if (headType !== taskResult.headType) {
+                            return;
+                        }
+                        dispatch(actions.updateState(headType, {
+                            progress: taskResult.progress
+                        }));
+                    });
+                });
+
+            controller.on('taskCompleted:processImage', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(actions.onReceiveProcessImageTaskResult(headType, taskResult));
+            });
+
+            controller.on('taskCompleted:generateToolPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(processActions.onGenerateToolPath(headType, taskResult));
+            });
+
+            controller.on('taskCompleted:generateGcode', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(processActions.onGenerateGcode(headType, taskResult));
+            });
+
+            controller.on('taskCompleted:generateViewPath', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(processActions.onGenerateViewPath(headType, taskResult));
+            });
+        };
+    },
 
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
@@ -222,7 +262,7 @@ export const actions = {
                 }
                 case 'LOAD_MODEL_FAILED': {
                     worker.terminate();
-                    dispatch(actions.updateState({
+                    dispatch(actions.updateState(headType, {
                         stage: CNC_LASER_STAGE.PREVIEW_FAILED,
                         progress: 0
                     }));
@@ -300,13 +340,12 @@ export const actions = {
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
 
-        if (model.uploadName.indexOf('.stl') > 0) {
+        if (path.extname(uploadName).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
         }
 
 
         // Process image right after created
-        dispatch(actions.showAllModelsObj3D(headType));
         dispatch(actions.processSelectedModel(headType));
     },
 
@@ -326,7 +365,7 @@ export const actions = {
 
     // TODO: method docs
     selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions, toolPathModelGroup } = getState()[headType];
+        const { SVGActions } = getState()[headType];
         if (!isMultiSelect) {
             // remove all selected model
             dispatch(actions.clearSelection(headType));
@@ -336,36 +375,10 @@ export const actions = {
 
         // todo, donot reset here
         SVGActions.resetSelection();
-
-        // todo, multi select tool path model and `modelGroup.state` is undefined
-        const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
-        dispatch(baseActions.updateState(headType, toolPathModelState));
-    },
-
-    // todo, select model by toolPathModel ??? meshObject ???
-    selectModelInProcess: (headType, intersect, selectEvent) => (dispatch, getState) => {
-        const { SVGActions, modelGroup, toolPathModelGroup } = getState()[headType];
-
-        dispatch(actions.clearSelection(headType));
-
-        if (intersect && selectEvent !== SELECTEVENT.UNSELECT) {
-            const model = modelGroup.getSelectedModelByIntersect(intersect);
-
-            if (model) {
-                SVGActions.addSelectedSvgModelsByModels([model]);
-
-                toolPathModelGroup.selectToolPathModel(model.modelID);
-                const toolPathModelState = toolPathModelGroup.selectToolPathModel(model.modelID);
-                dispatch(baseActions.updateState(headType, toolPathModelState));
-                dispatch(baseActions.render(headType));
-            }
-        } else {
-            toolPathModelGroup.selectToolPathModel();
-        }
     },
 
     changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, materials } = getState()[headType];
+        const { modelGroup, materials } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -383,14 +396,6 @@ export const actions = {
             ...selectedModel.getModeConfig(mode)
         };
         modelGroup.updateSelectedMode(mode, config);
-
-        // Set or replace G-code config of new mode
-        const { gcodeConfig } = modelDefaultConfigs;
-        const toolPathModelState = toolPathModelGroup.updateSelectedMode(mode, gcodeConfig);
-        dispatch(baseActions.updateState(headType, {
-            // ...modelState,
-            ...toolPathModelState
-        }));
 
         dispatch(actions.processSelectedModel(headType));
     },
@@ -432,19 +437,6 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
-    updateSelectedModelDeviation: (headType, deviation) => (dispatch, getState) => {
-        const { page, SVGActions, modelGroup } = getState()[headType];
-        if (page === PAGE_PROCESS) {
-            return;
-        }
-        const selectedModelsTransformation = modelGroup.getSelectedModelTransformation();
-        const transformation = {
-            positionX: selectedModelsTransformation.positionX + deviation.dx,
-            positionY: selectedModelsTransformation.positionY + deviation.dy
-        };
-        SVGActions.updateSelectedElementsTransformation(transformation);
-    },
-
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
         const { modelGroup, materials } = getState()[headType];
 
@@ -463,7 +455,6 @@ export const actions = {
         };
 
         modelGroup.updateSelectedConfig(newConfig);
-        dispatch(actions.showAllModelsObj3D(headType));
     },
 
     // TODO: temporary workaround for model image processing
@@ -545,76 +536,6 @@ export const actions = {
         // >>>>>>> Feature: Add 4 axis module
     },
 
-    // processAllMeshModel: (headType) => (dispatch, getState) => {
-    //     const { materials, modelGroup, SVGActions } = getState()[headType];
-    //     const { size } = getState().machine;
-    //
-    //     const models = modelGroup.getModels().filter(m => m.sourceType === 'image3d');
-    //
-    //     console.log(models);
-    //
-    //     if (models.length === 0) {
-    //         return;
-    //     }
-    //
-    //     for (const model of models) {
-    //         const options = {
-    //             headType: headType,
-    //             uploadName: model.uploadName,
-    //             sourceType: model.sourceType,
-    //             mode: model.mode,
-    //             transformation: {
-    //                 width: model.transformation.width,
-    //                 height: model.transformation.height,
-    //                 rotationZ: 0,
-    //                 flip: model.transformation.flip
-    //             },
-    //
-    //             config: {
-    //                 ...model.config
-    //             },
-    //             isRotate: materials.isRotate
-    //         };
-    //
-    //         api.processImage(options)
-    //             .then((res) => {
-    //                 const processImageName = res.body.filename;
-    //                 if (!processImageName) {
-    //                     return;
-    //                 }
-    //
-    //                 const { width, height } = res.body;
-    //
-    //                 const svgModel = model.relatedModels.svgModel;
-    //                 const { sourceWidth, sourceHeight } = sizeModelByMachineSize(size, width, height);
-    //                 const modelOptions = {
-    //                     sourceWidth: sourceWidth,
-    //                     sourceHeight: sourceHeight,
-    //                     width: width,
-    //                     height: height,
-    //                     transformation: {
-    //                         width: width * model.transformation.scaleX,
-    //                         height: height * model.transformation.scaleY
-    //                     }
-    //                 };
-    //                 model.updateAndRefresh(modelOptions);
-    //
-    //                 // modelGroup.updateSelectedModelProcessImage(processImageName);
-    //                 model.updateProcessImageName(processImageName);
-    //
-    //                 // SVGActions.updateElementImage(processImageName);
-    //                 SVGActions.updateSvgModelImage(svgModel, processImageName);
-    //
-    //                 // dispatch(baseActions.recordSnapshot(headType));
-    //                 dispatch(baseActions.resetCalculatedState(headType));
-    //                 dispatch(baseActions.render(headType));
-    //             })
-    //             .catch((e) => {
-    //                 // TODO: use log
-    //                 console.error(e);
-    //             });
-    //     }
-    // },
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
         const { page, modelGroup } = getState()[headType];
@@ -657,22 +578,16 @@ export const actions = {
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { page, modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
+        const { page, modelGroup, SVGActions } = getState()[headType];
 
         if (page === PAGE_PROCESS) return;
 
         SVGActions.deleteSelectedElements();
-        // todo
-        let toolPathModelState = null;
-        for (const model of modelGroup.getSelectedModelArray()) {
-            toolPathModelGroup.selectToolPathModel(model.modelID);
-            toolPathModelState = toolPathModelGroup.removeSelectedToolPathModel();
-        }
+
         const modelState = modelGroup.removeSelectedModel();
 
         dispatch(baseActions.updateState(headType, {
-            ...modelState,
-            ...toolPathModelState
+            ...modelState
         }));
         if (!modelState.hasModel) {
             dispatch(baseActions.updateState(headType, {
@@ -748,7 +663,6 @@ export const actions = {
         const { modelGroup, transformationUpdateTime } = getState()[headType];
 
         const modelState = modelGroup.onModelTransform();
-        dispatch(actions.showAllModelsObj3D(headType));
         if (new Date().getTime() - transformationUpdateTime > 50) {
             dispatch(baseActions.updateTransformation(headType, modelState.transformation));
         }
@@ -771,120 +685,6 @@ export const actions = {
         }
     },
 
-    // UNUSED, replaced by modifyText
-    /*
-    updateSelectedModelTextConfig: (headType, newConfig) => (dispatch, getState) => {
-        const { modelGroup, SVGActions, toolPathModelGroup, config } = getState()[headType];
-        newConfig = {
-            ...config,
-            ...newConfig
-        };
-        api.convertTextToSvg(newConfig)
-            .then(async (res) => {
-                const { originalName, uploadName, width, height } = res.body;
-
-                const selectedModel = modelGroup.getSelectedModel();
-
-                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, newConfig.lineHeight, {
-                    width,
-                    height
-                });
-                const source = {
-                    originalName,
-                    uploadName,
-                    sourceHeight: height,
-                    width: textSize.width,
-                    sourceWidth: width,
-                    height: textSize.height
-                };
-                const transformation = {
-                    width: selectedModel.transformation.width / selectedModel.width * textSize.width,
-                    height: selectedModel.transformation.height / selectedModel.height * textSize.height
-                };
-
-                SVGActions.updateElementImage(uploadName);
-                SVGActions.updateTransformation(transformation);
-                modelGroup.updateSelectedSource(source);
-                modelGroup.updateSelectedModelTransformation(transformation);
-                modelGroup.updateSelectedConfig(newConfig);
-                toolPathModelGroup.updateSelectedNeedPreview(true);
-
-                // dispatch(actions.showModelObj3D(headType));
-                dispatch(baseActions.updateConfig(headType, newConfig));
-                dispatch(baseActions.updateTransformation(headType, {
-                    ...textSize
-                }));
-                dispatch(baseActions.resetCalculatedState(headType));
-                // dispatch(baseActions.recordSnapshot(headType));
-                dispatch(baseActions.render(headType));
-            });
-    },
-    */
-
-    // previewModel: (headType, isProcess) => (dispatch, getState) => {
-    //     const { page, modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
-    //     if (page === PAGE_EDITOR) {
-    //         return;
-    //     }
-    //
-    //     const { materials } = getState()[headType];
-    //     const { isRotate = false, diameter = 0, isCW = true } = materials || {};
-    //
-    //     if (isProcess || autoPreviewEnabled) {
-    //         const modelState = modelGroup.getSelectedModel()
-    //             .getTaskInfo();
-    //         if (modelState) {
-    //             const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelState.modelID);
-    //             if (toolPathModelTaskInfo && toolPathModelTaskInfo.visible) {
-    //                 const taskInfo = {
-    //                     ...modelState,
-    //                     ...toolPathModelTaskInfo,
-    //                     isRotate: isRotate,
-    //                     diameter: diameter,
-    //                     isCW: isCW
-    //                 };
-    //                 controller.commitToolPathTask({
-    //                     taskId: taskInfo.modelID,
-    //                     headType: headType,
-    //                     data: taskInfo
-    //                 });
-    //                 dispatch(baseActions.updateState(headType, {
-    //                     stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
-    //                     progress: 0
-    //                 }));
-    //             }
-    //         }
-    //     }
-    // },
-
-    manualPreview: (headType, isProcess) => async (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[headType];
-
-        const { materials, toolParams = {} } = getState()[headType];
-
-        if (isProcess || autoPreviewEnabled) {
-            for (const model of modelGroup.getModels()) {
-                await model.preview({ materials, toolParams });
-            }
-
-            const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup, toolPathModelGroup);
-            if (isAllModelsPreviewed) {
-                dispatch(baseActions.updateState(headType, {
-                    isAllModelsPreviewed: isAllModelsPreviewed
-                }));
-                dispatch(actions.showAllToolPathsObj3D(headType));
-                dispatch(baseActions.render(headType));
-            }
-        }
-    },
-
-    setAutoPreview: (headType, value) => (dispatch) => {
-        dispatch(baseActions.updateState(headType, {
-            autoPreviewEnabled: value
-        }));
-        dispatch(actions.manualPreview(headType));
-    },
-
     initSelectedModelListener: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
@@ -893,138 +693,6 @@ export const actions = {
         });
     },
 
-    // initModelsPreviewChecker: (headType) => (dispatch, getState) => {
-    //     const { modelGroup, toolPathModelGroup, isAllModelsPreviewed } = getState()[headType];
-    //     const check = () => {
-    //         const isAllModelsPreviewedN = checkIsAllModelsPreviewed(modelGroup, toolPathModelGroup);
-    //         if (isAllModelsPreviewedN !== isAllModelsPreviewed) {
-    //             dispatch(baseActions.updateState(headType, { isAllModelsPreviewed: isAllModelsPreviewedN }));
-    //         }
-    //         setTimeout(check, 200);
-    //     };
-    //     check();
-    // },
-
-    showAllToolPathsObj3D: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
-        modelGroup.hideAllModelsObj3D();
-        toolPathModelGroup.showAllToolPathModels();
-        toolPathModelGroup.showToolPathObjs();
-    },
-
-    showAllModelsObj3D: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
-        modelGroup.showAllModelsObj3D();
-        toolPathModelGroup.hideAllToolPathModels();
-    },
-
-    onReceiveTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        // const state = getState()[headType];
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
-        const { data, filename } = taskResult;
-
-        if (taskResult.taskStatus === 'failed' && toolPathModelGroup.getToolPathModelByID(data.id)) {
-            dispatch(baseActions.updateState(headType, {
-                previewFailed: true,
-                stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
-                progress: 1
-            }));
-            dispatch(actions.setAutoPreview(headType, false));
-            return;
-        }
-
-        dispatch(baseActions.updateState({
-            stage: CNC_LASER_STAGE.PREVIEWING,
-            progress: 0
-        }));
-
-        const toolPathModelState = await toolPathModelGroup.receiveTaskResult(data, filename);
-
-        if (toolPathModelState) {
-            dispatch(baseActions.updateState(headType, {
-                previewFailed: false,
-                stage: CNC_LASER_STAGE.PREVIEW_SUCCESS,
-                progress: 1
-            }));
-        } else {
-            dispatch(baseActions.updateState(headType, {
-                previewFailed: false,
-                stage: CNC_LASER_STAGE.RE_PREVIEW,
-                progress: 1
-            }));
-        }
-        const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup, toolPathModelGroup);
-        if (isAllModelsPreviewed) {
-            dispatch(actions.showAllToolPathsObj3D(headType));
-            dispatch(baseActions.updateState(headType, {
-                isAllModelsPreviewed: isAllModelsPreviewed
-            }));
-        }
-        dispatch(baseActions.render(headType));
-    },
-
-    updateSelectedModelPrintOrder: (headType, printOrder) => (dispatch, getState) => {
-        const { toolPathModelGroup } = getState()[headType];
-        toolPathModelGroup.updateSelectedPrintOrder(printOrder);
-
-        dispatch(baseActions.updateState(headType, { printOrder }));
-        dispatch(baseActions.resetCalculatedState(headType));
-    },
-
-    updateSelectedModelGcodeConfig: (headType, gcodeConfig) => (dispatch, getState) => {
-        const { toolPathModelGroup } = getState()[headType];
-        toolPathModelGroup.updateSelectedGcodeConfig(gcodeConfig);
-        dispatch(actions.manualPreview(headType));
-        dispatch(baseActions.updateGcodeConfig(headType, gcodeConfig));
-        dispatch(baseActions.resetCalculatedState(headType));
-    },
-
-    updateAllModelGcodeConfig: (headType, gcodeConfig) => (dispatch, getState) => {
-        // const { modelGroup, model } = getState()[headType];
-        const { toolPathModelGroup, selectedModelID } = getState()[headType];
-        toolPathModelGroup.updateAllModelGcodeConfig(gcodeConfig);
-        dispatch(actions.manualPreview(headType));
-        if (selectedModelID) {
-            dispatch(baseActions.updateGcodeConfig(headType, gcodeConfig));
-            dispatch(baseActions.resetCalculatedState(headType));
-            dispatch(baseActions.render(headType));
-        }
-    },
-
-    /**
-     * Callback function trigger by event when G-code generated.
-     *
-     * @param headType
-     * @param taskResult
-     * @returns {Function}
-     */
-    onReceiveGcodeTaskResult: (headType, taskResult) => async (dispatch) => {
-        dispatch(baseActions.updateState(
-            headType, {
-                isGcodeGenerating: false
-            }
-        ));
-        if (taskResult.taskStatus === 'failed') {
-            dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
-                progress: 1
-            }));
-            return;
-        }
-        const { gcodeFile } = taskResult;
-
-        dispatch(baseActions.updateState(headType, {
-            gcodeFile: {
-                name: gcodeFile.name,
-                uploadName: gcodeFile.name,
-                size: gcodeFile.size,
-                lastModified: gcodeFile.lastModified,
-                thumbnail: gcodeFile.thumbnail
-            },
-            stage: CNC_LASER_STAGE.GENERATE_GCODE_SUCCESS,
-            progress: 1
-        }));
-    },
 
     /**
      * Callback function trigger by event when image processed.
@@ -1080,26 +748,6 @@ export const actions = {
         }));
     },
 
-
-    onReceiveViewPathTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        const { size } = getState().machine;
-        const { toolPathModelGroup, materials } = getState()[headType];
-        const { isRotate } = materials;
-
-        if (taskResult.taskStatus === 'failed') {
-            dispatch(baseActions.updateState(headType, {
-                stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
-                progress: 1
-            }));
-            return;
-        }
-        const { viewPathFile } = taskResult;
-        toolPathModelGroup.receiveViewPathTaskResult(viewPathFile, isRotate ? materials : size).then(() => {
-            dispatch(baseActions.render(headType));
-        });
-    },
-
-
     getEstimatedTime: (headType, type) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         if (type === 'selected') {
@@ -1113,107 +761,6 @@ export const actions = {
     getSelectedModel: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         return modelGroup.getSelectedModel();
-    },
-
-    togglePage: (headType, page) => (dispatch) => {
-        dispatch(baseActions.updateState(headType, {
-            page: page
-        }));
-        if (page === PAGE_PROCESS) {
-            dispatch(actions.manualPreview(headType));
-        }
-        dispatch(baseActions.render(headType));
-    },
-
-    /**
-     * Generate View Path.
-     *
-     * @param headType
-     * @param thumbnail G-code thumbnail should be included in G-code header.
-     * @returns {Function}
-     */
-    generateViewPath: (headType) => (dispatch, getState) => {
-        const modelInfos = [];
-        const { modelGroup, toolPathModelGroup, materials, toolParams } = getState()[headType];
-
-        for (const model of modelGroup.getModels()) {
-            if (!model.visible) continue;
-            const modelTaskInfo = model.getTaskInfo();
-            const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
-            if (toolPathModelTaskInfo) {
-                const taskInfo = {
-                    ...modelTaskInfo,
-                    ...toolPathModelTaskInfo,
-                    materials,
-                    toolParams
-                };
-                modelInfos.push(taskInfo);
-            }
-        }
-        if (modelInfos.length === 0) {
-            return;
-        }
-        controller.commitViewPathTask({
-            taskId: uuid.v4(),
-            headType: headType,
-            data: modelInfos
-        });
-        dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_GCODE,
-            progress: 0
-        }));
-    },
-
-    /**
-     * Generate G-code.
-     *
-     * @param headType
-     * @param thumbnail G-code thumbnail should be included in G-code header.
-     * @returns {Function}
-     */
-    generateGcode: (headType, thumbnail) => (dispatch, getState) => {
-        const modelInfos = [];
-        const { modelGroup, toolPathModelGroup } = getState()[headType];
-        for (const model of modelGroup.getModels()) {
-            if (!model.visible) continue;
-            const modelTaskInfo = model.getTaskInfo();
-            const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
-            if (toolPathModelTaskInfo) {
-                const taskInfo = {
-                    ...modelTaskInfo,
-                    ...toolPathModelTaskInfo
-                };
-                modelInfos.push(taskInfo);
-            }
-        }
-        if (modelInfos.length === 0) {
-            return;
-        }
-        const orderModelInfos = modelInfos.map(d => d)
-            .sort((d1, d2) => {
-                if (d1.printOrder > d2.printOrder) {
-                    return 1;
-                } else if (d1.printOrder < d2.printOrder) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-        dispatch(baseActions.updateState(
-            headType, {
-                isGcodeGenerating: true
-            }
-        ));
-        orderModelInfos[0].thumbnail = thumbnail;
-        controller.commitGcodeTask({
-            taskId: uuid.v4(),
-            headType: headType,
-            data: orderModelInfos
-        });
-        dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_GCODE,
-            progress: 0
-        }));
     },
 
     bringSelectedModelToFront: (headType) => (dispatch, getState) => {
@@ -1233,15 +780,13 @@ export const actions = {
         modelGroup.arrangeAllModels2D();
         const modelState = modelGroup.onModelTransform();
 
-        dispatch(actions.showAllModelsObj3D(headType));
         dispatch(baseActions.updateTransformation(headType, modelState.transformation));
-        dispatch(actions.manualPreview(headType));
         dispatch(actions.recordSnapshot(headType));
         dispatch(baseActions.render(headType));
     },
 
     undo: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
         if (undoSnapshots.length <= 1) {
             return;
         }
@@ -1249,22 +794,19 @@ export const actions = {
         const snapshots = undoSnapshots[undoSnapshots.length - 1];
 
         const modelState = modelGroup.undoRedo(snapshots.models);
-        const toolPathModelState = toolPathModelGroup.undoRedo(snapshots.toolPathModels);
 
         dispatch(baseActions.updateState(headType, {
             ...modelState,
-            ...toolPathModelState,
             undoSnapshots: undoSnapshots,
             redoSnapshots: redoSnapshots,
             canUndo: undoSnapshots.length > 1,
             canRedo: redoSnapshots.length > 0
         }));
-        dispatch(actions.manualPreview(headType));
         dispatch(baseActions.render(headType));
     },
 
     redo: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
         if (redoSnapshots.length === 0) {
             return;
         }
@@ -1273,27 +815,22 @@ export const actions = {
         const snapshots = undoSnapshots[undoSnapshots.length - 1];
 
         const modelState = modelGroup.undoRedo(snapshots.models);
-        const toolPathModelState = toolPathModelGroup.undoRedo(snapshots.toolPathModels);
 
         dispatch(baseActions.updateState(headType, {
             ...modelState,
-            ...toolPathModelState,
             undoSnapshots: undoSnapshots,
             redoSnapshots: redoSnapshots,
             canUndo: undoSnapshots.length > 1,
             canRedo: redoSnapshots.length > 0
         }));
-        dispatch(actions.manualPreview(headType));
         dispatch(baseActions.render(headType));
     },
 
     recordSnapshot: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState()[headType];
         const cloneModels = modelGroup.cloneModels();
-        const cloneToolPathModels = toolPathModelGroup.cloneToolPathModels();
         undoSnapshots.push({
-            models: cloneModels,
-            toolPathModels: cloneToolPathModels
+            models: cloneModels
         });
         redoSnapshots.splice(0);
         dispatch(baseActions.updateState(headType, {
@@ -1305,17 +842,15 @@ export const actions = {
     },
 
     hideSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions } = getState()[headType];
         modelGroup.hideSelectedModel();
-        toolPathModelGroup.hideSelectedModel();
         SVGActions.hideSelectedElement();
         dispatch(baseActions.render(headType));
     },
 
     showSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, SVGActions, toolPathModelGroup } = getState()[headType];
+        const { modelGroup, SVGActions } = getState()[headType];
         modelGroup.showSelectedModel();
-        toolPathModelGroup.showSelectedModel();
         SVGActions.showSelectedElement();
         // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
         dispatch(baseActions.render(headType));
@@ -1324,18 +859,22 @@ export const actions = {
     /**
      * Reset process state after model changes
      */
+    // eslint-disable-next-line no-unused-vars
     resetProcessState: (headType) => (dispatch, getState) => {
-        const { isAllModelsPreviewed } = getState()[headType];
-        dispatch(actions.showAllModelsObj3D(headType));
-        if (isAllModelsPreviewed) {
-            dispatch(baseActions.updateState(headType, {
-                isAllModelsPreviewed: false
-            }));
-        }
-        dispatch(baseActions.updateState(headType, {
-            gcodeFile: null
-        }));
+        // const { isAllModelsPreviewed } = getState()[headType];
+        // if (isAllModelsPreviewed) {
+        //     dispatch(baseActions.updateState(headType, {
+        //         isAllModelsPreviewed: false
+        //     }));
+        // }
+        // dispatch(baseActions.updateState(headType, {
+        //     gcodeFile: null
+        // }));
     },
+
+    /**
+     * SVG Actions below
+     **************************************************************************/
 
     /**
      * Create model from element.
@@ -1352,14 +891,10 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions, toolPathModelGroup } = getState()[headType];
-        // change 'selectToolPathModel' when selectElements on edit
+        const { SVGActions } = getState()[headType];
         SVGActions.selectElements(elements);
-        const modelID = elements[0].id;
-        toolPathModelGroup.selectToolPathModel(modelID);
-        // select first toolPathModel by default
-        // const model = modelGroup.getSelectedModelArray() && modelGroup.getSelectedModelArray().length > 0 && modelGroup.getSelectedModelArray()[0];
-        // toolPathModelGroup.selectToolPathModel(model && model.modelID);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -1369,25 +904,96 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.clearSelection();
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
-     * Resize element.
+     * Move elements start.
      */
-    resizeElement: (headType, element, { resizeDir, resizeFrom, resizeTo, isUniformScaling }) => (dispatch, getState) => {
+    moveElementsStart: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.resizeElement(element, { resizeDir, resizeFrom, resizeTo, isUniformScaling });
+        SVGActions.moveElementsStart(elements);
     },
 
-    // TODO: ...
     /**
-     * Resize element.
+     * Move elements.
      */
-    afterResizeElement: (headType, element) => (dispatch, getState) => {
+    moveElements: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElements(elements, options);
+    },
+
+    /**
+     * Move elements finish.
+     */
+    moveElementsFinish: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElementsFinish(elements, options);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Move elements immediately.
+     */
+    moveElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.moveElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Move elements on key down (⬇).
+     */
+    moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
+        const { page, SVGActions } = getState()[headType];
+        if (page === PAGE_PROCESS) {
+            return;
+        }
+        SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
+    },
+
+    /**
+     * Move elements on key up (⬆).
+     */
+    moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        SVGActions.moveElementsOnArrowKeyUp();
+        dispatch(actions.resetProcessState(headType));
+    },
+
+    /**
+     * Resize elements start.
+     */
+    resizeElementsStart: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElementsStart(elements, options);
+    },
+
+    /**
+     * Resize elements (resizing).
+     */
+    resizeElements: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.resizeElements(elements, options);
+    },
+
+    /**
+     * Resize elements finish.
+     */
+    resizeElementsFinish: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions, modelGroup } = getState()[headType];
 
-        SVGActions.afterResizeElement(element);
+        SVGActions.resizeElementsFinish(elements, options);
+
         dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
@@ -1397,46 +1003,98 @@ export const actions = {
         if (selectedModel.sourceType !== 'image3d') {
             dispatch(actions.processSelectedModel(headType));
         }
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
-     * Move element on mouse up
+     * Resize elements immediately.
      */
-    moveElement: (headType, element, { dx, dy }) => (dispatch, getState) => {
+    resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.moveElement(element, { dx, dy });
-        dispatch(actions.resetProcessState(headType));
+        SVGActions.resizeElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
-     * Move elements on key down
+     * Flip elements horizontally.
+     *
+     * Note that only support flip one element.
      */
-    moveElementsOnKeyDown: (headType, { dx, dy }) => (dispatch, getState) => {
-        const { page, SVGActions } = getState()[headType];
-        if (page === PAGE_PROCESS) {
-            return;
-        }
-        SVGActions.onMovingByArrowKeyDown({ dx, dy });
-    },
-
-    /**
-     * Move elements on key up
-     */
-    moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
+    flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
-        SVGActions.onMovingByArrowKeyUp();
-        dispatch(actions.resetProcessState(headType));
+
+        SVGActions.flipElementsHorizontally(elements);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Flip elements vertically.
+     *
+     * Note that only support flip one element.
+     */
+    flipElementsVertically: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.flipElementsVertically(elements);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Rotate elements start.
+     */
+    rotateElementsStart: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElementsStart(elements, options);
+    },
+
+    /**
+     * Rotate elements (rotating).
+     *
+     * @param options.deltaAngle - delta angle
+     */
+    rotateElements: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElements(elements, options);
     },
 
     /**
      * Rotate element.
      */
-    rotateElement: (headType, element, { angle, cx, cy }) => (dispatch, getState) => {
+    rotateElement: (headType, element, options) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
 
-        SVGActions.rotateElement(element, { angle, cx, cy });
+        // FIXME: remove this
+        SVGActions.rotateElement(element, options);
         dispatch(actions.resetProcessState(headType));
+    },
+
+    /**
+     * Rotate elements finish.
+     */
+    rotateElementsFinish: (headType, elements) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElementsFinish(elements);
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Rotate elements immediately.
+     */
+    rotateElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        SVGActions.rotateElementsImmediately(elements, options);
+
+        dispatch(baseActions.render(headType));
     },
 
     /**
@@ -1481,7 +1139,7 @@ export const actions = {
     },
 
     updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
-        const { materials, modelGroup, toolPathModelGroup } = getState()[headType];
+        const { materials, modelGroup, toolPathGroup } = getState()[headType];
         const allMaterials = {
             ...materials,
             ...newMaterials
@@ -1497,10 +1155,9 @@ export const actions = {
             allMaterials.y = 0;
         }
         modelGroup.setMaterials(allMaterials);
-        if (headType === 'laser') {
-            toolPathModelGroup.updateMaterials(allMaterials);
-        }
-        toolPathModelGroup.object.isRotate = allMaterials.isRotate;
+
+        toolPathGroup.updateMaterials(allMaterials);
+
         dispatch(baseActions.updateState(headType, {
             materials: {
                 ...allMaterials
@@ -1509,8 +1166,71 @@ export const actions = {
         if (materials.isRotate !== allMaterials.isRotate) {
             dispatch(actions.processSelectedModel(headType));
         }
-        dispatch(actions.showAllModelsObj3D(headType));
+    },
+
+    /**
+     * Process procedure: page control, data synchronize and preview
+     **************************************************************************/
+
+    __synchronizeElements: (headType) => (dispatch, getState) => {
+        const { SVGActions, toolPathGroup } = getState()[headType];
+
+        const selectedElements = SVGActions.getSelectedElements();
+
+        // Convert position from SVG coordinate to logical coordinate
+        // TODO: Convert in SVGActions, and update here
+        for (const element of selectedElements) {
+            const svgModel = SVGActions.getSVGModelByElement(element);
+            const model = svgModel.relatedModel;
+
+            const t = SvgModel.getElementTransform(element);
+            const size = getState().machine.size;
+
+            const transformation = {
+                ...model.transformation,
+                positionX: t.x - size.x,
+                positionY: -t.y + size.y,
+                positionZ: 0,
+                scaleX: t.scaleX,
+                scaleY: t.scaleY,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: -t.angle / 180 * Math.PI,
+                width: t.width * t.scaleX,
+                height: t.height * t.scaleY
+            };
+
+            model.updateTransformation(transformation);
+        }
+
+        toolPathGroup.checkoutToolPathStatus();
+    },
+
+    /**
+     * Switch to another page.
+     *
+     * @param headType
+     * @param page
+     */
+    switchToPage: (headType, page) => (dispatch) => {
+        if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
+            return;
+        }
+
+        // switch to `page`
+        dispatch(baseActions.updateState(headType, { page }));
+
+        // when switching to "Process" page, we need to
+        // 1. synchronize SVG elements to its corresponding image in "Process" page
+        // 2. trigger preview of all images
+        if (page === PAGE_PROCESS) {
+            dispatch(actions.__synchronizeElements(headType));
+        }
+
+        dispatch(baseActions.render(headType));
     }
+
 };
 
 export default function reducer() {

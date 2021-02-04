@@ -16,7 +16,10 @@ class Enclosure extends PureComponent {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
-        server: PropTypes.object.isRequired
+        setEnclosureLight: PropTypes.func.isRequired,
+        setEnclosureFan: PropTypes.func.isRequired,
+        setDoorDetection: PropTypes.func.isRequired,
+        getEnclosureStatus: PropTypes.func.isRequired
     }
 
     state = {
@@ -36,7 +39,7 @@ class Enclosure extends PureComponent {
                 led = 0;
             }
             if (this.props.connectionType === 'wifi') {
-                this.props.server.setEnclosureLight(led, (errMsg, res) => {
+                this.props.setEnclosureLight(led, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -64,7 +67,7 @@ class Enclosure extends PureComponent {
                 fan = 0;
             }
             if (this.props.connectionType === 'wifi') {
-                this.props.server.setEnclosureFan(fan, (errMsg, res) => {
+                this.props.setEnclosureFan(fan, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -86,7 +89,7 @@ class Enclosure extends PureComponent {
         },
         onHandleDoorEnabled: () => {
             const isDoorEnabled = !this.state.isDoorEnabled;
-            this.props.server.setDoorDetection(isDoorEnabled, (errMsg, res) => {
+            this.props.setDoorDetection(isDoorEnabled, (errMsg, res) => {
                 if (errMsg) {
                     log.error(errMsg);
                     return;
@@ -109,7 +112,7 @@ class Enclosure extends PureComponent {
 
     componentDidMount() {
         if (this.props.isConnected && this.props.connectionType === 'wifi') {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+            this.props.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
@@ -140,7 +143,7 @@ class Enclosure extends PureComponent {
             });
         }
         if (nextProps.isConnected && this.props.connectionType === 'wifi') {
-            this.props.server.getEnclosureStatus((errMsg, res) => {
+            this.props.getEnclosureStatus((errMsg, res) => {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
@@ -230,6 +233,7 @@ class Enclosure extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const { server, isConnected, headType, connectionType, enclosureLight, enclosureFan } = state.machine;
+    const { setEnclosureLight, setEnclosureFan, setDoorDetection, getEnclosureStatus } = server;
 
     return {
         headType,
@@ -237,7 +241,10 @@ const mapStateToProps = (state) => {
         enclosureFan,
         isConnected,
         connectionType,
-        server
+        setEnclosureLight,
+        setEnclosureFan,
+        setDoorDetection,
+        getEnclosureStatus
     };
 };
 

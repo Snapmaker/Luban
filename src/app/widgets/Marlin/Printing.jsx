@@ -169,7 +169,7 @@ class Printing extends PureComponent {
                             }}
                             onClick={actions.onClickLoad}
                         >
-                            {i18n._('load')}
+                            {i18n._('Load')}
                         </button>
                     </div>
 

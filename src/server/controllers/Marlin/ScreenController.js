@@ -34,7 +34,7 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     WRITE_SOURCE_UNKNOWN,
-    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE
+    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER
 } from '../constants';
 
 // % commands
@@ -262,6 +262,10 @@ class ScreenController {
                 if (!this.controller.state.isScreenProtocol) {
                     this.writeln('M1010');
                 }
+            } else if (this.query.type === QUERY_TYPE_PURIFIER) {
+                if (!this.controller.state.isScreenProtocol) {
+                    this.writeln('M1011');
+                }
             } else {
                 log.error('Unsupported query type: ', this.query.type);
             }
@@ -272,8 +276,8 @@ class ScreenController {
 
     queryState = (() => {
         let index = 0;
-        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE];
-        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ENCLOSURE];
+        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
+        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
 
         return () => {
             if (!this.ready) {
@@ -551,6 +555,12 @@ class ScreenController {
             }
         });
         this.controller.on('enclosure', (res) => {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('purifier', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
                 this.emitAll('serialport:read', { data: res.raw });

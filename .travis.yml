@@ -53,8 +53,8 @@ after_success:
     - RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
     - COMMIT_LOG=`git log -1 --format='%ci %H %s'`
     - |
-        # build:mac-x64
-        if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        # Build macOS version
+        if [ "$TRAVIS_OS_NAME" == "osx" ] && [ -n "$TRAVIS_TAG" ]; then
             # https://github.com/electron-userland/electron-osx-sign/issues/83
             # Temporarily Bypass Gatekeeper
             sudo spctl --master-disable;
@@ -67,8 +67,8 @@ after_success:
             ls -al releases/*;
         fi
     - |
-        # build:linux-x64
-        if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        # Build Linux versions (deb, rpm)
+        if [ "$TRAVIS_OS_NAME" == "linux" ] && [ -n "$TRAVIS_TAG" ]; then
             npm run build:linux-x64;
             ls -al output output/*;
             cp -af "output/${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb" "releases/${RELEASE}-linux-amd64.deb";
@@ -82,7 +82,9 @@ after_success:
         fi
     - |
         # build:linux-ia32
-        if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        # Build Linux versions (deb, rpm)
+        # Note that .deb and .rpm packages are failed to build, because of lack of support of serialport 32-bit
+        if [ "$TRAVIS_OS_NAME" == "linux" ] && [ -n "$TRAVIS_TAG" ]; then
             npm run build:linux-ia32;
             ls -al output output/*;
             cp -af "output/${PACKAGE_NAME}_${PACKAGE_VERSION}_i386.deb" "releases/${RELEASE}-linux-i386.deb";

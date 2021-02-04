@@ -32,7 +32,7 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     WRITE_SOURCE_UNKNOWN,
-    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE
+    HEAD_TYPE_3DP, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER
 } from '../constants';
 
 // % commands
@@ -136,6 +136,8 @@ class MarlinController {
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_ENCLOSURE) {
                 this.writeln('M1010');
+            } else if (this.query.type === QUERY_TYPE_PURIFIER) {
+                this.writeln('M1011');
             } else if (this.query.type === QUERY_TYPE_ORIGIN_OFFSET) {
                 this.writeln('M1007');
             } else {
@@ -148,8 +150,8 @@ class MarlinController {
 
     queryState = (() => {
         let index = 0;
-        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE];
-        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE];
+        const typeOf3dp = [QUERY_TYPE_POSITION, QUERY_TYPE_TEMPERATURE, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
+        const type = [QUERY_TYPE_POSITION, QUERY_TYPE_ORIGIN_OFFSET, QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER];
 
         return () => {
             if (!this.ready) {
@@ -426,6 +428,11 @@ class MarlinController {
         this.controller.on('enclosure', (res) => {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 // this.emitAll('serialport:read', res.raw);
+                this.emitAll('serialport:read', { data: res.raw });
+            }
+        });
+        this.controller.on('purifier', (res) => {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
         });
@@ -792,6 +799,7 @@ class MarlinController {
             setTimeout(() => this.writeln('M1006'), 100);
             setTimeout(() => this.writeln('M1007'), 150);
             setTimeout(() => this.writeln('M1010'), 200);
+            setTimeout(() => this.writeln('M1011'), 200);
             setTimeout(() => this.writeln('M105'), 250);
 
             this.handler = setInterval(() => {
@@ -806,6 +814,7 @@ class MarlinController {
                 setTimeout(() => this.writeln('M1006'), 100);
                 setTimeout(() => this.writeln('M1007'), 150);
                 setTimeout(() => this.writeln('M1010'), 200);
+                setTimeout(() => this.writeln('M1011'), 200);
                 setTimeout(() => this.writeln('M105'), 250);
 
                 setTimeout(() => {

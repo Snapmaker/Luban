@@ -1,19 +1,18 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { DATA_PREFIX, PAGE_EDITOR } from '../../constants';
-import { controller } from '../../lib/controller';
+import { DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
-import ToolPathModelGroup from '../../models/ToolPathModelGroup';
 
 import {
-    ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
-    ACTION_UPDATE_GCODE_CONFIG,
+    ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
-import { actions as editorActions, CNC_LASER_STAGE } from '../editor';
+import { actions as editorActions } from '../editor';
 import { machineStore } from '../../store/local-storage';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
+import { CNC_LASER_STAGE } from '../editor/utils';
 
 
 const initModelGroup = new ModelGroup('laser');
@@ -37,10 +36,12 @@ const INITIAL_STATE = {
     target: null,
 
     modelGroup: initModelGroup,
-    toolPathModelGroup: new ToolPathModelGroup(initModelGroup),
     SVGActions: new SVGActionsFactory(initModelGroup),
 
-    isAllModelsPreviewed: false,
+    displayedType: DISPLAYED_TYPE_MODEL,
+    toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),
+    updatingToolPath: null,
+
     isGcodeGenerating: false,
     gcodeFile: null,
 
@@ -84,58 +85,8 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    init: () => (dispatch, getState) => {
-        const { modelGroup } = getState().laser;
-        modelGroup.setDataChangedCallback(() => {
-            dispatch(editorActions.render('laser'));
-        });
-
-        // TODO: not yet to clear old events before regist
-        const controllerEvents = {
-            'taskCompleted:generateToolPath': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.onReceiveTaskResult('laser', taskResult));
-                }
-            },
-            'taskCompleted:generateGcode': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.onReceiveGcodeTaskResult('laser', taskResult));
-                }
-            },
-            'taskCompleted:processImage': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.onReceiveProcessImageTaskResult('laser', taskResult));
-                }
-            },
-            'taskProgress:generateToolPath': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.updateState('laser', {
-                        stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
-                        progress: taskResult.progress
-                    }));
-                }
-            },
-            'taskProgress:generateGcode': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.updateState('laser', {
-                        stage: CNC_LASER_STAGE.GENERATING_GCODE,
-                        progress: taskResult.progress
-                    }));
-                }
-            },
-            'taskProgress:processImage': (taskResult) => {
-                if (taskResult.headType === 'laser') {
-                    dispatch(editorActions.updateState('laser', {
-                        stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
-                        progress: taskResult.progress
-                    }));
-                }
-            }
-        };
-
-        Object.keys(controllerEvents).forEach(event => {
-            controller.on(event, controllerEvents[event]);
-        });
+    init: () => (dispatch) => {
+        dispatch(editorActions._init(HEAD_LASER));
 
         const materials = machineStore.get('laser.materials');
         if (materials) {
@@ -206,20 +157,10 @@ export default function reducer(state = INITIAL_STATE, action) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
             }
-            case ACTION_RESET_CALCULATED_STATE: {
-                return Object.assign({}, state, {
-                    isAllModelsPreviewed: false
-                });
-            }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {
                     transformation: { ...state.transformation, ...action.transformation },
                     transformationUpdateTime: +new Date()
-                });
-            }
-            case ACTION_UPDATE_GCODE_CONFIG: {
-                return Object.assign({}, state, {
-                    gcodeConfig: { ...state.gcodeConfig, ...action.gcodeConfig }
                 });
             }
             case ACTION_UPDATE_CONFIG: {

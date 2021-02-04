@@ -25,6 +25,7 @@ class Visualizer extends PureComponent {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         selectedModelArray: PropTypes.array,
+        transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -44,6 +45,7 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         saveSupport: PropTypes.func.isRequired,
         clearAllManualSupport: PropTypes.func.isRequired,
+        autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
@@ -112,7 +114,7 @@ class Visualizer extends PureComponent {
                 rotationX: 0,
                 rotationY: 0,
                 rotationZ: 0
-            });
+            }, false);
             this.props.onModelAfterTransform();
         },
         clearBuildPlate: () => {
@@ -124,6 +126,30 @@ class Visualizer extends PureComponent {
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
         },
+        mirrorSelectedModel: (value) => {
+            switch (value) {
+                case 'X':
+                    this.props.updateSelectedModelTransformation({
+                        scaleX: this.props.transformation.scaleX * -1
+                    }, false);
+                    break;
+                case 'Y':
+                    this.props.updateSelectedModelTransformation({
+                        scaleY: this.props.transformation.scaleY * -1
+                    }, false);
+                    break;
+                case 'Z':
+                    this.props.updateSelectedModelTransformation({
+                        scaleZ: this.props.transformation.scaleZ * -1
+                    }, false);
+                    break;
+                default:
+                    break;
+            }
+        },
+        autoRotateSelectedModel: () => {
+            this.props.autoRotateSelectedModel();
+        },
         updateBoundingBox: () => {
             this.canvas.current.controls.updateBoundingBox();
         },
@@ -131,19 +157,6 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         }
-        // startSupportMode: () => {
-        //     this.canvas.current.controls.startSupportMode();
-        // },
-        // clearSelectedSupport: () => {
-        //     const { modelGroup } = this.props;
-        //     const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
-        //     if (isSupportSelected) {
-        //         modelGroup.removeSelectedModel();
-        //     }
-        // },
-        // clearAllManualSupport: () => {
-        //     this.props.modelGroup.removeAllManualSupport();
-        // }
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
@@ -396,6 +409,35 @@ class Visualizer extends PureComponent {
                                 onClick: this.actions.layFlatSelectedModel
                             },
                             {
+                                type: 'item',
+                                label: i18n._('Auto Rotate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: this.actions.autoRotateSelectedModel
+                            },
+                            {
+                                type: 'subMenu',
+                                label: i18n._('Mirror Selected Model'),
+                                disabled: !isModelSelected,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('X Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('X')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Y Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('Y')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Z Axis'),
+                                        onClick: () => this.actions.mirrorSelectedModel('Z')
+                                    }
+                                ]
+
+                            },
+                            {
                                 type: 'separator'
                             },
                             {
@@ -451,6 +493,7 @@ const mapStateToProps = (state) => {
         size,
         allModel: modelGroup.models,
         selectedModelArray: modelGroup.selectedModelArray,
+        transformation: modelGroup.getSelectedModelTransformationForPrinting(),
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -468,9 +511,10 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
+    autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))

@@ -13,13 +13,14 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as editorActions, CNC_LASER_STAGE } from '../../flux/editor';
+import { actions as editorActions } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
-import { PAGE_EDITOR } from '../../constants';
+import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR } from '../../constants';
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
+import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
 
 function humanReadableTime(t) {
@@ -45,7 +46,8 @@ class Visualizer extends Component {
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
-        toolPathModelGroup: PropTypes.object.isRequired,
+        toolPathGroup: PropTypes.object.isRequired,
+        displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
@@ -71,13 +73,21 @@ class Visualizer extends Component {
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
-        onResizeElement: PropTypes.func.isRequired,
-        onAfterResizeElement: PropTypes.func.isRequired,
-        onMoveElement: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
-        onRotateElement: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
-        updateTextTransformationAfterEdit: PropTypes.func.isRequired
+        updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+
+        elementActions: PropTypes.shape({
+            moveElementsStart: PropTypes.func.isRequired,
+            moveElements: PropTypes.func.isRequired,
+            moveElementsFinish: PropTypes.func.isRequired,
+            resizeElementsStart: PropTypes.func.isRequired,
+            resizeElements: PropTypes.func.isRequired,
+            resizeElementsFinish: PropTypes.func.isRequired,
+            rotateElementsStart: PropTypes.func.isRequired,
+            rotateElements: PropTypes.func.isRequired,
+            rotateElementsFinish: PropTypes.func.isRequired
+        })
     };
 
     contextMenuRef = React.createRef();
@@ -241,6 +251,14 @@ class Visualizer extends Component {
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
         }
+
+        if (nextProps.displayedType !== this.props.displayedType) {
+            if (nextProps.displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                this.canvas.current.controls.disableClick();
+            } else {
+                this.canvas.current.controls.enableClick();
+            }
+        }
     }
 
     getNotice() {
@@ -275,7 +293,7 @@ class Visualizer extends Component {
             case CNC_LASER_STAGE.PROCESSING_IMAGE:
                 return i18n._('Processing object {{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS:
-                return i18n._('Process object successfully.');
+                return i18n._('Processed object successfully.');
             case CNC_LASER_STAGE.PROCESS_IMAGE_FAILED:
                 return i18n._('Failed to process object.');
             default:
@@ -329,11 +347,8 @@ class Visualizer extends Component {
                         onCreateElement={this.props.onCreateElement}
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
-                        onResizeElement={this.props.onResizeElement}
-                        onAfterResizeElement={this.props.onAfterResizeElement}
-                        onMoveElement={this.props.onMoveElement}
+                        elementActions={this.props.elementActions}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                        onRotateElement={this.props.onRotateElement}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                     />
@@ -350,7 +365,7 @@ class Visualizer extends Component {
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
-                        toolPathModelGroupObject={this.props.toolPathModelGroup.object}
+                        toolPathGroupObject={this.props.toolPathGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
@@ -369,7 +384,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}
-                        autoFocus={this.actions.autoFocus}
+                        toFront={this.actions.autoFocus}
                     />
                 </div>
                 {estimatedTime && (
@@ -507,7 +522,7 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
-    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathModelGroup, renderingTimestamp, stage, progress } = state.laser;
+    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
 
     return {
@@ -521,7 +536,8 @@ const mapStateToProps = (state) => {
         selectedModelID,
         svgModelGroup,
         modelGroup,
-        toolPathModelGroup,
+        toolPathGroup,
+        displayedType,
         selectedModelArray,
         // model,
         backgroundGroup: background.group,
@@ -551,16 +567,22 @@ const mapDispatchToProps = (dispatch) => {
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('laser', element)),
         onSelectElements: (elements) => dispatch(editorActions.selectElements('laser', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('laser')),
-        onResizeElement: (element, options) => dispatch(editorActions.resizeElement('laser', element, options)),
-        onAfterResizeElement: (element) => dispatch(editorActions.afterResizeElement('laser', element)),
-        onMoveElement: (element, options) => dispatch(editorActions.moveElement('laser', element, options)),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('laser')),
-        onRotateElement: (element, options) => dispatch(editorActions.rotateElement('laser', element, options)),
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),
+        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
 
-        updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation))
-
+        elementActions: {
+            moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),
+            moveElements: (elements, options) => dispatch(editorActions.moveElements('laser', elements, options)),
+            moveElementsFinish: (elements, options) => dispatch(editorActions.moveElementsFinish('laser', elements, options)),
+            resizeElementsStart: (elements, options) => dispatch(editorActions.resizeElementsStart('laser', elements, options)),
+            resizeElements: (elements, options) => dispatch(editorActions.resizeElements('laser', elements, options)),
+            resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsFinish('laser', elements, options)),
+            rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('laser', elements, options)),
+            rotateElements: (elements, options) => dispatch(editorActions.rotateElements('laser', elements, options)),
+            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options))
+        }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
     };

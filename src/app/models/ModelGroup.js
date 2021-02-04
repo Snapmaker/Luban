@@ -1,7 +1,8 @@
-import { Vector3, Group, Euler, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide } from 'three';
+import { Vector3, Group, Matrix4, BufferGeometry, MeshPhongMaterial, Mesh, DoubleSide } from 'three';
 import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
+import _ from 'lodash';
 import Model from './Model';
 import { SELECTEVENT } from '../constants';
 
@@ -17,7 +18,6 @@ class ModelGroup extends EventEmitter {
         this.headType = headType;
         // this.object = new Object3D();
         this.object = new Group();
-        this.showObject = new Group();
 
         this.models = [];
 
@@ -32,6 +32,9 @@ class ModelGroup extends EventEmitter {
 
         this.candidatePoints = null;
         this._bbox = null;
+
+        // The selectedToolPathModelIDs is used to generate the toolpath
+        this.selectedToolPathModelIDs = [];
     }
 
     setMaterials(materials) {
@@ -165,7 +168,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasAnyModelVisible() {
-        return this.models.some((model) => model.visible);
+        return this.models.filter(m => !m.supportTag).some((model) => model.visible);
     }
 
     hideSelectedModel() {
@@ -388,9 +391,6 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    addHiddenMeshObjects() {
-        this.showObject.children.splice(0);
-    }
 
     setConvexGeometry(uploadName, convexGeometry) {
         const models = this.models.filter(m => m.uploadName === uploadName);
@@ -489,34 +489,6 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    applySelectedObjectParentMatrix() {
-        // if (this.selectedGroup.children.length === 1) {
-        //     const meshObject = this.selectedGroup.children[0];
-        //     this.selectedGroup.scale.copy(meshObject.scale);
-        //     this.selectedGroup.rotation.copy(meshObject.rotation);
-        //     this.selectedGroup.uniformScalingState = meshObject.uniformScalingState;
-        // }
-        // this.selectedGroup.updateMatrix();
-        // const newPosition = this.calculateSelectedGroupPosition(this.selectedGroup);
-        // this.selectedGroup.position.copy(newPosition);
-        // this.selectedGroup.updateMatrix();
-        // this.selectedGroup.children.forEach((eachMeshObject) => {
-        //     eachMeshObject.applyMatrix(new Matrix4().getInverse(this.selectedGroup.matrix));
-        // });
-    }
-
-    removeSelectedObjectParentMatrix() {
-        // if (this.selectedGroup.children.length > 0) {
-        //     this.selectedGroup.children.forEach((eachMeshObject) => {
-        //         eachMeshObject.applyMatrix(this.selectedGroup.matrix);
-        //     });
-        // }
-        // this.selectedGroup.children.forEach((meshObject) => {
-        //     const model = this.models.find(d => d.meshObject === meshObject);
-        //     model && model.onTransform();
-        // });
-    }
-
     addSelectedModels(modelArray) {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
@@ -549,7 +521,7 @@ class ModelGroup extends EventEmitter {
     // use for widget
     selectModelById(modelID, isMultiSelect = false) {
         const selectModel = this.models.find(d => d.modelID === modelID);
-        // this.removeSelectedObjectParentMatrix();
+
         if (isMultiSelect) {
             if (selectModel) {
                 const objectIndex = this.selectedGroup.children.indexOf(selectModel.meshObject);
@@ -565,8 +537,6 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(selectModel);
             }
         }
-        // this.resetSelectedObjectWhenMultiSelect();
-        // this.applySelectedObjectParentMatrix();
 
         this.modelChanged();
         return this.getStateAndUpdateBoundingBox();
@@ -574,7 +544,6 @@ class ModelGroup extends EventEmitter {
 
     // use for canvas
     selectMultiModel(intersect, selectEvent) {
-        // this.removeSelectedObjectParentMatrix();
         let model;
         switch (selectEvent) {
             case SELECTEVENT.UNSELECT:
@@ -605,23 +574,10 @@ class ModelGroup extends EventEmitter {
                 break;
             default:
         }
-        // this.resetSelectedObjectWhenMultiSelect();
-        // this.applySelectedObjectParentMatrix();
+
         this.modelChanged();
         this.emit('select');
         return this.getStateAndUpdateBoundingBox();
-    }
-
-    resetSelectedObjectWhenMultiSelect() {
-        if (this.selectedGroup.children.length > 1) {
-            this.resetSelectedObjectScaleAndRotation();
-            this.selectedGroup.uniformScalingState = true;
-        }
-    }
-
-    resetSelectedObjectScaleAndRotation() {
-        this.selectedGroup.scale.copy(new Vector3(1, 1, 1));
-        this.selectedGroup.rotation.copy(new Euler(0, 0, 0));
     }
 
     addModelToSelectedGroup(model) {
@@ -706,39 +662,35 @@ class ModelGroup extends EventEmitter {
     }
 
     arrangeAllModels() {
-        // this.removeSelectedObjectParentMatrix();
-        this.resetSelectedObjectScaleAndRotation();
-        const models = this.getModels();
+        const models = this.getModels().filter(m => !m.supportTag);
         for (const model of models) {
-            this.object.remove(model.meshObject);
-            this.selectedGroup.remove(model.meshObject);
+            ThreeUtils.removeObjectParent(model.meshObject);
         }
-        this.models.splice(0);
 
+        const arrangedModels = [];
         for (const model of models) {
             model.stickToPlate();
             model.meshObject.position.x = 0;
             model.meshObject.position.y = 0;
-            const point = this._computeAvailableXY(model);
+            const point = this._computeAvailableXY(model, arrangedModels);
             model.meshObject.position.x = point.x;
             model.meshObject.position.y = point.y;
             model.meshObject.updateMatrix();
-            // this.add(model);
-            this.models.push(model);
+
+            arrangedModels.push(model);
             this.object.add(model.meshObject);
             if (this.selectedModelIDArray.includes(model.modelID)) {
-                this.selectedGroup.add(model.meshObject);
+                ThreeUtils.setObjectParent(model.meshObject, this.selectedGroup);
             }
         }
-        // this.applySelectedObjectParentMatrix();
+        this.prepareSelectedGroup();
+
         return this.getStateAndUpdateBoundingBox();
     }
 
     duplicateSelectedModel(modelID) {
         const modelsToCopy = this.selectedModelArray;
         if (modelsToCopy.length === 0) return this._getEmptyState();
-
-        // this.removeSelectedObjectParentMatrix();
 
         // Unselect all models
         this.unselectAllModels();
@@ -772,7 +724,6 @@ class ModelGroup extends EventEmitter {
             this.object.add(newModel.meshObject);
             this.addModelToSelectedGroup(newModel);
         });
-        // this.applySelectedObjectParentMatrix();
 
         return this.getStateAndUpdateBoundingBox();
     }
@@ -781,11 +732,7 @@ class ModelGroup extends EventEmitter {
      * Copy action: copy selected models (simply save the objects without their current positions).
      */
     copy() {
-        // this.removeSelectedObjectParentMatrix();
-
         this.clipboard = this.selectedModelArray.map(model => model.clone(this));
-
-        // this.applySelectedObjectParentMatrix();
     }
 
     /**
@@ -794,8 +741,6 @@ class ModelGroup extends EventEmitter {
     paste() {
         const modelsToCopy = this.clipboard;
         if (modelsToCopy.length === 0) return this._getEmptyState();
-
-        // this.removeSelectedObjectParentMatrix();
 
         // Unselect all models
         this.unselectAllModels();
@@ -823,7 +768,6 @@ class ModelGroup extends EventEmitter {
                 this.addModelToSelectedGroup(newModel);
             }
         });
-        // this.applySelectedObjectParentMatrix();
 
         return this.getStateAndUpdateBoundingBox();
     }
@@ -871,12 +815,24 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
-        // this.removeSelectedObjectParentMatrix();
         selected.forEach((item) => {
             item.layFlat();
             item.computeBoundingBox();
         });
-        // this.applySelectedObjectParentMatrix();
+        return this.getState();
+    }
+
+    autoRotateSelectedModel() {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
+            return null;
+        }
+
+        selected.forEach((item) => {
+            item.autoRotate();
+            item.computeBoundingBox();
+        });
+
         return this.getState();
     }
 
@@ -900,9 +856,9 @@ class ModelGroup extends EventEmitter {
 
     shouldApplyScaleToObjects(scaleX, scaleY, scaleZ) {
         return this.selectedGroup.children.every((meshObject) => {
-            if (scaleX * meshObject.scale.x < 0.01
-              || scaleY * meshObject.scale.y < 0.01
-              || scaleZ * meshObject.scale.z < 0.01
+            if (Math.abs(scaleX * meshObject.scale.x) < 0.01
+              || Math.abs(scaleY * meshObject.scale.y) < 0.01
+              || Math.abs(scaleZ * meshObject.scale.z) < 0.01
             ) {
                 return false; // should disable
             }
@@ -910,8 +866,20 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    updateSelectedGroupTransformation(transformation) {
+    /**
+     * Update transformation of selected group.
+     *
+     * Note that this function is used for 3DP only.
+     *
+     * Note that when newUniformScalingState is used to mirror and to reset
+     *
+     * TODO: Laser and CNC was moved to somewhere else.
+     *
+     * @param transformation
+     */
+    updateSelectedGroupTransformation(transformation, newUniformScalingState) {
         const { positionX, positionY, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, width, height, uniformScalingState } = transformation;
+        const shouldUniformScale = newUniformScalingState ?? this.selectedGroup.uniformScalingState;
 
         // todo, width and height use for 2d
         if (width !== undefined) {
@@ -927,20 +895,30 @@ class ModelGroup extends EventEmitter {
         if (positionY !== undefined) {
             this.selectedGroup.position.setY(positionY);
         }
-        if (this.selectedGroup.uniformScalingState === true) {
-            if (scaleX !== undefined && this.shouldApplyScaleToObjects(scaleX, scaleX, scaleX)) {
-                this.selectedGroup.scale.set(scaleX, scaleX, scaleX);
+        // Note that this is new value, but not a proportion, not to change pls.
+        if (shouldUniformScale) {
+            if (scaleX !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleX, scaleX * y / x, scaleX * z / x)) {
+                    this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);
+                }
             }
-            if (scaleY !== undefined && this.shouldApplyScaleToObjects(scaleY, scaleY, scaleY)) {
-                this.selectedGroup.scale.set(scaleY, scaleY, scaleY);
+            if (scaleY !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleY * x / y, scaleY, scaleY * z / y)) {
+                    this.selectedGroup.scale.set(scaleY * x / y, scaleY, scaleY * z / y);
+                }
             }
-            if (scaleZ !== undefined && this.shouldApplyScaleToObjects(scaleZ, scaleZ, scaleZ)) {
-                this.selectedGroup.scale.set(scaleZ, scaleZ, scaleZ);
+            if (scaleZ !== undefined) {
+                const { x, y, z } = this.selectedGroup.scale;
+                if (this.shouldApplyScaleToObjects(scaleZ * x / z, scaleZ * y / z, scaleZ)) {
+                    this.selectedGroup.scale.set(scaleZ * x / z, scaleZ * y / z, scaleZ);
+                }
             }
         } else {
             if (scaleX !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleX * meshObject.scale.x < 0.01
+                    if (Math.abs(scaleX * meshObject.scale.x) < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -952,7 +930,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleY !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleY * meshObject.scale.y < 0.01
+                    if (Math.abs(scaleY * meshObject.scale.y) < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -964,7 +942,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleZ !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (scaleZ * meshObject.scale.z < 0.01
+                    if (Math.abs(scaleZ * meshObject.scale.z) < 0.01
                     ) {
                         return false; // should disable
                     }
@@ -1006,7 +984,6 @@ class ModelGroup extends EventEmitter {
     // Note: the function is only useful for 3D object operations on Canvas
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
-        // this.removeSelectedObjectParentMatrix();
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
@@ -1014,10 +991,8 @@ class ModelGroup extends EventEmitter {
             selected.computeBoundingBox();
         });
         this._checkAnyModelOversteppedOrSelected();
-        // this.applySelectedObjectParentMatrix();
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
-        // removeSelectedObjectParentMatrix makes object matrixWorld exception
         this.prepareSelectedGroup();
         if (selectedModelArray.length === 0) {
             return null;
@@ -1047,15 +1022,18 @@ class ModelGroup extends EventEmitter {
         this.object.visible = true;
     }
 
-    _computeAvailableXY(model) {
-        if (this.getModels().length === 0) {
+    _computeAvailableXY(model, arrangedModels) {
+        if (!arrangedModels) {
+            arrangedModels = this.getModels();
+        }
+        if (arrangedModels.length === 0) {
             return { x: 0, y: 0 };
         }
 
         model.computeBoundingBox();
         const modelBox3 = model.boundingBox;
         const box3Arr = [];
-        for (const m of this.getModels()) {
+        for (const m of arrangedModels) {
             m.computeBoundingBox();
             box3Arr.push(m.boundingBox);
         }
@@ -1124,36 +1102,6 @@ class ModelGroup extends EventEmitter {
         return { x: 0, y: 0 };
     }
 
-    getAllBoundingBox() {
-        const boundingBox = { max: { x: null, y: null, z: null }, min: { x: null, y: null, z: null } };
-        for (const model of this.models) {
-            let modelBoundingBox;
-            if (model.headType === '3dp') {
-                modelBoundingBox = model.boundingBox;
-            } else {
-                modelBoundingBox = {
-                    max: {
-                        x: model.transformation.positionX + model.transformation.width / 2,
-                        y: model.transformation.positionY + model.transformation.height / 2,
-                        z: 0
-                    },
-                    min: {
-                        x: model.transformation.positionX - model.transformation.width / 2,
-                        y: model.transformation.positionY - model.transformation.height / 2,
-                        z: 0
-                    }
-                };
-            }
-            boundingBox.max.x = boundingBox.max.x ? Math.max(boundingBox.max.x, modelBoundingBox.max.x) : modelBoundingBox.max.x;
-            boundingBox.max.y = boundingBox.max.y ? Math.max(boundingBox.max.y, modelBoundingBox.max.y) : modelBoundingBox.max.y;
-            boundingBox.max.z = boundingBox.max.z ? Math.max(boundingBox.max.z, modelBoundingBox.max.z) : modelBoundingBox.max.z;
-            boundingBox.min.x = boundingBox.min.x ? Math.min(boundingBox.min.x, modelBoundingBox.min.x) : modelBoundingBox.min.x;
-            boundingBox.min.y = boundingBox.min.y ? Math.min(boundingBox.min.y, modelBoundingBox.min.y) : modelBoundingBox.min.y;
-            boundingBox.min.z = boundingBox.min.z ? Math.min(boundingBox.min.z, modelBoundingBox.min.z) : modelBoundingBox.min.z;
-        }
-        return boundingBox;
-    }
-
     _checkAnyModelOversteppedOrSelected() {
         let isAnyModelOverstepped = false;
         for (const model of this.getModels()) {
@@ -1174,7 +1122,7 @@ class ModelGroup extends EventEmitter {
     }
 
     hasModel() {
-        return this.getModels().length > 0;
+        return this.getModels().filter(v => v.visible).length > 0;
     }
 
     // not include p1, p2
@@ -1430,6 +1378,36 @@ class ModelGroup extends EventEmitter {
             }
             count++;
         }
+    }
+
+    /**
+     * Set selected modelIDs to create tool path.
+     * @param modelIDs
+     */
+    setSelectedToolPathModelIDs(modelIDs = []) {
+        this.selectedToolPathModelIDs = modelIDs.map(v => v);
+        this.modelChanged();
+    }
+
+    addSelectedToolPathModelIDs(modelIDs = []) {
+        for (const modelID of modelIDs) {
+            this.selectedToolPathModelIDs.push(modelID);
+        }
+        this.modelChanged();
+    }
+
+    removeSelectedToolPathModelIDs(modelIDs = []) {
+        this.selectedToolPathModelIDs = this.selectedToolPathModelIDs.filter(v => !_.includes(modelIDs, v));
+        this.modelChanged();
+    }
+
+    getSelectedToolPathModels() {
+        return this.models.filter(model => _.includes(this.selectedToolPathModelIDs, model.modelID));
+    }
+
+    setAllSelectedToolPathModelIDs() {
+        this.selectedToolPathModelIDs = this.models.map(v => v.modelID);
+        this.modelChanged();
     }
 }
 

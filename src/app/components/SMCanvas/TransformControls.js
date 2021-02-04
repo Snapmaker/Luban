@@ -95,18 +95,6 @@ class TransformControls extends Object3D {
         this.destroyDefaults();
     }
 
-    calculateScalePosition(originalPosition, centerPosition, eVec) {
-        const positionX = centerPosition.x + (originalPosition.x - centerPosition.x) * eVec.x;
-        const positionY = centerPosition.y + (originalPosition.y - centerPosition.y) * eVec.y;
-        const positionZ = centerPosition.z + (originalPosition.z - centerPosition.z) * eVec.z;
-        return {
-            x: positionX,
-            y: positionY,
-            z: positionZ
-        };
-    }
-
-
     createPeripheral(definitions) {
         const peripheral = new Object3D();
 
@@ -818,9 +806,9 @@ class TransformControls extends Object3D {
 
     shouldApplyScaleToObjects(parentEVec) {
         return this.object.children.every((meshObject) => {
-            if (parentEVec.x * this.object.scale.x * meshObject.scale.x < 0.01
-              || parentEVec.y * this.object.scale.y * meshObject.scale.y < 0.01
-              || parentEVec.z * this.object.scale.z * meshObject.scale.z < 0.01
+            if (Math.abs(parentEVec.x * this.object.scale.x * meshObject.scale.x) < 0.01
+              || Math.abs(parentEVec.y * this.object.scale.y * meshObject.scale.y) < 0.01
+              || Math.abs(parentEVec.z * this.object.scale.z * meshObject.scale.z) < 0.01
             ) {
                 return false; // should disable
             }

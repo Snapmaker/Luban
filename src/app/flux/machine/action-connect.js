@@ -1,6 +1,6 @@
 import includes from 'lodash/includes';
 import isInteger from 'lodash/isInteger';
-
+// import { Server } from './Server';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import { machineStore } from '../../store/local-storage';
 
@@ -36,19 +36,52 @@ const setConnectionTimeout = (connectionTimeout) => (dispatch) => {
  * Set selected server.
  *
  * Update state only, we will save the server when connection established.
+ * If 'server' is not found in 'servers' list, add it and update state
  */
-const setSelectedServer = (server) => (dispatch) => {
-    dispatch(baseActions.updateState({ server }));
+const setSelectedServer = (server) => (dispatch, getState) => {
+    const { servers } = getState().machine;
+
+    // We can assume that server must be found on server list
+    const find = servers.find(s => s.address === server.address);
+    if (find) {
+        // Update server selected
+        dispatch(baseActions.updateState({ server: find }));
+    }
+};
+
+/**
+ * Add new server.
+ *
+ * @param server - server to be added.
+ * @returns The new added server or an old server if it already exists.
+ */
+const addServer = (server) => (dispatch, getState) => {
+    const { servers } = getState().machine;
+
+    const find = servers.find(s => s.address === server.address);
+
+    if (find) {
+        return find;
+    } else {
+        const newServers = servers.slice(0);
+        newServers.push(server);
+
+        dispatch(baseActions.updateState({
+            servers: newServers
+        }));
+
+        return server;
+    }
 };
 
 const setServerAddress = (serverAddress) => (dispatch) => {
-    dispatch(baseActions.updateState({ serverAddress: serverAddress }));
+    dispatch(baseActions.updateState({ savedServerAddress: serverAddress }));
 
     machineStore.set('server.address', serverAddress);
 };
 
 const setServerToken = (token) => (dispatch) => {
-    dispatch(baseActions.updateState({ serverToken: token }));
+    dispatch(baseActions.updateState({ savedServerToken: token }));
 
     machineStore.set('server.token', token);
 };
@@ -72,6 +105,7 @@ export default {
     setConnectionType,
     setConnectionTimeout,
 
+    addServer,
     setSelectedServer,
 
     setMachineSerialPort,

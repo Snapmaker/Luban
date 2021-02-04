@@ -43,10 +43,10 @@ class Model {
 
         this.limitSize = limitSize;
 
-        const geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+        this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
+        const material = modelInfo.material || new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
-        this.meshObject = new THREE.Mesh(geometry, material);
+        this.meshObject = new THREE.Mesh(this.geometry, material);
 
         this.modelID = modelID;
         this.modelName = modelName ?? 'unnamed';
@@ -97,6 +97,10 @@ class Model {
 
         this.lastToolPathStr = null;
         this.isToolPath = false;
+
+        if (modelInfo.convexGeometry) {
+            this.setConvexGeometry(modelInfo.convexGeometry);
+        }
     }
 
     get visible() {
@@ -465,7 +469,7 @@ class Model {
 
     computeBoundingBox() {
         if (this.sourceType === '3d') {
-            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject, !this.supportTag);
+            this.boundingBox = ThreeUtils.computeBoundingBox(this.meshObject);
         } else {
             const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
             const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
@@ -571,11 +575,7 @@ class Model {
      * @returns {Model}
      */
     clone(modelGroup) {
-        const clone = new Model({
-            ...this,
-            geometry: this.meshObject.geometry.clone(),
-            material: this.meshObject.material.clone()
-        }, modelGroup);
+        const clone = new Model({ ...this }, modelGroup);
         clone.originModelID = this.modelID;
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
@@ -584,21 +584,77 @@ class Model {
 
         clone.setMatrix(this.meshObject.matrixWorld);
 
-        // copy convex geometry as well
-        if (this.sourceType === '3d') {
-            if (this.convexGeometry) {
-                clone.convexGeometry = this.convexGeometry.clone();
-            }
+        return clone;
+    }
+
+    /**
+     * Find the best fit direction, and rotate the model
+     * step1. get big planes of convex geometry
+     * step2. calculate area, support volumes of each big plane
+     * step3. find the best fit plane using formula below
+     */
+    autoRotate() {
+        if (this.sourceType !== '3d' || !this.convexGeometry) {
+            return;
         }
 
-        return clone;
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
+        this.meshObject.updateMatrixWorld();
+
+        // TODO: how about do not use matrix to speed up
+        const { planes, areas } = ThreeUtils.computeGeometryPlanes(this.convexGeometry, this.meshObject.matrixWorld);
+        const maxArea = Math.max.apply(null, areas);
+        const bigPlanes = { planes: null, areas: [] };
+        bigPlanes.planes = planes.filter((p, idx) => {
+            // filter big planes, 0.1 can be change to improve perfomance
+            const isBig = areas[idx] > maxArea * 0.1;
+            isBig && bigPlanes.areas.push(areas[idx]);
+            return isBig;
+        });
+
+        if (!bigPlanes.planes.length) return;
+
+        const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
+        const objPlanes = ThreeUtils.computeGeometryPlanes(this.meshObject.geometry, this.meshObject.matrixWorld, bigPlanes.planes);
+
+        let targetPlane;
+        const minSupportVolume = Math.min.apply(null, objPlanes.supportVolumes);
+        // if has a direction without support, choose it
+        if (minSupportVolume < 1) {
+            const idx = objPlanes.supportVolumes.findIndex(i => i === minSupportVolume);
+            targetPlane = objPlanes.planes[idx];
+        }
+
+        if (!targetPlane) {
+            const rates = [];
+            for (let idx = 0, len = bigPlanes.planes.length; idx < len; idx++) {
+                // update rate formula to improve performance
+                rates.push(
+                    objPlanes.areas[idx]
+                    * (objPlanes.areas[idx] / bigPlanes.areas[idx])
+                    * (minSupportVolume / objPlanes.supportVolumes[idx])
+                );
+            }
+
+            const maxRate = Math.max.apply(null, rates);
+            const idx = rates.findIndex(r => r === maxRate);
+            targetPlane = bigPlanes.planes[idx];
+        }
+
+        // WARNING: applyQuternion DONT update Matrix...
+        this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(targetPlane.normal, xyPlaneNormal));
+        this.meshObject.updateMatrix();
+
+        this.stickToPlate();
+        this.onTransform();
+        revertParent();
     }
 
     layFlat() {
         if (this.sourceType !== '3d') {
             return;
         }
-        const epsilon = 1e-6;
+
         const positionX = this.meshObject.position.x;
         const positionY = this.meshObject.position.y;
 
@@ -606,139 +662,42 @@ class Model {
             return;
         }
 
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
         // Attention: the minY-vertex and min-angle-vertex must be in the same face
         // transform convexGeometry clone
-        let convexGeometryClone = this.convexGeometry.clone();
-
+        const convexGeometryClone = this.convexGeometry.clone();
+        convexGeometryClone.computeVertexNormals();
         // this.updateMatrix();
         this.meshObject.updateMatrix();
         convexGeometryClone.applyMatrix(this.meshObject.matrix);
-        let faces = convexGeometryClone.faces;
-        const vertices = convexGeometryClone.vertices;
-
-        // find out the following params:
-        let minZ = Number.MAX_VALUE;
-        let minZVertexIndex = -1;
-        let minAngleVertexIndex = -1; // The angle between the vector(minY-vertex -> min-angle-vertex) and the x-z plane is minimal
+        const faces = convexGeometryClone.faces;
         let minAngleFace = null;
-
-        // find minZ and minZVertexIndex
-        for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i].z < minZ) {
-                minZ = vertices[i].z;
-                minZVertexIndex = i;
-            }
-        }
-
-        // get minZ vertices count
-        let minZVerticesCount = 0;
-        for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i].z - minZ < epsilon) {
-                ++minZVerticesCount;
-            }
-        }
-
-        if (minZVerticesCount >= 3) {
-            // already lay flat
-            return;
-        }
-
-        // find minAngleVertexIndex
-        if (minZVerticesCount === 2) {
-            for (let i = 0; i < vertices.length; i++) {
-                if (vertices[i].z - minZ < epsilon && i !== minZVertexIndex) {
-                    minAngleVertexIndex = i;
-                }
-            }
-        } else if (minZVerticesCount === 1) {
-            let sinValue = Number.MAX_VALUE; // sin value of the angle between directionVector3 and x-z plane
-            for (let i = 1; i < vertices.length; i++) {
-                if (i !== minZVertexIndex) {
-                    const directionVector3 = new THREE.Vector3().subVectors(vertices[i], vertices[minZVertexIndex]);
-                    const length = directionVector3.length();
-                    // min sinValue corresponds minAngleVertexIndex
-                    if (directionVector3.z / length < sinValue) {
-                        sinValue = directionVector3.z / length;
-                        minAngleVertexIndex = i;
-                    }
-                }
-            }
-            // transform model to make min-angle-vertex y equal to minY
-            const vb1 = new THREE.Vector3().subVectors(vertices[minAngleVertexIndex], vertices[minZVertexIndex]);
-            const va1 = new THREE.Vector3(vb1.x, vb1.y, 0);
-            const matrix1 = this._getRotateMatrix(va1, vb1);
-            this.meshObject.applyMatrix(matrix1);
-            this.stickToPlate();
-
-            // update geometry
-            convexGeometryClone = this.convexGeometry.clone();
-            convexGeometryClone.applyMatrix(this.meshObject.matrix);
-            faces = convexGeometryClone.faces;
-        }
-
-        // now there must be 2 minY vertices
-        // find minAngleFace
-        const candidateFaces = [];
+        let minAngle = Math.PI;
         for (let i = 0; i < faces.length; i++) {
             const face = faces[i];
-            if ([face.a, face.b, face.c].includes(minZVertexIndex)
-                && [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
-                candidateFaces.push(face);
+            const angle = face.normal.angleTo(new THREE.Vector3(0, 0, -1));
+            if (angle < minAngle) {
+                minAngle = angle;
+                minAngleFace = face;
             }
         }
 
-        // max cos value corresponds min angle
-        convexGeometryClone.computeFaceNormals();
-        let cosValue = Number.MIN_VALUE;
-        for (let i = 0; i < candidateFaces.length; i++) {
-            // faceNormal points model outer surface
-            const faceNormal = candidateFaces[i].normal;
-            if (faceNormal.z < 0) {
-                const cos = -faceNormal.z / faceNormal.length();
-                if (cos > cosValue) {
-                    cosValue = cos;
-                    minAngleFace = candidateFaces[i];
-                }
-            }
-        }
 
         const xyPlaneNormal = new THREE.Vector3(0, 0, -1);
         const vb2 = minAngleFace.normal;
-        const matrix2 = this._getRotateMatrix(xyPlaneNormal, vb2);
-        this.meshObject.applyMatrix(matrix2);
+        this.meshObject.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(vb2, xyPlaneNormal));
         this.stickToPlate();
         this.meshObject.position.x = positionX;
         this.meshObject.position.y = positionY;
         this.meshObject.updateMatrix();
 
         this.onTransform();
-    }
-
-    // get matrix for rotating v2 to v1. Applying matrix to v2 can make v2 to parallels v1.
-    _getRotateMatrix(v1, v2) {
-        // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
-        const cross = new THREE.Vector3();
-        cross.crossVectors(v2, v1);
-        const dot = v1.dot(v2);
-
-        const l1 = v1.length();
-        const l2 = v2.length();
-        const w = l1 * l2 + dot;
-        const x = cross.x;
-        const y = cross.y;
-        const z = cross.z;
-
-        const q = new THREE.Quaternion(x, y, z, w);
-        q.normalize();
-
-        const matrix4 = new THREE.Matrix4();
-        matrix4.makeRotationFromQuaternion(q);
-        return matrix4;
+        revertParent();
     }
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode, geometry, material,
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
             transformation, processImageName
         } = this;
         return {
@@ -752,8 +711,6 @@ class Model {
             uploadName,
             config,
             mode,
-            geometry,
-            material,
             transformation,
             processImageName
         };
@@ -818,6 +775,7 @@ class Model {
         geometry.computeVertexNormals();
 
         this.meshObject.geometry = geometry;
+        this.computeBoundingBox();
     }
 
     setVertexColors() {
@@ -884,24 +842,34 @@ class Model {
         }
     }
 
+    // TODO: move preview method to flux. @parachute
     async preview(options) {
         const modelTaskInfo = this.getTaskInfo();
         const toolPathModelTaskInfo = this.relatedModels.toolPathModel.getTaskInfo();
+
         if (toolPathModelTaskInfo && toolPathModelTaskInfo.visible) {
+            // TODO: too complex the API
             const taskInfo = {
                 ...modelTaskInfo,
                 ...toolPathModelTaskInfo,
                 ...options
             };
+
+            // Check if parameters are the same, if yes then skip the preview
             const lastToolPathStr = JSON.stringify({ ...taskInfo, toolPathFilename: '' });
             if (this.lastToolPathStr === lastToolPathStr) {
                 return true;
             }
+
+            // Generate task ID for new tool path
             const id = uuid.v4();
             this.relatedModels.toolPathModel.id = id;
             taskInfo.id = id;
+
             this.lastToolPathStr = lastToolPathStr;
             this.relatedModels.toolPathModel.isPreview = false;
+
+            // Commit async task
             controller.commitToolPathTask({
                 taskId: taskInfo.modelID,
                 headType: this.headType,

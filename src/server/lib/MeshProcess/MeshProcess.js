@@ -83,9 +83,9 @@ const getPointByLineAndAngle = (start, end, angle) => {
 // eslint-disable-next-line no-unused-vars
 const writeSvg = (width, height, paths, outputFile, p = '') => {
     let d = '';
-    for (const path of paths) {
+    for (const eachPath of paths) {
         d += 'M';
-        for (const point of path) {
+        for (const point of eachPath) {
             d += `${point.x} ${point.y} `;
         }
     }
@@ -143,10 +143,19 @@ export class MeshProcess {
         const mesh = this.mesh;
 
         if (this.isRotate) {
-            const r = Vector2.length({
-                x: mesh.aabb.length.x / 2,
-                y: mesh.aabb.length.y / 2
-            });
+            const center = {
+                x: (mesh.aabb.max.x + mesh.aabb.min.x) / 2,
+                y: (mesh.aabb.max.y + mesh.aabb.min.y) / 2
+            };
+            let r2 = 0;
+            for (const vertex of mesh.vertices) {
+                r2 = Math.max(Vector2.length2({
+                    x: vertex.p.x - center.x,
+                    y: vertex.p.y - center.y
+                }), r2);
+            }
+
+            const r = Math.sqrt(r2);
 
             const width = round(r * Math.PI * 2, 2);
             const height = this.mesh.aabb.length.z;
@@ -159,8 +168,7 @@ export class MeshProcess {
     }
 
     convertTo3AxisImage() {
-        const width = this.mesh.aabb.length.x;
-        const height = this.mesh.aabb.length.z;
+        const { width, height } = this.getWidthAndHeight();
 
         const layerThickness = 1 / this.sliceDensity;
         const initialLayerThickness = layerThickness / 2;
@@ -215,7 +223,7 @@ export class MeshProcess {
         const maxY = this.mesh.aabb.max.y;
         const grayRange = this.maxGray - this.minGray;
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).slice(0, -4)}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -246,13 +254,9 @@ export class MeshProcess {
     }
 
     convertTo4AxisImage() {
-        const r = Vector2.length({
-            x: this.mesh.aabb.length.x / 2,
-            y: this.mesh.aabb.length.y / 2
-        });
+        const { width, height } = this.getWidthAndHeight();
 
-        const width = round(r * Math.PI * 2, 2);
-        const height = this.mesh.aabb.length.z;
+        const r = width / (Math.PI * 2);
 
         const layerThickness = 1 / this.sliceDensity;
         const initialLayerThickness = layerThickness / 2;
@@ -309,7 +313,7 @@ export class MeshProcess {
             }
         }
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).slice(0, -4)}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -349,10 +353,10 @@ export class MeshProcess {
     _setDirection() {
         this.mesh.setDirection(this.direction);
         if ((this.flip & 1) > 0) {
-            this.mesh.addCoordinateSystem({ zSymbol: -1 });
+            this.mesh.addCoordinateSystem({ z: '-z' });
         }
         if ((this.flip & 2) > 0) {
-            this.mesh.addCoordinateSystem({ xSymbol: -1 });
+            this.mesh.addCoordinateSystem({ x: '-x' });
         }
     }
 
@@ -366,7 +370,7 @@ export class MeshProcess {
             });
             return this.convertTo4AxisImage();
         } else {
-            this.mesh.addCoordinateSystem({ ySymbol: -1 });
+            this.mesh.addCoordinateSystem({ y: '-y' });
             this.mesh.offset({
                 x: -this.mesh.aabb.min.x,
                 y: -this.mesh.aabb.min.y,
