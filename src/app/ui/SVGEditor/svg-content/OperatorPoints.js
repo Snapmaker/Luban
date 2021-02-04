@@ -124,12 +124,15 @@ class OperatorPoints {
 
     updateScale(scale) { // just change the engineer scale
         this.scale = scale;
+
         this.rotateGripConnector.setAttribute('stroke-width', 1 / this.scale);
         const ny = this.rotateGripConnector.getAttribute('y1');
         this.rotateGripConnector.setAttribute('y2', ny - GRIP_RADIUS * 9.4 / this.scale);
+
         this.rotateGrip.setAttribute('cy', ny - GRIP_RADIUS * 9.4 / this.scale);
         this.rotateGrip.setAttribute('r', GRIP_RADIUS / this.scale);
         this.rotateGrip.setAttribute('stroke-width', 2 / this.scale);
+
         for (const dir of Object.keys(this.operatorGrips)) {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('r', GRIP_RADIUS / this.scale);

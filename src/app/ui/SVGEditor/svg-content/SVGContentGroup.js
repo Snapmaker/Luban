@@ -199,7 +199,7 @@ class SVGContentGroup {
                 angle: rotate.angle
             });
         } else if (elements.length > 1) {
-            // re-create axis-aligned selector if multiple elements selected
+            // re-create axis-aligned selector if multiple elements are selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
 
             const selectorElement = this.operatorPoints.operatorPointsGroup;
@@ -413,7 +413,6 @@ class SVGContentGroup {
 
     moveSelector(elements, { dx, dy }) { // change the new transform
         // TODO
-        console.log('move selector', elements);
         const transformList = getTransformList(this.operatorPoints.operatorPointsGroup);
 
         const transform = this.svgContent.createSVGTransform();

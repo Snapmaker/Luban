@@ -506,8 +506,8 @@ class SvgModel {
             const t = {
                 x: newCenter.x,
                 y: newCenter.y,
-                width: width,
-                height: height,
+                width,
+                height,
                 scaleX,
                 scaleY,
                 angle
@@ -587,8 +587,10 @@ class SvgModel {
             case 'ellipse': {
                 element.setAttribute('cx', x);
                 element.setAttribute('cy', y);
-                element.setAttribute('rx', width / 2);
-                element.setAttribute('ry', height / 2);
+                element.setAttribute('rx', width / 2 * scaleX);
+                element.setAttribute('ry', height / 2 * scaleY);
+                scaleX = 1;
+                scaleY = 1;
                 break;
             }
             case 'image': {

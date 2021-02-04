@@ -29,7 +29,6 @@ class CNCPath extends PureComponent {
         // functions
         setDisplay: PropTypes.func.isRequired,
 
-        updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
         updateSelectedModelConfig: PropTypes.func.isRequired,
@@ -73,7 +72,6 @@ class CNCPath extends PureComponent {
             page, selectedModelArray,
             selectedModelVisible, sourceType, mode,
             showOrigin,
-            updateSelectedModelTransformation,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
             updateSelectedModelUniformScalingState,
@@ -92,7 +90,6 @@ class CNCPath extends PureComponent {
                 {isEditor && (
                     <TransformationSection
                         headType="cnc"
-                        updateSelectedModelTransformation={updateSelectedModelTransformation}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
                 )}
@@ -163,7 +160,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changeActiveToolListDefinition: (definitionId, name) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, name)),
         updateShowCncToolManager: (showCncToolManager) => dispatch(cncActions.updateShowCncToolManager(showCncToolManager)),
-        updateSelectedModelTransformation: (params, changeFrom) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params, changeFrom)),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
