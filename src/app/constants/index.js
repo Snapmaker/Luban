@@ -103,10 +103,11 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     // 'Support'
     'support_enable',
     'support_type',
+    'support_angle',
     'support_pattern',
     'support_infill_rate',
-    'support_z_distance',
-    'support_angle'
+    'support_z_distance'
+
 ];
 export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
