@@ -249,7 +249,7 @@
     "regenerator-runtime": "~0.13.5",
     "regression": "^2.0.1",
     "semver": "~5.6.0",
-    "serialport": "~8.0.8",
+    "serialport": "~9.0.4",
     "serve-favicon": "~2.5.0",
     "session-file-store": "~1.1.2",
     "sha1": "~1.1.1",
