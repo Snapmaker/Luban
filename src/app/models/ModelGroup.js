@@ -841,9 +841,9 @@ class ModelGroup extends EventEmitter {
         if (selected.length === 0) {
             return null;
         }
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
 
         selected.forEach((item) => {
-            this.selectModelById(item.modelID, true);
             item.updateTransformation({
                 scaleX: 1,
                 scaleY: 1,
@@ -852,7 +852,6 @@ class ModelGroup extends EventEmitter {
                 rotationY: 0,
                 rotationZ: 0
             });
-            this.selectModelById(item.modelID, true);
         });
 
         return this.getState();
