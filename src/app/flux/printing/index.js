@@ -1116,6 +1116,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+
     autoRotateSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.autoRotateSelectedModel();
@@ -1124,6 +1125,16 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+
+    resetSelectedModelTransformation: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const modelState = modelGroup.resetSelectedModelTransformation();
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
+
     // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;

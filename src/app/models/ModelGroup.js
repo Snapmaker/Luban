@@ -836,6 +836,28 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
+    resetSelectedModelTransformation() {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
+            return null;
+        }
+
+        selected.forEach((item) => {
+            this.selectModelById(item.modelID, true);
+            item.updateTransformation({
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: 0
+            });
+            this.selectModelById(item.modelID, true);
+        });
+
+        return this.getState();
+    }
+
     onModelTransform() {
         // this.selectedModelIDArray.splice(0);
         this.selectedModelArray.forEach((item) => {
