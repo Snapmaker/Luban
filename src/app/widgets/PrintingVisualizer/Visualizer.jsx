@@ -46,7 +46,8 @@ class Visualizer extends PureComponent {
         saveSupport: PropTypes.func.isRequired,
         clearAllManualSupport: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
-        layFlatSelectedModel: PropTypes.func.isRequired
+        layFlatSelectedModel: PropTypes.func.isRequired,
+        resetSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     state = {
@@ -107,15 +108,7 @@ class Visualizer extends PureComponent {
             this.props.duplicateSelectedModel();
         },
         resetSelectedModelTransformation: () => {
-            this.props.updateSelectedModelTransformation({
-                scaleX: 1,
-                scaleY: 1,
-                scaleZ: 1,
-                rotationX: 0,
-                rotationY: 0,
-                rotationZ: 0
-            }, false);
-            this.props.onModelAfterTransform();
+            this.props.resetSelectedModelTransformation();
         },
         clearBuildPlate: () => {
             this.props.removeAllModels();
@@ -514,6 +507,7 @@ const mapDispatchToProps = (dispatch) => ({
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
+    resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
