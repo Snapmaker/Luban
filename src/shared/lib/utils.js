@@ -53,6 +53,10 @@ export const isNull = (d) => {
     return _.isNull(d) || _.isUndefined(d);
 };
 
+export const removeSpecialChars = (str) => {
+    return str.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '');
+};
+
 export default {
     isZero,
     isEqual

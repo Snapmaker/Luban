@@ -16,7 +16,7 @@ import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
 import { MeshProcess } from '../../lib/MeshProcess/MeshProcess';
-import { mmToPixel } from '../../../shared/lib/utils';
+import { mmToPixel, removeSpecialChars } from '../../../shared/lib/utils';
 
 const log = logger('api:image');
 
@@ -27,13 +27,13 @@ export const set = (req, res) => {
     // if 'files' does not exist, the model in the case library is being loaded
     if (files) {
         const file = files.image;
-        originalName = path.basename(file.name);
+        originalName = removeSpecialChars(path.basename(file.name));
         uploadName = pathWithRandomSuffix(originalName);
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         originalPath = file.path;
     } else {
         const { name, casePath } = req.body;
-        originalName = path.basename(name);
+        originalName = removeSpecialChars(path.basename(name));
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
         uploadName = pathWithRandomSuffix(originalName);
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
