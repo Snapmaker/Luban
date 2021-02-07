@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../flux/workspace';
@@ -13,6 +14,7 @@ import Thumbnail from '../CncLaserShared/Thumbnail';
 
 class Output extends PureComponent {
     static propTypes = {
+        ...withRouter.propTypes,
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
@@ -52,7 +54,7 @@ class Output extends PureComponent {
             }
             this.props.renderGcodeFile(gcodeFile);
 
-            document.location.href = '/#/workspace';
+            this.props.history.push('/workspace');
             window.scrollTo(0, 0);
         },
         onExport: () => {
@@ -219,4 +221,4 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Output);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Output));
