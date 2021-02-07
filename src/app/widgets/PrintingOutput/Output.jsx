@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import { withRouter } from 'react-router-dom';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import path from 'path';
@@ -17,6 +18,7 @@ import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 class Output extends PureComponent {
     static propTypes = {
+        ...withRouter.propTypes,
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
 
@@ -60,7 +62,7 @@ class Output extends PureComponent {
 
             this.props.renderGcodeFile(gcodeFile);
 
-            document.location.href = '/#/workspace';
+            this.props.history.push('/workspace');
             window.scrollTo(0, 0);
         },
         changeFilenameExt: (filename) => {

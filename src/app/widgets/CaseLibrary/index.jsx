@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 
 import React, { PureComponent } from 'react';
+import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { MACHINE_SERIES } from '../../constants';
@@ -16,6 +17,7 @@ import styles from './index.styl';
 
 class CaseLibrary extends PureComponent {
     static propTypes = {
+        ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
         headType: PropTypes.string,
         isConnected: PropTypes.bool,
@@ -129,7 +131,7 @@ class CaseLibrary extends PureComponent {
     };
 
     loadThreeAxisCase = (config) => {
-        document.location.href = `/#/${config.tag}`;
+        this.props.history.push(`/${config.tag}`);
         if (config.tag === '3dp') {
             this.actions.load3dpCaseSettings(config);
             this.props.removeAllModels();
@@ -140,7 +142,7 @@ class CaseLibrary extends PureComponent {
     };
 
     loadFourAxisCase = (config) => {
-        document.location.href = `/#/${config.tag}`;
+        this.props.history.push(`/${config.tag}`);
         if (config.tag !== 'workspace') {
             this.actions.loadLaserCncCaseSettings(config);
         } else {
@@ -303,4 +305,4 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(CaseLibrary);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(CaseLibrary));
