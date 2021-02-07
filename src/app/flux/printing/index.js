@@ -5,7 +5,7 @@ import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
-import { timestamp, pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import { timestamp } from '../../../shared/lib/random-utils';
 
 
 import i18n from '../../lib/i18n';
@@ -741,11 +741,9 @@ export const actions = {
 
         const formData = new FormData();
         formData.append('file', file);
-        const uploadName = pathWithRandomSuffix(file.name);
-        formData.append('uploadName', uploadName);
         const res = await api.uploadFile(formData);
 
-        const { originalName } = res.body;
+        const { originalName, uploadName } = res.body;
 
         dispatch(actions.updateState({ progress: 0.25 }));
 
