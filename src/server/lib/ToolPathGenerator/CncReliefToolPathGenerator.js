@@ -64,7 +64,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         super();
 
         const { config, transformation, gcodeConfig, materials, toolParams } = modelInfo;
-        const { targetDepth, axialStockToLeave, stepDown, density, isModel = false } = gcodeConfig;
+        const { targetDepth, allowance, stepDown, density, isModel = false } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter, toolAngle } = toolParams;
 
@@ -84,7 +84,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.isRotateModel = isRotate && isModel;
 
         this.targetDepth = targetDepth;
-        this.axialStockToLeave = axialStockToLeave;
+        this.allowance = allowance;
 
         this.initialZ = isRotate ? radius : 0;
 
@@ -172,8 +172,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     }
                 }
 
-                if (this.axialStockToLeave > 0) {
-                    this.calculateAxialStockToLeave(data);
+                if (this.allowance > 0) {
+                    this.calculateAllowance(data);
                 }
 
                 if (this.toolAngle < 60) {
@@ -200,13 +200,13 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         return grey - 255 / depthOffsetRatio;
     }
 
-    calculateAxialStockToLeave(data) {
+    calculateAllowance(data) {
         const width = data.length;
         const height = data[0].length;
         const depth = this.imageInitalZ - this.imageFinalZ;
         for (let i = 0; i < width; i++) {
             for (let j = 0; j < height; j++) {
-                data[i][j] = Math.min(Math.floor(this.axialStockToLeave / depth * 255 + data[i][j]), 255);
+                data[i][j] = Math.min(Math.floor(this.allowance / depth * 255 + data[i][j]), 255);
             }
         }
     }

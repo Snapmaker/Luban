@@ -28,7 +28,7 @@ class GcodeParameters extends PureComponent {
         const { type, gcodeConfig } = toolPath;
 
         const { pathType, enableTab, tabHeight, tabSpace, tabWidth } = gcodeConfig;
-        const { targetDepth, axialStockToLeave, safetyHeight, stopHeight } = gcodeConfig;
+        const { targetDepth, allowance, safetyHeight, stopHeight } = gcodeConfig;
 
         const { isRotate } = materials;
 
@@ -60,18 +60,18 @@ class GcodeParameters extends PureComponent {
                     )}
                     {!isSVG && !isRotate && (
                         <TipTrigger
-                            title={i18n._('Axial Stock To Leave')}
+                            title={i18n._('Allowance')}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Axial Stock To Leave')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Allowance')}</span>
                                 <Input
                                     disabled={false}
                                     className="sm-parameter-row__input"
-                                    value={axialStockToLeave}
+                                    value={allowance}
                                     min={0.00}
                                     max={targetDepth}
                                     step={0.1}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ axialStockToLeave: value }); }}
+                                    onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>

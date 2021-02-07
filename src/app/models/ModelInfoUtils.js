@@ -219,7 +219,7 @@ const defaultGcodeConfigs = {
     // Cnc
     [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE)]: {
         targetDepth: 2.0,
-        axialStockToLeave: 0,
+        allowance: 0,
         stepDown: 0.5,
         safetyHeight: 1.0,
         stopHeight: 10,
@@ -233,7 +233,7 @@ const defaultGcodeConfigs = {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,
-        axialStockToLeave: 0,
+        allowance: 0,
         stepDown: 0.5,
         safetyHeight: 1.0,
         stopHeight: 10,
@@ -248,7 +248,7 @@ const defaultGcodeConfigs = {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,
-        axialStockToLeave: 0,
+        allowance: 0,
         stepDown: 10,
         safetyHeight: 1.0,
         stopHeight: 10,
