@@ -34,7 +34,18 @@ export class DefinitionLoader {
             : path.join(DataStorage.configDir, `${definitionId}.def.json`);
 
         const data = fs.readFileSync(filePath, 'utf8');
-        const json = JSON.parse(data);
+        // in case of JSON parse error, set default json inherits from snapmaker2.def.json
+        let json = {
+            'name': 'Snapmaker Default',
+            'version': 2,
+            'inherits': 'snapmaker2'
+        };
+        try {
+            json = JSON.parse(data);
+        } catch (e) {
+            console.error(`JSON Syntax error of: ${definitionId}`);
+        }
+
 
         this.loadJSON(definitionId, json);
     }

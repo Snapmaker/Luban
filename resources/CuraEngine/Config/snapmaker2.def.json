@@ -185,9 +185,6 @@
                 },
                 "support_z_distance":{
                     "enabled": true
-                },
-                "support_angle":{
-                    "enabled": true
                 }
             }
         },
