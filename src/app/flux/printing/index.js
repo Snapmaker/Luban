@@ -170,8 +170,6 @@ export const actions = {
         await definitionManager.init(series);
 
         dispatch(actions.updateState({
-            materialDefinitions: definitionManager.materialDefinitions,
-            qualityDefinitions: definitionManager.qualityDefinitions,
             activeDefinition: definitionManager.activeDefinition
         }));
 
@@ -180,6 +178,11 @@ export const actions = {
         // Update machine size after active definition is loaded
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
+
+        dispatch(actions.updateState({
+            materialDefinitions: definitionManager.materialDefinitions,
+            qualityDefinitions: definitionManager.qualityDefinitions
+        }));
 
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
