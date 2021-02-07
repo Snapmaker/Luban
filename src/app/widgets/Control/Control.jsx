@@ -532,10 +532,12 @@ class Control extends PureComponent {
                     >
                         {i18n._('Home')}
                     </button>
-                    <span className="sm-parameter-row__label" style={{ width: '80px', margin: '0 0 0 30px' }}>{i18n._('Jog Speed')}</span>
+                    <span className="sm-parameter-row__label2" style={{ margin: '0 0 0 10px' }}>{i18n._('Jog Speed')}</span>
                     <Creatable
                         backspaceRemoves={false}
-                        className="sm-parameter-row__select"
+                        className="sm-parameter-row__select2"
+                        style={{
+                        }}
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         options={this.state.jogSpeedOptions}
