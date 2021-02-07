@@ -779,7 +779,8 @@ export const actions = {
             gcodeLineGroup.remove(gcodeLine);
             gcodeLine.geometry.dispose();
             dispatch(actions.updateState({
-                gcodeLine: null
+                gcodeLine: null,
+                displayedType: 'model'
             }));
         }
     },
