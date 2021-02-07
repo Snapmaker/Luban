@@ -675,7 +675,7 @@
     "Warning": "警告",
     "Webcam": "网络摄像头",
     "Webcam Settings": "网络摄像头设置",
-    "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.": "",
+    "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image individually.": "启用后，雕刻图像的功率将在 G 代码中设置，在工作区中设置的功率则不会生效。雕刻多幅图像时，可以分别设置每幅图像的功率。",
     "When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can't be cut with only one pass.": "启用后，雕刻图像的功率将在 G 代码中设置，在工作区中设置的功率则不会生效。雕刻多幅图像时，可以分别设置每幅图像的功率。",
     "When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.": "启用后，机器将根据以下设置自动运行多次 G 代码。此功能可帮助你切割需多次切割的材料。",
     "When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.": "雕刻多幅图像时，此参数设置图像的打印顺序。当打印顺序相同时，先上传的图像将会被优先雕刻。",
