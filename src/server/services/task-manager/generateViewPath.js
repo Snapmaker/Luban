@@ -43,7 +43,7 @@ const generateCncViewPath = async (modelInfo, onProgress) => {
         return new Promise((resolve) => {
             resolve(viewPath);
         });
-    } else if (sourceType === 'raster' && mode === 'greyscale') {
+    } else if ((sourceType === 'raster' || sourceType === 'svg') && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
         generator.on('progress', (p) => onProgress(p));
 
