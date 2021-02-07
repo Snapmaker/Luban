@@ -64,7 +64,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         super();
 
         const { config, transformation, gcodeConfig, materials, toolParams } = modelInfo;
-        const { targetDepth, stepDown, density, isModel = false } = gcodeConfig;
+        const { targetDepth, allowance, stepDown, density, isModel = false } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter, toolAngle } = toolParams;
 
@@ -84,6 +84,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.isRotateModel = isRotate && isModel;
 
         this.targetDepth = targetDepth;
+        this.allowance = allowance;
 
         this.initialZ = isRotate ? radius : 0;
 
@@ -102,6 +103,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.density = Math.min(density, this.calMaxDensity(toolDiameter, transformation));
 
         this.toolAngle = toolAngle;
+        this.toolParams = toolParams;
 
         this.rotationZ = transformation.rotationZ;
         this.flip = transformation.flip;
@@ -170,7 +172,16 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     }
                 }
 
-                this.upSmooth(data);
+                if (this.allowance > 0) {
+                    this.calculateAllowance(data);
+                }
+
+                if (this.toolAngle < 60) {
+                    this.upSmooth(data);
+                } else {
+                    this.preventCollision(data);
+                }
+
                 return data;
             });
     }
@@ -187,6 +198,17 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
     calc(grey, depthOffsetRatio) {
         return grey - 255 / depthOffsetRatio;
+    }
+
+    calculateAllowance(data) {
+        const width = data.length;
+        const height = data[0].length;
+        const depth = this.imageInitalZ - this.imageFinalZ;
+        for (let i = 0; i < width; i++) {
+            for (let j = 0; j < height; j++) {
+                data[i][j] = Math.min(Math.floor(this.allowance / depth * 255 + data[i][j]), 255);
+            }
+        }
     }
 
     // TODO: Note that with white to be cut, this function is actually downSmooth
@@ -219,6 +241,60 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         updated = true;
                     }
                 }
+            }
+        }
+    };
+
+    _calculateCollisionOffsetOffsetZ = (offsetX) => {
+        const { toolDiameter, toolAngle, toolShaftDiameter } = this.toolParams;
+        if (offsetX <= toolDiameter / 2) {
+            return 0;
+        }
+        if (offsetX > toolShaftDiameter / 2) {
+            return -1;
+        }
+        return (offsetX - toolDiameter / 2) / Math.tan(toolAngle / 2 * Math.PI / 180);
+    };
+
+    /**
+     * Calculate tool collision area
+     * @param data
+     */
+    preventCollision = (data) => {
+        const { toolShaftDiameter } = this.toolParams;
+
+        const width = data.length;
+        const height = data[0].length;
+
+        const count = Math.round(toolShaftDiameter / 2 * this.density);
+
+        const depth = this.imageInitalZ - this.imageFinalZ;
+
+        const offsetPixels = [];
+        for (let i = 0; i <= count; i++) {
+            const offsetZ = this._calculateCollisionOffsetOffsetZ(i / this.density);
+            offsetPixels[i] = offsetZ / depth * 255;
+        }
+
+        const nData = data.map(v => v.map(d => d));
+
+        for (let i = 0; i < width; i++) {
+            for (let j = 0; j < height; j++) {
+                for (let k = Math.max(0, i - count); k <= Math.min(width - 1, i + count); k++) {
+                    for (let l = Math.max(0, j - count); l <= Math.min(height - 1, j + count); l++) {
+                        const offsetIndex = Math.abs(k - i) + Math.abs(l - j);
+                        if (offsetPixels[offsetIndex] === undefined || data[i][j] === 255) {
+                            continue;
+                        }
+                        nData[i][j] = Math.max(nData[i][j], data[k][l] - offsetPixels[offsetIndex]);
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < width; i++) {
+            for (let j = 0; j < height; j++) {
+                data[i][j] = nData[i][j];
             }
         }
     };

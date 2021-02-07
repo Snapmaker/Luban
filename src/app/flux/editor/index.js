@@ -256,7 +256,7 @@ export const actions = {
                     const state = getState().printing;
                     const progress = 0.25 + data.progress * 0.5;
                     if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                        dispatch(actions.updateState({ progress }));
+                        dispatch(actions.updateState(headType, { progress }));
                     }
                     break;
                 }
