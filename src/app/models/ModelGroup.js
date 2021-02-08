@@ -82,17 +82,17 @@ class ModelGroup extends EventEmitter {
         };
     }
 
+    getBoundingBox() {
+        return ThreeUtils.computeBoundingBox(this.object);
+    }
+
     getStateAndUpdateBoundingBox() {
         // this.selectedModelIDArray = [];
         // this.selectedModelArray.forEach((item) => {
         //     // this.selectedModelIDArray.push(item.modelID);
         // });
 
-        // TODO: add boundingBox value into the state
-        const boundingBox = ThreeUtils.computeBoundingBox(this.object);
-
         return {
-            boundingBox: boundingBox,
             selectedModelArray: this.selectedModelArray,
             selectedModelIDArray: this.selectedModelIDArray,
             estimatedTime: this.estimatedTime,
