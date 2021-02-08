@@ -787,7 +787,10 @@ export const actions = {
     },
 
     generateGcode: (thumbnail) => async (dispatch, getState) => {
-        const { hasModel, activeDefinition, boundingBox, modelGroup } = getState().printing;
+        const { hasModel, activeDefinition, modelGroup } = getState().printing;
+        // TODO
+        const { boundingBox } = modelGroup.getStateAndUpdateBoundingBox();
+        console.log('generateGcode', boundingBox);
         if (!hasModel) {
             return;
         }
