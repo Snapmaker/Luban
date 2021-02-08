@@ -96,7 +96,7 @@ Start a new line manually according to your needs.')}
                                     ref={this.textArea}
                                     disabled={disabled}
                                     onFocus={actions.onSelectAllText}
-                                    style={{ width: '202px', float: 'right', resize: 'none' }}
+                                    style={{ width: '189px', float: 'right', resize: 'none' }}
                                     className="form-control"
                                     rows="3"
                                     value={text}
