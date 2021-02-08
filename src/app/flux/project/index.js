@@ -1,9 +1,8 @@
 import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../../constants';
-import ToolPath from '../../toolpaths/ToolPath';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
-import machineAction from '../machine/action-base';
+// import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 
 import i18n from '../../lib/i18n';
@@ -143,25 +142,17 @@ export const actions = {
         }
 
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation));
+                sourceType, config, gcodeConfig, transformation, modelID));
         }
-        if (machineInfo) {
-            dispatch(machineAction.updateState({ ...machineInfo }));
+        const { toolPathGroup } = modState;
+        if (toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
+            toolPathGroup.deleteAllToolPaths();
         }
         if (toolpaths && toolpaths.length) {
-            const { toolPathGroup } = modState;
             for (let k = 0; k < toolpaths.length; k++) {
-                const nToolPath = new ToolPath({
-                    ...toolpaths[k],
-                    modelGroup
-                });
-                toolPathGroup.toolPaths.push(nToolPath);
-                toolPathGroup.toolPathObjects.add(nToolPath.object);
-
-                toolPathGroup.selectedToolPathId = nToolPath.id;
-                nToolPath.commitGenerateToolPath({ materials });
+                toolPathGroup.saveToolPath(toolpaths[k], { materials });
             }
         }
         dispatch(modActions.updateState(restState));
@@ -259,8 +250,13 @@ export const actions = {
             }
             formData.append('file', file);
             const { body: { content } } = await api.recoverProjectFile(formData);
-
-            const envObj = JSON.parse(content);
+            let envObj;
+            try {
+                envObj = JSON.parse(content);
+            } catch (e) {
+                console.error(e);
+                return;
+            }
             const machineInfo = envObj.machineInfo;
             const { headType } = machineInfo;
 

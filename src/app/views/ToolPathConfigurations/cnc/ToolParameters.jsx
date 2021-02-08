@@ -65,10 +65,10 @@ class ToolParameters extends PureComponent {
                                 && <span>*</span>
                             )}
                             <Select
-                                style={{
-                                    right: '32px'
-                                }}
-                                className="sm-parameter-row__select-lg"
+                                className={classNames(
+                                    styles['manager-select'],
+                                    'sm-parameter-row__select-lg'
+                                )}
                                 clearable={false}
                                 options={toolDefinitionOptions}
                                 placeholder={i18n._('Choose carving path')}
@@ -77,11 +77,6 @@ class ToolParameters extends PureComponent {
                             />
                             <Anchor
                                 onClick={this.actions.onShowCncToolManager}
-                                style={{
-                                    float: 'right',
-                                    position: 'absolute',
-                                    right: 0
-                                }}
                             >
                                 <span
                                     className={classNames(

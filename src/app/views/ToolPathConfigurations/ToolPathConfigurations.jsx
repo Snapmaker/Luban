@@ -111,8 +111,9 @@ class ToolPathConfigurations extends PureComponent {
                         if (config.step_down.default_value !== gcodeConfig.stepDown) {
                             config.step_down.default_value = gcodeConfig.stepDown;
                         }
-                        // if (config.density.default_value !== gcodeConfig.density) {
-                        // }
+                        if (config.density.default_value !== gcodeConfig.density) {
+                            config.density.default_value = gcodeConfig.density;
+                        }
                     }
                 });
             });
@@ -146,17 +147,22 @@ class ToolPathConfigurations extends PureComponent {
     }
 
     checkIfDefinitionModified() {
-        const { activeToolDefinition } = this.state;
-        const currentToolDefinition = this.props.activeToolListDefinition;
-        return !Object.entries(currentToolDefinition.config).every(([key, setting]) => {
-            return activeToolDefinition.config[key].default_value === setting.default_value;
-        });
+        if (this.props.headType === HEAD_CNC) {
+            const { activeToolDefinition } = this.state;
+            const currentToolDefinition = this.props.activeToolListDefinition;
+            return !Object.entries(currentToolDefinition.config).every(([key, setting]) => {
+                return activeToolDefinition.config[key].default_value === setting.default_value;
+            });
+        } else {
+            return false;
+        }
     }
 
     render() {
         if (!this.state.toolPath) {
             return null;
         }
+        // check if the definition in manager is modified
         const isModifiedDefinition = this.checkIfDefinitionModified();
 
         return (

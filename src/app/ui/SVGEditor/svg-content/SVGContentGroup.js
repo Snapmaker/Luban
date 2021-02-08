@@ -1,3 +1,4 @@
+import uuid from 'uuid';
 import { createSVGElement, getBBox, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
 // import SelectorManager from './SelectorManager';
@@ -7,7 +8,7 @@ import { recalculateDimensions } from '../element-recalculate';
 import SvgModel from '../../../models/SvgModel';
 
 class SVGContentGroup {
-    counter = 0;
+    svgId = null;
 
     selectedElements = [];
 
@@ -36,14 +37,13 @@ class SVGContentGroup {
     }
 
     // for create new elem
-    getId() {
-        return `id${this.counter}`;
+    getNewId() {
+        this.svgId = `id${uuid.v4()}`;
+        return this.svgId;
     }
 
-    // for create new elem
-    getNextId() {
-        this.counter++;
-        return `id${this.counter}`;
+    getId() {
+        return this.svgId;
     }
 
     getScreenCTM() {
@@ -133,7 +133,7 @@ class SVGContentGroup {
             }
         }
         data.attr = Object.assign({
-            id: this.getNextId()
+            id: this.getNewId()
         }, data.attr);
         const element = createSVGElement(data);
         this.group.append(element);

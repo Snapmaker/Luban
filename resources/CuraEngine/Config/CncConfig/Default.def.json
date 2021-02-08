@@ -1,7 +1,7 @@
 {
     "category": "Default",
     "definitionId": "Default",
-    "version": '1.0.0',
+    "version": "1.0.0",
     "toolList": [
         {
             "definitionId": "Default",
