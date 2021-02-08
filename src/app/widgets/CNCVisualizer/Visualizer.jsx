@@ -605,8 +605,8 @@ const mapDispatchToProps = (dispatch) => {
             moveElements: (elements, options) => dispatch(editorActions.moveElements('cnc', elements, options)),
             moveElementsFinish: (elements, options) => dispatch(editorActions.moveElementsFinish('cnc', elements, options)),
             resizeElementsStart: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
-            resizeElements: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
-            resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsStart('cnc', elements, options)),
+            resizeElements: (elements, options) => dispatch(editorActions.resizeElements('cnc', elements, options)),
+            resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsFinish('cnc', elements, options)),
             rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('cnc', elements, options)),
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options))
