@@ -136,7 +136,7 @@ export const actions = {
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
                 sourceType, config, gcodeConfig, transformation));
         }
-        dispatch(modActions.updateState(restState));
+        dispatch(modActions.updateState(envHeadType, restState));
 
         dispatch(actions.clearSavedEnvironment(envHeadType));
     },
