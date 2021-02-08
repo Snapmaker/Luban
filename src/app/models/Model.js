@@ -37,7 +37,7 @@ class Model {
 
     constructor(modelInfo, modelGroup) {
         const {
-            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
+            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, scale, originalName, uploadName, config, gcodeConfig, mode,
             transformation, processImageName, modelName, supportTag, target
         } = modelInfo;
 
@@ -58,6 +58,7 @@ class Model {
         this.height = height;
         this.sourceWidth = sourceWidth;
         this.width = width;
+        this.scale = scale;
         this.originalName = originalName;
         this.uploadName = uploadName;
         this.config = config;
@@ -121,6 +122,7 @@ class Model {
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
+            scale: this.scale,
             originalName: this.originalName,
             uploadName: this.uploadName,
             processImageName: this.processImageName,

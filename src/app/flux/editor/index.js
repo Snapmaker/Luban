@@ -5,7 +5,7 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    sizeModelByMachineSize
+    sizeModelByMachineSize, sizeModelByMinSize
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
@@ -183,8 +183,18 @@ export const actions = {
         sourceType = sourceType || getSourceType(originalName);
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
+        let { width, height, scale } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
         // Generate geometry
+        if (sourceType === SOURCE_TYPE_IMAGE3D) {
+            const res = sizeModelByMinSize({ x: 50, y: 50 }, width, height);
+            if (res) {
+                width = res.width;
+                height = res.height;
+                scale = res.scale;
+            }
+        }
+
+        console.log(width, height, scale);
 
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
 
@@ -232,6 +242,7 @@ export const actions = {
             width,
             sourceHeight,
             height,
+            scale,
             transformation,
             config,
             gcodeConfig,
@@ -990,8 +1001,8 @@ export const actions = {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
                 const modelOptions = {
-                    sourceWidth: width * DEFAULT_SCALE,
-                    sourceHeight: height * DEFAULT_SCALE,
+                    sourceWidth: width / model.scale * DEFAULT_SCALE,
+                    sourceHeight: height / model.scale * DEFAULT_SCALE,
                     width: width,
                     height: height,
                     transformation: {

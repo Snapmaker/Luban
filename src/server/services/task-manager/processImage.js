@@ -4,7 +4,7 @@ const _processImage = async (modelInfo, onProgress) => {
     try {
         return editorProcess(modelInfo, onProgress);
     } catch (e) {
-        return Promise.reject(new Error('Unknown error.'));
+        return Promise.reject(new Error(`Unknown error: ${e}`));
     }
 };
 

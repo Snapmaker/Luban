@@ -7,6 +7,7 @@ import {
     SOURCE_TYPE_RASTER,
     SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT
 } from '../constants';
+import { round } from '../../shared/lib/utils';
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 4;
@@ -20,6 +21,19 @@ const DEFAULT_TEXT_CONFIG = {
     alignment: 'left' // left, middle, right
 };
 
+const MIN_SIZE = {
+    x: 50,
+    y: 50
+};
+
+const sizeModelByMinSize = (size = MIN_SIZE, width, height) => {
+    if (width < size.x && height < size.y) {
+        const scale = round(Math.max(MIN_SIZE.x / width, MIN_SIZE.y / height), 2);
+        return { width: width * scale, height: height * scale, scale };
+    }
+    return null;
+};
+
 const sizeModelByMachineSize = (size, width, height) => {
     let height_ = height;
     let width_ = width;
@@ -31,7 +45,7 @@ const sizeModelByMachineSize = (size, width, height) => {
         width_ = size.y * width_ / height_;
         height_ = size.y;
     }
-    return { width: width_, height: height_ };
+    return { width: width_, height: height_, scale: round(width_ / width, 2) };
 };
 
 const checkParams = (headType, sourceType, mode) => {
@@ -293,6 +307,7 @@ const generateModelDefaultConfigs = (headType, sourceType, mode, isRotate = fals
 export {
     DEFAULT_TEXT_CONFIG,
     sizeModelByMachineSize,
+    sizeModelByMinSize,
     checkParams,
     generateModelDefaultConfigs
 };
