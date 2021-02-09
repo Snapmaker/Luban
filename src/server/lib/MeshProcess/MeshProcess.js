@@ -3,7 +3,8 @@ import fs from 'fs';
 import { Mesh } from './Mesh';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import {
-    CNC_IMAGE_NEGATIVE_RANGE_FIELD, DIRECTION_FRONT, DIRECTION_RIGHT
+    BACK,
+    CNC_IMAGE_NEGATIVE_RANGE_FIELD, BOTTOM, FRONT, LEFT, RIGHT, TOP
 } from '../../constants';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
@@ -104,17 +105,37 @@ const writeSvg = (width, height, paths, outputFile, p = '') => {
     fs.writeFileSync(`${DataStorage.tmpDir}/${p}${outputFile.replace('.png', '.svg')}`, svg, 'utf8');
 };
 
+export const DIRECTION_FACE_OPTIONS = {
+    [FRONT]: { x: 'x', y: 'y', z: 'z' },
+    [BACK]: { x: '-x', y: '-y', z: 'z' },
+    [LEFT]: { x: '-y', y: 'x', z: 'z' },
+    [RIGHT]: { x: 'y', y: '-x', z: 'z' },
+    [TOP]: { x: 'x', y: '-z', z: 'y' },
+    [BOTTOM]: { x: 'x', y: 'z', z: '-y' }
+};
+
+const PLACEMENT_FACE_OPTIONS = {
+    [FRONT]: { x: '-x', y: '-z', z: '-y' },
+    [BACK]: { x: '-x', y: 'z', z: 'y' },
+    [LEFT]: { x: 'z', y: 'y', z: '-x' },
+    [RIGHT]: { x: '-z', y: 'y', z: 'x' },
+    [TOP]: { x: 'x', y: 'y', z: 'z' },
+    [BOTTOM]: { x: '-x', y: 'y', z: '-z' }
+};
+
+
 export class MeshProcess {
     constructor(modelInfo) {
         const { uploadName, config = {}, transformation = {}, materials = {} } = modelInfo;
 
         const { isRotate, diameter } = materials;
 
-        const { direction = DIRECTION_FRONT, minGray = 0, maxGray = 255,
+        const { direction = FRONT, placement = BOTTOM, minGray = 0, maxGray = 255,
             sliceDensity = 5, extensionX = 0, extensionY = 0 } = config;
 
         this.uploadName = uploadName;
         this.direction = direction;
+        this.placement = placement;
         this.minGray = minGray;
         this.maxGray = maxGray;
         this.extensionX = extensionX;
@@ -122,10 +143,7 @@ export class MeshProcess {
         this.sliceDensity = sliceDensity;
         this.transformation = transformation;
 
-        this.flip = isRotate ? 3 : 0;
-        if (transformation.flip) {
-            this.flip = this.flip ^ transformation.flip;
-        }
+        this.flip = transformation.flip || 0;
 
         this.isRotate = isRotate;
         this.diameter = diameter;
@@ -351,7 +369,7 @@ export class MeshProcess {
     }
 
     _setDirection() {
-        this.mesh.setDirection(this.direction);
+        this.mesh.setCoordinateSystem(this.isRotate ? PLACEMENT_FACE_OPTIONS[this.placement] : DIRECTION_FACE_OPTIONS[this.direction]);
         if ((this.flip & 1) > 0) {
             this.mesh.addCoordinateSystem({ z: '-z' });
         }
@@ -362,7 +380,7 @@ export class MeshProcess {
 
     convertToImage() {
         if (this.isRotate) {
-            this.mesh.addDirection(DIRECTION_RIGHT);
+            this.mesh.addCoordinateSystem(DIRECTION_FACE_OPTIONS[RIGHT]);
             this.mesh.offset({
                 x: -(this.mesh.aabb.max.x + this.mesh.aabb.min.x) / 2,
                 y: -(this.mesh.aabb.max.y + this.mesh.aabb.min.y) / 2,

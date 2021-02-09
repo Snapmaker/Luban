@@ -1,8 +1,8 @@
 import EventEmitter from 'events';
-import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, DIRECTION_BACK, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT } from '../../../constants';
+import { BACK, CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, FRONT, LEFT, RIGHT } from '../../../constants';
 import DataStorage from '../../../DataStorage';
 import CncReliefToolPathGenerator from '../CncReliefToolPathGenerator';
-import { MeshProcess } from '../../MeshProcess/MeshProcess';
+import { DIRECTION_FACE_OPTIONS, MeshProcess } from '../../MeshProcess/MeshProcess';
 import XToBToolPath from '../../ToolPath/XToBToolPath';
 import CncMeshLinkageToolPathGenerator from './CncMeshLinkageToolPathGenerator';
 
@@ -61,7 +61,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         });
 
         const parseToToolPath = async (face, i) => {
-            meshProcess.mesh.setDirection(face);
+            meshProcess.mesh.setCoordinateSystem(DIRECTION_FACE_OPTIONS[face]);
             meshProcess.mesh.offset({
                 x: -meshProcess.mesh.aabb.min.x,
                 y: -(meshProcess.mesh.aabb.min.y + meshProcess.mesh.aabb.max.y) / 2,
@@ -90,7 +90,7 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             return generator.generateToolPathObj();
         };
 
-        const faces = [DIRECTION_LEFT, DIRECTION_FRONT, DIRECTION_RIGHT, DIRECTION_BACK];
+        const faces = [LEFT, FRONT, RIGHT, BACK];
 
         const { jogSpeed } = this.gcodeConfig;
 
