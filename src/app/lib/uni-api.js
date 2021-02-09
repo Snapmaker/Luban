@@ -201,10 +201,15 @@ const File = {
  * Dialogs control in electron
  */
 const Dialog = {
-    showMessageBox(options) {
+    showMessageBox(options, modal = true) {
         if (isElectron()) {
-            const { dialog } = window.require('electron').remote;
+            const remote = window.require('electron').remote;
+            const { dialog } = remote;
             options.title = 'Snapmaker Luban';
+            if (modal) {
+                const currentWindow = remote.getCurrentWindow();
+                return dialog.showMessageBox(currentWindow, options);
+            }
             return dialog.showMessageBox(options);
         } else {
             return window.confirm(options.message);
