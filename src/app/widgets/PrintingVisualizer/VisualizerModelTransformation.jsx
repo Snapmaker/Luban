@@ -618,7 +618,7 @@ class VisualizerModelTransformation extends PureComponent {
 
                             >
                                 <Input
-                                    min={0}
+                                    min={1}
                                     max={size.y / 2}
                                     value={defaultSupportSize.x}
                                     onChange={(value) => {
@@ -632,7 +632,7 @@ class VisualizerModelTransformation extends PureComponent {
 
                             >
                                 <Input
-                                    min={0}
+                                    min={1}
                                     max={size.y / 2}
                                     value={defaultSupportSize.y}
                                     onChange={(value) => {
