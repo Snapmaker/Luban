@@ -1,5 +1,5 @@
 import {
-    ABSENT_VALUE, CNC_MESH_SLICE_MODE_ROTATION, DIRECTION_FRONT, HEAD_CNC, HEAD_LASER,
+    ABSENT_VALUE, CNC_MESH_SLICE_MODE_ROTATION, BOTTOM, FRONT, HEAD_CNC, HEAD_LASER,
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE,
     PROCESS_MODE_VECTOR,
@@ -111,7 +111,8 @@ const defaultConfigs = {
         invert: false
     },
     [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D)]: {
-        direction: DIRECTION_FRONT,
+        direction: FRONT,
+        placement: BOTTOM,
         minGray: 0,
         maxGray: 255,
         sliceDensity: 5,

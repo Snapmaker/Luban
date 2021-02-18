@@ -7,22 +7,17 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as textActions } from '../../flux/text';
 import TipTrigger from '../../components/TipTrigger';
-import {
-    DIRECTION_BACK,
-    DIRECTION_DOWN,
-    DIRECTION_FRONT,
-    DIRECTION_LEFT,
-    DIRECTION_RIGHT,
-    DIRECTION_UP
-} from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
 import { NumberInput as Input } from '../../components/Input';
+import { BACK, BOTTOM, FRONT, LEFT, RIGHT, TOP } from '../../constants';
 
 class Image3dParameters extends PureComponent {
     static propTypes = {
         disabled: PropTypes.bool,
+        materials: PropTypes.object.isRequired,
         config: PropTypes.shape({
             direction: PropTypes.string,
+            placement: PropTypes.string,
             minGray: PropTypes.number,
             maxGray: PropTypes.number,
             sliceDensity: PropTypes.number
@@ -39,8 +34,11 @@ class Image3dParameters extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        onChangeFace: (option) => {
+        onChangeDirectionFace: (option) => {
             this.props.updateSelectedModelConfig({ direction: option.value });
+        },
+        onChangePlacementFace: (option) => {
+            this.props.updateSelectedModelConfig({ placement: option.value });
         },
         onChangeMinGray: (minGray) => {
             this.props.updateSelectedModelConfig({ minGray });
@@ -55,25 +53,25 @@ class Image3dParameters extends PureComponent {
 
     render() {
         const { config, disabled } = this.props;
-        const { direction, sliceDensity } = config;
-        const directionOptions = [{
-            value: DIRECTION_FRONT,
-            label: DIRECTION_FRONT
+        const { direction, placement, sliceDensity } = config;
+        const Options = [{
+            value: FRONT,
+            label: 'Front'
         }, {
-            value: DIRECTION_BACK,
-            label: DIRECTION_BACK
+            value: BACK,
+            label: 'Back'
         }, {
-            value: DIRECTION_LEFT,
-            label: DIRECTION_LEFT
+            value: LEFT,
+            label: 'Left'
         }, {
-            value: DIRECTION_RIGHT,
-            label: DIRECTION_RIGHT
+            value: RIGHT,
+            label: 'Right'
         }, {
-            value: DIRECTION_UP,
-            label: DIRECTION_UP
+            value: TOP,
+            label: 'Top'
         }, {
-            value: DIRECTION_DOWN,
-            label: DIRECTION_DOWN
+            value: BOTTOM,
+            label: 'Bottom'
         }];
         const actions = this.actions;
 
@@ -92,27 +90,51 @@ class Image3dParameters extends PureComponent {
                 </Anchor>
                 {this.state.expanded && (
                     <React.Fragment>
-                        <TipTrigger
-                            title={i18n._('Projection Direction')}
-                            content={i18n._('Select the model\'s projection orientation.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Projection Direction')}</span>
-                                <Select
-                                    disabled={disabled}
-                                    className="sm-parameter-row__select"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={directionOptions}
-                                    value={direction}
-                                    onChange={(option) => {
-                                        actions.onChangeFace(option);
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
+                        {!this.props.materials.isRotate && (
+                            <TipTrigger
+                                title={i18n._('Projection Direction')}
+                                content={i18n._('Select the model\'s projection orientation.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Projection Direction')}</span>
+                                    <Select
+                                        disabled={disabled}
+                                        className="sm-parameter-row__select"
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
+                                        options={Options}
+                                        value={direction}
+                                        onChange={(option) => {
+                                            actions.onChangeDirectionFace(option);
+                                            this.props.processSelectedModel();
+                                        }}
+                                    />
+                                </div>
+                            </TipTrigger>
+                        )}
+                        {this.props.materials.isRotate && (
+                            <TipTrigger
+                                title={i18n._('Placement Face')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Placement Face')}</span>
+                                    <Select
+                                        disabled={disabled}
+                                        className="sm-parameter-row__select"
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
+                                        options={Options}
+                                        value={placement}
+                                        onChange={(option) => {
+                                            actions.onChangePlacementFace(option);
+                                            this.props.processSelectedModel();
+                                        }}
+                                    />
+                                </div>
+                            </TipTrigger>
+                        )}
                         <TipTrigger
                             title={i18n._('Image Density')}
                             content={i18n._('Set the density of the images generated by model')}
@@ -140,8 +162,9 @@ class Image3dParameters extends PureComponent {
     }
 }
 
-const mapStateToProps = () => {
-    return {};
+const mapStateToProps = (state) => {
+    const { materials } = state.cnc;
+    return { materials };
 };
 
 const mapDispatchToProps = (dispatch) => {

@@ -2,7 +2,6 @@ import fs from 'fs';
 import { AABB3D } from './AABB3D';
 import { Vector3 } from '../../../shared/lib/math/Vector3';
 import { STLParse } from '../../../shared/lib/STLParse/STLParse';
-import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
 import Coordinate from './Coordinate';
 
@@ -22,15 +21,6 @@ const modifyCoordinateSystem = (p, propCoordinate, nextCoordinate) => {
     p.x = v[nextCoordinate.xK()] * nextCoordinate.xS();
     p.y = v[nextCoordinate.yK()] * nextCoordinate.yS();
     p.z = v[nextCoordinate.zK()] * nextCoordinate.zS();
-};
-
-const surfaceOptions = {
-    [DIRECTION_FRONT]: { x: 'x', y: 'y', z: 'z' },
-    [DIRECTION_BACK]: { x: '-x', y: '-y', z: 'z' },
-    [DIRECTION_LEFT]: { x: '-y', y: 'x', z: 'z' },
-    [DIRECTION_RIGHT]: { x: 'y', y: '-x', z: 'z' },
-    [DIRECTION_UP]: { x: 'x', y: '-z', z: 'y' },
-    [DIRECTION_DOWN]: { x: 'x', y: 'z', z: '-y' }
 };
 
 export class Mesh {
@@ -168,14 +158,6 @@ export class Mesh {
         }
 
         this.aabb.rotate(angle);
-    }
-
-    addDirection(direction) {
-        this.addCoordinateSystem(surfaceOptions[direction]);
-    }
-
-    setDirection(direction) {
-        this.setCoordinateSystem(surfaceOptions[direction]);
     }
 
     addCoordinateSystem(coordinate) {
