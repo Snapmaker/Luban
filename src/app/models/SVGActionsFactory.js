@@ -7,7 +7,7 @@ import { isZero } from '../../shared/lib/utils';
 import { generateModelDefaultConfigs } from './ModelInfoUtils';
 import SvgModel from './SvgModel';
 import api from '../api';
-import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
+// import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 import { transformListToTransform, transformBox } from '../ui/SVGEditor/element-transform';
 
 const coordGmModelToSvg = (size, transformation) => {
@@ -575,6 +575,7 @@ class SVGActionsFactory {
         svgModel.setParent(this.svgContentGroup.group);
         const data = svgModel.genModelConfig();
 
+
         const { modelID, content, width, height, transformation, config: elemConfig } = data;
         const blob = new Blob([content], { type: 'image/svg+xml' });
         const file = new File([blob], `${modelID}.svg`);
@@ -602,8 +603,8 @@ class SVGActionsFactory {
                 originalName,
                 uploadName,
                 sourceWidth: res.body.width,
-                width,
                 sourceHeight: res.body.height,
+                width,
                 height,
                 transformation,
                 config,
@@ -1333,7 +1334,6 @@ class SVGActionsFactory {
         const svgModel = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
         const model = svgModel.relatedModel;
 
-
         const config = {};
 
         if (options.text !== undefined) {
@@ -1357,8 +1357,8 @@ class SVGActionsFactory {
         // Update model
         const { width, height } = svgModel.elem.getBBox();
         const baseUpdateData = {
-            sourceWidth: width * DEFAULT_SCALE,
-            sourceHeight: height * DEFAULT_SCALE,
+            sourceWidth: width,
+            sourceHeight: height,
             width,
             height,
             transformation: {

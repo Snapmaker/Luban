@@ -23,7 +23,6 @@ class Output extends PureComponent {
         minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
-        boundingBox: PropTypes.object.isRequired,
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
@@ -196,7 +195,6 @@ class Output extends PureComponent {
                 <Thumbnail
                     ref={this.thumbnail}
                     modelGroup={this.props.modelGroup}
-                    boundingBox={this.props.boundingBox}
                     minimized={this.props.minimized}
                 />
             </div>
@@ -209,7 +207,7 @@ const mapStateToProps = (state) => {
     const { workflowState } = state.machine;
     const {
         stage,
-        modelGroup, hasModel, boundingBox, isAnyModelOverstepped,
+        modelGroup, hasModel, isAnyModelOverstepped,
         isGcodeOverstepped, gcodeLine, gcodeFile
     } = printing;
 
@@ -218,7 +216,6 @@ const mapStateToProps = (state) => {
         stage,
         modelGroup,
         hasAnyModelVisible: modelGroup.hasAnyModelVisible(),
-        boundingBox,
         hasModel,
         isAnyModelOverstepped,
         isGcodeOverstepped,

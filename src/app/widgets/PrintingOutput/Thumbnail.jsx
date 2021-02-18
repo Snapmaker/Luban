@@ -25,7 +25,6 @@ class Thumbnail extends PureComponent {
         this.object = null;
     }
 
-
     componentDidMount() {
         const width = 300;
         const height = 200;
