@@ -8,17 +8,15 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    sizeModelByMachineSize
+    limitModelSizeByMachineSize
 } from '../../models/ModelInfoUtils';
 
 import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
-
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
-import { DEFAULT_SCALE } from '../../ui/SVGEditor/constants';
 import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
 import SvgModel from '../../models/SvgModel';
@@ -261,35 +259,49 @@ export const actions = {
             }
         };
     },
+
+    /**
+     * Generate model by given parameters.
+     *
+     * @param headType
+     * @param originalName - original name of uploaded image file
+     * @param uploadName - modified name of uploaded image file
+     * @param sourceWidth - source width of image
+     * @param sourceHeight - source height of image
+     * @param mode - bw | greyscale | ...
+     * @param sourceType - raster | svg | dxf | text | image3d | ...
+     * @param config - model config (TODO: can be removed?)
+     * @param gcodeConfig - G-code config (TODO: can be removed?)
+     * @param transformation - ?
+     * @param modelID - optional, used in project recovery
+     */
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
-        // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
-        // Generate geometry
-
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
-
         if (!checkParams(headType, sourceType, mode)) {
-            console.error(`sourceType or mode error, sourceType:${sourceType}, mode:${mode}`);
+            console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${mode}`);
             return;
         }
 
+        // Get default configurations
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
+
         const defaultConfig = modelDefaultConfigs.config;
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
-        // cnc size limit
+
+        // Limit image size by machine size
+        let { width, height } = limitModelSizeByMachineSize(size, sourceWidth, sourceHeight);
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
             height = 40 * sourceHeight / sourceWidth;
         }
         const defaultTransformation = {
-            width: width,
-            height: height
+            width,
+            height
         };
-
 
         config = {
             ...defaultConfig,
@@ -313,8 +325,8 @@ export const actions = {
             originalName,
             uploadName,
             sourceWidth,
-            width,
             sourceHeight,
+            width,
             height,
             transformation,
             config,
@@ -707,8 +719,8 @@ export const actions = {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
                 const modelOptions = {
-                    sourceWidth: width * DEFAULT_SCALE,
-                    sourceHeight: height * DEFAULT_SCALE,
+                    sourceWidth: width,
+                    sourceHeight: height,
                     width: width,
                     height: height,
                     transformation: {

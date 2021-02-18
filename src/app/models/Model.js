@@ -37,14 +37,20 @@ class Model {
 
     constructor(modelInfo, modelGroup) {
         const {
-            modelID = `id${uuid.v4()}`, limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
+            modelID = `id${uuid.v4()}`, limitSize, headType,
+            sourceType, sourceWidth, sourceHeight, width, height, originalName, uploadName,
+            config, gcodeConfig, mode,
             transformation, processImageName, modelName, supportTag, target
         } = modelInfo;
 
         this.limitSize = limitSize;
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+        const material = modelInfo.material || new THREE.MeshPhongMaterial({
+            color: 0xa0a0a0,
+            specular: 0xb0b0b0,
+            shininess: 0
+        });
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 

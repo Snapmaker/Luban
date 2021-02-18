@@ -1,9 +1,7 @@
 import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
-import { remapElement } from '../ui/SVGEditor/element-recalculate';
 import { NS } from '../ui/SVGEditor/lib/namespaces';
-import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 import { DATA_PREFIX } from '../constants';
 
 import api from '../api';
@@ -222,25 +220,20 @@ class SvgModel {
     genModelConfig() {
         const elem = this.elem;
         const coord = coordGmSvgToModel(this.size, elem);
-        // const fontSize = elem.getAttribute('font-size') * 8;
 
         // eslint-disable-next-line prefer-const
         let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
         width *= scaleX;
         height *= scaleY;
 
-        const scale = svg.createSVGTransform();
-        scale.setScale(DEFAULT_SCALE, DEFAULT_SCALE);
-
         const clone = elem.cloneNode(true);
         clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
-        clone.setAttribute('font-size', clone.getAttribute('font-size') * DEFAULT_SCALE);
-        remapElement(clone, scale.matrix);
+        clone.setAttribute('font-size', clone.getAttribute('font-size'));
 
-        let vx = x * DEFAULT_SCALE * scaleX;
-        let vy = y * DEFAULT_SCALE * scaleY;
-        let vwidth = width * DEFAULT_SCALE;
-        let vheight = height * DEFAULT_SCALE;
+        let vx = x * scaleX;
+        let vy = y * scaleY;
+        let vwidth = width;
+        let vheight = height;
 
         if (scaleX < 0) {
             vx += vwidth;
@@ -252,7 +245,7 @@ class SvgModel {
         }
 
         // Todo: need to optimize
-        const content = `<svg x="0" y="0" width="${vwidth}" height="${vheight}}" `
+        const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
             + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
             + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
         const model = {
@@ -312,8 +305,8 @@ class SvgModel {
             processImageName: uploadName,
             width,
             height,
-            sourceWidth: width * Math.abs(scaleX) * DEFAULT_SCALE,
-            sourceHeight: height * Math.abs(scaleY) * DEFAULT_SCALE
+            sourceWidth: width * Math.abs(scaleX),
+            sourceHeight: height * Math.abs(scaleY)
         });
     }
 
@@ -324,8 +317,8 @@ class SvgModel {
             const { text, 'font-family': font, 'font-size': size } = this.relatedModel.config;
             const { scaleX, scaleY } = this.relatedModel.transformation;
             const { width, height } = this.elem.getBBox();
-            const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
-            const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
+            const sourceWidth = width * Math.abs(scaleX);
+            const sourceHeight = height * Math.abs(scaleY);
             const name = this.relatedModel.originalName;
             const alignment = 'middle';
             res = await api.convertOneLineTextToSvg({ text, font, name, size, sourceWidth, sourceHeight, alignment });

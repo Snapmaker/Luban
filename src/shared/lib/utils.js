@@ -13,7 +13,7 @@ export const isEqual = (a, b) => {
 export const angleToPi = (angle) => angle / 180 * Math.PI;
 export const piToAngle = (pi) => pi / Math.PI * 180;
 
-export const mmToPixel = (mm) => mm * 7.8;
+export const mmToPixel = (mm) => mm * 7.8; // TODO: remove 7.8 DEFAULT_SCALE
 export const pixelToMM = (pi) => pi / 7.8;
 
 export const round = (d, n) => {

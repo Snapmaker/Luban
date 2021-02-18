@@ -20,7 +20,14 @@ const DEFAULT_TEXT_CONFIG = {
     alignment: 'left' // left, middle, right
 };
 
-const sizeModelByMachineSize = (size, width, height) => {
+/**
+ * Limit model size proportionally.
+ *
+ * @param size
+ * @param width
+ * @param height
+ */
+const limitModelSizeByMachineSize = (size, width, height) => {
     let height_ = height;
     let width_ = width;
     if (width_ * size.y >= height_ * size.x && width_ > size.x) {
@@ -299,7 +306,7 @@ const generateModelDefaultConfigs = (headType, sourceType, mode, isRotate = fals
 
 export {
     DEFAULT_TEXT_CONFIG,
-    sizeModelByMachineSize,
+    limitModelSizeByMachineSize,
     checkParams,
     generateModelDefaultConfigs
 };
