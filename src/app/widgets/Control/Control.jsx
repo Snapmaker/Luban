@@ -536,8 +536,6 @@ class Control extends PureComponent {
                     <Creatable
                         backspaceRemoves={false}
                         className="sm-parameter-row__select2"
-                        style={{
-                        }}
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         options={this.state.jogSpeedOptions}
