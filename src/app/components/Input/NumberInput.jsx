@@ -37,11 +37,11 @@ class NumberInput extends PureComponent {
     componentWillReceiveProps(nextProps) {
         // If any of .min, .max changed, call .onAfterChangeWrapper once again
         // to check if value is valid.
-        const checkKeys = ['min', 'max'];
-        const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
-        if (changesMade) {
-            this.onAfterChangeWrapper(nextProps.value);
-        }
+        // const checkKeys = ['min', 'max'];
+        // const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
+        // if (changesMade) {
+        //     this.onAfterChangeWrapper(nextProps.value);
+        // }
 
         // Changes from outside also reflects on display
         if (nextProps.value !== this.props.value) {

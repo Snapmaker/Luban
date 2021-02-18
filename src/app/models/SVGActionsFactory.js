@@ -528,6 +528,8 @@ class SVGActionsFactory {
                 });
             }
         }
+        const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
+        this._setSelectedElementsTransformation(t);
     }
 
     resetSelection() {

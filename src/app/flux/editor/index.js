@@ -11,7 +11,7 @@ import {
     sizeModelByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX, EPSILON } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
@@ -218,7 +218,7 @@ export const actions = {
             });
     },
 
-    prepareStlVisualizer: (headType, model) => (dispatch, getState) => {
+    prepareStlVisualizer: (headType, model) => (dispatch) => {
         const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
         const worker = new LoadModelWorker();
         worker.postMessage({ uploadPath });
@@ -253,11 +253,6 @@ export const actions = {
                     break;
                 }
                 case 'LOAD_MODEL_PROGRESS': {
-                    const state = getState().printing;
-                    const progress = 0.25 + data.progress * 0.5;
-                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
-                        dispatch(actions.updateState(headType, { progress }));
-                    }
                     break;
                 }
                 case 'LOAD_MODEL_FAILED': {

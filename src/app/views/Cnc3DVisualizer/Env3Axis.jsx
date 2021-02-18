@@ -27,7 +27,7 @@ class Env3Axis extends Object3D {
 
     _setup() {
         // const box = new BoxGeometry(this.size.x * 1.2, this.size.y, this.size.z * 1.2);
-        const box = new BoxGeometry(this.size.x * 2, 0.01, this.size.z * 2);
+        const box = new BoxGeometry(this.size.x, 0.01, this.size.z);
         const materialNormal = new MeshPhongMaterial({
             opacity: 0.2,
             transparent: true,

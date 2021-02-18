@@ -20,6 +20,22 @@ import styles from './styles.styl';
 
 const texture = new TextureLoader().load('../images/wood.png');
 
+const getModelTransformation = (t, size) => {
+    return {
+        positionX: t.x - size.x,
+        positionY: -t.y + size.y,
+        positionZ: 0,
+        scaleX: t.scaleX ?? 1,
+        scaleY: t.scaleY ?? 1,
+        scaleZ: 1,
+        rotationX: 0,
+        rotationY: 0,
+        rotationZ: -t.angle / 180 * Math.PI,
+        width: t.width * t.scaleX,
+        height: t.height * t.scaleY
+    };
+};
+
 const directionMatrixes = {
     [DIRECTION_FRONT]: new Matrix4(),
     [DIRECTION_BACK]: new Matrix4().makeRotationZ(Math.PI),
@@ -93,7 +109,10 @@ const set4AxisMeshState = async (mesh, transformation, materials) => {
 
     mesh.position.set(0, 0, materials.length / 2 - transformation.positionY);
     mesh.updateMatrix();
-    mesh.applyMatrix(new Matrix4().makeRotationZ(-transformation.positionX / radius));
+    if (radius) {
+        mesh.applyMatrix(new Matrix4().makeRotationZ(-transformation.positionX / radius));
+    }
+
     if (radius > materials.diameter / 2) {
         const material = new MeshPhongMaterial({ color: 0xff0000, specular: 0xb0b0b0, shininess: 0 });
         mesh.material = material;
@@ -113,6 +132,7 @@ class Cnc3DVisualizer extends PureComponent {
 
     environment = null;
 
+    cameraInitialPosition = null;
 
     state = {
         show: true
@@ -128,15 +148,21 @@ class Cnc3DVisualizer extends PureComponent {
         if (nextProps.hasModel) {
             const { mesh, materials, transformation, direction, machineSize } = nextProps;
             if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
+                || materials.diameter !== this.props.materials.diameter
+                || materials.length !== this.props.materials.length
                 || transformation !== this.props.transformation || direction !== this.props.direction
             ) {
+                const t = getModelTransformation(transformation, machineSize);
                 mesh.remove(...mesh.children);
                 mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-                setMeshTransform(mesh, transformation, direction);
-                this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
+                setMeshTransform(mesh, t, direction);
+                if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
+                    this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
+                }
+
 
                 if (materials.isRotate) {
-                    set4AxisMeshState(mesh, transformation, materials);
+                    set4AxisMeshState(mesh, t, materials);
 
                     this.environment = new Env4Axis(mesh, materials);
                     this.worldTransform = new Matrix4().makeRotationY(Math.PI);
@@ -144,7 +170,7 @@ class Cnc3DVisualizer extends PureComponent {
                     const meshSize = getMeshSize(mesh);
                     const platSize = { x: machineSize.x, y: meshSize.y, z: machineSize.z };
 
-                    set3AxisMeshState(mesh, transformation, platSize);
+                    set3AxisMeshState(mesh, t, platSize);
 
                     this.environment = new Env3Axis(platSize);
                     this.worldTransform = new Matrix4();
@@ -222,14 +248,14 @@ class Cnc3DVisualizer extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { modelGroup, materials } = state.cnc;
+    const { modelGroup, materials, SVGActions } = state.cnc;
     const { size } = state.machine;
     let hasModel = false, mesh = null, transformation = null, direction = null;
     if (modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].image3dObj) {
         const model = modelGroup.selectedModelArray[0];
         hasModel = true;
         mesh = model.image3dObj;
-        transformation = model.transformation;
+        transformation = SVGActions.getSelectedElementsTransformation();
         direction = model.config.direction;
     }
 
