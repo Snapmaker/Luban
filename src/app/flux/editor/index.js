@@ -8,7 +8,8 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    limitModelSizeByMachineSize
+    limitModelSizeByMachineSize,
+    sizeModelByMinSize
 } from '../../models/ModelInfoUtils';
 
 import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
@@ -293,11 +294,20 @@ export const actions = {
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
-        let { width, height } = limitModelSizeByMachineSize(size, sourceWidth, sourceHeight);
+        let { width, height, scale } = limitModelSizeByMachineSize(size, sourceWidth, sourceHeight);
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
             height = 40 * sourceHeight / sourceWidth;
         }
+        if (sourceType === SOURCE_TYPE_IMAGE3D) {
+            const res = sizeModelByMinSize({ x: 50, y: 50 }, width, height);
+            if (res) {
+                width = res.width;
+                height = res.height;
+                scale = res.scale;
+            }
+        }
+
         const defaultTransformation = {
             width,
             height
@@ -328,6 +338,7 @@ export const actions = {
             sourceHeight,
             width,
             height,
+            scale,
             transformation,
             config,
             gcodeConfig,
@@ -719,8 +730,8 @@ export const actions = {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
                 const modelOptions = {
-                    sourceWidth: width,
-                    sourceHeight: height,
+                    sourceWidth: width / model.scale,
+                    sourceHeight: height / model.scale,
                     width: width,
                     height: height,
                     transformation: {

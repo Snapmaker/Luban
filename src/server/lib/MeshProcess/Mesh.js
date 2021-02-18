@@ -5,7 +5,7 @@ import { STLParse } from '../../../shared/lib/STLParse/STLParse';
 import { isEqual } from '../../../shared/lib/utils';
 import Coordinate from './Coordinate';
 
-const VERTEX_MELD_DISTANCE = 0.03;
+const VERTEX_MELD_DISTANCE = 0.000003;
 
 const pointHash = (p) => {
     return (p.x / VERTEX_MELD_DISTANCE) ^ ((p.y / VERTEX_MELD_DISTANCE) << 10) ^ ((p.z / VERTEX_MELD_DISTANCE) << 20);
