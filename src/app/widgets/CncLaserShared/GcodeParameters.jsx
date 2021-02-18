@@ -261,7 +261,7 @@ class GcodeParameters extends PureComponent {
                             <OptionalDropdown
                                 style={{ marginTop: '10px' }}
                                 title={i18n._('Fixed Power')}
-                                titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                                titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image individually.')}
                                 disabled={disabled}
                                 onClick={actions.onToggleFixedPowerEnabled}
                                 hidden={!fixedPowerEnabled}
