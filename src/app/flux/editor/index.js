@@ -1176,13 +1176,11 @@ export const actions = {
     __synchronizeElements: (headType) => (dispatch, getState) => {
         const { SVGActions, toolPathGroup } = getState()[headType];
 
-        const selectedElements = SVGActions.getSelectedElements();
-
         // Convert position from SVG coordinate to logical coordinate
         // TODO: Convert in SVGActions, and update here
-        for (const element of selectedElements) {
-            const svgModel = SVGActions.getSVGModelByElement(element);
+        for (const svgModel of SVGActions.svgModels) {
             const model = svgModel.relatedModel;
+            const element = svgModel.elem;
 
             const t = SvgModel.getElementTransform(element);
             const size = getState().machine.size;
