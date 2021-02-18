@@ -822,6 +822,41 @@ class ModelGroup extends EventEmitter {
         return this.getState();
     }
 
+    autoRotateSelectedModel() {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
+            return null;
+        }
+
+        selected.forEach((item) => {
+            item.autoRotate();
+            item.computeBoundingBox();
+        });
+        this.prepareSelectedGroup();
+        return this.getState();
+    }
+
+    resetSelectedModelTransformation() {
+        const selected = this.getSelectedModelArray();
+        if (selected.length === 0) {
+            return null;
+        }
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+
+        selected.forEach((item) => {
+            item.updateTransformation({
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: 0
+            });
+        });
+
+        return this.getState();
+    }
+
     onModelTransform() {
         // this.selectedModelIDArray.splice(0);
         this.selectedModelArray.forEach((item) => {
