@@ -82,6 +82,13 @@ class ModelGroup extends EventEmitter {
         };
     }
 
+    /**
+     * Note: for performance consideration, don't call this method in render.
+     */
+    getBoundingBox() {
+        return ThreeUtils.computeBoundingBox(this.object);
+    }
+
     getStateAndUpdateBoundingBox() {
         // this.selectedModelIDArray = [];
         // this.selectedModelArray.forEach((item) => {
