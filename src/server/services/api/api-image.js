@@ -27,15 +27,15 @@ export const set = (req, res) => {
     // if 'files' does not exist, the model in the case library is being loaded
     if (files) {
         const file = files.image;
-        originalName = removeSpecialChars(path.basename(file.name));
-        uploadName = pathWithRandomSuffix(originalName);
+        originalName = path.basename(file.name);
+        uploadName = pathWithRandomSuffix(removeSpecialChars(originalName));
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         originalPath = file.path;
     } else {
         const { name, casePath } = req.body;
-        originalName = removeSpecialChars(path.basename(name));
+        originalName = name;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        uploadName = pathWithRandomSuffix(originalName);
+        uploadName = pathWithRandomSuffix(removeSpecialChars(originalName));
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
     }
     const extname = path.extname(uploadName).toLowerCase();

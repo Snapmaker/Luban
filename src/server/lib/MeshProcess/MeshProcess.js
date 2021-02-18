@@ -106,7 +106,7 @@ const writeSvg = (width, height, paths, outputFile, p = '') => {
 
 export class MeshProcess {
     constructor(modelInfo) {
-        const { uploadName, config = {}, transformation = {}, materials = {} } = modelInfo;
+        const { uploadName, scale = 1, config = {}, transformation = {}, materials = {} } = modelInfo;
 
         const { isRotate, diameter } = materials;
 
@@ -121,6 +121,7 @@ export class MeshProcess {
         this.extensionY = extensionY;
         this.sliceDensity = sliceDensity;
         this.transformation = transformation;
+        this.scale = scale;
 
         this.flip = isRotate ? 3 : 0;
         if (transformation.flip) {
@@ -182,7 +183,7 @@ export class MeshProcess {
         for (let j = 0; j < this.slicer.slicerLayers.length; j++) {
             const slicerLayer = this.slicer.slicerLayers[j];
 
-            const polygons = [].concat(slicerLayer.polygonsPart.data).concat(slicerLayer.openPolygons.data);
+            const polygons = [].concat(slicerLayer.polygons.data).concat(slicerLayer.polygonsPart.data).concat(slicerLayer.openPolygons.data);
 
             for (const polygon of polygons) {
                 const size = polygon.size();
@@ -368,6 +369,11 @@ export class MeshProcess {
                 y: -(this.mesh.aabb.max.y + this.mesh.aabb.min.y) / 2,
                 z: -this.mesh.aabb.min.z
             });
+            this.mesh.resize({
+                x: this.scale,
+                y: this.scale,
+                z: this.scale
+            });
             return this.convertTo4AxisImage();
         } else {
             this.mesh.addCoordinateSystem({ y: '-y' });
@@ -375,6 +381,11 @@ export class MeshProcess {
                 x: -this.mesh.aabb.min.x,
                 y: -this.mesh.aabb.min.y,
                 z: -this.mesh.aabb.min.z
+            });
+            this.mesh.resize({
+                x: this.scale,
+                y: this.scale,
+                z: this.scale
             });
             return this.convertTo3AxisImage();
         }
