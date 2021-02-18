@@ -111,7 +111,7 @@ const INITIAL_STATE = {
     hasModel: false,
     isAnyModelOverstepped: false,
     // model: null, // selected model
-    boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+    // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
     // PrintingManager
     showPrintingManager: false,
@@ -788,8 +788,6 @@ export const actions = {
 
     generateGcode: (thumbnail) => async (dispatch, getState) => {
         const { hasModel, activeDefinition, modelGroup } = getState().printing;
-        // TODO
-        const boundingBox = modelGroup.getBoundingBox();
         if (!hasModel) {
             return;
         }
@@ -801,8 +799,6 @@ export const actions = {
         }));
 
         // Prepare model file
-
-
         const { model, support, originalName } = await dispatch(actions.prepareModel());
 
 
@@ -823,11 +819,12 @@ export const actions = {
         };
         */
 
+        const boundingBox = modelGroup.getBoundingBox();
         const params = {
             model,
             support,
             originalName,
-            boundingBox: boundingBox,
+            boundingBox,
             thumbnail: thumbnail
         };
         controller.slice(params);
