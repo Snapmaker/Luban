@@ -37,7 +37,7 @@ class Model {
 
     constructor(modelInfo, modelGroup) {
         const {
-            modelID = uuid.v4(), limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
+            modelID = `id${uuid.v4()}`, limitSize, headType, sourceType, sourceHeight, height, sourceWidth, width, originalName, uploadName, config, gcodeConfig, mode,
             transformation, processImageName, modelName, supportTag, target
         } = modelInfo;
 

@@ -2,6 +2,7 @@ import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../../consta
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
+// import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 
 import i18n from '../../lib/i18n';
@@ -57,7 +58,6 @@ export const actions = {
         startService(HEAD_3DP);
     },
 
-
     autoSaveEnvironment: (headType, force = false) => async (dispatch, getState) => {
         const fluxMod = headType2FluxMod(headType);
         const editorState = getState()[fluxMod];
@@ -67,8 +67,15 @@ export const actions = {
         // dispatch(actions.updateState(headType, { hasModel: !!models.length }));
         if (!models.length && initState) return;
 
+        const machineState = getState().machine;
+        const { size, series } = machineState;
         const { defaultMaterialId, defaultQualityId, isRecommended } = editorState;
-        const envObj = { headType, defaultMaterialId, defaultQualityId, isRecommended, models: [] };
+        const machineInfo = {};
+        machineInfo.headType = headType;
+        machineInfo.size = size;
+        machineInfo.series = series;
+
+        const envObj = { machineInfo, defaultMaterialId, defaultQualityId, isRecommended, models: [], toolpaths: [] };
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
             const { materials } = getState()[headType];
             envObj.materials = materials;
@@ -76,6 +83,10 @@ export const actions = {
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
             envObj.models.push(model.getSerializableConfig());
+        }
+        if (headType === HEAD_CNC || headType === HEAD_LASER) {
+            const toolPaths = editorState.toolPathGroup.getToolPaths();
+            envObj.toolpaths = toolPaths;
         }
         const content = JSON.stringify(envObj);
 
@@ -107,7 +118,6 @@ export const actions = {
         if (backendRecover) {
             await api.recoverEnv({ content });
         }
-
         const envObj = JSON.parse(content);
         let modActions = null;
         let modState = null;
@@ -120,21 +130,30 @@ export const actions = {
             modState = getState().printing;
             await dispatch(printingActions.initSize());
         }
+        const { modelGroup } = modState;
         // await dispatch(modActions.init(envHeadType));
-        modState.modelGroup.removeAllModels();
+        modelGroup.removeAllModels();
 
-        // modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
-        const { models, materials, ...restState } = envObj;
+        const { models, toolpaths, materials, machineInfo, ...restState } = envObj;
 
         if (materials && (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER)) {
             dispatch(modActions.updateMaterials(envHeadType, materials));
         }
 
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation));
+                sourceType, config, gcodeConfig, transformation, modelID));
+        }
+        const { toolPathGroup } = modState;
+        if (toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
+            toolPathGroup.deleteAllToolPaths();
+        }
+        if (toolpaths && toolpaths.length) {
+            for (let k = 0; k < toolpaths.length; k++) {
+                toolPathGroup.saveToolPath(toolpaths[k], { materials });
+            }
         }
         dispatch(modActions.updateState(envHeadType, restState));
 
@@ -231,9 +250,15 @@ export const actions = {
             }
             formData.append('file', file);
             const { body: { content } } = await api.recoverProjectFile(formData);
-            const envObj = JSON.parse(content);
-            const headType = envObj.headType;
-
+            let envObj;
+            try {
+                envObj = JSON.parse(content);
+            } catch (e) {
+                console.error(e);
+                return;
+            }
+            const machineInfo = envObj.machineInfo;
+            const { headType } = machineInfo;
 
             await dispatch(actions.save(headType, {
                 message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] })

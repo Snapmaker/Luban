@@ -16,7 +16,7 @@ class CncParameters extends PureComponent {
     static propTypes = {
         toolDefinitions: PropTypes.array.isRequired,
         activeToolDefinition: PropTypes.object.isRequired,
-
+        isModifiedDefinition: PropTypes.bool.isRequired,
         toolPath: PropTypes.object.isRequired,
 
         updateToolPath: PropTypes.func.isRequired,
@@ -251,6 +251,7 @@ class CncParameters extends PureComponent {
                     <ToolParameters
                         activeToolDefinition={this.props.activeToolDefinition}
                         toolDefinitions={this.props.toolDefinitions}
+                        isModifiedDefinition={this.props.isModifiedDefinition}
                         updateToolConfig={this.props.updateToolConfig}
                         toolPath={this.props.toolPath}
                     />

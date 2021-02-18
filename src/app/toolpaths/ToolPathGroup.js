@@ -4,6 +4,7 @@ import { createToolPathName, getToolPathType, SUCCESS, WARNING } from './utils';
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
+import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../lib/renderer/ToolPathRenderer';
 
 class ToolPathGroup {
     toolPaths = [];
@@ -68,6 +69,7 @@ class ToolPathGroup {
         } else {
             this.selectedToolPathId = toolPathId;
         }
+        this.addSelectedToolpathColor();
         this._updated();
     }
 
@@ -138,10 +140,26 @@ class ToolPathGroup {
             });
             this.toolPaths.push(toolPath);
             this.toolPathObjects.add(toolPath.object);
-
             this.selectedToolPathId = toolPath.id;
+            this.addSelectedToolpathColor();
         }
         toolPath.commitGenerateToolPath(options);
+    }
+
+    addSelectedToolpathColor() {
+        const selectedToolpath = this._getToolPath(this.selectedToolPathId);
+        this.toolPathObjects.children.forEach((item) => {
+            if (selectedToolpath && selectedToolpath.object === item) {
+                item.children.forEach((meshObj) => {
+                    meshObj.material = MATERIAL_SELECTED;
+                });
+            } else {
+                item.children.forEach((meshObj) => {
+                    meshObj.material = MATERIAL_UNSELECTED;
+                });
+            }
+        });
+        this._updated();
     }
 
     toolPathToUp(toolPathId) {
@@ -191,6 +209,19 @@ class ToolPathGroup {
         if (this.selectedToolPathId === toolPathId) {
             this.selectedToolPathId = '';
         }
+
+        this._updated();
+    }
+
+    deleteAllToolPaths() {
+        const toolPaths = this._getToolPaths();
+        toolPaths.forEach((item) => {
+            if (item) {
+                this.toolPathObjects.remove(item.object);
+            }
+        });
+        this.toolPaths = [];
+        this.selectedToolPathId = '';
 
         this._updated();
     }

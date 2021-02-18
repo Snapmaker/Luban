@@ -230,7 +230,6 @@ class ToolPath {
 
     checkoutToolPathStatus() {
         const taskInfos = this.getSelectModelsAndToolPathInfo();
-
         if (!taskInfos || taskInfos.length === 0) {
             console.error('The models of tool path is empty');
             this.status = FAILED;

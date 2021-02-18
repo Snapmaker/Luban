@@ -24,13 +24,6 @@ import { machineStore } from '../../store/local-storage';
 import SvgModel from '../../models/SvgModel';
 import { CNC_LASER_STAGE } from './utils';
 
-const getCount = (() => {
-    let count = 0;
-
-    return () => {
-        return `modelID${count++}`;
-    };
-})();
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -268,7 +261,7 @@ export const actions = {
             }
         };
     },
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation) => (dispatch, getState) => {
+    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions } = getState()[headType];
 
@@ -311,7 +304,6 @@ export const actions = {
             ...transformation
         };
 
-        const modelID = getCount();
         const options = {
             modelID,
             limitSize: size,

@@ -88,6 +88,38 @@ class ToolPathConfigurations extends PureComponent {
             this.setState({
                 toolPath: nToolPath
             });
+        },
+        updateCncActiveToolDefinition: (updatingToolPath) => {
+            const { toolDefinitions } = this.props;
+            const { toolParams, gcodeConfig } = updatingToolPath;
+            let activeToolDefinition = this.props.activeToolListDefinition;
+            toolDefinitions.forEach((d) => {
+                d.toolList.forEach((toolDefinition) => {
+                    const config = toolDefinition.config;
+                    if (config.diameter.default_value === toolParams.toolDiameter && config.angle.default_value === toolParams.toolAngle && config.shaft_diameter.default_value === toolParams.toolShaftDiameter) {
+                        activeToolDefinition = { ...toolDefinition };
+                        activeToolDefinition.definitionId = d.definitionId;
+                        if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
+                            config.jog_speed.default_value = gcodeConfig.jogSpeed;
+                        }
+                        if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
+                            config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
+                        }
+                        if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
+                            config.work_speed.default_value = gcodeConfig.workSpeed;
+                        }
+                        if (config.step_down.default_value !== gcodeConfig.stepDown) {
+                            config.step_down.default_value = gcodeConfig.stepDown;
+                        }
+                        if (config.density.default_value !== gcodeConfig.density) {
+                            config.density.default_value = gcodeConfig.density;
+                        }
+                    }
+                });
+            });
+            this.setState({
+                activeToolDefinition
+            });
         }
     };
 
@@ -104,9 +136,25 @@ class ToolPathConfigurations extends PureComponent {
             });
         }
         if (nextProps.updatingToolPath !== this.props.updatingToolPath) {
+            const newToolPath = _.cloneDeep(nextProps.updatingToolPath);
             this.setState({
-                toolPath: _.cloneDeep(nextProps.updatingToolPath)
+                toolPath: newToolPath
             });
+            if (!_.isNull(nextProps.updatingToolPath) && nextProps.headType === HEAD_CNC) {
+                this.actions.updateCncActiveToolDefinition(newToolPath);
+            }
+        }
+    }
+
+    checkIfDefinitionModified() {
+        if (this.props.headType === HEAD_CNC) {
+            const { activeToolDefinition } = this.state;
+            const currentToolDefinition = this.props.activeToolListDefinition;
+            return !Object.entries(currentToolDefinition.config).every(([key, setting]) => {
+                return activeToolDefinition.config[key].default_value === setting.default_value;
+            });
+        } else {
+            return false;
         }
     }
 
@@ -114,6 +162,8 @@ class ToolPathConfigurations extends PureComponent {
         if (!this.state.toolPath) {
             return null;
         }
+        // check if the definition in manager is modified
+        const isModifiedDefinition = this.checkIfDefinitionModified();
 
         return (
             <React.Fragment>
@@ -137,6 +187,7 @@ class ToolPathConfigurations extends PureComponent {
                             <CncParameters
                                 toolPath={this.state.toolPath}
                                 toolDefinitions={this.props.toolDefinitions}
+                                isModifiedDefinition={isModifiedDefinition}
                                 activeToolDefinition={this.state.activeToolDefinition}
                                 updateToolPath={this.actions.updateToolPath}
                                 updateToolConfig={this.actions.updateToolConfig}
