@@ -40,12 +40,12 @@ export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngi
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
 
 // 3D Mesh Convert 2D Image
-export const DIRECTION_FRONT = 'front';
-export const DIRECTION_BACK = 'back';
-export const DIRECTION_LEFT = 'left';
-export const DIRECTION_RIGHT = 'right';
-export const DIRECTION_UP = 'up';
-export const DIRECTION_DOWN = 'down';
+export const FRONT = 'front';
+export const BACK = 'back';
+export const LEFT = 'left';
+export const RIGHT = 'right';
+export const TOP = 'top';
+export const BOTTOM = 'bottom';
 
 // Model
 export const SOURCE_TYPE_3DP = '3dp';

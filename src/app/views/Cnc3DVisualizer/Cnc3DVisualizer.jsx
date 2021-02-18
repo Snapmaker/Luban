@@ -13,7 +13,14 @@ import Env4Axis from './Env4Axis';
 
 import { actions as cncActions } from '../../flux/cnc';
 
-import { DIRECTION_BACK, DIRECTION_DOWN, DIRECTION_FRONT, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP } from '../../constants';
+import {
+    BACK,
+    BOTTOM,
+    FRONT,
+    LEFT,
+    RIGHT,
+    TOP
+} from '../../constants';
 
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
@@ -37,12 +44,21 @@ const getModelTransformation = (t, size) => {
 };
 
 const directionMatrixes = {
-    [DIRECTION_FRONT]: new Matrix4(),
-    [DIRECTION_BACK]: new Matrix4().makeRotationZ(Math.PI),
-    [DIRECTION_LEFT]: new Matrix4().makeRotationZ(Math.PI / 2),
-    [DIRECTION_RIGHT]: new Matrix4().makeRotationZ(-Math.PI / 2),
-    [DIRECTION_UP]: new Matrix4().makeRotationX(Math.PI / 2),
-    [DIRECTION_DOWN]: new Matrix4().makeRotationX(-Math.PI / 2)
+    [FRONT]: new Matrix4(),
+    [BACK]: new Matrix4().makeRotationZ(Math.PI),
+    [LEFT]: new Matrix4().makeRotationZ(Math.PI / 2),
+    [RIGHT]: new Matrix4().makeRotationZ(-Math.PI / 2),
+    [TOP]: new Matrix4().makeRotationX(Math.PI / 2),
+    [BOTTOM]: new Matrix4().makeRotationX(-Math.PI / 2)
+};
+
+const placementMatrixes = {
+    [FRONT]: new Matrix4().makeRotationX(Math.PI / 2),
+    [BACK]: new Matrix4().makeRotationX(-Math.PI / 2),
+    [LEFT]: new Matrix4().makeRotationY(-Math.PI / 2),
+    [RIGHT]: new Matrix4().makeRotationY(Math.PI / 2),
+    [TOP]: new Matrix4().makeRotationY(Math.PI),
+    [BOTTOM]: new Matrix4()
 };
 
 const getMeshBbox = (mesh) => {
@@ -64,9 +80,9 @@ const getMeshSize = (mesh) => {
 };
 
 
-const setMeshTransform = (mesh, transformation, direction = DIRECTION_FRONT) => {
+const setMeshTransform = (mesh, transformation, isRotate, direction = FRONT, placement = BOTTOM) => {
     mesh.applyMatrix(new Matrix4().getInverse(mesh.matrix));
-    mesh.applyMatrix(directionMatrixes[direction]);
+    mesh.applyMatrix(isRotate ? placementMatrixes[placement] : directionMatrixes[direction]);
 
     mesh.applyMatrix(new Matrix4().makeScale(transformation.scaleX, Math.abs(transformation.scaleY), transformation.scaleY));
 };
@@ -127,6 +143,7 @@ class Cnc3DVisualizer extends PureComponent {
         transformation: PropTypes.object,
         machineSize: PropTypes.object,
         direction: PropTypes.string,
+        placement: PropTypes.string,
         updateStlVisualizer: PropTypes.func
     };
 
@@ -146,7 +163,7 @@ class Cnc3DVisualizer extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.hasModel) {
-            const { mesh, materials, transformation, direction, machineSize } = nextProps;
+            const { mesh, materials, transformation, direction, placement, machineSize } = nextProps;
             if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
                 || materials.diameter !== this.props.materials.diameter
                 || materials.length !== this.props.materials.length
@@ -155,11 +172,11 @@ class Cnc3DVisualizer extends PureComponent {
                 const t = getModelTransformation(transformation, machineSize);
                 mesh.remove(...mesh.children);
                 mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
-                setMeshTransform(mesh, t, direction);
+
+                setMeshTransform(mesh, t, materials.isRotate, direction, placement);
                 if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
                     this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
                 }
-
 
                 if (materials.isRotate) {
                     set4AxisMeshState(mesh, t, materials);
@@ -250,17 +267,18 @@ class Cnc3DVisualizer extends PureComponent {
 const mapStateToProps = (state) => {
     const { modelGroup, materials, SVGActions } = state.cnc;
     const { size } = state.machine;
-    let hasModel = false, mesh = null, transformation = null, direction = null;
+    let hasModel = false, mesh = null, transformation = null, direction = null, placement = null;
     if (modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].image3dObj) {
         const model = modelGroup.selectedModelArray[0];
         hasModel = true;
         mesh = model.image3dObj;
         transformation = SVGActions.getSelectedElementsTransformation();
         direction = model.config.direction;
+        placement = model.config.placement;
     }
 
     return {
-        hasModel, mesh, materials, transformation, direction, machineSize: size
+        hasModel, mesh, materials, transformation, direction, placement, machineSize: size
     };
 };
 
