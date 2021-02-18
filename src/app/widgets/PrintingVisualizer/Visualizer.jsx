@@ -7,6 +7,7 @@ import { Vector3, Box3 } from 'three';
 
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
@@ -34,6 +35,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
+        destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -158,6 +160,7 @@ class Visualizer extends PureComponent {
             return this.state.isSupporting;
         },
         startSupportMode: () => {
+            this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
             this.setState({ isSupporting: true });
             this.canvas.current.controls.startSupportMode();
@@ -219,7 +222,7 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup } = nextProps;
+        const { size, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage } = nextProps;
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
             if (transformMode !== 'support') {
@@ -256,6 +259,13 @@ class Visualizer extends PureComponent {
         }
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
+        }
+
+        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_FAILED) {
+            modal({
+                title: i18n._('Parse Error'),
+                body: i18n._('Failed to load model.')
+            });
         }
     }
 
@@ -498,6 +508,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),

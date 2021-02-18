@@ -839,7 +839,7 @@ class ModelGroup extends EventEmitter {
             item.autoRotate();
             item.computeBoundingBox();
         });
-
+        this.prepareSelectedGroup();
         return this.getState();
     }
 
