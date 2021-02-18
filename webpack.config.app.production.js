@@ -54,7 +54,7 @@ module.exports = {
         app: path.resolve(__dirname, 'src/app/index.jsx')
     },
     output: {
-        path: path.resolve(__dirname, 'dist/Snapmakerjs/app'),
+        path: path.resolve(__dirname, 'dist/Luban/app'),
         chunkFilename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         filename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         publicPath: publicPath
