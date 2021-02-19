@@ -182,46 +182,48 @@ class TransformationSection extends PureComponent {
                             title={i18n._('Move (mm)')}
                             content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
                         >
-                            <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
-                            <Input
-                                className={styles['input-box-left']}
-                                disabled={!selectedNotHide}
-                                value={toFixed(logicalX, 1)}
-                                min={-size.x}
-                                max={size.x}
-                                onChange={(value) => {
-                                    actions.onChangeLogicalX(value);
-                                }}
-                            />
-                            <span
-                                className={styles['input-box-inner-text']}
-                                style={{ marginLeft: '-15px' }}
-                            >
-                                X
-                            </span>
-                            <span
-                                className={styles['description-text']}
-                                style={{
-                                    marginLeft: '6px',
-                                    width: '32px',
-                                    textAlign: 'center',
-                                    display: 'inline-block'
-                                }}
-                            />
-                            <Input
-                                className={styles['input-box-right']}
-                                disabled={!selectedNotHide}
-                                value={toFixed(logicalY, 1)}
-                                min={-size.y}
-                                max={size.y}
-                                onChange={actions.onChangeLogicalY}
-                            />
-                            <span
-                                className={styles['input-box-inner-text']}
-                                style={{ marginLeft: '-15px' }}
-                            >
-                                Y
-                            </span>
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
+                                <Input
+                                    className={styles['input-box-left']}
+                                    disabled={!selectedNotHide}
+                                    value={toFixed(logicalX, 1)}
+                                    min={-size.x}
+                                    max={size.x}
+                                    onChange={(value) => {
+                                        actions.onChangeLogicalX(value);
+                                    }}
+                                />
+                                <span
+                                    className={styles['input-box-inner-text']}
+                                    style={{ marginLeft: '-15px' }}
+                                >
+                                    X
+                                </span>
+                                <span
+                                    className={styles['description-text']}
+                                    style={{
+                                        marginLeft: '6px',
+                                        width: '32px',
+                                        textAlign: 'center',
+                                        display: 'inline-block'
+                                    }}
+                                />
+                                <Input
+                                    className={styles['input-box-right']}
+                                    disabled={!selectedNotHide}
+                                    value={toFixed(logicalY, 1)}
+                                    min={-size.y}
+                                    max={size.y}
+                                    onChange={actions.onChangeLogicalY}
+                                />
+                                <span
+                                    className={styles['input-box-inner-text']}
+                                    style={{ marginLeft: '-15px' }}
+                                >
+                                    Y
+                                </span>
+                            </div>
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Size')}
