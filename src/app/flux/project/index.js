@@ -46,9 +46,14 @@ export const actions = {
         };
     },
 
-    initRecoverService: () => (dispatch) => {
+    initRecoverService: () => (dispatch, getState) => {
         const startService = (envHeadType) => {
-            dispatch(actions.getLastEnvironment(envHeadType));
+            // disable auto recovery if openedFile set
+            const { openedFile } = getState().project[envHeadType];
+            if (!openedFile) {
+                dispatch(actions.getLastEnvironment(envHeadType));
+            }
+
             const action = actions.autoSaveEnvironment(envHeadType);
             setInterval(() => dispatch(action), 1000);
         };
@@ -156,7 +161,7 @@ export const actions = {
             }
         }
         dispatch(modActions.updateState(envHeadType, restState));
-
+        // TODO: set current content to avoid <unSaved> flag mis-set
         dispatch(actions.clearSavedEnvironment(envHeadType));
     },
 
@@ -233,6 +238,7 @@ export const actions = {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
         UniApi.File.save(openedFile.path, tmpFile);
+        dispatch(actions.clearSavedEnvironment(headType));
     },
 
     open: (file, history) => async (dispatch) => {
@@ -266,10 +272,9 @@ export const actions = {
 
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));
             history.push(`/${headType}`);
-            dispatch(actions.onRecovery(headType, false));
-            setTimeout(() => {
-                dispatch(actions.updateState(headType, { unSaved: false }));
-            }, 2000);
+            await dispatch(actions.onRecovery(headType, false));
+
+            dispatch(actions.updateState(headType, { unSaved: false }));
         } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
