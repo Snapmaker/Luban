@@ -13,6 +13,7 @@ export const processDxf = (modelInfo) => {
         outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
 
         const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
+        // when loading dxf on editor, should set strokeWidth as a low value, this is '0.1'
         const svg = dxfToSvg(result.svg, 0.1);
         updateDxfBoundingBox(svg);
         svgInverse(svg, 2);

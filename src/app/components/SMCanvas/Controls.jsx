@@ -389,9 +389,9 @@ class Controls extends EventEmitter {
             // Check if we select a new object
             const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
-            // 'intersectObjects' will checks all intersection between the ray and the objects with or without the descendants.
-            // If second params is true, it also checks all descendants of the objects.
-            // In 3dp, it should set second params as true for support function.
+            // 'intersectObjects' will check all intersection between the ray and the objects with or without the descendants.
+            // If second parameter is true, it also checks all descendants of the objects.
+            // In 3dp, it should set second parameter as true for support function.
             // In laser/cnc, for dxf, should only select the 'Mesh' object.
             const allIntersectObjects = this.ray.intersectObjects(allObjects, true);
             const intersect = allIntersectObjects.filter(intersectObject => intersectObject.object.isMesh)[0];
