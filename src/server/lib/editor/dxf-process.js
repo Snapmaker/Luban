@@ -13,7 +13,7 @@ export const processDxf = (modelInfo) => {
         outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
 
         const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
-        const svg = dxfToSvg(result.svg);
+        const svg = dxfToSvg(result.svg, 0.1);
         updateDxfBoundingBox(svg);
         svgInverse(svg, 2);
 
