@@ -152,7 +152,7 @@ export const actions = {
                 sourceType, config, gcodeConfig, transformation, modelID));
         }
         const { toolPathGroup } = modState;
-        if (toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
+        if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
             toolPathGroup.deleteAllToolPaths();
         }
         if (toolpaths && toolpaths.length) {
