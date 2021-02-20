@@ -1212,6 +1212,9 @@ export const actions = {
             };
 
             model.updateTransformation(transformation);
+            if (model.sourceType === 'svg' && model.config.svgNodeName !== 'text') {
+                svgModel.updateSource();
+            }
         }
 
         toolPathGroup.checkoutToolPathStatus();
