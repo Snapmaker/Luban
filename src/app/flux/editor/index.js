@@ -1196,8 +1196,8 @@ export const actions = {
                 rotationX: 0,
                 rotationY: 0,
                 rotationZ: -t.angle / 180 * Math.PI,
-                width: t.width * t.scaleX,
-                height: t.height * t.scaleY
+                width: t.width * Math.abs(t.scaleX),
+                height: t.height * Math.abs(t.scaleY)
             };
 
             model.updateTransformation(transformation);

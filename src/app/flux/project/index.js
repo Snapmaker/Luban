@@ -295,7 +295,7 @@ export const actions = {
             await dispatch(printingActions.initSize());
         }
 
-        // modState.toolPathModelGroup && modState.toolPathModelGroup.removeAllModels();
+        modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();

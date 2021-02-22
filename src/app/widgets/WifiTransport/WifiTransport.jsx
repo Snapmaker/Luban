@@ -260,8 +260,8 @@ class WifiTransport extends PureComponent {
                         <span style={{ paddingLeft: '4px' }}>{i18n._('Preview in workspace')}</span>
                     </div>
                     {_.map(gcodeFiles, (gcodeFile, index) => {
-                        const name = gcodeFile.name.length > 33
-                            ? `${gcodeFile.name.substring(0, 15)}......${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
+                        const name = gcodeFile.name.length > 25
+                            ? `${gcodeFile.name.substring(0, 15)}...${gcodeFile.name.substring(gcodeFile.name.length - 10, gcodeFile.name.length)}`
                             : gcodeFile.name;
                         let size = '';
                         const { isRenaming, uploadName } = gcodeFile;
