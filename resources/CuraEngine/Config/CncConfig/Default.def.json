@@ -5,7 +5,7 @@
     "toolList": [
         {
             "definitionId": "Default",
-            "name": "snap.v-bit",
+            "name": "Carving V bit (30° 0.2 mm)",
             "config": {
                 "diameter": {
                     "default_value": 0.2,
@@ -70,7 +70,7 @@
             }
         },
         {
-            "name": "snap.flat-end-mill",
+            "name": "Flat End Mill (1.5 mm)",
             "definitionId": "Default",
             "config": {
                 "diameter": {
@@ -136,7 +136,7 @@
             }
         },
         {
-            "name": "snap.ball-end-mill",
+            "name": "Ball End Mill (3.175 mm)",
             "definitionId": "Default",
             "config": {
                 "diameter": {
@@ -202,7 +202,7 @@
             }
         },
         {
-            "name": "snap.straight-flute-sharp",
+            "name": "Straight Groove V-bit (20° 0.3 mm)",
             "definitionId": "Default",
             "config": {
                 "diameter": {

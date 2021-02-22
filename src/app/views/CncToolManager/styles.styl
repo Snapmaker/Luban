@@ -39,11 +39,26 @@
                     display: inline-block
                     height: 32px
                     line-height: 32px;
-                    padding-left: 10px;
                     width: 100%;
                     text-align: left;
                     &.selected {
                         background: #E6F2FD;
+                    }
+                    .manager-btn-unfold {
+                        width: 32px;
+                        height: 32px;
+                        display: inline-block;
+                        vertical-align: middle;
+                        .manager-btn-unfold-bg {
+                            background: url("../../images/cnc-laser/ic_right arrow_18x18.png") no-repeat center/18px 18px
+                            height: 18px;
+                            margin: 7px;
+                            width: 18px;
+                            display: inline-block;
+                            &.unfold {
+                                background-image: url("../../images/cnc-laser/ic_drop arrow_18x18.png")
+                            }
+                        }
                     }
                 }
             }

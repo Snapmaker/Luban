@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { includes } from 'lodash';
+import { includes, noop } from 'lodash';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
@@ -21,10 +21,12 @@ const SUBCATEGORY = 'CncConfig';
 function isOfficialListDefinition(activeToolList) {
     return includes(['Default'],
         activeToolList.definitionId)
-            && includes(['snap.v-bit',
-                'snap.flat-end-mill',
-                'snap.ball-end-mill',
-                'snap.straight-flute-sharp'],
+            && includes([
+                'Flat End Mill (1.5 mm)',
+                'Ball End Mill (3.175 mm)',
+                'Carving V bit (30° 0.2 mm)',
+                'Straight Groove V-bit (20° 0.3 mm)'
+            ],
             activeToolList.name);
 }
 
@@ -32,7 +34,7 @@ function isOfficialCategoryDefinition(activeToolCategory) {
     return includes(['Default'],
         activeToolCategory.definitionId);
 }
-class PrintingManager extends PureComponent {
+class CncToolManager extends PureComponent {
     static propTypes = {
         showCncToolManager: PropTypes.bool,
         toolDefinitions: PropTypes.array.isRequired,
@@ -54,8 +56,8 @@ class PrintingManager extends PureComponent {
 
     state = {
         showCncToolManager: false,
-        nameForToolList: 'snap.v-bit',
-
+        nameForToolList: 'Carving V bit (30° 0.2 mm)',
+        configExpanded: {},
         activeToolListDefinition: null,
         activeToolCategory: null,
 
@@ -64,7 +66,14 @@ class PrintingManager extends PureComponent {
     };
 
     actions = {
-        hidePrintingManager: () => {
+        foldCategory: (definitionId) => {
+            const { configExpanded } = this.state;
+            configExpanded[definitionId] = !configExpanded[definitionId];
+            this.setState({
+                configExpanded: JSON.parse(JSON.stringify(configExpanded))
+            });
+        },
+        hideCncToolManager: () => {
             this.props.updateShowCncToolManager(false);
         },
         showNotification: (msg) => {
@@ -151,7 +160,7 @@ class PrintingManager extends PureComponent {
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
             const name = this.state.activeToolListDefinition.name;
             const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name)
-             || activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
+             || activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
             if (toolDefinitionForManager) {
                 toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
                 this.setState({ activeToolListDefinition: toolDefinitionForManager });
@@ -221,7 +230,7 @@ class PrintingManager extends PureComponent {
             const newState = {};
             if (this.props.toolDefinitions.length === 0) {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
+                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
                 activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolCategory,
@@ -230,7 +239,7 @@ class PrintingManager extends PureComponent {
             } else {
                 const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
                 const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === this.state.activeToolListDefinition.name)
-                || activeToolCategory.toolList.find(k => k.name === 'snap.v-bit');
+                || activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
                 if (activeToolListDefinition) {
                     activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                     Object.assign(newState, {
@@ -249,11 +258,17 @@ class PrintingManager extends PureComponent {
                 });
                 checkboxAndSelectGroup.category = category;
                 checkboxAndSelectGroup.definitionId = definitionId;
+                checkboxAndSelectGroup.expaned = false;
                 checkboxAndSelectGroup.nameArray = nameArray;
                 return checkboxAndSelectGroup;
             });
+            const configExpanded = {};
+            nextProps.toolDefinitions.forEach(d => {
+                configExpanded[d.definitionId] = false;
+            });
             Object.assign(newState, {
-                toolDefinitionOptions: toolDefinitionOptions
+                toolDefinitionOptions: toolDefinitionOptions,
+                configExpanded
             });
             this.setState(newState);
         }
@@ -263,7 +278,7 @@ class PrintingManager extends PureComponent {
         const state = this.state;
         const actions = this.actions;
         const { showCncToolManager,
-            activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory } = state;
+            activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory, configExpanded } = state;
 
         return (
             <React.Fragment>
@@ -272,7 +287,7 @@ class PrintingManager extends PureComponent {
                         className={classNames(styles['manager-body'])}
                         style={{ width: '700px' }}
                         size="lg"
-                        onClose={actions.hidePrintingManager}
+                        onClose={actions.hideCncToolManager}
                     >
                         <Modal.Body
                             style={{ margin: '0', padding: '20px 0 0', height: '100%', minHeight: '525px', textAlign: 'center' }}
@@ -297,23 +312,35 @@ class PrintingManager extends PureComponent {
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: isCategorySelected && this.actions.isCategorySelectedNow(option.definitionId) })}
                                                         onClick={() => this.actions.onSelectToolCategory(option.definitionId)}
                                                     >
-                                                        {displayCategory}
+                                                        <div className={classNames(styles['manager-btn-unfold'])}>
+                                                            <span
+                                                                className={classNames(styles['manager-btn-unfold-bg'], { [styles.unfold]: !configExpanded[option.definitionId] })}
+                                                                onKeyDown={noop}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => { this.actions.foldCategory(option.definitionId,); }}
+                                                            />
+                                                        </div>
+                                                        <span>{displayCategory}</span>
                                                     </Anchor>
-                                                    <ul style={{ listStyle: 'none' }}>
-                                                        { option.nameArray.map(singleName => {
-                                                            const displayName = limitStringLength(i18n._(singleName), 24);
-                                                            return (
-                                                                <li key={`${singleName}`}>
-                                                                    <Anchor
-                                                                        className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.definitionId, singleName) })}
-                                                                        onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
-                                                                    >
-                                                                        {displayName}
-                                                                    </Anchor>
-                                                                </li>
-                                                            );
-                                                        })}
-                                                    </ul>
+                                                    {!configExpanded[option.definitionId] && (
+                                                        <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+                                                            { option.nameArray.map(singleName => {
+                                                                const displayName = limitStringLength(i18n._(singleName), 24);
+                                                                return (
+                                                                    <li key={`${singleName}`}>
+                                                                        <Anchor
+                                                                            className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.definitionId, singleName) })}
+                                                                            style={{ paddingLeft: '42px' }}
+                                                                            onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
+                                                                        >
+                                                                            {displayName}
+                                                                        </Anchor>
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                        </ul>
+                                                    )}
                                                 </li>
                                             );
                                         }))}
@@ -343,28 +370,33 @@ class PrintingManager extends PureComponent {
                                 </div>
                                 <div className={classNames(styles['manager-details'])}>
                                     <div className="sm-parameter-container">
-                                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label-lg">{i18n._('Name')}</span>
                                             {!isCategorySelected && (
-                                                <input
-                                                    className="sm-parameter-row__input"
-                                                    style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                    onChange={actions.onChangeToolListName}
-                                                    disabled={isOfficialListDefinition(activeToolListDefinition)}
-                                                    value={state.nameForToolList}
-                                                />
+                                                <div>
+                                                    <span className="sm-parameter-row__label-lg">{i18n._('Tool Name')}</span>
+                                                    <input
+                                                        className="sm-parameter-row__input"
+                                                        style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
+                                                        onChange={actions.onChangeToolListName}
+                                                        disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                                        value={state.nameForToolList}
+                                                    />
+                                                </div>
                                             )}
                                             {isCategorySelected && (
-                                                <input
-                                                    className="sm-parameter-row__input"
-                                                    onChange={actions.onChangeToolCategoryName}
-                                                    disabled={isOfficialCategoryDefinition(activeToolCategory)}
-                                                    style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                    value={activeToolCategory.category}
-                                                />
+                                                <div>
+                                                    <span className="sm-parameter-row__label-lg">{i18n._('Material Name')}</span>
+                                                    <input
+                                                        className="sm-parameter-row__input"
+                                                        onChange={actions.onChangeToolCategoryName}
+                                                        disabled={isOfficialCategoryDefinition(activeToolCategory)}
+                                                        style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
+                                                        value={activeToolCategory.category}
+                                                    />
+                                                </div>
                                             )}
                                         </div>
+                                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                                         {state.notificationMessage && (
                                             <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                                 {state.notificationMessage}
@@ -441,7 +473,7 @@ class PrintingManager extends PureComponent {
                                 </div>
                                 <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                     <Anchor
-                                        onClick={() => { actions.hidePrintingManager(); }}
+                                        onClick={() => { actions.hideCncToolManager(); }}
                                         className="sm-btn-large sm-btn-default"
                                         style={{ marginRight: '11px' }}
                                     >
@@ -499,4 +531,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(PrintingManager);
+export default connect(mapStateToProps, mapDispatchToProps)(CncToolManager);

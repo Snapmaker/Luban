@@ -11,6 +11,7 @@ import { actions as cncActions } from '../../../flux/cnc';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../constants';
+import { limitStringLength } from '../../../lib/normalize-range';
 
 class ToolParameters extends PureComponent {
     static propTypes = {
@@ -49,7 +50,7 @@ class ToolParameters extends PureComponent {
                 const name = item.name;
                 checkboxAndSelectGroup.name = name;
                 checkboxAndSelectGroup.definitionId = definitionId;
-                checkboxAndSelectGroup.label = `${category} - ${name}`;
+                checkboxAndSelectGroup.label = limitStringLength(`${category} - ${name}`, 24);
                 checkboxAndSelectGroup.value = `${definitionId}-${name}`;
                 return checkboxAndSelectGroup;
             }));
@@ -59,10 +60,24 @@ class ToolParameters extends PureComponent {
             <div>
                 <React.Fragment>
                     <div className="sm-parameter-container">
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Material & Tool')}</span>
+                        <div
+                            style={{ position: 'relative' }}
+                        >
+                            <span className={classNames(
+                                'sm-parameter-row__label',
+                                styles['manager-select-name'],
+                            )}
+                            >
+                                {i18n._('Material & Tool')}
+                            </span>
                             {(this.props.isModifiedDefinition
-                                && <span>*</span>
+                                && (
+                                    <span
+                                        className={classNames(
+                                            styles['manager-is-modified']
+                                        )}
+                                    />
+                                )
                             )}
                             <Select
                                 className={classNames(

@@ -68,6 +68,7 @@ class CncParameters extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Name')}</span>
                         <TextInput
                             className="sm-parameter-row__input"
+                            style={{ display: 'inline-block', width: '180px', lineHeight: '15px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
@@ -100,8 +101,12 @@ class CncParameters extends PureComponent {
                                     </div>
                                 )}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Path')}</span>
+                                <div>
+                                    <span
+                                        style={{ height: '30px', lineHeight: '30px' }}
+                                    >
+                                        {i18n._('Path')}
+                                    </span>
                                     <Select
                                         disabled={false}
                                         className="sm-parameter-row__select"
@@ -224,7 +229,7 @@ class CncParameters extends PureComponent {
                         </div>
                     )}
                 </div>
-                <div className={classNames(widgetStyles.separator)} />
+                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                 <div className="sm-tabs" style={{ marginTop: '6px', marginBottom: '12px' }}>
                     <button
                         type="button"
