@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { PROCESS_MODE_VECTOR } from '../../constants';
 
 export class ViewPathRenderer {
     async render(viewPaths, size) {
@@ -61,21 +60,23 @@ export class ViewPathRenderer {
                 positions[index] = data[i][j].x;
                 positions[index + 2] = data[i][j].y;
             }
-            if (i === 0) {
-                const topIndex = ((radialSegments + 1) * (heightSegments + 1) + radialSegments) * 3;
-                for (let j = 0; j < data[i].length; j++) {
-                    const index = topIndex + j * 3;
-                    positions[index] = data[i][j].x;
-                    positions[index + 2] = data[i][j].y;
+            if (isRotate) {
+                if (i === 0) {
+                    const topIndex = ((radialSegments + 1) * (heightSegments + 1) + radialSegments) * 3;
+                    for (let j = 0; j < data[i].length; j++) {
+                        const index = topIndex + j * 3;
+                        positions[index] = data[i][j].x;
+                        positions[index + 2] = data[i][j].y;
+                    }
                 }
-            }
 
-            if (i === data.length - 1) {
-                const topIndex = ((radialSegments + 1) * (heightSegments + 1) + 3 * radialSegments + 1) * 3;
-                for (let j = 0; j < data[i].length; j++) {
-                    const index = topIndex + j * 3;
-                    positions[index] = data[i][j].x;
-                    positions[index + 2] = data[i][j].y;
+                if (i === data.length - 1) {
+                    const topIndex = ((radialSegments + 1) * (heightSegments + 1) + 3 * radialSegments + 1) * 3;
+                    for (let j = 0; j < data[i].length; j++) {
+                        const index = topIndex + j * 3;
+                        positions[index] = data[i][j].x;
+                        positions[index + 2] = data[i][j].y;
+                    }
                 }
             }
         }
@@ -105,15 +106,13 @@ export class ViewPathRenderer {
         const group = new THREE.Group();
         for (const viewPath of viewPaths.data) {
             // eslint-disable-next-line no-unused-vars
-            const { mode, boundingBox } = viewPath;
-            const mesh = mode === PROCESS_MODE_VECTOR && !viewPaths.isRotate
-                ? this._generateSvgViewPathObj(viewPath)
-                : this._generateViewPathObj(viewPath);
+            const { boundingBox } = viewPath;
+            const mesh = this._generateViewPathObj(viewPath);
 
             if (!viewPaths.isRotate) {
                 const boxPoints = this._generateByBox(boundingBox.min, boundingBox.max);
                 const boxMesh = this._generateMesh(new THREE.Shape(boxPoints),
-                    viewPaths.targetDepth - boundingBox.length.z, '#cccccc');
+                    viewPaths.targetDepth - boundingBox.length.z - 1, '#cccccc');
                 boxMesh.position.z = -viewPaths.targetDepth;
                 group.add(boxMesh);
             }
