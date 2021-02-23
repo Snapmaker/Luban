@@ -575,15 +575,17 @@ class SvgModel {
     static recalculateElementAttributes(element, t) {
         const { x, y, width = 0, height = 0, angle } = t;
         let { scaleX, scaleY } = t;
+        const absScaleX = Math.abs(scaleX);
+        const absScaleY = Math.abs(scaleY);
 
         switch (element.nodeName) {
             case 'ellipse': {
                 element.setAttribute('cx', x);
                 element.setAttribute('cy', y);
-                element.setAttribute('rx', width / 2 * scaleX);
-                element.setAttribute('ry', height / 2 * scaleY);
-                scaleX = 1;
-                scaleY = 1;
+                element.setAttribute('rx', width / 2 * absScaleX);
+                element.setAttribute('ry', height / 2 * absScaleY);
+                scaleX /= absScaleX;
+                scaleY /= absScaleY;
                 break;
             }
             case 'image': {
@@ -594,12 +596,12 @@ class SvgModel {
                 break;
             }
             case 'rect': {
-                element.setAttribute('x', x - width * scaleX / 2);
-                element.setAttribute('y', y - height * scaleY / 2);
-                element.setAttribute('width', width * scaleX);
-                element.setAttribute('height', height * scaleY);
-                scaleX = 1;
-                scaleY = 1;
+                element.setAttribute('x', x - width * absScaleX / 2);
+                element.setAttribute('y', y - height * absScaleY / 2);
+                element.setAttribute('width', width * absScaleX);
+                element.setAttribute('height', height * absScaleY);
+                scaleX /= absScaleX;
+                scaleY /= absScaleY;
                 break;
             }
             case 'text': {
