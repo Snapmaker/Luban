@@ -10,6 +10,8 @@ import { svgToSegments } from './SVGFill';
 import Normalizer from './Normalizer';
 import XToBToolPath from '../ToolPath/XToBToolPath';
 import { angleToPi, round } from '../../../shared/lib/utils';
+import { Vector2 } from '../../../shared/lib/math/Vector2';
+import { bresenhamLine } from '../bresenham-line';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -84,9 +86,14 @@ export default class CNCToolPathGenerator extends EventEmitter {
     constructor(modelInfo = {}) {
         super();
 
-        const { isRotate, diameter } = modelInfo.materials;
+        const { gcodeConfig, materials } = modelInfo;
+
+        const { isRotate, diameter } = materials;
+        const { targetDepth } = gcodeConfig;
         this.isRotate = isRotate;
         this.diameter = diameter;
+        this.density = 10;
+        this.targetDepth = targetDepth;
         this.toolPath = new XToBToolPath({ isRotate, diameter });
     }
 
@@ -393,6 +400,47 @@ export default class CNCToolPathGenerator extends EventEmitter {
         return this.isRotate ? this._generateRotateViewPath(svg, modelInfo) : this._generateViewPathObj(svg, modelInfo);
     }
 
+    _calculateOffsetBox(viewPaths, p1, p2, offset) {
+        if (Vector2.isEqual(p1, p2)) {
+            return;
+        }
+
+        const k1 = Vector2.mulScale(Vector2.normalize(Vector2.sub(p2, p1)), offset);
+        const k2 = Vector2.rotate(k1, 90);
+        const k3 = { x: -k1.x, y: -k1.y };
+        const k4 = { x: -k2.x, y: -k2.y };
+
+        const bP1 = Vector2.add(Vector2.add(p1, k2), k3);
+        const bP2 = Vector2.add(Vector2.add(p1, k3), k4);
+        const bP3 = Vector2.add(Vector2.add(p2, k4), k1);
+        const bP4 = Vector2.add(Vector2.add(p2, k1), k2);
+
+        const boxRange = new Map();
+
+        const boxes = [].concat(bresenhamLine(bP1, bP2)).concat(bresenhamLine(bP2, bP3)).concat(bresenhamLine(bP3, bP4)).concat(bresenhamLine(bP4, bP1));
+
+        for (const box of boxes) {
+            if (boxRange.has(box.x)) {
+                const range = boxRange.get(box.x);
+                range[0] = Math.min(range[0], box.y);
+                range[1] = Math.max(range[1], box.y);
+            } else {
+                boxRange.set(box.x, [box.y, box.y]);
+            }
+        }
+
+        for (const key of boxRange.keys()) {
+            const range = boxRange.get(key);
+
+            for (let j = range[0]; j <= range[1]; j++) {
+                if (j < 0 || j >= viewPaths.length || key < 0 || key >= viewPaths[0].length) {
+                    continue;
+                }
+                viewPaths[j][key].y = -this.targetDepth;
+            }
+        }
+    }
+
     _generateViewPathObj(svg, modelInfo) {
         const { sourceType, mode, transformation, gcodeConfig, toolParams } = modelInfo;
 
@@ -403,34 +451,35 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         this._processSVG(svg, modelInfo);
 
-        const minX = svg.viewBox[0];
-        const maxX = svg.viewBox[0] + svg.viewBox[2];
-        const minY = svg.viewBox[1];
-        const maxY = svg.viewBox[1] + svg.viewBox[3];
-
-        const width = maxX - minX;
-        const height = maxY - minY;
-
-        const normalizer = new Normalizer(
-            'Center',
-            minX,
-            maxX,
-            minY,
-            maxY,
-            { x: 1, y: 1 },
-            { x: 0, y: 0 }
-        );
-
         // radius needed to carve to `targetDepth`
         const radiusNeeded = (toolAngle === 180)
             ? (toolShaftDiameter * 0.5)
             : (targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180));
         const off = Math.min(radiusNeeded, toolShaftDiameter * 0.5);
+        const offDesity = off * this.density;
+
+        const svgWidth = svg.viewBox[0] + svg.viewBox[2];
+        const svgHeight = svg.viewBox[1] + svg.viewBox[3];
+
+        scale(svg, { x: this.density, y: this.density });
+        translate(svg, offDesity, offDesity);
+
+        const width = Math.round(svgWidth * this.density + 2 * offDesity);
+        const height = Math.round(svgHeight * this.density + 2 * offDesity);
+
+        const viewPaths = [];
+
+        for (let j = 0; j <= height; j++) {
+            viewPaths.push([]);
+
+            for (let i = 0; i <= width; i++) {
+                viewPaths[j][i] = { x: (i - width / 2) / this.density, y: 0 };
+            }
+        }
 
         let progress = 0;
         // const polygons = null;
         // scan shapes
-        const unions = [];
         for (let i = 0; i < svg.shapes.length; i++) {
             const shape = svg.shapes[i];
             if (!shape.visibility) {
@@ -443,9 +492,11 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     continue;
                 }
 
-                const result = new PolygonOffset(path.points).ext(off);
-                unions.push([result]);
-                // polygons = polygons === null ? [result] : martinez.union(polygons, [result]);
+                for (let k = 0; k < path.points.length - 1; k++) {
+                    const p1 = path.points[k];
+                    const p2 = path.points[k + 1];
+                    this._calculateOffsetBox(viewPaths, { x: p1[0], y: p1[1] }, { x: p2[0], y: p2[1] }, offDesity);
+                }
             }
             const p = (i + 1) / svg.shapes.length;
             if (p - progress > 0.05) {
@@ -454,68 +505,40 @@ export default class CNCToolPathGenerator extends EventEmitter {
             }
         }
 
-        const polygons = PolygonOffset.recursiveUnion(unions);
+        viewPaths.reverse();
+
+        this.emit('progress', 1);
 
         const boundingBox = {
             min: {
-                x: positionX - width / 2 - off,
-                y: positionY - height / 2 - off,
+                x: positionX - width / 2 / this.density,
+                y: positionY - height / 2 / this.density,
                 z: -targetDepth
             },
             max: {
-                x: positionX + width / 2 + off,
-                y: positionY + height / 2 + off,
+                x: positionX + width / 2 / this.density,
+                y: positionY + height / 2 / this.density,
                 z: 0
             },
             length: {
-                x: width + 2 * off,
-                y: height + 2 * off,
+                x: width / this.density,
+                y: height / this.density,
                 z: targetDepth
             }
         };
 
-        const boxPoints = [
-            [-off, -off],
-            [-off, boundingBox.length.y - off],
-            [boundingBox.length.x - off, boundingBox.length.y - off],
-            [boundingBox.length.x - off, -off],
-            [-off, -off]
-        ];
-
-        const viewPath = [boxPoints];
-        for (const polygon of polygons) {
-            for (const path of polygon) {
-                viewPath.push(path);
-            }
-        }
-
-        const data = [];
-
-        for (let i = 0; i < viewPath.length; i++) {
-            let order = false;
-            for (let j = 0; j < viewPath.length; j++) {
-                if (i === j) {
-                    continue;
-                }
-                if (isPointInPolygon(viewPath[i][0], viewPath[j])) {
-                    order = !order;
-                }
-            }
-            new PolygonOffset()._orientRings(viewPath[i], order);
-            data.push(viewPath[i].map(v => { return { x: normalizer.x(v[0]), y: normalizer.y(v[1]) }; }));
-        }
-
-        this.emit('progress', 1);
 
         return {
             sourceType: sourceType,
             mode: mode,
+            width: width / this.density,
+            height: height / this.density,
             positionX: positionX,
             positionY: positionY,
             positionZ: positionZ,
             targetDepth: targetDepth,
             boundingBox: boundingBox,
-            data: data
+            data: viewPaths
         };
     }
 
