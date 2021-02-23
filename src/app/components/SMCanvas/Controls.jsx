@@ -1,6 +1,6 @@
 /**
  * Controls for canvas based on OrbitControls.
- *
+ * Update part of OrbitControls
  * Reference:
  * - https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js
  */
@@ -36,7 +36,6 @@ class Controls extends EventEmitter {
     camera = null;
 
     group = null;
-
 
     domElement = null;
 
@@ -89,6 +88,11 @@ class Controls extends EventEmitter {
 
     selectedGroup = null;
 
+    // Set to true to zoom to cursor ,panning may have to be enabled
+    zoomToCursor = false;
+
+    mouse3D = new THREE.Vector3();
+
     ray = new THREE.Raycaster();
 
     horizontalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -107,6 +111,7 @@ class Controls extends EventEmitter {
         this.domElement = (domElement !== undefined) ? domElement : document;
         this.onScale = onScale;
         this.onPan = onPan;
+        this.zoomToCursor = (sourceType === '3D');
 
         this.initTransformControls();
         this.supportActions = supportActions;
@@ -496,7 +501,29 @@ class Controls extends EventEmitter {
         this.panPosition.set(event.clientX, event.clientY);
     };
 
+    // update mouse 3D position
+    updateMouse3D = (() => {
+        const scope = this;
+        const v = new THREE.Vector3();
+        const v1 = new THREE.Vector3();
+        return (event) => {
+            const element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            // Conversion screen coordinates to world coordinates and calculate distance
+            // Calculate mouse relative position, use event.offsetY or event.clientY in different situations
+            v.set((event.offsetX / element.clientWidth) * 2 - 1, -(event.offsetY / element.clientHeight) * 2 + 1, 0.5);
+
+            v.unproject(scope.camera);
+
+            v.sub(scope.camera.position).normalize();
+
+            const distance = v1.copy(scope.target).sub(scope.camera.position).dot(new THREE.Vector3(1, 1, 1)) / v.dot(new THREE.Vector3(1, 1, 1));
+
+            scope.mouse3D.copy(scope.camera.position).add(v.multiplyScalar(distance));
+        };
+    })();
+
     handleMouseWheel = (event) => {
+        this.updateMouse3D(event);
         if (event.deltaY < 0) {
             this.dollyIn();
         } else {
@@ -555,11 +582,16 @@ class Controls extends EventEmitter {
 
             this.spherical.theta += this.sphericalDelta.theta;
             this.spherical.phi += this.sphericalDelta.phi;
+
             this.spherical.makeSafe();
 
+            const prevRadius = this.spherical.radius;
             this.spherical.radius *= this.scale;
             this.spherical.radius = Math.max(this.spherical.radius, 0.05);
-
+            // suport zoomToCursor (mouse only)
+            if (this.zoomToCursor) {
+                this.target.lerp(this.mouse3D, 1 - this.spherical.radius / prevRadius);
+            }
             spherialOffset.setFromSpherical(this.spherical);
 
             if (this.camera.up.z === 1) {
