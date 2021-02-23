@@ -103,7 +103,7 @@ export const buildFirmwareFile = (req, res) => {
 
 export const uploadCaseFile = (req, res) => {
     const { name, casePath } = req.body;
-    let originalName = removeSpecialChars(path.basename(name));
+    let originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
     let uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -157,7 +157,7 @@ export const uploadGcodeFile = async (req, res) => {
     } else {
         const { casePath, name } = req.body;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        originalName = removeSpecialChars(path.basename(name));
+        originalName = path.basename(name);
         uploadName = originalName.replace(/\.zip$/, '');
         uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
         // const tmpFilePath = `${DataStorage.tmpDir}/${originalName}`;
@@ -344,7 +344,7 @@ export const packageEnv = async (req, res) => {
 
 export const uploadFileToTmp = (req, res) => {
     const { name, casePath } = req.body;
-    const originalName = removeSpecialChars(path.basename(name));
+    const originalName = path.basename(name);
     const originalPath = `${DataStorage.userCaseDir}/${casePath}/${originalName}`;
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
