@@ -783,6 +783,7 @@ class Model {
         geometry.computeVertexNormals();
 
         this.meshObject.geometry = geometry;
+        this.geometry = geometry;
         this.computeBoundingBox();
     }
 

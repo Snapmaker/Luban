@@ -29,21 +29,19 @@ const formatISODateTime = (time) => {
     return time > 0 ? moment.unix(time / 1000).format('YYYY-MM-DD HH:mm:ss') : '–';
 };
 
-const formatElapsedTime = (elapsedTime) => {
-    if (!elapsedTime || elapsedTime < 0) {
+const formatDuration = (value) => {
+    if (!value || value < 0) {
         return '–';
     }
-    const d = moment.duration(elapsedTime, 'ms');
-    return moment(d._data).format('HH:mm:ss');
+    const d = moment.duration(value, 'ms');
+    const str = moment(d._data).format('HH[h] mm[m] ss[s]');
+    if (d.days()) {
+        return `${d.days()}d ${str}`;
+    } else {
+        return str;
+    }
 };
 
-const formatRemainingTime = (remainingTime) => {
-    if (!remainingTime || remainingTime < 0) {
-        return '–';
-    }
-    const d = moment.duration(remainingTime, 'ms');
-    return moment(d._data).format('HH:mm:ss');
-};
 
 class GCode extends PureComponent {
     static propTypes = {
@@ -216,8 +214,8 @@ class GCode extends PureComponent {
         const displayUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
         const startTime = formatISODateTime(gcodePrintingInfo.startTime);
         const finishTime = formatISODateTime(gcodePrintingInfo.finishTime);
-        const elapsedTime = formatElapsedTime(gcodePrintingInfo.elapsedTime);
-        const remainingTime = formatRemainingTime(gcodePrintingInfo.remainingTime);
+        const elapsedTime = formatDuration(gcodePrintingInfo.elapsedTime);
+        const remainingTime = formatDuration(gcodePrintingInfo.remainingTime);
 
         return (
             <div className={styles['gcode-inspect']}>

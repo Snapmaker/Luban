@@ -231,19 +231,19 @@ class VisualizerModelTransformation extends PureComponent {
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-rotate'],
-                            { [styles.disabled]: transformDisabled || isSupportSelected },
+                            { [styles.disabled]: transformDisabled || supportDisabled },
                             {
-                                [styles.selected]: !(transformDisabled || isSupportSelected) && transformMode === 'rotate'
+                                [styles.selected]: !(transformDisabled || supportDisabled) && transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('rotate');
                         }}
-                        disabled={transformDisabled || isSupportSelected}
+                        disabled={transformDisabled || supportDisabled}
                     >
                         <div className={classNames(
                             styles.text,
-                            { [styles.disabled]: transformDisabled || isSupportSelected }
+                            { [styles.disabled]: transformDisabled || supportDisabled }
                         )}
                         >
                             {i18n._('ROTATE')}
