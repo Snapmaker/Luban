@@ -721,9 +721,11 @@ class SVGCanvas extends PureComponent {
                 // (x1, y1): delta of (width, height)
                 const x1 = (x0 * Math.cos(angle) + y0 * Math.sin(angle)) * widthFactor;
                 const y1 = (-x0 * Math.sin(angle) + y0 * Math.cos(angle)) * heightFactor;
-                const scaleX = (width + x1) / width;
-                const scaleY = (height + y1) / height;
 
+                const startWidth = width * Math.abs(draw.scaleX);
+                const startHeight = height * Math.abs(draw.scaleY);
+                const scaleX = (startWidth + x1) / startWidth;
+                const scaleY = (startHeight + y1) / startHeight;
                 const newScaleX = draw.scaleX * scaleX;
                 const newScaleY = draw.scaleY * scaleY;
 
