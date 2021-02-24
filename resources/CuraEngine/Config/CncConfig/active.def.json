@@ -1,7 +1,7 @@
 {
     "category": "Default",
     "definitionId": "Default",
-    "name": "snap.v-bit",
+    "name": "Carving V bit (30° 0.2 mm)",
     "config": {
         "diameter": {
             "default_value": 0.2,

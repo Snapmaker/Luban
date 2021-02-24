@@ -502,7 +502,7 @@ class ExtractSquareTrace extends PureComponent {
                             onClick={this.actions.setBackgroundImage}
                             disabled={!this.state.isStitched}
                         >
-                            {i18n._('Comfirm')}
+                            {i18n._('Confirm')}
                         </button>
                     </div>
                 </div>
