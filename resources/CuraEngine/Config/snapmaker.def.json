@@ -287,6 +287,46 @@
             "label": "Initial Layer Print Speed",
             "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the heated bed."
         },
+        "support": {
+            "children": {
+                "support_enable": {
+                    "label": "Generate Auto Support",
+                    "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing."
+                },
+                "support_infill_rate": {
+                    "label": "Support Density",
+                    "description": "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.",
+                    "enabled": true
+                },
+                "support_pattern": {
+                    "label": "Support Pattern",
+                    "description": "The pattern of the support structures of the print. The different options available result in sturdy or easy to remove support.",
+                    "default_value": "zigzag",
+                    "enabled": true,
+                    "options": {
+                        "lines": "Lines",
+                        "grid": "Grid",
+                        "zigzag": "Zig Zag"
+                    }
+                },
+                "support_type": {
+                    "label": "Support Placement",
+                    "description": "Adjusts the placement of the support structures. The placement can be set to touching heated bed or everywhere. When set to everywhere the support structures will also be printed on the model.",
+                    "options": {
+                        "buildplate": "Touching Heated Bed",
+                        "everywhere": "Everywhere"
+                    }
+                },
+                "support_z_distance": {
+                    "enabled": true
+                },
+                "support_angle": {
+                    "label": "Support Overhang Angle",
+                    "description": "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.",
+                    "enabled": true
+                }
+            }
+        },
         "speed_topbottom": {
             "label": "Top/Bottom Speed",
             "description": "The speed at which top/bottom layers are printed."

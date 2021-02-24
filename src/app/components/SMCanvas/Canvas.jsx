@@ -122,11 +122,18 @@ class Canvas extends Component {
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
         }
-        if (this.props.toolPathModelGroupObject) {
-            if (this.props.toolPathModelGroupObject.isRotate && this.props.toolPathModelGroupObject.visible) {
-                this.controls.setShouldForbidSelect(true);
+        if (nextProps.toolPathModelGroupObject) {
+            if (nextProps.toolPathModelGroupObject.visible) {
+                this.controls.updateFramePeripheralVisible(false);
             } else {
-                this.controls.setShouldForbidSelect(false);
+                this.controls.updateFramePeripheralVisible(true);
+            }
+            if (nextProps.toolPathModelGroupObject.visible) {
+                if (nextProps.toolPathModelGroupObject.isRotate) {
+                    this.controls.setShouldForbidSelect(true);
+                } else {
+                    this.controls.setShouldForbidSelect(false);
+                }
             }
         }
     }

@@ -496,9 +496,12 @@ class Controls extends EventEmitter {
         this.selectableObjects = objects;
     }
 
+    updateFramePeripheralVisible(visible) {
+        this.transformControl.updateFramePeripheralVisible(visible);
+    }
+
     setShouldForbidSelect(shouldForbidSelect) {
         this.shouldForbidSelect = shouldForbidSelect;
-        this.transformControl.updateFramePeripheralVisible(!shouldForbidSelect);
     }
 
     updateBoundingBox() {
