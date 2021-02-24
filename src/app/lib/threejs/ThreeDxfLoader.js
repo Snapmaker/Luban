@@ -3,6 +3,7 @@ import request from 'superagent';
 import { isUndefined } from 'lodash';
 import log from '../log';
 import DxfParser from '../../../shared/lib/DXFParser';
+import { measureBoundary } from '../../../shared/lib/DXFParser/Parser';
 import DxfShader from './DxfShaderLine';
 import { EPSILON } from '../../constants';
 
@@ -532,48 +533,6 @@ class ThreeDxfLoader {
         return mesh;
     }
 
-    addInsertContent(entities, dxf, position = { x: 0, y: 0 }) {
-        position = {
-            x: position.x + entities.position.x,
-            y: position.y + entities.position.y
-        };
-        const oldEntities = dxf.blocks[entities.name].entities;
-        let newEntities;
-        for (let i = 0; i < oldEntities.length; i++) {
-            newEntities = JSON.parse(JSON.stringify(oldEntities[i]));
-            if (oldEntities[i].type === 'LINE' || oldEntities[i].type === 'LWPOLYLINE' || oldEntities[i].type === 'POLYLINE') {
-                newEntities.vertices.x += position.x;
-                newEntities.vertices.y += position.y;
-                dxf.entities.push(newEntities);
-            } else if (oldEntities[i].type === 'SPLINE') {
-                if (newEntities.fitPoints && newEntities.fitPoints.length > 0) {
-                    newEntities.fitPoints.map((item) => {
-                        item.x += position.x;
-                        item.y += position.y;
-                        return item;
-                    });
-                } else {
-                    newEntities.controlPoints.map((item) => {
-                        item.x += position.x;
-                        item.y += position.y;
-                        return item;
-                    });
-                }
-                dxf.entities.push(newEntities);
-            } else if (oldEntities[i].type === 'POINT') {
-                newEntities.position.x += position.x;
-                newEntities.position.y += position.y;
-                dxf.entities.push(newEntities);
-            } else if (oldEntities[i].type === 'ARC' || oldEntities[i].type === 'CIRCLE' || oldEntities[i].type === 'ELLIPSE') {
-                newEntities.center.x += position.x;
-                newEntities.center.y += position.y;
-                dxf.entities.push(newEntities);
-            } else if (oldEntities[i].type === 'INSERT') {
-                this.addInsertContent(newEntities, dxf, position);
-            }
-        }
-    }
-
     normalizer(dxfString, scale) {
         const dxf = dxfString;
         // entities
@@ -636,98 +595,6 @@ class ThreeDxfLoader {
         return (num - distance) * scale;
     }
 
-    measureBoundary(dxf) {
-        let maxX = Number.MIN_SAFE_INTEGER, minX = Number.MAX_SAFE_INTEGER, maxY = Number.MIN_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER;
-        for (const entities of dxf.entities) {
-            if (entities.type === 'INSERT') {
-                this.addInsertContent(entities, dxf);
-            }
-        }
-
-        for (const entities of dxf.entities) {
-            if (entities.type === 'LINE' || entities.type === 'LWPOLYLINE') {
-                entities.vertices.forEach((point) => {
-                    maxX = Math.max(point.x, maxX);
-                    minX = Math.min(point.x, minX);
-                    maxY = Math.max(point.y, maxY);
-                    minY = Math.min(point.y, minY);
-                });
-            } else if (entities.type === 'POLYLINE') {
-                entities.vertices.forEach((point) => {
-                    maxX = Math.max(point.x, maxX);
-                    minX = Math.min(point.x, minX);
-                    maxY = Math.max(point.y, maxY);
-                    minY = Math.min(point.y, minY);
-                });
-            } else if (entities.type === 'SPLINE') {
-                let points;
-                let interpolatedPoints = [];
-                let curve;
-                if (entities.fitPoints && entities.fitPoints.length > 0) {
-                    points = entities.fitPoints.map((vec) => {
-                        return new THREE.Vector2(vec.x, vec.y);
-                    });
-                    if (entities.degreeOfSplineCurve === 2) {
-                        for (let i = 0; i + 2 < points.length; i += 2) {
-                            curve = new THREE.QuadraticBezierCurve(points[i], points[i + 1], points[i + 2]);
-                            interpolatedPoints.push(...curve.getPoints(points.length));
-                        }
-                    } else {
-                        curve = new THREE.SplineCurve(points);
-                        interpolatedPoints = curve.getPoints(points.length * 2);
-                    }
-                } else {
-                    interpolatedPoints = entities.controlPoints;
-                }
-                interpolatedPoints.forEach((point) => {
-                    maxX = Math.max(point.x, maxX);
-                    minX = Math.min(point.x, minX);
-                    maxY = Math.max(point.y, maxY);
-                    minY = Math.min(point.y, minY);
-                });
-            } else if (entities.type === 'POINT') {
-                const position = entities.position;
-                if (position.x === 0 && position.y === 0) {
-                    continue;
-                }
-                maxX = Math.max(position.x, maxX);
-                minX = Math.min(position.x, minX);
-                maxY = Math.max(position.y, maxY);
-                minY = Math.min(position.y, minY);
-            } else if (entities.type === 'CIRCLE' || entities.type === 'ARC') {
-                const { center, radius } = entities;
-                maxX = Math.max(center.x + radius, maxX);
-                minX = Math.min(center.x - radius, minX);
-                maxY = Math.max(center.y + radius, maxY);
-                minY = Math.min(center.y - radius, minY);
-            } else if (entities.type === 'ELLIPSE') {
-                const centerX = entities.center.x;
-                const centerY = entities.center.y;
-                let disX;
-                let disY;
-                if (entities.majorAxisEndPoint.x === 0) {
-                    disY = Math.abs(entities.majorAxisEndPoint.y);
-                    disX = disY * entities.axisRatio;
-                } else {
-                    disX = Math.abs(entities.majorAxisEndPoint.x);
-                    disY = disX * entities.axisRatio;
-                }
-                maxX = Math.max(centerX + disX, maxX);
-                minX = Math.min(centerX - disX, minX);
-                maxY = Math.max(centerY + disY, maxY);
-                minY = Math.min(centerY - disY, minY);
-            }
-        }
-        dxf.boundary = {
-            minX: minX - 1,
-            maxX: maxX + 1,
-            minY: minY - 1,
-            maxY: maxY + 1
-        };
-        dxf.width = dxf.boundary.maxX - dxf.boundary.minX;
-        dxf.height = dxf.boundary.maxY - dxf.boundary.minY;
-    }
-
     load(path, onLoad) {
         // Create scene from dxf object (dxfStr)
         const parser = new DxfParser();
@@ -736,7 +603,7 @@ class ThreeDxfLoader {
             const dxf = parser.parseSync(result);
 
             let scale = 1;
-            this.measureBoundary(dxf);
+            measureBoundary(dxf);
             if (this.width) {
                 scale = this.width / dxf.width;
             }
