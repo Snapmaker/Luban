@@ -4,7 +4,6 @@
  */
 
 import EventEmitter from 'events';
-import PolygonOffset from './PolygonOffset';
 import { flip, scale, rotate, translate } from '../../../shared/lib/SVGParser';
 import { svgToSegments } from './SVGFill';
 import Normalizer from './Normalizer';
@@ -12,6 +11,8 @@ import XToBToolPath from '../ToolPath/XToBToolPath';
 import { angleToPi, round } from '../../../shared/lib/utils';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { bresenhamLine } from '../bresenham-line';
+import { polyOffset } from '../clipper/cLipper-adapter';
+import * as ClipperLib from '../clipper/clipper';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -144,12 +145,13 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                     // use margin / padding depending on `inside`
                     if (!inside) {
-                        const outlinePoints = new PolygonOffset(path.points).margin(off);
-                        path.points = outlinePoints[0];
+                        const outlinePoints = polyOffset([path.points], off, ClipperLib.JoinType.jtMiter,
+                            path.closed ? ClipperLib.EndType.etClosedPolygon : ClipperLib.EndType.etOpenRound);
+                        path.points = outlinePoints[0] || [];
                         path.outlinePoints = outlinePoints;
                     } else {
-                        const outlinePoints = new PolygonOffset(path.points).padding(off);
-                        path.points = outlinePoints[0];
+                        const outlinePoints = polyOffset([path.points], -off, ClipperLib.JoinType.jtMiter, path.closed ? ClipperLib.EndType.etClosedPolygon : ClipperLib.EndType.etOpenRound);
+                        path.points = outlinePoints[0] || [];
                         path.outlinePoints = outlinePoints;
                     }
                 }
