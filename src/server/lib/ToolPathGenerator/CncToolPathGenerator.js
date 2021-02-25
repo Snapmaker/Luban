@@ -4,14 +4,15 @@
  */
 
 import EventEmitter from 'events';
-import PolygonOffset from './PolygonOffset';
-import { flip, scale, rotate, translate } from '../../../shared/lib/SVGParser';
+import { flip, rotate, scale, translate } from '../../../shared/lib/SVGParser';
 import { svgToSegments } from './SVGFill';
 import Normalizer from './Normalizer';
 import XToBToolPath from '../ToolPath/XToBToolPath';
 import { angleToPi, round } from '../../../shared/lib/utils';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { bresenhamLine } from '../bresenham-line';
+import { polyOffset } from '../clipper/cLipper-adapter';
+import * as ClipperLib from '../clipper/clipper';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -47,8 +48,7 @@ function isPointInPolygon(point, polygon) {
 function pointDistance(p1, p2, p) {
     const n = [p2[0] - p1[0], p2[1] - p1[1]];
     const m = [p2[0] - p[0], p2[1] - p[1]];
-    const d = Math.abs((n[0] * m[1] - n[1] * m[0]) / Math.sqrt(n[0] * n[0] + n[1] * n[1]));
-    return d;
+    return Math.abs((n[0] * m[1] - n[1] * m[0]) / Math.sqrt(n[0] * n[0] + n[1] * n[1]));
 }
 
 /**
@@ -144,12 +144,14 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                     // use margin / padding depending on `inside`
                     if (!inside) {
-                        const outlinePoints = new PolygonOffset(path.points).margin(off);
-                        path.points = outlinePoints[0];
+                        const outlinePoints = polyOffset([path.points], off, ClipperLib.JoinType.jtMiter,
+                            path.closed ? ClipperLib.EndType.etClosedPolygon : ClipperLib.EndType.etOpenRound);
+                        path.points = outlinePoints[0] || [];
                         path.outlinePoints = outlinePoints;
                     } else {
-                        const outlinePoints = new PolygonOffset(path.points).padding(off);
-                        path.points = outlinePoints[0];
+                        const outlinePoints = polyOffset([path.points], -off, ClipperLib.JoinType.jtMiter,
+                            path.closed ? ClipperLib.EndType.etClosedPolygon : ClipperLib.EndType.etOpenRound);
+                        path.points = outlinePoints[0] || [];
                         path.outlinePoints = outlinePoints;
                     }
                 }
@@ -397,7 +399,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
     }
 
     generateViewPathObj(svg, modelInfo) {
-        return this.isRotate ? this._generateRotateViewPath(svg, modelInfo) : this._generateViewPathObj(svg, modelInfo);
+        return this._generateViewPathObj(svg, modelInfo);
     }
 
     _calculateOffsetBox(viewPaths, p1, p2, offset) {
@@ -507,6 +509,40 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         viewPaths.reverse();
 
+        let data = null;
+
+        if (this.isRotate) {
+            data = [];
+            const perimeter = Math.round(this.diameter * Math.PI * this.density);
+
+            for (let j = 0; j <= height; j++) {
+                data[j] = [];
+                for (let i = 0; i <= Math.max(width, perimeter); i++) {
+                    if (i > width) {
+                        const x = (i - width / 2) / this.density;
+                        const z = this.diameter / 2;
+                        const b = angleToPi(this.toolPath.toB(x));
+                        const px = round(z * Math.sin(b), 2);
+                        const py = round(z * Math.cos(b), 2);
+                        data[j][i] = { x: px, y: py, z: z };
+                    } else {
+                        const ii = i % perimeter;
+                        const x = viewPaths[j][i].x;
+                        const z = Math.max(viewPaths[j][i].y + this.diameter / 2, 0);
+                        if (data[j][ii] && z > data[j][ii].z) {
+                            continue;
+                        }
+                        const b = angleToPi(this.toolPath.toB(x));
+                        const px = round(z * Math.sin(b), 2);
+                        const py = round(z * Math.cos(b), 2);
+                        data[j][ii] = { x: px, y: py, z: z };
+                    }
+                }
+            }
+        } else {
+            data = viewPaths;
+        }
+
         this.emit('progress', 1);
 
         const boundingBox = {
@@ -533,12 +569,15 @@ export default class CNCToolPathGenerator extends EventEmitter {
             mode: mode,
             width: width / this.density,
             height: height / this.density,
-            positionX: positionX,
+            positionX: this.isRotate ? 0 : positionX,
             positionY: positionY,
             positionZ: positionZ,
+            rotationB: this.isRotate ? this.toolPath.toB(positionX) : 0,
             targetDepth: targetDepth,
             boundingBox: boundingBox,
-            data: viewPaths
+            isRotate: this.isRotate,
+            diameter: this.diameter,
+            data: data
         };
     }
 

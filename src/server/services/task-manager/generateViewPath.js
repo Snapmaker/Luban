@@ -1,6 +1,5 @@
 import fs from 'fs';
 import _ from 'lodash';
-import * as martinez from 'martinez-polygon-clipping';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import SVGParser from '../../../shared/lib/SVGParser';
@@ -9,6 +8,7 @@ import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerat
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
 import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D } from '../../constants';
+import { polyUnion } from '../../lib/clipper/cLipper-adapter';
 
 const log = logger('service:TaskManager');
 
@@ -72,14 +72,10 @@ const generateBoxPoints = (results) => {
     let rectangle = null;
     for (const result of results) {
         const { min, max } = result.boundingBox;
-        const box = [[min.x, min.y], [min.x, max.y], [max.x, max.y], [max.x, min.y], [min.x, min.y]];
-        rectangle = rectangle === null ? [[box]] : martinez.union(rectangle, [[box]]);
+        const box = [{ x: min.x, y: min.y }, { x: min.x, y: max.y }, { x: max.x, y: max.y }, { x: max.x, y: min.y }, { x: min.x, y: min.y }];
+        rectangle = rectangle === null ? [box] : polyUnion(rectangle, [box]);
     }
-    const boxPoints = [];
-    for (const rectangleElement of rectangle) {
-        boxPoints.push(rectangleElement[0].map(v => { return { x: v[0], y: v[1] }; }));
-    }
-    return boxPoints;
+    return rectangle;
 };
 
 const generateBoxPointsByRotate = (results) => {
