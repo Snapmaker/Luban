@@ -170,12 +170,11 @@ export class ViewPathRenderer {
         ];
     }
 
-    _generateMaterial(color = '#ffffff') {
+    _generateMaterial(color = '#cea775') {
         return new THREE.MeshPhongMaterial(
             {
                 color: color,
-                shininess: 0,
-                map: this.texture
+                shininess: 0
             }
         );
     }

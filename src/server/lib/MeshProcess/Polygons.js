@@ -1,8 +1,8 @@
-import * as martinez from 'martinez-polygon-clipping';
+import _ from 'lodash';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 
 import { isEqual } from '../../../shared/lib/utils';
-import PolygonOffset from '../ToolPathGenerator/PolygonOffset';
+import { polyDiff, polyIntersection, polyOffset, recursivePolyUnion } from '../clipper/cLipper-adapter';
 
 function getDist2FromLine(p, a, b) {
     const vba = Vector2.sub(b, a);
@@ -21,6 +21,13 @@ function getDist2FromLine(p, a, b) {
 
 export class Polygon {
     path = [];
+
+    constructor(path) {
+        if (path && path.length > 0) {
+            this.path = _.cloneDeep(path);
+        }
+    }
+
 
     add(p) {
         this.path.push(p);
@@ -394,85 +401,68 @@ export class Polygons {
     diff(polygons) {
         let diffPolygonArrays = [];
         for (const polygon of this.data) {
-            diffPolygonArrays.push([polygon.path.map(v => [v.x, v.y])]);
+            diffPolygonArrays.push(polygon.path);
         }
         for (const polygon of polygons.data) {
-            const polygonPathArray = polygon.path.map(v => [v.x, v.y]);
-            diffPolygonArrays = martinez.diff(diffPolygonArrays, [[polygonPathArray]]);
+            diffPolygonArrays = polyDiff(diffPolygonArrays, [polygon.path]);
         }
+
         const diffPolygons = new Polygons();
-        for (const diffPolygonArray of diffPolygonArrays) {
-            for (const diffPolygon of diffPolygonArray) {
-                const polygon = new Polygon();
-                for (const point of diffPolygon) {
-                    polygon.add({ x: point[0], y: point[1] });
-                }
-                diffPolygons.add(polygon);
-            }
+        for (const path of diffPolygonArrays) {
+            diffPolygons.add(new Polygon(path));
         }
         return diffPolygons;
     }
 
-    union(polygons, test = false) {
-        const polygonOffsetPaths = [];
+    union(polygons) {
+        const polyPaths = [];
         for (const polygon of this.data) {
-            polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
+            polyPaths.push([polygon.path]);
         }
         if (polygons && polygons.size() > 0) {
             for (const polygon of polygons.data) {
-                polygonOffsetPaths.push([[polygon.path.map(v => [v.x, v.y])]]);
+                polyPaths.push([polygon.path]);
             }
         }
-        const result = PolygonOffset.recursiveUnion(polygonOffsetPaths, test);
+
+        const result = recursivePolyUnion(polyPaths);
+
         const unionPolygons = new Polygons();
-        for (const paths of result) {
-            const polygonPart = new Polygon();
-            for (const pathElement of paths[0]) {
-                polygonPart.add({ x: pathElement[0], y: pathElement[1] });
-            }
+
+        for (const path of result) {
+            const polygonPart = new Polygon(path);
             unionPolygons.add(polygonPart);
         }
+
         return unionPolygons;
     }
 
     intersection(polygons) {
         let intersectionPolygonArrays = [];
         for (const polygon of this.data) {
-            intersectionPolygonArrays.push([polygon.path.map(v => [v.x, v.y])]);
+            intersectionPolygonArrays.push(polygon.path);
         }
         const polygonPathArrays = [];
         for (let i = 0; i < polygons.size(); i++) {
-            const polygonPathArray = polygons.get(i).path.map(v => [v.x, v.y]);
-            polygonPathArrays.push(polygonPathArray);
+            polygonPathArrays.push(polygons[i].path);
         }
-        intersectionPolygonArrays = martinez.intersection(intersectionPolygonArrays, [polygonPathArrays]);
+        intersectionPolygonArrays = polyIntersection(intersectionPolygonArrays, polygonPathArrays);
 
         const intersectionPolygons = new Polygons();
-        if (intersectionPolygonArrays) {
-            for (const intersectionPolygonArray of intersectionPolygonArrays) {
-                for (const intersectionPolygon of intersectionPolygonArray) {
-                    const polygon = new Polygon();
-                    for (const point of intersectionPolygon) {
-                        polygon.add({ x: point[0], y: point[1] });
-                    }
-                    intersectionPolygons.add(polygon);
-                }
-            }
+
+        for (const path of intersectionPolygonArrays) {
+            intersectionPolygons.add(new Polygon(path));
         }
+
         return intersectionPolygons;
     }
 
     padding(offset) {
         const resultPolygons = new Polygons();
         for (const polygon of this.data) {
-            const polygonArray = polygon.path.map(v => [v.x, v.y]);
-            const result = new PolygonOffset(polygonArray).padding(offset);
-            const resultPolygon = new Polygon();
-            if (result && result.length > 0 && result[0].length > 0) {
-                for (const point of result[0]) {
-                    resultPolygon.add({ x: point[0], y: point[1] });
-                }
-                resultPolygons.add(resultPolygon);
+            const paths = polyOffset([polygon.path], -offset);
+            for (const path of paths) {
+                resultPolygons.add(new Polygon(path));
             }
         }
         return resultPolygons;
