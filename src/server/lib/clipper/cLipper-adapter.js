@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as ClipperLib from './clipper';
 
-const SCALE = 1000;
+const SCALE = 1000000;
 
 const PATHS_TYPE_ARRAY = 'array'; // [0,0]
 const PATHS_TYPE_CLIPPER = 'clipper'; // {X:0, Y:0}
