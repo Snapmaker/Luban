@@ -54,7 +54,6 @@ class EnclosureDisplay extends PureComponent {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
-                    console.log('res', res);
                     const { isReady } = res;
                     if (isReady === true) {
                         this.props.setDisplay(true);
