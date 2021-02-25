@@ -16,6 +16,29 @@ class EnclosureDisplay extends PureComponent {
         connectionType: PropTypes.string.isRequired
     }
 
+    componentDidMount() {
+        if (!this.props.isConnected) {
+            this.props.setDisplay(false);
+            return;
+        }
+        if (this.props.isConnected && this.props.enclosureOnline
+            && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
+            this.props.setDisplay(true);
+        }
+
+        if (this.props.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
+            this.props.server.getEnclosureStatus((errMsg, res) => {
+                if (errMsg) {
+                    log.warn(errMsg);
+                } else {
+                    const { isReady } = res;
+                    if (isReady === true) {
+                        this.props.setDisplay(true);
+                    }
+                }
+            });
+        }
+    }
 
     componentWillReceiveProps(nextProps) {
         if (!nextProps.isConnected) {
@@ -31,6 +54,7 @@ class EnclosureDisplay extends PureComponent {
                 if (errMsg) {
                     log.warn(errMsg);
                 } else {
+                    console.log('res', res);
                     const { isReady } = res;
                     if (isReady === true) {
                         this.props.setDisplay(true);
