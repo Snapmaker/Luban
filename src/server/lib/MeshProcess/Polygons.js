@@ -457,10 +457,10 @@ export class Polygons {
         return intersectionPolygons;
     }
 
-    padding(offset) {
+    offset(offset) {
         const resultPolygons = new Polygons();
         for (const polygon of this.data) {
-            const paths = polyOffset([polygon.path], -offset);
+            const paths = polyOffset([polygon.path], offset);
             for (const path of paths) {
                 resultPolygons.add(new Polygon(path));
             }

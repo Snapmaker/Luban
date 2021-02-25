@@ -12,7 +12,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         super();
         const { uploadName, gcodeConfig = {}, transformation = {}, materials = {}, toolParams = {} } = modelInfo;
 
-        const { density = 5, safetyHeight = 0, smoothY = true, stepDown } = gcodeConfig;
+        const { density = 5, safetyHeight = 0, smoothY = true, stepDown, allowance } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter = 0, toolAngle = 0, toolShaftDiameter = 0 } = toolParams;
 
@@ -20,6 +20,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         this.uploadName = uploadName;
         this.transformation = transformation;
         this.gcodeConfig = gcodeConfig;
+        this.allowance = allowance;
 
         this.density = density;
         this.smoothY = smoothY;
@@ -657,12 +658,20 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             delete slicerLayer.openPolygons;
         }
 
+        if (this.allowance) {
+            await this.modelInfo.taskAsyncFor(0, slicerLayers.length - 1, 1, (i) => {
+                const slicerLayer = slicerLayers[i];
+                const polygonsPart = slicerLayer.polygonsPart.offset(this.allowance);
+                slicerLayer.polygonsPart = polygonsPart.splitIntoParts();
+            });
+        }
+
         if (this.toolAngle < 60 && this.smoothY) {
             await this.modelInfo.taskAsyncFor(1, slicerLayers.length - 1, 1, (i) => {
                 const slicerLayer = slicerLayers[i];
                 const tan = Math.tan(this.toolAngle / 2 / 180 * Math.PI);
                 const offset = Math.abs(slicerLayer.z - slicerLayers[i - 1].z) / tan;
-                const offsetPolygons = slicerLayers[i - 1].polygonsPart.padding(offset);
+                const offsetPolygons = slicerLayers[i - 1].polygonsPart.offset(-offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
 
@@ -673,7 +682,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
                 const slicerLayer = slicerLayers[i];
                 const tan = Math.tan(this.toolAngle / 2 / 180 * Math.PI);
                 const offset = Math.abs(slicerLayer.z - slicerLayers[i + 1].z) / tan;
-                const offsetPolygons = slicerLayers[i + 1].polygonsPart.padding(offset);
+                const offsetPolygons = slicerLayers[i + 1].polygonsPart.offset(-offset);
                 offsetPolygons.addPolygons(slicerLayer.polygonsPart);
                 slicerLayer.polygonsPart = offsetPolygons.splitIntoParts();
                 this.emitProgress(0.4 + 0.2 * (slicerLayers.length - 2 - i) / (slicerLayers.length - 2));
@@ -681,7 +690,6 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         }
 
         const p = this.progress;
-
 
         await this.modelInfo.taskAsyncFor(0, slicerLayers.length - 1, 1, (i) => {
             this._generateSlicerLayerToolPath(slicerLayers, i);

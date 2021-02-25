@@ -43,7 +43,7 @@ class CncParameters extends PureComponent {
 
         const { name, type, gcodeConfig } = toolPath;
 
-        const { pathType, sliceMode, smoothY, fillDensity } = gcodeConfig;
+        const { pathType, sliceMode, smoothY, fillDensity, allowance } = gcodeConfig;
 
         const { isRotate } = materials;
 
@@ -227,6 +227,24 @@ class CncParameters extends PureComponent {
                                 </div>
                             )}
                         </div>
+                    )}
+                    {!isSVG && (
+                        <TipTrigger
+                            title={i18n._('Allowance')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Allowance')}</span>
+                                <Input
+                                    disabled={false}
+                                    className="sm-parameter-row__input"
+                                    value={allowance}
+                                    min={0.00}
+                                    step={0.1}
+                                    onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
                     )}
                 </div>
                 <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
