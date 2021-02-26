@@ -445,6 +445,8 @@ class SVGCanvas extends PureComponent {
                 }
 
                 const element = elements[0];
+                // todo
+                draw.uniformScale = element.uniformScale ?? true;
 
                 // TODO: Save [bbox, center, matrix, scale] on element
                 draw.bbox = element.getBBox();
@@ -721,15 +723,35 @@ class SVGCanvas extends PureComponent {
                 const startHeight = height * Math.abs(draw.scaleY);
                 const scaleX = (startWidth + x1) / startWidth;
                 const scaleY = (startHeight + y1) / startHeight;
-                const newScaleX = draw.scaleX * scaleX;
-                const newScaleY = draw.scaleY * scaleY;
-
+                let newScaleX, newScaleY;
+                newScaleX = draw.scaleX * scaleX;
+                newScaleY = draw.scaleY * scaleY;
                 // calculate new center point
-                const centerPointAfter = {
-                    x: centerPointOrigin.x + (x1 * Math.cos(angle) * widthFactor - y1 * Math.sin(angle) * heightFactor) / 2,
-                    y: centerPointOrigin.y + (x1 * Math.sin(angle) * widthFactor + y1 * Math.cos(angle) * heightFactor) / 2
-                };
+                let centerPointAfter;
 
+                // uniform scale
+                if (draw.uniformScale) {
+                    if (x1 !== 0) {
+                        newScaleY = draw.scaleY * scaleX;
+                        const newY1 = startHeight * scaleX - startHeight;
+                        centerPointAfter = {
+                            x: centerPointOrigin.x + (x1 * Math.cos(angle) * widthFactor - newY1 * Math.sin(angle) * heightFactor) / 2,
+                            y: centerPointOrigin.y + (x1 * Math.sin(angle) * widthFactor + newY1 * Math.cos(angle) * heightFactor) / 2
+                        };
+                    } else {
+                        newScaleX = draw.scaleX * scaleY;
+                        const newX1 = startWidth * scaleY - startHeight;
+                        centerPointAfter = {
+                            x: centerPointOrigin.x + (newX1 * Math.cos(angle) * widthFactor - y1 * Math.sin(angle) * heightFactor) / 2,
+                            y: centerPointOrigin.y + (newX1 * Math.sin(angle) * widthFactor + y1 * Math.cos(angle) * heightFactor) / 2
+                        };
+                    }
+                } else {
+                    centerPointAfter = {
+                        x: centerPointOrigin.x + (x1 * Math.cos(angle) * widthFactor - y1 * Math.sin(angle) * heightFactor) / 2,
+                        y: centerPointOrigin.y + (x1 * Math.sin(angle) * widthFactor + y1 * Math.cos(angle) * heightFactor) / 2
+                    };
+                }
 
                 this.props.elementActions.resizeElements(elements, {
                     scaleX: newScaleX,
