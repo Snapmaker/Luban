@@ -286,7 +286,7 @@ class Controls extends EventEmitter {
             const mousePosition = new THREE.Vector3();
             this.ray.ray.intersectPlane(this.horizontalPlane, mousePosition);
             this.supportActions.moveSupport(mousePosition);
-            this.emit(EVENTS.TRANSFORM_OBJECT);
+            this.emit(EVENTS.UPDATE);
         }
         if (!(this.selectedGroup && this.selectedGroup.children.length > 0) || this.state !== STATE.NONE) {
             return;
