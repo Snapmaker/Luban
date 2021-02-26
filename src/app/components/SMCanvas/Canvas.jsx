@@ -355,10 +355,10 @@ class Canvas extends Component {
     }
 
     toFront() {
-        this.camera.position.x = this.cameraInitialPosition.x;
-        this.camera.position.y = this.cameraInitialPosition.y;
-        this.camera.position.z = this.cameraInitialPosition.z;
-        this.controls.setTarget(new Vector3(0, 0, this.cameraInitialPosition.z));
+        this.camera.position.x = this.props.cameraInitialPosition.x;
+        this.camera.position.y = this.props.cameraInitialPosition.y;
+        this.camera.position.z = this.props.cameraInitialPosition.z;
+        this.controls.setTarget(new Vector3(0, 0, this.props.cameraInitialPosition.z));
         // this.camera.lookAt(new Vector3(0, 0, this.cameraInitialPosition.z));
         this.renderScene();
     }

@@ -368,31 +368,31 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Center Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.deleteSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Reset Selected Model Transformation'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Lay Flat Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || isSupportSelected,
                                 onClick: this.actions.layFlatSelectedModel
                             },
                             {

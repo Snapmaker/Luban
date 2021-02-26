@@ -1033,9 +1033,9 @@ export const actions = {
 
     onModelTransform: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.onModelTransform();
-        dispatch(actions.updateTransformation(modelState.transformation));
-        dispatch(actions.displayModel());
+        modelGroup.onModelTransform();
+        // dispatch(actions.updateTransformation(modelState.transformation));
+        // dispatch(actions.displayModel());
     },
 
     onModelAfterTransform: () => (dispatch, getState) => {
