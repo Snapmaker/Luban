@@ -136,9 +136,10 @@ const File = {
     async saveAs(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');
-            const { app, dialog } = window.require('electron').remote;
+            const { app } = window.require('electron').remote;
             tmpFile = app.getPath('userData') + tmpFile;
-            const saveDialogReturnValue = await dialog.showSaveDialog({
+            // eslint-disable-next-line no-use-before-define
+            const saveDialogReturnValue = await Dialog.showSaveDialog({
                 title: targetFile,
                 filters: [{ name: 'files', extensions: [targetFile.split('.')[1]] }]
             });
@@ -169,9 +170,10 @@ const File = {
     async exportAs(targetFile, tmpFile) {
         if (isElectron()) {
             const fs = window.require('fs');
-            const { app, dialog } = window.require('electron').remote;
+            const { app } = window.require('electron').remote;
             tmpFile = app.getPath('userData') + tmpFile;
-            const saveDialogReturnValue = await dialog.showSaveDialog({
+            // eslint-disable-next-line no-use-before-define
+            const saveDialogReturnValue = await Dialog.showSaveDialog({
                 title: targetFile,
                 defaultPath: targetFile,
                 filters: [{ name: 'files', extensions: [targetFile.split('.').pop()] }]
@@ -209,6 +211,19 @@ const Dialog = {
         } else {
             return window.confirm(options.message);
         }
+    },
+    showSaveDialog(options, modal = true) {
+        if (isElectron()) {
+            const remote = window.require('electron').remote;
+            const { dialog } = remote;
+            options.title = 'Snapmaker Luban';
+            if (modal) {
+                const currentWindow = remote.getCurrentWindow();
+                return dialog.showSaveDialog(currentWindow, options);
+            }
+            return dialog.showSaveDialog(options);
+        }
+        return null;
     }
 };
 
