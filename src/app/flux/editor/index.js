@@ -1212,6 +1212,9 @@ export const actions = {
             };
 
             model.updateTransformation(transformation);
+            // Need to update source for SVG, element attributes(width, height) changed
+            // Not to update source for text, because <path> need to remap first
+            // Todo, <Path> error, add remap method or not to use model source
             if (model.sourceType === 'svg' && model.config.svgNodeName !== 'text') {
                 svgModel.updateSource();
             }

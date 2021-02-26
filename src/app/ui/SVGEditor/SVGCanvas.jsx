@@ -452,12 +452,7 @@ class SVGCanvas extends PureComponent {
                     x: draw.bbox.x + draw.bbox.width / 2,
                     y: draw.bbox.y + draw.bbox.height / 2
                 };
-                draw.startAngle = this.svgContentGroup.getElementAngel();
-
-                // Save matrix before scaling
-                const cloned = element.cloneNode();
-                const clonedTransformList = cloned.transform.baseVal;
-                draw.matrix = clonedTransformList.consolidate().matrix;
+                draw.angle = this.svgContentGroup.getElementAngel();
 
                 // Save scale ratio before scaling
                 const transformList = element.transform.baseVal;
@@ -714,7 +709,7 @@ class SVGCanvas extends PureComponent {
                     heightFactor = -1;
                 }
 
-                const angle = draw.startAngle * Math.PI / 180;
+                const angle = draw.angle * Math.PI / 180;
                 // (x0, y0): vector startPoint->endPoint
                 const x0 = endPoint.x - startPoint.x;
                 const y0 = endPoint.y - startPoint.y;
