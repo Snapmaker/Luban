@@ -773,8 +773,9 @@ class TransformControls extends Object3D {
                 break;
             }
             case 'scale': {
-                const parentSVec = new Vector3().copy(this.pointStart).applyQuaternion(this.parentQuaternionInv);
-                const parentEVec = new Vector3().copy(this.pointEnd).applyQuaternion(this.parentQuaternionInv);
+                const objectPosition = new Vector3().copy(this.object.position).applyMatrix4(this.object.matrixWorld); // TODO: optimize?
+                const parentSVec = new Vector3().copy(this.pointStart).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
+                const parentEVec = new Vector3().copy(this.pointEnd).sub(objectPosition).applyQuaternion(this.parentQuaternionInv);
                 parentEVec.divide(parentSVec);
 
                 if (this.object.uniformScalingState === true) {
