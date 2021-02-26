@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as ClipperLib from './clipper';
 
-const SCALE = 1000;
+const SCALE = 1000000;
 
 const PATHS_TYPE_ARRAY = 'array'; // [0,0]
 const PATHS_TYPE_CLIPPER = 'clipper'; // {X:0, Y:0}
@@ -55,7 +55,7 @@ const toResult = (solution, type) => {
     }
 };
 
-const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtMiter, EndType = ClipperLib.EndType.etClosedPolygon) => {
+const polyOffset = (paths, offset, joinType = ClipperLib.JoinType.jtSquare, EndType = ClipperLib.EndType.etClosedPolygon) => {
     const type = checkPathsType(paths);
 
     if (!type) {
