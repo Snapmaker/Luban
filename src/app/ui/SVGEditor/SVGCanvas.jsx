@@ -452,11 +452,7 @@ class SVGCanvas extends PureComponent {
                     x: draw.bbox.x + draw.bbox.width / 2,
                     y: draw.bbox.y + draw.bbox.height / 2
                 };
-
-                // Save matrix before scaling
-                const cloned = element.cloneNode();
-                const clonedTransformList = cloned.transform.baseVal;
-                draw.matrix = clonedTransformList.consolidate().matrix;
+                draw.angle = this.svgContentGroup.getElementAngel();
 
                 // Save scale ratio before scaling
                 const transformList = element.transform.baseVal;
@@ -695,12 +691,6 @@ class SVGCanvas extends PureComponent {
                 const startPoint = { x: draw.startX, y: draw.startY };
                 const endPoint = { x: pt.x, y: pt.y };
 
-                // Convert points for axis-aligned bbox to calculate scale ratio
-                const elementMatrixInverse = draw.matrix.inverse();
-
-                const startPointOrigin = transformPoint(startPoint, elementMatrixInverse);
-                const endPointOrigin = transformPoint(endPoint, elementMatrixInverse);
-
                 const centerPointOrigin = draw.center;
                 const { width, height } = draw.bbox;
 
@@ -719,18 +709,27 @@ class SVGCanvas extends PureComponent {
                     heightFactor = -1;
                 }
 
-                // TODO: consider uniformScaling
-                const scaleX = (width + (endPointOrigin.x - startPointOrigin.x) * widthFactor) / width;
-                const scaleY = (height + (endPointOrigin.y - startPointOrigin.y) * heightFactor) / height;
+                const angle = draw.angle * Math.PI / 180;
+                // (x0, y0): vector startPoint->endPoint
+                const x0 = endPoint.x - startPoint.x;
+                const y0 = endPoint.y - startPoint.y;
+                // (x1, y1): delta of (width, height)
+                const x1 = (x0 * Math.cos(angle) + y0 * Math.sin(angle)) * widthFactor;
+                const y1 = (-x0 * Math.sin(angle) + y0 * Math.cos(angle)) * heightFactor;
+
+                const startWidth = width * Math.abs(draw.scaleX);
+                const startHeight = height * Math.abs(draw.scaleY);
+                const scaleX = (startWidth + x1) / startWidth;
+                const scaleY = (startHeight + y1) / startHeight;
+                const newScaleX = draw.scaleX * scaleX;
+                const newScaleY = draw.scaleY * scaleY;
 
                 // calculate new center point
                 const centerPointAfter = {
-                    x: centerPointOrigin.x + (endPoint.x - startPoint.x) / 2 * (widthFactor !== 0),
-                    y: centerPointOrigin.y + (endPoint.y - startPoint.y) / 2 * (heightFactor !== 0)
+                    x: centerPointOrigin.x + (x1 * Math.cos(angle) * widthFactor - y1 * Math.sin(angle) * heightFactor) / 2,
+                    y: centerPointOrigin.y + (x1 * Math.sin(angle) * widthFactor + y1 * Math.cos(angle) * heightFactor) / 2
                 };
 
-                const newScaleX = draw.scaleX * scaleX;
-                const newScaleY = draw.scaleY * scaleY;
 
                 this.props.elementActions.resizeElements(elements, {
                     scaleX: newScaleX,
