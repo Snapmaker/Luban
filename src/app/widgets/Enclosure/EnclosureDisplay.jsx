@@ -72,13 +72,11 @@ class EnclosureDisplay extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { server, isConnected, headType, connectionType, enclosureOnline, enclosureLight, enclosureFan } = state.machine;
+    const { server, isConnected, headType, connectionType, enclosureOnline } = state.machine;
 
     return {
         headType,
         enclosureOnline,
-        enclosureLight,
-        enclosureFan,
         isConnected,
         connectionType,
         server
