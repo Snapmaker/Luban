@@ -168,7 +168,7 @@ class FontManager {
             return Promise.resolve(localFont);
         }
 
-        const fontConfig = libFontManager.findFontSync({ family });
+        const fontConfig = this.systemFonts.find(f => f.family === family);
 
         if (!fontConfig || !fontConfig.path) {
             throw new Error('No Font Found!');
