@@ -148,7 +148,7 @@ class ToolPathGroup {
 
     addSelectedToolpathColor() {
         const selectedToolpath = this._getToolPath(this.selectedToolPathId);
-        let newIndex;
+        let newIndex = -1;
         this.toolPathObjects.children.forEach((item, index) => {
             if (selectedToolpath && selectedToolpath.object === item) {
                 newIndex = index;
