@@ -264,7 +264,15 @@ export const actions = {
                 return;
             }
             const machineInfo = envObj.machineInfo;
-            const { headType } = machineInfo;
+            let headType;
+            // Compatible with old project file
+            if (machineInfo) {
+                // new verison of project file
+                headType = machineInfo.headType;
+            } else {
+                // old verison of project file
+                headType = envObj.headType;
+            }
 
             await dispatch(actions.save(headType, {
                 message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] })
