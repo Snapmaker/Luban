@@ -171,7 +171,7 @@ function BulgeGeometry(startPoint, endPoint, bulge, segments) {
 
 BulgeGeometry.prototype = Object.create(THREE.Geometry.prototype);
 
-export const dxfToSvg = (dxf) => {
+export const dxfToSvg = (dxf, strokeWidth = 0.72) => {
     const shapes = []; let
         res = {};
     for (const entities of dxf.entities) {
@@ -287,7 +287,7 @@ export const dxfToSvg = (dxf) => {
         }
         shape.fill = 'none';
         shape.stroke = '#000000';
-        shape.strokeWidth = 0.72;
+        shape.strokeWidth = strokeWidth;
         shape.visibility = true;
         shapes.push(shape);
     }
@@ -404,10 +404,10 @@ export const measureBoundary = (dxfString) => {
     }
 
     dxf.boundary = {
-        minX: minX - 1,
-        maxX: maxX + 1,
-        minY: minY - 1,
-        maxY: maxY + 1
+        minX: minX,
+        maxX: maxX,
+        minY: minY,
+        maxY: maxY
     };
     dxf.width = dxf.boundary.maxX - dxf.boundary.minX;
     dxf.height = dxf.boundary.maxY - dxf.boundary.minY;
