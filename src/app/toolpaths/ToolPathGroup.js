@@ -55,6 +55,7 @@ class ToolPathGroup {
 
         if (toolPath) {
             await toolPath.onGenerateToolPath(taskResult);
+            this.addSelectedToolpathColor();
             this._updated();
         }
     }
@@ -141,15 +142,16 @@ class ToolPathGroup {
             this.toolPaths.push(toolPath);
             this.toolPathObjects.add(toolPath.object);
             this.selectedToolPathId = toolPath.id;
-            this.addSelectedToolpathColor();
         }
         toolPath.commitGenerateToolPath(options);
     }
 
     addSelectedToolpathColor() {
         const selectedToolpath = this._getToolPath(this.selectedToolPathId);
-        this.toolPathObjects.children.forEach((item) => {
+        let newIndex = -1;
+        this.toolPathObjects.children.forEach((item, index) => {
             if (selectedToolpath && selectedToolpath.object === item) {
+                newIndex = index;
                 item.children.forEach((meshObj) => {
                     meshObj.material = MATERIAL_SELECTED;
                 });
@@ -159,7 +161,12 @@ class ToolPathGroup {
                 });
             }
         });
-        this._updated();
+        if (selectedToolpath && newIndex !== this.toolPathObjects.children.length - 1) {
+            // The cloned object must be used to force updating the scene
+            this.toolPathObjects.remove(selectedToolpath.object);
+            selectedToolpath.object = selectedToolpath.object.clone();
+            this.toolPathObjects.add(selectedToolpath.object);
+        }
     }
 
     toolPathToUp(toolPathId) {
