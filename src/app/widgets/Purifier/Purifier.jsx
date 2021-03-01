@@ -80,8 +80,12 @@ class Purifier extends PureComponent {
         }
     };
 
+    constructor(props) {
+        super(props);
+        props.setTitle(i18n._('Air Purifier'));
+    }
+
     componentDidMount() {
-        this.props.setTitle(i18n._('Air Purifier'));
         if (!this.props.isConnected) {
             this.props.setDisplay(false);
             return;

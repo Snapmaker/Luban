@@ -16,10 +16,10 @@ class Enclosure extends PureComponent {
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
-        setEnclosureLight: PropTypes.func,
-        setEnclosureFan: PropTypes.func,
-        setDoorDetection: PropTypes.func,
-        getEnclosureStatus: PropTypes.func
+        setEnclosureLight: PropTypes.func.isRequired,
+        setEnclosureFan: PropTypes.func.isRequired,
+        setDoorDetection: PropTypes.func.isRequired,
+        getEnclosureStatus: PropTypes.func.isRequired
     }
 
     state = {
