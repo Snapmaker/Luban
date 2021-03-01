@@ -891,6 +891,13 @@ class SVGActionsFactory {
         this.onKeyMovingValue.y = 0;
     }
 
+    /**
+     *
+     * @param elements
+     * @param newX
+     * @param newY
+     */
+
     moveElementsImmediately(elements, { newX, newY }) {
         if (!elements || elements.length === 0) {
             return;
@@ -956,6 +963,20 @@ class SVGActionsFactory {
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
         this._setSelectedElementsTransformation(t);
+    }
+
+
+    /**
+     *
+     */
+
+    getSelectedElementsUniformScalingState() {
+        if (this.selectedSvgModels.length !== 1) {
+            return false;
+        }
+        const svgModel = this.selectedSvgModels[0];
+        const model = svgModel.relatedModel;
+        return model.transformation.uniformScalingState;
     }
 
     /**

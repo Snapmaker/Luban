@@ -83,6 +83,7 @@ class SVGCanvas extends PureComponent {
         onSelectElements: PropTypes.func.isRequired,
         onClearSelection: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
+        getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -446,7 +447,7 @@ class SVGCanvas extends PureComponent {
 
                 const element = elements[0];
                 // todo
-                draw.uniformScale = element.uniformScale ?? true;
+                draw.uniformScale = this.props.getSelectedElementsUniformScalingState() ?? true;
 
                 // TODO: Save [bbox, center, matrix, scale] on element
                 draw.bbox = element.getBBox();
