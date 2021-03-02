@@ -305,7 +305,7 @@ class CncToolManager extends PureComponent {
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
-                                            const displayCategory = limitStringLength(i18n._(option.category), 28);
+                                            const displayCategory = limitStringLength(option.category, 28);
                                             return (
                                                 <li key={`${option.definitionId}`}>
                                                     <Anchor
