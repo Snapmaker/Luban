@@ -224,7 +224,7 @@ export class MeshProcess {
         const maxY = this.mesh.aabb.max.y;
         const grayRange = this.maxGray - this.minGray;
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -314,7 +314,7 @@ export class MeshProcess {
             }
         }
 
-        this.outputFilename = pathWithRandomSuffix(this.uploadName).replace('.stl', '.png');
+        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
