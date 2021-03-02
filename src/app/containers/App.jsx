@@ -190,7 +190,7 @@ class App extends PureComponent {
         const { history } = this.props;
         const actions = this.actions;
 
-        history.listen(location => {
+        this.unlisten = history.listen(location => {
             this.logPageView();
 
             // show warning when open CNC tab for the first time
@@ -229,6 +229,9 @@ class App extends PureComponent {
                 });
             }
         });
+        if (history.location && history.location.pathname === '/workspace') {
+            history.push('/workspace');
+        }
 
         // get platform
         api.utils.getPlatform().then(res => {
@@ -282,6 +285,10 @@ class App extends PureComponent {
                 this.setState({ recoveringProject: false });
             }
         }
+    }
+
+    componentWillUnmount() {
+        this.unlisten();
     }
 
     logPageView() {

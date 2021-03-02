@@ -15,7 +15,8 @@ class TerminalWrapper extends PureComponent {
         onData: PropTypes.func,
         isDefault: PropTypes.bool.isRequired,
         terminalHistory: PropTypes.object.isRequired,
-        history: PropTypes.object.isRequired,
+        shouldRenderFitaddon: PropTypes.bool.isRequired,
+        consoleHistory: PropTypes.object.isRequired,
         inputValue: PropTypes.string.isRequired
     };
 
@@ -84,9 +85,6 @@ class TerminalWrapper extends PureComponent {
             scrollback: 1000,
             tabStopWidth: 4
         });
-
-        this.fitAddon = new FitAddon();
-        this.term.loadAddon(this.fitAddon);
         this.term.prompt = () => {
             this.term.write('\r\n');
         };
@@ -114,13 +112,21 @@ class TerminalWrapper extends PureComponent {
             e.preventDefault();
         });
         this.term.focus(false);
-        // this.fitAddon.fit();
 
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (this.props.shouldRenderFitaddon !== nextProps.shouldRenderFitaddon && nextProps.shouldRenderFitaddon) {
+            if (!this.fitAddon && this.term) {
+                this.fitAddon = new FitAddon();
+                this.term.loadAddon(this.fitAddon);
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -164,8 +170,8 @@ class TerminalWrapper extends PureComponent {
         if (event.keyCode === 13) {
             this.writeln(`${this.prompt}${event.target.value}`);
             this.props.onData(event.target.value);
-            // Reset the index to the last position of the history array
-            this.props.history.push(event.target.value);
+            // Reset the index to the last position of the location array
+            this.props.consoleHistory.push(event.target.value);
             event.target.value = '';
 
             this.setState({
@@ -176,23 +182,23 @@ class TerminalWrapper extends PureComponent {
 
         // Arrow Up
         if (event.keyCode === 38) {
-            event.target.value = this.props.history.back() || '';
+            event.target.value = this.props.consoleHistory.back() || '';
             this.props.terminalHistory.set(0, event.target.value);
         }
 
         // Arrow Down
         if (event.keyCode === 40) {
-            event.target.value = this.props.history.forward() || '';
+            event.target.value = this.props.consoleHistory.forward() || '';
             this.props.terminalHistory.set(0, event.target.value);
         }
     }
+
 
     resize() {
         if (!(this.term && this.term.element)) {
             return;
         }
-
-        const geometry = this.fitAddon.proposeDimensions(this.term);
+        const geometry = this.fitAddon && this.fitAddon.proposeDimensions(this.term);
         if (!geometry) {
             return;
         }

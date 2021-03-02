@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
+import { withRouter } from 'react-router-dom';
 import settings from '../../config/settings';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
@@ -12,12 +13,13 @@ import { ABSENT_OBJECT, CONNECTION_TYPE_SERIAL } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
+        ...withRouter.propTypes,
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
         minimized: PropTypes.bool.isRequired,
         isDefault: PropTypes.bool.isRequired,
         terminalHistory: PropTypes.object.isRequired,
-        history: PropTypes.object.isRequired,
+        consoleHistory: PropTypes.object.isRequired,
         consoleLogs: PropTypes.array,
 
         // redux
@@ -27,6 +29,10 @@ class Console extends PureComponent {
         connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
+
+    state = {
+        shouldRenderFitaddon: false
+    }
 
     terminal = React.createRef();
 
@@ -153,7 +159,6 @@ class Console extends PureComponent {
                 terminal.writeln(color.blue('------------------------------------'));
             }
         },
-
         greetings: () => {
             const terminal = this.terminal.current;
             if (this.props.isConnected && this.props.port) {
@@ -193,6 +198,21 @@ class Console extends PureComponent {
             }
         }
     };
+
+    componentWillMount() {
+        this.unlisten = this.props.history.listen((location) => {
+            if (location.pathname === '/workspace') {
+                this.setState({
+                    shouldRenderFitaddon: true
+                });
+            } else {
+                this.setState({
+                    shouldRenderFitaddon: false
+                });
+            }
+        });
+    }
+
 
     componentDidMount() {
         if (this.props.terminalHistory.getLength() === 0) {
@@ -256,6 +276,7 @@ class Console extends PureComponent {
     }
 
     componentWillUnmount() {
+        this.unlisten();
         this.removeControllerEvents();
         this.unsubscribe();
     }
@@ -296,15 +317,16 @@ class Console extends PureComponent {
     }
 
     render() {
-        const { isDefault, terminalHistory, history } = this.props;
+        const { isDefault, terminalHistory, consoleHistory } = this.props;
         const inputValue = terminalHistory.get(0) || '';
         return (
             <Terminal
                 ref={this.terminal}
                 onData={this.actions.onTerminalData}
                 isDefault={isDefault}
+                shouldRenderFitaddon={this.state.shouldRenderFitaddon}
                 terminalHistory={terminalHistory}
-                history={history}
+                consoleHistory={consoleHistory}
                 inputValue={inputValue}
             />
         );
@@ -313,7 +335,7 @@ class Console extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { port, server, isConnected, connectionType, terminalHistory, history, consoleLogs } = machine;
+    const { port, server, isConnected, connectionType, terminalHistory, consoleHistory, consoleLogs } = machine;
 
     return {
         port,
@@ -321,7 +343,7 @@ const mapStateToProps = (state) => {
         isConnected,
         connectionType,
         terminalHistory,
-        history,
+        consoleHistory,
         consoleLogs
     };
 };
@@ -332,4 +354,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Console);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Console));
