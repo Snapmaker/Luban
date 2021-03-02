@@ -19,13 +19,11 @@ class Purifier extends PureComponent {
         setDisplay: PropTypes.func.isRequired,
         connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
-        airPurifier: PropTypes.bool,
-        airPurifierSwitch: PropTypes.bool,
-        airPurifierFanSpeed: PropTypes.number,
-        airPurifierFilterHealth: PropTypes.number,
-
-        setFilterSwitch: PropTypes.func,
-        setFilterWorkSpeed: PropTypes.func
+        airPurifier: PropTypes.bool.isRequired,
+        airPurifierSwitch: PropTypes.bool.isRequired,
+        airPurifierFanSpeed: PropTypes.number.isRequired,
+        airPurifierFilterHealth: PropTypes.number.isRequired,
+        server: PropTypes.object.isRequired
     };
 
     state = {
@@ -38,7 +36,7 @@ class Purifier extends PureComponent {
         onHandleFilterEnabled: () => {
             const { isFilterEnable, workSpeed } = this.state;
             if (this.props.connectionType === 'wifi') {
-                this.props.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
+                this.props.server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -58,7 +56,7 @@ class Purifier extends PureComponent {
         },
         onChangeFilterSpeed: (workSpeed) => {
             if (this.props.connectionType === 'wifi') {
-                this.props.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
+                this.props.server.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -228,16 +226,15 @@ class Purifier extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { isConnected, server, connectionType, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
-    const { setFilterSwitch, setFilterWorkSpeed } = server;
+    const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
     return {
         isConnected,
         connectionType,
+        airPurifier,
         airPurifierSwitch,
         airPurifierFanSpeed,
         airPurifierFilterHealth,
-        setFilterSwitch,
-        setFilterWorkSpeed
+        server
     };
 };
 

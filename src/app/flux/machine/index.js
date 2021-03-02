@@ -98,6 +98,11 @@ const INITIAL_STATE = {
     enclosureFan: 0,
     enclosureOnline: false,
 
+    airPurifier: false,
+    airPurifierSwitch: false,
+    airPurifierFanSpeed: 3,
+    airPurifierFilterHealth: 2,
+
     zAxisModule: null,
 
     isEnclosureDoorOpen: false,
