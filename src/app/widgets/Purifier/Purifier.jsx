@@ -14,6 +14,7 @@ import { actions as machineActions } from '../../flux/machine';
 
 class Purifier extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
         isConnected: PropTypes.bool.isRequired,
         setDisplay: PropTypes.func.isRequired,
         connectionType: PropTypes.string.isRequired,
@@ -22,9 +23,7 @@ class Purifier extends PureComponent {
         airPurifierSwitch: PropTypes.bool.isRequired,
         airPurifierFanSpeed: PropTypes.number.isRequired,
         airPurifierFilterHealth: PropTypes.number.isRequired,
-
-        setFilterSwitch: PropTypes.func.isRequired,
-        setFilterWorkSpeed: PropTypes.func.isRequired
+        server: PropTypes.object.isRequired
     };
 
     state = {
@@ -37,7 +36,7 @@ class Purifier extends PureComponent {
         onHandleFilterEnabled: () => {
             const { isFilterEnable, workSpeed } = this.state;
             if (this.props.connectionType === 'wifi') {
-                this.props.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
+                this.props.server.setFilterSwitch(!isFilterEnable, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -57,7 +56,7 @@ class Purifier extends PureComponent {
         },
         onChangeFilterSpeed: (workSpeed) => {
             if (this.props.connectionType === 'wifi') {
-                this.props.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
+                this.props.server.setFilterWorkSpeed(workSpeed, (errMsg, res) => {
                     if (errMsg) {
                         log.error(errMsg);
                         return;
@@ -79,7 +78,23 @@ class Purifier extends PureComponent {
         }
     };
 
+    constructor(props) {
+        super(props);
+        props.setTitle(i18n._('Air Purifier'));
+    }
+
     componentDidMount() {
+        if (!this.props.isConnected) {
+            this.props.setDisplay(false);
+            return;
+        }
+        if (!this.props.airPurifier) {
+            this.props.setDisplay(false);
+            return;
+        }
+        if (this.props.airPurifier) {
+            this.props.setDisplay(true);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -87,11 +102,11 @@ class Purifier extends PureComponent {
             this.props.setDisplay(false);
             return;
         }
-        if (nextProps.airPurifier) {
+        if (!nextProps.airPurifier) {
             this.props.setDisplay(false);
             return;
         }
-        if (!nextProps.airPurifier) {
+        if (nextProps.airPurifier) {
             this.props.setDisplay(true);
         }
 
@@ -211,16 +226,15 @@ class Purifier extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { isConnected, server, connectionType, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
-    const { setFilterSwitch, setFilterWorkSpeed } = server;
+    const { isConnected, server, connectionType, airPurifier, airPurifierSwitch, airPurifierFanSpeed, airPurifierFilterHealth } = state.machine;
     return {
         isConnected,
         connectionType,
+        airPurifier,
         airPurifierSwitch,
         airPurifierFanSpeed,
         airPurifierFilterHealth,
-        setFilterSwitch,
-        setFilterWorkSpeed
+        server
     };
 };
 
