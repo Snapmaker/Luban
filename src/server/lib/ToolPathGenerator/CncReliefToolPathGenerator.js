@@ -404,7 +404,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         const normalizer = this.normalizer;
 
         const normalizedX0 = normalizer.x(0);
-        const normalizedHeight = normalizer.y(this.targetHeight);
+        const normalizedHeight = normalizer.y(0);
         const zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
 
         // safeStart
@@ -429,10 +429,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             let isOrder = true;
             const zState = new ZState();
 
-            await this.modelInfo.taskAsyncFor(0, this.targetHeight - 1, 1, (j) => {
+            await this.modelInfo.taskAsyncFor(this.targetHeight - 1, 0, -1, (j) => {
                 const gY = normalizer.y(this.targetHeight - 1 - j);
 
-                const isFirst = j === 0;
+                const isFirst = j === this.targetHeight - 1;
 
                 if (zMin[j] >= curDepth + this.stepDown) {
                     zState.update({
@@ -443,7 +443,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     return;
                 }
 
-                if (j > 0) {
+                if (j < this.targetHeight - 1) {
                     if (!this.isRotateModel) {
                         isOrder = !isOrder;
                     } else {
