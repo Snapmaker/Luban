@@ -920,6 +920,9 @@ class SVGActionsFactory {
      * Move selected elements by arrow key on key up.
      */
     moveElementsOnArrowKeyUp() {
+        if (this.onKeyMovingValue.x === 0 && this.onKeyMovingValue.y === 0) {
+            return;
+        }
         const elements = this.getSelectedElements();
         this.moveElementsFinish(elements);
 
