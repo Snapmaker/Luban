@@ -33,6 +33,7 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
+        destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -152,6 +153,7 @@ class Visualizer extends PureComponent {
             return this.state.isSupporting;
         },
         startSupportMode: () => {
+            this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
             this.setState({ isSupporting: true });
             this.canvas.current.controls.startSupportMode();
@@ -462,6 +464,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
