@@ -1,5 +1,6 @@
 import events from 'events';
 import fs from 'fs';
+import uuid from 'uuid';
 import _ from 'lodash';
 import chalk from 'chalk';
 import parseJSON from 'parse-json';
@@ -8,7 +9,57 @@ import logger from '../../lib/logger';
 const log = logger('service:configstore');
 
 const defaultState = { // default state
+
 };
+const allMacros = [
+    {
+        name: 'M502&M500 Restore Factory Defaults',
+        content: 'M500'
+    },
+    {
+        name: 'M200 S0 Controller Status',
+        content: 'M2000 S0'
+    },
+    {
+        name: 'M200 S0 Controller Status',
+        content: 'M2000 S0'
+    },
+    {
+        name: 'M1999 Booting Log',
+        content: 'M1999'
+    },
+    {
+        name: 'M1005 Firmware Info',
+        content: 'M1005'
+    },
+    {
+        name: 'M420 V Bed Leveling Data',
+        content: 'M420 V'
+    },
+    {
+        name: 'M119 Limit&Proximity Switch Status',
+        content: 'M119'
+    },
+    {
+        name: 'M503 Controller Settings',
+        content: 'M503'
+    },
+    {
+        name: 'M1006 Toolhead Status',
+        content: 'M1006'
+    },
+    {
+        name: 'M1007 Origin Info',
+        content: 'M1007'
+    }
+];
+const defaultMacros = allMacros.map((item) => {
+    item.id = uuid.v4();
+    item.mtime = new Date().getTime();
+    item.repeat = 1;
+    item.isDefault = true;
+    return item;
+});
 
 class ConfigStore extends events.EventEmitter {
     file = '';
@@ -22,6 +73,8 @@ class ConfigStore extends events.EventEmitter {
     load(file) {
         this.file = file;
         this.reload();
+        this.initMacros();
+        // useless !
         this.emit('load', this.config); // emit load event
 
         if (this.watcher) {
@@ -49,7 +102,6 @@ class ConfigStore extends events.EventEmitter {
             log.error(err);
             this.emit('error', err); // emit error event
         }
-
         return this.config;
     }
 
@@ -77,6 +129,12 @@ class ConfigStore extends events.EventEmitter {
         };
 
         return true;
+    }
+
+    initMacros() {
+        if (this.config) {
+            this.config.macros = _.uniqBy(Array.isArray(this.config.macros) ? defaultMacros.concat(this.config.macros) : defaultMacros, 'content');
+        }
     }
 
     sync() {
