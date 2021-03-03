@@ -432,6 +432,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             await this.modelInfo.taskAsyncFor(0, this.targetHeight - 1, 1, (j) => {
                 const gY = normalizer.y(this.targetHeight - 1 - j);
 
+                const isFirst = j === 0;
+
                 if (zMin[j] >= curDepth + this.stepDown) {
                     zState.update({
                         y: gY,
@@ -462,15 +464,15 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         z = Math.max(curDepth, z);
                         if (k === 0) {
                             if (currentZ === z) {
-                                this.toolPath.move1XY(gX, gY, workSpeed);
+                                this.toolPath.move1XY(gX, gY, isFirst ? workSpeed / 2 : workSpeed);
                             } else {
-                                this.toolPath.move1XYZ(gX, gY, z, plungeSpeed);
+                                this.toolPath.move1XYZ(gX, gY, z, isFirst ? plungeSpeed / 2 : plungeSpeed);
                             }
                         } else {
                             if (currentZ === z) {
-                                this.toolPath.move1X(gX, workSpeed);
+                                this.toolPath.move1X(gX, isFirst ? workSpeed / 2 : workSpeed);
                             } else {
-                                this.toolPath.move1XZ(gX, z, plungeSpeed);
+                                this.toolPath.move1XZ(gX, z, isFirst ? plungeSpeed / 2 : plungeSpeed);
                             }
                         }
                         currentZ = z;
