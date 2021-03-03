@@ -9,7 +9,7 @@ import Modal from '../components/Modal';
 class ModalHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
-        container: PropTypes.object,
+        removeContainer: PropTypes.func.isRequired,
         title: PropTypes.node,
         body: PropTypes.node,
         footer: PropTypes.node
@@ -26,16 +26,10 @@ class ModalHOC extends PureComponent {
     handleClose = () => {
         this.setState({ show: false });
         setTimeout(() => {
-            this.removeContainer();
+            this.props.removeContainer();
             this.props.onClose();
         });
     };
-
-    removeContainer() {
-        const { container } = this.props;
-        ReactDOM.unmountComponentAtNode(container);
-        container.remove();
-    }
 
     render() {
         const { title, body, footer, size } = this.props;
@@ -70,17 +64,20 @@ class ModalHOC extends PureComponent {
     }
 }
 
-export default (options) => new Promise((resolve) => {
+export default (options) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
+    const removeContainer = () => {
+        ReactDOM.unmountComponentAtNode(container);
+        container.remove();
+    };
 
     const props = {
         ...options,
-        onClose: () => {
-            resolve();
-        },
-        container: container
+        removeContainer: removeContainer
     };
 
     ReactDOM.render(<ModalHOC {...props} />, container);
-});
+    // return popupActions
+    return { close: removeContainer };
+};

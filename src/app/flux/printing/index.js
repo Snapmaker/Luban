@@ -1155,6 +1155,15 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
+    scaleToFitSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        const { size } = getState().machine;
+        const modelState = modelGroup.scaleToFitSelectedModel(size);
+        dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
+    },
 
     resetSelectedModelTransformation: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;

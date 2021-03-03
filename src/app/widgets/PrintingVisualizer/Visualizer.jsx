@@ -49,6 +49,7 @@ class Visualizer extends PureComponent {
         clearAllManualSupport: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
+        scaleToFitSelectedModel: PropTypes.func.isRequired,
         resetSelectedModelTransformation: PropTypes.func.isRequired
     };
 
@@ -120,6 +121,9 @@ class Visualizer extends PureComponent {
         },
         layFlatSelectedModel: () => {
             this.props.layFlatSelectedModel();
+        },
+        scaleToFitSelectedModel: () => {
+            this.props.scaleToFitSelectedModel();
         },
         mirrorSelectedModel: (value) => {
             switch (value) {
@@ -274,6 +278,39 @@ class Visualizer extends PureComponent {
                 body: i18n._('Failed to load model.')
             });
         }
+        if (stage !== this.props.stage && stage === PRINTING_STAGE.LOAD_MODEL_SUCCEED) {
+            const modelSize = new Vector3();
+            selectedModelArray[0].boundingBox.getSize(modelSize);
+            const isLarge = ['x', 'y', 'x'].some((key) => modelSize[key] >= size[key]);
+
+            if (isLarge) {
+                const popupActions = modal({
+                    title: i18n._('Scale to fit'),
+                    body: (
+                        <React.Fragment>
+                            <p>{i18n._('Model’s size exceeds the machine’s maximum build volume.')}</p>
+                            <p>{i18n._('Do you want scale model to fit machine?')}</p>
+                        </React.Fragment>
+
+                    ),
+
+                    footer: (
+                        <button
+                            type="button"
+                            className="btn sm-btn-default"
+                            onClick={() => {
+                                this.actions.scaleToFitSelectedModel();
+                                popupActions.close();
+                            }}
+                        >
+                            {i18n._('Yes')}
+                        </button>
+
+
+                    )
+                });
+            }
+        }
     }
 
     getNotice() {
@@ -426,6 +463,12 @@ class Visualizer extends PureComponent {
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
+                                type: 'item',
+                                label: i18n._('Scale To Fit Selected Model'),
+                                disabled: !isModelSelected || isSupportSelected,
+                                onClick: this.actions.scaleToFitSelectedModel
+                            },
+                            {
                                 type: 'subMenu',
                                 label: i18n._('Mirror Selected Model'),
                                 disabled: !isModelSelected || isSupportSelected,
@@ -528,6 +571,7 @@ const mapDispatchToProps = (dispatch) => ({
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     autoRotateSelectedModel: () => dispatch(printingActions.autoRotateSelectedModel()),
+    scaleToFitSelectedModel: () => dispatch(printingActions.scaleToFitSelectedModel()),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))
