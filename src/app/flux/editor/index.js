@@ -1023,6 +1023,7 @@ export const actions = {
         const { SVGActions } = getState()[headType];
         SVGActions.moveElementsOnArrowKeyUp();
         dispatch(actions.resetProcessState(headType));
+        dispatch(baseActions.render(headType));
     },
 
     /**
