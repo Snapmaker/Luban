@@ -1,5 +1,5 @@
 import STLExporter from '../../components/three-extensions/STLExporter';
-import STLBinaryExporter from '../../components/three-extensions/STLBinaryExporter';
+// import STLBinaryExporter from '../../components/three-extensions/STLBinaryExporter';
 import OBJExporter from '../../components/three-extensions/OBJExporter';
 
 class ModelExporter {
@@ -31,7 +31,7 @@ class ModelExporter {
     }
 
     parseToBinaryStl(object3d) {
-        return new STLBinaryExporter().parse(object3d);
+        return new STLExporter().parse(object3d, { binary: true });
     }
 
     parseToObj(object3d) {

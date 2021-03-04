@@ -6,6 +6,9 @@
  * modified by Walker
  * 1. Use local matrix rather than world matrix (line 31)
  * 2. Switch y and z (line 65) to handle left-hand and right-hand coordinate problem
+ *
+ * Update STLExporter function:
+   TODO: When exporting with ASCII, it will exceed string max length. Error: Invalid string length
  */
 
 import * as THREE from 'three';
@@ -14,76 +17,150 @@ function STLExporter() {};
 
 STLExporter.prototype = {
 
-	constructor: STLExporter,
+    constructor: STLExporter,
 
-	parse: ( function () {
+    parse: (function () {
+        return function parse(scene, options){
+			if (options === undefined) options = {};
 
-		var vector = new THREE.Vector3();
-		var normalMatrixLocal = new THREE.Matrix3();
+	        const binary = options.binary !== undefined ? options.binary : false;
 
-		return function parse( scene ) {
 
-			var output = '';
+	        const objects = [];
+	        let triangles = 0;
 
-			output += 'solid exported\n';
+	        scene.traverse((object) => {
+	            if (object.isMesh) {
+	                const geometry = object.geometry;
 
-			scene.traverse( function ( object ) {
+	                if (geometry.isBufferGeometry !== true) {
+	                    throw new Error('THREE.STLExporter: Geometry is not of type THREE.BufferGeometry.');
+	                }
 
-				if ( object instanceof THREE.Mesh ) {
+	                const index = geometry.index;
+	                const positionAttribute = geometry.getAttribute('position');
 
-					var geometry = object.geometry;
-					var matrixLocal = object.matrix;
+	                triangles += (index !== null) ? (index.count / 3) : (positionAttribute.count / 3);
 
-					if ( geometry instanceof THREE.BufferGeometry ) {
+	                objects.push({
+	                    object3d: object,
+	                    geometry: geometry
+	                });
+	            }
+	        });
 
-						geometry = new THREE.Geometry().fromBufferGeometry( geometry );
+	        let output;
+	        let offset = 80; // skip header
 
-					}
+	        if (binary === true) {
+	            const bufferLength = triangles * 2 + triangles * 3 * 4 * 4 + 80 + 4;
+	            const arrayBuffer = new ArrayBuffer(bufferLength);
+	            output = new DataView(arrayBuffer);
+	            output.setUint32(offset, triangles, true); offset += 4;
+	        } else {
+	            output = '';
+	            output += 'solid exported\n';
+	        }
 
-					if ( geometry instanceof THREE.Geometry ) {
+	        const vA = new THREE.Vector3();
+	        const vB = new THREE.Vector3();
+	        const vC = new THREE.Vector3();
+	        const cb = new THREE.Vector3();
+	        const ab = new THREE.Vector3();
+	        const normal = new THREE.Vector3();
 
-						var vertices = geometry.vertices;
-						var faces = geometry.faces;
+		    function writeNormal(vAInside, vBInside, vCInside) {
+		        cb.subVectors(vCInside, vBInside);
+		        ab.subVectors(vAInside, vBInside);
+		        cb.cross(ab).normalize();
+		        normal.copy(cb).normalize();
 
-						normalMatrixLocal.getNormalMatrix( matrixLocal );
+		        if (binary === true) {
+		            output.setFloat32(offset, normal.x, true); offset += 4;
+		            output.setFloat32(offset, normal.y, true); offset += 4;
+		            output.setFloat32(offset, normal.z, true); offset += 4;
+		        } else {
+		            output += `\tfacet normal ${normal.x} ${normal.y} ${normal.z}\n`;
+		            output += '\t\touter loop\n';
+		        }
+		    }
 
-						for ( var i = 0, l = faces.length; i < l; i ++ ) {
+		    function writeVertex(vertex) {
+		        if (binary === true) {
+		            output.setFloat32(offset, vertex.x, true); offset += 4;
+		            output.setFloat32(offset, vertex.y, true); offset += 4;
+		            output.setFloat32(offset, vertex.z, true); offset += 4;
+		        } else {
+		            output += `\t\t\tvertex ${vertex.x} ${vertex.y} ${vertex.z}\n`;
+		        }
+		    }
 
-							var face = faces[ i ];
+		    function writeFace(a, b, c, positionAttribute, object) {
+	            vA.fromBufferAttribute(positionAttribute, a);
+	            vB.fromBufferAttribute(positionAttribute, b);
+	            vC.fromBufferAttribute(positionAttribute, c);
 
-							vector.copy( face.normal ).applyMatrix3( normalMatrixLocal ).normalize();
+	            if (object.isSkinnedMesh === true) {
+	                object.boneTransform(a, vA);
+	                object.boneTransform(b, vB);
+	                object.boneTransform(c, vC);
+	            }
 
-							output += '\tfacet normal ' + vector.x + ' ' + vector.y + ' ' + vector.z + '\n';
-							output += '\t\touter loop\n';
+	            vA.applyMatrix4(object.matrixWorld);
+	            vB.applyMatrix4(object.matrixWorld);
+	            vC.applyMatrix4(object.matrixWorld);
 
-							var indices = [ face.a, face.b, face.c ];
+	            writeNormal(vA, vB, vC);
 
-							for ( var j = 0; j < 3; j ++ ) {
+	            writeVertex(vA);
+	            writeVertex(vB);
+	            writeVertex(vC);
 
-								vector.copy( vertices[ indices[ j ] ] ).applyMatrix4( matrixLocal );
+	            if (binary === true) {
+	                output.setUint16(offset, 0, true); offset += 2;
+	            } else {
+	                output += '\t\tendloop\n';
+	                output += '\tendfacet\n';
+	            }
+	        }
 
-                                output += '\t\t\tvertex ' + vector.x + ' ' + vector.y + ' ' + vector.z + '\n';
+	        for (let i = 0, il = objects.length; i < il; i++) {
+	            const object = objects[i].object3d;
+	            const geometry = objects[i].geometry;
 
-							}
+	            const index = geometry.index;
+	            const positionAttribute = geometry.getAttribute('position');
 
-							output += '\t\tendloop\n';
-							output += '\tendfacet\n';
+	            if (index !== null) {
+	                // indexed geometry
 
-						}
+	                for (let j = 0; j < index.count; j += 3) {
+	                    const a = index.getX(j + 0);
+	                    const b = index.getX(j + 1);
+	                    const c = index.getX(j + 2);
 
-					}
+	                    writeFace(a, b, c, positionAttribute, object);
+	                }
+	            } else {
+	                // non-indexed geometry
+                    const remainder = positionAttribute.count % 3 > 1;
+	                for (let j = 0; j < positionAttribute.count-1; j += 3) {
+	                    const a = j;
+	                    const b = j + 1 <= positionAttribute.count ? j + 1  : positionAttribute.count ;
+	                    const c = j + 2 <= positionAttribute.count ? j + 2  : positionAttribute.count ;
 
-				}
+	                    writeFace(a, b, c, positionAttribute, object);
+	                }
+	            }
+	        }
 
-			} );
+	        if (binary === false) {
+	            output += 'endsolid exported\n';
+	        }
 
-			output += 'endsolid exported\n';
-
-			return output;
-
-		};
-
-	}() )
+	        return output;
+		}
+    }())
 
 };
 
