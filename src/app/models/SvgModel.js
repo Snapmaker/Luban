@@ -5,6 +5,7 @@ import { NS } from '../ui/SVGEditor/lib/namespaces';
 import { DATA_PREFIX } from '../constants';
 
 import api from '../api';
+import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 
@@ -335,8 +336,9 @@ class SvgModel {
             const { text, 'font-family': font, 'font-size': size } = this.relatedModel.config;
             const { scaleX, scaleY } = this.relatedModel.transformation;
             const { width, height } = this.elem.getBBox();
-            const sourceWidth = width * Math.abs(scaleX);
-            const sourceHeight = height * Math.abs(scaleY);
+            // Todo: remove DEFAULT_SCALE after convertOneLineTextToSvg method improved.
+            const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
+            const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
             const name = this.relatedModel.originalName;
             const alignment = 'middle';
             res = await api.convertOneLineTextToSvg({ text, font, name, size, sourceWidth, sourceHeight, alignment });

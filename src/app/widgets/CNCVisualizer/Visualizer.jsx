@@ -79,6 +79,7 @@ class Visualizer extends Component {
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+        getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -379,6 +380,7 @@ class Visualizer extends Component {
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
                         elementActions={this.props.elementActions}
+                        getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
@@ -596,6 +598,7 @@ const mapDispatchToProps = (dispatch) => {
         onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),
         onClearSelection: () => dispatch(editorActions.clearSelection('cnc')),
         onMoveSelectedElementsByKey: () => dispatch(editorActions.moveElementsOnKeyUp('cnc')),
+        getSelectedElementsUniformScalingState: () => dispatch(editorActions.getSelectedElementsUniformScalingState('cnc')),
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation)),

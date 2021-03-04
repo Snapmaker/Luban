@@ -31,6 +31,7 @@ class SVGEditor extends PureComponent {
         onClearSelection: PropTypes.func.isRequired,
         onMoveSelectedElementsByKey: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
+        getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -120,6 +121,7 @@ class SVGEditor extends PureComponent {
                             onClearSelection={this.props.onClearSelection}
                             onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                             updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
+                            getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                             elementActions={this.props.elementActions}
                         />
                     </div>

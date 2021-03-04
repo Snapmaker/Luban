@@ -855,7 +855,7 @@ class SVGActionsFactory {
     }
 
     /**
-     * move selected elements by arrow key on key down
+     * Move selected elements by arrow key on key down.
      */
     moveElementsOnArrowKeyDown(elements, { dx, dy }) {
         // Key move start
@@ -881,7 +881,7 @@ class SVGActionsFactory {
     }
 
     /**
-     * move selected elements by arrow key on key up
+     * Move selected elements by arrow key on key up.
      */
     moveElementsOnArrowKeyUp() {
         const elements = this.getSelectedElements();
@@ -891,6 +891,9 @@ class SVGActionsFactory {
         this.onKeyMovingValue.y = 0;
     }
 
+    /**
+     * Move selected elements by writing variable in Transformation.
+     */
     moveElementsImmediately(elements, { newX, newY }) {
         if (!elements || elements.length === 0) {
             return;
@@ -956,6 +959,20 @@ class SVGActionsFactory {
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);
         this._setSelectedElementsTransformation(t);
+    }
+
+
+    /**
+     * Get selected element's uniform scaling state for resizing.
+     */
+
+    getSelectedElementsUniformScalingState() {
+        if (this.selectedSvgModels.length !== 1) {
+            return false;
+        }
+        const svgModel = this.selectedSvgModels[0];
+        const model = svgModel.relatedModel;
+        return model.transformation.uniformScalingState;
     }
 
     /**
