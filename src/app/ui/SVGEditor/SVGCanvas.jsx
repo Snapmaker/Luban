@@ -446,7 +446,6 @@ class SVGCanvas extends PureComponent {
                 }
 
                 const element = elements[0];
-                // todo
                 draw.uniformScale = this.props.getSelectedElementsUniformScalingState() ?? true;
 
                 // TODO: Save [bbox, center, matrix, scale] on element

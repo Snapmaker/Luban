@@ -855,7 +855,7 @@ class SVGActionsFactory {
     }
 
     /**
-     * move selected elements by arrow key on key down
+     * Move selected elements by arrow key on key down.
      */
     moveElementsOnArrowKeyDown(elements, { dx, dy }) {
         // Key move start
@@ -881,7 +881,7 @@ class SVGActionsFactory {
     }
 
     /**
-     * move selected elements by arrow key on key up
+     * Move selected elements by arrow key on key up.
      */
     moveElementsOnArrowKeyUp() {
         const elements = this.getSelectedElements();
@@ -892,7 +892,7 @@ class SVGActionsFactory {
     }
 
     /**
-     * move selected elements by writing variable in Transformation
+     * Move selected elements by writing variable in Transformation.
      */
     moveElementsImmediately(elements, { newX, newY }) {
         if (!elements || elements.length === 0) {
@@ -963,7 +963,7 @@ class SVGActionsFactory {
 
 
     /**
-     *
+     * Get selected element's uniform scaling state for resizing.
      */
 
     getSelectedElementsUniformScalingState() {
