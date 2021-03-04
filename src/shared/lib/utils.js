@@ -38,6 +38,17 @@ export const removeSpecialChars = (str) => {
     return str.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '');
 };
 
+export const checkoutIsImageSuffix = (filePath) => {
+    const index = filePath.lastIndexOf('.');
+    if (index !== -1) {
+        const ext = filePath.substr(index + 1).trim();
+        return [
+            'apng', 'avif', 'ico', 'png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'psd', 'svg', 'tiff']
+            .indexOf(ext.toLowerCase()) !== -1;
+    }
+    return false;
+};
+
 export default {
     isZero,
     isEqual
