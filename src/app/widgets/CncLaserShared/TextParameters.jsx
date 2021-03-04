@@ -100,6 +100,11 @@ Start a new line manually according to your needs.')}
                                     className="form-control"
                                     rows="3"
                                     value={text}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                     onChange={actions.onChangeText}
                                 />
                             </div>
