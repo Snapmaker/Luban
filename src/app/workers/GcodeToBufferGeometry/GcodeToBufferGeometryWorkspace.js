@@ -55,7 +55,7 @@ class GcodeToBufferGeometryWorkspace {
                 const { headerType, isRotate = false, diameter } = modal;
                 let z = state.z;
                 if (isRotate && headerType === 'laser') {
-                    z = diameter / 2;
+                    z = diameter / 2 + state.z;
                 }
                 const res = Vector2.rotate({ x: state.x, y: z }, -state.b || 0);
                 return {
