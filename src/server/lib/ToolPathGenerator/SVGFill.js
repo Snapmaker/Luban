@@ -198,23 +198,22 @@ function svgToSegments(svg, options = {}) {
                 }
             }
 
-            if (shape.fill) {
-                const newShape = {
-                    paths: []
-                };
-                for (const path of shape.paths) {
-                    if (path.closed) {
-                        const newPath = {
-                            points: []
-                        };
-                        for (const point of path.points) {
-                            newPath.points.push(mapPointToInteger(point, options.fillDensity));
-                        }
-                        newShape.paths.push(newPath);
+            const newShape = {
+                paths: []
+            };
+            for (const path of shape.paths) {
+                if (path.closed) {
+                    const newPath = {
+                        points: []
+                    };
+                    for (const point of path.points) {
+                        newPath.points.push(mapPointToInteger(point, options.fillDensity));
                     }
+                    newShape.paths.push(newPath);
                 }
-                fillShape(canvas, width, height, newShape, color);
             }
+            fillShape(canvas, width, height, newShape, color);
+
             for (const [rowIndex, row] of canvas.entries()) {
                 for (const [columnIndex, value] of row.entries()) {
                     if (accumulatorCanvas[rowIndex][columnIndex]) {
