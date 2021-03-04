@@ -176,6 +176,45 @@ class SvgModel {
         return this.elem.nodeName;
     }
 
+    get x() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(0);
+        return transform.matrix.e;
+    }
+
+    get y() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(0);
+        return transform.matrix.f;
+    }
+
+    get scaleX() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(2);
+
+        return transform.matrix.a || 1;
+    }
+
+    get scaleY() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(2);
+        return transform.matrix.d || 1;
+    }
+
+    get angle() {
+        const transformList = SvgModel.getTransformList(this.elem);
+        const transform = transformList.getItem(1);
+        return transform.angle || 0;
+    }
+
+    get logicalX() {
+        return this.x - this.size.x;
+    }
+
+    get logicalY() {
+        return -this.y + this.size.y;
+    }
+
     setRelatedModel(relatedModel, update = true) {
         this.relatedModel = relatedModel;
         update && this.onUpdate();
@@ -285,15 +324,14 @@ class SvgModel {
 
     async updateSource() {
         const { width, height } = this.elem.getBBox();
-        const { scaleX, scaleY } = this.relatedModel.transformation;
         const uploadName = await this.uploadSourceFile();
         this.relatedModel.updateSource({
             uploadName,
             processImageName: uploadName,
             width,
             height,
-            sourceWidth: width * Math.abs(scaleX) * DEFAULT_SCALE,
-            sourceHeight: height * Math.abs(scaleY) * DEFAULT_SCALE
+            sourceWidth: width,
+            sourceHeight: height
         });
     }
 

@@ -707,14 +707,20 @@ class SVGActionsFactory {
 
         // Update model
         const { width, height } = svgModel.elem.getBBox();
+        const { logicalX, logicalY, scaleX, scaleY, angle } = svgModel;
         const baseUpdateData = {
             sourceWidth: width * DEFAULT_SCALE,
             sourceHeight: height * DEFAULT_SCALE,
             width,
             height,
             transformation: {
-                width: width * model.transformation.scaleX,
-                height: height * model.transformation.scaleY
+                positionX: logicalX,
+                positionY: logicalY,
+                width: width * Math.abs(scaleX),
+                height: height * Math.abs(scaleY),
+                scaleX,
+                scaleY,
+                rotationZ: -angle * Math.PI / 180
             }
         };
         model.updateAndRefresh({ ...baseUpdateData, config });
