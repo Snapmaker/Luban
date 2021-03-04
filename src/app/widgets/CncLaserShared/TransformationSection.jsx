@@ -249,7 +249,7 @@ class TransformationSection extends PureComponent {
                                 </span>
                                 <button
                                     type="button"
-                                    disabled={!selectedNotHide || sourceType === 'raster'}
+                                    disabled={!selectedNotHide}
                                     className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
                                     style={{
                                         height: '22px',
