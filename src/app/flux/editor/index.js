@@ -981,14 +981,6 @@ export const actions = {
     },
 
     /**
-     * Get elements uniform scaling state for resizing
-     */
-    getSelectedElementsUniformScalingState: (headType) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        return SVGActions.getSelectedElementsUniformScalingState();
-    },
-
-    /**
      * Resize elements start.
      */
     resizeElementsStart: (headType, elements, options) => (dispatch, getState) => {
@@ -1062,6 +1054,14 @@ export const actions = {
         SVGActions.flipElementsVertically(elements);
 
         dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Get elements uniform scaling state for resizing.
+     */
+    getSelectedElementsUniformScalingState: (headType) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+        return SVGActions.getSelectedElementsUniformScalingState();
     },
 
     /**

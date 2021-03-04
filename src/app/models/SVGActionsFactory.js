@@ -892,12 +892,8 @@ class SVGActionsFactory {
     }
 
     /**
-     *
-     * @param elements
-     * @param newX
-     * @param newY
+     * move selected elements by writing variable in Transformation
      */
-
     moveElementsImmediately(elements, { newX, newY }) {
         if (!elements || elements.length === 0) {
             return;

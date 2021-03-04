@@ -318,6 +318,7 @@ class SvgModel {
             const { text, 'font-family': font, 'font-size': size } = this.relatedModel.config;
             const { scaleX, scaleY } = this.relatedModel.transformation;
             const { width, height } = this.elem.getBBox();
+            // Todo: remove DEFAULT_SCALE after convertOneLineTextToSvg method improved.
             const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
             const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
             const name = this.relatedModel.originalName;
