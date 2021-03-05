@@ -49,6 +49,7 @@ class CaseLibrary extends PureComponent {
     actions = {
         load3dpCaseSettings: async (config) => {
             const materialDefinitionId = config.material.definitionId;
+            const materialDefinitionName = config.material.definitionName;
             const materialDefinition = this.props.materialDefinitions.find(d => d.definitionId === materialDefinitionId);
             if (materialDefinition) {
                 this.props.updateDefaultMaterialId(materialDefinitionId);
@@ -56,7 +57,7 @@ class CaseLibrary extends PureComponent {
             } else {
                 const defaultDefinition = this.props.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 const addDefinition = config.material;
-                const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionId);
+                const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionName);
                 for (const key of defaultDefinition.ownKeys) {
                     if (addDefinition[key] === undefined) {
                         continue;
@@ -71,6 +72,7 @@ class CaseLibrary extends PureComponent {
             }
 
             const qualityDefinitionId = config.quality.definitionId;
+            const qualityDefinitionName = config.quality.definitionName;
             const qualityDefinition = await this.props.qualityDefinitions.find(d => d.definitionId === qualityDefinitionId);
             if (qualityDefinition) {
                 if (['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'].indexOf(qualityDefinitionId) === -1) {
@@ -83,7 +85,7 @@ class CaseLibrary extends PureComponent {
             } else {
                 const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
                 const addDefinition = config.quality;
-                const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId, qualityDefinitionId);
+                const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId, qualityDefinitionName);
                 for (const key of defaultDefinition.ownKeys) {
                     if (newDefinition.settings[key] === undefined) {
                         continue;
