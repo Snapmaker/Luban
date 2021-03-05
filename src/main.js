@@ -212,12 +212,13 @@ const createWindow = async () => {
     menuBuilder.buildMenu();
 
     // the "open file or folder" dialog can also be triggered from the React app
-    ipcMain.on('openFile', () => {
+    ipcMain.handle('popFile', () => {
         const newProjectFile = config.get('projectFile');
         if (!isUndefined(newProjectFile) && !isNull(newProjectFile)) {
-            mainWindow.webContents.send('open-file', newProjectFile);
             config.set('projectFile', null);
+            return newProjectFile;
         }
+        return null;
     });
 
     ipcMain.on('clean-all-recent-files', () => {
