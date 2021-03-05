@@ -12,7 +12,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         super();
         const { uploadName, gcodeConfig = {}, transformation = {}, materials = {}, toolParams = {} } = modelInfo;
 
-        const { density = 5, safetyHeight = 0, smoothY = true, stepDown, allowance } = gcodeConfig;
+        const { density = 5, safetyHeight = 1, smoothY = true, stepDown, allowance } = gcodeConfig;
         const { isRotate, diameter } = materials;
         const { toolDiameter = 0, toolAngle = 0, toolShaftDiameter = 0 } = toolParams;
 
@@ -113,8 +113,9 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         }
     }
 
-    _generateSlicerLayerToolPath(slicerLayers, index) {
-        const { jogSpeed = 300, workSpeed = 300, plungeSpeed = 300 } = this.gcodeConfig;
+    _generateSlicerLayerToolPath(slicerLayers, index, gcodeConfig) {
+        const { jogSpeed = 300, workSpeed = 300, plungeSpeed = 300 } = gcodeConfig;
+
         const slicerLayer = slicerLayers[index];
 
         const polygonsPart = slicerLayer.polygonsPart;
@@ -692,7 +693,13 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         const p = this.progress;
 
         await this.modelInfo.taskAsyncFor(0, slicerLayers.length - 1, 1, (i) => {
-            this._generateSlicerLayerToolPath(slicerLayers, i);
+            const isFirst = i === 0;
+
+            this._generateSlicerLayerToolPath(slicerLayers, i, {
+                ...this.gcodeConfig,
+                workSpeed: isFirst ? this.gcodeConfig.workSpeed / 2 : this.gcodeConfig.workSpeed,
+                plungeSpeed: isFirst ? this.gcodeConfig.plungeSpeed / 2 : this.gcodeConfig.plungeSpeed
+            });
             this.emitProgress((1 - p) * (i / slicerLayers.length) + p);
         });
 
