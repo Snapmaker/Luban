@@ -129,20 +129,26 @@ class App extends PureComponent {
                 await this.props.saveAndClose(currentHeadType, { message });
             }
         },
-        openProject: (file) => {
+        openProject: async (file) => {
             if (!file) {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             } else {
                 try {
-                    this.props.openProject(file, this.props.history);
+                    await this.props.openProject(file, this.props.history);
                 } catch (e) {
                     console.log(e.message);
                 }
             }
         },
-        initFileOpen: () => {
-            UniApi.File.openProjectFile();
+        initFileOpen: async () => {
+            const file = await UniApi.File.popFile();
+            if (file) {
+                await this.actions.openProject(file);
+            }
+            // start recover service after file opened on startup
+            // to ensure opened file set before service run
+            this.props.initRecoverService();
         },
         initUniEvent: () => {
             UniApi.Event.on('message', (event, message) => {
@@ -248,7 +254,6 @@ class App extends PureComponent {
         this.props.cncInit();
         this.props.printingInit();
         this.props.textInit();
-        this.props.initRecoverService();
 
         UniApi.Window.initWindow();
         this.actions.initUniEvent();

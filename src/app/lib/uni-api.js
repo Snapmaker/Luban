@@ -120,11 +120,13 @@ const File = {
             fs.copyFileSync(tmpFile, targetFile);
         }
     },
-    openProjectFile() {
+    popFile() {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
-            ipcRenderer.send('openFile');
+            // use invoke and handle method to get file saved in main process
+            return ipcRenderer.invoke('popFile');
         }
+        return null;
     },
     /**
      * Export file to local directory.
