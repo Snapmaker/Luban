@@ -177,32 +177,32 @@ class SvgModel {
     }
 
     get x() {
-        const transformList = SvgModel.getTransformList(this.elem);
+        const transformList = this.elemTransformList();
         const transform = transformList.getItem(0);
         return transform.matrix.e;
     }
 
     get y() {
-        const transformList = SvgModel.getTransformList(this.elem);
+        const transformList = this.elemTransformList();
         const transform = transformList.getItem(0);
         return transform.matrix.f;
     }
 
     get scaleX() {
-        const transformList = SvgModel.getTransformList(this.elem);
+        const transformList = this.elemTransformList();
         const transform = transformList.getItem(2);
 
         return transform.matrix.a || 1;
     }
 
     get scaleY() {
-        const transformList = SvgModel.getTransformList(this.elem);
+        const transformList = this.elemTransformList();
         const transform = transformList.getItem(2);
         return transform.matrix.d || 1;
     }
 
     get angle() {
-        const transformList = SvgModel.getTransformList(this.elem);
+        const transformList = this.elemTransformList();
         const transform = transformList.getItem(1);
         return transform.angle || 0;
     }
@@ -330,8 +330,8 @@ class SvgModel {
             processImageName: uploadName,
             width,
             height,
-            sourceWidth: width,
-            sourceHeight: height
+            sourceWidth: width * DEFAULT_SCALE,
+            sourceHeight: height * DEFAULT_SCALE
         });
     }
 
