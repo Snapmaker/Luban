@@ -1,0 +1,202 @@
+name: Build on Release created
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+
+  build-windows:
+    name: Build Windows Packages
+
+    # windows-2019
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js 10.x
+        uses: actions/setup-node@v2
+        with:
+            node-version: '10.x'
+
+      - run: npm install
+
+      - run: npm run build
+
+      # ----------------------------------------------------------------
+      # Build Windows x64
+      # ----------------------------------------------------------------
+      - name: Build Windows x64 Binaries
+        run: npm run build:win-x64
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
+
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - name: Setting Environment Variables
+        run: |
+          $PRODUCT_NAME="Snapmaker Luban"
+          $PACKAGE_NAME="snapmaker-luban"
+          $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
+          $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
+
+          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe"
+          $INSTALLER_ASSET_NAME="${RELEASE}-win-x64.exe"
+
+          $INSTALLER_AU_ASSET_NAME="${PACKAGE_NAME}-Setup-${PACKAGE_VERSION}.exe"
+
+          echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
+          echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
+          echo "INSTALLER_AU_ASSET_NAME=${INSTALLER_AU_ASSET_NAME}" >> ${Env:GITHUB_ENV}
+
+      - name: Upload Release Asset - Windows x64 Installer
+        id: upload-release-asset-x64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.INSTALLER_ASSET_PATH }}
+          asset_name: ${{ env.INSTALLER_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - YAML (Auto Updates)
+        id: upload-release-asset-yaml
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./output/latest.yml
+          asset_name: latest.yml
+          asset_content_type: text/plain
+
+      - name: Upload Release Asset - Windows x64 Installer (Auto Updates)
+        id: upload-release-asset-x64-au
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.INSTALLER_ASSET_PATH }}
+          asset_name: ${{ env.INSTALLER_AU_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      # ----------------------------------------------------------------
+      # Build Windows x86
+      # ----------------------------------------------------------------
+      - name: Build Windows x86 Binaries
+        run: npm run build:win-ia32
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK_WINDOWS }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_WINDOWS }}
+
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - name: Setting Environment Variables
+        run: |
+          $PRODUCT_NAME="Snapmaker Luban"
+          $PACKAGE_NAME="snapmaker-luban"
+          $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
+          $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
+
+          $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe"
+          $INSTALLER_ASSET_PATH="${RELEASE}-win-ia32.exe"
+
+          echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
+          echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
+
+      - name: Upload Release Asset - Windows x86 Installer
+        id: upload-release-asset-x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.INSTALLER_ASSET_PATH }}
+          asset_name: ${{ env.INSTALLER_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+  build-macos:
+    name: Build macOS Packages
+
+    # macos-10.15
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js 10.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '10.x'
+
+      - run: npm install
+
+      - run: npm run build
+
+      # ----------------------------------------------------------------
+      # Build macOS x64
+      # ----------------------------------------------------------------
+      - name: Build macOS Binaries
+        run: npm run build:mac-x64
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK_MACOS }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_MACOS }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+
+      # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - name: Setting Environment Variables
+        run: |
+          PRODUCT_NAME="Snapmaker Luban"
+          PACKAGE_NAME="snapmaker-luban"
+          PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+          RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+          INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg"
+          INSTALLER_ASSET_NAME="${RELEASE}-mac-x64.dmg"
+
+          ZIP_ASSET_PATH="./output/${PRODUCT_NAME}-${PACKAGE_VERSION}-mac.zip"
+          ZIP_ASSET_NAME="${RELEASE}-mac.zip"
+
+          echo "INSTALLER_ASSET_PATH=$INSTALLER_ASSET_PATH" >> $GITHUB_ENV
+          echo "INSTALLER_ASSET_NAME=$INSTALLER_ASSET_NAME" >> $GITHUB_ENV
+          echo "ZIP_ASSET_PATH=$ZIP_ASSET_PATH" >> $GITHUB_ENV
+          echo "ZIP_ASSET_NAME=$ZIP_ASSET_NAME" >> $GITHUB_ENV
+
+      - name: Upload Release Asset - macOS DMG Installer
+        id: upload-release-asset-dmg
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.INSTALLER_ASSET_PATH }}
+          asset_name: ${{ env.INSTALLER_ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset - YAML (Auto Updates)
+        id: upload-release-asset-yaml
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./output/latest-mac.yml
+          asset_name: latest-mac.yml
+          asset_content_type: text/plain
+
+      - name: Upload Release Asset - macOS ZIP (Auto Updates)
+        id: upload-release-asset-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ env.ZIP_ASSET_PATH }}
+          asset_name: ${{ env.ZIP_ASSET_NAME }}
+          asset_content_type: application/octet-stream
