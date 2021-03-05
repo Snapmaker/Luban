@@ -115,8 +115,7 @@ class JobType extends PureComponent {
                             />
                         )}
                         <div style={{
-                            marginTop: '16px',
-                            padding: '0px 15px 0px 15px'
+                            marginTop: '16px'
                         }}
                         >
                             <div className="sm-parameter-row">
