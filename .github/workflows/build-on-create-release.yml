@@ -39,7 +39,7 @@ jobs:
       - name: Setting Environment Variables
         run: |
           $PRODUCT_NAME="Snapmaker Luban"
-          $PACKAGE_NAME="snapmaker-luban"
+          $PACKAGE_NAME="Snapmaker-Luban"
           $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
           $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
@@ -98,12 +98,12 @@ jobs:
       - name: Setting Environment Variables
         run: |
           $PRODUCT_NAME="Snapmaker Luban"
-          $PACKAGE_NAME="snapmaker-luban"
+          $PACKAGE_NAME="Snapmaker-Luban"
           $PACKAGE_VERSION=node -e "console.log(require('./src/package.json').version)"
           $RELEASE="${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
           $INSTALLER_ASSET_PATH="./output/${PRODUCT_NAME} Setup ${PACKAGE_VERSION}.exe"
-          $INSTALLER_ASSET_PATH="${RELEASE}-win-ia32.exe"
+          $INSTALLER_ASSET_NAME="${RELEASE}-win-ia32.exe"
 
           echo "INSTALLER_ASSET_PATH=${INSTALLER_ASSET_PATH}" >> ${Env:GITHUB_ENV}
           echo "INSTALLER_ASSET_NAME=${INSTALLER_ASSET_NAME}" >> ${Env:GITHUB_ENV}
@@ -153,7 +153,7 @@ jobs:
       - name: Setting Environment Variables
         run: |
           PRODUCT_NAME="Snapmaker Luban"
-          PACKAGE_NAME="snapmaker-luban"
+          PACKAGE_NAME="Snapmaker-Luban"
           PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
           RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
 
