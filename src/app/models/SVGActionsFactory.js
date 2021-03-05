@@ -460,6 +460,7 @@ class SVGActionsFactory {
                     }
                 });
             }
+            svgModel.onUpdate();
         }
 
         this.modelGroup.updateSelectedGroupTransformation(transformation);
