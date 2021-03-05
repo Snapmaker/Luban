@@ -244,7 +244,7 @@ class ToolPath {
             return f;
         }
         if (dx === 0 && dy === 0 && dz === 0) {
-            return Math.round(f * 360 / Math.PI / this.diameter);
+            return Math.min(Math.round(f * 360 / Math.PI / this.diameter), MAX_B_SPEED);
         }
         const s = db * db + dx * dx + dy * dy + dz * dz;
         const ns = (db * Math.PI * this.diameter / 360) * (db * Math.PI * this.diameter / 360) + dx * dx + dy * dy + dz * dz;
