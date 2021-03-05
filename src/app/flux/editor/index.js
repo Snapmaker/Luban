@@ -294,7 +294,7 @@ export const actions = {
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
-        let { width, height, scale } = limitModelSizeByMachineSize(size, sourceWidth, sourceHeight);
+        let { width, height, scale } = limitModelSizeByMachineSize(materials.isRotate && sourceType === SOURCE_TYPE_IMAGE3D ? materials : size, sourceWidth, sourceHeight);
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
             height = 40 * sourceHeight / sourceWidth;
