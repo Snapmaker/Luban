@@ -158,7 +158,7 @@ class Printing extends PureComponent {
                                             <span
                                                 className="sm-parameter-row__input"
                                             >
-                                                {laserFocalLength}
+                                                {laserFocalLength.toFixed(2)}
                                             </span>
                                             <span className="sm-parameter-row__input-unit">mm</span>
                                         </div>
@@ -167,7 +167,7 @@ class Printing extends PureComponent {
                                             <span
                                                 className="sm-parameter-row__input"
                                             >
-                                                {laserFocalLength + materialThickness}
+                                                {(laserFocalLength + materialThickness).toFixed(2)}
                                             </span>
                                             <span className="sm-parameter-row__input-unit">mm</span>
                                         </div>
