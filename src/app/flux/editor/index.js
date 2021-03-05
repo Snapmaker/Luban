@@ -183,7 +183,7 @@ export const actions = {
         sourceType = sourceType || getSourceType(originalName);
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height, scale } = sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
+        let { width, height, scale } = sizeModelByMachineSize(sourceType === SOURCE_TYPE_IMAGE3D ? materials : size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
         // Generate geometry
         if (sourceType === SOURCE_TYPE_IMAGE3D) {
             const res = sizeModelByMinSize({ x: 50, y: 50 }, width, height);
@@ -193,8 +193,6 @@ export const actions = {
                 scale = res.scale;
             }
         }
-
-        console.log(width, height, scale);
 
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
 

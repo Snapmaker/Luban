@@ -458,7 +458,10 @@ export const CaseConfigFourAxis = [
         tag: 'laser',
         title: 'Rotary Laser Engraved Lion',
         materials: {
-            isRotate: true
+            diameter: 40,
+            fixtureLength: 20,
+            isRotate: true,
+            length: 70
         },
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
@@ -496,7 +499,10 @@ export const CaseConfigFourAxis = [
         title: 'Rotary CNC Carved Chess Piece',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
-            isRotate: true
+            isRotate: true,
+            diameter: 35,
+            fixtureLength: 20,
+            length: 75
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-A250&A350.png',
         pathConfig: {
@@ -533,7 +539,10 @@ export const CaseConfigFourAxis = [
         title: '4-axis Linkage CNC Carved Lion',
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
         materials: {
-            isRotate: true
+            isRotate: true,
+            diameter: 35,
+            fixtureLength: 20,
+            length: 75
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
         pathConfig: {
