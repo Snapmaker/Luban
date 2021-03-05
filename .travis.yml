@@ -1,11 +1,5 @@
 os:
-    - osx
     - linux
-
-# https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
-# Default: 9.4
-osx_image: xcode11.6  # Xcode 11.6, macOS 10.15.5, JDK 14.02
-# osx_image: xcode12u  # Xcode 12.0, macOS 10.15.5, JDK 14.0.1
 
 # Linux Ubuntu Precise
 sudo: required
@@ -51,21 +45,6 @@ after_success:
     - PACKAGE_NAME=`node -e "console.log(require('./src/package.json').name)"`
     - PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
     - RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
-    - COMMIT_LOG=`git log -1 --format='%ci %H %s'`
-    - |
-        # Build macOS version
-        if [ "$TRAVIS_OS_NAME" == "osx" ] && [ -n "$TRAVIS_TAG" ]; then
-            # https://github.com/electron-userland/electron-osx-sign/issues/83
-            # Temporarily Bypass Gatekeeper
-            sudo spctl --master-disable;
-            sudo spctl --status;
-            travis_wait 60 npm run build:mac-x64;
-            ls -al output output/*;
-            cp -af "output/latest-mac.yml" "releases/latest-mac.yml";
-            cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}.dmg" "releases/${RELEASE}-mac-x64.dmg";
-            cp -af "output/${PRODUCT_NAME}-${PACKAGE_VERSION}-mac.zip" "releases/${RELEASE}-mac.zip";
-            ls -al releases/*;
-        fi
     - |
         # Build Linux versions (deb, rpm)
         if [ "$TRAVIS_OS_NAME" == "linux" ] && [ -n "$TRAVIS_TAG" ]; then
@@ -113,4 +92,3 @@ deploy:
         # https://docs.travis-ci.com/user/deployment#Conditional-Releases-with-on
         tags: true  # Deploy app only when a tag is applied to the commit
         node: '10'
-        repo: Snapmaker/Luban
