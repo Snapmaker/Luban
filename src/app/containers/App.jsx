@@ -229,6 +229,7 @@ class App extends PureComponent {
                 });
             }
         });
+        // Make fit-addon loading when loading from the workspace for the first time (console widget)
         if (history.location && history.location.pathname === '/workspace') {
             history.push('/workspace');
         }
