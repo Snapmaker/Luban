@@ -123,7 +123,6 @@ class Output extends PureComponent {
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-default"
-                        disabled={isProcess && autoPreviewEnabled}
                         onClick={this.actions.onProcess}
                         style={{ display: 'block', width: '100%' }}
                     >
