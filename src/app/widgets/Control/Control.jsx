@@ -134,7 +134,17 @@ class Control extends PureComponent {
 
         // actions
         jog: (params = {}) => {
-            const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
+            const { workPosition } = this.props;
+            const s = map(params, (value, axis) => {
+                const axisMoved = axis.toUpperCase();
+                let signNumber = 1;
+                if (axisMoved === 'Y' && workPosition.isFourAxis) {
+                    signNumber = -1;
+                } else {
+                    signNumber = 1;
+                }
+                return (`${axisMoved}${signNumber * value}`);
+            }).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
                 this.actions.executeGcode(gcode.join('\n'));

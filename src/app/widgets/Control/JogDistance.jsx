@@ -16,9 +16,14 @@ const JogDistance = (props) => {
     const { canClick, units, selectedDistance, selectedAngle, customDistance, customAngle, workPosition } = state;
     // console.log('JogDistance', selectedAngle, customAngle);
     const distance = String(selectedDistance); // force convert to string
-    const isCustomDistanceSelected = !(_.includes(['10', '1', '0.1', '0.05'], distance));
+    let isCustomDistanceSelected = true;
+    if (workPosition.isFourAxis) {
+        isCustomDistanceSelected = !(_.includes(['10', '5', '1', '0.1'], distance));
+    } else {
+        isCustomDistanceSelected = !(_.includes(['10', '1', '0.1', '0.05'], distance));
+    }
     const angle = String(selectedAngle);
-    const isCustomAngleSelected = !(_.includes(['5', '1', '0.5'], angle));
+    const isCustomAngleSelected = !(_.includes(['5', '1', '0.2'], angle));
     const distanceClasses = {
         '10': classNames(
             'btn',
@@ -26,6 +31,14 @@ const JogDistance = (props) => {
             {
                 'btn-secondary': distance === '10',
                 'btn-outline-secondary': distance !== '10'
+            }
+        ),
+        '5': classNames(
+            'btn',
+            'col-3',
+            {
+                'btn-secondary': distance === '5',
+                'btn-outline-secondary': distance !== '5'
             }
         ),
         '1': classNames(
@@ -77,12 +90,12 @@ const JogDistance = (props) => {
                 'btn-outline-secondary': angle !== '1'
             }
         ),
-        '0.5': classNames(
+        '0.2': classNames(
             'btn',
             'col-4',
             {
-                'btn-secondary': angle === '0.5',
-                'btn-outline-secondary': angle !== '0.5'
+                'btn-secondary': angle === '0.2',
+                'btn-outline-secondary': angle !== '0.2'
             }
         ),
         'custom': classNames(
@@ -111,6 +124,18 @@ const JogDistance = (props) => {
                                 >
                                     10
                                 </button>
+                                {workPosition.isFourAxis && (
+                                    <button
+                                        type="button"
+                                        className={distanceClasses['5']}
+                                        title={`5 ${units}`}
+                                        onClick={() => actions.selectDistance('5')}
+                                        disabled={!canClick}
+                                        style={{ height: '31.25px' }}
+                                    >
+                                    5
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     className={distanceClasses['1']}
@@ -131,16 +156,18 @@ const JogDistance = (props) => {
                                 >
                                     0.1
                                 </button>
-                                <button
-                                    type="button"
-                                    className={distanceClasses['0.05']}
-                                    title={`0.05 ${units}`}
-                                    onClick={() => actions.selectDistance('0.05')}
-                                    disabled={!canClick}
-                                    style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
-                                >
+                                {!workPosition.isFourAxis && (
+                                    <button
+                                        type="button"
+                                        className={distanceClasses['0.05']}
+                                        title={`0.05 ${units}`}
+                                        onClick={() => actions.selectDistance('0.05')}
+                                        disabled={!canClick}
+                                        style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
+                                    >
                                     0.05
-                                </button>
+                                    </button>
+                                )}
                             </div>
                             <button
                                 type="button"
@@ -195,7 +222,7 @@ const JogDistance = (props) => {
                                     <button
                                         type="button"
                                         className={angleClasses['5']}
-                                        title={`10 ${units}`}
+                                        title={`5 ${units}`}
                                         onClick={() => actions.selectAngle('5')}
                                         disabled={!canClick}
                                         style={{ height: '31.25px' }}
@@ -214,13 +241,13 @@ const JogDistance = (props) => {
                                     </button>
                                     <button
                                         type="button"
-                                        className={angleClasses['0.5']}
-                                        title={`0.1 ${units}`}
-                                        onClick={() => actions.selectAngle('0.5')}
+                                        className={angleClasses['0.2']}
+                                        title={`0.2 ${units}`}
+                                        onClick={() => actions.selectAngle('0.2')}
                                         disabled={!canClick}
                                         style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
                                     >
-                                        0.5
+                                        0.2
                                     </button>
                                 </div>
                                 <button
