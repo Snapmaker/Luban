@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import Anchor from '../Anchor';
 import TipTrigger from '../TipTrigger';
 import styles from './styles.styl';
+import Checkbox from '../Checkbox';
 
 // TODO: to be improved
 const OptionalDropdown = (props) => {
@@ -18,8 +19,7 @@ const OptionalDropdown = (props) => {
                             onClick={onClick}
                             disabled={disabled}
                         >
-                            <i className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])} />
-                            <span>{title}</span>
+                            <Checkbox disabled={disabled} checked={!hidden} className={styles.checkbox} label={title} />
                         </Anchor>
                     </div>
                     <div className={styles['expandable-separator']}>
