@@ -85,7 +85,7 @@ const INITIAL_STATE = {
 
     // Console
     terminalHistory: new FixedArray(1000),
-    history: new History(1000),
+    consoleHistory: new History(1000),
     consoleLogs: [],
     // Serial port
 
