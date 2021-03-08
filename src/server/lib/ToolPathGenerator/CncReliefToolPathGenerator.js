@@ -484,6 +484,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             z: k === 0 ? this.initialZ : z,
                             f: jogSpeed
                         });
+                        currentZ = k === 0 ? this.initialZ : z;
                     }
                 }
 
