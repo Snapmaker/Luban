@@ -380,7 +380,7 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
-                if (mouseTarget && mouseTarget !== this.svgContainer) {
+                if (mouseTarget && mouseTarget.parentNode.id === 'svg-data') {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                         && mouseTarget.id !== 'printable-area-group') {
                         // without shift key, we regard the action as new select
