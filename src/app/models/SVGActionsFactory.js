@@ -425,8 +425,6 @@ class SVGActionsFactory {
 
                     const transform = svg.createSVGTransform();
                     transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
-                    const transformList = elem.transform.baseVal;
-                    transformList.insertItemBefore(transform, 0);
                     svgModel.onUpdate();
                 }
             }
