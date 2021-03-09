@@ -38,7 +38,7 @@ export const removeSpecialChars = (str) => {
     return str.replace(/[`~!@#$%^&*()_|+\-=?;:'",<>{}[\]\\/]/gi, '');
 };
 
-export const checkoutIsImageSuffix = (filePath) => {
+export const checkIsImageSuffix = (filePath) => {
     const index = filePath.lastIndexOf('.');
     if (index !== -1) {
         const ext = filePath.substr(index + 1).trim();
