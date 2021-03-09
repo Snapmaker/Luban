@@ -250,7 +250,7 @@ class Transformation extends PureComponent {
                                     </div>
                                     <span
                                         className={styles['description-text']}
-                                        style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                        style={{ width: '28px', textAlign: 'center', display: 'inline-block' }}
                                     />
                                     {selectedModelArray.length === 1 && (
                                         <button
@@ -266,7 +266,7 @@ class Transformation extends PureComponent {
                                     {selectedModelArray.length === 1 && (
                                         <span
                                             className={styles['description-text']}
-                                            style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                            style={{ width: '20px', textAlign: 'center', display: 'inline-block' }}
                                         />
                                     )}
                                     {selectedModelArray.length === 1 && (
