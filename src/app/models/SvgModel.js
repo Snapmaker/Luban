@@ -6,6 +6,7 @@ import { DATA_PREFIX } from '../constants';
 
 import api from '../api';
 import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
+import { checkIsImageSuffix } from '../../shared/lib/utils';
 
 const svg = document.createElementNS(NS.SVG, 'svg');
 
@@ -409,7 +410,7 @@ class SvgModel {
                 elem.setAttribute('width', width);
                 elem.setAttribute('height', height);
                 if (!elem.getAttribute('href')) {
-                    elem.setAttribute('href', href);
+                    elem.setAttribute('href', checkIsImageSuffix(href) ? href : './images/loading.gif');
                 }
                 break;
             }
