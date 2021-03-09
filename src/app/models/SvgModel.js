@@ -518,6 +518,12 @@ class SvgModel extends BaseModel {
      * On transform complete, normalize transform list.
      */
     static completeElementTransform(element) {
+        const { x, y, width, height } = element.getBBox();
+        // TODO: to deal with key up error, fix it
+        if (width === 0 || height === 0) {
+            return;
+        }
+
         // normalize transform list
         const transformList = SvgModel.getTransformList(element);
 
@@ -539,8 +545,6 @@ class SvgModel extends BaseModel {
         if (transformType === 'move') {
             // move action
             // [T][T][R][S][T]
-            const { x, y, width, height } = element.getBBox();
-
             const angle = transformList.getItem(2).angle;
             const scaleX = transformList.getItem(3).matrix.a;
             const scaleY = transformList.getItem(3).matrix.d;
@@ -568,8 +572,6 @@ class SvgModel extends BaseModel {
         } else if (transformType === 'resize') {
             // resize action
             // [T][R][S][T]
-            const { x, y, width, height } = element.getBBox();
-
             const angle = transformList.getItem(1).angle;
             const scaleX = transformList.getItem(2).matrix.a;
             const scaleY = transformList.getItem(2).matrix.d;
@@ -597,8 +599,6 @@ class SvgModel extends BaseModel {
         } else {
             // rotate action
             // [R][T][R][S][T]
-            const { x, y, width, height } = element.getBBox();
-
             const rotateAngle = transformList.getItem(0).angle;
 
             const angle = transformList.getItem(2).angle;
