@@ -128,45 +128,51 @@ class Transformation extends PureComponent {
                             title={i18n._('Move (mm)')}
                             content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
                         >
-                            <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
-                            <Input
-                                className={styles['input-box-left']}
-                                disabled={!selectedNotHide}
-                                value={toFixed(positionX, 1)}
-                                min={-size.x}
-                                max={size.x}
-                                onChange={(value) => {
-                                    actions.onChangePositionX(value);
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                            <span
-                                className={styles['input-box-inner-text']}
-                                style={{ marginLeft: '-15px' }}
-                            >
-                                X
-                            </span>
-                            <span
-                                className={styles['description-text']}
-                                style={{ marginLeft: '6px', width: '32px', textAlign: 'center', display: 'inline-block' }}
-                            />
-                            <Input
-                                className={styles['input-box-right']}
-                                disabled={!selectedNotHide}
-                                value={toFixed(positionY, 1)}
-                                min={-size.y}
-                                max={size.y}
-                                onChange={(value) => {
-                                    actions.onChangePositionY(value);
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                            <span
-                                className={styles['input-box-inner-text']}
-                                style={{ marginLeft: '-15px' }}
-                            >
-                                Y
-                            </span>
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide}
+                                            value={toFixed(positionX, 1)}
+                                            min={-size.x}
+                                            max={size.x}
+                                            onChange={(value) => {
+                                                actions.onChangePositionX(value);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-15px' }}
+                                        >
+                                            X
+                                        </span>
+                                    </div>
+                                    <span
+                                        className={styles['description-text']}
+                                        style={{ marginLeft: '6px', width: '20px', textAlign: 'center', display: 'inline-block' }}
+                                    />
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide}
+                                            value={toFixed(positionY, 1)}
+                                            min={-size.y}
+                                            max={size.y}
+                                            onChange={(value) => {
+                                                actions.onChangePositionY(value);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-15px' }}
+                                        >
+                                            Y
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Size')}
@@ -174,50 +180,54 @@ class Transformation extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
-                                <Input
-                                    className={styles['input-box-left']}
-                                    disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(width, 1)}
-                                    min={1}
-                                    max={size.x}
-                                    onChange={(value) => {
-                                        actions.onChangeWidth(value);
-                                        // actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-17px' }}
-                                >
-                                   W
-                                </span>
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide || sourceType === 'raster'}
-                                    className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
-                                    style={{ height: '22px', width: '22px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '10px', marginRight: '5px' }}
-                                    onClick={() => {
-                                        actions.onChangeUniformScalingState(!uniformScalingState);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <Input
-                                    className={styles['input-box-right']}
-                                    disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(height, 1)}
-                                    min={1}
-                                    max={size.y}
-                                    onChange={(value) => {
-                                        actions.onChangeHeight(value);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-16px' }}
-                                >
-                                   H
-                                </span>
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide || canResize === false}
+                                            value={toFixed(width, 1)}
+                                            min={1}
+                                            max={size.x}
+                                            onChange={(value) => {
+                                                actions.onChangeWidth(value);
+                                                // actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-17px' }}
+                                        >
+                                           W
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide || sourceType === 'raster'}
+                                        className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
+                                        style={{ height: '22px', width: '20px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '4px', marginRight: '2px' }}
+                                        onClick={() => {
+                                            actions.onChangeUniformScalingState(!uniformScalingState);
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide || canResize === false}
+                                            value={toFixed(height, 1)}
+                                            min={1}
+                                            max={size.y}
+                                            onChange={(value) => {
+                                                actions.onChangeHeight(value);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-16px' }}
+                                        >
+                                           H
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </TipTrigger>
                         <TipTrigger
@@ -226,48 +236,51 @@ class Transformation extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
-                                <DegreeInput
-                                    className={styles['input-box-left']}
-                                    disabled={!selectedNotHide}
-                                    value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1) : 0}
-                                    suffix="°"
-                                    onChange={(value) => {
-                                        actions.onChangeRotationZ(value);
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                                <span
-                                    className={styles['description-text']}
-                                    style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
-                                />
-                                {selectedModelArray.length === 1 && (
-                                    <button
-                                        type="button"
-                                        disabled={!selectedNotHide}
-                                        className={styles.icon_flip_vertically}
-                                        onClick={() => {
-                                            actions.onChangeFlip('scaleX');
-                                            actions.onModelAfterTransform();
-                                        }}
-                                    />
-                                )}
-                                {selectedModelArray.length === 1 && (
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <DegreeInput
+                                            disabled={!selectedNotHide}
+                                            value={rotationZ ? toFixed(rotationZ * 180 / Math.PI, 1) : 0}
+                                            suffix="°"
+                                            onChange={(value) => {
+                                                actions.onChangeRotationZ(value);
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                    </div>
                                     <span
                                         className={styles['description-text']}
                                         style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
                                     />
-                                )}
-                                {selectedModelArray.length === 1 && (
-                                    <button
-                                        type="button"
-                                        disabled={!selectedNotHide}
-                                        className={styles.icon_flip_horizontal}
-                                        onClick={() => {
-                                            actions.onChangeFlip('scaleY');
-                                            actions.onModelAfterTransform();
-                                        }}
-                                    />
-                                )}
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            disabled={!selectedNotHide}
+                                            className={styles.icon_flip_vertically}
+                                            onClick={() => {
+                                                actions.onChangeFlip('scaleX');
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                    )}
+                                    {selectedModelArray.length === 1 && (
+                                        <span
+                                            className={styles['description-text']}
+                                            style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                        />
+                                    )}
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            disabled={!selectedNotHide}
+                                            className={styles.icon_flip_horizontal}
+                                            onClick={() => {
+                                                actions.onChangeFlip('scaleY');
+                                                actions.onModelAfterTransform();
+                                            }}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </TipTrigger>
                     </React.Fragment>
