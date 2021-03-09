@@ -186,7 +186,7 @@ class SetBackground extends PureComponent {
                     )}
                     disabled={!canCameraCapture}
                     onClick={this.actions.showModal}
-                    style={{ display: (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI || isConnected || hasBackground)) ? 'block' : 'none' }}
+                    style={{ display: (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground)) ? 'block' : 'none' }}
                 >
                     {i18n._('Camera Capture')}
                 </button>

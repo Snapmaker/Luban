@@ -221,17 +221,15 @@ class Control extends PureComponent {
             }
             if (workPosition.isFourAxis) {
                 const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
-                let maxB = bbox.max.b;
-                if (angleDiff > 360) {
-                    maxB = bbox.min.b + 360;
-                }
+                const minB = 0;
+                const maxB = angleDiff > 360 ? 360 : angleDiff;
                 gcode.push(
                     'G90', // absolute position
-                    `G0 B${bbox.min.b} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
-                    `G0 B${bbox.min.b} Y${bbox.max.y}`,
+                    `G0 B${minB} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
+                    `G0 B${minB} Y${bbox.max.y}`,
                     `G0 B${maxB} Y${bbox.max.y}`,
                     `G0 B${maxB} Y${bbox.min.y}`,
-                    `G0 B${bbox.min.b} Y${bbox.min.y}`,
+                    `G0 B${minB} Y${bbox.min.y}`,
                     `G0 B${workPosition.b} Y${workPosition.y}` // go back to origin
                 );
             } else {

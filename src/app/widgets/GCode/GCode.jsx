@@ -139,17 +139,20 @@ class GCode extends PureComponent {
                         min: {
                             x: 0,
                             y: 0,
-                            z: 0
+                            z: 0,
+                            b: 0
                         },
                         max: {
                             x: 0,
                             y: 0,
-                            z: 0
+                            z: 0,
+                            b: 0
                         },
                         delta: {
                             x: 0,
                             y: 0,
-                            z: 0
+                            z: 0,
+                            b: 0
                         }
                     }
                 });
@@ -158,23 +161,27 @@ class GCode extends PureComponent {
                 const dX = bbox.max.x - bbox.min.x;
                 const dY = bbox.max.y - bbox.min.y;
                 const dZ = bbox.max.z - bbox.min.z;
+                const dB = bbox.max.b - bbox.min.b;
 
                 this.setState({
                     bbox: {
                         min: {
                             x: bbox.min.x,
                             y: bbox.min.y,
-                            z: bbox.min.z
+                            z: bbox.min.z,
+                            b: bbox.min.b
                         },
                         max: {
                             x: bbox.max.x,
                             y: bbox.max.y,
-                            z: bbox.max.z
+                            z: bbox.max.z,
+                            b: bbox.max.b
                         },
                         delta: {
                             x: dX,
                             y: dY,
-                            z: dZ
+                            z: dZ,
+                            b: dB
                         }
                     }
                 });
@@ -248,6 +255,12 @@ class GCode extends PureComponent {
                                     <td>{bbox.min.z} {displayUnits}</td>
                                     <td>{bbox.max.z} {displayUnits}</td>
                                     <td>{bbox.delta.z} {displayUnits}</td>
+                                </tr>
+                                <tr>
+                                    <td className={styles.axis}>B</td>
+                                    <td>{bbox.min.b} °</td>
+                                    <td>{bbox.max.b} °</td>
+                                    <td>{bbox.delta.b} °</td>
                                 </tr>
                             </tbody>
                         </table>
