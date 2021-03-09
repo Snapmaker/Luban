@@ -395,6 +395,7 @@ class SVGCanvas extends PureComponent {
                         this.addToSelection([mouseTarget]);
                     }
 
+                    /*
                     for (const elem of this.svgContentGroup.selectedElements) {
                         const transformList = getTransformList(elem);
 
@@ -407,6 +408,7 @@ class SVGCanvas extends PureComponent {
                             transformList.appendItem(transform);
                         }
                     }
+                    */
                 } else {
                     this.clearSelection();
                 }
