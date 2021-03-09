@@ -147,6 +147,7 @@
     "@babel/runtime": "~7.12.0",
     "@trendmicro/react-breadcrumbs": "~0.5.4",
     "@trendmicro/react-buttons": "~1.3.0",
+    "@trendmicro/react-checkbox": "^3.4.1",
     "@trendmicro/react-dropdown": "~1.3.0",
     "@trendmicro/react-interpolate": "~0.5.3",
     "@trendmicro/react-modal": "~2.3.0",
