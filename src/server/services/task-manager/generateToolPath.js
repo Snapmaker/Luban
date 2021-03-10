@@ -121,9 +121,6 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
             });
         });
     } else if (sourceType === SOURCE_TYPE_IMAGE3D && mode === PROCESS_MODE_GREYSCALE) {
-        // TODO Parameters used twice resulted in no invert
-        modelInfo.config.invert = false;
-
         const generator = new CncMeshToolPathGenerator(modelInfo);
         generator.on('progress', (p) => onProgress(p));
 

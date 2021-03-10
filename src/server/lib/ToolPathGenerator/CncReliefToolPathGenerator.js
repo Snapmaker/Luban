@@ -3,7 +3,6 @@ import EventEmitter from 'events';
 // import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { round } from '../../../shared/lib/utils';
-import { CNC_IMAGE_NEGATIVE_RANGE_FIELD } from '../../constants';
 import XToBToolPath from '../ToolPath/XToBToolPath';
 
 const OVERLAP_RATE = 0.5;
@@ -139,16 +138,19 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     img.invert();
                 }
 
+                const { width, height } = img.bitmap;
+
                 img
                     .greyscale()
-                    .resize(this.targetWidth, this.targetHeight)
                     .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
                     .rotate(-this.rotationZ * 180 / Math.PI);
 
+                const scale = { w: img.bitmap.width / width, h: img.bitmap.height / height };
+
 
                 // targetWidth&targetHeight will be changed after rotated
-                const targetWidth = img.bitmap.width;
-                const targetHeight = img.bitmap.height;
+                const targetWidth = this.targetWidth * scale.w;
+                const targetHeight = this.targetHeight * scale.h;
 
                 this._initGenerator(targetWidth, targetHeight);
 
@@ -160,9 +162,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         const y = Math.floor(j / this.targetHeight * img.bitmap.height);
                         const idx = y * img.bitmap.width * 4 + x * 4;
                         const a = img.bitmap.data[idx + 3];
-                        if (a === CNC_IMAGE_NEGATIVE_RANGE_FIELD) {
-                            data[i][j] = -img.bitmap.data[idx];
-                        } else if (a === 0) {
+                        if (a === 0) {
                             data[i][j] = 255;
                         } else {
                             data[i][j] = img.bitmap.data[idx];
