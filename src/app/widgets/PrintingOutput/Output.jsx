@@ -164,7 +164,7 @@ class Output extends PureComponent {
                                     <button
                                         type="button"
                                         className="sm-btn-large sm-btn-default"
-                                        style={{ width: '100%' }}
+                                        style={{ width: '100%', lineHeight: '95%' }}
                                         disabled={!hasModel}
                                         onClick={actions.onClickExportModel}
                                     >
