@@ -147,8 +147,13 @@ export const generateGcode = (toolPaths, onProgress) => {
             } else {
                 boundingBox.max.x = Math.max(boundingBox.max.x, toolPathObj.boundingBox.max.x);
                 boundingBox.max.y = Math.max(boundingBox.max.y, toolPathObj.boundingBox.max.y);
+                boundingBox.max.z = Math.max(boundingBox.max.z, toolPathObj.boundingBox.max.z);
+                boundingBox.max.b = Math.max(boundingBox.max.b, toolPathObj.boundingBox.max.b);
+
                 boundingBox.min.x = Math.min(boundingBox.min.x, toolPathObj.boundingBox.min.x);
                 boundingBox.min.y = Math.min(boundingBox.min.y, toolPathObj.boundingBox.min.y);
+                boundingBox.min.z = Math.min(boundingBox.min.z, toolPathObj.boundingBox.min.z);
+                boundingBox.min.b = Math.min(boundingBox.min.b, toolPathObj.boundingBox.min.b);
             }
 
             checkoutBoundingBoxIsNull(boundingBox);
@@ -176,6 +181,7 @@ export const generateGcode = (toolPaths, onProgress) => {
         + `;min_x(mm): ${boundingBox.min.x}\n`
         + `;min_y(mm): ${boundingBox.min.y}\n`
         + `;min_b(mm): ${boundingBox.min.b}\n`
+        + `;min_z(mm): ${boundingBox.min.z}\n`
         + `;work_speed(mm/minute): ${gcodeConfig.workSpeed}\n`
         + `;jog_speed(mm/minute): ${gcodeConfig.jogSpeed}\n`
         + `;power(%): ${power}\n`
