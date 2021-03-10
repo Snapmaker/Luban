@@ -409,6 +409,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         // safeStart
         this.toolPath.safeStart(normalizedX0, normalizedHeight, stopHeight, safetyHeight, jogSpeed);
+        this.toolPath.rotateStart(jogSpeed);
         this.toolPath.spindleOn({ P: 100 });
 
         const zMin = [];
@@ -510,6 +511,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         }
         this.toolPath.move0Z(stopHeight, jogSpeed);
         this.toolPath.spindleOff();
+        this.toolPath.resetB();
 
         const boundingBox = this.toolPath.boundingBox;
         const { positionX } = this.transformation;
