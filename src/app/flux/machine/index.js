@@ -608,10 +608,19 @@ export const actions = {
                 }));
                 // make 'workPosition' value as Number
                 if (!(_.isUndefined(b))) {
-                    if (Number(workPosition.x) !== x
-                        || Number(workPosition.y) !== y
-                        || Number(workPosition.z) !== z
-                        || Number(workPosition.b) !== b) {
+                    if (!workPosition.isFourAxis) {
+                        dispatch(baseActions.updateState({
+                            workPosition: {
+                                ...workPosition,
+                                isFourAxis: true
+                            }
+                        }));
+                    }
+                    // Conversion using the 'Number' method is unreliable, cuz 'Number(undefined) === 0'
+                    if (workPosition.x !== x.toFixed(3)
+                        || workPosition.y !== y.toFixed(3)
+                        || workPosition.z !== z.toFixed(3)
+                        || workPosition.b !== b.toFixed(3)) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
                             dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
@@ -630,9 +639,9 @@ export const actions = {
                         }));
                     }
                 } else {
-                    if (Number(workPosition.x) !== x
-                        || Number(workPosition.y) !== y
-                        || Number(workPosition.z) !== z) {
+                    if (workPosition.x !== x.toFixed(3)
+                        || workPosition.y !== y.toFixed(3)
+                        || workPosition.z !== z.toFixed(3)) {
                         // TODO: Set `isRotate` only once.
                         if (headType === HEAD_LASER || headType === HEAD_CNC) {
                             dispatch(editorActions.updateMaterials(headType.toLowerCase(), {
@@ -651,9 +660,9 @@ export const actions = {
                     }
                 }
 
-                if (Number(originOffset.x) !== offsetX
-                    || Number(originOffset.y) !== offsetY
-                    || Number(originOffset.z) !== offsetZ) {
+                if (originOffset.x !== offsetX.toFixed(3)
+                    || originOffset.y !== offsetY.toFixed(3)
+                    || originOffset.z !== offsetZ.toFixed(3)) {
                     dispatch(baseActions.updateState({
                         originOffset: {
                             x: `${offsetX.toFixed(3)}`,
