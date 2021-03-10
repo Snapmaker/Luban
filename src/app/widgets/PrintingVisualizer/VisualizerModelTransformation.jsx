@@ -157,11 +157,15 @@ class VisualizerModelTransformation extends PureComponent {
         let rotateY = 0;
         let rotateZ = 0;
         let uniformScalingState = true;
+        // TODO: refactor these flags
         const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true;
         }));
         const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
             return model.visible === true && !model.supportTag;
+        }));
+        const rotateDisabled = (selectedModelArray.length > 0 && selectedModelArray.some((model) => {
+            return model.supportTag;
         }));
 
 
@@ -231,19 +235,19 @@ class VisualizerModelTransformation extends PureComponent {
                         className={classNames(
                             styles['model-operation'],
                             styles['operation-rotate'],
-                            { [styles.disabled]: transformDisabled || supportDisabled },
+                            { [styles.disabled]: transformDisabled || rotateDisabled },
                             {
-                                [styles.selected]: !(transformDisabled || supportDisabled) && transformMode === 'rotate'
+                                [styles.selected]: !(transformDisabled || rotateDisabled) && transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
                             actions.setTransformMode('rotate');
                         }}
-                        disabled={transformDisabled || supportDisabled}
+                        disabled={transformDisabled || rotateDisabled}
                     >
                         <div className={classNames(
                             styles.text,
-                            { [styles.disabled]: transformDisabled || supportDisabled }
+                            { [styles.disabled]: transformDisabled || rotateDisabled }
                         )}
                         >
                             {i18n._('ROTATE')}
