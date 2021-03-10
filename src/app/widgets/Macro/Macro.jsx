@@ -37,6 +37,10 @@ class Macro extends PureComponent {
         developToolsExecuteGcode: PropTypes.func.isRequired
     };
 
+    state = {
+        macros: []
+    }
+
     actions = {
         executeGcode: (gcode) => {
             gcode = gcode.trim();
@@ -79,24 +83,29 @@ class Macro extends PureComponent {
                 return false;
             }
             return true;
-        },
-        hideDefaultMacroOnWifi: () => {
-            // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
-            const { connectionType } = this.props;
-            let macros = this.props.macros;
-            if (connectionType === CONNECTION_TYPE_WIFI) {
-                macros = macros.filter((item) => {
-                    return item.isDefault !== true;
-                });
-            }
-            return macros;
         }
     };
 
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.macros && Array.isArray(nextProps.macros)) {
+            this.setState({
+                macros: nextProps.macros
+            });
+        }
+        // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
+        if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
+            const macros = nextProps.macros.filter((item) => {
+                return item.isDefault !== true;
+            });
+            this.setState({
+                macros: macros
+            });
+        }
+    }
 
     render() {
         const canClick = this.actions.canClick();
-        const macros = this.actions.hideDefaultMacroOnWifi();
+        const { macros } = this.state;
 
         return (
             <div>
