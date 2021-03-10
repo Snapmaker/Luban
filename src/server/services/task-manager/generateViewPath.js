@@ -9,12 +9,13 @@ import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToo
 import logger from '../../lib/logger';
 import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D } from '../../constants';
 import { polyUnion } from '../../lib/clipper/cLipper-adapter';
+import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
 
 const log = logger('service:TaskManager');
 
 const generateCncViewPath = async (modelInfo, onProgress) => {
-    const { sourceType, mode, uploadName, processImageName } = modelInfo;
-    let modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const { sourceType, mode, uploadName } = modelInfo;
+    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     // if (config.svgNodeName === 'text') {
     //     const result = await editorProcess(modelInfo);
     //     modelPath = `${DataStorage.tmpDir}/${result.filename}`;
@@ -53,9 +54,7 @@ const generateCncViewPath = async (modelInfo, onProgress) => {
             resolve(viewPath);
         });
     } else if (sourceType === SOURCE_TYPE_IMAGE3D && mode === PROCESS_MODE_GREYSCALE) {
-        modelPath = `${DataStorage.tmpDir}/${processImageName}`;
-
-        const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
+        const generator = new CncMeshToolPathGenerator(modelInfo);
         generator.on('progress', (p) => onProgress(p));
 
         const viewPath = await generator.generateViewPathObj();

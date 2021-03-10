@@ -33,14 +33,30 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
     }
 
     async generateToolPathSliceModeRotation() {
-        const modelPath = `${DataStorage.tmpDir}/${this.processImageName}`;
+        const meshProcess = new MeshProcess(this.modelInfo);
 
-        const generator = new CncReliefToolPathGenerator(this.modelInfo, modelPath);
+        const { width, height } = meshProcess.getWidthAndHeight();
+        if (this.transformation.width && this.transformation.height) {
+            meshProcess.mesh.resize({
+                x: this.transformation.width / width,
+                y: this.transformation.width / width,
+                z: this.transformation.height / height
+            });
+        }
+
+        const { data, imageWidth, imageHeight } = meshProcess.convertToData(this.density);
+
+        const generator = new CncReliefToolPathGenerator(this.modelInfo);
+
+        generator.targetWidth = imageWidth;
+        generator.targetHeight = imageHeight;
+
         generator.on('progress', (p) => {
             this.emit('progress', p);
         });
 
-        return generator.generateToolPathObj();
+        generator.upSmooth(data);
+        return generator.parseImageToToolPathObj(data);
     }
 
     async generateToolPathSliceModeLinkage() {
@@ -147,5 +163,32 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         this.emit('progress', 1);
 
         return res;
+    }
+
+    generateViewPathObj() {
+        const meshProcess = new MeshProcess(this.modelInfo);
+
+        const { width, height } = meshProcess.getWidthAndHeight();
+        if (this.transformation.width && this.transformation.height) {
+            meshProcess.mesh.resize({
+                x: this.transformation.width / width,
+                y: this.transformation.width / width,
+                z: this.transformation.height / height
+            });
+        }
+
+        const { data, imageWidth, imageHeight } = meshProcess.convertToData(this.density);
+
+        const generator = new CncReliefToolPathGenerator(this.modelInfo);
+        generator.on('progress', (p) => {
+            this.emit('progress', p);
+        });
+
+        generator.targetWidth = imageWidth;
+        generator.targetHeight = imageHeight;
+
+        generator.upSmooth(data);
+        return this.isRotate ? generator.parseRotateImageToViewPathObj(data)
+            : generator.parseImageToViewPathObj(data);
     }
 }

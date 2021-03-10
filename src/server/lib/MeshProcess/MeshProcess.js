@@ -186,10 +186,10 @@ export class MeshProcess {
         }
     }
 
-    convertTo3AxisImage() {
+    convertTo3AxisData(density) {
         const { width, height } = this.getWidthAndHeight();
 
-        const layerThickness = 1 / this.sliceDensity;
+        const layerThickness = 1 / density;
         const initialLayerThickness = layerThickness / 2;
         const imageWidth = Math.floor((width - initialLayerThickness) / layerThickness) + 1;
         const imageHeight = Math.floor((height - initialLayerThickness) / layerThickness) + 1;
@@ -197,6 +197,13 @@ export class MeshProcess {
         this.slicer = new Slicer(this.mesh, layerThickness, imageHeight, initialLayerThickness);
 
         const data = [];
+
+        for (let i = 0; i < imageWidth; i++) {
+            data[i] = [];
+            for (let j = 0; j < imageHeight; j++) {
+                data[i][j] = 0;
+            }
+        }
 
         for (let j = 0; j < this.slicer.slicerLayers.length; j++) {
             const slicerLayer = this.slicer.slicerLayers[j];
@@ -225,62 +232,32 @@ export class MeshProcess {
 
                         y = round(y, 2);
 
-                        if (data[i] === undefined) {
-                            data[i] = [];
-                        }
-
-                        if (data[i][j] === undefined) {
-                            data[i][j] = y;
-                        } else {
-                            data[i][j] = Math.max(data[i][j], y);
-                        }
+                        data[i][j] = Math.max(data[i][j], y);
                     }
                 }
             }
         }
 
-        const maxY = this.mesh.aabb.max.y;
-        const grayRange = this.maxGray - this.minGray;
-
-        this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
-
-        return new Promise(resolve => {
-            // eslint-disable-next-line no-new
-            new Jimp(imageWidth, imageHeight, (err, image) => {
-                for (let i = 0; i < imageWidth; i++) {
-                    for (let j = 0; j < imageHeight; j++) {
-                        const ii = i - this.extensionX;
-                        const jj = imageHeight - 1 - (j - this.extensionY);
-                        const idx = j * imageWidth * 4 + ii * 4;
-                        const d = data[ii] && data[ii][jj] ? data[ii][jj] / maxY * grayRange + this.minGray : 0;
-
-                        image.bitmap.data[idx] = d;
-                        image.bitmap.data[idx + 1] = d;
-                        image.bitmap.data[idx + 2] = d;
-                        image.bitmap.data[idx + 3] = 255;
-                    }
-                }
-
-                image.write(`${DataStorage.tmpDir}/${this.outputFilename}`, () => {
-                    resolve({
-                        filename: this.outputFilename,
-                        width: width,
-                        height: height
-                    });
-                });
-            });
-        });
+        const maxZ = this.mesh.aabb.max.y;
+        return {
+            maxZ: maxZ,
+            data: data,
+            width,
+            height,
+            imageWidth: imageWidth,
+            imageHeight: imageHeight
+        };
     }
 
-    convertTo4AxisDate() {
+    convertTo4AxisDate(density) {
         const { width, height } = this.getWidthAndHeight();
 
         const r = width / (Math.PI * 2);
 
-        const layerThickness = 1 / this.sliceDensity;
+        const layerThickness = 1 / density;
         const initialLayerThickness = layerThickness / 2;
 
-        const imageWidth = Math.ceil(width * this.sliceDensity);
+        const imageWidth = Math.ceil(width * density);
         const imageHeight = Math.floor((height - initialLayerThickness) / layerThickness) + 1;
 
         const slicer = new Slicer(this.mesh, layerThickness, imageHeight, initialLayerThickness);
@@ -327,25 +304,84 @@ export class MeshProcess {
         }
 
         return {
-            radius: r,
+            maxZ: r,
             data: data,
-            width: width,
-            height: height
+            width,
+            height,
+            imageWidth,
+            imageHeight
         };
     }
 
-    convertTo4AxisImage() {
+    _setDirection() {
+        this.mesh.setCoordinateSystem(this.isRotate ? PLACEMENT_FACE_OPTIONS[this.placement] : DIRECTION_FACE_OPTIONS[this.direction]);
+        if ((this.flip & 1) > 0) {
+            this.mesh.addCoordinateSystem({ z: '-z' });
+        }
+        if ((this.flip & 2) > 0) {
+            this.mesh.addCoordinateSystem({ x: '-x' });
+        }
+    }
+
+    convertToData(density = this.sliceDensity) {
+        let result = null;
+
+        if (this.isRotate) {
+            this.mesh.addCoordinateSystem(DIRECTION_FACE_OPTIONS[RIGHT]);
+            this.mesh.offset({
+                x: -(this.mesh.aabb.max.x + this.mesh.aabb.min.x) / 2,
+                y: -(this.mesh.aabb.max.y + this.mesh.aabb.min.y) / 2,
+                z: -this.mesh.aabb.min.z
+            });
+            result = this.convertTo4AxisDate(density);
+        } else {
+            this.mesh.addCoordinateSystem({ y: '-y' });
+            this.mesh.offset({
+                x: -this.mesh.aabb.min.x,
+                y: -this.mesh.aabb.min.y,
+                z: -this.mesh.aabb.min.z
+            });
+            result = this.convertTo3AxisData(density);
+        }
+
+        const { maxZ, data, imageWidth, imageHeight, width, height } = result;
+
+        const grayRange = this.maxGray - this.minGray;
+
+        for (let i = 0; i < data.length; i++) {
+            data[i].reverse();
+
+            for (let j = 0; j < data[i].length; j++) {
+                data[i][j] = data[i][j] / maxZ * grayRange + this.minGray;
+            }
+        }
+
+        return {
+            data,
+            width,
+            height,
+            imageWidth,
+            imageHeight
+        };
+    }
+
+    convertToImage() {
         this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
 
-        const axisData = this.convertTo4AxisDate();
+        this.mesh.resize({
+            x: this.scale,
+            y: this.scale,
+            z: this.scale
+        });
+
+        const axisData = this.convertToData(this.sliceDensity);
 
         const data = axisData.data;
-        const r = axisData.radius;
-        const width = axisData.width;
-        const height = axisData.height;
 
         const imageWidth = data.length;
         const imageHeight = data[0].length;
+        const width = axisData.width;
+        const height = axisData.height;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -353,8 +389,7 @@ export class MeshProcess {
                 for (let i = 0; i < imageWidth; i++) {
                     for (let j = 0; j < imageHeight; j++) {
                         const idx = j * imageWidth * 4 + i * 4;
-                        const nj = imageHeight - 1 - j;
-                        const d = data[i][nj] / r * 255;
+                        const d = data[i][j];
 
                         image.bitmap.data[idx] = d;
                         image.bitmap.data[idx + 1] = d;
@@ -372,45 +407,5 @@ export class MeshProcess {
                 });
             });
         });
-    }
-
-    _setDirection() {
-        this.mesh.setCoordinateSystem(this.isRotate ? PLACEMENT_FACE_OPTIONS[this.placement] : DIRECTION_FACE_OPTIONS[this.direction]);
-        if ((this.flip & 1) > 0) {
-            this.mesh.addCoordinateSystem({ z: '-z' });
-        }
-        if ((this.flip & 2) > 0) {
-            this.mesh.addCoordinateSystem({ x: '-x' });
-        }
-    }
-
-    convertToImage() {
-        if (this.isRotate) {
-            this.mesh.addCoordinateSystem(DIRECTION_FACE_OPTIONS[RIGHT]);
-            this.mesh.offset({
-                x: -(this.mesh.aabb.max.x + this.mesh.aabb.min.x) / 2,
-                y: -(this.mesh.aabb.max.y + this.mesh.aabb.min.y) / 2,
-                z: -this.mesh.aabb.min.z
-            });
-            this.mesh.resize({
-                x: this.scale,
-                y: this.scale,
-                z: this.scale
-            });
-            return this.convertTo4AxisImage();
-        } else {
-            this.mesh.addCoordinateSystem({ y: '-y' });
-            this.mesh.offset({
-                x: -this.mesh.aabb.min.x,
-                y: -this.mesh.aabb.min.y,
-                z: -this.mesh.aabb.min.z
-            });
-            this.mesh.resize({
-                x: this.scale,
-                y: this.scale,
-                z: this.scale
-            });
-            return this.convertTo3AxisImage();
-        }
     }
 }
