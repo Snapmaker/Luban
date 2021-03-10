@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import sha1 from 'sha1';
+// import sha1 from 'sha1';
 
 const t = (...args) => {
     const key = args[0];
@@ -25,7 +25,8 @@ function processKey(value, options) {
         value = `${value}${i18next.options.pluralSeparator}plural`;
     }
 
-    return sha1(value);
+    return value;
+    // return sha1(value);
 }
 
 const _ = (...args) => {

@@ -8,6 +8,7 @@ import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
 import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
 import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
@@ -44,6 +45,7 @@ series([
         i18next
             .use(XHR)
             .use(LanguageDetector)
+            .use(initReactI18next)
             .init(settings.i18next, () => {
                 next();
             });
