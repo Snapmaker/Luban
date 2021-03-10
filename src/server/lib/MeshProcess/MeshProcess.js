@@ -4,7 +4,7 @@ import { Mesh } from './Mesh';
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import {
     BACK,
-    CNC_IMAGE_NEGATIVE_RANGE_FIELD, BOTTOM, FRONT, LEFT, RIGHT, TOP
+    BOTTOM, FRONT, LEFT, RIGHT, TOP
 } from '../../constants';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
@@ -272,7 +272,7 @@ export class MeshProcess {
         });
     }
 
-    convertTo4AxisImage() {
+    convertTo4AxisDate() {
         const { width, height } = this.getWidthAndHeight();
 
         const r = width / (Math.PI * 2);
@@ -288,17 +288,23 @@ export class MeshProcess {
         const data = [];
         const sliceAngle = 360 / imageWidth;
 
-        for (let i = 0; i < slicer.slicerLayers.length; i++) {
+        for (let i = 0; i < imageWidth; i++) {
             data[i] = [];
-            const slicerLayer = slicer.slicerLayers[i];
+            for (let j = 0; j < imageHeight; j++) {
+                data[i][j] = 0;
+            }
+        }
+
+        for (let j = 0; j < slicer.slicerLayers.length; j++) {
+            const slicerLayer = slicer.slicerLayers[j];
 
             const polygons = [].concat(slicerLayer.polygonsPart.data).concat(slicerLayer.openPolygons.data);
 
             for (const polygon of polygons) {
                 const ppath = polygon.path;
-                for (let j = 0; j < ppath.length; j++) {
-                    const start = ppath[j % ppath.length];
-                    const end = ppath[(j + 1) % ppath.length];
+                for (let k = 0; k < ppath.length; k++) {
+                    const start = ppath[k % ppath.length];
+                    const end = ppath[(k + 1) % ppath.length];
 
                     const a1 = Vector2.angle(start);
                     const a2 = Vector2.angle(end);
@@ -308,31 +314,38 @@ export class MeshProcess {
                     const range = getAngleRange(a1, a2, sliceAngle);
                     for (let a = range.start; a <= range.end; a++) {
                         const aa = (a * sliceAngle) % 360;
-                        const hj = Math.round(aa / sliceAngle);
+                        const i = Math.round(aa / sliceAngle);
 
                         const p = getPointByLineAndAngle(start, end, aa);
-                        if (!data[i][hj]) {
-                            data[i][hj] = [];
-                        }
 
                         const l = Vector2.length(p);
 
-                        if (!data[i][hj][0]) {
-                            data[i][hj][0] = l;
-                        }
-
-                        if (!data[i][hj][1]) {
-                            data[i][hj][1] = l;
-                        }
-
-                        data[i][hj][0] = Math.max(l, data[i][hj][0]);
-                        data[i][hj][1] = Math.min(l, data[i][hj][1]);
+                        data[i][j] = Math.max(l, data[i][j]);
                     }
                 }
             }
         }
 
+        return {
+            radius: r,
+            data: data,
+            width: width,
+            height: height
+        };
+    }
+
+    convertTo4AxisImage() {
         this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
+
+        const axisData = this.convertTo4AxisDate();
+
+        const data = axisData.data;
+        const r = axisData.radius;
+        const width = axisData.width;
+        const height = axisData.height;
+
+        const imageWidth = data.length;
+        const imageHeight = data[0].length;
 
         return new Promise(resolve => {
             // eslint-disable-next-line no-new
@@ -340,21 +353,13 @@ export class MeshProcess {
                 for (let i = 0; i < imageWidth; i++) {
                     for (let j = 0; j < imageHeight; j++) {
                         const idx = j * imageWidth * 4 + i * 4;
-                        const h = imageHeight - 1 - j;
-                        let d = 0;
-                        let a = 255;
-                        const k = (i + imageWidth / 2) % imageWidth;
-                        if (data[h][i]) {
-                            d = data[h][i][0] / r * 255;
-                        } else if (data[h][k] && data[h][k][1] < data[h][k][0]) {
-                            d = data[h][k][1] / r * 255;
-                            a = CNC_IMAGE_NEGATIVE_RANGE_FIELD;
-                        }
+                        const nj = imageHeight - 1 - j;
+                        const d = data[i][nj] / r * 255;
 
                         image.bitmap.data[idx] = d;
                         image.bitmap.data[idx + 1] = d;
                         image.bitmap.data[idx + 2] = d;
-                        image.bitmap.data[idx + 3] = a;
+                        image.bitmap.data[idx + 3] = 255;
                     }
                 }
 
