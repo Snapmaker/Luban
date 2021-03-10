@@ -141,7 +141,7 @@ class Printing extends PureComponent {
                                             <span>
                                                 <Input
                                                     className="sm-parameter-row__input"
-                                                    value={materialThickness}
+                                                    value={materialThickness * 2}
                                                     max={size.z - 40}
                                                     min={0}
                                                     onChange={actions.onChangeFourAxisMaterialThickness}
