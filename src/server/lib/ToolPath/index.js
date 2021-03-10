@@ -343,6 +343,19 @@ class ToolPath {
                     boundingBox.max.b = Math.max(boundingBox.max.b, commandObj.B);
                 }
             }
+
+            if (commandObj.Z !== undefined) {
+                if (boundingBox.min.z === null) {
+                    boundingBox.min.z = commandObj.Z;
+                } else {
+                    boundingBox.min.z = Math.min(boundingBox.min.z, commandObj.Z);
+                }
+                if (boundingBox.max.z === null) {
+                    boundingBox.max.z = commandObj.Z;
+                } else {
+                    boundingBox.max.z = Math.max(boundingBox.max.z, commandObj.Z);
+                }
+            }
         }
     }
 
