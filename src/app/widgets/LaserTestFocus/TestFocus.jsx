@@ -84,7 +84,7 @@ class TestFocus extends PureComponent {
                         </Modal.Header>
                         <Modal.Body className={styles['test-laser-instruction-content']}>
                             <p>
-                                <Trans>
+                                <Trans i18nKey="_laser test focus 1">
                                     Setting work origin is essentially finding the best place for the engraved image
                                     in the X and Y directions and determining the distance (Z Offset) between the
                                     Engraving & Carving Platform and the Laser Module to acquire the smallest laser dot
@@ -105,7 +105,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans>
+                                    <Trans i18nKey="_laser test focus 2">
                                         Click <b>Focus</b> and use <b>Jog Pad</b> in the Axes section to move the Laser
                                         Cutting Module to the position that is close to the optimal Z Offset
                                         (just like how you do with the 200mW Laser Engraving Module).
@@ -119,7 +119,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans>
+                                    <Trans i18nKey="_laser test focus 3">
                                         Set Work Speed and Power based on the material you are using. If you are using a
                                         piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value
                                         between 80 mm/s and 120 mm/s and set the Power to 100%.
@@ -135,7 +135,7 @@ class TestFocus extends PureComponent {
                                     alt="x"
                                 />
                                 <p>
-                                    <Trans>
+                                    <Trans i18nKey="_laser test focus 4">
                                         Click <span className="fa fa-play" /> to start laser cutting.
                                         Choose the position that can cut the material the most smoothly or engrave the
                                         thinnest line and the software will set it as Z Offset.

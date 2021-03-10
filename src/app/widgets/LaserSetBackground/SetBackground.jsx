@@ -93,7 +93,7 @@ class SetBackground extends PureComponent {
             modal({
                 title: i18n._('Information'),
                 body: (
-                    <Trans>
+                    <Trans i18nKey="_laser setting background information">
                         Laser module is not connected. Please make sure it is installed properly, and then connect to your Snapmaker via <b>Connection</b>.
                     </Trans>
                 )
