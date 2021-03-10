@@ -16,6 +16,14 @@ export const actions = {
         } catch (err) {
             //Ignore error
         }
+        dispatch(printingActions.removeAllModels());
+
+        // remove material setting config
+        dispatch(printingActions.removeAllMaterialDefinitions());
+
+        // remove quality setting config
+        dispatch(printingActions.removeAllQualityDefinitions());
+
 
         // api.removeElectronData();
         dispatch(projectActions.cleanAllRecentFiles());
@@ -29,14 +37,6 @@ export const actions = {
         api.removeEnv({
             headType: HEAD_3DP
         });
-        dispatch(printingActions.removeAllModels());
-
-        // remove material setting config
-        dispatch(printingActions.removeAllMaterialDefinitions());
-
-        // remove quality setting config
-        dispatch(printingActions.removeAllQualityDefinitions());
-
         // reset basic store
         storeManager.clear();
     }
