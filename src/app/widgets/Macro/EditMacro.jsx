@@ -39,7 +39,7 @@ class EditMacro extends PureComponent {
 
     render() {
         const { modalParams } = this.props;
-        const { id, name, content, repeat } = { ...modalParams };
+        const { id, name, content, repeat, isDefault } = { ...modalParams };
 
         return (
             <Modal disableOverlay size="md" onClose={this.props.closeModal}>
@@ -106,6 +106,7 @@ class EditMacro extends PureComponent {
                     <Button
                         btnStyle="danger"
                         className="pull-left"
+                        disabled={isDefault}
                         onClick={() => {
                             const name_ = get(this.fields.name, 'value');
 

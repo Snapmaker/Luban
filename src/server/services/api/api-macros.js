@@ -48,7 +48,6 @@ export const fetch = (req, res) => {
     const totalRecords = records.length;
     const [begin, end] = getPagingRange({ page, pageLength, totalRecords });
     const pagedRecords = paging ? records.slice(begin, end) : records;
-
     res.send({
         pagination: {
             page: Number(page),
@@ -56,14 +55,14 @@ export const fetch = (req, res) => {
             totalRecords: Number(totalRecords)
         },
         records: pagedRecords.map(record => {
-            const { id, mtime, name, content, repeat } = { ...record };
-            return { id, mtime, name, content, repeat };
+            const { id, mtime, name, content, repeat, isDefault } = { ...record };
+            return { id, mtime, name, content, repeat, isDefault };
         })
     });
 };
 
 export const create = (req, res) => {
-    const { name, content, repeat } = { ...req.body };
+    const { name, content, repeat, isDefault = false } = { ...req.body };
 
     if (!name) {
         res.status(ERR_BAD_REQUEST).send({
@@ -84,9 +83,10 @@ export const create = (req, res) => {
         const record = {
             id: uuid.v4(),
             mtime: new Date().getTime(),
-            name: name,
-            content: content,
-            repeat: repeat
+            name,
+            content,
+            repeat,
+            isDefault
         };
 
         records.push(record);
@@ -112,8 +112,8 @@ export const read = (req, res) => {
         return;
     }
 
-    const { mtime, name, content, repeat } = { ...record };
-    res.send({ id, mtime, name, content, repeat });
+    const { mtime, name, content, repeat, isDefault } = { ...record };
+    res.send({ id, mtime, name, content, repeat, isDefault });
 };
 
 export const update = (req, res) => {

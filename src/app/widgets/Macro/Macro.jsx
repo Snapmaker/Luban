@@ -2,17 +2,21 @@ import ensureArray from 'ensure-array';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
-import api from '../../api';
-import { Button } from '../../components/Buttons';
-import Space from '../../components/Space';
-import i18n from '../../lib/i18n';
-import { actions as machineActions } from '../../flux/machine';
-import { actions as developToolsActions } from '../../flux/develop-tools';
+import TipTrigger from '../../components/TipTrigger';
 import {
+    CONNECTION_TYPE_WIFI,
     MODAL_RUN_MACRO,
     MODAL_EDIT_MACRO,
     WORKFLOW_STATE_IDLE, PROTOCOL_SCREEN
 } from '../../constants';
+import api from '../../api';
+import { Button } from '../../components/Buttons';
+import Space from '../../components/Space';
+import { limitStringLength } from '../../lib/normalize-range';
+import i18n from '../../lib/i18n';
+import { actions as machineActions } from '../../flux/machine';
+import { actions as developToolsActions } from '../../flux/develop-tools';
+
 import styles from './index.styl';
 
 const STATUS_IDLE = 'idle';
@@ -25,12 +29,17 @@ class Macro extends PureComponent {
         dataSource: PropTypes.string.isRequired,
 
         // redux
+        connectionType: PropTypes.string.isRequired,
         isConnected: PropTypes.bool.isRequired,
         workflowState: PropTypes.string.isRequired,
         workflowStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
         developToolsExecuteGcode: PropTypes.func.isRequired
     };
+
+    state = {
+        macros: []
+    }
 
     actions = {
         executeGcode: (gcode) => {
@@ -60,8 +69,8 @@ class Macro extends PureComponent {
         openEditMacroModal: (id) => {
             api.macros.read(id)
                 .then((res) => {
-                    const { name, content, repeat } = res.body;
-                    this.props.openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat });
+                    const { name, content, repeat, isDefault } = res.body;
+                    this.props.openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat, isDefault });
                 });
         },
         canClick: () => {
@@ -77,10 +86,26 @@ class Macro extends PureComponent {
         }
     };
 
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.macros && Array.isArray(nextProps.macros)) {
+            this.setState({
+                macros: nextProps.macros
+            });
+        }
+        // When connecting to wifi, some gcode is not implemented. Temporarily hide the default macro
+        if (nextProps.connectionType === CONNECTION_TYPE_WIFI) {
+            const macros = nextProps.macros.filter((item) => {
+                return item.isDefault !== true;
+            });
+            this.setState({
+                macros: macros
+            });
+        }
+    }
 
     render() {
-        const { macros } = this.props;
         const canClick = this.actions.canClick();
+        const { macros } = this.state;
 
         return (
             <div>
@@ -99,20 +124,28 @@ class Macro extends PureComponent {
                             {ensureArray(macros).map((macro) => (
                                 <tr key={macro.id}>
                                     <td style={{ padding: '6px 0px' }}>
-                                        <Button
-                                            compact
-                                            btnSize="xs"
-                                            btnStyle="flat"
-                                            disabled={!canClick}
-                                            onClick={() => {
-                                                this.actions.runMacro(macro);
-                                            }}
-                                            title={i18n._('Run Macro')}
+
+                                        <TipTrigger
+                                            style={{ display: 'inline-block' }}
+                                            key={macro.id}
+                                            title={i18n._('Macro')}
+                                            content={macro.name}
                                         >
-                                            <i className="fa fa-play" />
-                                        </Button>
-                                        <Space width="8" />
-                                        {macro.name}
+                                            <Button
+                                                compact
+                                                btnSize="xs"
+                                                btnStyle="flat"
+                                                disabled={!canClick}
+                                                onClick={() => {
+                                                    this.actions.runMacro(macro);
+                                                }}
+                                                title={i18n._('Run Macro')}
+                                            >
+                                                <i className="fa fa-play" />
+                                            </Button>
+                                            <Space width="8" />
+                                            {limitStringLength(macro.name, 30)}
+                                        </TipTrigger>
                                     </td>
                                     <td style={{ width: '1%' }}>
                                         <div className="nowrap">
@@ -139,11 +172,12 @@ class Macro extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-    const { workflowState, workflowStatus, isConnected } = state.machine;
+    const { workflowState, workflowStatus, isConnected, connectionType } = state.machine;
     const { dataSource } = state.widget.widgets[ownProps.widgetId];
 
     return {
         isConnected,
+        connectionType,
         workflowState,
         workflowStatus,
         dataSource
