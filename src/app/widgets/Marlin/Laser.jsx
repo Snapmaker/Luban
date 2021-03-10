@@ -14,6 +14,7 @@ class Printing extends PureComponent {
     static propTypes = {
         headStatus: PropTypes.bool,
         laserPower: PropTypes.number,
+        workPosition: PropTypes.object.isRequired,
         isLaserPrintAutoMode: PropTypes.bool,
         materialThickness: PropTypes.number,
         laserFocalLength: PropTypes.number,
@@ -84,11 +85,14 @@ class Printing extends PureComponent {
         },
         onChangeMaterialThickness: (value) => {
             this.props.updateMaterialThickness(value);
+        },
+        onChangeFourAxisMaterialThickness: (value) => {
+            this.props.updateMaterialThickness(value / 2);
         }
     };
 
     render() {
-        const { size, isLaserPrintAutoMode, materialThickness, laserFocalLength, connectionType } = this.props;
+        const { size, isLaserPrintAutoMode, materialThickness, laserFocalLength, workPosition, connectionType } = this.props;
         const { laserPowerOpen, laserPowerMarks, laserPower } = this.state;
         const actions = this.actions;
         const isWifiPrinting = this.actions.isWifiPrinting();
@@ -113,7 +117,7 @@ class Printing extends PureComponent {
                                         />
                                     </span>
                                 </div>
-                                {isLaserPrintAutoMode && (
+                                {isLaserPrintAutoMode && !workPosition.isFourAxis && (
                                     <div>
                                         <div className="sm-parameter-row">
                                             <span className="sm-parameter-row__label-lg">{i18n._('Material Thickness')}</span>
@@ -130,15 +134,29 @@ class Printing extends PureComponent {
                                         </div>
                                     </div>
                                 )}
+                                {isLaserPrintAutoMode && workPosition.isFourAxis && (
+                                    <div>
+                                        <div className="sm-parameter-row">
+                                            <span className="sm-parameter-row__label-lg">{i18n._('Material Diameter')}</span>
+                                            <span>
+                                                <Input
+                                                    className="sm-parameter-row__input"
+                                                    value={materialThickness}
+                                                    max={size.z - 40}
+                                                    min={0}
+                                                    onChange={actions.onChangeFourAxisMaterialThickness}
+                                                />
+                                            </span>
+                                            <span className="sm-parameter-row__input-unit">mm</span>
+                                        </div>
+                                    </div>
+                                )}
                                 {isLaserPrintAutoMode && laserFocalLength && (
                                     <div>
                                         <div className="sm-parameter-row">
                                             <span className="sm-parameter-row__label-lg">{i18n._('Laser Height')}</span>
                                             <span
                                                 className="sm-parameter-row__input"
-                                                style={{
-                                                    paddingLeft: '44px'
-                                                }}
                                             >
                                                 {laserFocalLength}
                                             </span>
@@ -148,9 +166,6 @@ class Printing extends PureComponent {
                                             <span className="sm-parameter-row__label-lg">{i18n._('Z Offset')}</span>
                                             <span
                                                 className="sm-parameter-row__input"
-                                                style={{
-                                                    paddingLeft: '44px'
-                                                }}
                                             >
                                                 {laserFocalLength + materialThickness}
                                             </span>
@@ -210,13 +225,14 @@ class Printing extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { size, workflowStatus, connectionType, server, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, laserFocalLength } = machine;
+    const { size, workflowStatus, connectionType, server, laserPower, headStatus, isLaserPrintAutoMode, materialThickness, workPosition, laserFocalLength } = machine;
 
     return {
         size,
         workflowStatus,
         connectionType,
         server,
+        workPosition,
         laserPower,
         headStatus,
         isLaserPrintAutoMode,
