@@ -769,6 +769,8 @@ export const actions = {
     },
 
     setTransformMode: (value) => (dispatch) => {
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
         dispatch(actions.updateState({
             transformMode: value
         }));
