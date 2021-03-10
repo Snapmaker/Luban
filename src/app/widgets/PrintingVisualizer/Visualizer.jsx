@@ -136,13 +136,7 @@ class Visualizer extends PureComponent {
         // startSupportMode: () => {
         //     this.canvas.current.controls.startSupportMode();
         // },
-        // clearSelectedSupport: () => {
-        //     const { modelGroup } = this.props;
-        //     const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
-        //     if (isSupportSelected) {
-        //         modelGroup.removeSelectedModel();
-        //     }
-        // },
+
         // clearAllManualSupport: () => {
         //     this.props.modelGroup.removeAllManualSupport();
         // }
@@ -185,6 +179,13 @@ class Visualizer extends PureComponent {
             let defaultSupportSize = this.state.defaultSupportSize;
             defaultSupportSize = { ...defaultSupportSize, ...size };
             this.setState({ defaultSupportSize });
+        },
+        clearSelectedSupport: () => {
+            const { modelGroup } = this.props;
+            const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
+            if (isSupportSelected) {
+                modelGroup.removeSelectedModel();
+            }
         },
         clearAllManualSupport: () => {
             this.props.clearAllManualSupport();
@@ -303,7 +304,8 @@ class Visualizer extends PureComponent {
         // const actions = this.actions;
 
         const isModelSelected = (selectedModelArray.length > 0);
-        const isSupportSelected = modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].supportTag === true;
+        const isSingleSelected = (selectedModelArray.length === 1);
+        const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
         const isModelDisplayed = (displayedType === 'model');
         const notice = this.getNotice();
         // let isSupporting = false;
@@ -411,7 +413,7 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Add Manual Support'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: !isSingleSelected || isSupportSelected,
                                 onClick: this.supportActions.startSupportMode
                             },
                             {

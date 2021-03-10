@@ -46,6 +46,9 @@ export const CaseConfigOriginal = [
             name: 'Laser_test_Origin.jpg',
             casePath: './Origin/'
         },
+        materials: {
+            isRotate: false
+        },
         caseConfigs: {
             config: {
                 // greyscale: {
@@ -123,6 +126,9 @@ export const CaseConfigOriginal = [
             name: 'CNC_test_Origin.svg',
             casePath: './Origin/'
         },
+        materials: {
+            isRotate: false
+        },
         caseConfigs: {
             tool: CNC_TOOL_SNAP_V_BIT,
             config: {
@@ -188,6 +194,9 @@ export const CaseConfig150 = [
         pathConfig: {
             name: 'Laser_test_A150.svg',
             casePath: './A150'
+        },
+        materials: {
+            isRotate: false
         },
         caseConfigs: {
             config: {
@@ -263,6 +272,9 @@ export const CaseConfig150 = [
             name: 'CNC_test_A150.svg',
             casePath: './A150/'
         },
+        materials: {
+            isRotate: false
+        },
         caseConfigs: {
             config: {
             },
@@ -324,6 +336,9 @@ export const CaseConfig250 = [
             name: 'Laser_test_A250.svg',
             casePath: './A250'
         },
+        materials: {
+            isRotate: false
+        },
         caseConfigs: {
             config: {
             },
@@ -353,6 +368,9 @@ export const CaseConfig250 = [
         pathConfig: {
             name: 'CNC_test_A250.svg',
             casePath: './A250/'
+        },
+        materials: {
+            isRotate: false
         },
         caseConfigs: {
             config: {
@@ -409,6 +427,9 @@ export const CaseConfig350 = [
             name: 'Laser_test_A350.svg',
             casePath: './A350'
         },
+        materials: {
+            isRotate: false
+        },
         caseConfigs: {
             config: {
 
@@ -438,6 +459,9 @@ export const CaseConfig350 = [
         pathConfig: {
             name: 'CNC_test_A350.svg',
             casePath: './A350/'
+        },
+        materials: {
+            isRotate: false
         },
         caseConfigs: {
             config: {
