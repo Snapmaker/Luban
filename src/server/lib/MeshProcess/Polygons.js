@@ -266,7 +266,7 @@ export class Polygons {
     /**
      * Removes vertices of the polygons to make sure that they are not too high
      */
-    simplify(smallestLineSegment = 0.08, allowedErrorDistance = 0.04) {
+    simplify(smallestLineSegment = 0.005, allowedErrorDistance = 0.0025) {
         const smallestLineSegmentSquared = smallestLineSegment * smallestLineSegment;
         const allowedErrorDistanceSquared = allowedErrorDistance * allowedErrorDistance;
 
