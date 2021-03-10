@@ -662,6 +662,7 @@ export const actions = {
                                 x: `${x.toFixed(3)}`,
                                 y: `${y.toFixed(3)}`,
                                 z: `${z.toFixed(3)}`,
+                                isFourAxis: false,
                                 a: '0.000'
                             }
                         }));

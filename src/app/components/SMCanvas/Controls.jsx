@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three';
 import EventEmitter from 'events';
+import { isUndefined } from 'lodash';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
@@ -210,7 +211,7 @@ class Controls extends EventEmitter {
     // Ref: https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TransformControls.js#L515
     getMouseCoord(event) {
         const rect = this.domElement.getBoundingClientRect();
-
+        // TODO: The result is not correct, change all the clientX/clientY as offsetX/offsetY
         return {
             x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
             y: -((event.clientY - rect.top) / rect.height) * 2 + 1 // Y axis up is positive
@@ -263,8 +264,6 @@ class Controls extends EventEmitter {
             case THREE.MOUSE.RIGHT:
                 this.state = STATE.PAN;
                 this.panMoved = false;
-                // should not trigger click here
-                // this.onClick(event, true);
                 this.handleMouseDownPan(event);
                 break;
             default:
@@ -394,13 +393,24 @@ class Controls extends EventEmitter {
             // Check if we select a new object
             const coord = this.getMouseCoord(event);
             this.ray.setFromCamera(coord, this.camera);
-            // 'intersectObjects' will check all intersection between the ray and the objects with or without the descendants.
-            // If second parameter is true, it also checks all descendants of the objects.
-            // In 3dp, it should set second parameter as true for support function.
-            // In laser/cnc, for dxf, should only select the 'Mesh' object.
+            /*
+                'intersectObjects' will check all intersection between the ray and the objects with or without the descendants.
+                If second parameter is true, it also checks all descendants of the objects.
+                In 3dp, it should set second parameter as true for support function.
+                In laser/cnc, for dxf, should only select the 'Mesh' object.
+            */
             const allIntersectObjects = this.ray.intersectObjects(allObjects, true);
-            const intersect = allIntersectObjects.filter(intersectObject => intersectObject.object.isMesh)[0];
+            let intersect = allIntersectObjects.filter(intersectObject => intersectObject.object.isMesh)[0];
             const isMultiSelect = event.shiftKey;
+            /*
+                Temporarily solving meshobject cannot be selected after the canvas rotates 180 degrees around the Y axis in cnc/laser tab
+                Solution: Use the selected child object to find the actual parent object
+            */
+            if (intersect && this.sourceType !== '3D' && isUndefined(intersect.object.uniformScalingState)) {
+                intersect = {
+                    object: intersect.object.parent
+                };
+            }
 
             let selectEvent = '';
             if (isMultiSelect) {

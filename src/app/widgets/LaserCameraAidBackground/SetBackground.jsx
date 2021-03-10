@@ -24,6 +24,7 @@ class SetBackground extends PureComponent {
         workflowStatus: PropTypes.string.isRequired,
         connectionType: PropTypes.string.isRequired,
         hasBackground: PropTypes.bool.isRequired,
+        workPosition: PropTypes.object,
         server: PropTypes.object.isRequired,
 
         // redux
@@ -116,7 +117,7 @@ class SetBackground extends PureComponent {
 
     render() {
         const state = { ...this.state };
-        const { connectionType, isConnected, hasBackground, laserSize, series, workflowStatus } = this.props;
+        const { connectionType, isConnected, hasBackground, laserSize, series, workflowStatus, workPosition } = this.props;
         let fullWidth;
         if (series === 'A350') {
             fullWidth = laserSize ? (laserSize.x * 1.5 + 72 + 4) : 512;
@@ -185,7 +186,7 @@ class SetBackground extends PureComponent {
                     )}
                     disabled={!canCameraCapture}
                     onClick={this.actions.showModal}
-                    style={{ display: (connectionType !== CONNECTION_TYPE_WIFI || !isConnected || hasBackground) ? 'none' : 'block' }}
+                    style={{ display: (!workPosition.isFourAxis && (connectionType === CONNECTION_TYPE_WIFI && isConnected && !hasBackground)) ? 'block' : 'none' }}
                 >
                     {i18n._('Camera Capture')}
                 </button>
@@ -216,6 +217,7 @@ const mapStateToProps = (state) => {
         hasBackground: laser.background.enabled,
         laserSize: machine.laserSize,
         size: machine.size,
+        workPosition: machine.workPosition,
         workflowStatus: machine.workflowStatus
     };
 };

@@ -191,7 +191,7 @@ class DisplayPanel extends PureComponent {
                                     <div>
                                         <span className={styles['integer-part']}>{machinePositionB}</span>
                                     </div>
-                                    <span className={styles.unit}>{lengthUnits}</span>
+                                    <span className={styles.unit}>°</span>
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
@@ -199,7 +199,7 @@ class DisplayPanel extends PureComponent {
                                         <span className={styles['decimal-point']}>.</span>
                                         <span className={styles['fractional-part']}>{machinePositionB.split('.')[1]}</span>
                                     </div>
-                                    <span className={styles.unit}>{lengthUnits}</span>
+                                    <span className={styles.unit}>°</span>
                                 </td>
                                 <td className={styles.action}>
                                     <DropdownButton

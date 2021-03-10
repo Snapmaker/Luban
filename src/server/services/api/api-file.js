@@ -367,10 +367,14 @@ export const uploadFileToTmp = (req, res) => {
 export const recoverProjectFile = async (req, res) => {
     const file = req.files.file || JSON.parse(req.body.file);
     const { uploadName } = await cpFileToTmp(file);
+    let content;
+    try {
+        await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+        content = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
+    } catch (e) {
+        log.error(`Failed to read file ${uploadName} and ${e}`);
+    }
 
-    await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
-
-    let content = fs.readFileSync(`${DataStorage.tmpDir}/config.json`);
     content = content.toString();
 
     const config = JSON.parse(content);

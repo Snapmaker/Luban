@@ -7,6 +7,7 @@
 
 import noop from 'lodash/noop';
 import React, { Component } from 'react';
+import { isNil } from 'lodash';
 import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight, WebGLRenderer } from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
@@ -95,19 +96,21 @@ class Canvas extends Component {
     }
 
     componentDidMount() {
-        this.setupScene();
-        this.setupControls();
+        if (this.node) {
+            this.setupScene();
+            this.setupControls();
 
-        this.group.add(this.printableArea);
-        this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
-        this.group.add(this.modelGroup.object);
-        this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
-        this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
-        this.backgroundGroup && this.group.add(this.backgroundGroup);
+            this.group.add(this.printableArea);
+            this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+            this.group.add(this.modelGroup.object);
+            this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
+            this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
+            this.backgroundGroup && this.group.add(this.backgroundGroup);
 
-        this.renderScene();
+            this.renderScene();
 
-        window.addEventListener('resize', this.resizeWindow, false);
+            window.addEventListener('resize', this.resizeWindow, false);
+        }
     }
 
     // just for laser and cnc, dont set scale prop for 3dp
@@ -297,12 +300,11 @@ class Canvas extends Component {
     resizeWindow = () => {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
-        if (width * height !== 0) {
+        if (width * height !== 0 && !isNil(width) && !isNil(height)) {
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
-
         this.renderScene();
     };
 
@@ -511,7 +513,15 @@ class Canvas extends Component {
 
     render() {
         if (!Detector.webgl) {
-            return null;
+            return (
+                <div
+                    style={{
+                        backgroundColor: '#eee'
+                    }}
+                >
+                    `Failed to get WebGL context. Your browser or device may not support WebGL.`
+                </div>
+            );
         }
         return (
             <div
