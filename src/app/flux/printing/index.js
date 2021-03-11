@@ -192,6 +192,24 @@ export const actions = {
             }
         ));
     },
+    // Use for switch machine size
+    switchSize: () => async (dispatch, getState) => {
+        // state
+        const printingState = getState().printing;
+        const { modelGroup, gcodeLineGroup } = printingState;
+        const { series, size } = getState().machine;
+        await definitionManager.init(series);
+        dispatch(actions.updateState({
+            activeDefinition: definitionManager.activeDefinition
+        }));
+        // model group
+        modelGroup.updateBoundingBox(new THREE.Box3(
+            new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON, size.y / 2 + EPSILON, size.z + EPSILON)
+        ));
+        // Re-position model group
+        gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
+    },
 
     initSize: () => async (dispatch, getState) => {
         // also used in actions.saveAndClose of project/index.js
