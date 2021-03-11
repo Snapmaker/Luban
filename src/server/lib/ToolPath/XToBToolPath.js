@@ -8,6 +8,12 @@ class XToBToolPath extends ToolPath {
         this.circle = 0;
     }
 
+    rotateStart(f) {
+        if (this.isRotate) {
+            super.move0X(0, f);
+        }
+    }
+
     move0X(x, f) {
         if (this.isRotate) {
             super.move0B(this.toCircleB(x), f);

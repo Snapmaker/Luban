@@ -41,6 +41,9 @@ class LaserToolPathGenerator extends EventEmitter {
         toolPath.setCommand({ G: 21 });
 
         toolPath.setComment('; G-code START <<<');
+
+        toolPath.rotateStart(gcodeConfig.jogSpeed);
+
         toolPath.setCommand({ M: 106, P: 0, S: 255 });
 
         if (mode === 'bw' || mode === 'halftone' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
@@ -58,6 +61,9 @@ class LaserToolPathGenerator extends EventEmitter {
         }
 
         toolPath.setCommand({ M: 107, P: 0 });
+
+        toolPath.resetB();
+
         toolPath.setComment('; G-code END <<<');
 
         const boundingBox = toolPath.boundingBox;
@@ -79,7 +85,7 @@ class LaserToolPathGenerator extends EventEmitter {
             movementMode: (headType === 'laser' && mode === 'greyscale') ? gcodeConfig.movementMode : '',
             data: toolPath.commands,
             estimatedTime: toolPath.estimatedTime * 1.4,
-            positionX: positionX,
+            positionX: isRotate ? 0 : positionX,
             positionY: positionY,
             positionZ: positionZ,
             rotationB: isRotate ? toolPath.toB(positionX) : 0,

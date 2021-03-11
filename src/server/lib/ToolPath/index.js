@@ -260,6 +260,12 @@ class ToolPath {
         this.commands.push({ M: 5 });
     }
 
+    resetB() {
+        if (this.isRotate) {
+            this.commands.push({ G: 92, B: this.getState().B % 360 });
+        }
+    }
+
     setCommand(commandObj) {
         this.setBoundingBox(commandObj);
 
