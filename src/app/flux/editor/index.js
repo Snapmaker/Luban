@@ -567,7 +567,8 @@ export const actions = {
         const { page, modelGroup } = getState()[headType];
         if (page === PAGE_PROCESS) return;
 
-        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode, transformation } = modelGroup.getSelectedModel();
+        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode } = modelGroup.getSelectedModel();
+        const transformation = { ...modelGroup.getSelectedModel().transformation };
         transformation.positionX += 5;
         transformation.positionY -= 5;
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
