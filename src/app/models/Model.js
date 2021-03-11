@@ -44,7 +44,7 @@ class Model {
         this.limitSize = limitSize;
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
-        const material = modelInfo.material || new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
+        const material = modelInfo.material || new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
