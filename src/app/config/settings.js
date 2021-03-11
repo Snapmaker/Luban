@@ -54,7 +54,7 @@ const settings = {
         load: 'currentOnly',
 
         // char to separate keys
-        keySeparator: '.',
+        keySeparator: false,
 
         // char to split namespace from key
         nsSeparator: ':',

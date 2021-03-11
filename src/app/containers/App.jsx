@@ -205,7 +205,7 @@ class App extends PureComponent {
                     title: i18n._('Warning'),
                     body: (
                         <div>
-                            <Trans i18nKey="_CNC first loading warning">
+                            <Trans i18nKey="(key)CNC loading warning">
                                 This is an alpha feature that helps you get started with CNC Carving. Make sure you
                                 <a
                                     style={{ color: '#28a7e1' }}

@@ -23,7 +23,7 @@ const MotionButtonGroup = (props) => {
                                 <p>{i18n._('Click to check the boundary of the image to be engraved.')}</p>
                                 <br />
                                 <p>
-                                    <Trans i18nKey="_CNC carving notice">
+                                    <Trans i18nKey="(key)Workspace CNC_carving notice">
                                         Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.
                                     </Trans>
                                 </p>
