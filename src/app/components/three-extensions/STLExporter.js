@@ -7,7 +7,9 @@
  * 1. Use local matrix rather than world matrix (line 31)
  * 2. Switch y and z (line 65) to handle left-hand and right-hand coordinate problem
  *
- * Update STLExporter function:
+ * Update STLExporter function（ Exporting binary stl file part）:
+   1. Regardless of whether the object to be parsed has descendants, it is parsed in the same way.
+   2. When parsing object with 'children', inside iterative 'face', no using ‘applyMatrix3’ to calculate binary data.
    TODO: When exporting with ASCII, it will exceed string max length. Error: Invalid string length
  */
 
