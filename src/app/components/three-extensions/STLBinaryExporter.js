@@ -30,6 +30,7 @@ STLBinaryExporter.prototype = {
             // We collect objects first, as we may need to convert from BufferGeometry to Geometry
             const objects = [];
             let triangles = 0;
+            // Iterative 'face' and 'updateMatrixWorld' takes more time
             scene.traverse((object) => {
                 if (!(object instanceof THREE.Mesh)) return;
 
@@ -67,7 +68,7 @@ STLBinaryExporter.prototype = {
 
                 for (let i = 0, l = faces.length; i < l; i++) {
                     const face = faces[i];
-
+                    // Iterative 'face', 'applyMatrix3' operation takes more time and space
                     vector.copy(face.normal).applyMatrix3(normalMatrixWorld).normalize();
 
                     output.setFloat32(offset, vector.x, true); offset += 4; // normal
