@@ -1,3 +1,11 @@
+---
+name: Feature request
+about: Suggest an idea for this project
+title: 'Feature Request: xxxx in laser/cnc'
+labels: ''
+assignees: ''
+
+---
 <!--🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅
 
 Oh hi there! 😄
@@ -17,5 +25,3 @@ Existing issues often contain information about workarounds, resolution, or prog
 
 <!-- A clear and concise description of what you want to happen. -->
 <!-- ✍️-->
-
-
