@@ -227,6 +227,7 @@ export const actions = {
             const idxClicked = result && result.response;
             if (idxClicked === 1) throw new Error('Cancel');
             if (idxClicked === 2) {
+                dispatch(actions.clearSavedEnvironment(headType));
                 return;
             }
         }
