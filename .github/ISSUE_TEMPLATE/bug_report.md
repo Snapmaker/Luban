@@ -14,7 +14,7 @@ Existing issues often contain information about workarounds, resolution, or prog
 <!-- ✍️edit: --> The issue is caused by version x.y.z
 
 
-### Is this a regression?(optional)
+### Is this a regression? (optional)
 
 <!-- Did this behavior use to work in the previous version? -->
 <!-- ✍️--> Yes, the previous version in which this bug was not present was: ....
@@ -27,7 +27,7 @@ Steps to reproduce the behavior:
 4. See error
 <!-- ✍️--> A clear and concise description of the problem...
 
-Exception or Error(optional)
+Exception or Error (optional)
 <pre><code>
 <!-- If the issue is accompanied by an exception or an error, please share it below: -->
 <!-- ✍️-->
@@ -42,7 +42,7 @@ Expected behavior
 **Platform:**
 <pre><code>
 <!-- ✍️-->
-- Operating System: [Windows 10 x64, MacOS Big Sur, Ubuntu 20.04, etc]
+- Operating System: [Windows 10 x64, macOS Big Sur, Ubuntu 20.04, etc]
 - Printer: [Snapmaker Original, Snapmaker A150, etc]
 
 </code></pre>
