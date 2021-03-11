@@ -696,6 +696,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
         });
 
         this.toolPath.spindleOff();
+        this.toolPath.resetB();
 
         const boundingBox = {
             max: {

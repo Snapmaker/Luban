@@ -254,6 +254,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         toolPath.safeStart(normalizer.x(point[0]), normalizer.y(point[1]), stopHeight, safetyHeight, jogSpeed);
 
+        toolPath.rotateStart(jogSpeed);
+
         toolPath.spindleOn({ P: 100 });
 
         const passes = Math.ceil(targetDepth / stepDown);
@@ -355,6 +357,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
         toolPath.move0Z(stopHeight, jogSpeed);
         toolPath.move0XY(0, 0, jogSpeed);
         toolPath.spindleOff();
+        toolPath.resetB();
 
         return toolPath;
     }
@@ -714,7 +717,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
             mode: mode,
             positionX: isRotate ? 0 : positionX,
             positionY: positionY,
-            rotationB: this.toolPath.toB(positionX),
+            rotationB: isRotate ? this.toolPath.toB(positionX) : 0,
             data: viewPaths,
             width: width,
             height: height,
