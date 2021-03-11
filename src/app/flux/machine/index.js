@@ -415,7 +415,7 @@ export const actions = {
         series && dispatch(actions.updateMachineSeries(series));
     },
 
-    updateMachineSeries: (series) => (dispatch, getState) => {
+    updateMachineSeries: (series) => async (dispatch, getState) => {
         machineStore.set('machine.series', series);
 
         const oldSeries = getState().machine.series;
@@ -426,10 +426,11 @@ export const actions = {
                 seriesInfo.setting.size = machineStore.get('machine.size') || seriesInfo.setting.size;
                 seriesInfo.setting.laserSize = seriesInfo.setting.size;
             }
+            //  Do not need to 'initSize' just use 'switchSize' function
+            await dispatch(printingActions.switchSize());
             seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
             seriesInfo && dispatch(actions.updateLaserSize(seriesInfo.setting.laserSize));
             dispatch(widgetActions.updateMachineSeries(series));
-            dispatch(printingActions.initSize());
         }
     },
     updateMachineSize: (size) => (dispatch, getState) => {
