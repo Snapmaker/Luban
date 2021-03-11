@@ -1,3 +1,11 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: 'Bug: xxxx in 3d printing'
+labels:
+assignees: ''
+
+---
 <!--🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅
 
 Oh hi there! 😄
@@ -46,4 +54,3 @@ Expected behavior
 - Printer: [Snapmaker Original, Snapmaker A150, etc]
 
 </code></pre>
-
