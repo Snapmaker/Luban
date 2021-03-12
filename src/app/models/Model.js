@@ -574,7 +574,11 @@ class Model {
      * @returns {Model}
      */
     clone(modelGroup) {
-        const clone = new Model({ ...this }, modelGroup);
+        const modelInfo = {
+            ...this,
+            material: this.meshObject.material
+        };
+        const clone = new Model(modelInfo, modelGroup);
         clone.originModelID = this.modelID;
         clone.modelID = uuid.v4();
         clone.generateModelObject3D();
