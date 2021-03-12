@@ -1,6 +1,6 @@
-import endsWith from 'lodash/endsWith';
-import mapKeys from 'lodash/mapKeys';
-import sha1 from 'sha1';
+// import endsWith from 'lodash/endsWith';
+// import mapKeys from 'lodash/mapKeys';
+// import sha1 from 'sha1';
 import pkg from '../../package.json';
 import log from '../lib/log';
 
@@ -54,7 +54,7 @@ const settings = {
         load: 'currentOnly',
 
         // char to separate keys
-        keySeparator: '.',
+        keySeparator: false,
 
         // char to split namespace from key
         nsSeparator: ':',
@@ -97,9 +97,9 @@ const settings = {
 
                 // gcode.json
                 // resource.json
-                if (endsWith(url, '/gcode.json') || endsWith(url, '/resource.json')) {
-                    return mapKeys(JSON.parse(data), (value, key) => sha1(key));
-                }
+                // if (endsWith(url, '/gcode.json') || endsWith(url, '/resource.json')) {
+                //     return mapKeys(JSON.parse(data), (value, key) => sha1(key));
+                // }
 
                 return JSON.parse(data);
             },
