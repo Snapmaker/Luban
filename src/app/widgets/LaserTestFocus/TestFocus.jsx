@@ -85,7 +85,7 @@ class TestFocus extends PureComponent {
                         <Modal.Body className={styles['test-laser-instruction-content']}>
                             <p>
                                 <Trans i18nKey="key_laser_test_focus_description_1">
-                                    Setting work origin is essentially finding the best place for the engraved image
+                                    <b>Setting work origin</b> is essentially finding the best place for the engraved image
                                     in the X and Y directions and determining the distance (Z Offset) between the
                                     Engraving & Carving Platform and the Laser Module to acquire the smallest laser dot
                                     on the material for the most efficient use of the laser power and the best result.
@@ -120,9 +120,9 @@ class TestFocus extends PureComponent {
                                 />
                                 <p>
                                     <Trans i18nKey="key_laser_test_focus_description_3">
-                                        Set Work Speed and Power based on the material you are using. If you are using a
-                                        piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value
-                                        between 80 mm/s and 120 mm/s and set the Power to 100%.
+                                        Set <b>Work Speed</b> and <b>Power</b> based on the material you are using. If you are using a
+                                        piece of 1.5 mm wood sheet, it’s recommended to set the <b>Work Speed</b> to a value
+                                        between 80 mm/s and 120 mm/s and set the <b>Power</b> to 100%.
                                         Click <b>Generate and Load G-code</b> and the G-code is automatically generated
                                         and loaded.
                                     </Trans>
