@@ -493,7 +493,7 @@ export const CaseConfigFourAxis = [
             diameter: 40,
             fixtureLength: 20,
             isRotate: true,
-            length: 70
+            length: 75
         },
         // sourceType: 'svg', // raster/svg/text
         mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
@@ -534,7 +534,7 @@ export const CaseConfigFourAxis = [
             isRotate: true,
             diameter: 35,
             fixtureLength: 20,
-            length: 75
+            length: 70
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-A250&A350.png',
         pathConfig: {
@@ -574,7 +574,7 @@ export const CaseConfigFourAxis = [
             isRotate: true,
             diameter: 35,
             fixtureLength: 20,
-            length: 75
+            length: 70
         },
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
         pathConfig: {
