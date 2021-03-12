@@ -191,5 +191,7 @@ export class Mesh {
             face.connectedFaceIndex[1] = this.getFaceIdxWithPoints(face.vertexIndex[1], face.vertexIndex[2], i);
             face.connectedFaceIndex[2] = this.getFaceIdxWithPoints(face.vertexIndex[2], face.vertexIndex[0], i);
         }
+
+        this.vertexHashMap.clear();
     }
 }

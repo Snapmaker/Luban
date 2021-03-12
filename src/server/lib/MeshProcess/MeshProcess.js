@@ -291,7 +291,7 @@ export class MeshProcess {
                     const range = getAngleRange(a1, a2, sliceAngle);
                     for (let a = range.start; a <= range.end; a++) {
                         const aa = (a * sliceAngle) % 360;
-                        const i = Math.round(aa / sliceAngle);
+                        const i = Math.min(Math.round(aa / sliceAngle), imageWidth - 1);
 
                         const p = getPointByLineAndAngle(start, end, aa);
 
