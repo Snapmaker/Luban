@@ -177,9 +177,10 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
             });
         }
 
-        const { data, imageWidth, imageHeight } = meshProcess.convertToData(this.density);
-
         const generator = new CncReliefToolPathGenerator(this.modelInfo);
+
+        const { data, imageWidth, imageHeight } = meshProcess.convertToData(generator.density);
+
         generator.on('progress', (p) => {
             this.emit('progress', p);
         });
