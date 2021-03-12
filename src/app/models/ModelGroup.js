@@ -500,7 +500,7 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
             if (!this.selectedModelArray.includes(model)) {
-                this.selectedModelArray.push(model);
+                model && this.selectedModelArray.push(model);
             }
         }
         // TODO: why?
