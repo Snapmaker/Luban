@@ -20,6 +20,9 @@ class SlicerLayer {
     makePolygons() {
         this.makeBasicPolygonLoop();
         this.createPolygonsPart();
+
+        this.slicerSegments = [];
+        this.faceIdxToSegmentIdx.clear();
     }
 
     makeBasicPolygonLoop() {
