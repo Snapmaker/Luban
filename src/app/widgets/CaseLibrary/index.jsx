@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-
+import { isUndefined } from 'lodash';
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -60,7 +60,7 @@ class CaseLibrary extends PureComponent {
                 const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionName);
                 const newDefinitionSettings = {};
                 for (const [key] of Object.entries(newDefinition.settings)) {
-                    if (addDefinition[key]) {
+                    if (!isUndefined(addDefinition[key])) {
                         newDefinitionSettings[key] = { 'default_value': addDefinition[key] };
                         newDefinition.settings[key].default_value = addDefinition[key];
                     }
@@ -91,7 +91,7 @@ class CaseLibrary extends PureComponent {
 
                 const newDefinitionSettings = {};
                 for (const [key] of Object.entries(newDefinition.settings)) {
-                    if (addDefinition[key]) {
+                    if (!isUndefined(addDefinition[key])) {
                         newDefinitionSettings[key] = { 'default_value': addDefinition[key] };
                         newDefinition.settings[key].default_value = addDefinition[key];
                     }
