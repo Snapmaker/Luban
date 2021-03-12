@@ -32,11 +32,14 @@ class ModalSmall extends PureComponent {
                 showCloseButton={showCloseButton}
                 onClose={onClose}
                 style={{
-                    borderRadius: '4px'
+                    borderRadius: '8px'
                 }}
             >
                 <Modal.Body style={{
-                    marginBottom: '42px'
+                    marginBottom: '42px',
+                    maxWidth: '480px',
+                    paddingLeft: '40px',
+                    paddingRight: '40px'
                 }}
                 >
                     <div className={styles['modal-small-img']}>
@@ -46,12 +49,24 @@ class ModalSmall extends PureComponent {
                         {i18n._(title)}
                     </div>
                     {text && (
-                        <div className={styles['modal-small-body-hit']}>
+                        <div
+                            className={styles['modal-small-body-hit']}
+                            style={{
+                                color: '#808080',
+                                lineHeight: '24px'
+                            }}
+                        >
                             {i18n._(text)}
                         </div>
                     )}
                     {subtext && (
-                        <div className={styles['modal-small-body-hit']}>
+                        <div
+                            className={styles['modal-small-body-hit']}
+                            style={{
+                                color: '#808080',
+                                lineHeight: '24px'
+                            }}
+                        >
                             {i18n._(subtext)}
                         </div>
                     )}

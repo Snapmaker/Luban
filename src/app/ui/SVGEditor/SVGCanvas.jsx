@@ -161,8 +161,7 @@ class SVGCanvas extends PureComponent {
             this.lastScale = nextProps.scale;
             this.updateCanvas();
         }
-
-        if (nextProps.target !== this.target) {
+        if (nextProps.target && nextProps.target !== this.target) {
             this.offsetX = -nextProps.target.x;
             this.offsetY = nextProps.target.y;
 
