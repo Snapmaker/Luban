@@ -276,7 +276,7 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             ...lastPointRotate
         });
 
-        for (let j = 1; j <= segCount; j++) {
+        for (let j = 1; j < segCount; j++) {
             interpolatePoints.add({
                 x: lastPointRotate.x + (pointRotate.x - lastPointRotate.x) / segCount * j,
                 y: lastPointRotate.y + (pointRotate.y - lastPointRotate.y) / segCount * j,
@@ -339,22 +339,45 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             }
         }
 
-        const interpolatePoints = new Polygon();
+        const interpolateLinePoints = new Polygon();
 
-        interpolatePoints.add({
+        interpolateLinePoints.add({
             ...lastPointRotate
         });
 
         for (let i = 0; i < interpolatePointsTmp.size(); i++) {
             if (!removeIndex[i]) {
                 const p = interpolatePointsTmp.get(i);
-                interpolatePoints.add(p);
+                interpolateLinePoints.add(p);
             }
         }
 
-        interpolatePoints.add({
+        interpolateLinePoints.add({
             ...pointRotate
         });
+
+        // B interpolate
+        const interpolatePoints = new Polygon();
+        interpolatePoints.add(interpolateLinePoints.get(0));
+
+        for (let i = 1; i < interpolateLinePoints.size(); i++) {
+            const lastP = interpolateLinePoints.get(i - 1);
+            const p = interpolateLinePoints.get(i);
+
+            const bCount = Math.max(1, Math.ceil(Math.abs(lastP.b - p.b)));
+
+            if (bCount > 1) {
+                for (let j = 1; j < bCount; j++) {
+                    interpolatePoints.add({
+                        x: lastP.x + (p.x - lastP.x) / bCount * j,
+                        y: lastP.y + (p.y - lastP.y) / bCount * j,
+                        b: lastP.b + (p.b - lastP.b) / bCount * j
+                    });
+                }
+            }
+
+            interpolatePoints.add(p);
+        }
 
         if (this.toolAngle < 60) {
             this._calculateCurveYCollisionArea(slicerLayers, index, interpolatePoints, angle);
