@@ -540,7 +540,7 @@ class Control extends PureComponent {
                     >
                         {i18n._('Home')}
                     </button>
-                    <span className="sm-parameter-row__label2" style={{ margin: '0 0 0 10px' }}>{i18n._('Jog Speed')}</span>
+                    <div className="sm-parameter-row__label2" style={{ textAlign: 'center', margin: '0 0 0 5px' }}>{i18n._('Jog Speed')}</div>
                     <Creatable
                         backspaceRemoves={false}
                         className="sm-parameter-row__select2"
