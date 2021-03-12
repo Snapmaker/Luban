@@ -18,7 +18,7 @@ const JogDistance = (props) => {
     const distance = String(selectedDistance); // force convert to string
     let isCustomDistanceSelected = true;
     if (workPosition.isFourAxis) {
-        isCustomDistanceSelected = !(_.includes(['10', '5', '1', '0.1'], distance));
+        isCustomDistanceSelected = !(_.includes(['5', '1', '0.1', '0.05'], distance));
     } else {
         isCustomDistanceSelected = !(_.includes(['10', '1', '0.1', '0.05'], distance));
     }
@@ -114,16 +114,18 @@ const JogDistance = (props) => {
                     <div className="col-12">
                         <div className="input-group no-gutters">
                             <div className="col-6">
-                                <button
-                                    type="button"
-                                    className={distanceClasses['10']}
-                                    title={`10 ${units}`}
-                                    onClick={() => actions.selectDistance('10')}
-                                    disabled={!canClick}
-                                    style={{ height: '31.25px' }}
-                                >
+                                {!workPosition.isFourAxis && (
+                                    <button
+                                        type="button"
+                                        className={distanceClasses['10']}
+                                        title={`10 ${units}`}
+                                        onClick={() => actions.selectDistance('10')}
+                                        disabled={!canClick}
+                                        style={{ height: '31.25px' }}
+                                    >
                                     10
-                                </button>
+                                    </button>
+                                )}
                                 {workPosition.isFourAxis && (
                                     <button
                                         type="button"
@@ -156,18 +158,18 @@ const JogDistance = (props) => {
                                 >
                                     0.1
                                 </button>
-                                {!workPosition.isFourAxis && (
-                                    <button
-                                        type="button"
-                                        className={distanceClasses['0.05']}
-                                        title={`0.05 ${units}`}
-                                        onClick={() => actions.selectDistance('0.05')}
-                                        disabled={!canClick}
-                                        style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
-                                    >
+
+                                <button
+                                    type="button"
+                                    className={distanceClasses['0.05']}
+                                    title={`0.05 ${units}`}
+                                    onClick={() => actions.selectDistance('0.05')}
+                                    disabled={!canClick}
+                                    style={{ borderRadius: '0', borderRight: '0px', height: '31.25px' }}
+                                >
                                     0.05
-                                    </button>
-                                )}
+                                </button>
+
                             </div>
                             <button
                                 type="button"
