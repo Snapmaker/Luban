@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-
+import { isUndefined } from 'lodash';
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -58,16 +58,17 @@ class CaseLibrary extends PureComponent {
                 const defaultDefinition = this.props.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 const addDefinition = config.material;
                 const newDefinition = await this.props.duplicateMaterialDefinition(defaultDefinition, materialDefinitionId, materialDefinitionName);
-                for (const key of defaultDefinition.ownKeys) {
-                    if (addDefinition[key] === undefined) {
-                        continue;
+                const newDefinitionSettings = {};
+                for (const [key] of Object.entries(newDefinition.settings)) {
+                    if (!isUndefined(addDefinition[key])) {
+                        newDefinitionSettings[key] = { 'default_value': addDefinition[key] };
+                        newDefinition.settings[key].default_value = addDefinition[key];
                     }
-                    newDefinition.settings[key].default_value = addDefinition[key];
-                    newDefinition.settings[key].from = addDefinition.definitionId;
                 }
+                await this.props.updateDefinitionSettings(newDefinition, newDefinitionSettings);
+
                 // Select new definition after creation
                 this.props.updateDefaultMaterialId(newDefinition.definitionId);
-                this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
                 this.props.updateActiveDefinition(newDefinition);
             }
 
@@ -80,24 +81,24 @@ class CaseLibrary extends PureComponent {
                 } else {
                     this.props.updateIsRecommended(true);
                 }
+
                 this.props.updateDefaultQualityId(qualityDefinitionId);
                 this.props.updateActiveDefinition(qualityDefinition);
             } else {
                 const defaultDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
                 const addDefinition = config.quality;
                 const newDefinition = await this.props.duplicateQualityDefinition(defaultDefinition, qualityDefinitionId, qualityDefinitionName);
-                for (const key of defaultDefinition.ownKeys) {
-                    if (newDefinition.settings[key] === undefined) {
-                        continue;
-                    }
-                    if (addDefinition[key] !== undefined) {
+
+                const newDefinitionSettings = {};
+                for (const [key] of Object.entries(newDefinition.settings)) {
+                    if (!isUndefined(addDefinition[key])) {
+                        newDefinitionSettings[key] = { 'default_value': addDefinition[key] };
                         newDefinition.settings[key].default_value = addDefinition[key];
-                        newDefinition.settings[key].from = addDefinition.definitionId;
                     }
                 }
-                this.props.updateIsRecommended(false);
 
-                this.props.updateDefinitionSettings(newDefinition, newDefinition.settings);
+                await this.props.updateDefinitionSettings(newDefinition, newDefinitionSettings);
+                this.props.updateIsRecommended(false);
                 this.props.updateDefaultQualityId(newDefinition.definitionId);
                 this.props.updateActiveDefinition(newDefinition);
             }

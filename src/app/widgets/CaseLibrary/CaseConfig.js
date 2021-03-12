@@ -519,10 +519,10 @@ export const CaseConfigFourAxis = [
         },
         caseTransformation: {
             positionX: 0,
-            positionY: 34.8,
+            positionY: 27.4,
             rotationZ: 0, // 90 / 180 * Math.PI
-            width: 46,
-            height: 60,
+            width: 42,
+            height: 54.8,
             flip: 0
         }
     },
