@@ -159,31 +159,7 @@ export class MeshProcess {
     }
 
     getWidthAndHeight() {
-        const mesh = this.mesh;
-
-        if (this.isRotate) {
-            const center = {
-                x: (mesh.aabb.max.x + mesh.aabb.min.x) / 2,
-                y: (mesh.aabb.max.y + mesh.aabb.min.y) / 2
-            };
-            let r2 = 0;
-            for (const vertex of mesh.vertices) {
-                r2 = Math.max(Vector2.length2({
-                    x: vertex.p.x - center.x,
-                    y: vertex.p.y - center.y
-                }), r2);
-            }
-
-            const r = Math.sqrt(r2);
-
-            const width = round(r * Math.PI * 2, 2);
-            const height = this.mesh.aabb.length.z;
-            return { width, height };
-        } else {
-            const width = this.mesh.aabb.length.x;
-            const height = this.mesh.aabb.length.z;
-            return { width, height };
-        }
+        return this.mesh.getSize(this.isRotate);
     }
 
     convertTo3AxisData(density) {

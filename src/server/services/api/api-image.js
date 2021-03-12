@@ -15,8 +15,8 @@ import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-import { MeshProcess } from '../../lib/MeshProcess/MeshProcess';
 import { mmToPixel, removeSpecialChars } from '../../../shared/lib/utils';
+import { Mesh } from '../../lib/MeshProcess/Mesh';
 
 const log = logger('api:image');
 
@@ -83,8 +83,7 @@ export const set = (req, res) => {
                     originalName = originalName.replace(/\.zip$/, '');
                     uploadName = originalName;
                 }
-                const meshProcess = new MeshProcess({ uploadName, materials: { isRotate: (isRotate === 'true' || isRotate === true) } });
-                const { width, height } = meshProcess.getWidthAndHeight();
+                const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${uploadName}`, isRotate === 'true' || isRotate === true);
                 res.send({
                     originalName: originalName,
                     uploadName: uploadName,
