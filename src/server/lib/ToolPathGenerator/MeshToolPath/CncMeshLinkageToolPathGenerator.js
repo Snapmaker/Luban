@@ -576,8 +576,9 @@ export default class CncMeshLinkageToolPathGenerator extends EventEmitter {
             for (let i = 0; i < path.length; i++) {
                 const point = path[i];
                 const nY = point.y + this.stepDown;
-                const maxY = Math.sqrt(radiusSquare - point.x * point.x);
-                const initZY = Math.sqrt(initialZSquare - point.x * point.x);
+                const maxY = Math.sqrt(radiusSquare - point.x * point.x) || 0;
+
+                const initZY = Math.sqrt(initialZSquare - point.x * point.x) || 0;
                 if (nY > maxY) {
                     pathTmp.push({
                         g: 0,

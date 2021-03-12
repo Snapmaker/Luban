@@ -2,8 +2,9 @@ import fs from 'fs';
 import { AABB3D } from './AABB3D';
 import { Vector3 } from '../../../shared/lib/math/Vector3';
 import { STLParse } from '../../../shared/lib/STLParse/STLParse';
-import { isEqual } from '../../../shared/lib/utils';
+import { isEqual, round } from '../../../shared/lib/utils';
 import Coordinate from './Coordinate';
+import { Vector2 } from '../../../shared/lib/math/Vector2';
 
 const VERTEX_MELD_DISTANCE = 0.000003;
 
@@ -71,6 +72,45 @@ export class Mesh {
         mesh.finish();
 
         return mesh;
+    }
+
+    /**
+     * Parse only the width and height of the STL
+     *
+     * @param filePath
+     * @param isRotate
+     * @returns {{width, height}|Error} width is circumference when rotate
+     */
+    static loadSize(filePath, isRotate) {
+        const mesh = new Mesh();
+
+        const data = fs.readFileSync(filePath);
+
+        const stlParse = new STLParse().parse(new Uint8Array(data).buffer);
+
+        if (!stlParse) {
+            return new Error('stl file parse error');
+        }
+
+        for (let i = 0; i < stlParse.vertices.length; i += 9) {
+            if (i + 9 > stlParse.vertices.length) {
+                continue;
+            }
+
+            const v0 = { x: stlParse.vertices[i], y: stlParse.vertices[i + 1], z: stlParse.vertices[i + 2] };
+            const v1 = { x: stlParse.vertices[i + 3], y: stlParse.vertices[i + 4], z: stlParse.vertices[i + 5] };
+            const v2 = { x: stlParse.vertices[i + 6], y: stlParse.vertices[i + 7], z: stlParse.vertices[i + 8] };
+
+            mesh.aabb.include(v0);
+            mesh.aabb.include(v1);
+            mesh.aabb.include(v2);
+
+            mesh.vertices.push({ p: v0 });
+            mesh.vertices.push({ p: v1 });
+            mesh.vertices.push({ p: v2 });
+        }
+
+        return mesh.getSize(isRotate);
     }
 
     addFace(v0, v1, v2) {
@@ -190,6 +230,34 @@ export class Mesh {
             face.connectedFaceIndex[0] = this.getFaceIdxWithPoints(face.vertexIndex[0], face.vertexIndex[1], i);
             face.connectedFaceIndex[1] = this.getFaceIdxWithPoints(face.vertexIndex[1], face.vertexIndex[2], i);
             face.connectedFaceIndex[2] = this.getFaceIdxWithPoints(face.vertexIndex[2], face.vertexIndex[0], i);
+        }
+
+        this.vertexHashMap.clear();
+    }
+
+    getSize(isRotate = false) {
+        if (isRotate) {
+            const center = {
+                x: (this.aabb.max.x + this.aabb.min.x) / 2,
+                y: (this.aabb.max.y + this.aabb.min.y) / 2
+            };
+            let r2 = 0;
+            for (const vertex of this.vertices) {
+                r2 = Math.max(Vector2.length2({
+                    x: vertex.p.x - center.x,
+                    y: vertex.p.y - center.y
+                }), r2);
+            }
+
+            const r = Math.sqrt(r2);
+
+            const width = round(r * Math.PI * 2, 2);
+            const height = this.aabb.length.z;
+            return { width, height };
+        } else {
+            const width = this.aabb.length.x;
+            const height = this.aabb.length.z;
+            return { width, height };
         }
     }
 }
