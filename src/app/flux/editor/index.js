@@ -5,7 +5,7 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    sizeModelByMachineSize, sizeModelByMinSize
+    sizeModelByMachineSize
 } from '../../models/ModelInfoUtils';
 
 import { baseActions, checkIsAllModelsPreviewed } from './base';
@@ -38,6 +38,44 @@ const getSourceType = (fileName) => {
         sourceType = 'raster';
     }
     return sourceType;
+};
+
+/**
+ * Recalculate model size
+ */
+const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
+    let width = sourceWidth;
+    let height = sourceHeight;
+    let scale = 1;
+
+    if (!materials.isRotate) {
+        const isX = sourceWidth > sourceHeight;
+        const value = isX ? sourceWidth : sourceHeight;
+        const max = isX ? size.x : size.y;
+        const min = 30;
+
+        if (value > max) {
+            scale = max / value;
+        } else if (value < min) {
+            scale = min / value;
+        }
+
+        width = scale * sourceWidth;
+        height = scale * sourceHeight;
+    } else {
+        const max = Math.max(materials.x, 90);
+        const min = Math.min(90);
+
+        if (width >= max) {
+            scale = max / sourceWidth;
+        } else if (width < min) {
+            scale = min / sourceWidth;
+        }
+        width = scale * sourceWidth;
+        height = scale * sourceHeight;
+    }
+
+    return { width, height, scale };
 };
 
 export const CNC_LASER_STAGE = {
@@ -183,16 +221,12 @@ export const actions = {
         sourceType = sourceType || getSourceType(originalName);
 
         // const sourceType = (path.extname(uploadName).toLowerCase() === '.svg' || path.extname(uploadName).toLowerCase() === '.dxf') ? 'svg' : 'raster';
-        let { width, height, scale } = sizeModelByMachineSize((sourceType === SOURCE_TYPE_IMAGE3D && materials.isRotate) ? materials : size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
-        // Generate geometry
-        if (sourceType === SOURCE_TYPE_IMAGE3D) {
-            const res = sizeModelByMinSize({ x: 50, y: 50 }, width, height);
-            if (res) {
-                width = res.width;
-                height = res.height;
-                scale = res.scale;
-            }
-        }
+        const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
+            ? sizeModelByMachineSize(size, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE)
+            : sizeModel(size, materials, sourceWidth / DEFAULT_SCALE, sourceHeight / DEFAULT_SCALE);
+
+        let { width, height } = newModelSize;
+        const { scale } = newModelSize;
 
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
 
