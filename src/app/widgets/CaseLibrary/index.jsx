@@ -140,14 +140,19 @@ class CaseLibrary extends PureComponent {
             this.props.removeAllModels();
             this.props.uploadCaseModel(config.pathConfig);
         } else {
-            this.actions.loadLaserCncCaseSettings(config);
+            setTimeout(() => {
+                this.actions.loadLaserCncCaseSettings(config);
+            }, 200);
         }
     };
 
     loadFourAxisCase = (config) => {
         this.props.history.push(`/${config.tag}`);
         if (config.tag !== 'workspace') {
-            this.actions.loadLaserCncCaseSettings(config);
+            // Let the laser/cnc page initialize first, and then load the model
+            setTimeout(() => {
+                this.actions.loadLaserCncCaseSettings(config);
+            }, 200);
         } else {
             const formData = new FormData();
             const name = config.pathConfig.name;
