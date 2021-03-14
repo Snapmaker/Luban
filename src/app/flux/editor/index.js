@@ -8,8 +8,7 @@ import {
     checkParams,
     DEFAULT_TEXT_CONFIG,
     generateModelDefaultConfigs,
-    limitModelSizeByMachineSize,
-    sizeModelByMinSize
+    limitModelSizeByMachineSize
 } from '../../models/ModelInfoUtils';
 
 import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
@@ -38,6 +37,44 @@ const getSourceType = (fileName) => {
         sourceType = 'raster';
     }
     return sourceType;
+};
+
+/**
+ * Recalculate model size
+ */
+const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
+    let width = sourceWidth;
+    let height = sourceHeight;
+    let scale = 1;
+
+    if (!materials.isRotate) {
+        const isX = sourceWidth > sourceHeight;
+        const value = isX ? sourceWidth : sourceHeight;
+        const max = isX ? size.x : size.y;
+        const min = 30;
+
+        if (value > max) {
+            scale = max / value;
+        } else if (value < min) {
+            scale = min / value;
+        }
+
+        width = scale * sourceWidth;
+        height = scale * sourceHeight;
+    } else {
+        const max = Math.max(materials.x, 90);
+        const min = Math.min(90);
+
+        if (width >= max) {
+            scale = max / sourceWidth;
+        } else if (width < min) {
+            scale = min / sourceWidth;
+        }
+        width = scale * sourceWidth;
+        height = scale * sourceHeight;
+    }
+
+    return { width, height, scale };
 };
 
 export const actions = {
@@ -294,18 +331,16 @@ export const actions = {
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
-        let { width, height, scale } = limitModelSizeByMachineSize(materials.isRotate && sourceType === SOURCE_TYPE_IMAGE3D ? materials : size, sourceWidth, sourceHeight);
+        const newModelSize = sourceType !== SOURCE_TYPE_IMAGE3D
+            ? limitModelSizeByMachineSize(size, sourceWidth, sourceHeight)
+            : sizeModel(size, materials, sourceWidth, sourceHeight);
+
+        let { width, height } = newModelSize;
+        const { scale } = newModelSize;
+
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
             width = 40;
             height = 40 * sourceHeight / sourceWidth;
-        }
-        if (sourceType === SOURCE_TYPE_IMAGE3D) {
-            const res = sizeModelByMinSize({ x: 50, y: 50 }, width, height);
-            if (res) {
-                width = res.width;
-                height = res.height;
-                scale = res.scale;
-            }
         }
 
         const defaultTransformation = {
