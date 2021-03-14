@@ -149,8 +149,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
 
                 // targetWidth&targetHeight will be changed after rotated
-                const targetWidth = this.targetWidth * scale.w;
-                const targetHeight = this.targetHeight * scale.h;
+                const targetWidth = Math.round(this.targetWidth * scale.w);
+                const targetHeight = Math.round(this.targetHeight * scale.h);
 
                 this._initGenerator(targetWidth, targetHeight);
 
