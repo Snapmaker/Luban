@@ -819,25 +819,6 @@ export const actions = {
             return;
         }
 
-        const boundingBox = {
-            max: {
-                ...models[0].boundingBox.max
-            },
-            min: {
-                ...models[0].boundingBox.min
-            }
-        };
-
-        for (let i = 1; i < models.length; i++) {
-            boundingBox.max.x = Math.max(boundingBox.max.x, models[i].boundingBox.max.x);
-            boundingBox.max.y = Math.max(boundingBox.max.y, models[i].boundingBox.max.y);
-            boundingBox.max.z = Math.max(boundingBox.max.z, models[i].boundingBox.max.z);
-            boundingBox.min.x = Math.min(boundingBox.min.x, models[i].boundingBox.min.x);
-            boundingBox.min.y = Math.min(boundingBox.min.y, models[i].boundingBox.min.y);
-            boundingBox.min.z = Math.min(boundingBox.min.z, models[i].boundingBox.min.z);
-        }
-
-
         modelGroup.unselectAllModels();
         // Info user that slice has started
         dispatch(actions.updateState({
