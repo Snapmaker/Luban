@@ -184,45 +184,46 @@ class TransformationSection extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
-                                <Input
-                                    className={styles['input-box-left']}
-                                    disabled={!selectedNotHide}
-                                    value={toFixed(logicalX, 1)}
-                                    min={-size.x}
-                                    max={size.x}
-                                    onChange={(value) => {
-                                        actions.onChangeLogicalX(value);
-                                    }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-15px' }}
-                                >
-                                    X
-                                </span>
-                                <span
-                                    className={styles['description-text']}
-                                    style={{
-                                        marginLeft: '6px',
-                                        width: '32px',
-                                        textAlign: 'center',
-                                        display: 'inline-block'
-                                    }}
-                                />
-                                <Input
-                                    className={styles['input-box-right']}
-                                    disabled={!selectedNotHide}
-                                    value={toFixed(logicalY, 1)}
-                                    min={-size.y}
-                                    max={size.y}
-                                    onChange={actions.onChangeLogicalY}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-15px' }}
-                                >
-                                    Y
-                                </span>
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide}
+                                            value={toFixed(logicalX, 1)}
+                                            min={-size.x}
+                                            max={size.x}
+                                            onChange={(value) => {
+                                                actions.onChangeLogicalX(value);
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-15px' }}
+                                        >
+                                            X
+                                        </span>
+                                    </div>
+                                    <span
+                                        className={styles['description-text']}
+                                        style={{ marginLeft: '6px', width: '20px', textAlign: 'center', display: 'inline-block' }}
+                                    />
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide}
+                                            value={toFixed(logicalY, 1)}
+                                            min={-size.y}
+                                            max={size.y}
+                                            onChange={(value) => {
+                                                actions.onChangeLogicalY(value);
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-15px' }}
+                                        >
+                                            Y
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </TipTrigger>
                         <TipTrigger
@@ -231,52 +232,52 @@ class TransformationSection extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
-                                <Input
-                                    className={styles['input-box-left']}
-                                    disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(logicalWidth, 1)}
-                                    min={1}
-                                    max={size.x}
-                                    onChange={(value) => {
-                                        actions.onChangeWidth(value);
-                                    }}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-17px' }}
-                                >
-                                   W
-                                </span>
-                                <button
-                                    type="button"
-                                    disabled={!selectedNotHide}
-                                    className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
-                                    style={{
-                                        height: '22px',
-                                        width: '22px',
-                                        display: 'inline-block',
-                                        'verticalAlign': 'middle',
-                                        marginLeft: '10px',
-                                        marginRight: '5px'
-                                    }}
-                                    onClick={() => {
-                                        actions.onChangeUniformScalingState(!uniformScalingState);
-                                    }}
-                                />
-                                <Input
-                                    className={styles['input-box-right']}
-                                    disabled={!selectedNotHide || canResize === false}
-                                    value={toFixed(logicalHeight, 1)}
-                                    min={1}
-                                    max={size.y}
-                                    onChange={actions.onChangeHeight}
-                                />
-                                <span
-                                    className={styles['input-box-inner-text']}
-                                    style={{ marginLeft: '-16px' }}
-                                >
-                                   H
-                                </span>
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide || canResize === false}
+                                            value={toFixed(logicalWidth, 1)}
+                                            min={1}
+                                            max={size.x}
+                                            onChange={(value) => {
+                                                actions.onChangeWidth(value);
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-17px' }}
+                                        >
+                                           W
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={!selectedNotHide || sourceType === 'raster'}
+                                        className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
+                                        style={{ height: '22px', width: '20px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '4px', marginRight: '2px' }}
+                                        onClick={() => {
+                                            actions.onChangeUniformScalingState(!uniformScalingState);
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <div className={styles['input-box-left']}>
+                                        <Input
+                                            disabled={!selectedNotHide || canResize === false}
+                                            value={toFixed(logicalHeight, 1)}
+                                            min={1}
+                                            max={size.y}
+                                            onChange={(value) => {
+                                                actions.onChangeWidth(value);
+                                            }}
+                                        />
+                                        <span
+                                            className={styles['input-box-inner-text']}
+                                            style={{ marginLeft: '-16px' }}
+                                        >
+                                           H
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </TipTrigger>
                         <TipTrigger
@@ -285,39 +286,42 @@ class TransformationSection extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
-                                <DegreeInput
-                                    className={styles['input-box-left']}
-                                    disabled={!selectedNotHide || !canRotate}
-                                    value={toFixed(logicalAngle, 1)}
-                                    suffix="°"
-                                    onChange={actions.onChangeLogicalAngle}
-                                />
-                                <span
-                                    className={styles['description-text']}
-                                    style={{ width: '31px', textAlign: 'center', display: 'inline-block' }}
-                                />
-                                {selectedModelArray.length === 1 && (
-                                    <button
-                                        type="button"
-                                        disabled={!selectedNotHide}
-                                        className={styles.icon_flip_vertically}
-                                        onClick={actions.onFlipHorizontally}
-                                    />
-                                )}
-                                {selectedModelArray.length === 1 && (
+                                <div className="sm-parameter-row__label-r">
+                                    <div className={styles['input-box-left']}>
+                                        <DegreeInput
+                                            disabled={!selectedNotHide || !canRotate}
+                                            value={toFixed(logicalAngle, 1)}
+                                            suffix="°"
+                                            onChange={actions.onChangeLogicalAngle}
+                                        />
+                                    </div>
                                     <span
                                         className={styles['description-text']}
-                                        style={{ width: '26px', textAlign: 'center', display: 'inline-block' }}
+                                        style={{ width: '28px', textAlign: 'center', display: 'inline-block' }}
                                     />
-                                )}
-                                {selectedModelArray.length === 1 && (
-                                    <button
-                                        type="button"
-                                        disabled={!selectedNotHide}
-                                        className={styles.icon_flip_horizontal}
-                                        onClick={actions.onFlipVertically}
-                                    />
-                                )}
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            disabled={!selectedNotHide}
+                                            className={styles.icon_flip_vertically}
+                                            onClick={actions.onFlipHorizontally}
+                                        />
+                                    )}
+                                    {selectedModelArray.length === 1 && (
+                                        <span
+                                            className={styles['description-text']}
+                                            style={{ width: '20px', textAlign: 'center', display: 'inline-block' }}
+                                        />
+                                    )}
+                                    {selectedModelArray.length === 1 && (
+                                        <button
+                                            type="button"
+                                            disabled={!selectedNotHide}
+                                            className={styles.icon_flip_horizontal}
+                                            onClick={actions.onFlipVertically}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </TipTrigger>
                     </React.Fragment>
