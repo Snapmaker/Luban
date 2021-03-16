@@ -859,7 +859,9 @@ class ModelGroup extends EventEmitter {
                 rotationY: 0,
                 rotationZ: 0
             });
+            item.stickToPlate();
         });
+        this.prepareSelectedGroup();
 
         return this.getState();
     }
