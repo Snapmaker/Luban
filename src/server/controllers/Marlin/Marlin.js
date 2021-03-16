@@ -577,7 +577,7 @@ class MarlinParserSelectedCurrent {
 
 class MarlinParserOriginOffset {
     static parse(line) {
-        const r = line.match(/^Origin offset ([XYZ]): (.*)$/);
+        const r = line.match(/^Origin offset ([XYZB]): (.*)$/);
         if (!r) {
             return null;
         }
