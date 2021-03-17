@@ -753,6 +753,7 @@ class Model {
     setSupportPosition(position) {
         const object = this.meshObject;
         object.position.copy(position);
+        object.updateMatrix();
         this.generateSupportGeometry();
     }
 
