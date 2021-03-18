@@ -60,15 +60,16 @@ function main() {
     const worksheet = workbook.Sheets[sheetName];
 
     const col2lang = {
-        // B: ['中文', 'zh-cn'],
+        B: ['English', 'en'],
+        C: ['Chinese', 'zh-cn'],
         // C: ['Japanese', 'ja'],
         // D: ['Korean', 'ko'],
-        // E: ['German', 'de'],
+        D: ['German', 'de'],
         // F: ['Italian', 'it'],
         // G: ['Spanish', 'es'],
-        // H: ['French', 'fr'],
+        E: ['French', 'fr']
         // I: ['Russian', 'ru'],
-        C: ['Ukrainian', 'uk']
+        // C: ['Ukrainian', 'uk']
     };
 
     Object.keys(col2lang).forEach((col) => {

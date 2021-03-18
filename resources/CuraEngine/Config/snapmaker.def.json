@@ -288,7 +288,7 @@
         "support": {
             "children": {
                 "support_enable": {
-                    "label": "Generate Support",
+                    "label": "Generate Auto Support",
                     "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing."
                 },
                 "support_infill_rate": {
@@ -316,6 +316,8 @@
                     }
                 },
                 "support_z_distance": {
+                    "label": "Support Z Distance",
+                    "description": "Distance from the top/bottom of the support structure to the print. This gap provides clearance to remove the supports after the model is printed. This value is rounded up to a multiple of the layer height.",
                     "enabled": true
                 },
                 "support_angle": {

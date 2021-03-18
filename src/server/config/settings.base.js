@@ -161,10 +161,10 @@ export default {
         load: 'currentOnly',
 
         // char to separate keys
-        keySeparator: '.',
+        keySeparator: false,
 
         // char to split namespace from key
-        nsSeparator: ':',
+        nsSeparator: false,
 
         interpolation: {
             prefix: '{{',
