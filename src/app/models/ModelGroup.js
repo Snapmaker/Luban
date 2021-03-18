@@ -1316,6 +1316,11 @@ class ModelGroup extends EventEmitter {
         });
         model.meshObject = new Mesh(geometry, material);
         model.meshObject.supportTag = true;
+        // https://github.com/mrdoob/three.js/issues/3845
+        // because of limitation of decompose
+        // non-uninform scale of object which has children is not recommended by threejs
+        // we use manual updateMatrix to avoid this problem
+        model.meshObject.matrixAutoUpdate = false;
         model.computeBoundingBox();
 
         // add to group and select
