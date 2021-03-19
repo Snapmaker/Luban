@@ -576,7 +576,7 @@ class TransformControls extends Object3D {
                 handle.material.opacity = handle.material._opacity;
 
                 if (this.axis) {
-                    if (handle.label === this.axis || handle.label.includes(this.axis) || handle.label === OUTLINE) {
+                    if (handle.label === this.axis || handle.label === OUTLINE) {
                         handle.material.opacity = 1;
                     } else {
                         handle.material.opacity = 0.15;

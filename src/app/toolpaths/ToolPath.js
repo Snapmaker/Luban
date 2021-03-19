@@ -195,7 +195,6 @@ class ToolPath {
                 } else {
                     model.status = SUCCESS;
                     model.toolPathFile = result.filename;
-
                     if (model.meshObj) {
                         this.object.remove(model.meshObj);
                     }

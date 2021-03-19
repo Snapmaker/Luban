@@ -38,6 +38,56 @@ function getTransformList(elem) {
     return elem.transform.baseVal;
 }
 
+function genModelConfig(elem, size) {
+    const coord = coordGmSvgToModel(size, elem);
+
+    // eslint-disable-next-line prefer-const
+    let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
+    width *= scaleX;
+    height *= scaleY;
+
+    const clone = elem.cloneNode(true);
+    clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
+    clone.setAttribute('font-size', clone.getAttribute('font-size'));
+
+    let vx = x * scaleX;
+    let vy = y * scaleY;
+    let vwidth = width;
+    let vheight = height;
+
+    if (scaleX < 0) {
+        vx += vwidth;
+        vwidth = -vwidth;
+    }
+    if (scaleY < 0) {
+        vy += vheight;
+        vheight = -vheight;
+    }
+
+    // Todo: need to optimize
+    const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
+        + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
+        + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
+    const model = {
+        modelID: elem.getAttribute('id'),
+        content: content,
+        width: width,
+        height: height,
+        transformation: {
+            positionX: positionX,
+            positionY: positionY
+        },
+        config: {
+            svgNodeName: elem.nodeName,
+            text: elem.textContent,
+            'font-size': elem.getAttribute('font-size'),
+            'font-family': elem.getAttribute('font-family')
+        }
+    };
+
+    return model;
+}
+
 /*
 // TODO: copied from element-transform, put it as util function
 function transformBox(x, y, w, h, m) {
@@ -66,10 +116,6 @@ function transformBox(x, y, w, h, m) {
 
 
 class SVGActionsFactory {
-    // event = new EventEmitter();
-
-    svgModels = [];
-
     selectedSvgModels = [];
 
     selectedElementsTransformation = {
@@ -111,7 +157,7 @@ class SVGActionsFactory {
             ...size
         };
 
-        for (const svgModel of this.svgModels) {
+        for (const svgModel of this.modelGroup.models) {
             svgModel.updateSize(this.size);
         }
         if (this.svgContentGroup) {
@@ -357,7 +403,6 @@ class SVGActionsFactory {
         });
 
         const svgModel = new SvgModel(elem, this.size);
-        this.svgModels.push(svgModel);
         svgModel.setParent(this.svgContentGroup.group);
 
         relatedModel.relatedModels.svgModel = svgModel;
@@ -366,7 +411,7 @@ class SVGActionsFactory {
     }
 
     getSVGModelByElement(elem) {
-        for (const svgModel of this.svgModels) {
+        for (const svgModel of this.modelGroup.models) {
             if (svgModel.elem === elem) {
                 return svgModel;
             }
@@ -376,7 +421,7 @@ class SVGActionsFactory {
 
     getModelsByElements(elems) {
         const svgModels = [];
-        for (const svgModel of this.svgModels) {
+        for (const svgModel of this.modelGroup.models) {
             if (elems.includes(svgModel.elem)) {
                 svgModels.push(svgModel);
             }
@@ -515,11 +560,10 @@ class SVGActionsFactory {
         this.modelGroup.addSelectedModels(models);
 
         for (const model of models) {
-            const svgModel = model.relatedModels.svgModel;
-            if (!this.selectedSvgModels.includes(svgModel)) {
-                this.selectedSvgModels.push(svgModel);
+            if (!this.selectedSvgModels.includes(model)) {
+                this.selectedSvgModels.push(model);
                 // todo
-                const posAndSize = this.svgContentGroup.addToSelection([svgModel.elem]);
+                const posAndSize = this.svgContentGroup.addToSelection([model.elem]);
                 this.modelGroup.updateSelectedGroupTransformation({
                     positionX: posAndSize.positionX - this.size.x,
                     positionY: this.size.y - posAndSize.positionY,
@@ -570,10 +614,8 @@ class SVGActionsFactory {
     async createModelFromElement(element) {
         const headType = this.modelGroup.headType;
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
-        const svgModel = new SvgModel(element, this.size);
-        this.svgModels.push(svgModel);
-        svgModel.setParent(this.svgContentGroup.group);
-        const data = svgModel.genModelConfig();
+
+        const data = genModelConfig(element, this.size);
 
 
         const { modelID, content, width, height, transformation, config: elemConfig } = data;
@@ -608,10 +650,13 @@ class SVGActionsFactory {
                 height,
                 transformation,
                 config,
-                gcodeConfig
+                gcodeConfig,
+                elem: element,
+                size: this.size
             };
 
-            this.modelGroup.addModel(options, { svgModel: svgModel });
+            const svgModel = this.modelGroup.addModel(options);
+            svgModel.setParent(this.svgContentGroup.group);
         } catch (e) {
             console.error(e);
         }
@@ -625,14 +670,13 @@ class SVGActionsFactory {
     selectElements(elements) {
         this.svgContentGroup.addToSelection(elements);
 
-        for (const svgModel of this.svgModels) {
+        for (const svgModel of this.modelGroup.models) {
             if (elements.includes(svgModel.elem)) {
                 this.selectedSvgModels.push(svgModel);
                 // todo, not modelGroup here, use flux/editor
-                const model = svgModel.relatedModel;
                 const modelGroup = this.modelGroup;
                 if (modelGroup) {
-                    modelGroup.addSelectedModels([model]);
+                    modelGroup.addSelectedModels([svgModel]);
                 }
             }
         }
@@ -844,6 +888,7 @@ class SVGActionsFactory {
     moveElementsFinish(elements) {
         for (const element of elements) {
             SvgModel.completeElementTransform(element);
+            this.getSVGModelByElement(element).onTransform();
         }
 
         // update selector
@@ -970,8 +1015,7 @@ class SVGActionsFactory {
         if (this.selectedSvgModels.length !== 1) {
             return false;
         }
-        const svgModel = this.selectedSvgModels[0];
-        const model = svgModel.relatedModel;
+        const model = this.selectedSvgModels[0];
         return model.transformation.uniformScalingState;
     }
 
@@ -1046,6 +1090,7 @@ class SVGActionsFactory {
         const element = elements[0];
 
         SvgModel.completeElementTransform(element);
+        this.getSVGModelByElement(element).onTransform();
 
         // update selector
         this.svgContentGroup.resizeSelectorFinish(elements);
@@ -1212,6 +1257,7 @@ class SVGActionsFactory {
     rotateElementsFinish(elements) {
         for (const element of elements) {
             SvgModel.completeElementTransform(element);
+            this.getSVGModelByElement(element).onTransform();
         }
 
         // update selector
@@ -1348,32 +1394,31 @@ class SVGActionsFactory {
         // only support single selected text element
         if (!element && this.selectedSvgModels.length > 1) return;
 
-        const svgModel = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
-        const model = svgModel.relatedModel;
+        const model = element ? this.getSVGModelByElement(element) : this.selectedSvgModels[0];
 
         const config = {};
 
         if (options.text !== undefined) {
-            svgModel.elem.textContent = options.text;
+            model.elem.textContent = options.text;
 
             config.text = options.text;
         }
 
         if (options.fontFamily !== undefined) {
-            svgModel.elem.setAttribute('font-family', options.fontFamily);
+            model.elem.setAttribute('font-family', options.fontFamily);
 
             config['font-family'] = options.fontFamily;
         }
 
         if (options.fontSize !== undefined) {
-            svgModel.elem.setAttribute('font-size', options.fontSize);
+            model.elem.setAttribute('font-size', options.fontSize);
 
             config['font-size'] = options.fontSize;
         }
 
         // Update model
-        const { width, height } = svgModel.elem.getBBox();
-        const { logicalX, logicalY, scaleX, scaleY, angle } = svgModel;
+        const { width, height } = model.elem.getBBox();
+        const { logicalX, logicalY, scaleX, scaleY, angle } = model;
         const baseUpdateData = {
             sourceWidth: width,
             sourceHeight: height,

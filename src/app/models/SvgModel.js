@@ -1,14 +1,26 @@
+import uuid from 'uuid';
+import * as THREE from 'three';
 import Canvg from 'canvg';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
 import { DATA_PREFIX } from '../constants';
 
+
+import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
+
 import api from '../api';
 import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 
+import BaseModel from './BaseModel';
+
+const EVENTS = {
+    UPDATE: { type: 'update' }
+};
+
 const svg = document.createElementNS(NS.SVG, 'svg');
+let updateTimer;
 
 // function transformPoint(point, m) {
 //     const { x, y } = point;
@@ -132,7 +144,7 @@ const remapPath = (elem, remap, scaleW, scaleH) => {
 };
 
 function setElementTransformToList(transformList, transformation, size) {
-    // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.relatedModel.transformation;
+    // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.transformation;
     transformList.clear();
 
     function pointModelToSvg({ x, y }) {
@@ -163,13 +175,29 @@ function setElementTransformToList(transformList, transformation, size) {
     transformList.getItem(0).tag = 'translateBack';
 }
 
-class SvgModel {
-    // SvgModel is View Model, need related to Model object
-    relatedModel = null;
+class SvgModel extends BaseModel {
+    isSvgModel = true;
 
-    constructor(elem, size) {
+    modeConfigs = {};
+
+    constructor(modelInfo, modelGroup) {
+        super(modelInfo, modelGroup);
+        const { elem, size } = modelInfo;
         this.elem = elem;
         this.size = size;
+
+        this.geometry = new THREE.PlaneGeometry(this.width, this.height);
+        const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+
+        this.meshObject = new THREE.Mesh(this.geometry, material);
+
+        this.generateModelObject3D();
+
+        this.processMode(modelInfo.mode, modelInfo.config);
+        // use model info to refresh element
+        this.refresh();
+        // trigger update source
+        this.onTransform();
     }
 
     get type() {
@@ -213,11 +241,6 @@ class SvgModel {
 
     get logicalY() {
         return -this.y + this.size.y;
-    }
-
-    setRelatedModel(relatedModel, update = true) {
-        this.relatedModel = relatedModel;
-        update && this.onUpdate();
     }
 
     setParent(parent) {
@@ -291,7 +314,7 @@ class SvgModel {
 
     // just for svg file
     async uploadSourceImage() {
-        const { uploadName } = this.relatedModel;
+        const { uploadName } = this;
 
         if (uploadName.indexOf('.svg') === -1) {
             return;
@@ -300,8 +323,8 @@ class SvgModel {
             .then(res => res.text());
         const canvas = document.createElement('canvas');
         // set canvas size to get image of exactly same size
-        canvas.width = this.relatedModel.width;
-        canvas.height = this.relatedModel.height;
+        canvas.width = this.width;
+        canvas.height = this.height;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
         const v = await Canvg.fromString(ctx, content);
@@ -312,35 +335,50 @@ class SvgModel {
         const formData = new FormData();
         formData.append('image', file);
         const res = await api.uploadImage(formData);
-        this.relatedModel.updateSource({
-            uploadImageName: res.body.uploadName
-        });
+
+        this.uploadImageName = res.body.uploadName;
+        this.generateModelObject3D();
+        this.generateProcessObject3D();
     }
 
+    // update model source file
     async updateSource() {
+        // svg and image files(always has this.type = 'image') do nothing
+        if (this.type === 'image') return;
         const { width, height } = this.elem.getBBox();
         const uploadName = await this.uploadSourceFile();
-        this.relatedModel.updateSource({
-            uploadName,
-            processImageName: uploadName,
-            width,
-            height,
-            sourceWidth: width,
-            sourceHeight: height
-        });
+        const processImageName = uploadName,
+            // !!!source file size MUST NOT apply scale
+            sourceWidth = width,
+            sourceHeight = height;
+
+
+        this.sourceHeight = sourceHeight || this.sourceHeight;
+        this.sourceWidth = sourceWidth || this.sourceWidth;
+        this.width = width || this.width;
+        this.height = height || this.height;
+        this.uploadName = uploadName || this.uploadName;
+        this.processImageName = processImageName || this.processImageName;
+
+
+        // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
+        // const width = this.transformation.width;
+        // const height = sourceHeight / sourceWidth * width;
+        this.generateModelObject3D();
+        this.generateProcessObject3D();
     }
 
     async uploadSourceFile() {
         const { content } = this.genModelConfig();
         let blob, file, res;
         if (this.type === 'text') {
-            const { text, 'font-family': font, 'font-size': size } = this.relatedModel.config;
-            const { scaleX, scaleY } = this.relatedModel.transformation;
+            const { text, 'font-family': font, 'font-size': size } = this.config;
+            const { scaleX, scaleY } = this.transformation;
             const { width, height } = this.elem.getBBox();
             // Todo: remove DEFAULT_SCALE after convertOneLineTextToSvg method improved.
             const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
             const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
-            const name = this.relatedModel.originalName;
+            const name = this.originalName;
             const alignment = 'middle';
             res = await api.convertOneLineTextToSvg({ text, font, name, size, sourceWidth, sourceHeight, alignment });
         } else {
@@ -371,7 +409,7 @@ class SvgModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, uploadName, width, height } = this.relatedModel;
+        const { config, transformation, uploadName, width, height } = this;
         const href = `${DATA_PREFIX}/${uploadName}`;
         const { positionX, positionY } = transformation;
 
@@ -384,7 +422,6 @@ class SvgModel {
         }
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
-
         switch (this.type) {
             case 'circle':
                 elem.setAttribute('cx', x);
@@ -425,7 +462,7 @@ class SvgModel {
                 break;
         }
 
-        setElementTransformToList(this.elemTransformList(), this.relatedModel.transformation, this.size);
+        setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
     }
 
     refresh() {
@@ -670,11 +707,11 @@ class SvgModel {
         const transform = this.elemTransform();
         if (!transform) return;
 
-        const { width, height } = this.relatedModel;
+        const { width, height } = this;
         const { bbox: { x, y }, scaleX, scaleY, translateX, translateY, rotationAngle } = transform;
 
         if (rotationAngle) {
-            this.relatedModel.updateAndRefresh({ transformation: { rotationZ: -rotationAngle / 180 * Math.PI } });
+            this.updateAndRefresh({ transformation: { rotationZ: -rotationAngle / 180 * Math.PI } });
             return;
         }
 
@@ -746,7 +783,7 @@ class SvgModel {
             this.updateSource();
         }
 
-        this.relatedModel.updateAndRefresh(attrs);
+        this.updateAndRefresh(attrs);
     }
 
     elemTransform() {
@@ -770,7 +807,7 @@ class SvgModel {
             angle = transformList.getItem(rotationIdx).angle;
 
             // rotation can not happen with other transform
-            if (transformList.getItem(rotationIdx).angle.toFixed(5) !== (-this.relatedModel.transformation.rotationZ / Math.PI * 180).toFixed(5)) {
+            if (transformList.getItem(rotationIdx).angle.toFixed(5) !== (-this.transformation.rotationZ / Math.PI * 180).toFixed(5)) {
                 transform.rotationAngle = transformList.getItem(rotationIdx).angle;
                 return transform;
             }
@@ -798,80 +835,6 @@ class SvgModel {
         return transform;
     }
 
-    /*
-    elemResize({ resizeDir, resizeFrom, resizeTo, isUniformScaling }) {
-        let clonedElem = this.elem.cloneNode();
-        const transformList = clonedElem.transform.baseVal;
-        transformList.clear();
-        setElementTransformToList(transformList, this.relatedModel.transformation, this.size);
-
-        const matrix = transformList.consolidate().matrix;
-        const matrixInverse = matrix.inverse();
-
-        function transformPoint(p, m) {
-            const svgPoint = svg.createSVGPoint();
-            svgPoint.x = p.x;
-            svgPoint.y = p.y;
-            return svgPoint.matrixTransform(m);
-        }
-
-        const { width, height } = this.relatedModel;
-        const { positionX, positionY, scaleX, scaleY, flip, uniformScalingState } = this.relatedModel.transformation;
-        // ( x, y ) is the center of model on modelGroup
-        const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
-
-        // 3 points before matrix
-        // resize model from ptFrom to ptTo base the center ptFixed
-        const ptFrom = transformPoint(resizeFrom, matrixInverse);
-        const ptTo = transformPoint(resizeTo, matrixInverse);
-
-        const ptFixed = { x, y };
-
-        if (ptFrom.x > x + width / 3) ptFixed.x -= width / 2;
-        if (ptFrom.x < x - width / 3) ptFixed.x += width / 2;
-        if (ptFrom.y > y + height / 3) ptFixed.y -= height / 2;
-        if (ptFrom.y < y - height / 3) ptFixed.y += height / 2;
-        // scale before matrix
-        let sx = 1;
-        let sy = 1;
-        if (Math.abs(ptFrom.x - x) > width / 10) {
-            sx = (ptFixed.x - ptTo.x) / width * ((flip & 2) ? 1 : -1) * (scaleX > 0 ? 1 : -1);
-            if (resizeDir.includes('w')) {
-                sx *= -1;
-            }
-        }
-        if (Math.abs(ptFrom.y - y) > height / 10) {
-            sy = (ptFixed.y - ptTo.y) / height * ((flip & 1) ? 1 : -1) * (scaleY > 0 ? 1 : -1);
-            if (resizeDir.includes('n')) {
-                sy *= -1;
-            }
-        }
-        // while uniform scaling
-        const uniformScaling = uniformScalingState || isUniformScaling;
-        if (uniformScaling) {
-            if (Math.abs(sx) === 1) {
-                sx *= Math.abs(sy);
-            } else {
-                sy = Math.abs(sx) * sy / Math.abs(sy);
-            }
-        }
-
-        // scale after matrix
-        const list = this.elemTransformList();
-        const scale = list.getItem(findItemIndexByType(list, 3));
-        scale.setScale(sx * scaleX * ((flip & 2) ? -1 : 1), sy * scaleY * ((flip & 1) ? -1 : 1));
-
-        clonedElem = this.elem.cloneNode();
-        clonedElem.transform.baseVal.getItem(0).setTranslate(x, y);
-        const ptFixedFrom = transformPoint(ptFixed, matrix);
-        const matrixTrans = clonedElem.transform.baseVal.consolidate().matrix;
-        const ptFixedTo = transformPoint(ptFixed, matrixTrans);
-        const tx = ptFixedTo.x - ptFixedFrom.x;
-        const ty = ptFixedTo.y - ptFixedFrom.y;
-        const trans = list.getItem(0);
-        trans.setTranslate(x - tx, y - ty);
-    }
-    */
 
     pointModelToSvg({ x, y }) {
         return { x: this.size.x + x, y: this.size.y - y };
@@ -880,6 +843,295 @@ class SvgModel {
     pointSvgToModel({ x, y }) {
         return { x: -this.size.x + x, y: this.size.y - y };
     }
+
+    // --Model functions--
+
+
+    generateModelObject3D() {
+        if (this.sourceType === 'dxf') {
+            if (this.modelObject3D) {
+                this.meshObject.remove(this.modelObject3D);
+                this.modelObject3D = null;
+            }
+
+            const path = `${DATA_PREFIX}/${this.uploadName}`;
+            new ThreeDxfLoader({ width: this.transformation.width }).load(path, (group) => {
+                this.modelObject3D = group;
+                this.meshObject.add(this.modelObject3D);
+                this.meshObject.dispatchEvent(EVENTS.UPDATE);
+            });
+        } else if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
+            const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
+            // const texture = new THREE.TextureLoader().load(uploadPath);
+            const texture = new THREE.TextureLoader().load(uploadPath, () => {
+                this.meshObject.dispatchEvent(EVENTS.UPDATE);
+            });
+
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 1,
+                map: texture,
+                side: THREE.DoubleSide
+            });
+            if (this.modelObject3D) {
+                this.meshObject.remove(this.modelObject3D);
+                this.modelObject3D = null;
+            }
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
+            this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+
+            this.meshObject.add(this.modelObject3D);
+            this.modelObject3D.visible = this.showOrigin;
+        }
+        this.updateTransformation(this.transformation);
+    }
+
+    generateProcessObject3D() {
+        if (this.sourceType !== 'raster' && this.sourceType !== 'image3d') {
+            return;
+        }
+        if (!this.processImageName) {
+            return;
+        }
+        const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
+        // const texture = new THREE.TextureLoader().load(uploadPath);
+        const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            this.meshObject.dispatchEvent(EVENTS.UPDATE);
+        });
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture,
+            side: THREE.DoubleSide
+        });
+        if (this.processObject3D) {
+            this.meshObject.remove(this.processObject3D);
+            this.processObject3D = null;
+        }
+        this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
+        this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+
+        this.meshObject.add(this.processObject3D);
+
+
+        this.processObject3D.visible = !this.showOrigin;
+
+        this.updateTransformation(this.transformation);
+    }
+
+    changeShowOrigin() {
+        this.showOrigin = !this.showOrigin;
+        this.modelObject3D.visible = this.showOrigin;
+        if (this.processObject3D) {
+            this.processObject3D.visible = !this.showOrigin;
+        }
+
+        return {
+            showOrigin: this.showOrigin,
+            showImageName: this.showOrigin ? this.uploadName : this.processImageName
+        };
+    }
+
+    // updateVisible(param) {
+    //     if (param === false) {
+    //         this.modelObject3D && (this.modelObject3D.visible = param);
+    //         this.processObject3D && (this.processObject3D.visible = param);
+    //     } else {
+    //         // todo
+    //         this.modelObject3D && (this.modelObject3D.visible = this.showOrigin);
+    //         this.processObject3D && (this.processObject3D.visible = !this.showOrigin);
+    //     }
+    // }
+
+    getModeConfig(mode) {
+        if (this.sourceType !== 'raster') {
+            return null;
+        }
+        return this.modeConfigs[mode];
+    }
+
+    processMode(mode, config) {
+        if (this.mode !== mode) {
+            this.modeConfigs[this.mode] = {
+                config: {
+                    ...this.config
+                }
+            };
+            if (this.modeConfigs[mode]) {
+                this.config = {
+                    ...this.modeConfigs[mode].config
+                };
+            } else {
+                this.config = {
+                    ...config
+                };
+            }
+
+            this.mode = mode;
+            this.processImageName = null;
+        }
+
+        this.generateProcessObject3D();
+
+        // const res = await api.processImage({
+        //     headType: this.headType,
+        //     uploadName: this.uploadName,
+        //     config: {
+        //         ...this.config,
+        //         density: 4
+        //     },
+        //     sourceType: this.sourceType,
+        //     mode: mode,
+        //     transformation: {
+        //         width: this.width,
+        //         height: this.height,
+        //         rotationZ: 0
+        //     }
+        // });
+        //
+        // this.processImageName = res.body.filename;
+    }
+
+    computeBoundingBox() {
+        const { width, height, rotationZ, scaleX, scaleY } = this.transformation;
+        const bboxWidth = (Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ))) * scaleX;
+        const bboxHeight = (Math.abs(width * Math.sin(rotationZ)) + Math.abs(height * Math.cos(rotationZ))) * scaleY;
+        const { logicalX: x, logicalY: y } = this;
+        this.boundingBox = new THREE.Box2(
+            new THREE.Vector2(x - bboxWidth / 2, y - bboxHeight / 2),
+            new THREE.Vector2(x + bboxWidth / 2, y + bboxHeight / 2)
+        );
+    }
+
+    getTaskInfo() {
+        const taskInfo = {
+            modelID: this.modelID,
+            modelName: this.modelName,
+            headType: this.headType,
+            sourceType: this.sourceType,
+            mode: this.mode,
+
+            visible: this.visible,
+
+            sourceHeight: this.sourceHeight,
+            sourceWidth: this.sourceWidth,
+            scale: this.scale,
+            originalName: this.originalName,
+            uploadName: this.uploadName,
+            processImageName: this.processImageName,
+
+            transformation: {
+                ...this.transformation
+            },
+            config: {
+                ...this.config
+            }
+        };
+
+        // because of text sourcefile has been transformed
+        if (this.config && this.config.svgNodeName !== 'text') {
+            taskInfo.transformation.flip = 0;
+            if (this.transformation.scaleX < 0) {
+                taskInfo.transformation.flip += 2;
+            }
+            if (this.transformation.scaleY < 0) {
+                taskInfo.transformation.flip += 1;
+            }
+        }
+        // svg process as image
+        if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
+            taskInfo.uploadName = this.uploadImageName;
+        }
+        return taskInfo;
+    }
+
+    onTransform() {
+        const t = SvgModel.getElementTransform(this.elem);
+        const size = this.size;
+
+        const transformation = {
+            ...this.transformation,
+            positionX: t.x - size.x,
+            positionY: -t.y + size.y,
+            positionZ: 0,
+            scaleX: t.scaleX,
+            scaleY: t.scaleY,
+            scaleZ: 1,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: -t.angle / 180 * Math.PI,
+            width: t.width * Math.abs(t.scaleX),
+            height: t.height * Math.abs(t.scaleY)
+        };
+
+        this.updateTransformation(transformation);
+        // Need to update source for SVG, element attributes(width, height) changed
+        // Not to update source for text, because <path> need to remap first
+        // Todo, <Path> error, add remap method or not to use model source
+        this.updateSource();
+    }
+
+    async updateAndRefresh({ transformation, config, ...others } = {}) {
+        if (transformation) {
+            this.updateTransformation(transformation);
+        }
+        if (config) {
+            this.config = {
+                ...this.config,
+                ...config
+            };
+        }
+        if (Object.keys(others)) {
+            for (const key of Object.keys(others)) {
+                this[key] = others[key];
+            }
+        }
+
+        this.refresh();
+        this.modelGroup.modelChanged();
+        if (this.config.svgNodeName === 'text') {
+            updateTimer && clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                this.updateSource();
+            }, 300); // to prevent continuous input cause frequently update
+        }
+    }
+
+    /**
+     * Note that you need to give cloned Model a new model name.
+     *
+     * @returns {ThreeModel}
+     */
+    clone(modelGroup) {
+        const clone = new SvgModel({ ...this }, modelGroup);
+        clone.originModelID = this.modelID;
+        clone.modelID = uuid.v4();
+        clone.generateModelObject3D();
+        clone.generateProcessObject3D();
+        this.meshObject.updateMatrixWorld();
+
+        clone.setMatrix(this.meshObject.matrixWorld);
+
+        return clone;
+    }
+
+    updateConfig(config) {
+        this.config = {
+            ...this.config,
+            ...config
+        };
+        this.processMode(this.mode, this.config);
+    }
+
+    updateProcessImageName(processImageName) {
+        // this.processMode(this.mode, this.config, processImageName);
+        this.processImageName = processImageName;
+
+        this.generateProcessObject3D();
+    }
+    // --Model functions--
 }
 
 
