@@ -3,7 +3,10 @@ import EventEmitter from 'events';
 // import { EPSILON } from '../../constants';
 import uuid from 'uuid';
 import _ from 'lodash';
-import Model from './Model';
+
+import Model from './BaseModel';
+import ThreeModel from './ThreeModel';
+import SvgModel from './SvgModel';
 import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
@@ -35,6 +38,15 @@ class ModelGroup extends EventEmitter {
 
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
+    }
+
+    // model factory
+    newModel(modelInfo) {
+        if (this.headType === 'printing') {
+            return new ThreeModel(modelInfo, this);
+        } else {
+            return new SvgModel(modelInfo, this);
+        }
     }
 
     setMaterials(materials) {
@@ -705,9 +717,9 @@ class ModelGroup extends EventEmitter {
         modelsToCopy.forEach((model) => {
             const newModel = model.clone(this);
 
-            if (model.sourceType === '3d') {
+            if (model.isThreeModel) {
                 newModel.stickToPlate();
-                newModel.modelName = this._createNewModelName(newModel.getTaskInfo());
+                newModel.modelName = this._createNewModelName(newModel);
                 newModel.meshObject.position.x = 0;
                 newModel.meshObject.position.y = 0;
                 const point = this._computeAvailableXY(newModel);
@@ -1239,7 +1251,7 @@ class ModelGroup extends EventEmitter {
      * @param relatedModels
      * @returns {Model}
      */
-    addModel(modelInfo, relatedModels = {}) {
+    addModel(modelInfo) {
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType,
@@ -1248,18 +1260,7 @@ class ModelGroup extends EventEmitter {
                 config: modelInfo.config
             });
         }
-        const model = new Model(modelInfo, this);
-        model.meshObject.addEventListener('update', this.onModelUpdate);
-        model.generateModelObject3D();
-
-        model.processMode(modelInfo.mode, modelInfo.config);
-
-        if (model.sourceType === '3d' && model.transformation.positionX === 0 && model.transformation.positionY === 0) {
-            model.stickToPlate();
-            const point = this._computeAvailableXY(model);
-            model.meshObject.position.x = point.x;
-            model.meshObject.position.y = point.y;
-        }
+        const model = this.newModel(modelInfo);
 
         model.computeBoundingBox();
 
@@ -1273,7 +1274,6 @@ class ModelGroup extends EventEmitter {
         }
 
         this.emit('add', model);
-        model.setRelatedModels(relatedModels);
         // refresh view
         this.modelChanged();
 
@@ -1296,9 +1296,7 @@ class ModelGroup extends EventEmitter {
             target = target.target;
         }
 
-        const model = new Model({
-            sourceType: '3d'
-        }, this);
+        const model = this.newModel({ sourceType: '3d' });
 
         model.supportTag = true;
         model.supportSize = { ...defaultSupportSize };
@@ -1370,7 +1368,7 @@ class ModelGroup extends EventEmitter {
     /**
      * Create a new name for model.
      *
-     * @param modelInfo - information needed to create new model name.
+     * @param model - information needed to create new model name.
      *      options = {
      *            config,
      *            mode,
@@ -1379,20 +1377,20 @@ class ModelGroup extends EventEmitter {
      *        };
      * @returns modelName
      */
-    _createNewModelName(modelInfo) {
-        const { config } = modelInfo;
+    _createNewModelName(model) {
+        const { config } = model;
         const isText = (config && config.svgNodeName === 'text');
-        const isShape = (modelInfo.mode === 'vector' && config && config.svgNodeName !== 'image');
+        const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
         let baseName = '';
-        if (modelInfo.sourceType === '3d') {
-            baseName = modelInfo.originalName;
+        if (model.sourceType === '3d') {
+            baseName = model.originalName;
         } else {
             if (isText) {
                 baseName = 'Text';
             } else if (isShape) {
                 baseName = 'Shape';
             } else {
-                baseName = modelInfo.originalName;
+                baseName = model.originalName;
             }
         }
 

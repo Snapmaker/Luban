@@ -19,7 +19,7 @@ import LoadModelWorker from '../../workers/LoadModel.worker';
 import { controller } from '../../lib/controller';
 import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
-import SvgModel from '../../models/SvgModel';
+
 import { CNC_LASER_STAGE } from './utils';
 
 
@@ -315,7 +315,7 @@ export const actions = {
      */
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const { materials, modelGroup, SVGActions } = getState()[headType];
+        const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
 
         sourceType = sourceType || getSourceType(originalName);
 
@@ -377,18 +377,22 @@ export const actions = {
             transformation,
             config,
             gcodeConfig,
-            isRotate: materials.isRotate
+            isRotate: materials.isRotate,
+            elem: contentGroup.addSVGElement({
+                element: config.svgNodeName || 'image',
+                attr: { id: modelID }
+            }),
+            size: size
         };
 
         const model = modelGroup.addModel(options);
-        SVGActions.createFromModel(model);
+
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
 
         if (path.extname(uploadName).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
         }
-
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
@@ -517,7 +521,7 @@ export const actions = {
         }
         // svg process as image
         if (selectedModel.sourceType === 'svg' && !selectedModel.uploadImageName) {
-            await selectedModel.relatedModels.svgModel.uploadSourceImage();
+            await selectedModel.uploadSourceImage();
         }
 
         const options = selectedModel.getTaskInfo();
@@ -761,8 +765,6 @@ export const actions = {
             return;
         }
 
-        const svgModel = model.relatedModels.svgModel;
-
         if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
@@ -785,7 +787,7 @@ export const actions = {
         model.updateProcessImageName(processImageName);
 
         // SVGActions.updateElementImage(processImageName);
-        SVGActions.updateSvgModelImage(svgModel, processImageName);
+        SVGActions.updateSvgModelImage(model, processImageName);
 
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));
@@ -1177,21 +1179,19 @@ export const actions = {
      * TODO: Rename.
      */
     updateModelTransformationByElement: (headType, element, transformation) => (dispatch, getState) => {
-        let model, svgModel;
+        let model;
         if (!element) {
             const { modelGroup } = getState()[headType];
             if (modelGroup.getSelectedModelArray.length !== 1) {
                 return;
             }
             model = modelGroup.getSelectedModelArray()[0];
-            svgModel = model.relatedModel.svgModel;
         } else {
             const { SVGActions } = getState()[headType];
-            svgModel = SVGActions.getModelsByElements([element])[0];
-            model = svgModel.relatedModel;
+            model = SVGActions.getModelsByElements([element])[0];
         }
         model.updateTransformation(transformation);
-        svgModel.onUpdate();
+        model.onUpdate();
     },
 
     updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
@@ -1225,55 +1225,13 @@ export const actions = {
     },
 
     /**
-     * Process procedure: page control, data synchronize and preview
-     **************************************************************************/
-
-    __synchronizeElements: (headType) => (dispatch, getState) => {
-        const { SVGActions, toolPathGroup } = getState()[headType];
-
-        // Convert position from SVG coordinate to logical coordinate
-        // TODO: Convert in SVGActions, and update here
-        for (const svgModel of SVGActions.svgModels) {
-            const model = svgModel.relatedModel;
-            const element = svgModel.elem;
-
-            const t = SvgModel.getElementTransform(element);
-            const size = getState().machine.size;
-
-            const transformation = {
-                ...model.transformation,
-                positionX: t.x - size.x,
-                positionY: -t.y + size.y,
-                positionZ: 0,
-                scaleX: t.scaleX,
-                scaleY: t.scaleY,
-                scaleZ: 1,
-                rotationX: 0,
-                rotationY: 0,
-                rotationZ: -t.angle / 180 * Math.PI,
-                width: t.width * Math.abs(t.scaleX),
-                height: t.height * Math.abs(t.scaleY)
-            };
-
-            model.updateTransformation(transformation);
-            // Need to update source for SVG, element attributes(width, height) changed
-            // Not to update source for text, because <path> need to remap first
-            // Todo, <Path> error, add remap method or not to use model source
-            if (model.sourceType === 'svg' && model.config.svgNodeName !== 'text') {
-                svgModel.updateSource();
-            }
-        }
-
-        toolPathGroup.checkoutToolPathStatus();
-    },
-
-    /**
      * Switch to another page.
      *
      * @param headType
      * @param page
      */
-    switchToPage: (headType, page) => (dispatch) => {
+    switchToPage: (headType, page) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
         if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
             return;
         }
@@ -1282,10 +1240,9 @@ export const actions = {
         dispatch(baseActions.updateState(headType, { page }));
 
         // when switching to "Process" page, we need to
-        // 1. synchronize SVG elements to its corresponding image in "Process" page
-        // 2. trigger preview of all images
+        // trigger preview of all images
         if (page === PAGE_PROCESS) {
-            dispatch(actions.__synchronizeElements(headType));
+            toolPathGroup.checkoutToolPathStatus();
         }
 
         dispatch(baseActions.render(headType));

@@ -60,7 +60,7 @@ class TextParameters extends PureComponent {
             this.props.modifyText(null, { fontFamily: font });
         },
         onChangeSize: (size) => {
-            this.props.modifyText(null, { fontSize: size });
+            this.props.modifyText(null, { fontSize: `${size}` });
         }
     };
 
