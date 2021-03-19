@@ -526,10 +526,10 @@ export const actions = {
         }
 
         const options = selectedModel.getTaskInfo();
-        options.transformation = {
-            width: options.transformation.width,
-            height: options.transformation.height
-        };
+        // options.transformation = {
+        //     width: options.transformation.width,
+        //     height: options.transformation.height
+        // };
 
         options.materials = materials;
         options.toolParams = toolParams;

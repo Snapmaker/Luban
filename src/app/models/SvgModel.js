@@ -647,10 +647,12 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'image': {
-                element.setAttribute('x', x - width / 2);
-                element.setAttribute('y', y - height / 2);
-                element.setAttribute('width', width);
-                element.setAttribute('height', height);
+                element.setAttribute('x', x - width * absScaleX / 2);
+                element.setAttribute('y', y - height * absScaleY / 2);
+                element.setAttribute('width', width * absScaleX);
+                element.setAttribute('height', height * absScaleY);
+                scaleX /= absScaleX;
+                scaleY /= absScaleY;
                 break;
             }
             case 'rect': {
