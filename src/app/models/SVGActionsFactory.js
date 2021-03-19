@@ -275,9 +275,7 @@ class SVGActionsFactory {
         // Update uniform scaling state
         if (uniformScalingState !== undefined) {
             if (selectedSVGModels.length === 1) {
-                const svgModel = selectedSVGModels[0];
-                const model = svgModel.relatedModel;
-
+                const model = selectedSVGModels[0];
                 model.updateTransformation({ uniformScalingState: transformation.uniformScalingState });
             }
         }
@@ -395,20 +393,20 @@ class SVGActionsFactory {
         this.svgContentGroup.showSelectorGrips(true);
     }
 
-    createFromModel(relatedModel) {
-        const { config } = relatedModel;
-        const elem = this.svgContentGroup.addSVGElement({
-            element: config.svgNodeName || 'image',
-            attr: { id: relatedModel.modelID }
-        });
+    // createFromModel(relatedModel) {
+    //     const { config } = relatedModel;
+    //     const elem = this.svgContentGroup.addSVGElement({
+    //         element: config.svgNodeName || 'image',
+    //         attr: { id: relatedModel.modelID }
+    //     });
 
-        const svgModel = new SvgModel(elem, this.size);
-        svgModel.setParent(this.svgContentGroup.group);
+    //     const svgModel = new SvgModel(elem, this.size);
+    //     svgModel.setParent(this.svgContentGroup.group);
 
-        relatedModel.relatedModels.svgModel = svgModel;
-        svgModel.relatedModel = relatedModel;
-        svgModel.refresh();
-    }
+    //     relatedModel.relatedModels.svgModel = svgModel;
+    //     svgModel.relatedModel = relatedModel;
+    //     svgModel.refresh();
+    // }
 
     getSVGModelByElement(elem) {
         for (const svgModel of this.modelGroup.models) {
@@ -475,8 +473,8 @@ class SVGActionsFactory {
             // translate and rotate models
 
             // FIXME
-            for (const svgModel of selectedModels) {
-                const elem = svgModel.elem;
+            for (const model of selectedModels) {
+                const elem = model.elem;
 
                 const rotateBox = svg.createSVGTransform();
                 rotateBox.setRotate(deviation.deltaAngle, deviation.cx, deviation.cy);
@@ -488,16 +486,15 @@ class SVGActionsFactory {
 
                 const endCenter = startCenter.matrixTransform(rotateBox.matrix);
                 // why model new center?
-                const modelNewCenter = svgModel.pointSvgToModel(endCenter);
+                const modelNewCenter = model.pointSvgToModel(endCenter);
 
-                const model = svgModel.relatedModel;
                 const rotationZ = ((model.transformation.rotationZ * 180 / Math.PI - deviation.deltaAngle + 540) % 360 - 180) * Math.PI / 180;
                 const positionX = modelNewCenter.x;
                 const positionY = modelNewCenter.y;
 
                 // <path> cannot use this
                 // because it has no xy
-                if (svgModel.type !== 'path') {
+                if (model.type !== 'path') {
                     model.updateAndRefresh({
                         transformation: {
                             positionX: positionX,
@@ -517,7 +514,7 @@ class SVGActionsFactory {
                     transform.setTranslate(modelNewCenter.x - model.transformation.positionX, -(modelNewCenter.y - model.transformation.positionY));
                     const transformList = elem.transform.baseVal;
                     transformList.insertItemBefore(transform, 0);
-                    svgModel.onUpdate();
+                    model.onUpdate();
                 }
             }
 
@@ -531,8 +528,7 @@ class SVGActionsFactory {
 
         if (deviation.scaleX !== undefined || deviation.scaleY !== undefined) {
             const element = elements[0];
-            const svgModel = this.getSVGModelByElement(element);
-            const model = svgModel.relatedModel;
+            const model = this.getSVGModelByElement(element);
 
             if (deviation.scaleX !== undefined) {
                 model.updateAndRefresh({
@@ -596,8 +592,7 @@ class SVGActionsFactory {
 
     resetSelectionNotResetList(elements) {
         const posAndSize = this.svgContentGroup.operatorPoints.resizeGrips(elements);
-        const svgModel = this.getModelsByElements(elements)[0];
-        const model = svgModel.relatedModel;
+        const model = this.getModelsByElements(elements)[0];
         model.updateTransformation({
             positionX: posAndSize.positionX - this.size.x,
             positionY: this.size.y - posAndSize.positionY,
@@ -966,6 +961,7 @@ class SVGActionsFactory {
                 scaleY,
                 angle
             });
+            this.getSVGModelByElement(element).onTransform();
         } else {
             const t = SVGActionsFactory.calculateElementsTransformation(elements);
 
@@ -995,6 +991,7 @@ class SVGActionsFactory {
                     scaleY,
                     angle
                 });
+                this.getSVGModelByElement(element).onTransform();
             }
         }
 
@@ -1137,6 +1134,7 @@ class SVGActionsFactory {
                 scaleY: newHeight / height * signScaleY,
                 angle
             });
+            this.getSVGModelByElement(element).onTransform();
         } else {
             // not supported
         }
@@ -1167,6 +1165,7 @@ class SVGActionsFactory {
             const scaleY = scaleTransform.matrix.d;
 
             scaleTransform.setScale(-scaleX, scaleY);
+            this.getSVGModelByElement(element).onTransform();
         }
 
         // update selector
@@ -1195,6 +1194,7 @@ class SVGActionsFactory {
             const scaleY = scaleTransform.matrix.d;
 
             scaleTransform.setScale(scaleX, -scaleY);
+            this.getSVGModelByElement(element).onTransform();
         }
 
         // update selector
@@ -1346,6 +1346,7 @@ class SVGActionsFactory {
                 scaleY,
                 angle: newAngle
             });
+            this.getSVGModelByElement(element).onTransform();
         } else {
             // not supported yet
         }

@@ -257,7 +257,6 @@ class TransformationSection extends PureComponent {
                                         style={{ height: '22px', width: '20px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '4px', marginRight: '2px' }}
                                         onClick={() => {
                                             actions.onChangeUniformScalingState(!uniformScalingState);
-                                            actions.onModelAfterTransform();
                                         }}
                                     />
                                     <div className={styles['input-box-left']}>
