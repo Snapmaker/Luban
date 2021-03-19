@@ -132,6 +132,9 @@ const defaultConfigs = {
         invert: false,
         turdSize: 2
     },
+    [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE_SVG)]: {
+        'stroke-width': '0.25'
+    },
     [toKey(HEAD_CNC, PROCESS_MODE_VECTOR, SOURCE_TYPE_TEXT)]: {
         ...DEFAULT_TEXT_CONFIG
     }
