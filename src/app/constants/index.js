@@ -78,6 +78,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'bottom_thickness',
     'outer_inset_first',
     'infill_sparse_density',
+    'infill_pattern',
     // 'speed_print',
     'speed_print_layer_0',
     'speed_infill',
@@ -130,7 +131,8 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
         name: 'Infill',
         fields: [
-            'infill_sparse_density'
+            'infill_sparse_density',
+            'infill_pattern'
         ]
     },
     {
