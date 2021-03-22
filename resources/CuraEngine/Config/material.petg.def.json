@@ -1,0 +1,49 @@
+{
+    "name": "PLA",
+    "version": 2,
+    "inherits": "snapmaker",
+    "overrides": {
+        "material_flow": {
+            "default_value": 100
+        },
+        "machine_heated_bed": {
+            "default_value": true
+        },
+        "material_final_print_temperature": {
+            "default_value": 200
+        },
+        "material_print_temperature_layer_0": {
+            "default_value": 235
+        },
+        "material_print_temperature": {
+            "default_value": 235
+        },
+        "material_bed_temperature_layer_0": {
+            "default_value": 75
+        },
+        "material_bed_temperature": {
+            "default_value": 70
+        },
+        "material_diameter": {
+            "default_value": 1.75
+        },
+        "speed": {
+            "speed_print": {
+                "speed_infill": 20,
+                "speed_wall": {
+                    "speed_wall_0": 25,
+                    "speed_wall_x": 25
+                },
+                "speed_roofing": 25,
+                "speed_topbottom": 25,
+                "speed_support": 25,
+                "speed_prime_tower": 25,
+                "speed_travel": 80,
+                "speed_layer_0": {
+                    "speed_print_layer_0": 15,
+                    "speed_travel_layer_0": 24
+                }
+            }
+        }
+    }
+}
