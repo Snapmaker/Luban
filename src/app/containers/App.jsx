@@ -5,6 +5,7 @@ import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 import { Trans } from 'react-i18next';
+import { ToastContainer } from '../components/Toast';
 
 import { actions as machineActions } from '../flux/machine';
 import { actions as developToolsActions } from '../flux/develop-tools';
@@ -31,7 +32,7 @@ import Cnc from './Cnc';
 import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
-// import recoverEnvironmentModal from '../modals/modal-recover-environment';
+
 import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
@@ -377,6 +378,17 @@ class App extends PureComponent {
                         )}
                     </div>
                 </div>
+                <ToastContainer
+                    position="top-center"
+                    autoClose={5000}
+                    hideProgressBar
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
             </div>
         );
     }

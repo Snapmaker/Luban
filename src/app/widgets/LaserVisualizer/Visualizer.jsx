@@ -17,7 +17,7 @@ import { actions as editorActions } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../LaserCameraAidBackground';
 import styles from './styles.styl';
-import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR } from '../../constants';
+import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
@@ -43,6 +43,7 @@ class Visualizer extends Component {
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
         selectedModelArray: PropTypes.array,
+        selectedToolPathModelArray: PropTypes.array,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
@@ -212,42 +213,12 @@ class Visualizer extends Component {
 
         this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
-        const { selectedModelArray } = nextProps;
+        const { selectedToolPathModelArray } = nextProps;
         // todo, selectedModelId nof found
-        if (selectedModelArray !== this.props.selectedModelArray) {
-            const selectedModel = selectedModelArray[0];
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                const sourceType = selectedModel.sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-                // this.canvas.current.controls.attach(model);
-                // const meshObject = nextProps.getSelectedModel().meshObject;
-                const meshObject = selectedModel.meshObject;
-                if (meshObject && selectedModel.visible) {
-                    this.canvas.current.controls.attach(meshObject);
-                } else {
-                    this.canvas.current.controls.detach();
-                }
-            }
+        if (selectedToolPathModelArray !== this.props.selectedToolPathModelArray) {
+            this.canvas.current.controls.detach();
+            selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
-        // else {
-        //     const selectedModel = this.props.modelGroup.getSelectedModelArray()[0]; //getSelectedModel();
-        //     console.log(selectedModel);
-        //     if (!selectedModel) {
-        //         this.canvas.current.controls.detach();
-        //     } else {
-        //         if (selectedModel.visible) {
-        //             this.canvas.current.controls.attach(selectedModel.meshObject);
-        //         } else {
-        //             this.canvas.current.controls.detach();
-        //         }
-        //     }
-        // }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
@@ -526,6 +497,7 @@ const mapStateToProps = (state) => {
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
+    const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
         page,
@@ -541,6 +513,7 @@ const mapStateToProps = (state) => {
         toolPathGroup,
         displayedType,
         selectedModelArray,
+        selectedToolPathModelArray,
         // model,
         backgroundGroup: background.group,
         renderingTimestamp,
