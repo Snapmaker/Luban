@@ -512,6 +512,10 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
             if (!this.selectedModelArray.includes(model)) {
+                if (!model) {
+                    console.trace('modelGroup, addSelectedModels', model);
+                    window.alert('blank');
+                }
                 model && this.selectedModelArray.push(model);
             }
         }
