@@ -1,6 +1,6 @@
 {
-    "name": "PLA",
-    "version": 2,
+    "name": "PETG",
+    "version": 1,
     "inherits": "snapmaker",
     "overrides": {
         "material_flow": {
