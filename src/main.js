@@ -16,7 +16,6 @@ const config = new Store();
 
 let serverData = null;
 let mainWindow = null;
-let mainWindowOptions = null;
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
@@ -177,7 +176,6 @@ const createWindow = async () => {
 
 
     mainWindow = window;
-    mainWindowOptions = windowOptions;
     configureWindow(window);
 
     const loadUrl = `http://${address}:${port}`;
@@ -195,9 +193,11 @@ const createWindow = async () => {
 
     window.on('close', (e) => {
         e.preventDefault();
+        const bounds = window.getBounds();
+        const display = screen.getDisplayMatching(bounds);
         const options = {
-            id: mainWindowOptions.id,
-            ...window.getBounds()
+            id: display.id,
+            ...bounds
         };
 
         config.set('winBounds', options);
