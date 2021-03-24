@@ -39,6 +39,14 @@
         "brim_width": {
             "description": "The distance from the model to the outermost brim line. A larger brim enhances adhesion to the heated bed, but also reduces the effective print area."
         },
+        "cool_fan_enabled": {
+            "label": "Enable Print Cooling",
+            "description": "Enables the print cooling fans while printing. The fans improve print quality on layers with short layer times and bridging / overhangs."
+        },
+        "cool_fan_speed": {
+            "label": "Fan Speed",
+            "description": "The speed at which the print cooling fans spin."
+        },
         "conical_overhang_angle": {
             "description": "The maximum angle of overhangs after the they have been made printable. At a value of 0° all overhangs are replaced by a piece of model connected to the heated bed, 90° will not change the model in any way."
         },

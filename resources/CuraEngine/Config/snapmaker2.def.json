@@ -139,6 +139,20 @@
                 }
             }
         },
+        "cooling": {
+            "type": "category",
+            "children": {
+                "cool_fan_enabled": {
+                    "label": "Enable Print Cooling",
+                    "default_value": true
+                },
+                "cool_fan_speed": {
+                    "label": "Fan Speed",
+                    "default_value": 100,
+                    "enable": "cool_fan_enabled"
+                }
+            }
+        },
         "material": {
             "type": "category",
             "children": {
