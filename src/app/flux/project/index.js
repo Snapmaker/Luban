@@ -144,7 +144,7 @@ export const actions = {
 
         dispatch(modActions.updateState(envHeadType, restState));
         // TODO: set current content to avoid <unSaved> flag mis-set
-        dispatch(actions.clearSavedEnvironment(envHeadType));
+        await dispatch(actions.clearSavedEnvironment(envHeadType));
     },
 
     quitRecovery: (headType) => async (dispatch) => {
