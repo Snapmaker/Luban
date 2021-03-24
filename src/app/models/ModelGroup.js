@@ -1266,7 +1266,6 @@ class ModelGroup extends EventEmitter {
      *            gcodeConfig
      *        };
      *
-     * @param relatedModels
      * @returns {Model}
      */
     addModel(modelInfo) {

@@ -41,7 +41,7 @@ class ModalHOC extends PureComponent {
         this.setState({ show: false });
         setTimeout(() => {
             this.props.removeContainer();
-            this.props.onClose();
+            this.props.onClose && this.props.onClose();
         });
     };
 
