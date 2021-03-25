@@ -1,7 +1,7 @@
 import noop from 'lodash/noop';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import Select from 'react-select';
+import Select from '../../components/Select';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';

@@ -17,17 +17,18 @@ import confirm from '../../lib/confirm';
 import { limitStringLength } from '../../lib/normalize-range';
 
 const SUBCATEGORY = 'CncConfig';
+const defaultToolListNames = [
+    'Carving V bit',
+    'Flat End Mill',
+    'Ball End Mill',
+    'Straight Groove V-bit'
+];
 
 function isOfficialListDefinition(activeToolList) {
     return includes(['Default'],
         activeToolList.definitionId)
-            && includes([
-                'Flat End Mill (1.5 mm)',
-                'Ball End Mill (3.175 mm)',
-                'Carving V bit (30° 0.2 mm)',
-                'Straight Groove V-bit (20° 0.3 mm)'
-            ],
-            activeToolList.name);
+            && includes(defaultToolListNames,
+                activeToolList.name);
 }
 
 function isOfficialCategoryDefinition(activeToolCategory) {
@@ -56,7 +57,7 @@ class CncToolManager extends PureComponent {
 
     state = {
         showCncToolManager: false,
-        nameForToolList: 'Carving V bit (30° 0.2 mm)',
+        nameForToolList: defaultToolListNames[0],
         configExpanded: {},
         activeToolListDefinition: null,
         activeToolCategory: null,
@@ -172,9 +173,9 @@ class CncToolManager extends PureComponent {
         },
         onSelectToolName: (definitionId, name) => {
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
-            const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name);
-            toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
+            const toolDefinitionForManager = activeToolCategory && activeToolCategory.toolList.find(k => k.name === name);
             if (toolDefinitionForManager) {
+                toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
                 this.setState({
                     activeToolListDefinition: toolDefinitionForManager,
                     activeToolCategory: activeToolCategory,
@@ -188,7 +189,6 @@ class CncToolManager extends PureComponent {
             this.actions.onSelectToolCategory(newDefinition.definitionId);
         },
         onDuplicateToolNameDefinition: async () => {
-            console.log('onDuplicateToolNameDefinition', this.state.activeToolCategory, this.state.activeToolListDefinition);
             const newToolName = await this.props.duplicateToolListDefinition(this.state.activeToolCategory, this.state.activeToolListDefinition);
             // need to change ,update activeToolListDefinition
             this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
@@ -229,18 +229,20 @@ class CncToolManager extends PureComponent {
         // Load 'toolDefinitions' and compose the content of the manager
         if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
             const newState = {};
+            let activeToolCategory;
+            let activeToolListDefinition;
             if (this.props.toolDefinitions.length === 0) {
-                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
+                activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
+                activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === defaultToolListNames[0]);
                 activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolCategory,
                     activeToolListDefinition
                 });
             } else {
-                const activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                const activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === this.state.activeToolListDefinition.name)
-                || activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
+                activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === this.state.activeToolListDefinition.definitionId) || nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
+                activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === this.state.activeToolListDefinition.name)
+                || activeToolCategory.toolList.find(k => k.name === defaultToolListNames[0]);
                 if (activeToolListDefinition) {
                     activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                     Object.assign(newState, {
@@ -254,13 +256,22 @@ class CncToolManager extends PureComponent {
                 const category = d.category;
                 const definitionId = d.definitionId;
                 const nameArray = [];
+                const detailNameArray = [];
                 d.toolList.forEach((item) => {
+                    let detailName = '';
+                    if (item.config.angle.default_value !== '180') {
+                        detailName = `${item.name}(${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                    } else {
+                        detailName = `${item.name}(${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                    }
                     nameArray.push(item.name);
+                    detailNameArray.push(detailName);
                 });
                 checkboxAndSelectGroup.category = category;
                 checkboxAndSelectGroup.definitionId = definitionId;
                 checkboxAndSelectGroup.expaned = false;
                 checkboxAndSelectGroup.nameArray = nameArray;
+                checkboxAndSelectGroup.detailNameArray = detailNameArray;
                 return checkboxAndSelectGroup;
             });
             const configExpanded = {};
@@ -326,8 +337,8 @@ class CncToolManager extends PureComponent {
                                                     </Anchor>
                                                     {!configExpanded[option.definitionId] && (
                                                         <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
-                                                            { option.nameArray.map(singleName => {
-                                                                const displayName = limitStringLength(i18n._(singleName), 24);
+                                                            { option.nameArray.map((singleName, index) => {
+                                                                const displayName = limitStringLength(i18n._(option.detailNameArray[index]), 24);
                                                                 return (
                                                                     <li key={`${singleName}`}>
                                                                         <Anchor

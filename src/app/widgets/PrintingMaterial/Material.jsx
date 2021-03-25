@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import Select from 'react-select';
+import Select from '../../components/Select';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -142,9 +142,7 @@ class Material extends PureComponent {
 
     render() {
         const state = this.state;
-        // const actions = this.actions;
         const { materialDefinition, materialDefinitionOptions } = state;
-
         if (!materialDefinition) {
             return null;
         }

@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Select from 'react-select';
 import _ from 'lodash';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import Select from '../../../components/Select';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
@@ -11,7 +11,7 @@ import { actions as cncActions } from '../../../flux/cnc';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../constants';
-import { limitStringLength } from '../../../lib/normalize-range';
+// import { limitStringLength } from '../../../lib/normalize-range';
 
 class ToolParameters extends PureComponent {
     static propTypes = {
@@ -51,23 +51,39 @@ class ToolParameters extends PureComponent {
         toolDefinitions.forEach(d => {
             const category = d.category;
             const definitionId = d.definitionId;
-            toolDefinitionOptions.push(...d.toolList.map((item) => {
-                const checkboxAndSelectGroup = {};
-                const name = item.name;
-                checkboxAndSelectGroup.name = name;
-                checkboxAndSelectGroup.definitionId = definitionId;
-                checkboxAndSelectGroup.label = limitStringLength(`${category} - ${name}`, 24);
-                checkboxAndSelectGroup.value = `${definitionId}-${name}`;
-                return checkboxAndSelectGroup;
-            }));
+            const groupOptions = {
+                label: category,
+                definitionId: definitionId,
+                options: d.toolList.map((item) => {
+                    const checkboxAndSelectGroup = {};
+                    const name = item.name;
+                    let detailName = '';
+                    if (item.config.angle.default_value !== '180') {
+                        detailName = `${item.name} (${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                    } else {
+                        detailName = `${item.name} (${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                    }
+                    checkboxAndSelectGroup.name = name;
+                    checkboxAndSelectGroup.definitionId = definitionId;
+                    checkboxAndSelectGroup.label = `${detailName}`;
+                    checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+                    return checkboxAndSelectGroup;
+                })
+            };
+            toolDefinitionOptions.push(groupOptions);
         });
-        console.log('toolDefinitionOptions', toolDefinitionOptions);
+        const valueObj = {
+            firstKey: 'definitionId',
+            firstValue: activeToolDefinition.definitionId,
+            secondKey: 'name',
+            secondValue: activeToolDefinition.name
+        };
         if (isModifiedDefinition) {
             toolDefinitionOptions.push({
-                name: '以当前设置创建配置文件',
+                name: 'modified',
                 definitionId: 'new',
-                label: '以当前设置创建配置文件',
-                value: 'new-以当前设置创建配置文件'
+                label: 'Create material profile with current parameters',
+                value: 'new-modified'
             });
         }
 
@@ -76,14 +92,16 @@ class ToolParameters extends PureComponent {
                 <React.Fragment>
                     <div className="sm-parameter-container">
                         <div
-                            style={{ position: 'relative' }}
+                            className={classNames(
+                                styles['manager-wrapper']
+                            )}
                         >
                             <span className={classNames(
                                 'sm-parameter-row__label',
                                 styles['manager-select-name'],
                             )}
                             >
-                                {i18n._('Material & Tool')}
+                                {i18n._('Tool')}
                             </span>
                             {(isModifiedDefinition
                                 && (
@@ -101,11 +119,18 @@ class ToolParameters extends PureComponent {
                                 )}
                                 style={{ width: '248px' }}
                                 clearable={false}
+                                isGroup
+                                valueObj={valueObj}
                                 options={toolDefinitionOptions}
                                 placeholder={i18n._('Choose carving path')}
-                                value={`${activeToolDefinition.definitionId}-${activeToolDefinition.name}`}
                                 onChange={this.actions.onChangeActiveToolListValue}
                             />
+                            <p className={classNames(
+                                styles['manager-detail'],
+                            )}
+                            >
+                                {i18n._('Material')} : {toolDefinitionOptions.find(d => d.definitionId === activeToolDefinition.definitionId).label}
+                            </p>
                             <Anchor
                                 onClick={this.actions.onShowCncToolManager}
                             >

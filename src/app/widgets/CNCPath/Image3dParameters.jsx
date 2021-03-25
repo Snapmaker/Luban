@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import Select from 'react-select';
+import Select from '../../components/Select';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as textActions } from '../../flux/text';
@@ -102,7 +102,6 @@ class Image3dParameters extends PureComponent {
                                         className="sm-parameter-row__select"
                                         backspaceRemoves={false}
                                         clearable={false}
-                                        searchable={false}
                                         options={Options}
                                         value={direction}
                                         onChange={(option) => {

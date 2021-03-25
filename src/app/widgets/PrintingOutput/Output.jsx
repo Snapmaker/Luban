@@ -1,10 +1,10 @@
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
-import Select from 'react-select';
 import { connect } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
+import Select from '../../components/Select';
 
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';

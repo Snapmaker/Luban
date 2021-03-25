@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import Select from 'react-select';
+import Select from '../../components/Select';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -121,7 +121,6 @@ Start a new line manually according to your needs.')}
                                     // style={{ width: '202px', float: 'right' }}
                                     backspaceRemoves={false}
                                     clearable={false}
-                                    searchable={false}
                                     options={fontOptions}
                                     placeholder={i18n._('Choose font')}
                                     value={fontFamily}

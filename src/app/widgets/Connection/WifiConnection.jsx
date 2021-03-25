@@ -2,9 +2,9 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import Select from 'react-select';
 import { Button, InputGroup } from 'react-bootstrap';
 import { map } from 'lodash';
+import Select from '../../components/Select';
 
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';

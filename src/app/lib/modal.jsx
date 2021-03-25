@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../components/Modal';
 
+let outsideInputValue = '';
 class ModalHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
@@ -22,12 +23,18 @@ class ModalHOC extends PureComponent {
 
     state = {
         show: true,
-        defaultInputValue: this.props.defaultInputValue ? this.props.defaultInputValue : ''
+        inputValue: this.props.defaultInputValue ? this.props.defaultInputValue : ''
     };
 
+    componentDidMount() {
+        if (this.props.defaultInputValue) {
+            outsideInputValue = this.props.defaultInputValue;
+        }
+    }
+
     onChangeInputValue = (event) => {
-        console.log('onChangeInputValue', event.target.value);
-        this.setState({ defaultInputValue: event.target.value });
+        this.setState({ inputValue: event.target.value });
+        outsideInputValue = event.target.value;
     }
 
     handleClose = () => {
@@ -38,9 +45,13 @@ class ModalHOC extends PureComponent {
         });
     };
 
+    componentWillUnmountMount() {
+        outsideInputValue = '';
+    }
+
     render() {
         const { title, body, footer, size } = this.props;
-        const { show, defaultInputValue } = this.state;
+        const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
         return (
@@ -74,7 +85,7 @@ class ModalHOC extends PureComponent {
                                 borderRadius: '4px',
                                 borderColor: '#c8c8c8' }}
                             onChange={this.onChangeInputValue}
-                            value={defaultInputValue}
+                            value={inputValue}
                         />
                     )}
                 </Modal.Body>
@@ -96,6 +107,9 @@ export default (options) => {
         ReactDOM.unmountComponentAtNode(container);
         container.remove();
     };
+    const getInputValue = () => {
+        return outsideInputValue;
+    };
 
     const props = {
         ...options,
@@ -104,5 +118,5 @@ export default (options) => {
 
     ReactDOM.render(<ModalHOC {...props} />, container);
     // return popupActions
-    return { close: removeContainer };
+    return { close: removeContainer, getInputValue: getInputValue };
 };

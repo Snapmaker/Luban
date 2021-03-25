@@ -80,8 +80,23 @@ class ToolPathConfigurations extends PureComponent {
                 activeToolDefinition: newDefinition
             });
         },
+        onDuplicateToolNameDefinition: async (inputValue) => {
+            const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === this.state.activeToolDefinition.definitionId) || this.props.toolDefinitions.find(d => d.definitionId === 'Default');
+            const newToolDefinition = {
+                ...this.state.activeToolDefinition,
+                name: inputValue
+            };
+            await this.props.duplicateToolListDefinition(activeToolCategory, newToolDefinition);
+        },
         setCurrentValueAsProfile: () => {
-            console.log('setCurrentValueAsProfile', this.props.duplicateToolListDefinition, this.state.activeToolDefinition);
+            const activeToolDefinition = this.state.activeToolDefinition;
+            const activeToolCategoryDefinition = this.props.toolDefinitions.find(d => d.definitionId === activeToolDefinition.definitionId);
+
+            // make sure name is not repeated
+            while (activeToolCategoryDefinition.toolList.find(d => d.name === activeToolDefinition.name)) {
+                activeToolDefinition.name = `#${activeToolDefinition.name}`;
+            }
+
             const popupActions = modal({
                 title: i18n._('Create Material Profile'),
                 body: (
@@ -90,12 +105,13 @@ class ToolPathConfigurations extends PureComponent {
                     </React.Fragment>
 
                 ),
-                defaultInputValue: `#${this.state.activeToolDefinition.name}`,
+                defaultInputValue: activeToolDefinition.name,
                 footer: (
                     <button
                         type="button"
                         className="btn sm-btn-default"
-                        onClick={() => {
+                        onClick={async () => {
+                            await this.actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
                             popupActions.close();
                         }}
                     >
@@ -196,7 +212,7 @@ class ToolPathConfigurations extends PureComponent {
             <React.Fragment>
                 <Modal
                     className={classNames(styles['manager-body'])}
-                    style={{ width: '468px', height: '640px', paddingBottom: '0px' }}
+                    style={{ width: '468px', height: '660px', paddingBottom: '0px' }}
                     size="lg"
                     onClose={this.actions.cancelUpdateToolPath}
                 >
@@ -206,8 +222,7 @@ class ToolPathConfigurations extends PureComponent {
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={{
-                        overflowY: 'auto',
-                        height: '500px'
+                        overflowY: 'auto'
                     }}
                     >
                         {this.props.headType === HEAD_CNC && (
