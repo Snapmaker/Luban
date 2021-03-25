@@ -34,9 +34,7 @@ const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
     'adhesion_type',
     'support_type',
     'support_pattern',
-    'infill_pattern',
-    'cool_fan_enabled',
-    'cool_fan_speed'
+    'infill_pattern'
 ];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
