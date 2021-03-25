@@ -20,6 +20,7 @@ class ToolParameters extends PureComponent {
         toolPath: PropTypes.object.isRequired,
         isModifiedDefinition: PropTypes.bool.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
+        setCurrentValueAsProfile: PropTypes.func.isRequired,
 
         changeActiveToolListDefinition: PropTypes.func.isRequired,
         updateShowCncToolManager: PropTypes.func.isRequired
@@ -30,14 +31,19 @@ class ToolParameters extends PureComponent {
             this.props.updateShowCncToolManager(true);
         },
         onChangeActiveToolListValue: (option) => {
-            const definitionId = option.definitionId;
-            const name = option.name;
-            this.props.changeActiveToolListDefinition(definitionId, name);
+            if (option.definitionId === 'new') {
+                this.actions.onShowCncToolManager();
+                this.props.setCurrentValueAsProfile();
+            } else {
+                const definitionId = option.definitionId;
+                const name = option.name;
+                this.props.changeActiveToolListDefinition(definitionId, name);
+            }
         }
     };
 
     render() {
-        const { toolDefinitions, activeToolDefinition, toolPath } = this.props;
+        const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition } = this.props;
         const { type } = toolPath;
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
 
@@ -55,6 +61,15 @@ class ToolParameters extends PureComponent {
                 return checkboxAndSelectGroup;
             }));
         });
+        console.log('toolDefinitionOptions', toolDefinitionOptions);
+        if (isModifiedDefinition) {
+            toolDefinitionOptions.push({
+                name: '以当前设置创建配置文件',
+                definitionId: 'new',
+                label: '以当前设置创建配置文件',
+                value: 'new-以当前设置创建配置文件'
+            });
+        }
 
         return (
             <div>
@@ -70,7 +85,7 @@ class ToolParameters extends PureComponent {
                             >
                                 {i18n._('Material & Tool')}
                             </span>
-                            {(this.props.isModifiedDefinition
+                            {(isModifiedDefinition
                                 && (
                                     <span
                                         className={classNames(
@@ -84,6 +99,7 @@ class ToolParameters extends PureComponent {
                                     styles['manager-select'],
                                     'sm-parameter-row__select-lg'
                                 )}
+                                style={{ width: '248px' }}
                                 clearable={false}
                                 options={toolDefinitionOptions}
                                 placeholder={i18n._('Choose carving path')}

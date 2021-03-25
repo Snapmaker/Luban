@@ -22,6 +22,7 @@ class CncParameters extends PureComponent {
         updateToolPath: PropTypes.func.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
+        setCurrentValueAsProfile: PropTypes.func.isRequired,
 
         materials: PropTypes.object.isRequired
     };
@@ -276,6 +277,7 @@ class CncParameters extends PureComponent {
                         toolDefinitions={this.props.toolDefinitions}
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         updateToolConfig={this.props.updateToolConfig}
+                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
                         toolPath={this.props.toolPath}
                     />
                 )}

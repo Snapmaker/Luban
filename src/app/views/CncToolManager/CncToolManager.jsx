@@ -188,6 +188,7 @@ class CncToolManager extends PureComponent {
             this.actions.onSelectToolCategory(newDefinition.definitionId);
         },
         onDuplicateToolNameDefinition: async () => {
+            console.log('onDuplicateToolNameDefinition', this.state.activeToolCategory, this.state.activeToolListDefinition);
             const newToolName = await this.props.duplicateToolListDefinition(this.state.activeToolCategory, this.state.activeToolListDefinition);
             // need to change ,update activeToolListDefinition
             this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
