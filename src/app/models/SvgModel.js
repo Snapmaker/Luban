@@ -186,7 +186,7 @@ class SvgModel extends BaseModel {
         this.size = size;
         this.zIndex = zIndex || 0;
 
-        this.geometry = new THREE.PlaneGeometry(this.width, this.height);
+        this.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
@@ -323,8 +323,8 @@ class SvgModel extends BaseModel {
             .then(res => res.text());
         const canvas = document.createElement('canvas');
         // set canvas size to get image of exactly same size
-        canvas.width = this.width;
-        canvas.height = this.height;
+        canvas.width = this.transformation.width;
+        canvas.height = this.transformation.height;
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
         const v = await Canvg.fromString(ctx, content);
@@ -850,6 +850,7 @@ class SvgModel extends BaseModel {
 
 
     generateModelObject3D() {
+        console.log('t', this.transformation, this.width, this.height);
         if (this.sourceType === 'dxf') {
             if (this.modelObject3D) {
                 this.meshObject.remove(this.modelObject3D);
@@ -880,7 +881,7 @@ class SvgModel extends BaseModel {
                 this.meshObject.remove(this.modelObject3D);
                 this.modelObject3D = null;
             }
-            this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
             this.meshObject.add(this.modelObject3D);
@@ -912,7 +913,7 @@ class SvgModel extends BaseModel {
             this.meshObject.remove(this.processObject3D);
             this.processObject3D = null;
         }
-        this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
+        this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
         this.meshObject.add(this.processObject3D);
