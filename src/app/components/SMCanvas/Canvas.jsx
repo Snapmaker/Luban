@@ -121,7 +121,6 @@ class Canvas extends Component {
             this.lastScale = nextProps.scale;
             this.controls.updateCamera();
         }
-
         if (nextProps.target && nextProps.target !== this.lastTarget) {
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));

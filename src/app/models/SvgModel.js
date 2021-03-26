@@ -190,6 +190,7 @@ class SvgModel extends BaseModel {
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
+        this.showOrigin = (this.sourceType !== 'raster' && this.sourceType !== 'image3d');
 
         this.generateModelObject3D();
 
@@ -850,7 +851,6 @@ class SvgModel extends BaseModel {
 
 
     generateModelObject3D() {
-        console.log('t', this.transformation, this.width, this.height);
         if (this.sourceType === 'dxf') {
             if (this.modelObject3D) {
                 this.meshObject.remove(this.modelObject3D);
