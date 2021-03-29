@@ -90,10 +90,10 @@ class ModalHOC extends PureComponent {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    {footer}
-                    <button type="button" className="btn btn-outline-secondary" onClick={this.handleClose}>
-                        {i18n._('Close')}
+                    <button type="button" className="sm-btn-large sm-btn-default" onClick={this.handleClose}>
+                        {i18n._('Cancel')}
                     </button>
+                    {footer}
                 </Modal.Footer>
             </Modal>
         );

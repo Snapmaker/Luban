@@ -30,9 +30,9 @@ class ToolParameters extends PureComponent {
         onShowCncToolManager: () => {
             this.props.updateShowCncToolManager(true);
         },
-        onChangeActiveToolListValue: (option) => {
+        onChangeActiveToolListValue: async (option) => {
             if (option.definitionId === 'new') {
-                this.actions.onShowCncToolManager();
+                await this.actions.onShowCncToolManager();
                 this.props.setCurrentValueAsProfile();
             } else {
                 const definitionId = option.definitionId;
@@ -82,7 +82,7 @@ class ToolParameters extends PureComponent {
             toolDefinitionOptions.push({
                 name: 'modified',
                 definitionId: 'new',
-                label: 'Create material profile with current parameters',
+                label: 'Create profile with current parameters',
                 value: 'new-modified'
             });
         }
@@ -115,14 +115,13 @@ class ToolParameters extends PureComponent {
                             <Select
                                 className={classNames(
                                     styles['manager-select'],
-                                    'sm-parameter-row__select-lg'
+                                    'sm-parameter-row__select'
                                 )}
-                                style={{ width: '248px' }}
                                 clearable={false}
                                 isGroup
                                 valueObj={valueObj}
                                 options={toolDefinitionOptions}
-                                placeholder={i18n._('Choose carving path')}
+                                placeholder={i18n._('Choose profile')}
                                 onChange={this.actions.onChangeActiveToolListValue}
                             />
                             <p className={classNames(
@@ -171,6 +170,7 @@ class ToolParameters extends PureComponent {
                                             value={defaultValue}
                                             min={min}
                                             max={max}
+                                            style={{ width: '160px' }}
                                             onChange={value => {
                                                 this.props.updateToolConfig(key, value);
                                             }}

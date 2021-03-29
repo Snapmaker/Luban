@@ -98,7 +98,7 @@ class ToolPathConfigurations extends PureComponent {
             }
 
             const popupActions = modal({
-                title: i18n._('Create Material Profile'),
+                title: i18n._('Create Profile'),
                 body: (
                     <React.Fragment>
                         <p>{i18n._('Enter Tool Name')}</p>
@@ -109,13 +109,13 @@ class ToolPathConfigurations extends PureComponent {
                 footer: (
                     <button
                         type="button"
-                        className="btn sm-btn-default"
+                        className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
                             await this.actions.onDuplicateToolNameDefinition(popupActions.getInputValue());
                             popupActions.close();
                         }}
                     >
-                        {i18n._('Yes')}
+                        {i18n._('Ok')}
                     </button>
                 )
             });

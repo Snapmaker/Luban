@@ -69,7 +69,7 @@ class CncParameters extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Name')}</span>
                         <TextInput
                             className="sm-parameter-row__input"
-                            style={{ display: 'inline-block', width: '180px', lineHeight: '15px' }}
+                            style={{ display: 'inline-block', width: '160px', lineHeight: '15px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
@@ -86,6 +86,7 @@ class CncParameters extends PureComponent {
                                         disabled
                                         className="sm-parameter-row__input"
                                         value={methodType}
+                                        style={{ width: '160px' }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -110,7 +111,9 @@ class CncParameters extends PureComponent {
                                     </span>
                                     <Select
                                         disabled={false}
-                                        className="sm-parameter-row__select"
+                                        className={classNames(
+                                            'sm-parameter-row__select-md',
+                                        )}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         menuContainerStyle={{ zIndex: 5 }}
@@ -147,6 +150,7 @@ class CncParameters extends PureComponent {
                                             value={fillDensity}
                                             min={1}
                                             max={20}
+                                            style={{ width: '160px' }}
                                             onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                         />
                                         <Slider
@@ -172,6 +176,7 @@ class CncParameters extends PureComponent {
                                     disabled
                                     className="sm-parameter-row__input"
                                     value={methodType}
+                                    style={{ width: '160px' }}
                                 />
                             </div>
                         </TipTrigger>
@@ -188,6 +193,7 @@ class CncParameters extends PureComponent {
                                         disabled
                                         className="sm-parameter-row__input"
                                         value={methodType}
+                                        style={{ width: '160px' }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -223,6 +229,7 @@ class CncParameters extends PureComponent {
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={smoothY}
+                                        style={{ width: '160px' }}
                                         onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}
                                     />
                                 </div>
@@ -240,6 +247,7 @@ class CncParameters extends PureComponent {
                                     className="sm-parameter-row__input"
                                     value={allowance}
                                     min={0.00}
+                                    style={{ width: '160px' }}
                                     step={0.1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
                                 />

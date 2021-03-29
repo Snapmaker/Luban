@@ -4,10 +4,8 @@ import React, { PureComponent } from 'react';
 import Select, { components } from 'react-select';
 
 const groupStyles = {
-    border: '2px dotted #cccccc',
-    color: 'white',
-    background: '#cccccc',
-    padding: '5px 0px',
+    color: '#979899',
+    padding: '0px 0px',
     display: 'flex'
 };
 
@@ -16,12 +14,14 @@ const customStyles = {
         if (state.data && state.data.definitionId === 'new') {
             return {
                 ...provided,
-                borderTop: '2px solid #C5C5C5',
+                borderTop: '1px solid #C5C5C5',
+                textIndent: '8px',
                 height: 'auto'
             };
         } else {
             return {
                 ...provided,
+                textIndent: '8px',
                 height: 30
             };
         }
@@ -31,6 +31,24 @@ const customStyles = {
         const transition = 'opacity 300ms';
 
         return { ...provided, opacity, transition };
+    },
+    dropdownIndicator: (provided) => {
+        return {
+            ...provided,
+            paddingTop: 0,
+            paddingBottom: 0,
+            paddingLeft: 5,
+            paddingRight: 5
+        };
+    },
+    valueContainer: (provided) => {
+        return { ...provided, padding: '0px 8px' };
+    },
+    menuList: (provided) => {
+        return { ...provided, marginTop: '0', marginBottom: '0', paddingTop: '0', paddingBottom: '0' };
+    },
+    menu: (provided) => {
+        return { ...provided, marginTop: '0', marginBottom: '0' };
     },
     control: () => ({
         // none of react-select's styles are passed to <Control />
