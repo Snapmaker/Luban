@@ -150,6 +150,12 @@ class DefinitionManager {
             settings.support_bottom_distance = { default_value: supportZDistance / 2 };
         }
 
+        if (settings.cool_fan_speed) {
+            const coolFanSpeed = settings.cool_fan_speed.default_value;
+            settings.cool_fan_speed_min = { default_value: coolFanSpeed };
+            settings.cool_fan_speed_max = { default_value: coolFanSpeed };
+        }
+
         // fix CuraEngine z_overide_xy not effected on support_mesh
         if (hasSupportModel) {
             if (settings.support_z_distance) {

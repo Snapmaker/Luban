@@ -65,6 +65,7 @@ export const PRINTING_MATERIAL_CONFIG_KEYS = [
     'material_print_temperature',
     'material_print_temperature_layer_0',
     'material_final_print_temperature',
+    'cool_fan_speed',
     'machine_heated_bed',
     'material_bed_temperature',
     'material_bed_temperature_layer_0'
@@ -78,6 +79,7 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'bottom_thickness',
     'outer_inset_first',
     'infill_sparse_density',
+    'infill_pattern',
     // 'speed_print',
     'speed_print_layer_0',
     'speed_infill',
@@ -107,7 +109,6 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'support_pattern',
     'support_infill_rate',
     'support_z_distance'
-
 ];
 export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
@@ -130,7 +131,8 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
         name: 'Infill',
         fields: [
-            'infill_sparse_density'
+            'infill_sparse_density',
+            'infill_pattern'
         ]
     },
     {
