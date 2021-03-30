@@ -167,8 +167,8 @@ class CNCPath extends PureComponent {
                         paramsDescs={
                             {
                                 jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                                workSpeed: i18n._('Determines how fast the tool moves on the material.'),
+                                plungeSpeed: i18n._('Determines how fast the tool feeds into the material.')
                             }
                         }
                     />
