@@ -159,17 +159,28 @@ class Material extends PureComponent {
                                 <tbody>
                                     {MATERIAL_CONFIG_KEYS.map((key) => {
                                         const setting = materialDefinition.settings[key];
-                                        const { label, unit } = setting;
+                                        const { type, label, unit } = setting;
                                         const defaultValue = setting.default_value;
-                                        console.log('kv', key, defaultValue, unit);
+                                        const inputDisabled = true;
 
                                         return (
                                             <tr key={key}>
                                                 <td>{i18n._(label)}</td>
-                                                <td>
-                                                    {defaultValue}
-                                                    {unit}
-                                                </td>
+                                                { type === 'float' && (
+                                                    <td>
+                                                        {defaultValue}
+                                                        {unit}
+                                                    </td>
+                                                )}
+                                                { type === 'bool' && (
+                                                    <input
+                                                        style={{ margin: '5px 5px' }}
+                                                        type="checkbox"
+                                                        disabled={inputDisabled}
+                                                        checked={defaultValue}
+                                                        onChange={() => {}}
+                                                    />
+                                                )}
                                             </tr>
                                         );
                                     })}
