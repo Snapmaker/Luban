@@ -17,3 +17,22 @@
     margin-left: 11px;
     background: url("../../images/18x18/printing-manager_18x18@2x.png") no-repeat center/18px 18px
 }
+
+table.config-details-table {
+    color: $desc-text-color;
+    margin-left: 10px;
+    font-size: 12px;
+
+    td {
+        height: 28px;
+        line-height: 13px;
+    }
+
+    tbody {
+        & > tr {
+            & > td:first-child {
+                width: 180px;
+            }
+        }
+    }
+}

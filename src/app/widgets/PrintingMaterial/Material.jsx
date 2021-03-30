@@ -5,13 +5,12 @@ import classNames from 'classnames';
 import Select from '../../components/Select';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { NumberInput as Input } from '../../components/Input';
-import TipTrigger from '../../components/TipTrigger';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
+import OptionalDropdown from '../../components/OptionalDropdown';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -25,12 +24,6 @@ const MATERIAL_CONFIG_KEYS = [
     'material_bed_temperature',
     'material_bed_temperature_layer_0'
 ];
-// Only custom material is editable, changes on diameter is not allowed as well
-function isDefinitionEditable(definition, key) {
-    return !definition.metadata.readonly
-        && key !== 'material_diameter';
-}
-
 
 class Material extends PureComponent {
     static propTypes = {
@@ -40,17 +33,15 @@ class Material extends PureComponent {
         updateActiveDefinition: PropTypes.func.isRequired,
         updateManagerDisplayType: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
-        updateDefinitionSettings: PropTypes.func.isRequired,
-        updateDefinitionsForManager: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired
     };
 
-   fileInput = React.createRef();
+    fileInput = React.createRef();
 
     state = {
+        showOfficialMaterialDetails: true,
         materialDefinition: null,
         materialDefinitionOptions: []
-
     };
 
     actions = {
@@ -80,24 +71,6 @@ class Material extends PureComponent {
                 this.props.updateDefaultMaterialId(definition.definitionId);
                 this.props.updateActiveDefinition(definition);
             }
-        },
-        onChangeMaterialDefinition: (key, value, shouldUpdateDefinitionsForManager = false) => {
-            const definition = this.state.materialDefinition;
-            if (!isDefinitionEditable(definition, key)) {
-                return;
-            }
-
-            definition.settings[key].default_value = value;
-            this.props.updateDefinitionSettings(definition, {
-                [key]: { default_value: value }
-            });
-            this.props.updateActiveDefinition(definition);
-            if (shouldUpdateDefinitionsForManager) {
-                this.props.updateDefinitionsForManager(definition.definitionId, PRINTING_MANAGER_TYPE_MATERIAL);
-            }
-        },
-        isMaterialSelected: (option) => {
-            return this.state.materialDefinition && this.state.materialDefinition.name === option.label;
         }
     };
 
@@ -118,7 +91,7 @@ class Material extends PureComponent {
                 this.props.updateActiveDefinition(definition);
             } else {
                 const definition = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinition.definitionId)
-                || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
+                    || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 Object.assign(newState, {
                     materialDefinition: definition
                 });
@@ -172,58 +145,39 @@ class Material extends PureComponent {
                     />
                 </Anchor>
                 <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                {materialDefinition && (
-                    <div className="sm-parameter-container">
-                        {MATERIAL_CONFIG_KEYS.map((key) => {
-                            const setting = materialDefinition.settings[key];
+                <div style={{ marginTop: '12px', marginBottom: '6px' }}>
+                    <OptionalDropdown
+                        draggable="false"
+                        title={i18n._('Show Details')}
+                        hidden={!state.showOfficialMaterialDetails}
+                        onClick={() => {
+                            this.setState({ showOfficialMaterialDetails: !state.showOfficialMaterialDetails });
+                        }}
+                    >
+                        {state.showOfficialMaterialDetails && (
+                            <table className={styles['config-details-table']}>
+                                <tbody>
+                                    {MATERIAL_CONFIG_KEYS.map((key) => {
+                                        const setting = materialDefinition.settings[key];
+                                        const { label, unit } = setting;
+                                        const defaultValue = setting.default_value;
+                                        console.log('kv', key, defaultValue, unit);
 
-                            const { label, description, type, unit = '', enabled = '' } = setting;
-                            const defaultValue = setting.default_value;
-                            if (enabled) {
-                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                                const conditions = enabled.split('and').map(c => c.trim());
-
-                                for (const condition of conditions) {
-                                // Simple implementation of condition
-                                    if (materialDefinition.settings[condition]) {
-                                        const value = materialDefinition.settings[condition].default_value;
-                                        if (!value) {
-                                            return null;
-                                        }
-                                    }
-                                }
-                            }
-
-                            return (
-                                <div key={key} className="sm-parameter-row">
-                                    <TipTrigger title={i18n._(label)} content={i18n._(description)}>
-                                        <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                                        {type === 'float' && (
-                                            <Input
-                                                className="sm-parameter-row__input"
-                                                value={defaultValue}
-                                                onChange={value => {
-                                                    this.actions.onChangeMaterialDefinition(key, value);
-                                                }}
-                                                disabled={!isDefinitionEditable(materialDefinition, key)}
-                                            />
-                                        )}
-                                        {type === 'bool' && (
-                                            <input
-                                                className="sm-parameter-row__checkbox"
-                                                type="checkbox"
-                                                checked={defaultValue}
-                                                disabled={!isDefinitionEditable(materialDefinition, key)}
-                                                onChange={(event) => this.actions.onChangeMaterialDefinition(key, event.target.checked, type === 'bool')}
-                                            />
-                                        )}
-                                        <span className="sm-parameter-row__input-unit">{unit}</span>
-                                    </TipTrigger>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                                        return (
+                                            <tr key={key}>
+                                                <td>{i18n._(label)}</td>
+                                                <td>
+                                                    {defaultValue}
+                                                    {unit}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </OptionalDropdown>
+                </div>
             </React.Fragment>
         );
     }
