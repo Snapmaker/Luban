@@ -23,18 +23,18 @@ const MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY = [
     'machine_heated_bed'
 ];
 const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
-    'outer_inset_first',
-    'retraction_enable',
-    'retract_at_layer_change',
-    'retraction_hop',
-    'magic_spiralize',
-    'support_enable',
-    'magic_mesh_surface_mode',
-    'retraction_hop_enabled',
     'adhesion_type',
-    'support_type',
+    'infill_pattern',
+    'magic_mesh_surface_mode',
+    'magic_spiralize',
+    'outer_inset_first',
+    'retract_at_layer_change',
+    'retraction_enable',
+    'retraction_hop',
+    'retraction_hop_enabled',
+    'support_enable',
     'support_pattern',
-    'infill_pattern'
+    'support_type'
 ];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
