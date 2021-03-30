@@ -461,11 +461,11 @@ class Controls extends EventEmitter {
                 this.transformControl.attach(this.selectedGroup);
             } else {
                 // FIXME: temporary solution
-                if (intersect) {
-                    this.transformControl.attach(intersect.object, selectEvent);
-                } else {
-                    this.transformControl.detach();
-                }
+                // if (intersect) {
+                //     this.transformControl.attach(intersect.object, selectEvent);
+                // } else {
+                //     this.transformControl.detach();
+                // }
             }
             this.emit(EVENTS.UPDATE);
             this.mouseDownPosition = null;

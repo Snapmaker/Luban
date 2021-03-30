@@ -3,6 +3,11 @@ import { baseActions } from './actions-base';
 import { controller } from '../../lib/controller';
 import { CNC_LASER_STAGE } from './utils';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, SELECTEVENT } from '../../constants';
+import { getToolPathType } from '../../toolpaths/utils';
+
+import { toast } from '../../components/Toast';
+
+import i18n from '../../lib/i18n';
 
 export const processActions = {
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
@@ -36,7 +41,14 @@ export const processActions = {
             if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
                 modelGroup.setSelectedToolPathModelIDs([model.modelID]);
             } else if (selectEvent === SELECTEVENT.ADDSELECT) {
-                modelGroup.addSelectedToolPathModelIDs([model.modelID]);
+                const selectedModels = modelGroup.getSelectedToolPathModels();
+                if (getToolPathType([...selectedModels, model]).length !== 1) {
+                    toast(i18n._('Cannot select model of deferent types to generate toolpath'));
+                } else if (selectedModels.findIndex(m => m === model) === -1) {
+                    modelGroup.addSelectedToolPathModelIDs([model.modelID]);
+                } else {
+                    modelGroup.removeSelectedToolPathModelIDs([model.modelID]);
+                }
             } else if (selectEvent === SELECTEVENT.REMOVESELECT) {
                 modelGroup.removeSelectedToolPathModelIDs([model.modelID]);
             } else {

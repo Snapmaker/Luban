@@ -12,6 +12,36 @@
 // react-select
 // @import url("~react-select/dist/react-select.css");
 
+// react-toastify
+@import url("~react-toastify/dist/ReactToastify.css");
+
+
+// rewrite react-toastify component style
+.Toastify__toast-container {
+  z-index: 9999;
+  -webkit-transform: translate3d(0, 0, 9999px);
+  position: fixed;
+  padding: 0px;
+  max-width: 720px;
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.Toastify__toast-container--top-center {
+  top: 5em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.Toastify__toast {
+   min-height: 0px;
+}
+
+.Toastify__close-button {
+    width: 0px; 
+    display: none;
+}
+
 // Rewrite react-select component style
 // since react-select is written in less, we have to rewrite its generated CSS
 .Select-control
