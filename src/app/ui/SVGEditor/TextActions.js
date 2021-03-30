@@ -364,7 +364,7 @@ class TextActions {
             const text = e.target.value;
             // TODO: remove SVGActions, move to flux
             const svgModel = this.SVGActions.getSVGModelByElement(this.curtext);
-            svgModel.relatedModel.updateAndRefresh({ config: { text } });
+            svgModel.updateAndRefresh({ config: { text } });
             this.init();
             this.setCursor();
         });

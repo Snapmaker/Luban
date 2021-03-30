@@ -313,6 +313,8 @@ class ThreeModel extends BaseModel {
         this.meshObject.updateMatrixWorld();
 
         clone.setMatrix(this.meshObject.matrixWorld);
+        // set proper material for new model
+        clone.setSelected();
 
         return clone;
     }

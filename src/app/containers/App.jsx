@@ -282,14 +282,36 @@ class App extends PureComponent {
         if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
             const { findLastEnvironment, openedFile } = nextProps.projectState[headType];
             UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
+            const keyRecoveringProject = `recoveringProject-${headType}`;
 
             if (findLastEnvironment) {
-                if (!this.state.recoveringProject) {
-                    this.setState({ recoveringProject: true });
-                    this.props.onRecovery(headType);
+                if (!this.state[keyRecoveringProject]) {
+                    this.setState({ [keyRecoveringProject]: true });
+                    const popupActions = modal({
+                        title: i18n._('Resume Job'),
+                        body: (
+                            <React.Fragment>
+                                <p>{i18n._('Do you want to resume previous job?')}</p>
+                            </React.Fragment>
+                        ),
+                        footer: (
+                            <button
+                                type="button"
+                                className="btn sm-btn-default sm-btn-primary"
+                                onClick={async () => {
+                                    await this.props.onRecovery(headType);
+                                    popupActions.close();
+                                    this.setState({ [keyRecoveringProject]: false });
+                                }}
+                            >
+                                {i18n._('Yes')}
+                            </button>
+                        ),
+                        onClose: () => { this.setState({ [keyRecoveringProject]: false }); }
+                    });
                 }
-            } else if (this.state.recoveringProject) {
-                this.setState({ recoveringProject: false });
+            } else if (this.state[keyRecoveringProject]) {
+                this.setState({ [keyRecoveringProject]: false });
             }
         }
     }
