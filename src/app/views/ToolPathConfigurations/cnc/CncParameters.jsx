@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Select from 'react-select';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider';
+import Select from '../../../components/Select';
 import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input, TextInput } from '../../../components/Input';
@@ -22,6 +22,7 @@ class CncParameters extends PureComponent {
         updateToolPath: PropTypes.func.isRequired,
         updateGcodeConfig: PropTypes.func.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
+        setCurrentValueAsProfile: PropTypes.func.isRequired,
 
         materials: PropTypes.object.isRequired
     };
@@ -68,7 +69,7 @@ class CncParameters extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Name')}</span>
                         <TextInput
                             className="sm-parameter-row__input"
-                            style={{ display: 'inline-block', width: '180px', lineHeight: '15px' }}
+                            style={{ display: 'inline-block', width: '160px', lineHeight: '15px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
@@ -85,6 +86,7 @@ class CncParameters extends PureComponent {
                                         disabled
                                         className="sm-parameter-row__input"
                                         value={methodType}
+                                        style={{ width: '160px' }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -109,7 +111,9 @@ class CncParameters extends PureComponent {
                                     </span>
                                     <Select
                                         disabled={false}
-                                        className="sm-parameter-row__select"
+                                        className={classNames(
+                                            'sm-parameter-row__select-md',
+                                        )}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         menuContainerStyle={{ zIndex: 5 }}
@@ -146,6 +150,7 @@ class CncParameters extends PureComponent {
                                             value={fillDensity}
                                             min={1}
                                             max={20}
+                                            style={{ width: '160px' }}
                                             onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                         />
                                         <Slider
@@ -171,6 +176,7 @@ class CncParameters extends PureComponent {
                                     disabled
                                     className="sm-parameter-row__input"
                                     value={methodType}
+                                    style={{ width: '160px' }}
                                 />
                             </div>
                         </TipTrigger>
@@ -187,6 +193,7 @@ class CncParameters extends PureComponent {
                                         disabled
                                         className="sm-parameter-row__input"
                                         value={methodType}
+                                        style={{ width: '160px' }}
                                     />
                                 </div>
                             </TipTrigger>
@@ -222,6 +229,7 @@ class CncParameters extends PureComponent {
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={smoothY}
+                                        style={{ width: '160px' }}
                                         onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}
                                     />
                                 </div>
@@ -239,6 +247,7 @@ class CncParameters extends PureComponent {
                                     className="sm-parameter-row__input"
                                     value={allowance}
                                     min={0.00}
+                                    style={{ width: '160px' }}
                                     step={0.1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
                                 />
@@ -276,6 +285,7 @@ class CncParameters extends PureComponent {
                         toolDefinitions={this.props.toolDefinitions}
                         isModifiedDefinition={this.props.isModifiedDefinition}
                         updateToolConfig={this.props.updateToolConfig}
+                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
                         toolPath={this.props.toolPath}
                     />
                 )}

@@ -6,10 +6,12 @@ import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../components/Modal';
 
+let outsideInputValue = '';
 class ModalHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         removeContainer: PropTypes.func.isRequired,
+        defaultInputValue: PropTypes.string,
         title: PropTypes.node,
         body: PropTypes.node,
         footer: PropTypes.node
@@ -20,8 +22,20 @@ class ModalHOC extends PureComponent {
     };
 
     state = {
-        show: true
+        show: true,
+        inputValue: this.props.defaultInputValue ? this.props.defaultInputValue : ''
     };
+
+    componentDidMount() {
+        if (this.props.defaultInputValue) {
+            outsideInputValue = this.props.defaultInputValue;
+        }
+    }
+
+    onChangeInputValue = (event) => {
+        this.setState({ inputValue: event.target.value });
+        outsideInputValue = event.target.value;
+    }
 
     handleClose = () => {
         this.setState({ show: false });
@@ -31,9 +45,13 @@ class ModalHOC extends PureComponent {
         });
     };
 
+    componentWillUnmountMount() {
+        outsideInputValue = '';
+    }
+
     render() {
         const { title, body, footer, size } = this.props;
-        const { show } = this.state;
+        const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
         return (
@@ -52,12 +70,30 @@ class ModalHOC extends PureComponent {
                 )}
                 <Modal.Body>
                     {body}
+                    {this.props.defaultInputValue && (
+                        <input
+                            type="text"
+                            className="sm-parameter-row__input"
+                            style={{ height: '30px',
+                                width: '100%',
+                                padding: '6px 12px',
+                                fontSize: '13px',
+                                lineHeight: '1.42857143',
+                                color: '#282828',
+                                borderWidth: '1px',
+                                borderStyle: 'solid',
+                                borderRadius: '4px',
+                                borderColor: '#c8c8c8' }}
+                            onChange={this.onChangeInputValue}
+                            value={inputValue}
+                        />
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
-                    {footer}
-                    <button type="button" className="btn btn-outline-secondary" onClick={this.handleClose}>
-                        {i18n._('Close')}
+                    <button type="button" className="sm-btn-large sm-btn-default" onClick={this.handleClose}>
+                        {i18n._('Cancel')}
                     </button>
+                    {footer}
                 </Modal.Footer>
             </Modal>
         );
@@ -71,6 +107,9 @@ export default (options) => {
         ReactDOM.unmountComponentAtNode(container);
         container.remove();
     };
+    const getInputValue = () => {
+        return outsideInputValue;
+    };
 
     const props = {
         ...options,
@@ -79,5 +118,5 @@ export default (options) => {
 
     ReactDOM.render(<ModalHOC {...props} />, container);
     // return popupActions
-    return { close: removeContainer };
+    return { close: removeContainer, getInputValue: getInputValue };
 };

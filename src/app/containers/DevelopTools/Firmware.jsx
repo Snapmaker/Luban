@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import Select from 'react-select';
 import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import TextArea from 'react-textarea-autosize';
+import Select from '../../components/Select';
 import { screenController } from '../../lib/controller';
 import api from '../../api';
 import i18n from '../../lib/i18n';
@@ -187,7 +187,6 @@ class Firmware extends PureComponent {
                                         label: i18n._('Modules')
                                     }]}
                                     value={originFileUpdateType}
-                                    searchable={false}
                                     onChange={this.actions.onChangeUpdateType}
                                 />
                             </td>

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes } from 'lodash';
-import Select from 'react-select';
+import Select from '../../components/Select';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
@@ -756,7 +756,6 @@ class PrintingManager extends PureComponent {
                                                                                     name={key}
                                                                                     disabled={!isDefinitionEditable(qualityDefinitionForManager)}
                                                                                     options={opts}
-                                                                                    searchable={false}
                                                                                     value={currentQualityOption[key]}
                                                                                     onChange={(option) => {
                                                                                         actions.onChangeQualityDefinitionForManager(key, option.value, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY);

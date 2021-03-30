@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
-import Select from 'react-select';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider';
+import Select from '../../../components/Select';
 
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';

@@ -1,7 +1,7 @@
 {
-    "category": "Default",
+    "category": "Default Material",
     "definitionId": "Default",
-    "name": "Carving V bit (30° 0.2 mm)",
+    "name": "Carving V bit",
     "config": {
         "diameter": {
             "default_value": 0.2,

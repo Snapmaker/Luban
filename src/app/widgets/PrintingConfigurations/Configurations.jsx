@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Select from 'react-select';
 import classNames from 'classnames';
+import Select from '../../components/Select';
 import Anchor from '../../components/Anchor';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';

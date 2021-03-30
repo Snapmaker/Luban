@@ -1,11 +1,11 @@
 {
-    "category": "Default",
+    "category": "Default Material",
     "definitionId": "Default",
     "version": "1.0.0",
     "toolList": [
         {
             "definitionId": "Default",
-            "name": "Carving V bit (30° 0.2 mm)",
+            "name": "Carving V bit",
             "config": {
                 "diameter": {
                     "default_value": 0.2,
@@ -70,7 +70,7 @@
             }
         },
         {
-            "name": "Flat End Mill (1.5 mm)",
+            "name": "Flat End Mill",
             "definitionId": "Default",
             "config": {
                 "diameter": {
@@ -136,7 +136,7 @@
             }
         },
         {
-            "name": "Ball End Mill (3.175 mm)",
+            "name": "Ball End Mill",
             "definitionId": "Default",
             "config": {
                 "diameter": {
@@ -202,7 +202,7 @@
             }
         },
         {
-            "name": "Straight Groove V-bit (20° 0.3 mm)",
+            "name": "Straight Groove V-bit",
             "definitionId": "Default",
             "config": {
                 "diameter": {
