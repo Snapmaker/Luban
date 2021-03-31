@@ -157,9 +157,23 @@ class Material extends PureComponent {
                                 <tbody>
                                     {MATERIAL_CONFIG_KEYS.map((key) => {
                                         const setting = materialDefinition.settings[key];
-                                        const { type, label, unit } = setting;
+                                        const { label, type, unit = '', enabled = '' } = setting;
                                         const defaultValue = setting.default_value;
                                         const inputDisabled = true;
+                                        if (enabled) {
+                                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                            const conditions = enabled.split('and').map(c => c.trim());
+
+                                            for (const condition of conditions) {
+                                                // Simple implementation of condition
+                                                if (materialDefinition.settings[condition]) {
+                                                    const value = materialDefinition.settings[condition].default_value;
+                                                    if (!value) {
+                                                        return null;
+                                                    }
+                                                }
+                                            }
+                                        }
 
                                         return (
                                             <tr key={key}>
@@ -171,13 +185,14 @@ class Material extends PureComponent {
                                                     </td>
                                                 )}
                                                 { type === 'bool' && (
-                                                    <input
-                                                        style={{ margin: '5px 5px' }}
-                                                        type="checkbox"
-                                                        disabled={inputDisabled}
-                                                        checked={defaultValue}
-                                                        onChange={() => {}}
-                                                    />
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            disabled={inputDisabled}
+                                                            checked={defaultValue}
+                                                            onChange={() => {}}
+                                                        />
+                                                    </td>
                                                 )}
                                             </tr>
                                         );
