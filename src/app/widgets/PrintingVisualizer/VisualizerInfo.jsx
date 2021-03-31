@@ -34,8 +34,11 @@ class VisualizerInfo extends PureComponent {
         if (!printTime) {
             return '';
         }
-        const hours = Math.floor(printTime / 3600);
-        const minutes = Math.ceil((printTime - hours * 3600) / 60);
+
+        let minutes = Math.floor(printTime / 60);
+        const hours = Math.floor(minutes / 60);
+        minutes -= hours * 60;
+
         return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
     }
 
