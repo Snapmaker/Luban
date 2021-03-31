@@ -3,7 +3,7 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Creatable } from 'react-select';
+import ChangedReactSelect from '../../components/Select';
 
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
@@ -541,7 +541,7 @@ class Control extends PureComponent {
                         {i18n._('Home')}
                     </button>
                     <div className="sm-parameter-row__label2" style={{ textAlign: 'center', margin: '0 0 0 5px' }}>{i18n._('Jog Speed')}</div>
-                    <Creatable
+                    <ChangedReactSelect
                         backspaceRemoves={false}
                         className="sm-parameter-row__select2"
                         clearable={false}
