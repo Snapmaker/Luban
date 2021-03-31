@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import { humanReadableTime } from '../../lib/time-utils';
 import Space from '../../components/Space';
 
 
@@ -29,25 +30,11 @@ class VisualizerInfo extends PureComponent {
         return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
     }
 
-    getPrintTimeDes() {
-        const { printTime } = this.props;
-        if (!printTime) {
-            return '';
-        }
-
-        let minutes = Math.floor(printTime / 60);
-        const hours = Math.floor(minutes / 60);
-        minutes -= hours * 60;
-
-        return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
-    }
-
-
     render() {
         const { selectedGroup, displayedType, selectedModelBBoxDes } = this.props;
         if (displayedType === 'gcode') {
             const filamentDes = this.getFilamentDes();
-            const printTimeDes = this.getPrintTimeDes();
+            const printTimeDes = humanReadableTime(this.props.printTime);
             return (
                 <React.Fragment>
                     <p>
