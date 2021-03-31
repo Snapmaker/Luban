@@ -2,72 +2,97 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { Delete, Refresh, Up, Down } from 'snapmaker-react-icon';
+import i18n from '../../../lib/i18n';
 import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
-
+// import TipTrigger from '../../../components/TipTrigger';
 class ToolPathFooter extends PureComponent {
     static propTypes = {
         selectedToolPathId: PropTypes.string,
+        toolPaths: PropTypes.array,
 
-        updatingToolPath: PropTypes.func.isRequired,
         deleteToolPath: PropTypes.func.isRequired,
         commitGenerateToolPath: PropTypes.func.isRequired,
         toolPathToUp: PropTypes.func.isRequired,
         toolPathToDown: PropTypes.func.isRequired
     };
 
+    actions = {
+        recalculateAllToolPath: () => {
+            this.props.toolPaths.forEach((toolPath) => {
+                this.props.commitGenerateToolPath(toolPath.id);
+            });
+        }
+    }
+
 
     render() {
-        const { selectedToolPathId } = this.props;
+        const { selectedToolPathId, toolPaths } = this.props;
 
         const disabled = !selectedToolPathId;
 
         return (
-            <div className={styles.toolPathFooter}>
-                <div className={styles.left}>
+            <div className={classNames(
+                styles.toolPathFooter,
+                'clearfix'
+            )}
+            >
+                <div className={classNames(
+                    styles.left
+                )}
+                >
                     <Anchor
                         className={classNames(
                             styles.icon,
-                            styles.iconEdit
                         )}
                         disabled={disabled}
-                        onClick={() => this.props.updatingToolPath(selectedToolPathId)}
-                    />
-                    <Anchor
-                        className={classNames(
-                            styles.icon,
-                            styles.iconDelete
-                        )}
-                        disabled={disabled}
+                        title={i18n._('Delete')}
                         onClick={() => this.props.deleteToolPath(selectedToolPathId)}
-                    />
+                    >
+                        <Delete disabled={disabled} size={22} />
+                    </Anchor>
                     <Anchor
                         className={classNames(
                             styles.icon,
-                            styles.iconRefresh
                         )}
-                        disabled={disabled}
-                        onClick={() => this.props.commitGenerateToolPath(selectedToolPathId)}
-                    />
+                        title={i18n._('Recalculate All')}
+                        onClick={() => this.actions.recalculateAllToolPath()}
+                    >
+                        <Refresh disabled={!toolPaths.length > 0} size={22} />
+
+                    </Anchor>
                 </div>
-                <div className={styles.right}>
+                <div className={classNames(
+                    styles.right,
+                )}
+                >
                     <Anchor
                         className={classNames(
                             styles.icon,
-                            styles.iconUp
                         )}
                         disabled={disabled}
+                        title={i18n._('Prioritize')}
                         onClick={() => this.props.toolPathToUp(selectedToolPathId)}
-                    />
+
+                    >
+                        <Up disabled={disabled} size={22} />
+                    </Anchor>
+
                     <Anchor
                         className={classNames(
                             styles.icon,
-                            styles.iconDown
                         )}
                         disabled={disabled}
+                        title={i18n._('Deprioritize')}
                         onClick={() => this.props.toolPathToDown(selectedToolPathId)}
-                    />
+                    >
+                        <Down disabled={disabled} size={22} />
+
+                    </Anchor>
+
+
                 </div>
             </div>
         );
@@ -78,17 +103,16 @@ class ToolPathFooter extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { toolPathGroup } = state[ownProps.headType];
 
-    const selectedToolPathId = toolPathGroup.selectedToolPathId;
-
     return {
-        selectedToolPathId
+        selectedToolPathId: toolPathGroup.selectedToolPathId,
+        toolPaths: toolPathGroup.toolPaths
     };
 };
 
 // eslint-disable-next-line no-unused-vars
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        updatingToolPath: (toolPathId) => dispatch(editorActions.updatingToolPath(ownProps.headType, toolPathId)),
+        // updatingToolPath: (toolPathId) => dispatch(editorActions.updatingToolPath(ownProps.headType, toolPathId)),
         deleteToolPath: (toolPathId) => dispatch(editorActions.deleteToolPath(ownProps.headType, toolPathId)),
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(ownProps.headType, toolPathId)),
         toolPathToUp: (toolPathId) => dispatch(editorActions.toolPathToUp(ownProps.headType, toolPathId)),

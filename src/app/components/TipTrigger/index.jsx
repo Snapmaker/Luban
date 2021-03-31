@@ -4,22 +4,48 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 
 const TipTrigger = (props) => {
-    const { placement = 'left', title = '', content, children, ...rest } = props;
-
-    const getOverlay = () => {
-        return (
-            <Popover id={`tip-popover-${title}`}>
-                <Popover.Title>{title}</Popover.Title>
-                <Popover.Content>{content}</Popover.Content>
-            </Popover>
-        );
-    };
+    const { placement = 'left', title = '', content, isIcon = false, children, ...rest } = props;
+    let placementValue = 'left';
+    let getOverlay;
+    if (isIcon) {
+        placementValue = 'bottom';
+        getOverlay = () => {
+            return (
+                <Popover
+                    id={`tip-popover-${title}`}
+                    style={{
+                        backgroundColor: '#FFFFCD',
+                        padding: '2px 10px',
+                        color: '#272829',
+                        borderRadius: 3
+                    }}
+                >
+                    <Popover.Title style={{ backgroundColor: '#FFFFCD' }}>
+                        {title}
+                    </Popover.Title>
+                    <Popover.Content style={{ backgroundColor: '#FFFFCD' }}>{content}</Popover.Content>
+                </Popover>
+            );
+        };
+    } else {
+        placementValue = placement;
+        getOverlay = () => {
+            return (
+                <Popover
+                    id={`tip-popover-${title}`}
+                >
+                    <Popover.Title>{title}</Popover.Title>
+                    <Popover.Content>{content}</Popover.Content>
+                </Popover>
+            );
+        };
+    }
 
     if (content) {
         const overlay = getOverlay();
         return (
             <OverlayTrigger
-                placement={placement}
+                placement={placementValue}
                 overlay={overlay}
                 delayShow={500}
             >

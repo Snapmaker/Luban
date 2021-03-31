@@ -148,6 +148,7 @@ class ChangedReactSelect extends PureComponent {
                 options={options}
                 styles={customStyles}
                 components={{ GroupHeading }}
+                value={defaultValue}
                 defaultValue={defaultValue}
             />
         );

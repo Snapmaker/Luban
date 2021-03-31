@@ -1,4 +1,5 @@
 @import "../styles.styl"
+
 .object-list-box
     margin-top: -15px
     margin-bottom: -15px
@@ -7,17 +8,29 @@
     max-height: 158px
     overflow: auto
     background: #FFFFFF
+.left {
+    float: left;
+    padding-left: 5px
+    height: 100%
+}
+
+.right  {
+    float: right;
+    padding-right: 5px
+    height: 100%
+}
 
 .object-list-item {
     background-color: unset
     background-size: 36px
-    position: relative
+    display: flex
 
     &.selected {
         background-color: #E7F2FD
     }
 
     .bt {
+        padding: 0 12px;
         &:hover {
             opacity(1)
         }
@@ -29,22 +42,27 @@
 
     .name {
         vertical-align: middle
-        line-height: 38px
+        line-height: 36px
         height: 36px
         display: inline-block
         width: 100%
     }
-
+    .icon-wrapper{
+        display: flex;
+        margin-right: 5px;
+    }
     .icon {
-        float: left
-        width: 36px
-        height: 36px
+        padding: 6px 2px;
+        box-sizing: content-box;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin: 0 4px;
 
         &.icon-hide-open, &.icon-hide-close {
             margin-right: 8px
             border: 0
-            position: absolute
-            right: 0
         }
 
         &.icon-hide-open {
@@ -111,35 +129,21 @@
         }
     }
 
-    .status {
-        position: absolute
-        right: 36px
-        width: 36px
-        height: 36px
-    }
 }
 
 .tool-path-footer {
 
-    height: 34px
-
-    .left {
-        float: left;
-        padding-left: 5px
-        height: 100%
-    }
-
-    .right  {
-        float: right;
-        padding-right: 5px
-        height: 100%
-    }
-
     .icon {
-
-        width: 23px
-        height: 34px
-
+        padding: 6px 2px;
+        box-sizing: content-box;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin: 0 4px;
+        //&:active  {
+        //    background-color: #ccc
+        //}
         &.icon-refresh {
             background: url("./images/list_ic_refresh_18x18@2x.png") no-repeat center center
             background-size: 18px
