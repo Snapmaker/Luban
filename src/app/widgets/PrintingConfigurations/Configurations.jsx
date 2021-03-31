@@ -6,7 +6,6 @@ import Select from '../../components/Select';
 import Anchor from '../../components/Anchor';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import i18n from '../../lib/i18n';
-import widgetStyles from '../styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
@@ -20,7 +19,8 @@ const OFFICIAL_CONFIG_KEYS = [
     'speed_infill',
     'speed_wall_0',
     'speed_wall_x',
-    'speed_travel'
+    'speed_travel',
+    'infill_pattern'
 ];
 
 class Configurations extends PureComponent {
@@ -143,15 +143,7 @@ class Configurations extends PureComponent {
                         )}
                     />
                 </Anchor>
-                <div className="sm-tabs" style={{ marginBottom: '12px' }}>
-                    <div style={{
-                        marginBottom: '10px'
-                    }}
-                    >
-                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                    </div>
-                </div>
-                <div style={{ marginTop: '12px', marginBottom: '6px' }}>
+                <div>
                     <OptionalDropdown
                         draggable="false"
                         title={i18n._('Show Details')}

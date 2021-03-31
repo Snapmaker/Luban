@@ -7,7 +7,6 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 import OptionalDropdown from '../../components/OptionalDropdown';
@@ -144,8 +143,7 @@ class Material extends PureComponent {
                         )}
                     />
                 </Anchor>
-                <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                <div style={{ marginTop: '12px', marginBottom: '6px' }}>
+                <div>
                     <OptionalDropdown
                         draggable="false"
                         title={i18n._('Show Details')}
