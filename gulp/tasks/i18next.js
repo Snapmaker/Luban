@@ -150,7 +150,8 @@ const curaFields = [
     'support_type',
     'support_pattern',
     'support_angle',
-    'support_infill_rate'
+    'support_infill_rate',
+    'support_z_distance'
 ];
 
 const CURA_CATEGORIES = [

@@ -3691,7 +3691,7 @@
             {
                 "support_enable":
                 {
-                    "label": "Generate Support",
+                    "label": "Generate Auto Support",
                     "description": "Generate structures to support parts of the model which have overhangs. Without these structures, such parts would collapse during printing.",
                     "type": "bool",
                     "default_value": false,

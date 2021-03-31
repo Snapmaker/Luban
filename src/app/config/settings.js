@@ -57,7 +57,7 @@ const settings = {
         keySeparator: false,
 
         // char to split namespace from key
-        nsSeparator: ':',
+        nsSeparator: false,
 
         interpolation: {
             prefix: '{{',
