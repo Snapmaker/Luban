@@ -1,8 +1,7 @@
+import logger from 'universal-logger';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
 
-import logger from '../../../server/lib/logger';
-
-const log = logger('SVGParser:AttributesParser');
+const log = logger();
 
 
 function parseDAttribute(value) {

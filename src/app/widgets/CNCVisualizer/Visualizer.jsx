@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 
 import i18n from '../../lib/i18n';
 import { controller } from '../../lib/controller';
+import { humanReadableTime } from '../../lib/time-utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Space from '../../components/Space';
@@ -21,13 +22,6 @@ import VisualizerTopLeft from './VisualizerTopLeft';
 import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
-
-
-function humanReadableTime(t) {
-    const hours = Math.floor(t / 3600);
-    const minutes = Math.ceil((t - hours * 3600) / 60);
-    return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
-}
 
 
 class Visualizer extends Component {

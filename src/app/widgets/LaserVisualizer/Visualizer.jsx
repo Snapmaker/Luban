@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
 
 import i18n from '../../lib/i18n';
+import { humanReadableTime } from '../../lib/time-utils';
 import ProgressBar from '../../components/ProgressBar';
 import Space from '../../components/Space';
 import ContextMenu from '../../components/ContextMenu';
@@ -21,13 +22,6 @@ import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constan
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
-
-
-function humanReadableTime(t) {
-    const hours = Math.floor(t / 3600);
-    const minutes = Math.ceil((t - hours * 3600) / 60);
-    return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
-}
 
 
 class Visualizer extends Component {
