@@ -105,7 +105,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.toolParams = toolParams;
 
         this.rotationZ = transformation.rotationZ;
-        this.flip = transformation.flip;
+        this.scaleX = transformation.scaleX;
+        this.scaleY = transformation.scaleY;
         this.invert = invert;
 
         this.toolPath = new XToBToolPath({ isRotate: this.isRotate, diameter: this.isRotateModel ? this.modelDiameter : this.diameter });
@@ -144,7 +145,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
                 img
                     .greyscale()
-                    .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
+                    .flip(this.scaleX < 0, this.scaleY < 0)
                     .rotate(-this.rotationZ * 180 / Math.PI);
 
                 const scale = { w: img.bitmap.width / width, h: img.bitmap.height / height };
