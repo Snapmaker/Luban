@@ -289,15 +289,15 @@ class Visualizer extends Component {
 
         if (nextProps.displayedType !== this.props.displayedType) {
             if (nextProps.displayedType === DISPLAYED_TYPE_TOOLPATH) {
-                this.canvas.current.controls.disableClick();
+                this.canvas.current.disableControls();
             } else {
-                this.canvas.current.controls.enableClick();
+                this.canvas.current.enableControls();
             }
         }
         if (nextProps.selectedToolPathModels !== this.props.selectedToolPathModels) {
-            this.canvas.current.controls.detach();
+            this.canvas.current.detach();
             for (const selectedToolPathModel of nextProps.selectedToolPathModels) {
-                this.canvas.current.controls.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
+                this.canvas.current.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
             }
         }
 

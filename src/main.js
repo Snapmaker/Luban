@@ -126,8 +126,12 @@ function updateHandle() {
         autoUpdater.downloadUpdate();
     });
     // Emitted when is ready to check for update
-    ipcMain.on('checkForUpdate', () => {
-        autoUpdater.checkForUpdates();
+    ipcMain.on('checkForUpdate', async () => {
+        try {
+            await autoUpdater.checkForUpdates();
+        } catch (e) {
+            console.log('Check for update failed', e);
+        }
     });
     ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {
         mainWindow.webContents.send('update-should-check-for-update', shouldCheckForUpdate);
