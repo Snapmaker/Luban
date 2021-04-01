@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes } from 'lodash';
+import { Edit, Import, Export, Delete, New, Copy } from 'snapmaker-react-icon';
+
+import modal from '../../lib/modal';
 import Select from '../../components/Select';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
@@ -12,10 +15,12 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import widgetStyles from '../../widgets/styles.styl';
+// import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
-import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
+import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL,
+    PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
+    PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
 import { limitStringLength } from '../../lib/normalize-range';
 
 // checkbox and select
@@ -46,7 +51,7 @@ function isOfficialDefinition(definition) {
     return includes(['material.pla', 'material.abs', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'],
         definition.definitionId);
 }
-
+// TODO: map actions and props by managerDisplayType to simplify component invoke
 class PrintingManager extends PureComponent {
     static propTypes = {
         showPrintingManager: PropTypes.bool,
@@ -68,39 +73,49 @@ class PrintingManager extends PureComponent {
 
         updateShowPrintingManager: PropTypes.func.isRequired,
         updateManagerDisplayType: PropTypes.func.isRequired,
-        // updateDefaultQualityId: PropTypes.func.isRequired,
+        updateDefaultQualityId: PropTypes.func.isRequired,
         updateDefaultMaterialId: PropTypes.func.isRequired
     };
 
-   materialFileInput = React.createRef();
+    materialFileInput = React.createRef();
 
-   qualityFileInput = React.createRef();
+    qualityFileInput = React.createRef();
+
+    scrollDom = React.createRef();
 
     state = {
         materialDefinitionForManager: null,
         qualityDefinitionForManager: null,
         materialDefinitionOptions: [],
         qualityDefinitionOptions: [],
+        configExpanded: {},
         showPrintingManager: false,
         notificationMessage: '',
-        nameForMaterial: 'PLA',
-        nameForQuality: 'Fast Print',
+        selectedName: '',
+        activeCateId: 2,
         qualityConfigExpanded: (function () {
             PRINTING_QUALITY_CONFIG_GROUP.forEach((config) => {
                 this[config.name] = false;
             });
             return this;
-        }).call({}),
-        qualityConfigGroup: PRINTING_QUALITY_CONFIG_GROUP
+        }).call({})
     };
 
     actions = {
+        foldCategory: (cateName) => {
+            const { configExpanded } = this.state;
+            configExpanded[cateName] = !configExpanded[cateName];
+            this.setState({
+                configExpanded: JSON.parse(JSON.stringify(configExpanded))
+            });
+        },
         hidePrintingManager: () => {
             this.props.updateShowPrintingManager(false);
         },
         updateManagerDisplayType: (managerDisplayType) => {
             this.actions.clearNotification();
             this.props.updateManagerDisplayType(managerDisplayType);
+            this.setState({ activeCateId: 0 });
         },
         showNotification: (msg) => {
             this.setState({
@@ -110,6 +125,27 @@ class PrintingManager extends PureComponent {
         clearNotification: () => {
             this.setState({
                 notificationMessage: ''
+            });
+        },
+        setActiveCate: (activeCateId) => {
+            if (this.scrollDom.current) {
+                const container = this.scrollDom.current.parentElement;
+                const offsetTops = [...this.scrollDom.current.children].map(i => i.offsetTop);
+                if (activeCateId !== undefined) {
+                    container.scrollTop = offsetTops[activeCateId] - 80;
+                } else {
+                    activeCateId = offsetTops.findIndex((item, idx) => item < container.scrollTop && offsetTops[idx + 1] > container.scrollTop);
+                    activeCateId = Math.max(activeCateId, 0);
+                }
+                this.setState({ activeCateId });
+            }
+            return true;
+        },
+        setRenamingStatus: (status) => {
+            const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
+            this.setState({
+                renamingStatus: status,
+                selectedName: this.state[keySelectedDefinition].name
             });
         },
         onChangeMaterialFileForManager: (event) => {
@@ -145,11 +181,19 @@ class PrintingManager extends PureComponent {
             }
             this.props.exportConfigFile(targetFile);
         },
-
+        onUpdateDefaultDefinition: () => {
+            const { managerDisplayType } = this.props;
+            const { qualityDefinitionForManager, materialDefinitionForManager } = this.state;
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                this.props.updateDefaultMaterialId(materialDefinitionForManager.definitionId);
+            } else {
+                this.props.updateDefaultQualityId(qualityDefinitionForManager.definitionId);
+            }
+        },
         onSelectQualityType: (definition) => {
             this.setState({
                 qualityDefinitionForManager: definition,
-                nameForQuality: definition.name
+                selectedName: definition.name
             });
         },
         onSelectQualityTypeById: (definitionId) => {
@@ -166,7 +210,7 @@ class PrintingManager extends PureComponent {
             newQualityDefinitionForManager.settings[key].default_value = value;
             this.setState({
                 qualityDefinitionForManager: newQualityDefinitionForManager,
-                nameForQuality: qualityDefinitionForManager.name
+                selectedName: qualityDefinitionForManager.name
             });
             if (checkboxKeyArray) {
                 let newqQualityDefinitionOptions;
@@ -183,6 +227,20 @@ class PrintingManager extends PureComponent {
                 });
             }
         },
+
+        onChangeDefinition: (key, value, checkboxKeyArray) => {
+            // setState in setTimeout is synchronize
+            setTimeout(() => {
+                const { managerDisplayType } = this.props;
+                if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                    this.actions.onChangeMaterialDefinitionForManager(key, value, checkboxKeyArray);
+                    this.actions.onSaveMaterialForManager(managerDisplayType);
+                } else {
+                    this.actions.onChangeQualityDefinitionForManager(key, value, checkboxKeyArray);
+                    this.actions.onSaveQualityForManager(managerDisplayType);
+                }
+            }, 0);
+        },
         onSaveQualityForManager: async (managerDisplayType) => {
             const qualityDefinitionForManager = this.state.qualityDefinitionForManager;
             const newDefinitionSettings = {};
@@ -194,25 +252,23 @@ class PrintingManager extends PureComponent {
 
             await this.props.updateDefinitionSettings(qualityDefinitionForManager, newDefinitionSettings);
 
-            const { nameForQuality } = this.state;
-
-            if (nameForQuality !== qualityDefinitionForManager.name) { // changed
-                try {
-                    await this.props.updateQualityDefinitionName(qualityDefinitionForManager, nameForQuality);
-                } catch (err) {
-                    this.actions.showNotification(err);
-                }
-            }
-
             this.props.updateDefinitionsForManager(qualityDefinitionForManager.definitionId, managerDisplayType);
         },
 
-        onSelectMaterialTypeNotUpdate: (definitionId) => {
-            const materialDefinitionForManager = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (materialDefinitionForManager) {
+        onSelectDefinition: (definitionId) => {
+            const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
+            if (definitionId === this.state[keySelectedDefinition].definitionId) {
+                return;
+            }
+
+            const keySelectedName = `${this.props.managerDisplayType}SelectedName`;
+            const selected = this.props[`${this.props.managerDisplayType}Definitions`].find(d => d.definitionId === definitionId);
+            this.actions.setRenamingStatus(false);
+
+            if (selected) {
                 this.setState({
-                    materialDefinitionForManager: materialDefinitionForManager,
-                    nameForMaterial: materialDefinitionForManager.name
+                    [keySelectedDefinition]: selected,
+                    [keySelectedName]: selected.name
                 });
             }
         },
@@ -221,7 +277,7 @@ class PrintingManager extends PureComponent {
             if (materialDefinitionForManager) {
                 this.setState({
                     materialDefinitionForManager: materialDefinitionForManager,
-                    nameForMaterial: materialDefinitionForManager.name
+                    selectedName: materialDefinitionForManager.name
                 });
 
                 this.props.updateDefaultMaterialId(materialDefinitionForManager.definitionId);
@@ -257,48 +313,59 @@ class PrintingManager extends PureComponent {
             }
             await this.props.updateDefinitionSettings(materialDefinitionForManager, newDefinitionSettings);
 
-            const { nameForMaterial } = this.state;
-
-            if (nameForMaterial !== materialDefinitionForManager.name) { // changed
+            this.props.updateDefinitionsForManager(materialDefinitionForManager.definitionId, managerDisplayType);
+        },
+        updaterDefinitionName: async () => {
+            const { selectedName } = this.state;
+            const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
+            const keyDefinitionOptions = `${this.props.managerDisplayType}DefinitionOptions`;
+            const definition = this.state[keySelectedDefinition];
+            const options = this.state[keyDefinitionOptions];
+            if (selectedName !== definition.name) { // changed
                 try {
-                    await this.props.updateMaterialDefinitionName(materialDefinitionForManager, nameForMaterial);
+                    if (this.props.managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                        await this.props.updateMaterialDefinitionName(definition, selectedName);
+                    } else {
+                        await this.props.updateQualityDefinitionName(definition, selectedName);
+                    }
+                    const option = options.find(o => o.value === definition.definitionId);
+                    option.label = selectedName;
+                    this.setState({ [keyDefinitionOptions]: [...options] });
                 } catch (err) {
                     this.actions.showNotification(err);
                 }
             }
-            this.props.updateDefinitionsForManager(materialDefinitionForManager.definitionId, managerDisplayType);
         },
-
+        isNameSelectedNow: (definitionId, name) => {
+            return this.state.activeToolListDefinition && this.state.activeToolListDefinition.name === name && this.state.activeToolListDefinition.definitionId === definitionId;
+        },
         isMaterialSelectedForManager: (option) => {
             return this.state.materialDefinitionForManager && this.state.materialDefinitionForManager.name === option.label;
         },
         isQualitySelectedForManager: (option) => {
             return this.state.qualityDefinitionForManager && this.state.qualityDefinitionForManager.name === option.label;
         },
-        onChangeNameForMaterial: (event) => {
+
+        onChangeSelectedName: (event) => {
             this.setState({
-                nameForMaterial: event.target.value
-            });
-        },
-        onChangeNameForQuality: (event) => {
-            this.setState({
-                nameForQuality: event.target.value
+                selectedName: event.target.value
             });
         },
 
-        onDuplicateManagerDefinition: async (managerDisplayType) => {
+        onDuplicateManagerDefinition: async (name) => {
+            const { managerDisplayType } = this.props;
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 const definition = this.state.materialDefinitionForManager;
-                const newDefinition = await this.props.duplicateMaterialDefinition(definition);
+                const newDefinition = await this.props.duplicateMaterialDefinition(definition, undefined, name);
 
                 // Select new definition after creation
-                this.actions.onSelectMaterialTypeNotUpdate(newDefinition.definitionId);
+                this.actions.onSelectDefinition(newDefinition.definitionId);
             } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const definition = this.state.qualityDefinitionForManager;
-                const newDefinition = await this.props.duplicateQualityDefinition(definition);
+                const newDefinition = await this.props.duplicateQualityDefinition(definition, undefined, name);
 
                 // Select new definition after creation
-                this.actions.onSelectQualityTypeById(newDefinition.definitionId);
+                this.actions.onSelectDefinition(newDefinition.definitionId);
             }
         },
         onRemoveManagerDefinition: async (managerDisplayType) => {
@@ -334,6 +401,48 @@ class PrintingManager extends PureComponent {
                     this.actions.onSelectQualityType(this.props.qualityDefinitions[0]);
                 }
             }
+        },
+        showNewModal: () => {
+            // const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
+            this.actions.showInputModal({
+                title: i18n._('Create Profile'),
+                label: i18n._('Enter Profile Name:'),
+                defaultInputValue: 'New Profile',
+                onComplete: this.actions.onDuplicateManagerDefinition
+            });
+        },
+        showDuplicateModal: () => {
+            const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
+            this.actions.showInputModal({
+                title: i18n._('Copy Profile'),
+                label: i18n._('Enter Profile Name:'),
+                defaultInputValue: this.state[keySelectedDefinition].name,
+                onComplete: this.actions.onDuplicateManagerDefinition
+            });
+        },
+        showInputModal: ({ title, label, defaultInputValue, onComplete }) => {
+            const popupActions = modal({
+                title: title,
+                body: (
+                    <React.Fragment>
+                        <p>{label}</p>
+                    </React.Fragment>
+
+                ),
+                defaultInputValue,
+                footer: (
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-primary"
+                        onClick={async () => {
+                            await onComplete(popupActions.getInputValue());
+                            popupActions.close();
+                        }}
+                    >
+                        {i18n._('Ok')}
+                    </button>
+                )
+            });
         }
     };
 
@@ -411,19 +520,26 @@ class PrintingManager extends PureComponent {
         const { managerDisplayType } = this.props;
         const { materialDefinitionOptions, materialDefinitionForManager, showPrintingManager,
             qualityDefinitionOptions, qualityDefinitionForManager, qualityConfigExpanded } = state;
-        const currentMaterialOption = materialDefinitionOptions.find((item) => {
-            return item.label === materialDefinitionForManager.name;
+        const { configExpanded, renamingStatus, selectedName, activeCateId } = state;
+
+        const cates = [{ cateName: 'Default', items: [] }, { cateName: 'Custom', items: [] }];
+        const regex = /^[a-z]+.[0-9]+$/;
+        const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? PRINTING_MATERIAL_CONFIG_GROUP : PRINTING_QUALITY_CONFIG_GROUP;
+        const optionList = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialDefinitionOptions : qualityDefinitionOptions;
+        optionList.forEach(option => {
+            const idx = regex.test(option.value) ? 1 : 0;
+            cates[idx].items.push(option);
         });
-        const currentQualityOption = qualityDefinitionOptions.find((item) => {
-            return item.label === qualityDefinitionForManager.name;
-        });
+
+        const selectedOption = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialDefinitionForManager : qualityDefinitionForManager;
+        // console.log(isOfficialDefinition(selectedOption))
+
         return (
             <React.Fragment>
                 {showPrintingManager && (
                     <Modal
                         className={classNames(styles['manager-body'])}
-                        style={{ width: '700px' }}
-                        size="lg"
+                        style={{ minWidth: '700px' }}
                         onClose={actions.hidePrintingManager}
                     >
                         <Modal.Body
@@ -431,379 +547,348 @@ class PrintingManager extends PureComponent {
                         >
                             <div className={classNames(styles['manager-type-wrapper'])}>
                                 <Anchor
-                                    onClick={() => actions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL)}
-                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL })}
+                                    // onClick={() => actions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL)}
+                                    className={classNames(styles['manager-type'])}
                                 >
-                                    {i18n._('Material')}
-                                </Anchor>
-                                <Anchor
-                                    onClick={() => actions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY)}
-                                    className={classNames(styles['manager-type'], { [styles.selected]: managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY })}
-                                    style={{ marginLeft: '20px' }}
-                                >
-                                    {i18n._('Printing Settings')}
+                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? i18n._('Material') : i18n._('Printing Settings')}
                                 </Anchor>
                             </div>
+
                             <div
                                 className={classNames(styles['manager-content'])}
                             >
                                 <div className={classNames(styles['manager-name'])}>
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
-                                        { managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (materialDefinitionOptions.map((option) => {
-                                            const displayName = limitStringLength(i18n._(option.label), 24);
-                                            return (
-                                                <li key={`${option.value}`}>
+                                        {(cates.map((cate) => {
+                                            const displayCategory = limitStringLength(cate.cateName, 28);
+                                            return !!cate.items.length && (
+                                                <li key={`${cate.cateName}`}>
                                                     <Anchor
-                                                        className={classNames(styles['manager-btn'], { [styles.selected]: this.actions.isMaterialSelectedForManager(option) })}
-                                                        onClick={() => this.actions.onSelectMaterialTypeNotUpdate(option.value)}
+                                                        className={classNames(styles['manager-btn'])}
+
                                                     >
-                                                        {displayName}
+                                                        <div className={classNames(styles['manager-btn-unfold'])}>
+                                                            <span
+                                                                className={classNames(styles['manager-btn-unfold-bg'], { [styles.unfold]: !configExpanded[cate.cateName] })}
+                                                                onKeyDown={() => {}}
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => { this.actions.foldCategory(cate.cateName); }}
+                                                            />
+                                                        </div>
+                                                        <span>{displayCategory}</span>
                                                     </Anchor>
-                                                </li>
-                                            );
-                                        }))}
-                                        { managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (qualityDefinitionOptions.map((option) => {
-                                            const displayName = limitStringLength(i18n._(option.label), 24);
-                                            return (
-                                                <li key={`${option.value}`}>
-                                                    <Anchor
-                                                        className={classNames(styles['manager-btn'], { [styles.selected]: this.actions.isQualitySelectedForManager(option) })}
-                                                        onClick={() => this.actions.onSelectQualityTypeById(option.value)}
-                                                    >
-                                                        {displayName}
-                                                    </Anchor>
+                                                    {!configExpanded[cate.cateName] && (
+                                                        <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
+                                                            {(cate.items.map((currentOption) => {
+                                                                const displayName = limitStringLength(i18n._(currentOption.label), 24);
+                                                                const isSelected = currentOption.value === selectedOption.definitionId;
+                                                                return (
+                                                                    <li key={`${currentOption.value}`}>
+                                                                        <Anchor
+                                                                            className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
+                                                                            style={{ paddingLeft: '42px' }}
+                                                                            onClick={() => this.actions.onSelectDefinition(currentOption.value)}
+                                                                        >
+                                                                            {(isSelected && renamingStatus) ? (
+                                                                                <input
+                                                                                    className="sm-parameter-row__input"
+                                                                                    value={selectedName}
+                                                                                    onChange={actions.onChangeSelectedName}
+                                                                                    onKeyPress={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                            e.preventDefault();
+                                                                                            this.actions.setRenamingStatus(false);
+                                                                                            this.actions.updaterDefinitionName();
+                                                                                        }
+                                                                                    }}
+                                                                                    onBlur={() => {
+                                                                                        this.actions.setRenamingStatus(false);
+                                                                                        this.actions.updaterDefinitionName();
+                                                                                    }}
+                                                                                    // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
+                                                                                />
+                                                                            ) : displayName}
+
+                                                                        </Anchor>
+                                                                    </li>
+                                                                );
+                                                            }))}
+                                                        </ul>
+
+                                                    )}
                                                 </li>
                                             );
                                         }))}
                                     </ul>
-                                    <input
-                                        ref={this.materialFileInput}
-                                        type="file"
-                                        accept=".json"
-                                        style={{ display: 'none' }}
-                                        multiple={false}
-                                        onChange={this.actions.onChangeMaterialFileForManager}
-                                    />
-                                    <input
-                                        ref={this.qualityFileInput}
-                                        type="file"
-                                        accept=".json"
-                                        style={{ display: 'none' }}
-                                        multiple={false}
-                                        onChange={this.actions.onChangeQualityFileForManager}
-                                    />
-                                    <div className="sm-tabs">
+
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-around'
+                                    }}
+                                    >
+                                        <Edit size={18} onClick={() => this.actions.setRenamingStatus(true)} disabled={isOfficialDefinition(selectedOption)} />
+                                        <input
+                                            ref={this.materialFileInput}
+                                            type="file"
+                                            accept=".json"
+                                            style={{ display: 'none' }}
+                                            multiple={false}
+                                            onChange={this.actions.onChangeMaterialFileForManager}
+                                        />
+                                        <input
+                                            ref={this.qualityFileInput}
+                                            type="file"
+                                            accept=".json"
+                                            style={{ display: 'none' }}
+                                            multiple={false}
+                                            onChange={this.actions.onChangeQualityFileForManager}
+                                        />
+                                        <Import size={18} onClick={() => this.actions.importFile(managerDisplayType)} />
+                                        <Export size={18} onClick={() => this.actions.exportConfigFile(managerDisplayType)} />
+                                        <Delete size={18} onClick={() => this.actions.onRemoveManagerDefinition(managerDisplayType)} disabled={isOfficialDefinition(selectedOption)} />
+                                    </div>
+
+
+                                    <div className="sm-tabs" style={{ padding: '16px' }}>
                                         <Anchor
-                                            onClick={() => this.actions.importFile(managerDisplayType)}
+
                                             className={classNames(styles['manager-file'], 'sm-tab')}
+                                            onClick={() => { actions.showNewModal(); }}
                                         >
-                                            {i18n._('Import')}
+                                            <New size={18} />
+                                            <span className={classNames(styles['action-title'])}>{i18n._('New')}</span>
                                         </Anchor>
                                         <Anchor
                                             className={classNames(styles['manager-file'], 'sm-tab')}
-                                            onClick={() => this.actions.exportConfigFile(managerDisplayType)}
+                                            onClick={() => { actions.showDuplicateModal(); }}
                                         >
-                                            {i18n._('Export')}
+                                            <Copy size={18} />
+                                            <span className={classNames(styles['action-title'])}>{i18n._('Copy')}</span>
                                         </Anchor>
                                     </div>
                                 </div>
-                                <div className={classNames(styles['manager-details'])}>
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
+
+                                {(optionConfigGroup.length > 1) && (
+                                    <div className={classNames(styles['manager-grouplist'])}>
                                         <div className="sm-parameter-container">
-                                            <div className="sm-parameter-row">
-                                                <span className="sm-parameter-row__label-lg">{i18n._('Name')}</span>
-                                                <input
-                                                    className="sm-parameter-row__input"
-                                                    style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                    value={state.nameForMaterial}
-                                                    onChange={actions.onChangeNameForMaterial}
-                                                    disabled={!isDefinitionEditable(materialDefinitionForManager)}
-                                                />
-                                            </div>
-                                            {state.notificationMessage && (
-                                                <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
-                                                    {state.notificationMessage}
-                                                </Notifications>
-                                            )}
-                                            <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                                            {PRINTING_MATERIAL_CONFIG_KEYS.map((key) => {
-                                                const setting = materialDefinitionForManager.settings[key];
-
-                                                const { label, description, type, unit = '', enabled = '' } = setting;
-
-                                                const defaultValue = setting.default_value;
-                                                if (enabled) {
-                                                    // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                                                    const conditions = enabled.split('and').map(c => c.trim());
-
-                                                    for (const condition of conditions) {
-                                                        // Simple implementation of condition
-                                                        if (materialDefinitionForManager.settings[condition]) {
-                                                            const value = materialDefinitionForManager.settings[condition].default_value;
-                                                            if (!value) {
-                                                                return null;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-
+                                            {optionConfigGroup.map((group, idx) => {
                                                 return (
-                                                    <div key={key} className="sm-parameter-row">
-                                                        <TipTrigger title={i18n._(label)} content={i18n._(description)}>
-                                                            <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                                                            {type === 'float' && (
-                                                                <Input
-                                                                    className="sm-parameter-row__input"
-                                                                    value={defaultValue}
-                                                                    onChange={value => {
-                                                                        this.actions.onChangeMaterialDefinitionForManager(key, value);
-                                                                    }}
-                                                                    disabled={!isDefinitionEditable(materialDefinitionForManager, key)}
-                                                                />
-                                                            )}
-                                                            {type === 'bool' && (
-                                                                <input
-                                                                    className="sm-parameter-row__checkbox"
-                                                                    type="checkbox"
-                                                                    checked={currentMaterialOption[key]}
-                                                                    disabled={!isDefinitionEditable(materialDefinitionForManager, key)}
-                                                                    onChange={(event) => this.actions.onChangeMaterialDefinitionForManager(key, event.target.checked, key)}
-                                                                />
-                                                            )}
-                                                            <span className="sm-parameter-row__input-unit">{unit}</span>
-                                                        </TipTrigger>
+                                                    <div
+                                                        key={i18n._(idx)}
+
+                                                    >
+                                                        {group.name && (
+                                                            <Anchor
+                                                                className={classNames(styles.item, { [styles.selected]: idx === activeCateId })}
+
+                                                                onClick={() => {
+                                                                    this.actions.setActiveCate(idx);
+                                                                }}
+                                                            >
+                                                                <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
+
+                                                            </Anchor>
+                                                        )}
+
                                                     </div>
                                                 );
                                             })}
                                         </div>
-                                    )}
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
-                                        <div style={{ marginBottom: '6px' }}>
-                                            <div className="sm-parameter-row">
-                                                <span className="sm-parameter-row__label-lg">{i18n._('Name')}</span>
-                                                <input
-                                                    className="sm-parameter-row__input"
-                                                    value={state.nameForQuality}
-                                                    style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                    onChange={actions.onChangeNameForQuality}
-                                                    disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                />
-                                            </div>
-                                            <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                                            {state.notificationMessage && (
-                                                <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
-                                                    {state.notificationMessage}
-                                                </Notifications>
-                                            )}
-                                            <div className="sm-parameter-container">
-                                                {state.qualityConfigGroup.map((group) => {
-                                                    return (
-                                                        <div key={i18n._(group.name)}>
-                                                            <Anchor
-                                                                className="sm-parameter-header"
-                                                                onClick={() => {
-                                                                    qualityConfigExpanded[group.name] = !qualityConfigExpanded[group.name];
-                                                                    this.setState({
-                                                                        qualityConfigExpanded: JSON.parse(JSON.stringify(qualityConfigExpanded))
-                                                                    });
-                                                                }}
-                                                            >
-                                                                <span className="fa fa-gear sm-parameter-header__indicator" />
-                                                                <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
-                                                                <span className={classNames(
-                                                                    'fa',
-                                                                    qualityConfigExpanded[group.name] ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                                                                    'sm-parameter-header__indicator',
-                                                                    'pull-right',
-                                                                )}
-                                                                />
-                                                            </Anchor>
-                                                            {qualityConfigExpanded[group.name] && group.fields.map((key) => {
-                                                                const setting = qualityDefinitionForManager.settings[key];
+                                    </div>
+                                )}
 
-                                                                const { label, description, type, unit = '', enabled, options } = setting;
-                                                                const defaultValue = setting.default_value;
-                                                                if (typeof enabled === 'string') {
-                                                                    if (enabled.indexOf(' and ') !== -1) {
-                                                                        const andConditions = enabled.split(' and ').map(c => c.trim());
-                                                                        for (const condition of andConditions) {
-                                                                            // parse resolveOrValue('adhesion_type') == 'skirt'
-                                                                            const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
-                                                                            const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
-                                                                            if (enabledKey) {
-                                                                                if (qualityDefinitionForManager.settings[enabledKey]) {
-                                                                                    const value = qualityDefinitionForManager.settings[enabledKey].default_value;
-                                                                                    if (value !== enabledValue) {
-                                                                                        return null;
-                                                                                    }
-                                                                                }
-                                                                            } else {
-                                                                                if (qualityDefinitionForManager.settings[condition]) {
-                                                                                    const value = qualityDefinitionForManager.settings[condition].default_value;
-                                                                                    if (!value) {
-                                                                                        return null;
-                                                                                    }
-                                                                                }
+
+                                <div
+                                    className={classNames(styles['manager-details'])}
+                                    onWheel={() => { this.actions.setActiveCate(); }}
+                                >
+                                    {state.notificationMessage && (
+                                        <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
+                                            {state.notificationMessage}
+                                        </Notifications>
+                                    )}
+
+                                    <div className="sm-parameter-container" ref={this.scrollDom}>
+                                        {optionConfigGroup.map((group, idx) => {
+                                            return (
+                                                <div key={i18n._(idx)}>
+                                                    {group.name && (
+                                                        <Anchor
+                                                            className="sm-parameter-header"
+                                                            onClick={() => {
+                                                                qualityConfigExpanded[group.name] = !qualityConfigExpanded[group.name];
+                                                                this.setState({
+                                                                    qualityConfigExpanded: JSON.parse(JSON.stringify(qualityConfigExpanded))
+                                                                });
+                                                            }}
+                                                        >
+                                                            <span className="fa fa-gear sm-parameter-header__indicator" />
+                                                            <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
+
+                                                        </Anchor>
+                                                    )}
+                                                    { group.fields.map((key) => {
+                                                        const setting = selectedOption.settings[key];
+
+                                                        const { label, description, type, unit = '', enabled, options } = setting;
+                                                        const defaultValue = setting.default_value;
+                                                        if (typeof enabled === 'string') {
+                                                            if (enabled.indexOf(' and ') !== -1) {
+                                                                const andConditions = enabled.split(' and ').map(c => c.trim());
+                                                                for (const condition of andConditions) {
+                                                                    // parse resolveOrValue('adhesion_type') == 'skirt'
+                                                                    const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
+                                                                    const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                                                                    if (enabledKey) {
+                                                                        if (selectedOption.settings[enabledKey]) {
+                                                                            const value = selectedOption.settings[enabledKey].default_value;
+                                                                            if (value !== enabledValue) {
+                                                                                return null;
                                                                             }
                                                                         }
                                                                     } else {
-                                                                        const orConditions = enabled.split(' or ')
-                                                                            .map(c => c.trim());
-                                                                        let result = false;
-                                                                        for (const condition of orConditions) {
-                                                                            if (qualityDefinitionForManager.settings[condition]) {
-                                                                                const value = qualityDefinitionForManager.settings[condition].default_value;
-                                                                                if (value) {
-                                                                                    result = true;
-                                                                                }
+                                                                        if (selectedOption.settings[condition]) {
+                                                                            const value = selectedOption.settings[condition].default_value;
+                                                                            if (!value) {
+                                                                                return null;
                                                                             }
-                                                                            if (condition.match('(.*) > ([0-9]+)')) {
-                                                                                const m = condition.match('(.*) > ([0-9]+)');
-                                                                                const enabledKey = m[1];
-                                                                                const enabledValue = parseInt(m[2], 10);
-                                                                                if (qualityDefinitionForManager.settings[enabledKey]) {
-                                                                                    const value = qualityDefinitionForManager.settings[enabledKey].default_value;
-                                                                                    if (value > enabledValue) {
-                                                                                        result = true;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            if (condition.match('(.*) < ([0-9]+)')) {
-                                                                                const m = condition.match('(.*) > ([0-9]+)');
-                                                                                const enabledKey = m[1];
-                                                                                const enabledValue = parseInt(m[2], 10);
-                                                                                if (qualityDefinitionForManager.settings[enabledKey]) {
-                                                                                    const value = qualityDefinitionForManager.settings[enabledKey].default_value;
-                                                                                    if (value < enabledValue) {
-                                                                                        result = true;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            if (condition.match("resolveOrValue\\('(.[^)|']*)'")) {
-                                                                                const m1 = condition.match("resolveOrValue\\('(.[^)|']*)'");
-                                                                                const m2 = condition.match("== ?'(.[^)|']*)'");
-                                                                                const enabledKey = m1[1];
-                                                                                const enabledValue = m2[1];
-                                                                                if (qualityDefinitionForManager.settings[enabledKey]) {
-                                                                                    const value = qualityDefinitionForManager.settings[enabledKey].default_value;
-                                                                                    if (value === enabledValue) {
-                                                                                        result = true;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        if (!result) {
-                                                                            return null;
                                                                         }
                                                                     }
-                                                                } else if (typeof enabled === 'boolean' && enabled === false) {
+                                                                }
+                                                            } else {
+                                                                const orConditions = enabled.split(' or ')
+                                                                    .map(c => c.trim());
+                                                                let result = false;
+                                                                for (const condition of orConditions) {
+                                                                    if (selectedOption.settings[condition]) {
+                                                                        const value = selectedOption.settings[condition].default_value;
+                                                                        if (value) {
+                                                                            result = true;
+                                                                        }
+                                                                    }
+                                                                    if (condition.match('(.*) > ([0-9]+)')) {
+                                                                        const m = condition.match('(.*) > ([0-9]+)');
+                                                                        const enabledKey = m[1];
+                                                                        const enabledValue = parseInt(m[2], 10);
+                                                                        if (selectedOption.settings[enabledKey]) {
+                                                                            const value = selectedOption.settings[enabledKey].default_value;
+                                                                            if (value > enabledValue) {
+                                                                                result = true;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    if (condition.match('(.*) < ([0-9]+)')) {
+                                                                        const m = condition.match('(.*) > ([0-9]+)');
+                                                                        const enabledKey = m[1];
+                                                                        const enabledValue = parseInt(m[2], 10);
+                                                                        if (selectedOption.settings[enabledKey]) {
+                                                                            const value = selectedOption.settings[enabledKey].default_value;
+                                                                            if (value < enabledValue) {
+                                                                                result = true;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    if (condition.match("resolveOrValue\\('(.[^)|']*)'")) {
+                                                                        const m1 = condition.match("resolveOrValue\\('(.[^)|']*)'");
+                                                                        const m2 = condition.match("== ?'(.[^)|']*)'");
+                                                                        const enabledKey = m1[1];
+                                                                        const enabledValue = m2[1];
+                                                                        if (selectedOption.settings[enabledKey]) {
+                                                                            const value = selectedOption.settings[enabledKey].default_value;
+                                                                            if (value === enabledValue) {
+                                                                                result = true;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                if (!result) {
                                                                     return null;
                                                                 }
-
-                                                                const opts = [];
-                                                                if (options) {
-                                                                    Object.keys(options).forEach((k) => {
-                                                                        opts.push({
-                                                                            value: k,
-                                                                            label: i18n._(options[k])
-                                                                        });
-                                                                    });
-                                                                }
-                                                                return (
-                                                                    <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
-                                                                        <div className="sm-parameter-row" key={key}>
-                                                                            <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                                                                            {type === 'float' && (
-                                                                                <Input
-                                                                                    className="sm-parameter-row__input"
-                                                                                    value={defaultValue}
-                                                                                    disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                                    onChange={(value) => {
-                                                                                        actions.onChangeQualityDefinitionForManager(key, value);
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                            {type === 'float' && (
-                                                                                <span className="sm-parameter-row__input-unit">{unit}</span>
-                                                                            )}
-                                                                            {type === 'int' && (
-                                                                                <Input
-                                                                                    className="sm-parameter-row__input"
-                                                                                    value={defaultValue}
-                                                                                    disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                                    onChange={(value) => {
-                                                                                        actions.onChangeQualityDefinitionForManager(key, value);
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                            {type === 'int' && (
-                                                                                <span className="sm-parameter-row__input-unit">{unit}</span>
-                                                                            )}
-                                                                            {type === 'bool' && (
-                                                                                <input
-                                                                                    className="sm-parameter-row__checkbox"
-                                                                                    type="checkbox"
-                                                                                    checked={currentQualityOption[key]}
-                                                                                    disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                                    onChange={(event) => actions.onChangeQualityDefinitionForManager(key, event.target.checked, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY)}
-                                                                                />
-                                                                            )}
-                                                                            {type === 'enum' && (
-                                                                                <Select
-                                                                                    className="sm-parameter-row__select"
-                                                                                    backspaceRemoves={false}
-                                                                                    clearable={false}
-                                                                                    menuContainerStyle={{ zIndex: 5 }}
-                                                                                    name={key}
-                                                                                    disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                                    options={opts}
-                                                                                    value={currentQualityOption[key]}
-                                                                                    onChange={(option) => {
-                                                                                        actions.onChangeQualityDefinitionForManager(key, option.value, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY);
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                        </div>
-                                                                    </TipTrigger>
-                                                                );
-                                                            })
                                                             }
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
+                                                        } else if (typeof enabled === 'boolean' && enabled === false) {
+                                                            return null;
+                                                        }
+
+                                                        const opts = [];
+                                                        if (options) {
+                                                            Object.keys(options).forEach((k) => {
+                                                                opts.push({
+                                                                    value: k,
+                                                                    label: i18n._(options[k])
+                                                                });
+                                                            });
+                                                        }
+                                                        return (
+                                                            <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
+                                                                <div className="sm-parameter-row" key={key}>
+                                                                    <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
+                                                                    {type === 'float' && (
+                                                                        <Input
+                                                                            className="sm-parameter-row__input"
+                                                                            style={{ width: '160px' }}
+                                                                            value={defaultValue}
+                                                                            disabled={!isDefinitionEditable(selectedOption)}
+                                                                            onChange={(value) => {
+                                                                                actions.onChangeDefinition(key, value);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    {type === 'float' && (
+                                                                        <span className="sm-parameter-row__input-unit">{unit}</span>
+                                                                    )}
+                                                                    {type === 'int' && (
+                                                                        <Input
+                                                                            className="sm-parameter-row__input"
+                                                                            style={{ width: '160px' }}
+                                                                            value={defaultValue}
+                                                                            disabled={!isDefinitionEditable(selectedOption)}
+                                                                            onChange={(value) => {
+                                                                                actions.onChangeDefinition(key, value);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    {type === 'int' && (
+                                                                        <span className="sm-parameter-row__input-unit">{unit}</span>
+                                                                    )}
+                                                                    {type === 'bool' && (
+                                                                        <input
+                                                                            className="sm-parameter-row__checkbox"
+                                                                            type="checkbox"
+                                                                            checked={selectedOption[key]}
+                                                                            disabled={!isDefinitionEditable(selectedOption)}
+                                                                            onChange={(event) => actions.onChangeDefinition(key, event.target.checked, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY)}
+                                                                        />
+                                                                    )}
+                                                                    {type === 'enum' && (
+                                                                        <Select
+                                                                            className="sm-parameter-row__select"
+                                                                            backspaceRemoves={false}
+                                                                            clearable={false}
+                                                                            menuContainerStyle={{ zIndex: 5 }}
+                                                                            name={key}
+                                                                            disabled={!isDefinitionEditable(selectedOption)}
+                                                                            options={opts}
+                                                                            value={defaultValue}
+                                                                            onChange={(option) => {
+                                                                                actions.onChangeDefinition(key, option.value, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY);
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            </TipTrigger>
+                                                        );
+                                                    })
+                                                    }
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+
                             </div>
+
                             <div className={classNames(styles['manager-settings'], 'clearfix')}>
-                                <div className={classNames(styles['manager-settings-operate'], styles['manager-settings-btn'])}>
-                                    <Anchor
-                                        onClick={() => { actions.onDuplicateManagerDefinition(managerDisplayType); }}
-                                        className="sm-btn-large sm-btn-default"
-                                        style={{ marginRight: '11px' }}
-                                    >
-                                        {i18n._('Copy')}
-                                    </Anchor>
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onRemoveManagerDefinition(managerDisplayType); }}
-                                            disabled={isOfficialDefinition(materialDefinitionForManager)}
-                                        >
-                                            {i18n._('Delete')}
-                                        </Anchor>
-                                    )}
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onRemoveManagerDefinition(managerDisplayType); }}
-                                            disabled={isOfficialDefinition(qualityDefinitionForManager)}
-                                        >
-                                            {i18n._('Delete')}
-                                        </Anchor>
-                                    )}
-                                </div>
                                 <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                     <Anchor
                                         onClick={() => { actions.hidePrintingManager(); }}
@@ -812,24 +897,18 @@ class PrintingManager extends PureComponent {
                                     >
                                         {i18n._('Close')}
                                     </Anchor>
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL && (
-                                        <Anchor
-                                            onClick={() => { actions.onSaveMaterialForManager(managerDisplayType); }}
-                                            className="sm-btn-large sm-btn-primary"
-                                            disabled={isOfficialDefinition(materialDefinitionForManager)}
-                                        >
-                                            {i18n._('Save')}
-                                        </Anchor>
-                                    )}
-                                    {managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY && (
-                                        <Anchor
-                                            onClick={() => { actions.onSaveQualityForManager(managerDisplayType); }}
-                                            className="sm-btn-large sm-btn-primary"
-                                            disabled={isOfficialDefinition(qualityDefinitionForManager)}
-                                        >
-                                            {i18n._('Save')}
-                                        </Anchor>
-                                    )}
+
+                                    <Anchor
+                                        onClick={() => {
+                                            actions.onUpdateDefaultDefinition();
+                                            actions.hidePrintingManager();
+                                        }}
+                                        className="sm-btn-large sm-btn-primary"
+                                        // disabled={isOfficialDefinition(selectedOption)}
+                                    >
+                                        {i18n._('Select')}
+                                    </Anchor>
+
                                 </div>
                             </div>
                         </Modal.Body>
@@ -866,8 +945,8 @@ const mapDispatchToProps = (dispatch) => {
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
         onUploadManagerDefinition: (materialFile, type) => dispatch(printingActions.onUploadManagerDefinition(materialFile, type)),
         exportConfigFile: (targetFile) => dispatch(projectActions.exportConfigFile(targetFile)),
-        duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
-        duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
+        duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId, newDefinitionName)),
+        duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId, newDefinitionName)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),
         removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
         updateMaterialDefinitionName: (definition, name) => dispatch(printingActions.updateMaterialDefinitionName(definition, name)),

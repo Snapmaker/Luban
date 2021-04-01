@@ -73,7 +73,6 @@ class ModalHOC extends PureComponent {
                     {this.props.defaultInputValue && (
                         <input
                             type="text"
-                            className="sm-parameter-row__input"
                             style={{ height: '30px',
                                 width: '100%',
                                 padding: '6px 12px',

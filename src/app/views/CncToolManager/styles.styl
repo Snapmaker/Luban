@@ -11,7 +11,6 @@
             padding-bottom: 9px
             height: 36px;
             font-size: 18px;
-            font-family: PingFangSC-Medium, PingFang SC;
             font-weight: 500;
             &.selected {
                 color: #28A7E1;
@@ -20,21 +19,25 @@
         }
     }
     .manager-content {
+        height: 530px
         padding: 20px;
+        display: flex;
         .manager-name {
-            width: 36%
+            display:flex
+            flex-direction: column
+            width: 260px
+            height: 100%
             margin-right: 10px
-            display: inline-block
             vertical-align: top
+            border: 1px solid #c8c8c8;
             .manager-name-wrapper {
                 list-style: none
                 background: #FFFFFF;
                 padding: 0;
                 margin: 0;
-                height: 363px;
                 overflow-y: scroll;
-                border: 1px solid #c8c8c8;
-                border-bottom: 0;
+                flex: 1
+                
                 .manager-btn {
                     display: inline-block
                     height: 32px
@@ -50,31 +53,66 @@
                         display: inline-block;
                         vertical-align: middle;
                         .manager-btn-unfold-bg {
+                            outline: none;
                             background: url("../../images/cnc-laser/ic_right arrow_18x18.png") no-repeat center/18px 18px
                             height: 18px;
                             margin: 7px;
                             width: 18px;
                             display: inline-block;
                             &.unfold {
+                                outline: none;
                                 background-image: url("../../images/cnc-laser/ic_drop arrow_18x18.png")
                             }
                         }
+                    }
+                    input{
+                        outline:none;
+                        border:none;
+                        width: 215px;
+                        height: 24px;
+                        background: #FFFFFF;
+                        margin-top: 16px;
+                        width: 180px;
+                        transform: translateY(-50%);
+                        
                     }
                 }
             }
             .manager-file {
                 width: 50%;
-                border-radius: 0;
+                vertical-align: middle;
+                background-color: white;
                 &:hover {
-                    color: #28A7E1
+                    color: #272829;
+                }
+                .action-title{
+                    vertical-align: middle;
+                    display: inline-block;
+                    padding: 0 5px;
                 }
             }
         }
+        .manager-grouplist {
+            width: 220px
+            height: 100%
+            border: 1px solid #c8c8c8;
+            margin-right: 10px;
+            padding: 1px;
+            text-align: left
+            .item{
+                display: block;
+                width: 100%;
+                line-height: 32px;
+                padding: 0px 10px;
+            }
+            .selected {
+                background: #E6F2FD;
+            }
+        }
         .manager-details {
-            width: 62%
-            height: 393px;
+            width: 420px
+            height: 100%
             overflow-y: scroll;
-            display: inline-block;
             border: 1px solid #c8c8c8;
             padding: 10px 10px 20px;
             text-align: left
@@ -99,4 +137,6 @@
             float: right;
         }
     }
+
+    
 }

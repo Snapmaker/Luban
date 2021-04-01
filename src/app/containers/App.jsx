@@ -307,7 +307,10 @@ class App extends PureComponent {
                                 {i18n._('Yes')}
                             </button>
                         ),
-                        onClose: () => { this.setState({ [keyRecoveringProject]: false }); }
+                        onClose: () => {
+                            this.setState({ [keyRecoveringProject]: false });
+                            this.props.clearSavedEnvironment(headType);
+                        }
                     });
                 }
             } else if (this.state[keyRecoveringProject]) {
@@ -454,6 +457,7 @@ const mapDispatchToProps = (dispatch) => {
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
+        clearSavedEnvironment: (headType) => dispatch(projectActions.clearSavedEnvironment(headType)),
         resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };
 };

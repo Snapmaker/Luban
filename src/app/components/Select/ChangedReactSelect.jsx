@@ -44,8 +44,11 @@ const customStyles = {
     valueContainer: (provided) => {
         return { ...provided, padding: '0px 8px' };
     },
+    input: (provided) => {
+        return { ...provided, lineHeight: '20px' };
+    },
     menuList: (provided) => {
-        return { ...provided, marginTop: '0', marginBottom: '0', paddingTop: '0', paddingBottom: '0' };
+        return { ...provided, marginTop: '0', marginBottom: '0', paddingTop: '0', paddingBottom: '0', lineHeight: '20px' };
     },
     menu: (provided) => {
         return { ...provided, marginTop: '0', marginBottom: '0' };
@@ -125,9 +128,10 @@ class ChangedReactSelect extends PureComponent {
                 secondValue = ''
             } = valueObj;
             if (!isNil(firstValue) && !isNil(secondValue)) {
-                defaultValue = options
-                    .find(d => d[firstKey] === firstValue)
-                    .options.find(d => d[secondKey] === secondValue);
+                const group = options.find(d => d[firstKey] === firstValue);
+                if (group) {
+                    defaultValue = group.options.find(d => d[secondKey] === secondValue);
+                }
             }
         } else {
             // Compatible with old interfaces
