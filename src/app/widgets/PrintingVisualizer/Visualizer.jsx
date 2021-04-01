@@ -127,15 +127,12 @@ class Visualizer extends PureComponent {
             this.props.layFlatSelectedModel();
         },
         updateBoundingBox: () => {
-            this.canvas.current.controls.updateBoundingBox();
+            this.canvas.current.updateBoundingBox();
         },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         }
-        // startSupportMode: () => {
-        //     this.canvas.current.controls.startSupportMode();
-        // },
 
         // clearAllManualSupport: () => {
         //     this.props.modelGroup.removeAllManualSupport();
@@ -151,14 +148,14 @@ class Visualizer extends PureComponent {
             this.props.destroyGcodeLine();
             this.actions.setTransformMode('support');
             this.setState({ isSupporting: true });
-            this.canvas.current.controls.startSupportMode();
+            this.canvas.current.startSupportMode();
             const model = this.props.selectedModelArray[0];
             model.setVertexColors();
         },
         stopSupportMode: () => {
             this.setState({ isSupporting: false });
             this.supportActions.saveSupport();
-            this.canvas.current.controls.stopSupportMode();
+            this.canvas.current.stopSupportMode();
             const model = this.props.selectedModelArray[0];
             model && model.removeVertexColors();
         },
@@ -229,8 +226,8 @@ class Visualizer extends PureComponent {
             //     const model = modelGroup.models.find(d => d.modelID === modelID);
             //     modelGroup.selectedGroup.add(model.meshObject);
             // });
-            this.canvas.current.controls.updateBoundingBox();
-            this.canvas.current.controls.attach(modelGroup.selectedGroup);
+            this.canvas.current.updateBoundingBox();
+            this.canvas.current.attach(modelGroup.selectedGroup);
 
             this.supportActions.stopSupportMode();
             if (selectedModelArray.length === 1 && selectedModelArray[0].supportTag && !['translate', 'scale'].includes(transformMode)) {

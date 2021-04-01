@@ -8,11 +8,13 @@
 import noop from 'lodash/noop';
 import React, { Component } from 'react';
 import { isNil } from 'lodash';
-import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight, WebGLRenderer } from 'three';
-import Detector from 'three/examples/js/Detector';
+import { Vector3, PerspectiveCamera, Scene, Group, HemisphereLight, DirectionalLight } from 'three';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
+
 import Controls, { EVENTS } from './Controls';
+import Detector from '../../three-extensions/Detector';
+import WebGLRenderer from '../../three-extensions/WebGLRenderer';
 
 
 const ANIMATION_DURATION = 500;
@@ -81,12 +83,6 @@ class Canvas extends Component {
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
-        this.transformMode = 'translate'; // transformControls mode: translate/scale/rotate
-
-        // controls
-        this.transformControls = null; // pan/scale/rotate selected model
-
-
         // threejs
         this.camera = null;
         this.renderer = null;
@@ -96,37 +92,46 @@ class Canvas extends Component {
     }
 
     componentDidMount() {
-        if (this.node) {
-            this.setupScene();
-            this.setupControls();
-
-            this.group.add(this.printableArea);
-            this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
-            this.group.add(this.modelGroup.object);
-            this.toolPathModelGroupObject && this.group.add(this.toolPathModelGroupObject);
-            this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
-            this.backgroundGroup && this.group.add(this.backgroundGroup);
-
-            this.renderScene();
-
-            window.addEventListener('resize', this.resizeWindow, false);
+        if (!this.isCanvasInitialized()) {
+            return;
         }
+
+        this.setupScene();
+        this.setupControls();
+
+        this.group.add(this.printableArea);
+        this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+        this.group.add(this.modelGroup.object);
+        this.toolPathModelGroupObject && this.group.add(this.toolPathModelGroupObject);
+        this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
+        this.backgroundGroup && this.group.add(this.backgroundGroup);
+
+        this.renderScene();
+
+        window.addEventListener('resize', this.resizeWindow, false);
     }
 
     // just for laser and cnc, dont set scale prop for 3dp
     componentWillReceiveProps(nextProps) {
         if (nextProps.scale && nextProps.scale !== this.lastScale) {
+            if (!this.isCanvasInitialized()) return;
+
             const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
             this.controls.setScale(currentScale / nextProps.scale);
             this.lastScale = nextProps.scale;
             this.controls.updateCamera();
         }
+
         if (nextProps.target && nextProps.target !== this.lastTarget) {
+            if (!this.isCanvasInitialized()) return;
+
             const { x, y } = nextProps.target;
             this.controls.panOffset.add(new Vector3(x - this.controls.target.x, y - this.controls.target.y, 0));
             this.controls.updateCamera();
         }
         if (nextProps.toolPathModelGroupObject) {
+            if (!this.isCanvasInitialized()) return;
+
             if (nextProps.toolPathModelGroupObject.visible) {
                 this.controls.updateFramePeripheralVisible(false);
             } else {
@@ -146,8 +151,6 @@ class Canvas extends Component {
         if (this.controls) {
             this.controls.dispose();
         }
-
-        this.transformControls && this.transformControls.dispose();
     }
 
     onScale = () => {
@@ -198,9 +201,7 @@ class Canvas extends Component {
         }
 
         this.renderer = new WebGLRenderer({ antialias: true });
-        this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
-        this.renderer.shadowMap.enabled = true;
 
         this.scene = new Scene();
         this.scene.add(this.camera);
@@ -259,25 +260,9 @@ class Canvas extends Component {
 
     setTransformMode(mode) {
         if (['translate', 'scale', 'rotate'].includes(mode)) {
-            this.transformControls && this.transformControls.setMode(mode);
             this.controls && this.controls.setTransformMode(mode);
         } else {
             this.controls && this.controls.setTransformMode(null);
-        }
-    }
-
-    setTransformControls2DState(params) {
-        const { enabledTranslate, enabledScale, enabledRotate } = params;
-        if (this.transformSourceType === '2D' && this.transformControls) {
-            if (enabledTranslate !== undefined) {
-                this.transformControls.setEnabledTranslate(enabledTranslate);
-            }
-            if (enabledScale !== undefined) {
-                this.transformControls.setEnabledScale(enabledScale);
-            }
-            if (enabledRotate !== undefined) {
-                this.transformControls.setEnabledRotate(enabledRotate);
-            }
         }
     }
 
@@ -288,6 +273,8 @@ class Canvas extends Component {
     };
 
     setCamera = (position, target) => {
+        if (!this.isCanvasInitialized()) return;
+
         this.camera.position.copy(position);
         this.controls.setTarget(target);
         this.renderScene();
@@ -298,13 +285,17 @@ class Canvas extends Component {
     };
 
     setCameraOnTop = () => {
+        if (!this.isCanvasInitialized()) return;
+
         const dist = this.camera.position.distanceTo(this.controls.target);
         this.camera.position.copy(new Vector3(0, 0, dist));
         this.controls.setTarget(new Vector3(0, 0, 0));
         this.controls.updateCamera();
-    }
+    };
 
     resizeWindow = () => {
+        if (!this.isCanvasInitialized()) return;
+
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
         if (width * height !== 0 && !isNil(width) && !isNil(height)) {
@@ -314,6 +305,10 @@ class Canvas extends Component {
         }
         this.renderScene();
     };
+
+    isCanvasInitialized() {
+        return !!this.node.current;
+    }
 
     zoomIn() {
         const object = { nonce: 0 };
@@ -483,15 +478,45 @@ class Canvas extends Component {
     }
 
     enable3D() {
-        this.controls.enableRotate = true;
+        if (this.controls) {
+            this.controls.enableRotate = true;
+        }
     }
 
     disable3D() {
-        this.controls.enableRotate = false;
+        if (this.controls) {
+            this.controls.enableRotate = false;
+        }
     }
 
-    updateTransformControl2D() {
-        this.transformSourceType === '2D' && this.transformControls && this.transformControls.updateGizmo();
+    startSupportMode() {
+        if (this.controls) {
+            this.controls.startSupportMode();
+        }
+    }
+
+    stopSupportMode() {
+        if (this.controls) {
+            this.controls.stopSupportMode();
+        }
+    }
+
+    attach(objects) {
+        if (this.controls) {
+            this.controls.attach(objects);
+        }
+    }
+
+    detach() {
+        if (this.controls) {
+            this.controls.detach();
+        }
+    }
+
+    updateBoundingBox() {
+        if (this.controls) {
+            this.controls.updateBoundingBox();
+        }
     }
 
     startTween(tween) {
@@ -511,6 +536,8 @@ class Canvas extends Component {
     }
 
     renderScene() {
+        if (!this.isCanvasInitialized()) return;
+
         this.light.position.copy(this.camera.position);
 
         this.renderer.render(this.scene, this.camera);
@@ -519,17 +546,10 @@ class Canvas extends Component {
     }
 
     render() {
-        if (!Detector.webgl) {
-            return (
-                <div
-                    style={{
-                        backgroundColor: '#eee'
-                    }}
-                >
-                    `Failed to get WebGL context. Your browser or device may not support WebGL.`
-                </div>
-            );
+        if (!Detector.isWebGLAvailable()) {
+            return Detector.getWebGLErrorMessage();
         }
+
         return (
             <div
                 ref={this.node}

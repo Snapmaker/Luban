@@ -175,48 +175,18 @@ class Visualizer extends Component {
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
         }
 
-        // TODO: find better way
-        /*
-        this.canvas.current.updateTransformControl2D();
-        const { model } = nextProps;
-        if (model !== this.props.model) {
-            if (!model) {
-                this.canvas.current.controls.detach();
-            } else {
-                const sourceType = model.modelInfo.source.type;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-
-                this.canvas.current.controls.attach(model);
-            }
-        }
-        */
-
-        this.canvas.current.updateTransformControl2D();
-        // const { model } = nextProps;
         const { selectedModelArray } = nextProps;
         // todo, selectedModelId nof found
         if (selectedModelArray !== this.props.selectedModelArray) {
             const selectedModel = selectedModelArray[0];
             if (!selectedModel) {
-                this.canvas.current.controls.detach();
+                this.canvas.current.detach();
             } else {
-                const sourceType = selectedModel.sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-                // this.canvas.current.controls.attach(model);
-                // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
                 if (meshObject && selectedModel.visible) {
-                    this.canvas.current.controls.attach(meshObject);
+                    this.canvas.current.attach(meshObject);
                 } else {
-                    this.canvas.current.controls.detach();
+                    this.canvas.current.detach();
                 }
             }
         }
@@ -524,7 +494,6 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
     const { page, materials, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
