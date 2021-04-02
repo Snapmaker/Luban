@@ -239,8 +239,8 @@ class Visualizer extends Component {
                 this.canvas.current.controls.enableClick();
             }
         }
-
-        if (nextProps.selectedToolPathModels.length !== this.props.selectedToolPathModels.length) {
+        if (nextProps.selectedToolPathModels !== this.props.selectedToolPathModels) {
+            this.canvas.current.controls.detach();
             for (const selectedToolPathModel of nextProps.selectedToolPathModels) {
                 this.canvas.current.controls.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
             }

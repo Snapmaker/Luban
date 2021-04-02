@@ -220,6 +220,7 @@ class TransformControls2D extends Object3D {
         */
     }
 
+
     attach(object, selectEvent) {
         if (!selectEvent) {
             return;
@@ -241,11 +242,15 @@ class TransformControls2D extends Object3D {
                 const peripheral = new Peripheral(object);
                 this.peripherals.push(peripheral);
                 this.add(peripheral);
-            } else {
-                const index = this.objects.findIndex(o => o === object);
-                this.objects.splice(index, 1);
-                const removePeripherals = this.peripherals.splice(index, 1);
-                this.remove(removePeripherals[0]);
+            }
+        } else if (selectEvent === SELECTEVENT.REMOVESELECT) {
+            const index = this.objects.findIndex(o => o === object);
+            this.objects.splice(index, 1);
+            const removePeripherals = this.peripherals.splice(index, 1);
+            this.remove(removePeripherals[0]);
+        } else {
+            for (const peripheral of this.peripherals) {
+                this.remove(peripheral);
             }
         }
 

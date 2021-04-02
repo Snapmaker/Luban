@@ -1278,7 +1278,11 @@ class ModelGroup extends EventEmitter {
             });
         }
         const model = this.newModel(modelInfo);
-
+        // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
+        if (model.sourceType !== '3d') {
+            const modelLength = this.models.length;
+            model.meshObject.position.z = (modelLength + 1) * 0.01;
+        }
         model.computeBoundingBox();
 
         // add to group and select

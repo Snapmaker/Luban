@@ -866,7 +866,7 @@ class SvgModel extends BaseModel {
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
-
+            // TODO make the 'MeshBasicMaterial' to be transparent
             const material = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 transparent: true,
