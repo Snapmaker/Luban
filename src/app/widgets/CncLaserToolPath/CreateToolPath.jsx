@@ -35,15 +35,41 @@ class CreateToolPath extends PureComponent {
         return (
             <div>
                 <div>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-default"
-                        disabled={this.props.toolPathTypes.length !== 1}
-                        onClick={this.props.createToolPath}
-                        style={{ display: 'block', width: '100%' }}
-                    >
-                        {i18n._('Create Toolpath')}
-                    </button>
+                    {this.props.toolPathTypes.length === 0 && (
+                        <div style={{ height: '20px', textAlign: 'center' }}>
+                            <img
+                                src="../../images/cnc-laser/ic_warning_20x20.png"
+                                style={{
+                                    marginTop: '-4px',
+                                    width: '20px',
+                                    height: '20px'
+                                }}
+                                alt="......"
+                            />
+                            <div style={{
+                                display: 'inline-block',
+                                color: '#979899',
+                                fontSize: '14px',
+                                fontFamily: 'Roboto-Regular, Roboto',
+                                height: '19px',
+                                lineHeight: '19px',
+                                marginLeft: '9px'
+                            }}
+                            >
+                                {i18n._('Select Object to Create Toolpath')}
+                            </div>
+                        </div>
+                    )}
+                    { this.props.toolPathTypes.length === 1 && (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-default"
+                            onClick={this.props.createToolPath}
+                            style={{ display: 'block', width: '100%' }}
+                        >
+                            {i18n._('Create Toolpath')}
+                        </button>
+                    )}
                 </div>
             </div>
         );
