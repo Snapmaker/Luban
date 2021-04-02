@@ -159,7 +159,6 @@ class Material extends PureComponent {
                                         const setting = materialDefinition.settings[key];
                                         const { label, type, unit = '', enabled = '' } = setting;
                                         const defaultValue = setting.default_value;
-                                        const inputDisabled = true;
                                         if (enabled) {
                                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
                                             const conditions = enabled.split('and').map(c => c.trim());
@@ -186,11 +185,10 @@ class Material extends PureComponent {
                                                 )}
                                                 { type === 'bool' && (
                                                     <td>
-                                                        <input
-                                                            type="checkbox"
-                                                            disabled={inputDisabled}
-                                                            checked={defaultValue}
-                                                            onChange={() => {}}
+                                                        <div
+                                                            className={
+                                                                classNames(styles[defaultValue ? 'checked' : 'unchecked'])
+                                                            }
                                                         />
                                                     </td>
                                                 )}
