@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import path from 'path';
-// import { ListIconOpen, ListIconClose, IconLock } from 'snapmaker-react-icon';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../flux/printing';

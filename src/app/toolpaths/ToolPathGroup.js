@@ -335,14 +335,16 @@ class ToolPathGroup {
         const infos = [];
         const modelIds = [];
         for (const toolPath of this.toolPaths) {
-            const taskInfos = toolPath.getSelectModelsAndToolPathInfo();
+            if (toolPath.visible) {
+                const taskInfos = toolPath.getSelectModelsAndToolPathInfo();
 
-            for (const taskInfo of taskInfos) {
-                taskInfo.materials = materials;
+                for (const taskInfo of taskInfos) {
+                    taskInfo.materials = materials;
 
-                if (!modelIds.includes(taskInfo.modelID)) {
-                    infos.push(taskInfo);
-                    modelIds.push(taskInfo.modelID);
+                    if (!modelIds.includes(taskInfo.modelID)) {
+                        infos.push(taskInfo);
+                        modelIds.push(taskInfo.modelID);
+                    }
                 }
             }
         }

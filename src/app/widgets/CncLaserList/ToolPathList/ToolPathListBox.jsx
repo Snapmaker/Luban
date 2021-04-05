@@ -2,6 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import { Edit, Hide, Show } from 'snapmaker-react-icon';
+
 import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
@@ -37,15 +39,10 @@ class ToolPathListBox extends PureComponent {
         selectToolPathId: (id) => {
             this.props.selectToolPathId(id);
         },
-        onClickCheck: (id, check) => {
+        onClickVisible: (id, visible, check) => {
             this.props.updateToolPath(id, {
+                visible: !visible,
                 check: !check
-            });
-        },
-
-        onClickVisible: (id, visible) => {
-            this.props.updateToolPath(id, {
-                visible: !visible
             });
         },
 
@@ -107,20 +104,18 @@ class ToolPathListBox extends PureComponent {
                                     <div
                                         className={classNames(
                                             styles['object-list-item'],
+                                            'clearfix',
                                             toolPath.id === this.props.selectedToolPathId ? styles.selected : null,
                                         )}
                                     >
-                                        <Anchor
+                                        {/** <Anchor
                                             className={classNames(
                                                 styles.icon,
                                                 toolPath.check ? styles.iconCheck : styles.iconUncheck
                                             )}
                                             onClick={() => this.actions.onClickCheck(toolPath.id, toolPath.check)}
-                                        />
+                                        />**/}
                                         <Anchor
-                                            style={{
-                                                width: '268px'
-                                            }}
                                             className={classNames(
                                                 styles.name,
                                                 styles.bt
@@ -132,21 +127,47 @@ class ToolPathListBox extends PureComponent {
                                                 {toolPath.name}
                                             </span>
                                         </Anchor>
-                                        <i className={classNames(
-                                            styles.status,
-                                            styles.icon,
-                                            getIconStatus(toolPath.status)
+                                        <div className={classNames(
+                                            styles.iconWrapper
                                         )}
-                                        />
-                                        <button
-                                            type="button"
-                                            className={classNames(
+                                        >
+                                            <i className={classNames(
                                                 styles.icon,
-                                                toolPath.visible ? styles.iconHideOpen : styles.iconHideClose,
-                                                styles.bt
+                                                getIconStatus(toolPath.status)
                                             )}
-                                            onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible)}
-                                        />
+                                            />
+                                            <Anchor
+                                                className={classNames(
+                                                    styles.icon,
+                                                )}
+                                                title={i18n._('Edit')}
+                                                onClick={() => this.props.updatingToolPath(toolPath.id)}
+                                            >
+                                                <Edit size={22} />
+                                            </Anchor>
+                                            {!toolPath.visible && (
+                                                <Anchor
+                                                    className={classNames(
+                                                        styles.icon,
+                                                    )}
+                                                    title={i18n._('Show')}
+                                                    onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                                >
+                                                    <Hide color="#ccc" size={22} />
+                                                </Anchor>
+                                            )}
+                                            {toolPath.visible && (
+                                                <Anchor
+                                                    className={classNames(
+                                                        styles.icon,
+                                                    )}
+                                                    title={i18n._('Hide')}
+                                                    onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                                >
+                                                    <Show size={22} />
+                                                </Anchor>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </TipTrigger>

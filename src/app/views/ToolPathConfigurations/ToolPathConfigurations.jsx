@@ -24,6 +24,7 @@ class ToolPathConfigurations extends PureComponent {
         updatingToolPath: PropTypes.object,
 
         duplicateToolListDefinition: PropTypes.func.isRequired,
+        changeActiveToolListDefinition: PropTypes.func.isRequired,
         cancelUpdateToolPath: PropTypes.func.isRequired,
         saveToolPath: PropTypes.func.isRequired
     };
@@ -87,6 +88,7 @@ class ToolPathConfigurations extends PureComponent {
                 name: inputValue
             };
             await this.props.duplicateToolListDefinition(activeToolCategory, newToolDefinition);
+            await this.props.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name);
         },
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = this.state.activeToolDefinition;
@@ -287,6 +289,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     return {
         cancelUpdateToolPath: () => dispatch(editorActions.cancelUpdateToolPath(ownProps.headType)),
         duplicateToolListDefinition: (activeToolCategory, activeToolListDefinition) => dispatch(cncActions.duplicateToolListDefinition(activeToolCategory, activeToolListDefinition)),
+        changeActiveToolListDefinition: (definitionId, name) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, name)),
         saveToolPath: (toolPath) => dispatch(editorActions.saveToolPath(ownProps.headType, toolPath))
     };
 };

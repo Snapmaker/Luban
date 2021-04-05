@@ -165,11 +165,11 @@ class Canvas extends Component {
     };
 
     getVisibleWidth() {
-        return this.node.current.parentElement.clientWidth;
+        return this.node.current && this.node.current.parentElement.clientWidth;
     }
 
     getVisibleHeight() {
-        return this.node.current.parentElement.clientHeight;
+        return this.node.current && this.node.current.parentElement.clientHeight;
     }
 
     setupScene() {
