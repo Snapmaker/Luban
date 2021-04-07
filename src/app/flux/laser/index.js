@@ -43,6 +43,7 @@ const INITIAL_STATE = {
     updatingToolPath: null,
 
     isGcodeGenerating: false,
+    isChangedAfterGcodeGenerating: true,
     gcodeFile: null,
 
     // model: null,

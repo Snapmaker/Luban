@@ -895,6 +895,9 @@ export const actions = {
         const { modelGroup, SVGActions } = getState()[headType];
         modelGroup.hideSelectedModel();
         SVGActions.hideSelectedElement();
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
         dispatch(baseActions.render(headType));
     },
 
@@ -903,6 +906,9 @@ export const actions = {
         modelGroup.showSelectedModel();
         SVGActions.showSelectedElement();
         // SVGActions.updateTransformation(modelGroup.getSelectedModel().transformation);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
         dispatch(baseActions.render(headType));
     },
 

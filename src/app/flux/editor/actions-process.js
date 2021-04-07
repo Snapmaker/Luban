@@ -68,7 +68,8 @@ export const processActions = {
 
         if (toolPath) {
             dispatch(baseActions.updateState(headType, {
-                updatingToolPath: toolPath
+                updatingToolPath: toolPath,
+                isChangedAfterGcodeGenerating: true
             }));
         }
     },
@@ -102,28 +103,41 @@ export const processActions = {
             dispatch(processActions.showToolPathGroupObject(headType));
         }
         dispatch(baseActions.updateState(headType, {
-            updatingToolPath: null
+            updatingToolPath: null,
+            isChangedAfterGcodeGenerating: true
         }));
     },
 
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
         const { toolPathGroup, materials } = getState()[headType];
         toolPathGroup.updateToolPath(toolPathId, newState, { materials });
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
     },
 
     toolPathToUp: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.toolPathToUp(toolPathId);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
     },
 
     toolPathToDown: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.toolPathToDown(toolPathId);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
     },
 
     deleteToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.deleteToolPath(toolPathId);
+        dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: true
+        }));
     },
 
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
@@ -131,6 +145,7 @@ export const processActions = {
         toolPathGroup.commitToolPath(toolPathId, { materials });
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+            isChangedAfterGcodeGenerating: true,
             progress: 0
         }));
     },
@@ -186,13 +201,15 @@ export const processActions = {
         }));
     },
 
-    onGenerateGcode: (headType, taskResult) => async (dispatch) => {
+    onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {
+        const { modelGroup } = getState()[headType];
         dispatch(baseActions.updateState(
             headType, {
                 isGcodeGenerating: false
             }
         ));
         if (taskResult.taskStatus === 'failed') {
+            modelGroup.estimatedTime = 0;
             dispatch(baseActions.updateState(headType, {
                 stage: CNC_LASER_STAGE.GENERATE_GCODE_FAILED,
                 progress: 1
@@ -200,11 +217,14 @@ export const processActions = {
             return;
         }
         const { gcodeFile } = taskResult;
+        modelGroup.estimatedTime = gcodeFile.estimatedTime;
 
         dispatch(baseActions.updateState(headType, {
+            isChangedAfterGcodeGenerating: false,
             gcodeFile: {
                 name: gcodeFile.name,
                 uploadName: gcodeFile.name,
+                estimatedTime: gcodeFile.estimatedTime,
                 size: gcodeFile.size,
                 lastModified: gcodeFile.lastModified,
                 thumbnail: gcodeFile.thumbnail
