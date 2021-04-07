@@ -177,7 +177,7 @@ class Material extends PureComponent {
                                         return (
                                             <tr key={key}>
                                                 <td>{i18n._(label)}</td>
-                                                { type === 'float' && (
+                                                { type !== 'bool' && (
                                                     <td>
                                                         {defaultValue}
                                                         {unit}
