@@ -18,8 +18,8 @@ class OperatorPoints {
                 id: 'selected-elements-box',
                 fill: 'none',
                 stroke: '#00b7ee',
-                'stroke-width': 1 / this.scale,
-                'stroke-dasharray': '2, 1',
+                'stroke-width': 2 / this.scale,
+                // 'stroke-dasharray': '2, 1',
                 style: 'pointer-events:none'
             }
         });

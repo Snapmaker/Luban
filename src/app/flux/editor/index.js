@@ -313,7 +313,7 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID) => (dispatch, getState) => {
+    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
 
@@ -377,6 +377,7 @@ export const actions = {
             transformation,
             config,
             gcodeConfig,
+            zIndex,
             isRotate: materials.isRotate,
             elem: contentGroup.addSVGElement({
                 element: config.svgNodeName || 'image',

@@ -1,4 +1,4 @@
-import { Geometry, Line, LineDashedMaterial, Object3D, Quaternion, Vector3 } from 'three';
+import { Geometry, Line, LineBasicMaterial, Object3D, Quaternion, Vector3 } from 'three';
 import ThreeUtils from '../three-extensions/ThreeUtils';
 
 const BLUE = 0x00b7ee;
@@ -26,10 +26,12 @@ class Peripheral extends Object3D {
 
         geometry.vertices = points;
 
-        const material = new LineDashedMaterial({
+        const material = new LineBasicMaterial({
             color: BLUE,
-            dashSize: 2,
-            gapSize: 1
+            // https://threejs.org/docs/index.html?q=LineDashedMaterial#api/en/materials/LineBasicMaterial
+            linewidth: 2
+            // dashSize: 2,
+            // gapSize: 1
         });
         const frame = new Line(geometry, material);
         // frame.computeLineDistances(); // ?

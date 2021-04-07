@@ -89,6 +89,17 @@ class SVGContentGroup {
         return this.group.querySelector(`#${id}`);
     }
 
+    insertAfter(element, index) {
+        index = Math.floor(index);
+        const childNodes = this.getChildNodes();
+        const childNodesLength = childNodes.length;
+        if (childNodesLength > 1 && index <= childNodesLength) {
+            this.group.insertBefore(element, childNodes[index - 2].nextSibling);
+        } else {
+            this.group.append(element);
+        }
+    }
+
     getSelected() {
         return this.selectedElements[0];
     }
