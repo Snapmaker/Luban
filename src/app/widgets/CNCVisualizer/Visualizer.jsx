@@ -18,6 +18,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerTopRight from './VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
@@ -353,6 +354,11 @@ class Visualizer extends Component {
                 {isEditor && (
                     <div className={styles['visualizer-top-left']}>
                         <VisualizerTopLeft />
+                    </div>
+                )}
+                {!isEditor && (
+                    <div className={styles['visualizer-top-right']}>
+                        <VisualizerTopRight />
                     </div>
                 )}
                 <div style={{
