@@ -69,8 +69,8 @@ const algorithms = {
 export async function processLaserGreyscale(modelInfo, onProgress) {
     onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
-    const { rotationZ = 0, flip = 0 } = modelInfo.transformation;
-    const { width, height } = modelInfo.transformation;
+    const { rotationZ = 0 } = modelInfo.transformation;
+    const { width, height, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -100,7 +100,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         .quality(100)
         .contrast((contrast - 50.0) / 50)
         .greyscale()
-        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .flip(scaleX < 0, scaleY < 0)
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI) // should we do this on generating toolpath?
         .threshold({ max: whiteClip })
@@ -146,7 +146,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
 export async function processCNCGreyscale(modelInfo, onProgress) {
     onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
-    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -160,7 +160,7 @@ export async function processCNCGreyscale(modelInfo, onProgress) {
     onProgress && onProgress(0.6);
     img
         .greyscale()
-        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .flip(scaleX < 0, scaleY < 0)
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI)
         .background(0xffffffff);
@@ -178,7 +178,7 @@ export async function processBW(modelInfo, onProgress) {
     onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
-    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert, bwThreshold } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -189,7 +189,7 @@ export async function processBW(modelInfo, onProgress) {
     onProgress && onProgress(0.5);
     img
         .greyscale()
-        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .flip(scaleX < 0, scaleY < 0)
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI); // rotate: unit is degree and clockwise
 
@@ -215,7 +215,7 @@ export async function processHalftone(modelInfo, onProgress) {
     onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
-    const { width, height, rotationZ = 0, flip = 0 } = modelInfo.transformation;
+    const { width, height, rotationZ = 0, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { npType, npSize, npAngle, threshold } = modelInfo.config;
     const { density = 4 } = modelInfo.gcodeConfig || {};
@@ -224,7 +224,7 @@ export async function processHalftone(modelInfo, onProgress) {
     onProgress && onProgress(0.6);
     img
         .greyscale()
-        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .flip(scaleX < 0, scaleY < 0)
         .resize(width * density, height * density)
         .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
         .threshold({ max: threshold })

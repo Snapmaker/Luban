@@ -144,14 +144,13 @@ const remapPath = (elem, remap, scaleW, scaleH) => {
 };
 
 function setElementTransformToList(transformList, transformation, size) {
-    // const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = this.transformation;
     transformList.clear();
 
     function pointModelToSvg({ x, y }) {
         return { x: size.x + x, y: size.y - y };
     }
 
-    const { positionX, positionY, rotationZ, scaleX, scaleY, flip } = transformation;
+    const { positionX, positionY, rotationZ, scaleX, scaleY } = transformation;
     const center = pointModelToSvg({ x: positionX, y: positionY });
 
     const translateOrigin = svg.createSVGTransform();
@@ -161,7 +160,7 @@ function setElementTransformToList(transformList, transformation, size) {
 
     const scale = svg.createSVGTransform();
     scale.tag = 'scale';
-    scale.setScale(scaleX * ((flip & 2) ? -1 : 1), scaleY * ((flip & 1) ? -1 : 1));
+    scale.setScale(scaleX, scaleY);
     transformList.insertItemBefore(scale, 0);
 
     const rotate = svg.createSVGTransform();
@@ -1030,17 +1029,6 @@ class SvgModel extends BaseModel {
                 ...this.config
             }
         };
-
-        // because of text sourcefile has been transformed
-        if (this.config && this.config.svgNodeName !== 'text') {
-            taskInfo.transformation.flip = 0;
-            if (this.transformation.scaleX < 0) {
-                taskInfo.transformation.flip += 2;
-            }
-            if (this.transformation.scaleY < 0) {
-                taskInfo.transformation.flip += 1;
-            }
-        }
         // svg process as image
         if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
             taskInfo.uploadName = this.uploadImageName;

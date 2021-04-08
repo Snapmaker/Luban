@@ -113,8 +113,7 @@ export const CaseConfigOriginal = [
             height: 100,
             positionX: 0,
             positionY: 0,
-            rotationZ: 0, // 90 / 180 * Math.PI
-            flip: 0
+            rotationZ: 0 // 90 / 180 * Math.PI
         }
     },
     {
@@ -149,8 +148,7 @@ export const CaseConfigOriginal = [
             // text
             // positionX: 1,
             // positionY: 2,
-            // rotationZ: 90 / 180 * Math.PI,
-            // flip: 1
+            // rotationZ: 90 / 180 * Math.PI
         }
     }
 ];
@@ -259,8 +257,7 @@ export const CaseConfig150 = [
             // text
             positionX: 0,
             positionY: 0,
-            rotationZ: 0, // 90 / 180 * Math.PI
-            flip: 0
+            rotationZ: 0 // 90 / 180 * Math.PI
         }
     },
     {
@@ -295,8 +292,7 @@ export const CaseConfig150 = [
             // text
             // positionX: 1,
             // positionY: 2,
-            // rotationZ: 90 / 180 * Math.PI,
-            // flip: 1
+            // rotationZ: 90 / 180 * Math.PI
         }
     }
 ];
@@ -356,8 +352,7 @@ export const CaseConfig250 = [
             // text
             positionX: 0,
             positionY: 0,
-            rotationZ: 0, // 90 / 180 * Math.PI
-            flip: 0
+            rotationZ: 0 // 90 / 180 * Math.PI
         }
     },
     {
@@ -447,8 +442,7 @@ export const CaseConfig350 = [
         caseTransformation: {
             positionX: 0,
             positionY: 0,
-            rotationZ: 0, // 90 / 180 * Math.PI
-            flip: 0
+            rotationZ: 0 // 90 / 180 * Math.PI
         }
     },
     {
@@ -522,8 +516,7 @@ export const CaseConfigFourAxis = [
             positionY: 27.4,
             rotationZ: 0, // 90 / 180 * Math.PI
             width: 42,
-            height: 54.8,
-            flip: 0
+            height: 54.8
         }
     },
     {

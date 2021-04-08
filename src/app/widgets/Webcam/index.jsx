@@ -52,28 +52,28 @@ class WebcamWidget extends PureComponent {
         // changeImageScale: (value) => {
         //     this.setState({ scale: value });
         // },
-        rotateLeft: () => {
-            const { flipHorizontally, flipVertically, rotation } = this.state;
-            const rotateLeft = (flipHorizontally && flipVertically) || (!flipHorizontally && !flipVertically);
-            const modulus = 4;
-            const i = rotateLeft ? -1 : 1;
-            this.setState({ rotation: (Math.abs(Number(rotation || 0)) + modulus + i) % modulus });
-        },
-        rotateRight: () => {
-            const { flipHorizontally, flipVertically, rotation } = this.state;
-            const rotateRight = (flipHorizontally && flipVertically) || (!flipHorizontally && !flipVertically);
-            const modulus = 4;
-            const i = rotateRight ? 1 : -1;
-            this.setState({ rotation: (Math.abs(Number(rotation || 0)) + modulus + i) % modulus });
-        },
-        toggleFlipHorizontally: () => {
-            const { flipHorizontally } = this.state;
-            this.setState({ flipHorizontally: !flipHorizontally });
-        },
-        toggleFlipVertically: () => {
-            const { flipVertically } = this.state;
-            this.setState({ flipVertically: !flipVertically });
-        },
+        // rotateLeft: () => {
+        //     const { flipHorizontally, flipVertically, rotation } = this.state;
+        //     const rotateLeft = (flipHorizontally && flipVertically) || (!flipHorizontally && !flipVertically);
+        //     const modulus = 4;
+        //     const i = rotateLeft ? -1 : 1;
+        //     this.setState({ rotation: (Math.abs(Number(rotation || 0)) + modulus + i) % modulus });
+        // },
+        // rotateRight: () => {
+        //     const { flipHorizontally, flipVertically, rotation } = this.state;
+        //     const rotateRight = (flipHorizontally && flipVertically) || (!flipHorizontally && !flipVertically);
+        //     const modulus = 4;
+        //     const i = rotateRight ? 1 : -1;
+        //     this.setState({ rotation: (Math.abs(Number(rotation || 0)) + modulus + i) % modulus });
+        // },
+        // toggleFlipHorizontally: () => {
+        //     const { flipHorizontally } = this.state;
+        //     this.setState({ flipHorizontally: !flipHorizontally });
+        // },
+        // toggleFlipVertically: () => {
+        //     const { flipVertically } = this.state;
+        //     this.setState({ flipVertically: !flipVertically });
+        // },
         toggleCrosshair: () => {
             const { crosshair } = this.state;
             this.setState({ crosshair: !crosshair });

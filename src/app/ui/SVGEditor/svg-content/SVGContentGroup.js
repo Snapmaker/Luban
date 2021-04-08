@@ -265,23 +265,6 @@ class SVGContentGroup {
         recalculateDimensions(this.svgContent, elem);
     }
 
-    updateElementFlip(elem, flip) {
-        const transformList = getTransformList(elem);
-        const transformOrigin = this.svgContent.createSVGTransform();
-        const transformScale = this.svgContent.createSVGTransform();
-        const transformBack = this.svgContent.createSVGTransform();
-        const bBox = getBBox(elem);
-        transformOrigin.setTranslate(bBox.x + bBox.width, bBox.y + bBox.height);
-        transformScale.setScale(((flip & 2) > 0 ? -1 : 1), ((flip & 1) > 0 ? -1 : 1));
-        transformBack.setTranslate(-(bBox.x + ((flip & 2) > 0 ? 0 : bBox.width)), -(bBox.y + ((flip & 1) > 0 ? 0 : bBox.height)));
-
-        transformList.appendItem(transformOrigin);
-        transformList.appendItem(transformScale);
-        transformList.appendItem(transformBack);
-
-        recalculateDimensions(this.svgContent, elem);
-    }
-
     updateElementTranslate(elem, translate) {
         const transformList = getTransformList(elem);
         const transform = this.svgContent.createSVGTransform();
@@ -344,8 +327,6 @@ class SVGContentGroup {
         // rotationZ = rotationZ ?? 0;
         // scaleX = scaleX ?? 1;
         // scaleY = scaleY ?? 1;
-        // todo, flip instead of negative scale
-        // flip = flip ?? 0;
         // todo move to svgModelGroup, size need
         const center = { x: size.x + positionX, y: size.y - positionY };
 
@@ -373,7 +354,6 @@ class SVGContentGroup {
         // [S][R][T]
         const scale = this.svgContent.createSVGTransform();
         scale.tag = 'scale';
-        // scale.setScale(scaleX * ((flip & 2) ? -1 : 1) / Math.abs(scaleX), scaleY * ((flip & 1) ? -1 : 1) / Math.abs(scaleY));
         // scale.setScale(scaleX / scaleX, scaleY / scaleY);
         scale.setScale(1, 1);
         transformList.insertItemBefore(scale, 0);

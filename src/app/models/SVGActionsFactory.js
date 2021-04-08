@@ -356,10 +356,6 @@ class SVGActionsFactory {
                 scaleY: nbbox.height / bbox.height
             });
         }
-        if (transformation.svgflip !== undefined) {
-            const flip = transformation.svgflip;
-            this.svgContentGroup.updateElementFlip(elem, flip);
-        }
         if (transformation.rotationZ !== undefined) {
             this.svgContentGroup.updateElementRotate(elem, {
                 ...nbbox,

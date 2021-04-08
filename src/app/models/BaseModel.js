@@ -30,7 +30,7 @@ class BaseModel {
     }
 
     updateTransformation(transformation) {
-        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip, uniformScalingState } = transformation;
+        const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, uniformScalingState } = transformation;
         const { width, height } = transformation;
 
         if (uniformScalingState !== undefined) {
@@ -73,45 +73,6 @@ class BaseModel {
         if (scaleZ !== undefined) {
             this.meshObject.scale.z = scaleZ;
             this.transformation.scaleZ = scaleZ;
-        }
-        if (flip !== undefined) {
-            this.transformation.flip = flip;
-            if (this.modelObject3D) {
-                if (flip === 0) {
-                    this.modelObject3D.rotation.x = 0;
-                    this.modelObject3D.rotation.y = 0;
-                }
-                if (flip === 1) {
-                    this.modelObject3D.rotation.x = Math.PI;
-                    this.modelObject3D.rotation.y = 0;
-                }
-                if (flip === 2) {
-                    this.modelObject3D.rotation.x = 0;
-                    this.modelObject3D.rotation.y = Math.PI;
-                }
-                if (flip === 3) {
-                    this.modelObject3D.rotation.x = Math.PI;
-                    this.modelObject3D.rotation.y = Math.PI;
-                }
-            }
-            if (this.processObject3D) {
-                if (flip === 0) {
-                    this.processObject3D.rotation.x = 0;
-                    this.processObject3D.rotation.y = 0;
-                }
-                if (flip === 1) {
-                    this.processObject3D.rotation.x = Math.PI;
-                    this.processObject3D.rotation.y = 0;
-                }
-                if (flip === 2) {
-                    this.processObject3D.rotation.x = 0;
-                    this.processObject3D.rotation.y = Math.PI;
-                }
-                if (flip === 3) {
-                    this.processObject3D.rotation.x = Math.PI;
-                    this.processObject3D.rotation.y = Math.PI;
-                }
-            }
         }
         // width & height dont effected on meshobject any more
         if (width) {

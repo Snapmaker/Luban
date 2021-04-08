@@ -1486,8 +1486,7 @@ ModelGroup.prototype.MOCK_MODEL = {
         width: 0,
         height: 0,
         positionX: 0,
-        positionY: 0,
-        flip: 0
+        positionY: 0
     }
 };
 
