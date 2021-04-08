@@ -50,6 +50,14 @@ class ToolPathGroup {
         this.simulationObjects.visible = false;
     }
 
+    showToolpathObjects(show) {
+        this.toolPathObjects.visible = show;
+    }
+
+    showSimulationObject(show) {
+        this.simulationObject.visible = show;
+    }
+
     async onGenerateToolPath(taskResult) {
         const toolPath = this.toolPaths.find(v => v.id === taskResult.taskId);
 

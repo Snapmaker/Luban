@@ -345,6 +345,7 @@ class Visualizer extends Component {
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
         const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
+        const { displayedType } = this.props;
 
         return (
             <div
@@ -356,7 +357,7 @@ class Visualizer extends Component {
                         <VisualizerTopLeft />
                     </div>
                 )}
-                {!isEditor && (
+                {(!isEditor && displayedType === 'toolpath') && (
                     <div className={styles['visualizer-top-right']}>
                         <VisualizerTopRight />
                     </div>

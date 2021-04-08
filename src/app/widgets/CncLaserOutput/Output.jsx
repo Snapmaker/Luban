@@ -10,7 +10,7 @@ import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS } from '../../consta
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Thumbnail from '../CncLaserShared/Thumbnail';
-
+import TipTrigger from '../../components/TipTrigger';
 
 class Output extends PureComponent {
     static propTypes = {
@@ -129,6 +129,21 @@ class Output extends PureComponent {
                     )}
                     {isProcess && (
                         <div>
+                            <TipTrigger
+                                title={i18n._('Auto ToolPath Preview')}
+                                content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto Tool Path Preview')}</span>
+                                    <input
+                                        type="checkbox"
+                                        className="sm-parameter-row__checkbox"
+                                        disabled={isEditor}
+                                        // checked={autoPreviewEnabled}
+                                        // onChange={(event) => { actions.onToggleAutoPreview(event.target.checked); }}
+                                    />
+                                </div>
+                            </TipTrigger>
                             {isCNC && (
                                 <button
                                     type="button"
