@@ -182,9 +182,10 @@ class SvgModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { elem, size } = modelInfo;
+        const { elem, size, zIndex } = modelInfo;
         this.elem = elem;
         this.size = size;
+        this.zIndex = zIndex || 0;
 
         this.geometry = new THREE.PlaneGeometry(this.width, this.height);
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
@@ -866,7 +867,7 @@ class SvgModel extends BaseModel {
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
-
+            // TODO make the 'MeshBasicMaterial' to be transparent
             const material = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 transparent: true,
@@ -1132,6 +1133,28 @@ class SvgModel extends BaseModel {
         this.generateProcessObject3D();
     }
     // --Model functions--
+
+    getSerializableConfig() {
+        const {
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
+            transformation, processImageName, zIndex
+        } = this;
+        return {
+            modelID,
+            limitSize,
+            headType,
+            sourceType,
+            sourceHeight,
+            sourceWidth,
+            originalName,
+            uploadName,
+            config,
+            mode,
+            zIndex,
+            transformation,
+            processImageName
+        };
+    }
 }
 
 

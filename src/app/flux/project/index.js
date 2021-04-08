@@ -4,6 +4,7 @@ import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
+import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -140,16 +141,17 @@ export const actions = {
         modelGroup.removeAllModels();
 
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
-        const { models, toolpaths, materials, machineInfo, ...restState } = envObj;
+        // eslint-disable-next-line prefer-const
+        let { models, toolpaths, materials, machineInfo, ...restState } = envObj;
 
         if (materials && (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER)) {
             dispatch(modActions.updateMaterials(envHeadType, materials));
         }
-
+        models = bubbleSortByAttribute(models, 'zIndex');
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID, zIndex } = models[k];
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation, modelID));
+                sourceType, config, gcodeConfig, transformation, modelID, zIndex));
         }
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {

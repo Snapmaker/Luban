@@ -44,6 +44,7 @@ class Visualizer extends Component {
         toolPathGroup: PropTypes.object.isRequired,
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
+        isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
 
         // func
         initContentGroup: PropTypes.func.isRequired,
@@ -273,10 +274,10 @@ class Visualizer extends Component {
 
     render() {
         // const isModelSelected = !!this.props.selectedModelID;
-        const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
+        const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length > 0);
         // const hasModel = this.props.hasModel;
 
-        const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
@@ -356,7 +357,9 @@ class Visualizer extends Component {
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>
-                        {i18n._('Estimated Time:')}<Space width={4} />{humanReadableTime(estimatedTime)}
+                        <span className="fa fa-clock-o" />
+                        <Space width={4} />
+                        {humanReadableTime(estimatedTime)}
                     </div>
                 )}
 
@@ -489,7 +492,8 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
-    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType, renderingTimestamp, stage, progress } = state.laser;
+    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -508,6 +512,7 @@ const mapStateToProps = (state) => {
         displayedType,
         selectedModelArray,
         selectedToolPathModelArray,
+        isChangedAfterGcodeGenerating,
         // model,
         backgroundGroup: background.group,
         renderingTimestamp,

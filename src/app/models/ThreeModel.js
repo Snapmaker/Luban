@@ -442,27 +442,6 @@ class ThreeModel extends BaseModel {
         revertParent();
     }
 
-    getSerializableConfig() {
-        const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName
-        } = this;
-        return {
-            modelID,
-            limitSize,
-            headType,
-            sourceType,
-            sourceHeight,
-            sourceWidth,
-            originalName,
-            uploadName,
-            config,
-            mode,
-            transformation,
-            processImageName
-        };
-    }
-
     setSupportPosition(position) {
         const object = this.meshObject;
         object.position.copy(position);
@@ -548,6 +527,28 @@ class ThreeModel extends BaseModel {
         bufferGeometry.removeAttribute('color');
         this.setSelected();
         this.modelGroup && this.modelGroup.modelChanged();
+    }
+
+    getSerializableConfig() {
+        const {
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
+            transformation, processImageName
+        } = this;
+
+        return {
+            modelID,
+            limitSize,
+            headType,
+            sourceType,
+            sourceHeight,
+            sourceWidth,
+            originalName,
+            uploadName,
+            config,
+            mode,
+            transformation,
+            processImageName
+        };
     }
 }
 

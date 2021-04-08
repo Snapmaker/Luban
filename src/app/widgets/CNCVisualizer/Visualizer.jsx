@@ -37,6 +37,7 @@ class Visualizer extends Component {
         target: PropTypes.object,
         // model: PropTypes.object,
         // selectedModelID: PropTypes.string,
+        isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
         selectedModelArray: PropTypes.array,
         selectedToolPathModels: PropTypes.array,
         modelGroup: PropTypes.object.isRequired,
@@ -239,8 +240,8 @@ class Visualizer extends Component {
                 this.canvas.current.controls.enableClick();
             }
         }
-
-        if (nextProps.selectedToolPathModels.length !== this.props.selectedToolPathModels.length) {
+        if (nextProps.selectedToolPathModels !== this.props.selectedToolPathModels) {
+            this.canvas.current.controls.detach();
             for (const selectedToolPathModel of nextProps.selectedToolPathModels) {
                 this.canvas.current.controls.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
             }
@@ -339,7 +340,7 @@ class Visualizer extends Component {
         }
         */
 
-        const estimatedTime = isOnlySelectedOneModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
         const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
@@ -416,7 +417,9 @@ class Visualizer extends Component {
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>
-                        {i18n._('Estimated Time:')}<Space width={4} />{humanReadableTime(estimatedTime)}
+                        <span className="fa fa-clock-o" />
+                        <Space width={4} />
+                        {humanReadableTime(estimatedTime)}
                     </div>
                 )}
                 <div className={styles['visualizer-progress']}>
@@ -545,7 +548,8 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
-    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
+    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel,
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, SVGActions, scale, target } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -566,6 +570,7 @@ const mapStateToProps = (state) => {
         selectedModelID,
         hasModel,
         renderingTimestamp,
+        isChangedAfterGcodeGenerating,
         stage,
         progress
     };

@@ -123,28 +123,6 @@ class BaseModel {
         this.transformation = { ...this.transformation };
         return this.transformation;
     }
-
-
-    getSerializableConfig() {
-        const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName
-        } = this;
-        return {
-            modelID,
-            limitSize,
-            headType,
-            sourceType,
-            sourceHeight,
-            sourceWidth,
-            originalName,
-            uploadName,
-            config,
-            mode,
-            transformation,
-            processImageName
-        };
-    }
 }
 
 export default BaseModel;

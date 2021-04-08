@@ -46,6 +46,7 @@ const INITIAL_STATE = {
     SVGActions: new SVGActionsFactory(initModelGroup),
 
     isGcodeGenerating: false,
+    isChangedAfterGcodeGenerating: true,
     gcodeFile: null,
 
     // model: null,

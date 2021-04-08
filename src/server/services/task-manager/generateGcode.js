@@ -9,7 +9,7 @@ import { isNull } from '../../../shared/lib/utils';
 
 const log = logger('service:TaskManager');
 
-const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail) => {
+const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail, estimatedTime) => {
     return new Promise((resolve, reject) => {
         const rs = fs.createReadStream(tmpFilePath, 'utf-8');
         const ws = fs.createWriteStream(filePath, 'utf-8');
@@ -37,6 +37,7 @@ const addHeaderToFile = (header, name, tmpFilePath, filePath, thumbnail) => {
                     uploadName: name,
                     size: ws.bytesWritten,
                     lastModified: +new Date(),
+                    estimatedTime,
                     thumbnail: thumbnail
                 }
             });
@@ -198,7 +199,7 @@ export const generateGcode = (toolPaths, onProgress) => {
     // eslint-disable-next-line no-unused-vars
     return new Promise((resolve, reject) => {
         writeStream.on('close', async () => {
-            const res = await addHeaderToFile(headerStart, outputFilename, outputFilePathTmp, outputFilePath, thumbnail);
+            const res = await addHeaderToFile(headerStart, outputFilename, outputFilePathTmp, outputFilePath, thumbnail, estimatedTime);
             resolve(res);
         });
         writeStream.on('error', (err) => {
