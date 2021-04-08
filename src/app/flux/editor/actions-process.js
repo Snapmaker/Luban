@@ -9,6 +9,8 @@ import { toast } from '../../components/Toast';
 
 import i18n from '../../lib/i18n';
 
+let toastId;
+
 export const processActions = {
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathGroup } = getState()[headType];
@@ -43,7 +45,9 @@ export const processActions = {
             } else if (selectEvent === SELECTEVENT.ADDSELECT) {
                 const selectedModels = modelGroup.getSelectedToolPathModels();
                 if (getToolPathType([...selectedModels, model]).length !== 1) {
-                    toast(i18n._('Cannot select model of deferent types to generate toolpath'));
+                    if (!toastId || !toast.isActive(toastId)) {
+                        toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+                    }
                 } else if (selectedModels.findIndex(m => m === model) === -1) {
                     modelGroup.addSelectedToolPathModelIDs([model.modelID]);
                 } else {

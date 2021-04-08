@@ -86,6 +86,7 @@ class ToolParameters extends PureComponent {
                 value: 'new-modified'
             });
         }
+        const foundDefinition = toolDefinitionOptions.find(d => d.definitionId === activeToolDefinition.definitionId);
 
         return (
             <div>
@@ -128,7 +129,7 @@ class ToolParameters extends PureComponent {
                                 styles['manager-detail'],
                             )}
                             >
-                                {i18n._('Material')} : {toolDefinitionOptions.find(d => d.definitionId === activeToolDefinition.definitionId).label}
+                                {foundDefinition && `${i18n._('Material')} : ${foundDefinition.label}`}
                             </p>
                             <Anchor
                                 onClick={this.actions.onShowCncToolManager}

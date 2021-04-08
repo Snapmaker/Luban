@@ -84,7 +84,7 @@ class CNCPath extends PureComponent {
         const isTextVector = (config.svgNodeName === 'text');
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName !== 'text';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
         return (
             <React.Fragment>
                 {isEditor && (

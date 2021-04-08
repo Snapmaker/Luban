@@ -110,6 +110,20 @@ export const PRINTING_QUALITY_CONFIG_KEYS = [
     'support_infill_rate',
     'support_z_distance'
 ];
+export const PRINTING_MATERIAL_CONFIG_GROUP = [
+    {
+        fields: [
+            'material_diameter',
+            'material_flow',
+            'material_print_temperature',
+            'material_print_temperature_layer_0',
+            'material_final_print_temperature',
+            'machine_heated_bed',
+            'material_bed_temperature',
+            'material_bed_temperature_layer_0'
+        ]
+    }
+];
 export const PRINTING_QUALITY_CONFIG_GROUP = [
     {
         name: 'Quality',
@@ -186,6 +200,26 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
             // 'support_xy_distance',
             // 'support_xy_overrides_z',
             'support_angle'
+        ]
+    }
+];
+export const CNC_TOOL_CONFIG_GROUP = [
+    {
+        name: 'Carving Tool',
+        fields: [
+            'diameter',
+            'angle',
+            'shaft_diameter'
+        ]
+    },
+    {
+        name: 'Parameters',
+        fields: [
+            'jog_speed',
+            'work_speed',
+            'plunge_speed',
+            'step_down',
+            'density'
         ]
     }
 ];

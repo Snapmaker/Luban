@@ -3,18 +3,23 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes, noop } from 'lodash';
+import { Edit, Import, Export, Delete, New, Copy } from 'snapmaker-react-icon';
+
+import modal from '../../lib/modal';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import CreateModal from './CreateModal';
 import { actions as cncActions } from '../../flux/cnc';
 import { actions as projectActions } from '../../flux/project';
-import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
 import confirm from '../../lib/confirm';
 import { limitStringLength } from '../../lib/normalize-range';
+
+import { CNC_TOOL_CONFIG_GROUP } from '../../constants';
 
 const SUBCATEGORY = 'CncConfig';
 const defaultToolListNames = [
@@ -31,14 +36,15 @@ function isOfficialListDefinition(activeToolList) {
                 activeToolList.name);
 }
 
-function isOfficialCategoryDefinition(activeToolCategory) {
-    return includes(['Default'],
-        activeToolCategory.definitionId);
-}
+// function isOfficialCategoryDefinition(activeToolCategory) {
+//     return includes(['Default'],
+//         activeToolCategory.definitionId);
+// }
 class CncToolManager extends PureComponent {
     static propTypes = {
         showCncToolManager: PropTypes.bool,
         toolDefinitions: PropTypes.array.isRequired,
+        activeToolListDefinition: PropTypes.object.isRequired,
         duplicateToolCategoryDefinition: PropTypes.func.isRequired,
         duplicateToolListDefinition: PropTypes.func.isRequired,
 
@@ -49,11 +55,13 @@ class CncToolManager extends PureComponent {
         onUploadToolDefinition: PropTypes.func.isRequired,
 
         exportConfigFile: PropTypes.func.isRequired,
-
+        changeActiveToolListDefinition: PropTypes.func.isRequired,
         updateShowCncToolManager: PropTypes.func.isRequired
     };
 
     toolFileInput = React.createRef();
+
+    refCreateModal = React.createRef();
 
     state = {
         showCncToolManager: false,
@@ -87,19 +95,25 @@ class CncToolManager extends PureComponent {
                 notificationMessage: ''
             });
         },
-        onChangeToolCategoryName: (event) => {
+        onChangeToolCategoryName: () => {
             const { activeToolCategory } = this.state;
-            this.setState({
-                activeToolCategory: {
-                    ...activeToolCategory,
-                    category: event.target.value
-                }
-            });
+            setTimeout(() => {
+                this.setState({
+                    activeToolCategory: {
+                        ...activeToolCategory,
+                        category: this.state.selectedName
+                    }
+                });
+                this.actions.onSaveToolCategory();
+            }, 0);
         },
-        onChangeToolListName: (event) => {
-            this.setState({
-                nameForToolList: event.target.value
-            });
+        onChangeToolListName: () => {
+            setTimeout(() => {
+                this.setState({
+                    nameForToolList: this.state.selectedName
+                });
+                this.actions.onSaveToolList();
+            }, 0);
         },
         onChangeToolFileForManager: (event) => {
             const toolFile = event.target.files[0];
@@ -116,13 +130,16 @@ class CncToolManager extends PureComponent {
             this.props.exportConfigFile(targetFile, SUBCATEGORY);
         },
         onChangeToolDefinition: (key, value) => {
-            const { activeToolListDefinition } = this.state;
-            const newActiveToolListDefinition = JSON.parse(JSON.stringify(activeToolListDefinition));
-            newActiveToolListDefinition.config[key].default_value = value;
+            setTimeout(() => {
+                const { activeToolListDefinition } = this.state;
+                const newActiveToolListDefinition = JSON.parse(JSON.stringify(activeToolListDefinition));
+                newActiveToolListDefinition.config[key].default_value = value;
 
-            this.setState({
-                activeToolListDefinition: newActiveToolListDefinition
-            });
+                this.setState({
+                    activeToolListDefinition: newActiveToolListDefinition
+                });
+                this.actions.onSaveToolList();
+            }, 0);
         },
         onSaveToolCategory: async () => {
             const { activeToolCategory, isCategorySelected } = this.state;
@@ -158,7 +175,15 @@ class CncToolManager extends PureComponent {
             return this.state.activeToolCategory && this.state.activeToolCategory.definitionId === definitionId;
         },
         onSelectToolCategory: (definitionId) => {
-            const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            if (this.state.isCategorySelected && definitionId === this.state.activeToolCategory.definitionId) {
+                return;
+            }
+            this.actions.setRenamingStatus(false);
+            let activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
+            if (!activeToolCategory) {
+                activeToolCategory = this.props.toolDefinitions[0];
+            }
+
             const name = this.state.activeToolListDefinition.name;
             const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name)
              || activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
@@ -172,6 +197,14 @@ class CncToolManager extends PureComponent {
             });
         },
         onSelectToolName: (definitionId, name) => {
+            if (
+                !this.state.isCategorySelected
+                && definitionId === this.state.activeToolCategory.definitionId
+                && name === this.state.activeToolListDefinition.name
+            ) {
+                return;
+            }
+            this.actions.setRenamingStatus(false);
             const activeToolCategory = this.props.toolDefinitions.find(d => d.definitionId === definitionId);
             const toolDefinitionForManager = activeToolCategory && activeToolCategory.toolList.find(k => k.name === name);
             if (toolDefinitionForManager) {
@@ -193,32 +226,142 @@ class CncToolManager extends PureComponent {
             // need to change ,update activeToolListDefinition
             this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
         },
+        onDuplicateDefinition: async () => {
+            if (this.state.isCategorySelected) {
+                return this.actions.onDuplicateToolCategoryDefinition();
+            } else {
+                return this.actions.onDuplicateToolNameDefinition();
+            }
+        },
         onRemoveToolDefinition: async () => {
             const { isCategorySelected, activeToolCategory } = this.state;
+            let ok;
             if (isCategorySelected) {
-                await confirm({
+                ok = await confirm({
                     body: `Are you sure to remove category profile "${activeToolCategory.category}"?`
                 });
-
-                await this.props.removeToolCategoryDefinition(activeToolCategory.definitionId);
+                ok && await this.props.removeToolCategoryDefinition(activeToolCategory.definitionId);
             } else {
                 const activeToolListDefinition = this.state.activeToolListDefinition;
 
-                await confirm({
+                ok = await confirm({
                     body: `Are you sure to remove profile "${activeToolListDefinition.name}"?`
                 });
 
-                await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
+                ok && await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
             }
 
             // After removal, select the first definition
-            if (this.props.toolDefinitions.length) {
+            if (ok && this.props.toolDefinitions.length) {
                 if (activeToolCategory) {
                     this.actions.onSelectToolCategory(activeToolCategory.definitionId);
                 } else {
                     this.actions.onSelectToolCategory(this.props.toolDefinitions[0].definitionId);
                 }
             }
+        },
+        onSelectToolListDefinition: () => {
+            const { definitionId, name } = this.state.activeToolListDefinition;
+            this.props.changeActiveToolListDefinition(definitionId, name);
+        },
+        onChangeSelectedName: (event) => {
+            this.setState({
+                selectedName: event.target.value
+            });
+        },
+        setRenamingStatus: (status) => {
+            this.setState({
+                renamingStatus: status
+            });
+            if (status) {
+                const title = this.state.isCategorySelected ? this.state.activeToolCategory.category : this.state.activeToolListDefinition.name;
+                this.setState({
+                    selectedName: title
+                });
+            }
+        },
+        showNewModal: () => {
+            this.actions.showCreateModal({
+                isCreate: true
+            });
+        },
+        showDuplicateModal: () => {
+            this.actions.showCreateModal({
+                isCreate: false
+            });
+        },
+        showCreateModal: ({ isCreate }) => {
+            let title = i18n._('Create');
+            let copyType = '', copyTargetName = '';
+            if (!isCreate) {
+                title = i18n._('Copy');
+                copyType = this.state.isCategorySelected ? 'Material' : 'Tool';
+                copyTargetName = this.state.isCategorySelected ? this.state.activeToolCategory.category : this.state.activeToolListDefinition.name;
+            }
+            const materialOptions = this.state.toolDefinitionOptions.map(option => {
+                return {
+                    label: option.category,
+                    value: option.definitionId
+                };
+            });
+            const popupActions = modal({
+                title: title,
+                body: (
+                    <React.Fragment>
+                        <CreateModal
+                            isCreate={isCreate}
+                            ref={this.refCreateModal}
+                            materialOptions={materialOptions}
+                            copyType={copyType}
+                            copyTargetName={copyTargetName}
+                        />
+                    </React.Fragment>
+
+                ),
+
+                footer: (
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-primary"
+                        onClick={async () => {
+                            const data = this.refCreateModal.current.getData();
+                            // await onComplete(popupActions.getInputValue());
+                            popupActions.close();
+                            if (isCreate) {
+                                if (data.createType === 'Material') {
+                                    const toolCategory = {
+                                        ...this.state.activeToolCategory,
+                                        toolList: [],
+                                        category: data.materialName
+                                    };
+
+                                    const newDefinition = await this.props.duplicateToolCategoryDefinition(toolCategory);
+                                    this.actions.onSelectToolCategory(newDefinition.definitionId);
+                                } else {
+                                    const toolCategory = this.props.toolDefinitions.find(category => category.definitionId === data.materialDefinitionId);
+                                    const tool = { ...this.state.activeToolListDefinition, name: data.toolName };
+                                    const newToolName = await this.props.duplicateToolListDefinition(toolCategory, tool);
+                                    this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
+                                }
+                            } else {
+                                if (this.state.isCategorySelected) {
+                                    const toolCategory = { ...this.state.activeToolCategory };
+                                    toolCategory.category = data.materialName;
+                                    const newDefinition = await this.props.duplicateToolCategoryDefinition(toolCategory);
+                                    this.actions.onSelectToolCategory(newDefinition.definitionId);
+                                } else {
+                                    const toolCategory = this.props.toolDefinitions.find(category => category.definitionId === data.materialDefinitionId);
+                                    const tool = { ...this.state.activeToolListDefinition, name: data.toolName };
+                                    const newToolName = await this.props.duplicateToolListDefinition(toolCategory, tool);
+                                    this.actions.onSelectToolName(this.state.activeToolCategory.definitionId, newToolName);
+                                }
+                            }
+                        }}
+                    >
+                        {i18n._('Ok')}
+                    </button>
+                )
+            });
         }
     };
 
@@ -260,9 +403,9 @@ class CncToolManager extends PureComponent {
                 d.toolList.forEach((item) => {
                     let detailName = '';
                     if (item.config.angle.default_value !== '180') {
-                        detailName = `${item.name}(${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                        detailName = `${item.name} (${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
                     } else {
-                        detailName = `${item.name}(${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                        detailName = `${item.name} (${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
                     }
                     nameArray.push(item.name);
                     detailNameArray.push(detailName);
@@ -290,15 +433,17 @@ class CncToolManager extends PureComponent {
         const state = this.state;
         const actions = this.actions;
         const { showCncToolManager,
-            activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory, configExpanded } = state;
-
+            activeToolListDefinition, toolDefinitionOptions, isCategorySelected, activeToolCategory, configExpanded,
+            renamingStatus, selectedName
+        } = state;
+        const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
         return (
             <React.Fragment>
                 {showCncToolManager && (
                     <Modal
                         className={classNames(styles['manager-body'])}
                         style={{ width: '700px' }}
-                        size="lg"
+
                         onClose={actions.hideCncToolManager}
                     >
                         <Modal.Body
@@ -318,6 +463,7 @@ class CncToolManager extends PureComponent {
                                     <ul className={classNames(styles['manager-name-wrapper'])}>
                                         {(toolDefinitionOptions.map((option) => {
                                             const displayCategory = limitStringLength(option.category, 28);
+                                            const isSelected = option.definitionId === activeToolCategory.definitionId;
                                             return (
                                                 <li key={`${option.definitionId}`}>
                                                     <Anchor
@@ -333,12 +479,34 @@ class CncToolManager extends PureComponent {
                                                                 onClick={() => { this.actions.foldCategory(option.definitionId,); }}
                                                             />
                                                         </div>
-                                                        <span>{displayCategory}</span>
+                                                        {(isCategorySelected && isSelected && renamingStatus) ? (
+                                                            <input
+                                                                className="sm-parameter-row__input"
+                                                                value={selectedName}
+                                                                onChange={actions.onChangeSelectedName}
+                                                                onKeyPress={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        this.actions.setRenamingStatus(false);
+                                                                        this.actions.onChangeToolCategoryName();
+                                                                    }
+                                                                }}
+                                                                onBlur={() => {
+                                                                    this.actions.setRenamingStatus(false);
+                                                                    this.actions.onChangeToolCategoryName();
+                                                                }}
+                                                                // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
+                                                            />
+                                                        ) : displayCategory}
+                                                        {/* <span>{displayCategory}</span> */}
                                                     </Anchor>
                                                     {!configExpanded[option.definitionId] && (
                                                         <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                             { option.nameArray.map((singleName, index) => {
                                                                 const displayName = limitStringLength(i18n._(option.detailNameArray[index]), 24);
+                                                                // eslint-disable-next-line no-shadow
+                                                                const isSelected = option.definitionId === activeToolListDefinition.definitionId
+                                                                && singleName === activeToolListDefinition.name;
                                                                 return (
                                                                     <li key={`${singleName}`}>
                                                                         <Anchor
@@ -346,7 +514,25 @@ class CncToolManager extends PureComponent {
                                                                             style={{ paddingLeft: '42px' }}
                                                                             onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
                                                                         >
-                                                                            {displayName}
+                                                                            {(!isCategorySelected && isSelected && renamingStatus) ? (
+                                                                                <input
+                                                                                    className="sm-parameter-row__input"
+                                                                                    value={selectedName}
+                                                                                    onChange={actions.onChangeSelectedName}
+                                                                                    onKeyPress={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                            e.preventDefault();
+                                                                                            this.actions.setRenamingStatus(false);
+                                                                                            this.actions.onChangeToolListName();
+                                                                                        }
+                                                                                    }}
+                                                                                    onBlur={() => {
+                                                                                        this.actions.setRenamingStatus(false);
+                                                                                        this.actions.onChangeToolListName();
+                                                                                    }}
+                                                                                    // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
+                                                                                />
+                                                                            ) : displayName}
                                                                         </Anchor>
                                                                     </li>
                                                                 );
@@ -357,132 +543,105 @@ class CncToolManager extends PureComponent {
                                             );
                                         }))}
                                     </ul>
-                                    <input
-                                        ref={this.toolFileInput}
-                                        type="file"
-                                        accept=".json"
-                                        style={{ display: 'none' }}
-                                        multiple={false}
-                                        onChange={this.actions.onChangeToolFileForManager}
-                                    />
-                                    <div className="sm-tabs">
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-around'
+                                    }}
+                                    >
+                                        <Edit size={18} onClick={() => this.actions.setRenamingStatus(true)} disabled={isOfficialListDefinition(activeToolListDefinition)} />
+                                        <input
+                                            ref={this.toolFileInput}
+                                            type="file"
+                                            accept=".json"
+                                            style={{ display: 'none' }}
+                                            multiple={false}
+                                            onChange={this.actions.onChangeQualityFileForManager}
+                                        />
+                                        <Import size={18} onClick={() => this.actions.importFile()} />
+                                        <Export size={18} onClick={() => this.actions.exportConfigFile()} />
+                                        <Delete size={18} onClick={() => this.actions.onRemoveToolDefinition()} disabled={isOfficialListDefinition(activeToolListDefinition)} />
+                                    </div>
+
+
+                                    <div className="sm-tabs" style={{ padding: '16px' }}>
                                         <Anchor
-                                            onClick={() => this.actions.importFile()}
+
                                             className={classNames(styles['manager-file'], 'sm-tab')}
+                                            onClick={() => { actions.showNewModal(); }}
                                         >
-                                            {i18n._('Import')}
+                                            <New size={18} />
+                                            <span className={classNames(styles['action-title'])}>{i18n._('New')}</span>
                                         </Anchor>
                                         <Anchor
                                             className={classNames(styles['manager-file'], 'sm-tab')}
-                                            onClick={() => this.actions.exportConfigFile()}
+                                            onClick={() => { actions.showDuplicateModal(); }}
                                         >
-                                            {i18n._('Export')}
+                                            <Copy size={18} />
+                                            <span className={classNames(styles['action-title'])}>{i18n._('Copy')}</span>
                                         </Anchor>
                                     </div>
                                 </div>
                                 <div className={classNames(styles['manager-details'])}>
                                     <div className="sm-parameter-container">
-                                        <div className="sm-parameter-row">
-                                            {!isCategorySelected && (
-                                                <div>
-                                                    <span className="sm-parameter-row__label-lg">{i18n._('Tool Name')}</span>
-                                                    <input
-                                                        className="sm-parameter-row__input"
-                                                        style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                        onChange={actions.onChangeToolListName}
-                                                        disabled={isOfficialListDefinition(activeToolListDefinition)}
-                                                        value={state.nameForToolList}
-                                                    />
-                                                </div>
-                                            )}
-                                            {isCategorySelected && (
-                                                <div>
-                                                    <span className="sm-parameter-row__label-lg">{i18n._('Material Name')}</span>
-                                                    <input
-                                                        className="sm-parameter-row__input"
-                                                        onChange={actions.onChangeToolCategoryName}
-                                                        disabled={isOfficialCategoryDefinition(activeToolCategory)}
-                                                        style={{ paddingLeft: '12px', height: '30px', width: '180px' }}
-                                                        value={activeToolCategory.category}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+
                                         {state.notificationMessage && (
                                             <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
                                                 {state.notificationMessage}
                                             </Notifications>
                                         )}
-                                        {!isCategorySelected && (Object.entries(activeToolListDefinition.config).map(([key, setting]) => {
-                                            const defaultValue = setting.default_value;
-                                            const label = setting.label;
-                                            const unit = setting.unit;
-                                            const min = setting.min || 0;
-                                            const max = setting.max || 6000;
-
+                                        {!isCategorySelected && optionConfigGroup.map((group, idx) => {
                                             return (
-                                                <div key={key} className="sm-parameter-row">
-
-                                                    <TipTrigger>
-                                                        <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                                                        <Input
-                                                            className="sm-parameter-row__input"
-                                                            value={defaultValue}
-                                                            min={min}
-                                                            max={max}
-                                                            onChange={value => {
-                                                                this.actions.onChangeToolDefinition(key, value);
+                                                <div key={i18n._(idx)}>
+                                                    {group.name && (
+                                                        <Anchor
+                                                            className="sm-parameter-header"
+                                                            onClick={() => {
+                                                                // qualityConfigExpanded[group.name] = !qualityConfigExpanded[group.name];
+                                                                // this.setState({
+                                                                //     qualityConfigExpanded: JSON.parse(JSON.stringify(qualityConfigExpanded))
+                                                                // });
                                                             }}
-                                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
-                                                        />
-                                                        <span className="sm-parameter-row__input-unit">{unit}</span>
-                                                    </TipTrigger>
+                                                        >
+                                                            <span className="fa fa-gear sm-parameter-header__indicator" />
+                                                            <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
+
+                                                        </Anchor>
+                                                    )}
+                                                    { group.fields.map((key) => {
+                                                        const setting = activeToolListDefinition.config[key];
+                                                        const defaultValue = setting.default_value;
+                                                        const label = setting.label;
+                                                        const unit = setting.unit;
+                                                        const min = setting.min || 0;
+                                                        const max = setting.max || 6000;
+                                                        return (
+                                                            <div key={key} className="sm-parameter-row">
+
+                                                                <TipTrigger>
+                                                                    <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
+                                                                    <Input
+                                                                        className="sm-parameter-row__input"
+                                                                        value={defaultValue}
+                                                                        min={min}
+                                                                        max={max}
+                                                                        onChange={value => {
+                                                                            this.actions.onChangeToolDefinition(key, value);
+                                                                        }}
+                                                                        disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                                                    />
+                                                                    <span className="sm-parameter-row__input-unit">{unit}</span>
+                                                                </TipTrigger>
+                                                            </div>
+                                                        );
+                                                    })
+                                                    }
                                                 </div>
                                             );
-                                        }))}
+                                        })}
                                     </div>
                                 </div>
                             </div>
                             <div className={classNames(styles['manager-settings'], 'clearfix')}>
-                                <div className={classNames(styles['manager-settings-operate'], styles['manager-settings-btn'])}>
-                                    {isCategorySelected && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onDuplicateToolCategoryDefinition(); }}
-                                            style={{ marginRight: '11px' }}
-                                        >
-                                            {i18n._('Copy Catalog')}
-                                        </Anchor>
-                                    )}
-                                    {!isCategorySelected && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onDuplicateToolNameDefinition(); }}
-                                            style={{ marginRight: '11px' }}
-                                        >
-                                            {i18n._('Copy Profile')}
-                                        </Anchor>
-                                    )}
-                                    {isCategorySelected && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onRemoveToolDefinition(); }}
-                                            disabled={isOfficialCategoryDefinition(activeToolCategory)}
-                                        >
-                                            {i18n._('Delete Catalog')}
-                                        </Anchor>
-                                    )}
-                                    {!isCategorySelected && (
-                                        <Anchor
-                                            className="sm-btn-large sm-btn-default"
-                                            onClick={() => { actions.onRemoveToolDefinition(); }}
-                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
-                                        >
-                                            {i18n._('Delete Profile')}
-                                        </Anchor>
-                                    )}
-                                </div>
                                 <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                     <Anchor
                                         onClick={() => { actions.hideCncToolManager(); }}
@@ -491,7 +650,7 @@ class CncToolManager extends PureComponent {
                                     >
                                         {i18n._('Close')}
                                     </Anchor>
-                                    {isCategorySelected && (
+                                    {/* {isCategorySelected && (
                                         <Anchor
                                             onClick={() => { actions.onSaveToolCategory(); }}
                                             className="sm-btn-large sm-btn-primary"
@@ -499,14 +658,20 @@ class CncToolManager extends PureComponent {
                                         >
                                             {i18n._('Save')}
                                         </Anchor>
-                                    )}
+                                    )} */}
                                     {!isCategorySelected && (
                                         <Anchor
-                                            onClick={() => { actions.onSaveToolList(); }}
+                                            onClick={() => {
+                                                actions.onSelectToolListDefinition();
+                                                actions.hideCncToolManager();
+                                            }}
                                             className="sm-btn-large sm-btn-primary"
-                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                            disabled={
+                                                activeToolListDefinition.definitionId === this.props.activeToolListDefinition.definitionId
+                                                && activeToolListDefinition.name === this.props.activeToolListDefinition.name
+                                            }
                                         >
-                                            {i18n._('Save')}
+                                            {i18n._('Select')}
                                         </Anchor>
                                     )}
                                 </div>
@@ -539,7 +704,8 @@ const mapDispatchToProps = (dispatch) => {
         onUploadToolDefinition: (toolFile) => dispatch(cncActions.onUploadToolDefinition(toolFile)),
         onDownloadToolListDefinition: (activeToolCategory, activeToolList) => dispatch(cncActions.onDownloadToolListDefinition(activeToolCategory, activeToolList)),
         updateToolDefinitionName: (isCategorySelected, definitionId, oldName, newName) => dispatch(cncActions.updateToolDefinitionName(isCategorySelected, definitionId, oldName, newName)),
-        updateToolListDefinition: (activeToolList) => dispatch(cncActions.updateToolListDefinition(activeToolList))
+        updateToolListDefinition: (activeToolList) => dispatch(cncActions.updateToolListDefinition(activeToolList)),
+        changeActiveToolListDefinition: (definitionId, name) => dispatch(cncActions.changeActiveToolListDefinition(definitionId, name))
     };
 };
 
