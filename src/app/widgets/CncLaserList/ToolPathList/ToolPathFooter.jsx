@@ -22,7 +22,9 @@ class ToolPathFooter extends PureComponent {
     actions = {
         recalculateAllToolPath: () => {
             this.props.toolPaths.forEach((toolPath) => {
-                this.props.commitGenerateToolPath(toolPath.id);
+                if (toolPath.status === 'warning') {
+                    this.props.commitGenerateToolPath(toolPath.id);
+                }
             });
         }
     }

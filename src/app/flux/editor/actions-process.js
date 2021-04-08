@@ -40,7 +40,7 @@ export const processActions = {
         } else {
             const model = modelGroup.getSelectedModelByIntersect(intersect);
 
-            if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
+            if (selectEvent === SELECTEVENT.UNSELECT_ADDSELECT) {
                 modelGroup.setSelectedToolPathModelIDs([model.modelID]);
             } else if (selectEvent === SELECTEVENT.ADDSELECT) {
                 const selectedModels = modelGroup.getSelectedToolPathModels();

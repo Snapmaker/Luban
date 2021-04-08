@@ -278,7 +278,7 @@ export const LASER_PRINT_MODE_AUTO = 'auto';
 export const LASER_PRINT_MODE_MANUAL = 'manual';
 
 export const SELECTEVENT = {
-    UNSELECT_SINGLESELECT: 'select:unSelect-singleSelect',
+    UNSELECT_ADDSELECT: 'select:unSelect-addSelect',
     UNSELECT: 'select:unSelect',
     ADDSELECT: 'select:addSelect',
     REMOVESELECT: 'select:removeSelect'

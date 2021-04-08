@@ -163,6 +163,12 @@ export const actions = {
             }
         }
         dispatch(modActions.updateState(envHeadType, restState));
+
+        if (envHeadType === HEAD_3DP) {
+            dispatch(modActions.updateState(restState));
+        } else {
+            dispatch(modActions.updateState(envHeadType, restState));
+        }
         // TODO: set current content to avoid <unSaved> flag mis-set
         await dispatch(actions.clearSavedEnvironment(envHeadType));
     },

@@ -575,7 +575,7 @@ class ModelGroup extends EventEmitter {
             case SELECTEVENT.UNSELECT:
                 this.unselectAllModels();
                 break;
-            case SELECTEVENT.UNSELECT_SINGLESELECT:
+            case SELECTEVENT.UNSELECT_ADDSELECT:
                 this.unselectAllModels();
                 model = this.models.find(d => d.meshObject === intersect.object);
                 if (model) {
@@ -1285,7 +1285,6 @@ class ModelGroup extends EventEmitter {
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
         if (model.sourceType !== '3d') {
             if (modelInfo.zIndex > 0) {
-                console.log('modelInfo.zIndex ', modelInfo.zIndex);
                 model.meshObject.position.z = modelInfo.zIndex;
                 model.zIndex = modelInfo.zIndex;
             } else {

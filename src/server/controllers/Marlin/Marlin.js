@@ -680,7 +680,7 @@ class MarlinLineParser {
             MarlinParserSelectedCurrent,
 
             MarlinParserSelectedOrigin,
-
+            // M1006
             MarlinReplyParserFocusHeight,
 
             MarlinReplyParserHeadPower,
