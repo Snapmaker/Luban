@@ -6,6 +6,22 @@ import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 import BaseModel from './BaseModel';
 
+const materialOverstepped = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    shininess: 30,
+    transparent: true,
+    opacity: 0.6
+});
+const materialSelected = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    shininess: 10
+});
+
+const materialNormal = new THREE.MeshPhongMaterial({
+    color: 0xcecece,
+    side: THREE.DoubleSide
+});
 
 class ThreeModel extends BaseModel {
     isThreeModel = true;
@@ -252,37 +268,16 @@ class ThreeModel extends BaseModel {
 
     setOversteppedAndSelected(overstepped, isSelected) {
         this.overstepped = overstepped;
-        if (this.overstepped) {
-            const materialOverstepped = new THREE.MeshPhongMaterial({
-                color: 0xff0000,
-                shininess: 30,
-                transparent: true,
-                opacity: 0.6
-            });
-
-            this.meshObject.material = materialOverstepped;
-        } else {
-            this.setSelected(isSelected);
-        }
+        this.setSelected(isSelected);
     }
 
     setSelected(isSelected) {
         if (typeof isSelected === 'boolean') {
             this.isSelected = isSelected;
         }
-
-        const materialSelected = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            side: THREE.DoubleSide,
-            shininess: 10
-        });
-
-        const materialNormal = new THREE.MeshPhongMaterial({
-            color: 0xcecece,
-            side: THREE.DoubleSide
-        });
-
-        if (this.isSelected === true) {
+        if (this.overstepped === true) {
+            this.meshObject.material = materialOverstepped;
+        } else if (this.isSelected === true) {
             this.meshObject.material = materialSelected;
         } else {
             this.meshObject.material = materialNormal;
@@ -527,6 +522,14 @@ class ThreeModel extends BaseModel {
         bufferGeometry.removeAttribute('color');
         this.setSelected();
         this.modelGroup && this.modelGroup.modelChanged();
+    }
+
+    getTaskInfo() {
+        const taskInfo = {
+            sourceType: this.sourceType,
+            originalName: this.originalName
+        };
+        return taskInfo;
     }
 
     getSerializableConfig() {

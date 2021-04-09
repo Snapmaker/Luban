@@ -28,6 +28,7 @@ class ModelGroup extends EventEmitter {
         this.selectedGroup = new Group();
         this.selectedGroup.uniformScalingState = true;
         this.selectedGroup.boundingBox = [];
+        this.selectedGroup.shouldUpdateBoundingbox = true;
         this.object.add(this.selectedGroup);
         this.selectedModelArray = [];
         this.clipboard = [];
@@ -81,18 +82,21 @@ class ModelGroup extends EventEmitter {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
 
-    getState() {
-        // this.selectedModelIDArray.splice(0);
-        // this.selectedModelArray.forEach((item) => {
-        //     // this.selectedModelIDArray.push(item.modelID);
-        // });
-
-        return {
+    getState(shouldCheckOverStep = true) {
+        const baseState = {
             selectedModelArray: this.selectedModelArray,
             selectedModelIDArray: this.selectedModelIDArray,
             estimatedTime: this.estimatedTime,
             hasModel: this.hasModel()
         };
+        if (this.headType === 'printing' && shouldCheckOverStep) {
+            return {
+                ...baseState,
+                isAnyModelOverstepped: this._checkAnyModelOversteppedOrSelected()
+            };
+        } else {
+            return baseState;
+        }
     }
 
     /**
@@ -101,21 +105,6 @@ class ModelGroup extends EventEmitter {
     getBoundingBox() {
         return ThreeUtils.computeBoundingBox(this.object);
     }
-
-    getStateAndUpdateBoundingBox() {
-        // this.selectedModelIDArray = [];
-        // this.selectedModelArray.forEach((item) => {
-        //     // this.selectedModelIDArray.push(item.modelID);
-        // });
-
-        return {
-            selectedModelArray: this.selectedModelArray,
-            selectedModelIDArray: this.selectedModelIDArray,
-            estimatedTime: this.estimatedTime,
-            hasModel: this.hasModel()
-        };
-    }
-
 
     getModel(modelID) {
         return this.models.find(d => d.modelID === modelID);
@@ -195,6 +184,7 @@ class ModelGroup extends EventEmitter {
         const models = this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = false;
+            model.meshObject.visible = false;
         });
         return this.getState();
     }
@@ -203,6 +193,7 @@ class ModelGroup extends EventEmitter {
         const models = this.getSelectedModelArray();
         models.forEach((model) => {
             model.visible = true;
+            model.meshObject.visible = true;
         });
         return this.getState();
     }
@@ -260,7 +251,7 @@ class ModelGroup extends EventEmitter {
     removeSelectedModel() {
         this._removeSelectedModels();
         this.unselectAllModels();
-        return this._getEmptyState();
+        return this.getState();
     }
 
     _removeAllModels() {
@@ -465,7 +456,7 @@ class ModelGroup extends EventEmitter {
             ThreeUtils.setObjectParent(model.meshObject, parent);
         }
 
-        return this._getEmptyState();
+        return this.getState();
     }
 
     getModels() {
@@ -511,6 +502,7 @@ class ModelGroup extends EventEmitter {
         }
     }
 
+    // used only for laser/cnc
     addSelectedModels(modelArray) {
         this.selectedGroup = new Group();
         for (const model of modelArray) {
@@ -565,7 +557,7 @@ class ModelGroup extends EventEmitter {
         }
 
         this.modelChanged();
-        return this.getStateAndUpdateBoundingBox();
+        return this.getState(false);
     }
 
     // use for canvas
@@ -603,7 +595,7 @@ class ModelGroup extends EventEmitter {
 
         this.modelChanged();
         this.emit('select');
-        return this.getStateAndUpdateBoundingBox();
+        return this.getState(false);
     }
 
     addModelToSelectedGroup(model) {
@@ -711,7 +703,7 @@ class ModelGroup extends EventEmitter {
         }
         this.prepareSelectedGroup();
 
-        return this.getStateAndUpdateBoundingBox();
+        return this.getState();
     }
 
     duplicateSelectedModel(modelID) {
@@ -751,7 +743,7 @@ class ModelGroup extends EventEmitter {
             this.addModelToSelectedGroup(newModel);
         });
 
-        return this.getStateAndUpdateBoundingBox();
+        return this.getState();
     }
 
     /**
@@ -795,7 +787,7 @@ class ModelGroup extends EventEmitter {
             }
         });
 
-        return this.getStateAndUpdateBoundingBox();
+        return this.getState();
     }
 
     // todo, remove it
@@ -825,7 +817,7 @@ class ModelGroup extends EventEmitter {
 
     generateModel(modelInfo) {
         this.addModel(modelInfo);
-        return this._getEmptyState();
+        return this.getState();
     }
 
     updateSelectedSource(source) {
@@ -1041,6 +1033,7 @@ class ModelGroup extends EventEmitter {
         }
 
         this.modelChanged();
+        return this.getState();
     }
 
     // model transformation triggered by controls
@@ -1053,12 +1046,11 @@ class ModelGroup extends EventEmitter {
             }
             selected.computeBoundingBox();
         });
-        this._checkAnyModelOversteppedOrSelected();
         this.selectedGroup.shouldUpdateBoundingbox = false;
 
         this.prepareSelectedGroup();
         if (selectedModelArray.length === 0) {
-            return null;
+            return {};
         } else {
             return this.getState();
         }
@@ -1168,7 +1160,7 @@ class ModelGroup extends EventEmitter {
     _checkAnyModelOversteppedOrSelected() {
         let isAnyModelOverstepped = false;
         for (const model of this.getModels()) {
-            if (model.sourceType === '3d') {
+            if (model.sourceType === '3d' && model.visible) {
                 const overstepped = this._checkOverstepped(model);
                 model.setOversteppedAndSelected(overstepped, model.isSelected);
                 isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
@@ -1179,7 +1171,8 @@ class ModelGroup extends EventEmitter {
 
     _checkOverstepped(model) {
         let isOverstepped = false;
-        model.computeBoundingBox();
+        // TODO: Using 'computeBoundingBox' here will make it's boundingBox uncorrect
+        // model.computeBoundingBox();
         isOverstepped = this._bbox && !this._bbox.containsBox(model.boundingBox);
         return isOverstepped;
     }

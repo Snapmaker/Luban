@@ -14,11 +14,11 @@ class VisualizerInfo extends PureComponent {
     static propTypes = {
         // model: PropTypes.object,
         selectedModelBBoxDes: PropTypes.string,
+        selectedModelArray: PropTypes.array.isRequired,
         displayedType: PropTypes.string.isRequired,
         printTime: PropTypes.number.isRequired,
         filamentLength: PropTypes.number.isRequired,
-        filamentWeight: PropTypes.number.isRequired,
-        selectedGroup: PropTypes.object
+        filamentWeight: PropTypes.number.isRequired
     };
 
 
@@ -31,7 +31,7 @@ class VisualizerInfo extends PureComponent {
     }
 
     render() {
-        const { selectedGroup, displayedType, selectedModelBBoxDes } = this.props;
+        const { selectedModelArray, displayedType, selectedModelBBoxDes } = this.props;
         if (displayedType === 'gcode') {
             const filamentDes = this.getFilamentDes();
             const printTimeDes = humanReadableTime(this.props.printTime);
@@ -49,7 +49,7 @@ class VisualizerInfo extends PureComponent {
                     </p>
                 </React.Fragment>
             );
-        } else if (selectedGroup.children.length > 0) {
+        } else if (selectedModelArray.length > 0) {
             return (
                 <React.Fragment>
                     <p>
@@ -68,7 +68,7 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { modelGroup, displayedType, printTime, filamentLength, filamentWeight } = printing;
     return {
-        selectedGroup: modelGroup.selectedGroup,
+        selectedModelArray: modelGroup.selectedModelArray,
         displayedType,
         printTime,
         filamentLength,
