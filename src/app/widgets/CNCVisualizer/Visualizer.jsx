@@ -18,7 +18,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerTopRight from './VisualizerTopRight';
+import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
@@ -358,8 +358,10 @@ class Visualizer extends Component {
                     </div>
                 )}
                 {(!isEditor && displayedType === 'toolpath') && (
-                    <div className={styles['visualizer-top-right']}>
-                        <VisualizerTopRight />
+                    <div>
+                        <VisualizerTopRight
+                            headType="cnc"
+                        />
                     </div>
                 )}
                 <div style={{

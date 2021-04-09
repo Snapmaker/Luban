@@ -26,7 +26,10 @@ export const processActions = {
     },
 
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+            return;
+        }
         if (toolPathGroup.toolPaths.length === 0) {
             return;
         }
@@ -42,7 +45,10 @@ export const processActions = {
     },
 
     showModelGroupObject: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_MODEL) {
+            return;
+        }
         modelGroup.showAllModelsObj3D();
         toolPathGroup.hide();
         dispatch(baseActions.updateState(headType, {
@@ -63,7 +69,10 @@ export const processActions = {
     },
 
     showSimulationInPreview: (headType, show) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_MODEL) {
+            return;
+        }
         toolPathGroup.showSimulationObject(show);
         dispatch(baseActions.updateState(headType, {
             showSimulation: show
