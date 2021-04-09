@@ -46,9 +46,9 @@ class LaserToolPathGenerator extends EventEmitter {
 
         toolPath.setCommand({ M: 106, P: 0, S: 255 });
 
-        if (mode === 'bw' || mode === 'halftone' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
+        if ((mode === 'bw' || mode === 'halftone' || mode === 'greyscale') && movementMode === 'greyscale-line') {
             await this.generateGcodeBW(modelInfo, modelPath);
-        } else if (mode === 'greyscale') {
+        } else if ((mode === 'bw' || mode === 'halftone' || mode === 'greyscale') && movementMode === 'greyscale-dot') {
             await this.generateGcodeGreyscale(modelInfo, modelPath);
         } else if (mode === 'vector' && sourceType === 'dxf') {
             await this.generateGcodeDxf(modelInfo, modelPath);
@@ -82,7 +82,7 @@ class LaserToolPathGenerator extends EventEmitter {
         return {
             headType: headType,
             mode: mode,
-            movementMode: (headType === 'laser' && mode === 'greyscale') ? gcodeConfig.movementMode : '',
+            movementMode: gcodeConfig.movementMode,
             data: toolPath.commands,
             estimatedTime: toolPath.estimatedTime * 1.4,
             positionX: isRotate ? 0 : positionX,

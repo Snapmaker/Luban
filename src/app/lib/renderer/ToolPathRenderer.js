@@ -72,7 +72,7 @@ class ToolPathRenderer {
     }
 
     render() {
-        const { headType, mode, movementMode, data, isRotate, isSelected } = this.toolPath;
+        const { headType, movementMode, data, isRotate, isSelected } = this.toolPath;
 
         // now only support cnc&laser
         if (!['cnc', 'laser'].includes(headType)) {
@@ -80,7 +80,7 @@ class ToolPathRenderer {
         }
         let obj;
         if (headType === 'laser') {
-            if (mode === 'greyscale' && movementMode === 'greyscale-dot') {
+            if (movementMode === 'greyscale-dot') {
                 obj = this.parseToPoints(data, isSelected);
             } else {
                 obj = this.parseToLine(data, isRotate, isSelected);
