@@ -25,6 +25,7 @@ class Output extends PureComponent {
         toolPathGroup: PropTypes.object.isRequired,
         canGenerateGcode: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool,
+        hasToolPathModel: PropTypes.bool,
         displayedType: PropTypes.string.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         isGcodeGenerating: PropTypes.bool.isRequired,
@@ -38,7 +39,8 @@ class Output extends PureComponent {
         switchToPage: PropTypes.func.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
         showModelGroupObject: PropTypes.func.isRequired,
-        setAutoPreview: PropTypes.func.isRequired
+        setAutoPreview: PropTypes.func.isRequired,
+        preview: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -78,6 +80,9 @@ class Output extends PureComponent {
         showToolPathObject: () => {
             this.props.showToolPathGroupObject();
         },
+        preview: () => {
+            this.props.preview();
+        },
         setAutoPreview: (enable) => {
             this.props.setAutoPreview(enable);
         },
@@ -106,7 +111,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, autoPreviewEnabled } = this.props;
+        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
 
@@ -127,8 +132,9 @@ class Output extends PureComponent {
                         <button
                             type="button"
                             className="sm-btn-large sm-btn-default"
-                            onClick={this.actions.showToolPathObject}
+                            onClick={this.actions.preview}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
+                            disabled={!hasToolPathModel ?? false}
                         >
                             {i18n._('Preview')}
                         </button>
@@ -199,12 +205,14 @@ const mapStateToProps = (state, ownProps) => {
         previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
+    const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
 
     return {
         page,
         headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
+        hasToolPathModel,
         displayedType,
         toolPathGroup,
         canGenerateGcode,
@@ -229,7 +237,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
         commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType)),
-        setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled))
+        setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled)),
+        preview: () => dispatch(editorActions.preview(headType))
     };
 };
 

@@ -9,6 +9,8 @@ import Space from '../../components/Space';
 
 class VisualizerTopRight extends PureComponent {
     static propTypes = {
+        canGenerateGcode: PropTypes.bool.isRequired,
+        hasSimulation: PropTypes.bool.isRequired,
         headType: PropTypes.string.isRequired,
         displayedType: PropTypes.string.isRequired,
         showToolPath: PropTypes.bool.isRequired,
@@ -33,12 +35,22 @@ class VisualizerTopRight extends PureComponent {
             this.props.showToolpathInPreview(!this.props.showToolPath);
         },
         switchShowSimulation: () => {
-            if (!this.props.showSimulation) {
+            if (this.props.showSimulation) {
+                this.props.showSimulationInPreview(!this.props.showSimulation);
+                return;
+            }
+            if (this.props.canGenerateGcode) {
                 this.props.commitGenerateViewPath();
             }
-            this.props.showSimulationInPreview(!this.props.showSimulation);
+            console.log('has', this.props.hasSimulation);
         }
     };
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.canGenerateGcode === false) {
+            this.props.showSimulationInPreview(false);
+        }
+    }
 
     render() {
         return (
@@ -96,8 +108,12 @@ class VisualizerTopRight extends PureComponent {
     }
 }
 const mapStateToProps = (state) => {
-    const { displayedType, showToolPath, showSimulation } = state.cnc;
+    const { displayedType, showToolPath, showSimulation, toolPathGroup } = state.cnc;
+    const canGenerateGcode = toolPathGroup.canGenerateGcode();
+    const hasSimulation = (toolPathGroup.simulationObject !== undefined);
     return {
+        canGenerateGcode,
+        hasSimulation,
         headType: 'cnc',
         displayedType,
         showToolPath,

@@ -1238,11 +1238,10 @@ export const actions = {
      * @param page
      */
     switchToPage: (headType, page) => (dispatch, getState) => {
-        const { toolPathGroup } = getState()[headType];
+        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
         if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
             return;
         }
-
         // switch to `page`
         dispatch(baseActions.updateState(headType, { page }));
 
@@ -1250,6 +1249,9 @@ export const actions = {
         // trigger preview of all images
         if (page === PAGE_PROCESS) {
             toolPathGroup.checkoutToolPathStatus();
+            if (autoPreviewEnabled) {
+                dispatch(actions.preview(headType));
+            }
         }
 
         dispatch(baseActions.render(headType));

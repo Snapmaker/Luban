@@ -83,7 +83,7 @@ const INITIAL_STATE = {
     stlVisualizer: { show: false },
 
     previewFailed: false,
-    autoPreviewEnabled: true,
+    autoPreviewEnabled: false,
 
     // rendering
     renderingTimestamp: 0

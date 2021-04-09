@@ -12,8 +12,24 @@ import i18n from '../../lib/i18n';
 let toastId;
 
 export const processActions = {
+    recalculateAllToolPath: (headType) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.toolPaths.forEach((toolPath) => {
+            dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
+        });
+    },
+
+    preview: (headType) => (dispatch) => {
+        dispatch(processActions.recalculateAllToolPath(headType));
+        dispatch(processActions.showToolPathGroupObject(headType));
+        dispatch(baseActions.render(headType));
+    },
+
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathGroup } = getState()[headType];
+        if (toolPathGroup.toolPaths.length === 0) {
+            return;
+        }
         modelGroup.hideAllModelsObj3D();
         toolPathGroup.show();
         toolPathGroup.showToolpathObjects(true);
@@ -127,9 +143,9 @@ export const processActions = {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
             toolPathGroup.saveToolPath(toolPath, { materials });
-            if (autoPreviewEnabled) {
-                dispatch(processActions.showToolPathGroupObject(headType));
-            }
+        }
+        if (autoPreviewEnabled) {
+            dispatch(processActions.preview(headType));
         }
         dispatch(baseActions.updateState(headType, {
             updatingToolPath: null,
@@ -140,6 +156,7 @@ export const processActions = {
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
         const { toolPathGroup, materials } = getState()[headType];
         toolPathGroup.updateToolPath(toolPathId, newState, { materials });
+        dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -164,6 +181,7 @@ export const processActions = {
     deleteToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.deleteToolPath(toolPathId);
+        dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
