@@ -17,8 +17,8 @@ class Output extends PureComponent {
         ...withRouter.propTypes,
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
+        autoPreviewEnabled: PropTypes.bool.isRequired,
 
-        headType: PropTypes.string.isRequired,
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -37,7 +37,8 @@ class Output extends PureComponent {
         exportFile: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
-        showModelGroupObject: PropTypes.func.isRequired
+        showModelGroupObject: PropTypes.func.isRequired,
+        setAutoPreview: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -74,6 +75,12 @@ class Output extends PureComponent {
         onSimulation: () => {
             this.props.commitGenerateViewPath();
         },
+        showToolPathObject: () => {
+            this.props.showToolPathGroupObject();
+        },
+        setAutoPreview: (enable) => {
+            this.props.setAutoPreview(enable);
+        },
         showAndHideToolPathObject: () => {
             if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.props.showModelGroupObject();
@@ -99,10 +106,9 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, headType, displayedType } = this.props;
+        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, autoPreviewEnabled } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const isCNC = headType === 'cnc';
 
         return (
             <div>
@@ -121,10 +127,10 @@ class Output extends PureComponent {
                         <button
                             type="button"
                             className="sm-btn-large sm-btn-default"
-                            onClick={this.actions.showAndHideToolPathObject}
+                            onClick={this.actions.showToolPathObject}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                         >
-                            {displayedType === DISPLAYED_TYPE_TOOLPATH ? i18n._('Hide Toolpath') : i18n._('Show Toolpath')}
+                            {i18n._('Preview')}
                         </button>
                     )}
                     {isProcess && (
@@ -139,22 +145,11 @@ class Output extends PureComponent {
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         disabled={isEditor}
-                                        // checked={autoPreviewEnabled}
-                                        // onChange={(event) => { actions.onToggleAutoPreview(event.target.checked); }}
+                                        checked={autoPreviewEnabled}
+                                        onChange={(event) => { actions.setAutoPreview(event.target.checked); }}
                                     />
                                 </div>
                             </TipTrigger>
-                            {isCNC && (
-                                <button
-                                    type="button"
-                                    className="sm-btn-large sm-btn-default"
-                                    disabled={!canGenerateGcode || isGcodeGenerating}
-                                    onClick={this.actions.onSimulation}
-                                    style={{ display: 'block', width: '100%' }}
-                                >
-                                    {i18n._('Simulate')}
-                                </button>
-                            )}
                             <button
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
@@ -200,7 +195,7 @@ const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
     const { widgets } = state.widget;
     const { widgetId, headType } = ownProps;
-    const { page, isGcodeGenerating,
+    const { page, isGcodeGenerating, autoPreviewEnabled,
         previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
@@ -217,7 +212,8 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         previewFailed,
         gcodeFile,
-        autoPreview: widgets[widgetId].autoPreview
+        autoPreview: widgets[widgetId].autoPreview,
+        autoPreviewEnabled
     };
 };
 
@@ -232,7 +228,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
-        commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType))
+        commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType)),
+        setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled))
     };
 };
 

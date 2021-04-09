@@ -2,22 +2,23 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
-import { DISPLAYED_TYPE_TOOLPATH } from '../../constants';
+import { HEAD_CNC, DISPLAYED_TYPE_TOOLPATH } from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
 import Space from '../../components/Space';
 
 class VisualizerTopRight extends PureComponent {
     static propTypes = {
+        headType: PropTypes.string.isRequired,
         displayedType: PropTypes.string.isRequired,
         showToolPath: PropTypes.bool.isRequired,
         showSimulation: PropTypes.bool.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
         showModelGroupObject: PropTypes.func.isRequired,
         showToolpathInPreview: PropTypes.func.isRequired,
-        showSimulationInPreview: PropTypes.func.isRequired
+        showSimulationInPreview: PropTypes.func.isRequired,
 
-        // commitGenerateViewPath: PropTypes.func.isRequired
+        commitGenerateViewPath: PropTypes.func.isRequired
     };
 
     actions = {
@@ -32,10 +33,9 @@ class VisualizerTopRight extends PureComponent {
             this.props.showToolpathInPreview(!this.props.showToolPath);
         },
         switchShowSimulation: () => {
-            console.log(this.props.showSimulation);
-            // if (!this.props.showSimulation) {
-            //     this.props.commitGenerateViewPath();
-            // }
+            if (!this.props.showSimulation) {
+                this.props.commitGenerateViewPath();
+            }
             this.props.showSimulationInPreview(!this.props.showSimulation);
         }
     };
@@ -78,17 +78,18 @@ class VisualizerTopRight extends PureComponent {
                             {i18n._('Toolpath')}
                         </span>
                     </div>
-                    <div className={styles.content}>
-                        <input
-                            type="checkbox"
-                            onChange={this.actions.switchShowSimulation}
-                            checked={this.props.showSimulation}
-                        />
-                        <span>
-                            {i18n._('Simulation')}
-                        </span>
-                    </div>
-
+                    {this.props.headType === HEAD_CNC && (
+                        <div className={styles.content}>
+                            <input
+                                type="checkbox"
+                                onChange={this.actions.switchShowSimulation}
+                                checked={this.props.showSimulation}
+                            />
+                            <span>
+                                {i18n._('Simulation')}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </React.Fragment>
         );
@@ -97,6 +98,7 @@ class VisualizerTopRight extends PureComponent {
 const mapStateToProps = (state) => {
     const { displayedType, showToolPath, showSimulation } = state.cnc;
     return {
+        headType: 'cnc',
         displayedType,
         showToolPath,
         showSimulation

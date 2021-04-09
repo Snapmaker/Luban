@@ -48,7 +48,6 @@ export const processActions = {
 
     showSimulationInPreview: (headType, show) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
-        console.log('show', show);
         toolPathGroup.showSimulationObject(show);
         dispatch(baseActions.updateState(headType, {
             showSimulation: show
@@ -122,13 +121,15 @@ export const processActions = {
     },
 
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
-        const { toolPathGroup, materials } = getState()[headType];
+        const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
 
         if (toolPathGroup.getToolPath(toolPath.id)) {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
             toolPathGroup.saveToolPath(toolPath, { materials });
-            dispatch(processActions.showToolPathGroupObject(headType));
+            if (autoPreviewEnabled) {
+                dispatch(processActions.showToolPathGroupObject(headType));
+            }
         }
         dispatch(baseActions.updateState(headType, {
             updatingToolPath: null,
@@ -289,6 +290,11 @@ export const processActions = {
         }));
     },
 
+    setAutoPreview: (headType, autoPreviewEnabled) => (dispatch) => {
+        dispatch(baseActions.updateState(headType, {
+            autoPreviewEnabled
+        }));
+    },
 
     onGenerateViewPath: (headType, taskResult) => async (dispatch, getState) => {
         const { size } = getState().machine;
@@ -304,6 +310,9 @@ export const processActions = {
         }
         const { viewPathFile } = taskResult;
         await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : size);
+        dispatch(baseActions.updateState(headType, {
+            showSimulation: true
+        }));
         dispatch(baseActions.render(headType));
     }
 };
