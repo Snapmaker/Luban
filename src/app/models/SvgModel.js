@@ -10,7 +10,6 @@ import { DATA_PREFIX } from '../constants';
 import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
 
 import api from '../api';
-import { DEFAULT_SCALE } from '../ui/SVGEditor/constants';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
 
 import BaseModel from './BaseModel';
@@ -372,15 +371,23 @@ class SvgModel extends BaseModel {
         const { content } = this.genModelConfig();
         let blob, file, res;
         if (this.type === 'text') {
-            const { text, 'font-family': font, 'font-size': size } = this.config;
-            const { scaleX, scaleY } = this.transformation;
-            const { width, height } = this.elem.getBBox();
-            // Todo: remove DEFAULT_SCALE after convertOneLineTextToSvg method improved.
-            const sourceWidth = width * Math.abs(scaleX) * DEFAULT_SCALE;
-            const sourceHeight = height * Math.abs(scaleY) * DEFAULT_SCALE;
+            // eslint-disable-next-line prefer-const
+            let { text, 'font-family': font, 'font-size': size } = this.config;
+            // enlarge font-size to make process image clear enough
+            size *= 16;
+            const cloneElement = this.elem.cloneNode(true);
+            cloneElement.setAttribute('font-size', size);
+            this.elem.parentNode.append(cloneElement);
+            // eslint-disable-next-line prefer-const
+            let { x, y, width, height } = cloneElement.getBBox();
+            const bbox = { x, y, width, height };
+            x = parseFloat(cloneElement.getAttribute('x'));
+            y = parseFloat(cloneElement.getAttribute('y'));
+            cloneElement.remove();
+
             const name = this.originalName;
             const alignment = 'middle';
-            res = await api.convertOneLineTextToSvg({ text, font, name, size, sourceWidth, sourceHeight, alignment });
+            res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
             file = new File([blob], 'gen.svg');
@@ -888,9 +895,6 @@ class SvgModel extends BaseModel {
     }
 
     generateProcessObject3D() {
-        if (this.sourceType !== 'raster' && this.sourceType !== 'image3d') {
-            return;
-        }
         if (!this.processImageName) {
             return;
         }
