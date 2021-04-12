@@ -41,10 +41,16 @@ class ToolPathGroup {
         this.updatedCallback && this.updatedCallback();
     }
 
+    /**
+    Used to show tool path group objects in process canvas after preview models
+     */
     show() {
         this.object.visible = true;
     }
 
+    /**
+     *  Used to show model group objects in process canvas before preview models
+     */
     hide() {
         this.object.visible = false;
         this.simulationObjects.visible = false;
