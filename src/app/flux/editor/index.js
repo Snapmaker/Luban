@@ -11,7 +11,7 @@ import {
     limitModelSizeByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
+import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, SOURCE_TYPE_RASTER, DATA_PREFIX } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
@@ -765,7 +765,11 @@ export const actions = {
         if (!processImageName) {
             return;
         }
-
+        if (model.sourceType === SOURCE_TYPE_RASTER) {
+            model.width = taskResult.data.transformation.width;
+            model.height = taskResult.data.transformation.height;
+            model.updateSource();
+        }
         if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
             const { width, height } = taskResult;
             if (!isEqual(width, model.width) || !isEqual(height, model.height)) {
