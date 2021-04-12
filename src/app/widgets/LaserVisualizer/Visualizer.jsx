@@ -294,7 +294,7 @@ class Visualizer extends Component {
                         <VisualizerTopLeft />
                     </div>
                 )}
-                {(!isEditor && displayedType === 'toolpath') && (
+                {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
                     <div>
                         <VisualizerTopRight
                             headType="laser"

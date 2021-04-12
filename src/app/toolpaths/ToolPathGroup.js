@@ -56,7 +56,7 @@ class ToolPathGroup {
 
     showSimulationObject(show) {
         // Todo, control it in actions-process
-        this.simulationObject && (this.simulationObject.visible = show);
+        this.simulationObject && (this.simulationObjects.visible = show);
     }
 
     async onGenerateToolPath(taskResult) {
