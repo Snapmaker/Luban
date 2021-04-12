@@ -123,7 +123,6 @@ class ToolPath {
         const { materials } = options;
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
-
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
 
@@ -195,13 +194,14 @@ class ToolPath {
                 } else {
                     model.status = SUCCESS;
                     model.toolPathFile = result.filename;
-                    if (model.meshObj) {
-                        this.object.remove(model.meshObj);
-                    }
-
                     this.loadToolPathFile(result.filename).then((toolPathObj3D) => {
-                        model.meshObj = toolPathObj3D;
-                        this.object.add(model.meshObj);
+                        // Not remove the pointer but just replace the contents of the pointer
+                        if (!model.meshObj) {
+                            model.meshObj = toolPathObj3D;
+                            this.object.add(model.meshObj);
+                        } else {
+                            model.meshObj.copy(toolPathObj3D);
+                        }
 
                         this.checkoutStatus();
                         resolve();

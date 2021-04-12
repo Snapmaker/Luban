@@ -418,7 +418,7 @@ class Controls extends EventEmitter {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
                         if (objectIndex === -1) {
-                            selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                            selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                         }
                     } else {
                         selectEvent = SELECTEVENT.UNSELECT;
@@ -438,14 +438,14 @@ class Controls extends EventEmitter {
                     if (intersect) {
                         const objectIndex = this.selectedGroup.children.indexOf(intersect.object);
                         if (objectIndex === -1) {
-                            selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                            selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                         }
                     } else {
                         selectEvent = SELECTEVENT.UNSELECT;
                     }
                 } else if (!isRightClick) {
                     if (intersect) {
-                        selectEvent = SELECTEVENT.UNSELECT_SINGLESELECT;
+                        selectEvent = SELECTEVENT.UNSELECT_ADDSELECT;
                     } else {
                         selectEvent = SELECTEVENT.UNSELECT;
                     }

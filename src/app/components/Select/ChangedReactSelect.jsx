@@ -83,7 +83,11 @@ const GroupHeading = props => (
 
 class ChangedReactSelect extends PureComponent {
     static propTypes = {
-        value: PropTypes.string,
+        value: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.bool,
+            PropTypes.string
+        ]),
         options: PropTypes.array.isRequired,
         // whether using 'GroupHeading' component
         isGroup: PropTypes.bool,

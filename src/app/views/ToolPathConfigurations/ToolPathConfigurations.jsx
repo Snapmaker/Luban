@@ -134,7 +134,7 @@ class ToolPathConfigurations extends PureComponent {
                 toolPath: nToolPath
             });
         },
-        updateCncActiveToolDefinition: (updatingToolPath) => {
+        updateCncActiveToolDefinition: async (updatingToolPath) => {
             const { toolDefinitions } = this.props;
             const { toolParams, gcodeConfig } = updatingToolPath;
             let activeToolDefinition = this.props.activeToolListDefinition;
@@ -162,6 +162,7 @@ class ToolPathConfigurations extends PureComponent {
                     }
                 });
             });
+            await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
             this.setState({
                 activeToolDefinition
             });

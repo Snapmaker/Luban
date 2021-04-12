@@ -225,7 +225,7 @@ class TransformControls2D extends Object3D {
         if (!selectEvent) {
             return;
         }
-        if (selectEvent === SELECTEVENT.UNSELECT_SINGLESELECT) {
+        if (selectEvent === SELECTEVENT.UNSELECT_ADDSELECT) {
             for (const peripheral of this.peripherals) {
                 this.remove(peripheral);
             }
