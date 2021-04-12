@@ -770,7 +770,7 @@ class ModelGroup extends EventEmitter {
 
             if (newModel.sourceType === '3d') {
                 newModel.stickToPlate();
-                newModel.modelName = this._createNewModelName(newModel.getTaskInfo());
+                newModel.modelName = this._createNewModelName(newModel);
                 newModel.meshObject.position.x = 0;
                 newModel.meshObject.position.y = 0;
                 const point = this._computeAvailableXY(newModel);
@@ -1401,13 +1401,13 @@ class ModelGroup extends EventEmitter {
      * @returns modelName
      */
     _createNewModelName(model) {
-        const { config } = model;
-        const isText = (config && config.svgNodeName === 'text');
-        const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
         let baseName = '';
         if (model.sourceType === '3d') {
             baseName = model.originalName;
         } else {
+            const { config } = model;
+            const isText = (config && config.svgNodeName === 'text');
+            const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
             if (isText) {
                 baseName = 'Text';
             } else if (isShape) {

@@ -524,14 +524,6 @@ class ThreeModel extends BaseModel {
         this.modelGroup && this.modelGroup.modelChanged();
     }
 
-    getTaskInfo() {
-        const taskInfo = {
-            sourceType: this.sourceType,
-            originalName: this.originalName
-        };
-        return taskInfo;
-    }
-
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
