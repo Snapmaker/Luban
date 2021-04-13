@@ -176,7 +176,6 @@ class Configurations extends PureComponent {
                                                 }
                                             }
                                         }
-                                        console.log('type', type, defaultValue, unit);
                                         return (
                                             <tr key={key}>
                                                 <td>{i18n._(label)}</td>
