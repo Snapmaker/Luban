@@ -151,40 +151,21 @@ const convertTextToSvg = async (options) => {
 
 // just process one line text, multi-line text can be transfered to text elements in front end
 const convertOneLineTextToSvg = async (options) => {
-    const { text, font, name, size, sourceWidth, sourceHeight } = options;
+    const { text, font, name, size, x, y, bbox } = options;
 
     const uploadName = pathWithRandomSuffix(name);
     const fontObj = await fontManager.getFont(font);
-    const unitsPerEm = fontObj.unitsPerEm;
-    const descender = fontObj.tables.os2.sTypoDescender;
-
-    let estimatedFontSize = Math.round(size / 72 * 25.4 * 40);
-    const originPath = fontObj.getPath(text, 0, 0, estimatedFontSize);
-    const bbox = originPath.getBoundingBox();
-
-    // draw text at x=0 will get bbox.x1>0
-    // we should calculate width including gaps of both side
-    // TODO: Behavior of SVG text and opentype calculation are different, use of
-    //   bbox.x1 as evaluation of text padding is not accurate. To really solve
-    //   this problem, we need deeper understanding on how SVG text is rendered.
-    const width = (bbox.x2 - bbox.x1) + bbox.x1 * 2;
-
-    const scale = sourceWidth / width;
-    estimatedFontSize *= scale;
-    const x = 0;
-    const y = (unitsPerEm + descender) / unitsPerEm * sourceHeight + 1; // hardcoded 1
-
     const fullPath = new opentype.Path();
-    const p = fontObj.getPath(text, x, y, Math.floor(estimatedFontSize));
+    const p = fontObj.getPath(text, x, y, Math.floor(size));
     fullPath.extend(p);
     fullPath.stroke = 'black';
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),
-        x0: 0,
-        y0: 0,
-        width: sourceWidth,
-        height: sourceHeight
+        x0: bbox.x,
+        y0: bbox.y,
+        width: bbox.width,
+        height: bbox.height
     });
     return new Promise((resolve, reject) => {
         const targetPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -196,8 +177,8 @@ const convertOneLineTextToSvg = async (options) => {
                 resolve({
                     originalName: name,
                     uploadName: uploadName,
-                    width: sourceWidth,
-                    height: sourceHeight
+                    width: bbox.width,
+                    height: bbox.height
                 });
             }
         });
