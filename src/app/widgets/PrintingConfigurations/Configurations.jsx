@@ -20,7 +20,9 @@ const OFFICIAL_CONFIG_KEYS = [
     'speed_wall_0',
     'speed_wall_x',
     'speed_travel',
-    'infill_pattern'
+    'infill_pattern',
+    'magic_mesh_surface_mode',
+    'support_enable'
 ];
 
 class Configurations extends PureComponent {
@@ -157,16 +159,41 @@ class Configurations extends PureComponent {
                                 <tbody>
                                     {OFFICIAL_CONFIG_KEYS.map((key) => {
                                         const setting = qualityDefinition.settings[key];
-                                        const { label, unit } = setting;
+                                        const { label, type, unit = '', enabled = '' } = setting;
                                         const defaultValue = setting.default_value;
 
+                                        if (enabled) {
+                                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                            const conditions = enabled.split('and').map(c => c.trim());
+
+                                            for (const condition of conditions) {
+                                                // Simple implementation of condition
+                                                if (qualityDefinition.settings[condition]) {
+                                                    const value = qualityDefinition.settings[condition].default_value;
+                                                    if (!value) {
+                                                        return null;
+                                                    }
+                                                }
+                                            }
+                                        }
                                         return (
                                             <tr key={key}>
                                                 <td>{i18n._(label)}</td>
-                                                <td>
-                                                    {defaultValue}
-                                                    {unit}
-                                                </td>
+                                                { type !== 'bool' && (
+                                                    <td>
+                                                        {defaultValue}
+                                                        {unit}
+                                                    </td>
+                                                )}
+                                                { type === 'bool' && (
+                                                    <td>
+                                                        <div
+                                                            className={
+                                                                classNames(styles[defaultValue ? 'checked' : 'unchecked'])
+                                                            }
+                                                        />
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     })}
