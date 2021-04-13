@@ -12,22 +12,70 @@ import i18n from '../../lib/i18n';
 let toastId;
 
 export const processActions = {
+    recalculateAllToolPath: (headType) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.toolPaths.forEach((toolPath) => {
+            dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
+        });
+    },
+
+    preview: (headType) => (dispatch) => {
+        dispatch(processActions.recalculateAllToolPath(headType));
+        dispatch(processActions.showToolPathGroupObject(headType));
+        dispatch(baseActions.render(headType));
+    },
+
     showToolPathGroupObject: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+            return;
+        }
+        if (toolPathGroup.toolPaths.length === 0) {
+            return;
+        }
         modelGroup.hideAllModelsObj3D();
         toolPathGroup.show();
+        toolPathGroup.showToolpathObjects(true);
         dispatch(baseActions.updateState(headType, {
-            displayedType: DISPLAYED_TYPE_TOOLPATH
+            displayedType: DISPLAYED_TYPE_TOOLPATH,
+            showToolPath: true,
+            showSimulation: false
         }));
         dispatch(baseActions.render(headType));
     },
 
     showModelGroupObject: (headType) => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_MODEL) {
+            return;
+        }
         modelGroup.showAllModelsObj3D();
         toolPathGroup.hide();
         dispatch(baseActions.updateState(headType, {
-            displayedType: DISPLAYED_TYPE_MODEL
+            displayedType: DISPLAYED_TYPE_MODEL,
+            showToolPath: false,
+            showSimulation: false
+        }));
+        dispatch(baseActions.render(headType));
+    },
+
+    showToolpathInPreview: (headType, show) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.showToolpathObjects(show);
+        dispatch(baseActions.updateState(headType, {
+            showToolPath: show
+        }));
+        dispatch(baseActions.render(headType));
+    },
+
+    showSimulationInPreview: (headType, show) => (dispatch, getState) => {
+        const { toolPathGroup, displayedType } = getState()[headType];
+        if (displayedType === DISPLAYED_TYPE_MODEL) {
+            return;
+        }
+        toolPathGroup.showSimulationObject(show);
+        dispatch(baseActions.updateState(headType, {
+            showSimulation: show
         }));
         dispatch(baseActions.render(headType));
     },
@@ -98,13 +146,15 @@ export const processActions = {
     },
 
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
-        const { toolPathGroup, materials } = getState()[headType];
+        const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
 
         if (toolPathGroup.getToolPath(toolPath.id)) {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
             toolPathGroup.saveToolPath(toolPath, { materials });
-            dispatch(processActions.showToolPathGroupObject(headType));
+        }
+        if (autoPreviewEnabled) {
+            dispatch(processActions.preview(headType));
         }
         dispatch(baseActions.updateState(headType, {
             updatingToolPath: null,
@@ -115,6 +165,7 @@ export const processActions = {
     updateToolPath: (headType, toolPathId, newState) => (dispatch, getState) => {
         const { toolPathGroup, materials } = getState()[headType];
         toolPathGroup.updateToolPath(toolPathId, newState, { materials });
+        dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -139,6 +190,7 @@ export const processActions = {
     deleteToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.deleteToolPath(toolPathId);
+        dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -265,6 +317,11 @@ export const processActions = {
         }));
     },
 
+    setAutoPreview: (headType, autoPreviewEnabled) => (dispatch) => {
+        dispatch(baseActions.updateState(headType, {
+            autoPreviewEnabled
+        }));
+    },
 
     onGenerateViewPath: (headType, taskResult) => async (dispatch, getState) => {
         const { size } = getState().machine;
@@ -280,6 +337,9 @@ export const processActions = {
         }
         const { viewPathFile } = taskResult;
         await toolPathGroup.onGenerateViewPath(viewPathFile, isRotate ? materials : size);
+        dispatch(baseActions.updateState(headType, {
+            showSimulation: true
+        }));
         dispatch(baseActions.render(headType));
     }
 };

@@ -16,7 +16,8 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
 import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerTopRight from '../LaserCameraAidBackground';
+import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
+import LaserCameraAidBackground from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
 // eslint-disable-next-line no-unused-vars
@@ -281,6 +282,7 @@ class Visualizer extends Component {
         const notice = this.getNotice();
         const isEditor = this.props.page === PAGE_EDITOR;
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
+        const displayedType = this.props.displayedType;
 
         return (
             <div
@@ -292,8 +294,15 @@ class Visualizer extends Component {
                         <VisualizerTopLeft />
                     </div>
                 )}
+                {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
+                    <div>
+                        <VisualizerTopRight
+                            headType="laser"
+                        />
+                    </div>
+                )}
                 <div className={styles['visualizer-top-right']}>
-                    <VisualizerTopRight />
+                    <LaserCameraAidBackground />
                 </div>
                 <div style={{
                     visibility: isEditor ? 'visible' : 'hidden'

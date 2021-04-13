@@ -42,6 +42,8 @@ const INITIAL_STATE = {
     displayedType: DISPLAYED_TYPE_MODEL,
     toolPathGroup: new ToolPathGroup(initModelGroup, 'cnc'),
     updatingToolPath: null,
+    showToolPath: false,
+    showSimulation: false,
 
     SVGActions: new SVGActionsFactory(initModelGroup),
 
@@ -81,7 +83,7 @@ const INITIAL_STATE = {
     stlVisualizer: { show: false },
 
     previewFailed: false,
-    autoPreviewEnabled: true,
+    autoPreviewEnabled: false,
 
     // rendering
     renderingTimestamp: 0

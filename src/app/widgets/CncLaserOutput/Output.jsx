@@ -10,21 +10,22 @@ import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS } from '../../consta
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Thumbnail from '../CncLaserShared/Thumbnail';
-
+import TipTrigger from '../../components/TipTrigger';
 
 class Output extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
         setTitle: PropTypes.func.isRequired,
         minimized: PropTypes.bool.isRequired,
+        autoPreviewEnabled: PropTypes.bool.isRequired,
 
-        headType: PropTypes.string.isRequired,
         page: PropTypes.string.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
         canGenerateGcode: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool,
+        hasToolPathModel: PropTypes.bool,
         displayedType: PropTypes.string.isRequired,
         previewFailed: PropTypes.bool.isRequired,
         isGcodeGenerating: PropTypes.bool.isRequired,
@@ -37,7 +38,9 @@ class Output extends PureComponent {
         exportFile: PropTypes.func.isRequired,
         switchToPage: PropTypes.func.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
-        showModelGroupObject: PropTypes.func.isRequired
+        showModelGroupObject: PropTypes.func.isRequired,
+        setAutoPreview: PropTypes.func.isRequired,
+        preview: PropTypes.func.isRequired
     };
 
     thumbnail = React.createRef();
@@ -74,6 +77,15 @@ class Output extends PureComponent {
         onSimulation: () => {
             this.props.commitGenerateViewPath();
         },
+        showToolPathObject: () => {
+            this.props.showToolPathGroupObject();
+        },
+        preview: () => {
+            this.props.preview();
+        },
+        setAutoPreview: (enable) => {
+            this.props.setAutoPreview(enable);
+        },
         showAndHideToolPathObject: () => {
             if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
                 this.props.showModelGroupObject();
@@ -99,10 +111,9 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, headType, displayedType } = this.props;
+        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
-        const isCNC = headType === 'cnc';
 
         return (
             <div>
@@ -121,25 +132,30 @@ class Output extends PureComponent {
                         <button
                             type="button"
                             className="sm-btn-large sm-btn-default"
-                            onClick={this.actions.showAndHideToolPathObject}
+                            onClick={this.actions.preview}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
+                            disabled={!hasToolPathModel ?? false}
                         >
-                            {displayedType === DISPLAYED_TYPE_TOOLPATH ? i18n._('Hide Toolpath') : i18n._('Show Toolpath')}
+                            {i18n._('Preview')}
                         </button>
                     )}
                     {isProcess && (
                         <div>
-                            {isCNC && (
-                                <button
-                                    type="button"
-                                    className="sm-btn-large sm-btn-default"
-                                    disabled={!canGenerateGcode || isGcodeGenerating}
-                                    onClick={this.actions.onSimulation}
-                                    style={{ display: 'block', width: '100%' }}
-                                >
-                                    {i18n._('Simulate')}
-                                </button>
-                            )}
+                            <TipTrigger
+                                title={i18n._('Auto ToolPath Preview')}
+                                content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto Tool Path Preview')}</span>
+                                    <input
+                                        type="checkbox"
+                                        className="sm-parameter-row__checkbox"
+                                        disabled={isEditor}
+                                        checked={autoPreviewEnabled}
+                                        onChange={(event) => { actions.setAutoPreview(event.target.checked); }}
+                                    />
+                                </div>
+                            </TipTrigger>
                             <button
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
@@ -185,16 +201,18 @@ const mapStateToProps = (state, ownProps) => {
     const { workflowState } = state.machine;
     const { widgets } = state.widget;
     const { widgetId, headType } = ownProps;
-    const { page, isGcodeGenerating,
+    const { page, isGcodeGenerating, autoPreviewEnabled,
         previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
+    const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
 
     return {
         page,
         headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
+        hasToolPathModel,
         displayedType,
         toolPathGroup,
         canGenerateGcode,
@@ -202,7 +220,8 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         previewFailed,
         gcodeFile,
-        autoPreview: widgets[widgetId].autoPreview
+        autoPreview: widgets[widgetId].autoPreview,
+        autoPreviewEnabled
     };
 };
 
@@ -217,7 +236,9 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         renderGcodeFile: (fileName) => dispatch(workspaceActions.renderGcodeFile(fileName)),
         createToolPath: () => dispatch(editorActions.createToolPath(headType)),
         exportFile: (targetFile) => dispatch(projectActions.exportFile(targetFile)),
-        commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType))
+        commitGenerateViewPath: () => dispatch(editorActions.commitGenerateViewPath(headType)),
+        setAutoPreview: (autoPreviewEnabled) => dispatch(editorActions.setAutoPreview(headType, autoPreviewEnabled)),
+        preview: () => dispatch(editorActions.preview(headType))
     };
 };
 
