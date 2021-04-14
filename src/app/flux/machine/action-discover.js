@@ -11,19 +11,19 @@ const init = () => (dispatch, getState) => {
             // Note that we may receive this event many times.
             const { servers } = getState().machine;
 
-            const newServers = [];
+            const newServers = new Set();
             for (const object of objects) {
-                const find = servers.find(v => v.equals(object));
+                const find = servers.find(v => v.address === object.address && v.name === object.name);
                 if (find) {
                     // use old Server instance
-                    newServers.push(find);
+                    newServers.add(find);
                 } else {
                     const server = new Server(object.name, object.address, object.model);
-                    newServers.push(server);
+                    newServers.add(server);
                 }
             }
 
-            dispatch(baseActions.updateState({ servers: newServers }));
+            dispatch(baseActions.updateState({ servers: [...newServers] }));
         }
     };
 

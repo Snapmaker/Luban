@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import { Button, InputGroup } from 'react-bootstrap';
 import { map } from 'lodash';
 import Select from '../../components/Select';
-
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import {
@@ -90,7 +89,7 @@ class WifiConnection extends PureComponent {
             this.props.discoverSnapmakerServers();
         },
         onChangeServerOption: (option) => {
-            const server = this.props.servers.find(v => v.name === option.name && v.address === option.address);
+            const server = this.props.servers.find(v => v.name === option.value && v.address === option.address);
             if (server) {
                 this.props.setSelectedServer(server);
                 this.setState({ server });
@@ -272,33 +271,35 @@ class WifiConnection extends PureComponent {
         }
     }
 
-    renderServerOptions = (server) => {
-        const display = `${server.name} (${server.address})`;
-        return (
-            <div title={display} style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                <i>{display}</i>
-            </div>
-        );
-    };
+    // renderServerOption = (props) => {
+    //     const display = `${props.value} (${props.label})`;
+    //     return (
+    //         <components.Option {...props}>
+    //             {display}
+    //         </components.Option>
+    //     );
+    // }
+
 
     /**
      *
      * @param server
      * @returns {*}
+     * not use
      */
-    renderServerValue = (server) => {
-        let display = '';
-        if (server !== ABSENT_OBJECT) {
-            display = `${server.name} (${server.address})`;
-        } else {
-            display = i18n._('No machines detected.');
-        }
-        return (
-            <div title={display} style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                <i>{display}</i>
-            </div>
-        );
-    };
+    // renderServerInput = (props) => {
+    //     let display = '';
+    //     if (props.label !== ABSENT_OBJECT) {
+    //         display = `${props.value} (${props.label})`;
+    //     } else {
+    //         display = i18n._('No machines detected.');
+    //     }
+    //     return (
+    //         <components.Option {...props}>
+    //             {display}
+    //         </components.Option>
+    //     );
+    // };
 
     render() {
         const { headType, servers, workflowStatus, serverDiscovering, isConnected, isOpen } = this.props;
@@ -313,25 +314,21 @@ class WifiConnection extends PureComponent {
                             marginRight: '5px'
                         }}
                     >
+                        {/** https://react-select.com/upgrade-guide#new-components-api **/}
                         <Select
-                            menuStyle={{
-                                maxHeight: '100px'
-                            }}
                             backspaceRemoves={false}
                             clearable={false}
-                            searchable={false}
                             name="port"
                             noResultsText={i18n._('No machines detected.')}
                             onChange={this.actions.onChangeServerOption}
-                            optionRenderer={this.renderServerOptions}
                             disabled={isOpen}
                             options={map(servers, (s) => ({
-                                name: s.name,
-                                address: s.address
+                                value: s.name,
+                                address: s.address,
+                                label: `${s.name} (${s.address})`
                             }))}
                             placeholder={i18n._('Choose a machine')}
-                            value={server}
-                            valueRenderer={this.renderServerValue}
+                            value={server ? server?.name : ''}
                         />
                     </div>
                     <InputGroup.Append>

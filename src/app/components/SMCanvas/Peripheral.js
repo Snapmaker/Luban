@@ -101,14 +101,18 @@ class Peripheral extends Object3D {
 
             { // this.framePeripheral
                 const offset = 0.1;
+                const offsetOutside = 0.5;
                 const line = this.framePeripheral.children[0];
                 const geometry = line.geometry; // new THREE.Geometry();
                 geometry.vertices = [];
-                geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
-                geometry.vertices.push(new Vector3(-width / 2 - offset, height / 2 + offset, 0));
-                geometry.vertices.push(new Vector3(-width / 2 - offset, -height / 2 - offset, 0));
-                geometry.vertices.push(new Vector3(width / 2 + offset, -height / 2 - offset, 0));
-                geometry.vertices.push(new Vector3(width / 2 + offset, height / 2 + offset, 0));
+                for (let i = 0.1; i <= offsetOutside; i += offset) {
+                    geometry.vertices.push(new Vector3(width / 2 + i, height / 2 + i, 0));
+                    geometry.vertices.push(new Vector3(-width / 2 - i, height / 2 + i, 0));
+                    geometry.vertices.push(new Vector3(-width / 2 - i, -height / 2 - i, 0));
+                    geometry.vertices.push(new Vector3(width / 2 + i, -height / 2 - i, 0));
+                    geometry.vertices.push(new Vector3(width / 2 + i, height / 2 + i, 0));
+                }
+
                 geometry.verticesNeedUpdate = true;
                 line.computeLineDistances();
             }
