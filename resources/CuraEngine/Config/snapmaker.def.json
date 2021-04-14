@@ -167,6 +167,7 @@
         "material_diameter": {
             "label": "Diameter",
             "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
+            "enabled": true,
             "default_value": 1.75
         },
         "material_final_print_temperature": {
@@ -175,6 +176,7 @@
         },
         "material_flow": {
             "label": "Flow",
+            "enabled": true,
             "description": "Flow compensation: the amount of material extruded is multiplied by this value."
         },
         "material_print_temp_prepend": {

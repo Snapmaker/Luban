@@ -15,7 +15,6 @@ import CreateModal from './CreateModal';
 import { actions as cncActions } from '../../flux/cnc';
 import { actions as projectActions } from '../../flux/project';
 import styles from './styles.styl';
-import confirm from '../../lib/confirm';
 import { limitStringLength } from '../../lib/normalize-range';
 
 import { CNC_TOOL_CONFIG_GROUP } from '../../constants';
@@ -61,6 +60,8 @@ class CncToolManager extends PureComponent {
     toolFileInput = React.createRef();
 
     refCreateModal = React.createRef();
+
+    renameInput = React.createRef();
 
     state = {
         showCncToolManager: false,
@@ -185,7 +186,7 @@ class CncToolManager extends PureComponent {
 
             const name = this.state.activeToolListDefinition.name;
             const toolDefinitionForManager = activeToolCategory.toolList.find(k => k.name === name)
-             || activeToolCategory.toolList.find(k => k.name === 'Carving V bit (30° 0.2 mm)');
+             || activeToolCategory.toolList[0];
             if (toolDefinitionForManager) {
                 toolDefinitionForManager.definitionId = activeToolCategory.definitionId;
                 this.setState({ activeToolListDefinition: toolDefinitionForManager });
@@ -236,18 +237,52 @@ class CncToolManager extends PureComponent {
             const { isCategorySelected, activeToolCategory } = this.state;
             let ok;
             if (isCategorySelected) {
-                ok = await confirm({
-                    body: `Are you sure to remove category profile "${activeToolCategory.category}"?`
+                const popupActions = modal({
+                    title: i18n._('Delete Parameters'),
+                    body: (
+                        <React.Fragment>
+                            <p>{`Are you sure to remove category profile "${activeToolCategory.category}"?`}</p>
+                        </React.Fragment>
+
+                    ),
+
+                    footer: (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary"
+                            onClick={async () => {
+                                await this.props.removeToolCategoryDefinition(activeToolCategory.definitionId);
+                                popupActions.close();
+                            }}
+                        >
+                            {i18n._('OK')}
+                        </button>
+                    )
                 });
-                ok && await this.props.removeToolCategoryDefinition(activeToolCategory.definitionId);
             } else {
                 const activeToolListDefinition = this.state.activeToolListDefinition;
+                const popupActions = modal({
+                    title: i18n._('Delete Parameters'),
+                    body: (
+                        <React.Fragment>
+                            <p>{`Are you sure to remove profile "${activeToolListDefinition.name}"?`}</p>
+                        </React.Fragment>
 
-                ok = await confirm({
-                    body: `Are you sure to remove profile "${activeToolListDefinition.name}"?`
+                    ),
+
+                    footer: (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary"
+                            onClick={async () => {
+                                await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
+                                popupActions.close();
+                            }}
+                        >
+                            {i18n._('OK')}
+                        </button>
+                    )
                 });
-
-                ok && await this.props.removeToolListDefinition(activeToolCategory, activeToolListDefinition);
             }
 
             // After removal, select the first definition
@@ -269,6 +304,12 @@ class CncToolManager extends PureComponent {
             });
         },
         setRenamingStatus: (status) => {
+            if (
+                (this.state.isCategorySelected && this.state.activeToolCategory.category === 'Default Material')
+                || (!this.state.isCategorySelected && isOfficialListDefinition(this.state.activeToolListDefinition))
+            ) {
+                return;
+            }
             this.setState({
                 renamingStatus: status
             });
@@ -277,6 +318,9 @@ class CncToolManager extends PureComponent {
                 this.setState({
                     selectedName: title
                 });
+                setTimeout(() => {
+                    this.renameInput.current.focus();
+                }, 0);
             }
         },
         showNewModal: () => {
@@ -436,6 +480,9 @@ class CncToolManager extends PureComponent {
             renamingStatus, selectedName
         } = state;
         const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
+        const unEditable = (isCategorySelected && this.state.activeToolCategory.category === 'Default Material')
+            || (!isCategorySelected && activeToolListDefinition && isOfficialListDefinition(activeToolListDefinition));
+
         return (
             <React.Fragment>
                 {showCncToolManager && (
@@ -468,6 +515,7 @@ class CncToolManager extends PureComponent {
                                                     <Anchor
                                                         className={classNames(styles['manager-btn'], { [styles.selected]: isCategorySelected && this.actions.isCategorySelectedNow(option.definitionId) })}
                                                         onClick={() => this.actions.onSelectToolCategory(option.definitionId)}
+                                                        onDoubleClick={() => { this.actions.setRenamingStatus(true); }}
                                                     >
                                                         <div className={classNames(styles['manager-btn-unfold'])}>
                                                             <span
@@ -476,10 +524,12 @@ class CncToolManager extends PureComponent {
                                                                 role="button"
                                                                 tabIndex={0}
                                                                 onClick={() => { this.actions.foldCategory(option.definitionId,); }}
+
                                                             />
                                                         </div>
                                                         {(isCategorySelected && isSelected && renamingStatus) ? (
                                                             <input
+                                                                ref={this.renameInput}
                                                                 className="sm-parameter-row__input"
                                                                 value={selectedName}
                                                                 onChange={actions.onChangeSelectedName}
@@ -511,9 +561,12 @@ class CncToolManager extends PureComponent {
                                                                             className={classNames(styles['manager-btn'], { [styles.selected]: !isCategorySelected && this.actions.isNameSelectedNow(option.definitionId, singleName) })}
                                                                             style={{ paddingLeft: '42px' }}
                                                                             onClick={() => this.actions.onSelectToolName(option.definitionId, singleName)}
+                                                                            onDoubleClick={() => { this.actions.setRenamingStatus(true); }}
+                                                                            title={option.detailNameArray[index]}
                                                                         >
                                                                             {(!isCategorySelected && isSelected && renamingStatus) ? (
                                                                                 <input
+                                                                                    ref={this.renameInput}
                                                                                     className="sm-parameter-row__input"
                                                                                     value={selectedName}
                                                                                     onChange={actions.onChangeSelectedName}
@@ -548,11 +601,12 @@ class CncToolManager extends PureComponent {
                                     >
                                         <SvgIcon
                                             name="Edit"
-                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
                                             size={18}
                                             title={i18n._('Edit')}
                                             onClick={() => this.actions.setRenamingStatus(true)}
+                                            disabled={unEditable}
                                         />
+
                                         <input
                                             ref={this.toolFileInput}
                                             type="file"
@@ -577,8 +631,8 @@ class CncToolManager extends PureComponent {
                                             name="Delete"
                                             size={18}
                                             title={i18n._('Delete')}
-                                            onClick={() => this.actions.onRemoveToolDefinition()}
-                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                            onClick={() => (!unEditable) && this.actions.onRemoveToolDefinition()}
+                                            disabled={unEditable}
                                         />
                                     </div>
 

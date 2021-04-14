@@ -159,7 +159,7 @@ class Material extends PureComponent {
                                         const setting = materialDefinition.settings[key];
                                         const { label, type, unit = '', enabled = '' } = setting;
                                         const defaultValue = setting.default_value;
-                                        if (enabled) {
+                                        if (typeof enabled === 'string') {
                                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
                                             const conditions = enabled.split('and').map(c => c.trim());
 
