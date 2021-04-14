@@ -2,8 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { Edit, Hide, Show } from 'snapmaker-react-icon';
-
+import SvgIcon from '../../../components/SvgIcon';
 import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
@@ -136,36 +135,36 @@ class ToolPathListBox extends PureComponent {
                                                 getIconStatus(toolPath.status)
                                             )}
                                             />
-                                            <Anchor
+                                            <SvgIcon
+                                                size={22}
+                                                name="Edit"
                                                 className={classNames(
                                                     styles.icon,
                                                 )}
                                                 title={i18n._('Edit')}
                                                 onClick={() => this.props.updatingToolPath(toolPath.id)}
-                                            >
-                                                <Edit size={22} />
-                                            </Anchor>
+                                            />
                                             {!toolPath.visible && (
-                                                <Anchor
+                                                <SvgIcon
+                                                    size={22}
+                                                    name="Hide"
                                                     className={classNames(
                                                         styles.icon,
                                                     )}
                                                     title={i18n._('Show')}
                                                     onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
-                                                >
-                                                    <Hide color="#ccc" size={22} />
-                                                </Anchor>
+                                                />
                                             )}
                                             {toolPath.visible && (
-                                                <Anchor
+                                                <SvgIcon
+                                                    size={22}
+                                                    name="Show"
                                                     className={classNames(
                                                         styles.icon,
                                                     )}
-                                                    title={i18n._('Hide')}
+                                                    title={i18n._('Show')}
                                                     onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
-                                                >
-                                                    <Show size={22} />
-                                                </Anchor>
+                                                />
                                             )}
                                         </div>
                                     </div>

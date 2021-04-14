@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes } from 'lodash';
-import { Edit, Import, Export, Delete, New, Copy } from 'snapmaker-react-icon';
-
+import SvgIcon from '../../components/SvgIcon';
 import modal from '../../lib/modal';
 import Select from '../../components/Select';
 import Notifications from '../../components/Notifications';
@@ -627,7 +626,13 @@ class PrintingManager extends PureComponent {
                                         justifyContent: 'space-around'
                                     }}
                                     >
-                                        <Edit size={18} onClick={() => this.actions.setRenamingStatus(true)} disabled={isOfficialDefinition(selectedOption)} />
+                                        <SvgIcon
+                                            name="Edit"
+                                            disabled={isOfficialDefinition(selectedOption)}
+                                            size={18}
+                                            title={i18n._('Edit')}
+                                            onClick={() => this.actions.setRenamingStatus(true)}
+                                        />
                                         <input
                                             ref={this.materialFileInput}
                                             type="file"
@@ -644,28 +649,45 @@ class PrintingManager extends PureComponent {
                                             multiple={false}
                                             onChange={this.actions.onChangeQualityFileForManager}
                                         />
-                                        <Import size={18} onClick={() => this.actions.importFile(managerDisplayType)} />
-                                        <Export size={18} onClick={() => this.actions.exportConfigFile(managerDisplayType)} />
-                                        <Delete size={18} onClick={() => this.actions.onRemoveManagerDefinition(managerDisplayType)} disabled={isOfficialDefinition(selectedOption)} />
+                                        <SvgIcon
+                                            name="Import"
+                                            size={18}
+                                            title={i18n._('Import')}
+                                            onClick={() => this.actions.importFile(managerDisplayType)}
+                                        />
+                                        <SvgIcon
+                                            name="Export"
+                                            size={18}
+                                            title={i18n._('Export')}
+                                            onClick={() => this.actions.exportConfigFile(managerDisplayType)}
+                                        />
+                                        <SvgIcon
+                                            name="Delete"
+                                            size={18}
+                                            title={i18n._('Delete')}
+                                            onClick={() => this.actions.onRemoveManagerDefinition(managerDisplayType)}
+                                            disabled={isOfficialDefinition(selectedOption)}
+                                        />
                                     </div>
 
 
                                     <div className="sm-tabs" style={{ padding: '16px' }}>
-                                        <Anchor
-
+                                        <SvgIcon
+                                            name="New"
+                                            size={18}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                             onClick={() => { actions.showNewModal(); }}
-                                        >
-                                            <New size={18} />
-                                            <span className={classNames(styles['action-title'])}>{i18n._('New')}</span>
-                                        </Anchor>
-                                        <Anchor
+                                            spanText={i18n._('New')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
+                                        <SvgIcon
+                                            name="Copy"
+                                            size={18}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                             onClick={() => { actions.showDuplicateModal(); }}
-                                        >
-                                            <Copy size={18} />
-                                            <span className={classNames(styles['action-title'])}>{i18n._('Copy')}</span>
-                                        </Anchor>
+                                            spanText={i18n._('Copy')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
                                     </div>
                                 </div>
 
@@ -862,7 +884,7 @@ class PrintingManager extends PureComponent {
                                                                     )}
                                                                     {type === 'enum' && (
                                                                         <Select
-                                                                            className="sm-parameter-row__select"
+                                                                            className="sm-parameter-row__select-md"
                                                                             backspaceRemoves={false}
                                                                             clearable={false}
                                                                             menuContainerStyle={{ zIndex: 5 }}

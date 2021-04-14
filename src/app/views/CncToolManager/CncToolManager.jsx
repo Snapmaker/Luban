@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { includes, noop } from 'lodash';
-import { Edit, Import, Export, Delete, New, Copy } from 'snapmaker-react-icon';
-
+import SvgIcon from '../../components/SvgIcon';
 import modal from '../../lib/modal';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
@@ -495,7 +494,6 @@ class CncToolManager extends PureComponent {
                                                                     this.actions.setRenamingStatus(false);
                                                                     this.actions.onChangeToolCategoryName();
                                                                 }}
-                                                                // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
                                                             />
                                                         ) : displayCategory}
                                                         {/* <span>{displayCategory}</span> */}
@@ -548,7 +546,13 @@ class CncToolManager extends PureComponent {
                                         justifyContent: 'space-around'
                                     }}
                                     >
-                                        <Edit size={18} onClick={() => this.actions.setRenamingStatus(true)} disabled={isOfficialListDefinition(activeToolListDefinition)} />
+                                        <SvgIcon
+                                            name="Edit"
+                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                            size={18}
+                                            title={i18n._('Edit')}
+                                            onClick={() => this.actions.setRenamingStatus(true)}
+                                        />
                                         <input
                                             ref={this.toolFileInput}
                                             type="file"
@@ -557,28 +561,45 @@ class CncToolManager extends PureComponent {
                                             multiple={false}
                                             onChange={this.actions.onChangeQualityFileForManager}
                                         />
-                                        <Import size={18} onClick={() => this.actions.importFile()} />
-                                        <Export size={18} onClick={() => this.actions.exportConfigFile()} />
-                                        <Delete size={18} onClick={() => this.actions.onRemoveToolDefinition()} disabled={isOfficialListDefinition(activeToolListDefinition)} />
+                                        <SvgIcon
+                                            name="Import"
+                                            size={18}
+                                            title={i18n._('Import')}
+                                            onClick={() => this.actions.importFile()}
+                                        />
+                                        <SvgIcon
+                                            name="Export"
+                                            size={18}
+                                            title={i18n._('Export')}
+                                            onClick={() => this.actions.exportConfigFile()}
+                                        />
+                                        <SvgIcon
+                                            name="Delete"
+                                            size={18}
+                                            title={i18n._('Delete')}
+                                            onClick={() => this.actions.onRemoveToolDefinition()}
+                                            disabled={isOfficialListDefinition(activeToolListDefinition)}
+                                        />
                                     </div>
 
 
                                     <div className="sm-tabs" style={{ padding: '16px' }}>
-                                        <Anchor
-
+                                        <SvgIcon
+                                            name="New"
+                                            size={18}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                             onClick={() => { actions.showNewModal(); }}
-                                        >
-                                            <New size={18} />
-                                            <span className={classNames(styles['action-title'])}>{i18n._('New')}</span>
-                                        </Anchor>
-                                        <Anchor
+                                            spanText={i18n._('New')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
+                                        <SvgIcon
+                                            name="Copy"
+                                            size={18}
                                             className={classNames(styles['manager-file'], 'sm-tab')}
                                             onClick={() => { actions.showDuplicateModal(); }}
-                                        >
-                                            <Copy size={18} />
-                                            <span className={classNames(styles['action-title'])}>{i18n._('Copy')}</span>
-                                        </Anchor>
+                                            spanText={i18n._('Copy')}
+                                            spanClassName={classNames(styles['action-title'])}
+                                        />
                                     </div>
                                 </div>
                                 <div className={classNames(styles['manager-details'])}>
