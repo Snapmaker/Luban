@@ -2,9 +2,8 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { Delete, Refresh, Up, Down } from 'snapmaker-react-icon';
+import SvgIcon from '../../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
-import Anchor from '../../../components/Anchor';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
 // import TipTrigger from '../../../components/TipTrigger';
@@ -45,56 +44,52 @@ class ToolPathFooter extends PureComponent {
                     styles.left
                 )}
                 >
-                    <Anchor
+                    <SvgIcon
                         className={classNames(
                             styles.icon,
                         )}
+                        name="Delete"
                         disabled={disabled}
+                        size={24}
                         title={i18n._('Delete')}
                         onClick={() => this.props.deleteToolPath(selectedToolPathId)}
-                    >
-                        <Delete disabled={disabled} size={22} />
-                    </Anchor>
-                    <Anchor
+                    />
+                    <SvgIcon
                         className={classNames(
                             styles.icon,
                         )}
                         title={i18n._('Recalculate All')}
                         onClick={() => this.actions.recalculateAllToolPath()}
-                    >
-                        <Refresh disabled={!toolPaths.length > 0} size={22} />
-
-                    </Anchor>
+                        name="Refresh"
+                        disabled={!toolPaths.length > 0}
+                        size={24}
+                    />
                 </div>
                 <div className={classNames(
                     styles.right,
                 )}
                 >
-                    <Anchor
+                    <SvgIcon
                         className={classNames(
                             styles.icon,
                         )}
                         disabled={disabled}
                         title={i18n._('Prioritize')}
                         onClick={() => this.props.toolPathToUp(selectedToolPathId)}
-
-                    >
-                        <Up disabled={disabled} size={22} />
-                    </Anchor>
-
-                    <Anchor
+                        name="Up"
+                        size={24}
+                    />
+                    <SvgIcon
                         className={classNames(
                             styles.icon,
+                            styles.rotate180
                         )}
                         disabled={disabled}
                         title={i18n._('Deprioritize')}
                         onClick={() => this.props.toolPathToDown(selectedToolPathId)}
-                    >
-                        <Down disabled={disabled} size={22} />
-
-                    </Anchor>
-
-
+                        name="Up"
+                        size={24}
+                    />
                 </div>
             </div>
         );
