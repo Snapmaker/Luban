@@ -17,6 +17,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+
       - name: Use Node.js 10.x
         uses: actions/setup-node@v2
         with:
@@ -128,6 +131,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
 
       - name: Use Node.js 10.x
         uses: actions/setup-node@v2

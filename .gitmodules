@@ -1,0 +1,3 @@
+[submodule "luban-case-library"]
+	path = luban-case-library
+	url = https://github.com/jane-rose/luban-case-library
