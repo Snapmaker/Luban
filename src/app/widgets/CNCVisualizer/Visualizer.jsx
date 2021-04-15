@@ -292,6 +292,9 @@ class Visualizer extends Component {
     }
 
     showContextMenu = (event) => {
+        if (this.props.modelGroup.selectedModelArray.length > 1) {
+            return;
+        }
         this.contextMenuRef.current.show(event);
     };
 

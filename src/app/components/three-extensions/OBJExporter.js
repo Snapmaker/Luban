@@ -77,7 +77,7 @@ OBJExporter.prototype = {
 						// transfrom the vertex to world space
 						// vertex.applyMatrix4( mesh.matrixWorld );
 						// modified by Walker
-                        vertex.applyMatrix4( mesh.matrix );
+                        vertex.applyMatrix4( mesh.matrixWorld );
 
 						// transform the vertex to export format
                         output += 'v ' + vertex.x + ' ' + vertex.y + ' ' + vertex.z + '\n';
