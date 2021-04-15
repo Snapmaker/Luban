@@ -361,6 +361,14 @@ export const actions = {
             ...transformation
         };
 
+        if (!transformation.scaleX) {
+            transformation.scaleX = transformation.width / width;
+        }
+
+        if (!transformation.scaleY) {
+            transformation.scaleY = transformation.height / height;
+        }
+
         const options = {
             modelID,
             limitSize: size,
