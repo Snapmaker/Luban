@@ -695,7 +695,7 @@ class CncToolManager extends PureComponent {
                                                                 <TipTrigger>
                                                                     <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
                                                                     <Input
-                                                                        className="sm-parameter-row__input"
+                                                                        className="sm-parameter-row__select-md"
                                                                         value={defaultValue}
                                                                         min={min}
                                                                         max={max}
