@@ -88,6 +88,7 @@ class ChangedReactSelect extends PureComponent {
             PropTypes.bool,
             PropTypes.string
         ]),
+        disabled: PropTypes.bool,
         options: PropTypes.array.isRequired,
         // whether using 'GroupHeading' component
         isGroup: PropTypes.bool,
@@ -121,6 +122,7 @@ class ChangedReactSelect extends PureComponent {
             value,
             options,
             isGroup,
+            disabled,
             ...props
         } = this.props;
         let defaultValue = {};
@@ -155,6 +157,7 @@ class ChangedReactSelect extends PureComponent {
                 {...props}
                 options={options}
                 styles={customStyles}
+                isDisabled={disabled}
                 components={{ GroupHeading }}
                 value={defaultValue}
                 defaultValue={defaultValue}

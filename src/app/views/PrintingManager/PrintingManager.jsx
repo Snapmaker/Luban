@@ -16,7 +16,6 @@ import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 // import widgetStyles from '../../widgets/styles.styl';
 import styles from './styles.styl';
-import confirm from '../../lib/confirm';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY, PRINTING_MANAGER_TYPE_MATERIAL,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
     PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
@@ -80,6 +79,8 @@ class PrintingManager extends PureComponent {
 
     qualityFileInput = React.createRef();
 
+    renameInput = React.createRef();
+
     scrollDom = React.createRef();
 
     state = {
@@ -141,11 +142,18 @@ class PrintingManager extends PureComponent {
             return true;
         },
         setRenamingStatus: (status) => {
+            const selectedOption = this.props.managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? this.state.materialDefinitionForManager : this.state.qualityDefinitionForManager;
+            if (isOfficialDefinition(selectedOption)) {
+                return;
+            }
             const keySelectedDefinition = `${this.props.managerDisplayType}DefinitionForManager`;
             this.setState({
                 renamingStatus: status,
                 selectedName: this.state[keySelectedDefinition].name
             });
+            status && setTimeout(() => {
+                this.renameInput.current.focus();
+            }, 0);
         },
         onChangeMaterialFileForManager: (event) => {
             const materialFile = event.target.files[0];
@@ -367,38 +375,85 @@ class PrintingManager extends PureComponent {
                 this.actions.onSelectDefinition(newDefinition.definitionId);
             }
         },
+        onCreateManagerDefinition: async (name) => {
+            const { managerDisplayType, materialDefinitions, qualityDefinitions } = this.props;
+            if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
+                const definition = materialDefinitions.find(def => def.definitionId === 'material.pla');
+                const newDefinition = await this.props.duplicateMaterialDefinition(definition, undefined, name);
+
+                // Select new definition after creation
+                this.actions.onSelectDefinition(newDefinition.definitionId);
+            } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
+                const definition = qualityDefinitions.find(def => def.definitionId === 'quality.normal_quality');
+                const newDefinition = await this.props.duplicateQualityDefinition(definition, undefined, name);
+
+                // Select new definition after creation
+                this.actions.onSelectDefinition(newDefinition.definitionId);
+            }
+        },
         onRemoveManagerDefinition: async (managerDisplayType) => {
+            const selectedOption = this.props.managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? this.state.materialDefinitionForManager : this.state.qualityDefinitionForManager;
+            if (isOfficialDefinition(selectedOption)) {
+                return;
+            }
             if (managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL) {
                 const definition = this.state.materialDefinitionForManager;
-                const confirmed = await confirm({
-                    body: `Are you sure to remove profile "${definition.name}"?`
+                const popupActions = modal({
+                    title: i18n._('Delete Parameters'),
+                    body: (
+                        <React.Fragment>
+                            <p>{`Are you sure to remove profile "${definition.name}"?`}</p>
+                        </React.Fragment>
+
+                    ),
+
+                    footer: (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary"
+                            onClick={async () => {
+                                await this.props.removeMaterialDefinition(definition);
+
+                                // After removal, select the first definition
+                                if (this.props.materialDefinitions.length) {
+                                    this.actions.onSelectMaterialTypeAndUpdate(this.props.materialDefinitions[0].definitionId);
+                                }
+                                popupActions.close();
+                            }}
+                        >
+                            {i18n._('OK')}
+                        </button>
+                    )
                 });
-                if (!confirmed) {
-                    return;
-                }
-
-                await this.props.removeMaterialDefinition(definition);
-
-                // After removal, select the first definition
-                if (this.props.materialDefinitions.length) {
-                    this.actions.onSelectMaterialTypeAndUpdate(this.props.materialDefinitions[0].definitionId);
-                }
             } else if (managerDisplayType === PRINTING_MANAGER_TYPE_QUALITY) {
                 const definition = this.state.qualityDefinitionForManager;
+                const popupActions = modal({
+                    title: i18n._('Delete Parameters'),
+                    body: (
+                        <React.Fragment>
+                            <p>{`Are you sure to remove profile "${definition.name}"?`}</p>
+                        </React.Fragment>
 
-                const confirmed = await confirm({
-                    body: `Are you sure to remove profile "${definition.name}"?`
+                    ),
+
+                    footer: (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary"
+                            onClick={async () => {
+                                await this.props.removeQualityDefinition(definition);
+
+                                // After removal, select the first definition
+                                if (this.props.qualityDefinitions.length) {
+                                    this.actions.onSelectQualityType(this.props.qualityDefinitions[0]);
+                                }
+                                popupActions.close();
+                            }}
+                        >
+                            {i18n._('OK')}
+                        </button>
+                    )
                 });
-                if (!confirmed) {
-                    return;
-                }
-
-                await this.props.removeQualityDefinition(definition);
-
-                // After removal, select the first definition
-                if (this.props.qualityDefinitions.length) {
-                    this.actions.onSelectQualityType(this.props.qualityDefinitions[0]);
-                }
             }
         },
         showNewModal: () => {
@@ -407,7 +462,7 @@ class PrintingManager extends PureComponent {
                 title: i18n._('Create Profile'),
                 label: i18n._('Enter Profile Name:'),
                 defaultInputValue: 'New Profile',
-                onComplete: this.actions.onDuplicateManagerDefinition
+                onComplete: this.actions.onCreateManagerDefinition
             });
         },
         showDuplicateModal: () => {
@@ -438,7 +493,7 @@ class PrintingManager extends PureComponent {
                             popupActions.close();
                         }}
                     >
-                        {i18n._('Ok')}
+                        {i18n._('OK')}
                     </button>
                 )
             });
@@ -588,9 +643,11 @@ class PrintingManager extends PureComponent {
                                                                             className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
                                                                             style={{ paddingLeft: '42px' }}
                                                                             onClick={() => this.actions.onSelectDefinition(currentOption.value)}
+                                                                            onDoubleClick={() => this.actions.setRenamingStatus(true)}
                                                                         >
                                                                             {(isSelected && renamingStatus) ? (
                                                                                 <input
+                                                                                    ref={this.renameInput}
                                                                                     className="sm-parameter-row__input"
                                                                                     value={selectedName}
                                                                                     onChange={actions.onChangeSelectedName}
@@ -752,7 +809,6 @@ class PrintingManager extends PureComponent {
                                                     )}
                                                     { group.fields.map((key) => {
                                                         const setting = selectedOption.settings[key];
-
                                                         const { label, description, type, unit = '', enabled, options } = setting;
                                                         const defaultValue = setting.default_value;
                                                         if (typeof enabled === 'string') {
@@ -877,7 +933,7 @@ class PrintingManager extends PureComponent {
                                                                         <input
                                                                             className="sm-parameter-row__checkbox"
                                                                             type="checkbox"
-                                                                            checked={selectedOption[key]}
+                                                                            checked={defaultValue}
                                                                             disabled={!isDefinitionEditable(selectedOption)}
                                                                             onChange={(event) => actions.onChangeDefinition(key, event.target.checked, QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY)}
                                                                         />

@@ -276,11 +276,11 @@ class ThreeModel extends BaseModel {
             this.isSelected = isSelected;
         }
         if (this.overstepped === true) {
-            this.meshObject.material = materialOverstepped;
+            this.meshObject.material = materialOverstepped.clone();
         } else if (this.isSelected === true) {
-            this.meshObject.material = materialSelected;
+            this.meshObject.material = materialSelected.clone();
         } else {
-            this.meshObject.material = materialNormal;
+            this.meshObject.material = materialNormal.clone();
         }
         // for indexed geometry
         if (isSelected && this.meshObject.geometry.getAttribute('color')) {

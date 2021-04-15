@@ -87,6 +87,7 @@ function onClickPreferences(browserWindow) {
 async function openFile(browserWindow, file) {
     if (!file) {
         const openDialogReturnValue = await dialog.showOpenDialog(
+            browserWindow,
             {
                 title: 'Snapmaker Luban',
                 filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
