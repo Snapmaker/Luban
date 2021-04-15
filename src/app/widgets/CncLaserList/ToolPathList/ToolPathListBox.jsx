@@ -40,6 +40,7 @@ class ToolPathListBox extends PureComponent {
 
     actions = {
         getContent: (headType, toolPath) => {
+            console.log('tp', toolPath);
             const methodType = toolPath.type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
             if (headType === HEAD_CNC) {
                 const def = this.props.toolDefinitions.find(d => d.definitionId === toolPath.toolParams.definitionId);
@@ -62,7 +63,7 @@ class ToolPathListBox extends PureComponent {
                     <div>
                         <p>Mode: {toolPath.type}</p>
                         {toolPath.type === TOOLPATH_TYPE_VECTOR && (
-                            <p>Path: {toolPath.gcodeConfig.fillEnabled ? 'Fill' : 'Border'}</p>
+                            <p>Fill: {toolPath.gcodeConfig.fillEnabled ? 'Yes' : 'No'}</p>
                         )}
                         {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
                             <p>Line Direction: {toolPath.gcodeConfig.direction}</p>
@@ -70,7 +71,10 @@ class ToolPathListBox extends PureComponent {
                         {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
                             <p>Movement Mode: {movementModeValue[toolPath.gcodeConfig.movementMode]}</p>
                         )}
-                        <p>Power: {toolPath.gcodeConfig.fixedPower}%</p>
+                        <p>Fixed power: {toolPath.gcodeConfig.fixedPowerEnabled ? 'Yes' : 'No'}</p>
+                        {toolPath.gcodeConfig.fixedPowerEnabled && (
+                            <p>Power: {toolPath.gcodeConfig.fixedPower}%</p>
+                        )}
                     </div>
                 );
             }
