@@ -275,16 +275,13 @@ class ModelGroup extends EventEmitter {
         return this._getEmptyState();
     }
 
-    // model.transformation.positionZ !== model.meshObject3D.position.z
     bringSelectedModelToFront() {
         const selected = this.getSelectedModel();
         const sorted = this.getSortedModelsByPositionZ().filter(model => model !== selected);
         for (let i = 0; i < sorted.length; i++) {
-            sorted[i].meshObject.position.z = (i + 1) * INDEXMARGIN;
-            sorted[i].zIndex = (i + 1) * INDEXMARGIN;
+            sorted[i].updateTransformation({ 'positionZ': (i + 1) * INDEXMARGIN });
         }
-        selected.meshObject.position.z = (sorted.length + 1) * INDEXMARGIN;
-        selected.zIndex = (sorted.length + 1) * INDEXMARGIN;
+        selected.updateTransformation({ 'positionZ': (sorted.length + 1) * INDEXMARGIN });
     }
 
     // keep the origin order
@@ -292,11 +289,16 @@ class ModelGroup extends EventEmitter {
         const selected = this.getSelectedModel();
         const sorted = this.getSortedModelsByPositionZ().filter(model => model !== selected);
         for (let i = 0; i < sorted.length; i++) {
-            sorted[i].meshObject.position.z = (i + 2) * INDEXMARGIN;
-            sorted[i].zIndex = (i + 2) * INDEXMARGIN;
+            sorted[i].updateTransformation({ 'positionZ': (i + 2) * INDEXMARGIN });
         }
-        selected.meshObject.position.z = INDEXMARGIN;
-        selected.zIndex = INDEXMARGIN;
+        selected.updateTransformation({ 'positionZ': INDEXMARGIN });
+    }
+
+    resetModelsPositionZByOrder() {
+        const sorted = this.getSortedModelsByPositionZ();
+        for (let i = 0; i < sorted.length; i++) {
+            sorted[i].updateTransformation({ 'positionZ': (i + 1) * INDEXMARGIN });
+        }
     }
 
     getSortedModelsByPositionZ() {
@@ -312,6 +314,7 @@ class ModelGroup extends EventEmitter {
                 }
             }
         }
+
         return sorted;
     }
 
@@ -1274,18 +1277,16 @@ class ModelGroup extends EventEmitter {
                 config: modelInfo.config
             });
         }
-        const model = this.newModel(modelInfo);
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
-        if (model.sourceType !== '3d') {
-            if (modelInfo.zIndex > 0) {
-                model.meshObject.position.z = modelInfo.zIndex;
-                model.zIndex = modelInfo.zIndex;
-            } else {
+        if (modelInfo.sourceType !== '3d') {
+            if (!(modelInfo?.transformation?.positionZ > 0)) {
+                this.resetModelsPositionZByOrder();
                 const modelLength = this.models.length;
-                model.meshObject.position.z = (modelLength + 1) * INDEXMARGIN;
-                model.zIndex = (modelLength + 1) * INDEXMARGIN;
+                modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
             }
         }
+        const model = this.newModel(modelInfo);
+
         model.computeBoundingBox();
 
         // add to group and select

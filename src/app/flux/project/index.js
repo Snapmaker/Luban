@@ -147,11 +147,11 @@ export const actions = {
         if (materials && (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER)) {
             dispatch(modActions.updateMaterials(envHeadType, materials));
         }
-        models = bubbleSortByAttribute(models, 'zIndex');
+        models = bubbleSortByAttribute(models, ['transformation', 'positionZ']);
         for (let k = 0; k < models.length; k++) {
-            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID, zIndex } = models[k];
+            const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
             dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
-                sourceType, config, gcodeConfig, transformation, modelID, zIndex));
+                sourceType, config, gcodeConfig, transformation, modelID));
         }
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {

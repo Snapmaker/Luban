@@ -180,10 +180,9 @@ class SvgModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { elem, size, zIndex } = modelInfo;
+        const { elem, size } = modelInfo;
         this.elem = elem;
         this.size = size;
-        this.zIndex = zIndex || 0;
 
         this.geometry = new THREE.PlaneGeometry(this.width, this.height);
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
@@ -1048,7 +1047,7 @@ class SvgModel extends BaseModel {
             ...this.transformation,
             positionX: t.x - size.x,
             positionY: -t.y + size.y,
-            positionZ: 0,
+            // positionZ: 0,
             scaleX: t.scaleX,
             scaleY: t.scaleY,
             scaleZ: 1,
@@ -1129,7 +1128,7 @@ class SvgModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName, zIndex
+            transformation, processImageName
         } = this;
         return {
             modelID,
@@ -1142,7 +1141,6 @@ class SvgModel extends BaseModel {
             uploadName,
             config,
             mode,
-            zIndex,
             transformation,
             processImageName
         };
