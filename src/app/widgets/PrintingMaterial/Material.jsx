@@ -185,11 +185,7 @@ class Material extends PureComponent {
                                                 )}
                                                 { type === 'bool' && (
                                                     <td>
-                                                        <div
-                                                            className={
-                                                                classNames(styles[defaultValue ? 'checked' : 'unchecked'])
-                                                            }
-                                                        />
+                                                        {defaultValue ? i18n._('Yes') : i18n._('No')}
                                                     </td>
                                                 )}
                                             </tr>
