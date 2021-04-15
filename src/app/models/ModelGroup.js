@@ -275,7 +275,6 @@ class ModelGroup extends EventEmitter {
         return this._getEmptyState();
     }
 
-    // Change the transformation but not updateTransformation until next operation
     bringSelectedModelToFront() {
         const selected = this.getSelectedModel();
         const sorted = this.getSortedModelsByPositionZ().filter(model => model !== selected);
