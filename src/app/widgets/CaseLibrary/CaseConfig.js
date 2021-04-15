@@ -16,7 +16,7 @@ export const CaseConfigOriginal = [
         },
         material: {
             definitionName: 'Caselibrary.Vase.Ori.material', // pla,stl
-            definitionId: 'material.VaseOri', // pla,stl
+            definitionId: 'material.7874417290204327', // pla,stl
             // material_diameter: 1.75,
             // material_flow: 100,
             material_print_temperature: 205,
@@ -28,7 +28,7 @@ export const CaseConfigOriginal = [
         quality: {
             isRecommand: true,
             definitionName: 'quality.normal_quality',
-            definitionId: 'quality.normal_quality'
+            definitionId: 'quality.7874417290204327'
             // layer_height: 0.16,
             //
             // layer_height: 0.16,
@@ -164,7 +164,7 @@ export const CaseConfig150 = [
         },
         material: {
             definitionName: 'Caselibrary.Vase.A150.material', // pla,stl
-            definitionId: 'material.VaseA150', // pla,stl
+            definitionId: 'material.5374625791241261', // pla,stl
             // material_diameter: 1.75,
             // material_flow: 100,
             // material_print_temperature: 198,
@@ -175,7 +175,7 @@ export const CaseConfig150 = [
         quality: {
             isRecommand: false,
             definitionName: 'Caselibrary.Vase.A150.quality',
-            definitionId: 'quality.VaseA150',
+            definitionId: 'quality.7874417290204327',
             layer_height: 0.16,
 
             // layer_height: 0.16,
@@ -309,13 +309,13 @@ export const CaseConfig250 = [
         material: {
             // pla,stl
             definitionName: 'Caselibrary.Vase.A250.material',
-            definitionId: 'material.VaseA250',
+            definitionId: 'material.9172052037515865',
             material_bed_temperature_layer_0: 50
         },
         quality: {
             isRecommand: false,
             definitionName: 'Caselibrary.Vase.A250.quality',
-            definitionId: 'quality.VaseA250',
+            definitionId: 'quality.9172052037515865',
             layer_height: 0.16,
             layer_height_0: 0.25,
             speed_wall_0: 40,
@@ -399,13 +399,13 @@ export const CaseConfig350 = [
         },
         material: {
             definitionName: 'Caselibrary.Vase.A350.material',
-            definitionId: 'material.VaseA350',
+            definitionId: 'material.430253604082258',
             material_bed_temperature_layer_0: 50
         },
         quality: {
             isRecommand: false,
             definitionName: 'Caselibrary.Vase.A350.quality',
-            definitionId: 'quality.VaseA350',
+            definitionId: 'quality.430253604082258',
             layer_height: 0.16,
             speed_wall_0: 40,
             layer_height_0: 0.25,
