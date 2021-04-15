@@ -554,7 +554,7 @@ export const CaseConfigFourAxis = [
             positionX: 0,
             positionY: 25,
             rotationZ: 0,
-            width: 110,
+            width: 109,
             height: 50
         }
     },
@@ -595,7 +595,7 @@ export const CaseConfigFourAxis = [
             positionX: 0,
             positionY: 25,
             rotationZ: 0,
-            width: 110,
+            width: 109,
             height: 50
         }
     }
