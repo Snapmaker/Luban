@@ -59,6 +59,7 @@ class LaserParameters extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Name')}</span>
                         <TextInput
                             className="sm-parameter-row__input"
+                            style={{ width: '160px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
@@ -73,7 +74,7 @@ class LaserParameters extends PureComponent {
                                     <span className="sm-parameter-row__label">{i18n._('Line Direction')}</span>
                                     <Select
                                         backspaceRemoves={false}
-                                        className="sm-parameter-row__select"
+                                        className="sm-parameter-row__select-md"
                                         clearable={false}
                                         menuContainerStyle={{ zIndex: 5 }}
                                         name="line_direction"
@@ -101,7 +102,7 @@ class LaserParameters extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Movement Mode')}</span>
                                 <Select
                                     backspaceRemoves={false}
-                                    className="sm-parameter-row__select-lg"
+                                    className="sm-parameter-row__select-md"
                                     clearable={false}
                                     menuContainerStyle={{ zIndex: 5 }}
                                     name="Movement"
