@@ -12,6 +12,7 @@ class ModalHOC extends PureComponent {
         ...Modal.propTypes,
         removeContainer: PropTypes.func.isRequired,
         defaultInputValue: PropTypes.string,
+        type: PropTypes.string,
         title: PropTypes.node,
         body: PropTypes.node,
         footer: PropTypes.node
@@ -50,7 +51,7 @@ class ModalHOC extends PureComponent {
     }
 
     render() {
-        const { title, body, footer, size } = this.props;
+        const { title, body, footer, size, type } = this.props;
         const { show, inputValue } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
@@ -89,10 +90,11 @@ class ModalHOC extends PureComponent {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
+                    {type === 'buttonRight' && footer}
                     <button type="button" className="sm-btn-large sm-btn-default" onClick={this.handleClose}>
                         {i18n._('Cancel')}
                     </button>
-                    {footer}
+                    {type !== 'buttonRight' && footer}
                 </Modal.Footer>
             </Modal>
         );
