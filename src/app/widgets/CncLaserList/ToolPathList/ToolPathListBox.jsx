@@ -82,13 +82,16 @@ class ToolPathListBox extends PureComponent {
     renderTipContent(headType, toolPath) {
         const methodType = toolPath.type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
         if (headType === HEAD_CNC) {
+            // Todo, check def default value
             const def = this.props.toolDefinitions.find(d => d.definitionId === toolPath.toolParams.definitionId);
             return (
                 <div>
                     <p>Method: {methodType}</p>
                     <p>Path: {toolPath.gcodeConfig.pathType}</p>
                     <p>Tool: {toolPath.toolParams.definitionName}</p>
-                    <p>Material: {def.category}</p>
+                    {def !== undefined && (
+                        <p>Material: {def.category}</p>
+                    )}
                 </div>
             );
         }
