@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import ToolPath from './ToolPath';
-import { createToolPathName, getToolPathType, SUCCESS, WARNING } from './utils';
+import { createToolPathName, getToolPathType, SUCCESS } from './utils';
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
@@ -138,7 +138,8 @@ class ToolPathGroup {
             type,
             modelIDs: this.modelGroup.selectedToolPathModelIDs,
             modelGroup: this.modelGroup,
-            gcodeConfig
+            gcodeConfig,
+            materials
         }).getState();
         // this.toolPaths.push(toolPathModel);
 
@@ -148,17 +149,18 @@ class ToolPathGroup {
     saveToolPath(toolPathInfo, options) {
         let toolPath = this._getToolPath(toolPathInfo.id);
         if (toolPath) {
-            toolPath.updateState(toolPathInfo);
+            toolPath.updateState({ ...toolPathInfo, ...options });
         } else {
             toolPath = new ToolPath({
                 ...toolPathInfo,
+                ...options,
                 modelGroup: this.modelGroup
             });
             this.toolPaths.push(toolPath);
             this.toolPathObjects.add(toolPath.object);
             this.selectedToolPathId = toolPath.id;
         }
-        toolPath.commitGenerateToolPath(options);
+        toolPath.commitGenerateToolPath();
     }
 
     addSelectedToolpathColor() {
@@ -248,19 +250,21 @@ class ToolPathGroup {
         this._updated();
     }
 
-    commitToolPath(toolPathId, options) {
+    commitToolPath(toolPathId) {
+        let res = false;
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
-            toolPath.commitGenerateToolPath(options);
+            res = toolPath.commitGenerateToolPath();
         }
         this._updated();
+        return res;
     }
 
     updateToolPath(toolPathId, newState, options) {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
-            toolPath.updateState(newState);
-            toolPath.commitGenerateToolPath(options);
+            toolPath.updateState({ ...newState, ...options });
+            toolPath.commitGenerateToolPath();
         }
 
         this._updated();
@@ -284,11 +288,8 @@ class ToolPathGroup {
 
     updateMaterials(materials) {
         for (const toolPath of this.toolPaths) {
-            toolPath.updateStatus(WARNING);
-            toolPath.removeToolPathObject();
+            toolPath.updateState({ materials });
         }
-
-        this.simulationObjects.visible = false;
 
         if (this.headType === HEAD_LASER) {
             this.updateLaserMaterialsBackground(materials);
