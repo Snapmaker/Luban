@@ -202,7 +202,7 @@ class CncParameters extends PureComponent {
                                 <React.Fragment>
                                     <TipTrigger
                                         title={i18n._('Slicing Mode')}
-                                        content={i18n._('Select the slicing mode of the mesh tool path')}
+                                        content={i18n._('Select the slicing mode of the mesh toolpath')}
                                     >
                                         <div className="sm-parameter-row">
                                             <span className="sm-parameter-row__label">{i18n._('Slicing Mode')}</span>

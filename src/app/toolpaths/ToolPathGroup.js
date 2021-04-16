@@ -42,7 +42,7 @@ class ToolPathGroup {
     }
 
     /**
-     * Used to show tool path group objects in process canvas after preview models
+     * Used to show toolpath group objects in process canvas after preview models
      */
     show() {
         this.object.visible = true;
