@@ -1438,7 +1438,7 @@ class ModelGroup extends EventEmitter {
     }
 
     /**
-     * Set selected modelIDs to create tool path.
+     * Set selected modelIDs to create toolpath.
      * @param modelIDs
      */
     setSelectedToolPathModelIDs(modelIDs = []) {

@@ -121,7 +121,7 @@ class ToolPath {
     }
 
     /**
-     * Commit generate tool path task to server
+     * Commit generate toolpath task to server
      */
     commitGenerateToolPath() {
         if (this.status === FAILED) {
@@ -191,7 +191,7 @@ class ToolPath {
     }
 
     /**
-     * Listen generate tool path result
+     * Listen generate toolpath result
      */
     onGenerateToolPath(result) {
         return new Promise((resolve, reject) => {
