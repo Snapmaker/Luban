@@ -8,21 +8,26 @@ const groupStyles = {
     padding: '0px 0px',
     display: 'flex'
 };
-
-const customStyles = {
+const defaultStyles = {
     option: (provided, state) => {
         if (state.data && state.data.definitionId === 'new') {
             return {
                 ...provided,
                 borderTop: '1px solid #C5C5C5',
                 textIndent: '8px',
+                paddingRight: '0',
+                marginBottom: '8px',
                 height: 'auto'
             };
         } else {
             return {
                 ...provided,
                 textIndent: '8px',
-                height: 30
+                paddingRight: '0',
+                height: 30,
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden'
             };
         }
     },
@@ -49,11 +54,8 @@ const customStyles = {
         // console.log('isDisabled', state);
         return { ...provided, lineHeight: '20px' };
     },
-    menuList: (provided) => {
-        return { ...provided, marginTop: '0', marginBottom: '0', paddingTop: '0', paddingBottom: '0', lineHeight: '20px' };
-    },
     menu: (provided) => {
-        return { ...provided, marginTop: '0', marginBottom: '0' };
+        return { ...provided, marginTop: '0', marginBottom: '0', zIndex: '10' };
     },
     control: (provided, state) => {
         const backgroundColor = state.isDisabled ? '#eee' : '#fff';
@@ -79,6 +81,25 @@ const customStyles = {
         };
     }
 };
+const stylesWithGroup = {
+    ...defaultStyles,
+    menuList: (provided) => {
+        return { ...provided, marginTop: '0', marginBottom: '0', paddingTop: '0', paddingBottom: '0', lineHeight: '20px' };
+    }
+};
+const stylesWithoutGroup = {
+    ...defaultStyles,
+    menuList: (provided) => {
+        return { ...provided, marginTop: '8px', marginBottom: '8px', paddingTop: '0', paddingBottom: '0', lineHeight: '20px' };
+    }
+};
+
+// const Option = (props) => (
+//     <components.Option {...props} />
+// );
+// const Input = (props) => (
+//     <components.Input {...props} />
+// );
 
 
 const GroupHeading = props => (
@@ -99,6 +120,7 @@ class ChangedReactSelect extends PureComponent {
         options: PropTypes.array.isRequired,
         // whether using 'GroupHeading' component
         isGroup: PropTypes.bool,
+        componentsCovered: PropTypes.object,
         // to calculate the 'defaultValue' for the react-select component
         valueObj: PropTypes.shape({
             firstKey: PropTypes.string,
@@ -118,6 +140,7 @@ class ChangedReactSelect extends PureComponent {
 
     static defaultProps = {
         isGroup: false
+        // customValue: false
     };
 
     actions = {
@@ -130,6 +153,7 @@ class ChangedReactSelect extends PureComponent {
             options,
             isGroup,
             disabled,
+            componentsCovered,
             ...props
         } = this.props;
         let defaultValue = {};
@@ -158,14 +182,13 @@ class ChangedReactSelect extends PureComponent {
                 defaultValue = options.find(d => d[firstKey] === firstValue);
             }
         }
-
         return (
             <Select
                 {...props}
                 options={options}
-                styles={customStyles}
                 isDisabled={disabled}
-                components={{ GroupHeading }}
+                styles={isGroup ? stylesWithGroup : stylesWithoutGroup}
+                components={componentsCovered || GroupHeading}
                 value={defaultValue}
                 defaultValue={defaultValue}
             />

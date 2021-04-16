@@ -15,7 +15,7 @@ import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
 import { calibrationPhoto, getCameraCalibration, getPhoto, setMatrix, takePhoto } from '../../lib/image-getPhoto';
-import { mmToPixel, removeSpecialChars } from '../../../shared/lib/utils';
+import { removeSpecialChars } from '../../../shared/lib/utils';
 import { Mesh } from '../../lib/MeshProcess/Mesh';
 
 const log = logger('api:image');
@@ -87,8 +87,8 @@ export const set = (req, res) => {
                 res.send({
                     originalName: originalName,
                     uploadName: uploadName,
-                    width: mmToPixel(width),
-                    height: mmToPixel(height)
+                    width: width,
+                    height: height
                 });
                 next();
             } else {

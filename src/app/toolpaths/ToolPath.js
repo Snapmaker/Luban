@@ -33,12 +33,14 @@ class ToolPath {
 
     toolParams;
 
+    materials;
+
     lastConfigJson = '';
 
     modelGroup;
 
     constructor(options) {
-        const { id, name, baseName, headType, type, modelIDs, gcodeConfig, toolParams = {}, modelGroup } = options;
+        const { id, name, baseName, headType, type, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
         this.id = id || uuid.v4();
         this.name = name;
@@ -54,6 +56,7 @@ class ToolPath {
 
         this.gcodeConfig = { ...gcodeConfig };
         this.toolParams = { ...toolParams };
+        this.materials = { ...materials };
         this.modelGroup = modelGroup;
 
         this.checkoutToolPathStatus();
@@ -76,6 +79,9 @@ class ToolPath {
             },
             toolParams: {
                 ...this.toolParams
+            },
+            materials: {
+                ...this.materials
             }
         };
     }
@@ -85,7 +91,7 @@ class ToolPath {
     }
 
     updateState(toolPath) {
-        const { name = this.name, check = this.check, visible = this.visible, gcodeConfig = this.gcodeConfig, toolParams = this.toolParams } = toolPath;
+        const { name = this.name, check = this.check, visible = this.visible, gcodeConfig = this.gcodeConfig, toolParams = this.toolParams, materials = this.materials } = toolPath;
 
         this.name = name;
         this.check = check;
@@ -97,6 +103,9 @@ class ToolPath {
         };
         this.toolParams = {
             ...toolParams
+        };
+        this.materials = {
+            ...materials
         };
 
         this.checkoutToolPathStatus();
@@ -112,21 +121,22 @@ class ToolPath {
     }
 
     /**
-     * Commit generate tool path task to server
+     * Commit generate toolpath task to server
      */
-    commitGenerateToolPath(options) {
+    commitGenerateToolPath() {
         if (this.status === FAILED) {
             this.clearModelObjects();
-            return;
+            return false;
         }
 
-        const { materials } = options;
+        this.checkoutToolPathStatus();
+        if (this.status === SUCCESS) {
+            return false;
+        }
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
-
-            taskInfo.materials = materials;
 
             const task = {
                 taskId: this.id,
@@ -140,6 +150,7 @@ class ToolPath {
             this.modelMap.get(taskInfo.modelID).status = RUNNING;
         }
         this.checkoutStatus();
+        return true;
     }
 
     _getModelTaskInfos() {
@@ -171,7 +182,8 @@ class ToolPath {
             modelInfos[i] = {
                 ...modelInfos[i],
                 gcodeConfig: this.gcodeConfig,
-                toolParams: this.toolParams
+                toolParams: this.toolParams,
+                materials: this.materials
             };
         }
 
@@ -179,7 +191,7 @@ class ToolPath {
     }
 
     /**
-     * Listen generate tool path result
+     * Listen generate toolpath result
      */
     onGenerateToolPath(result) {
         return new Promise((resolve, reject) => {
@@ -195,13 +207,11 @@ class ToolPath {
                     model.status = SUCCESS;
                     model.toolPathFile = result.filename;
                     this.loadToolPathFile(result.filename).then((toolPathObj3D) => {
-                        // Not remove the pointer but just replace the contents of the pointer
-                        if (!model.meshObj) {
-                            model.meshObj = toolPathObj3D;
-                            this.object.add(model.meshObj);
-                        } else {
-                            model.meshObj.copy(toolPathObj3D);
-                        }
+                        const oldMeshObj = model.meshObj;
+                        model.meshObj = toolPathObj3D;
+
+                        oldMeshObj && this.object.remove(oldMeshObj);
+                        this.object.add(toolPathObj3D);
 
                         this.checkoutStatus();
                         resolve();

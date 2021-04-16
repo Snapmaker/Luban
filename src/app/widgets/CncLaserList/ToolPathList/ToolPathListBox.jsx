@@ -10,6 +10,7 @@ import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolPathConfigurations from '../../../views/ToolPathConfigurations/ToolPathConfigurations';
+import { HEAD_CNC, HEAD_LASER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 
 class ToolPathListBox extends PureComponent {
     static propTypes = {
@@ -23,7 +24,10 @@ class ToolPathListBox extends PureComponent {
         updateToolPath: PropTypes.func.isRequired,
         updatingToolPath: PropTypes.func.isRequired,
 
-        previewFailed: PropTypes.bool.isRequired
+        previewFailed: PropTypes.bool.isRequired,
+
+        // cnc only
+        toolDefinitions: PropTypes.array
     };
 
     state = {
@@ -75,8 +79,52 @@ class ToolPathListBox extends PureComponent {
         }
     }
 
+    renderTipContent(headType, toolPath) {
+        const methodType = toolPath.type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
+        if (headType === HEAD_CNC) {
+            // Todo, check def default value
+            const def = this.props.toolDefinitions.find(d => d.definitionId === toolPath.toolParams.definitionId);
+            return (
+                <div>
+                    <p>Method: {methodType}</p>
+                    <p>Path: {toolPath.gcodeConfig.pathType}</p>
+                    <p>Tool: {toolPath.toolParams.definitionName}</p>
+                    {def !== undefined && (
+                        <p>Material: {def.category}</p>
+                    )}
+                </div>
+            );
+        }
+        if (headType === HEAD_LASER) {
+            const movementModeValue = {
+                'greyscale-line': i18n._('Line (Normal Quality)'),
+                'greyscale-dot': i18n._('Dot (High Quality)')
+            };
+
+            return (
+                <div>
+                    <p>Mode: {toolPath.type}</p>
+                    {toolPath.type === TOOLPATH_TYPE_VECTOR && (
+                        <p>Fill: {toolPath.gcodeConfig.fillEnabled ? 'Yes' : 'No'}</p>
+                    )}
+                    {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
+                        <p>Line Direction: {toolPath.gcodeConfig.direction}</p>
+                    )}
+                    {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
+                        <p>Movement Mode: {movementModeValue[toolPath.gcodeConfig.movementMode]}</p>
+                    )}
+                    <p>Fixed power: {toolPath.gcodeConfig.fixedPowerEnabled ? 'Yes' : 'No'}</p>
+                    {toolPath.gcodeConfig.fixedPowerEnabled && (
+                        <p>Power: {toolPath.gcodeConfig.fixedPower}%</p>
+                    )}
+                </div>
+            );
+        }
+        return '';
+    }
+
     render() {
-        const { toolPaths } = this.props;
+        const { toolPaths, headType } = this.props;
 
         const getIconStatus = (status) => {
             if (status === 'running') {
@@ -98,7 +146,7 @@ class ToolPathListBox extends PureComponent {
                             <TipTrigger
                                 key={toolPath.id}
                                 title={i18n._('Object')}
-                                content={toolPath.name}
+                                content={this.renderTipContent(headType, toolPath)}
                             >
                                 <div>
                                     <div
@@ -184,11 +232,12 @@ class ToolPathListBox extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     // eslint-disable-next-line no-unused-vars
-    const { toolPathGroup, previewFailed } = state[ownProps.headType];
+    const { toolPathGroup, previewFailed, toolDefinitions } = state[ownProps.headType];
 
     const toolPaths = toolPathGroup.getToolPaths();
 
     return {
+        toolDefinitions,
         toolPaths,
         headType: ownProps.headType,
         selectedToolPathId: toolPathGroup.selectedToolPathId,

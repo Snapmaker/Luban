@@ -203,6 +203,7 @@ class App extends PureComponent {
             // show warning when open CNC tab for the first time
             if (this.props.machineInfo.shouldShowCncWarning && location.pathname === '/cnc') {
                 modal({
+                    type: 'buttonRight',
                     title: i18n._('Warning'),
                     body: (
                         <div>

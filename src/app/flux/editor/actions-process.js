@@ -198,12 +198,13 @@ export const processActions = {
 
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup, materials } = getState()[headType];
-        toolPathGroup.commitToolPath(toolPathId, { materials });
-        dispatch(baseActions.updateState(headType, {
-            stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
-            isChangedAfterGcodeGenerating: true,
-            progress: 0
-        }));
+        if (toolPathGroup.commitToolPath(toolPathId, { materials })) {
+            dispatch(baseActions.updateState(headType, {
+                stage: CNC_LASER_STAGE.GENERATING_TOOLPATH,
+                isChangedAfterGcodeGenerating: true,
+                progress: 0
+            }));
+        }
     },
 
     onGenerateToolPath: (headType, taskResult) => (dispatch, getState) => {

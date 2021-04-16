@@ -361,6 +361,14 @@ export const actions = {
             ...transformation
         };
 
+        if (!transformation.scaleX) {
+            transformation.scaleX = transformation.width / width;
+        }
+
+        if (!transformation.scaleY) {
+            transformation.scaleY = transformation.height / height;
+        }
+
         const options = {
             modelID,
             limitSize: size,
@@ -1220,11 +1228,13 @@ export const actions = {
         modelGroup.setMaterials(allMaterials);
 
         toolPathGroup.updateMaterials(allMaterials);
+        toolPathGroup.showSimulationObject(false);
 
         dispatch(baseActions.updateState(headType, {
             materials: {
                 ...allMaterials
-            }
+            },
+            showSimulation: false
         }));
         if (materials.isRotate !== allMaterials.isRotate) {
             dispatch(actions.processSelectedModel(headType));

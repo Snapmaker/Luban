@@ -73,23 +73,23 @@ class VisualizerTopRight extends PureComponent {
                             </div>
                         </button>
                     </div>
-                    <div
-                        className={styles['top-right-div2']}
-                    >
-                        <div className={styles.title}>
-                            {i18n._('Preview Type')}
-                        </div>
-                        <div className={styles.content}>
-                            <input
-                                type="checkbox"
-                                onChange={this.actions.switchShowToolPath}
-                                checked={this.props.showToolPath}
-                            />
-                            <span>
-                                {i18n._('Toolpath')}
-                            </span>
-                        </div>
-                        {this.props.headType === HEAD_CNC && (
+                    {this.props.headType === HEAD_CNC && (
+                        <div
+                            className={styles['top-right-div2']}
+                        >
+                            <div className={styles.title}>
+                                {i18n._('Preview Type')}
+                            </div>
+                            <div className={styles.content}>
+                                <input
+                                    type="checkbox"
+                                    onChange={this.actions.switchShowToolPath}
+                                    checked={this.props.showToolPath}
+                                />
+                                <span>
+                                    {i18n._('Toolpath')}
+                                </span>
+                            </div>
                             <div className={styles.content}>
                                 <input
                                     type="checkbox"
@@ -100,8 +100,8 @@ class VisualizerTopRight extends PureComponent {
                                     {i18n._('Simulation')}
                                 </span>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </React.Fragment>
         );

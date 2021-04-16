@@ -989,6 +989,7 @@ export const actions = {
     updateSelectedModelTransformation: (transformation, newUniformScalingState) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.updateSelectedGroupTransformation(transformation, newUniformScalingState);
+        modelGroup.onModelAfterTransform();
         dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());

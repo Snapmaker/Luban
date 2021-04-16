@@ -146,7 +146,7 @@ class Output extends PureComponent {
                                 content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto Tool Path Preview')}</span>
+                                    <span className="sm-parameter-row__label-lg">{i18n._('Auto Toolpath Preview')}</span>
                                     <input
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"

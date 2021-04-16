@@ -45,6 +45,8 @@ class ToolPathConfigurations extends PureComponent {
             };
 
             if (this.state.activeToolDefinition) {
+                toolParams.definitionId = this.state.activeToolDefinition.definitionId;
+                toolParams.definitionName = this.state.activeToolDefinition.name;
                 toolParams.toolDiameter = this.state.activeToolDefinition.config.diameter.default_value;
                 toolParams.toolAngle = this.state.activeToolDefinition.config.angle.default_value;
                 toolParams.toolShaftDiameter = this.state.activeToolDefinition.config.shaft_diameter.default_value;
