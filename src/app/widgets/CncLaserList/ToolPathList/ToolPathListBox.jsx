@@ -39,47 +39,6 @@ class ToolPathListBox extends PureComponent {
     contextMenuRef = React.createRef();
 
     actions = {
-        getContent: (headType, toolPath) => {
-            console.log('tp', toolPath);
-            const methodType = toolPath.type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
-            if (headType === HEAD_CNC) {
-                const def = this.props.toolDefinitions.find(d => d.definitionId === toolPath.toolParams.definitionId);
-                return (
-                    <div>
-                        <p>Method: {methodType}</p>
-                        <p>Path: {toolPath.gcodeConfig.pathType}</p>
-                        <p>Tool: {toolPath.toolParams.definitionName}</p>
-                        <p>Material: {def.category}</p>
-                    </div>
-                );
-            }
-            if (headType === HEAD_LASER) {
-                const movementModeValue = {
-                    'greyscale-line': i18n._('Line (Normal Quality)'),
-                    'greyscale-dot': i18n._('Dot (High Quality)')
-                };
-
-                return (
-                    <div>
-                        <p>Mode: {toolPath.type}</p>
-                        {toolPath.type === TOOLPATH_TYPE_VECTOR && (
-                            <p>Fill: {toolPath.gcodeConfig.fillEnabled ? 'Yes' : 'No'}</p>
-                        )}
-                        {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
-                            <p>Line Direction: {toolPath.gcodeConfig.direction}</p>
-                        )}
-                        {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
-                            <p>Movement Mode: {movementModeValue[toolPath.gcodeConfig.movementMode]}</p>
-                        )}
-                        <p>Fixed power: {toolPath.gcodeConfig.fixedPowerEnabled ? 'Yes' : 'No'}</p>
-                        {toolPath.gcodeConfig.fixedPowerEnabled && (
-                            <p>Power: {toolPath.gcodeConfig.fixedPower}%</p>
-                        )}
-                    </div>
-                );
-            }
-            return '';
-        },
         selectToolPathId: (id) => {
             this.props.selectToolPathId(id);
         },
@@ -120,6 +79,47 @@ class ToolPathListBox extends PureComponent {
         }
     }
 
+    renderTipContent(headType, toolPath) {
+        const methodType = toolPath.type === TOOLPATH_TYPE_VECTOR ? 'Contour' : 'Carve';
+        if (headType === HEAD_CNC) {
+            const def = this.props.toolDefinitions.find(d => d.definitionId === toolPath.toolParams.definitionId);
+            return (
+                <div>
+                    <p>Method: {methodType}</p>
+                    <p>Path: {toolPath.gcodeConfig.pathType}</p>
+                    <p>Tool: {toolPath.toolParams.definitionName}</p>
+                    <p>Material: {def.category}</p>
+                </div>
+            );
+        }
+        if (headType === HEAD_LASER) {
+            const movementModeValue = {
+                'greyscale-line': i18n._('Line (Normal Quality)'),
+                'greyscale-dot': i18n._('Dot (High Quality)')
+            };
+
+            return (
+                <div>
+                    <p>Mode: {toolPath.type}</p>
+                    {toolPath.type === TOOLPATH_TYPE_VECTOR && (
+                        <p>Fill: {toolPath.gcodeConfig.fillEnabled ? 'Yes' : 'No'}</p>
+                    )}
+                    {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
+                        <p>Line Direction: {toolPath.gcodeConfig.direction}</p>
+                    )}
+                    {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
+                        <p>Movement Mode: {movementModeValue[toolPath.gcodeConfig.movementMode]}</p>
+                    )}
+                    <p>Fixed power: {toolPath.gcodeConfig.fixedPowerEnabled ? 'Yes' : 'No'}</p>
+                    {toolPath.gcodeConfig.fixedPowerEnabled && (
+                        <p>Power: {toolPath.gcodeConfig.fixedPower}%</p>
+                    )}
+                </div>
+            );
+        }
+        return '';
+    }
+
     render() {
         const { toolPaths, headType } = this.props;
 
@@ -142,7 +142,7 @@ class ToolPathListBox extends PureComponent {
                             <TipTrigger
                                 key={toolPath.id}
                                 title={i18n._('Object')}
-                                content={this.actions.getContent(headType, toolPath)}
+                                content={this.renderTipContent(headType, toolPath)}
                             >
                                 <div>
                                     <div
