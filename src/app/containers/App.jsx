@@ -297,7 +297,7 @@ class App extends PureComponent {
                         footer: (
                             <button
                                 type="button"
-                                className="btn sm-btn-default sm-btn-primary"
+                                className="btn sm-btn-default sm-btn-large sm-btn-primary"
                                 onClick={async () => {
                                     await this.props.onRecovery(headType);
                                     popupActions.close();

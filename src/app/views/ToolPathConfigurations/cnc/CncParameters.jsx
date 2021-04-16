@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
+// import Slider from 'rc-slider';
 import Select from '../../../components/Select';
 import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import i18n from '../../../lib/i18n';
@@ -151,13 +151,6 @@ class CncParameters extends PureComponent {
                                             min={1}
                                             max={20}
                                             style={{ width: '160px' }}
-                                            onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
-                                        />
-                                        <Slider
-                                            className="sm-parameter-row__slider"
-                                            value={fillDensity}
-                                            min={1}
-                                            max={20}
                                             onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                         />
                                     </div>

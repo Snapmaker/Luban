@@ -642,6 +642,7 @@ class PrintingManager extends PureComponent {
                                                                         <Anchor
                                                                             className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
                                                                             style={{ paddingLeft: '42px' }}
+                                                                            title={currentOption.label}
                                                                             onClick={() => this.actions.onSelectDefinition(currentOption.value)}
                                                                             onDoubleClick={() => this.actions.setRenamingStatus(true)}
                                                                         >
@@ -932,6 +933,7 @@ class PrintingManager extends PureComponent {
                                                                     {type === 'bool' && (
                                                                         <input
                                                                             className="sm-parameter-row__checkbox"
+                                                                            style={{ cursor: !isDefinitionEditable(selectedOption) ? 'not-allowed' : 'default' }}
                                                                             type="checkbox"
                                                                             checked={defaultValue}
                                                                             disabled={!isDefinitionEditable(selectedOption)}

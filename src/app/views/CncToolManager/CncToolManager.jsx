@@ -401,7 +401,7 @@ class CncToolManager extends PureComponent {
                             }
                         }}
                     >
-                        {i18n._('Ok')}
+                        {i18n._('OK')}
                     </button>
                 )
             });
@@ -444,13 +444,8 @@ class CncToolManager extends PureComponent {
                 const nameArray = [];
                 const detailNameArray = [];
                 d.toolList.forEach((item) => {
-                    let detailName = '';
-                    if (item.config.angle.default_value !== '180') {
-                        detailName = `${item.name} (${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
-                    } else {
-                        detailName = `${item.name} (${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
-                    }
-                    nameArray.push(item.name);
+                    const detailName = item.name;
+                    nameArray.push(detailName);
                     detailNameArray.push(detailName);
                 });
                 checkboxAndSelectGroup.category = category;

@@ -47,7 +47,7 @@ class SvgIcon extends PureComponent {
         } = this.props;
         const Component = Icons[name];
         if (!Component) {
-            console.error('Can\'t find the icon, please check your icon name');
+            console.error(`Can't find the icon named '${name}', please check your icon name`);
             return null;
         } else {
             return (
