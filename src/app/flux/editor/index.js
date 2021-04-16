@@ -1220,11 +1220,13 @@ export const actions = {
         modelGroup.setMaterials(allMaterials);
 
         toolPathGroup.updateMaterials(allMaterials);
+        toolPathGroup.showSimulationObject(false);
 
         dispatch(baseActions.updateState(headType, {
             materials: {
                 ...allMaterials
-            }
+            },
+            showSimulation: false
         }));
         if (materials.isRotate !== allMaterials.isRotate) {
             dispatch(actions.processSelectedModel(headType));
