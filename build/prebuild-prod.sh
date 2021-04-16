@@ -1,4 +1,5 @@
 #!/bin/bash
+npx browserslist@latest --update-db
 
 PLATFORM=`node -e "console.log(process.platform)"`
 DEST_DIR="dist/Snapmakerjs"
@@ -15,6 +16,9 @@ mkdir -p "$DEST_DIR"
 #
 # compile src
 #
+
+
+
 npm run pkgsync
 cp -af src/package.json "$DEST_DIR"
 pushd src
@@ -51,3 +55,4 @@ cp -r resources/CuraEngine/Config "$CURA_DIR"
 #
 cp -r resources/fonts "$RESOURCES_DIR"
 cp -r resources/user-case "$RESOURCES_DIR"
+
