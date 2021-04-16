@@ -43,6 +43,8 @@ install:
   - npm --version
   - npm config set loglevel warn
   - npm install
+  - npx browserslist@latest --update-db
+
 
 build_script:
   - ps: npm run build
