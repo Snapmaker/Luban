@@ -5,40 +5,23 @@ import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { MACHINE_SERIES } from '../../constants';
-import api from '../../api';
+// import api from '../../api';
 import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { CaseConfigOriginal, CaseConfig150, CaseConfig250, CaseConfig350, CaseConfigFourAxis } from './CaseConfig';
-import { actions as printingActions } from '../../flux/printing';
-import { actions as workspaceActions } from '../../flux/workspace';
-import { actions as editorActions } from '../../flux/editor';
+import { actions as projectActions } from '../../flux/project';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
+// const tmpFile = `/Tmp/${targetFile}`;
 class CaseLibrary extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
         headType: PropTypes.string,
         isConnected: PropTypes.bool,
+        openProject: PropTypes.func.isRequired,
         // laser: PropTypes.object.isRequired,
-        updateMaterials: PropTypes.func.isRequired,
-        insertDefaultCncTextVector: PropTypes.func.isRequired,
-        insertDefaultLaserTextVector: PropTypes.func.isRequired,
-        updateIsRecommended: PropTypes.func.isRequired,
-        updateDefaultMaterialId: PropTypes.func.isRequired,
-        updateDefaultQualityId: PropTypes.func.isRequired,
-        qualityDefinitions: PropTypes.array.isRequired,
-        materialDefinitions: PropTypes.array.isRequired,
-        updateActiveDefinition: PropTypes.func.isRequired,
-        updateDefinitionSettings: PropTypes.func.isRequired,
-        duplicateMaterialDefinition: PropTypes.func.isRequired,
-        duplicateQualityDefinition: PropTypes.func.isRequired,
-        removeAllModels: PropTypes.func.isRequired,
-        uploadCaseModel: PropTypes.func.isRequired,
-        renderGcodeFile: PropTypes.func.isRequired,
-        uploadCncCaseImage: PropTypes.func.isRequired,
-        uploadLaserCaseImage: PropTypes.func.isRequired,
         use4Axis: PropTypes.bool.isRequired
     };
 
@@ -133,47 +116,10 @@ class CaseLibrary extends PureComponent {
         }
     };
 
-    loadThreeAxisCase = (config) => {
-        this.props.history.push(`/${config.tag}`);
-        if (config.tag === '3dp') {
-            this.actions.load3dpCaseSettings(config);
-            this.props.removeAllModels();
-            this.props.uploadCaseModel(config.pathConfig);
-        } else {
-            setTimeout(() => {
-                this.actions.loadLaserCncCaseSettings(config);
-            }, 200);
-        }
+    loadCase = (config) => {
+        this.props.openProject(config.pathConfig, this.props.history);
     };
 
-    loadFourAxisCase = (config) => {
-        this.props.history.push(`/${config.tag}`);
-        if (config.tag !== 'workspace') {
-            // Let the laser/cnc page initialize first, and then load the model
-            setTimeout(() => {
-                this.actions.loadLaserCncCaseSettings(config);
-            }, 200);
-        } else {
-            const formData = new FormData();
-            const name = config.pathConfig.name;
-            const casePath = config.pathConfig.casePath;
-            formData.append('casePath', casePath);
-            formData.append('name', name);
-            api.uploadGcodeFile(formData)
-                .then((res) => {
-                    const response = res.body;
-                    const header = response.gcodeHeader;
-                    const gcodeFile = {
-                        name: response.uploadName,
-                        uploadName: response.uploadName,
-                        size: response.size,
-                        lastModified: +new Date(),
-                        thumbnail: header[';thumbnail'] || ''
-                    };
-                    this.props.renderGcodeFile(gcodeFile);
-                });
-        }
-    };
 
     render() {
         let CaseConfig;
@@ -223,7 +169,7 @@ class CaseLibrary extends PureComponent {
                                             styles.load,
                                         )}
                                         disabled={this.props.isConnected && this.props.headType !== config.tag}
-                                        onClick={() => this.loadThreeAxisCase(config)}
+                                        onClick={() => this.loadCase(config)}
                                     >
                                         {i18n._('Load')}
                                     </button>
@@ -259,7 +205,7 @@ class CaseLibrary extends PureComponent {
                                                     styles.load,
                                                 )}
                                                 disabled={this.props.isConnected && ((this.props.series === MACHINE_SERIES.A150.value || this.props.series === MACHINE_SERIES.ORIGINAL.value) || this.props.headType !== config.tag)}
-                                                onClick={() => this.loadFourAxisCase(config)}
+                                                onClick={() => this.loadCase(config)}
                                             >
                                                 {i18n._('Load')}
                                             </button>
@@ -276,40 +222,18 @@ class CaseLibrary extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const printing = state.printing;
     const machine = state.machine;
-    const { qualityDefinitions, materialDefinitions, defaultMaterialId, activeDefinition } = printing;
     return {
-        materialDefinitions,
         series: machine.series,
         headType: machine.headType,
         isConnected: machine.isConnected,
-        use4Axis: machine.use4Axis,
-        defaultMaterialId,
-        qualityDefinitions,
-        activeDefinition
+        use4Axis: machine.use4Axis
     };
 };
 
 
 const mapDispatchToProps = (dispatch) => ({
-    insertDefaultLaserTextVector: (caseConfigs, caseTransformation) => dispatch(editorActions.insertDefaultTextVector('laser', caseConfigs, caseTransformation)),
-    insertDefaultCncTextVector: (caseConfigs, caseTransformation) => dispatch(editorActions.insertDefaultTextVector('cnc', caseConfigs, caseTransformation)),
-    // uploadFont: (file) => dispatch(textActions.uploadFont(file)),
-    updateLaserState: (params) => dispatch(editorActions.updateState('laser', params)),
-    uploadLaserCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(editorActions.uploadCaseImage('laser', file, mode, caseConfigs, caseTransformation, onFailure)),
-    uploadCncCaseImage: (file, mode, caseConfigs, caseTransformation, onFailure) => dispatch(editorActions.uploadCaseImage('cnc', file, mode, caseConfigs, caseTransformation, onFailure)),
-    updateIsRecommended: (isRecommended) => dispatch(printingActions.updateIsRecommended(isRecommended)),
-    updateDefaultMaterialId: (materialId) => dispatch(printingActions.updateDefaultMaterialId(materialId)),
-    updateDefaultQualityId: (qualityId) => dispatch(printingActions.updateDefaultQualityId(qualityId)),
-    updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
-    updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
-    duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateMaterialDefinition(definition, newDefinitionId, newDefinitionName)),
-    duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => dispatch(printingActions.duplicateQualityDefinition(definition, newDefinitionId, newDefinitionName)),
-    renderGcodeFile: (gcodeFile) => dispatch(workspaceActions.renderGcodeFile(gcodeFile)),
-    removeAllModels: () => dispatch(printingActions.removeAllModels()),
-    updateMaterials: (headType, materials) => dispatch(editorActions.updateMaterials(headType, materials)),
-    uploadCaseModel: (file) => dispatch(printingActions.uploadCaseModel(file))
+    openProject: (headType, history) => dispatch(projectActions.open(headType, history))
 });
 
 

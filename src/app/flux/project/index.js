@@ -252,6 +252,7 @@ export const actions = {
 
     open: (file, history) => async (dispatch) => {
         // file: { path, name }
+        console.log('open', file, history);
         const [, tail] = file.name.split('.');
         if (!tail) return;
 

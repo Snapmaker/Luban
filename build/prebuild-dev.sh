@@ -47,4 +47,4 @@ cp -r resources/CuraEngine/Config "$CURA_DIR"
 # Copy other resources
 #
 cp -r resources/fonts "$RESOURCES_DIR"
-cp -r resources/user-case "$RESOURCES_DIR"
+cp -r luban-case-library "$RESOURCES_DIR"

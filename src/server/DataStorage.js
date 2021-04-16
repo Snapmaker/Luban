@@ -136,8 +136,7 @@ class DataStorage {
 
      async initUserCase() {
          mkdirp.sync(this.userCaseDir);
-
-         const USER_CASE_LOCAL = '../resources/user-case';
+         const USER_CASE_LOCAL = '../resources/luban-case-library/';
          if (fs.existsSync(USER_CASE_LOCAL)) {
              const files = fs.readdirSync(USER_CASE_LOCAL);
              for (const file of files) {
