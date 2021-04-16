@@ -27,7 +27,7 @@ class ToolPathListBox extends PureComponent {
         previewFailed: PropTypes.bool.isRequired,
 
         // cnc only
-        toolDefinitions: PropTypes.string
+        toolDefinitions: PropTypes.array
     };
 
     state = {
