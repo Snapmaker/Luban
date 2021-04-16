@@ -48,6 +48,7 @@ class GcodeParameters extends PureComponent {
                                 <Input
                                     disabled={false}
                                     className="sm-parameter-row__input"
+                                    style={{ width: '160px' }}
                                     value={targetDepth}
                                     min={0.01}
                                     max={size.z}
@@ -67,6 +68,7 @@ class GcodeParameters extends PureComponent {
                             <Input
                                 disabled={false}
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={safetyHeight}
                                 min={0.1}
                                 max={size.z}
@@ -85,6 +87,7 @@ class GcodeParameters extends PureComponent {
                             <Input
                                 disabled={false}
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={stopHeight}
                                 min={0.1}
                                 max={size.z}
@@ -146,6 +149,7 @@ class GcodeParameters extends PureComponent {
                                             <span className="sm-parameter-row__label">{i18n._('Tab Width')}</span>
                                             <Input
                                                 className="sm-parameter-row__input"
+                                                style={{ width: '160px' }}
                                                 value={tabWidth}
                                                 min={1}
                                                 step={1}

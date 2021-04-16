@@ -116,7 +116,7 @@ class CreateModal extends PureComponent {
                         {this.state.createType === 'Material' && this.renderMaterialCreate()}
                     </div>
 
-                    <div style={{ marginTop: '10px' }}>
+                    <div style={{ marginTop: '20px' }}>
                         <RadioButton value="Tool">{i18n._('Create Carving Tool')}</RadioButton>
                         {this.state.createType === 'Tool' && this.renderToolCreate()}
                     </div>

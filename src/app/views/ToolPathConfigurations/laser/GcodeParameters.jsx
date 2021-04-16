@@ -45,6 +45,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <span className="sm-parameter-row__label">{i18n._('Density')}</span>
                             <NumberInput
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={density}
                                 min={1}
                                 max={10}
@@ -112,6 +113,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
                             <Input
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={jogSpeed}
                                 min={1}
                                 max={6000}
@@ -131,6 +133,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
                             <Input
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={workSpeed}
                                 min={1}
                                 step={1}
@@ -150,6 +153,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <span className="sm-parameter-row__label">{i18n._('Dwell Time')}</span>
                             <Input
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={dwellTime}
                                 min={0.1}
                                 max={1000}
@@ -168,6 +172,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <span className="sm-parameter-row__label">{i18n._('Plunge Speed')}</span>
                             <Input
                                 className="sm-parameter-row__input"
+                                style={{ width: '160px' }}
                                 value={plungeSpeed}
                                 min={0.1}
                                 max={1000}
@@ -195,6 +200,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                 <span className="sm-parameter-row__label">{i18n._('Passes')}</span>
                                 <Input
                                     className="sm-parameter-row__input"
+                                    style={{ width: '160px' }}
                                     min={2}
                                     max={50}
                                     value={multiPasses}
@@ -211,6 +217,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                 <span className="sm-parameter-row__label">{i18n._('Pass Depth')}</span>
                                 <Input
                                     className="sm-parameter-row__input"
+                                    style={{ width: '160px' }}
                                     min={0}
                                     max={10}
                                     value={multiPassDepth}

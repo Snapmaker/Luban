@@ -119,7 +119,7 @@ class ToolPathConfigurations extends PureComponent {
                             popupActions.close();
                         }}
                     >
-                        {i18n._('Ok')}
+                        {i18n._('OK')}
                     </button>
                 )
             });

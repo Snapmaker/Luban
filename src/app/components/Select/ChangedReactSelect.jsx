@@ -34,8 +34,9 @@ const defaultStyles = {
     singleValue: (provided, state) => {
         const opacity = state.isDisabled ? 0.5 : 1;
         const transition = 'opacity 300ms';
+        const color = state.isDisabled ? '#000' : '#282828';
 
-        return { ...provided, opacity, transition };
+        return { ...provided, opacity, transition, color };
     },
     dropdownIndicator: (provided) => {
         return {
@@ -49,30 +50,36 @@ const defaultStyles = {
     valueContainer: (provided) => {
         return { ...provided, padding: '0px 8px' };
     },
-    input: (provided) => {
+    input: (provided,) => {
+        // console.log('isDisabled', state);
         return { ...provided, lineHeight: '20px' };
     },
     menu: (provided) => {
         return { ...provided, marginTop: '0', marginBottom: '0', zIndex: '10' };
     },
-    control: () => ({
-        // none of react-select's styles are passed to <Control />
-        height: 30,
-        alignItems: 'center',
-        backgroundColor: 'hsl(0,0%,100%)',
-        borderColor: 'hsl(0,0%,80%)',
-        borderRadius: '4px',
-        borderStyle: 'solid',
-        borderWidth: '1px',
-        cursor: 'default',
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        outline: '0 !important',
-        position: 'relative',
-        transition: 'all 100ms',
-        boxSizing: 'border-box'
-    })
+    control: (provided, state) => {
+        const backgroundColor = state.isDisabled ? '#eee' : '#fff';
+
+        return {
+            // const backgroundColor = '#ccc';
+            // none of react-select's styles are passed to <Control />
+            height: 30,
+            alignItems: 'center',
+            borderColor: 'hsl(0,0%,80%)',
+            borderRadius: '4px',
+            borderStyle: 'solid',
+            borderWidth: '1px',
+            cursor: 'default',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            outline: '0 !important',
+            position: 'relative',
+            transition: 'all 100ms',
+            boxSizing: 'border-box',
+            backgroundColor
+        };
+    }
 };
 const stylesWithGroup = {
     ...defaultStyles,
