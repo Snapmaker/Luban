@@ -298,6 +298,12 @@ class TransformationSection extends PureComponent {
                                         className={styles['description-text']}
                                         style={{ width: '28px', textAlign: 'center', display: 'inline-block' }}
                                     />
+                                    {selectedModelArray.length !== 1 && (
+                                        <span
+                                            className={styles['description-text']}
+                                            style={{ width: '80px', textAlign: 'center', display: 'inline-block' }}
+                                        />
+                                    )}
                                     {selectedModelArray.length === 1 && (
                                         <button
                                             type="button"
