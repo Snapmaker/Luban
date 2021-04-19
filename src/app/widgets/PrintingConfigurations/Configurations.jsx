@@ -9,6 +9,7 @@ import i18n from '../../lib/i18n';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
+import Space from '../../components/Space';
 
 import styles from './styles.styl';
 
@@ -181,8 +182,9 @@ class Configurations extends PureComponent {
                                                 <td>{i18n._(label)}</td>
                                                 { type !== 'bool' && (
                                                     <td>
-                                                        {defaultValue}
-                                                        {unit}
+                                                        <span>{i18n._(defaultValue)}</span>
+                                                        <Space width="4" />
+                                                        <span>{i18n._(unit)}</span>
                                                     </td>
                                                 )}
                                                 { type === 'bool' && (

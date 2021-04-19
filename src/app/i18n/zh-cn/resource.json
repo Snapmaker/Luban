@@ -716,7 +716,7 @@
     "by Snapmaker": "自 Snapmaker",
     "fullscreen": "全屏",
     "in": "in",
-    "key_CNC_loading_warning": "这是一个 alpha 功能，可帮助你开始使用 CNC 雕刻。在进行下一步之前，请确保你先阅读<1>安全信息</ 1>。",
+    "key_CNC_loading_warning": "这是一个 alpha 功能，可帮助你开始使用 CNC 雕刻。在进行下一步之前，请确保你先阅读<1/><2>安全信息<2/>。",
     "key_Workspace_CNC_carving_notice": "注意：如果要使用CNC雕刻模块，请在使用该功能前确保雕刻钻头不会碰到压块。",
     "key_laser_module_not_connect_notice": "未连接激光模组。请确保已正确安装模组后通过<1>连接</1>连接到你的 Snapmaker。",
     "key_laser_setting_background_description_1": "1. 在平台上放置一张纸或木板。",

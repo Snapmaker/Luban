@@ -716,7 +716,7 @@
     "by Snapmaker": "",
     "fullscreen": "полноэкранный",
     "in": "дюйм",
-    "key_CNC_loading_warning": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1>Read This First - Safety Information</1>before proceeding.",
+    "key_CNC_loading_warning": "This is an alpha feature that helps you get started with CNC Carving. Make sure you<1/><2>Read This First - Safety Information</2><3/>before proceeding.",
     "key_Workspace_CNC_carving_notice": "Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.",
     "key_laser_module_not_connect_notice": "Laser module is not connected. Please make sure it is installed properly, and then connect to your Snapmaker via <1>Connection</1>.",
     "key_laser_setting_background_description_1": "1. Place a piece of paper or wood sheet on the platform.",

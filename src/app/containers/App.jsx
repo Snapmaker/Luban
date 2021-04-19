@@ -32,6 +32,7 @@ import Cnc from './Cnc';
 import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
+import Space from '../components/Space';
 
 import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
 
@@ -209,6 +210,7 @@ class App extends PureComponent {
                         <div>
                             <Trans i18nKey="key_CNC_loading_warning">
                                 This is an alpha feature that helps you get started with CNC Carving. Make sure you
+                                <Space width={4} />
                                 <a
                                     style={{ color: '#28a7e1' }}
                                     href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
@@ -217,6 +219,7 @@ class App extends PureComponent {
                                 >
                                     Read This First - Safety Information
                                 </a>
+                                <Space width={4} />
                                 before proceeding.
                             </Trans>
                         </div>
