@@ -1,6 +1,6 @@
 {
   "name": "snapmaker-luban",
-  "version": "3.13.0",
+  "version": "3.15.0",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/Snapmaker/Luban",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -328,7 +328,7 @@
     "progress": "~2.0.0",
     "react-textarea-autosize": "^7.1.0",
     "redux-devtools": "~3.4.0",
-    "snapmaker-react-icon": "^1.18.1",
+    "snapmaker-react-icon": "~1.18.1",
     "style-loader": "~0.21.0",
     "stylint": "~1.5.9",
     "stylus": "~0.54.5",
