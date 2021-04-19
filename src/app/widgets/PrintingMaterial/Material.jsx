@@ -10,6 +10,7 @@ import { actions as projectActions } from '../../flux/project';
 import styles from './styles.styl';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 import OptionalDropdown from '../../components/OptionalDropdown';
+import Space from '../../components/Space';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -179,8 +180,9 @@ class Material extends PureComponent {
                                                 <td>{i18n._(label)}</td>
                                                 { type !== 'bool' && (
                                                     <td>
-                                                        {defaultValue}
-                                                        {unit}
+                                                        <span>{i18n._(defaultValue)}</span>
+                                                        <Space width="4" />
+                                                        <span>{i18n._(unit)}</span>
                                                     </td>
                                                 )}
                                                 { type === 'bool' && (
