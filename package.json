@@ -159,6 +159,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "~1.18.3",
     "bootstrap": "~4.4.1",
+    "caniuse-lite": "~1.0.30001211",
     "canvg": "^3.0.6",
     "chained-function": "~0.5.0",
     "chalk": "~2.4.1",
