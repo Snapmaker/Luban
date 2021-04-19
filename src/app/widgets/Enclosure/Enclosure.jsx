@@ -209,16 +209,16 @@ class Enclosure extends PureComponent {
                                 <span className="sm-parameter-row__label-lg">{i18n._('Door Detection')}</span>
                                 <button
                                     type="button"
-                                    className={!isDoorEnabled ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
+                                    className={isDoorEnabled ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
                                     style={{
                                         float: 'right'
                                     }}
                                     onClick={this.actions.onHandleDoorEnabled}
                                 >
-                                    {isDoorEnabled && <i className="fa fa-toggle-off" />}
-                                    {!isDoorEnabled && <i className="fa fa-toggle-on" />}
+                                    {!isDoorEnabled && <i className="fa fa-toggle-off" />}
+                                    {isDoorEnabled && <i className="fa fa-toggle-on" />}
                                     <span className="space" />
-                                    {!isDoorEnabled ? i18n._('On') : i18n._('Off')}
+                                    {isDoorEnabled ? i18n._('On') : i18n._('Off')}
                                 </button>
                             </div>
                         </TipTrigger>
