@@ -87,7 +87,12 @@ class ToolPathListBox extends PureComponent {
             return (
                 <div>
                     <p>Method: {methodType}</p>
-                    <p>Path: {toolPath.gcodeConfig.pathType}</p>
+                    {toolPath.type === TOOLPATH_TYPE_VECTOR && (
+                        <p>Path: {toolPath.gcodeConfig.pathType}</p>
+                    )}
+                    {toolPath.type !== TOOLPATH_TYPE_VECTOR && (
+                        <p>Allowance: {toolPath.gcodeConfig.allowance}</p>
+                    )}
                     <p>Tool: {toolPath.toolParams.definitionName}</p>
                     {def !== undefined && (
                         <p>Material: {def.category}</p>

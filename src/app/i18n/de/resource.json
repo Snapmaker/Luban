@@ -716,7 +716,7 @@
     "by Snapmaker": "von Snapmaker",
     "fullscreen": "Vollbildschirm",
     "in": "in",
-    "key_CNC_loading_warning": "Dies ist eine Alpha-Funktion, die Ihnen den Einstieg in das CNC-Fräsen erleichtert. Stellen Sie sicher, dass Sie<1>Dies zuerst lesen - Sicherheitshinweise</1>, vor anderen Anweisungen.",
+    "key_CNC_loading_warning": "Dies ist eine Alpha-Funktion, die Ihnen den Einstieg in das CNC-Fräsen erleichtert. Stellen Sie sicher, dass Sie<1/><2>Dies zuerst lesen - Sicherheitshinweise</2><3/>, vor anderen Anweisungen.",
     "key_Workspace_CNC_carving_notice": "Hinweis: Wenn Sie das CNC-Fräsmodul verwenden, stellen Sie sicher, dass der Fräser nicht in die Halterungen läuft, bevor Sie diese Funktion verwenden.",
     "key_laser_module_not_connect_notice": "Lasermodul ist nicht angeschlossen. Vergewissern Sie sich, dass es richtig installiert ist, und verbinden Sie sich dann über <1>Verbindung</1> mit Ihrem Snapmaker.",
     "key_laser_setting_background_description_1": "1. Legen Sie ein Stück Papier oder eine Holzplatte auf die Plattform.",

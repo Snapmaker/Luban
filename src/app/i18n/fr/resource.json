@@ -716,7 +716,7 @@
     "by Snapmaker": "par Snapmaker",
     "fullscreen": "plein écran",
     "in": "dans",
-    "key_CNC_loading_warning": "Il s'agit d'une fonction alpha qui vous aide à démarrer avec la sculpture CNC. Assurez-vous d'abord de<1>Lire ceci - Informations de sécurité</1> avant toute autre instruction.",
+    "key_CNC_loading_warning": "Il s'agit d'une fonction alpha qui vous aide à démarrer avec la sculpture CNC. Assurez-vous d'abord de<1/><2>Lire ceci - Informations de sécurité</2><3/> avant toute autre instruction.",
     "key_Workspace_CNC_carving_notice": "Remarque : Si vous utilisez le module de sculpture CNC, assurez-vous que la mèche de sculpture ne se heurtera pas aux dispositifs de fixation avant d'utiliser cette fonction.",
     "key_laser_module_not_connect_notice": "Le module laser n'est pas connecté. Veuillez vous assurer qu'il est correctement installé, puis connectez-vous à votre Snapmaker via <1>Connexion</1>.",
     "key_laser_setting_background_description_1": "1. Placez un morceau de papier ou une feuille de bois sur la plate-forme.",
