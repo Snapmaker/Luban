@@ -422,6 +422,8 @@ export const PROCESS_MODE_BW = 'bw';
 export const PROCESS_MODE_HALFTONE = 'halftone';
 export const PROCESS_MODE_VECTOR = 'vector';
 export const PROCESS_MODE_GREYSCALE = 'greyscale';
+export const PROCESS_MODE_MESH = 'mesh';
+
 export const PROCESS_MODE_ROTATION = 'rotation';
 export const PROCESS_MODE_PLANE = 'plane';
 export const PROCESS_MODE_4AXIS_LINKAGE = '4axisLinkage';

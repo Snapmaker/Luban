@@ -1,10 +1,7 @@
 import {
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE,
-    PROCESS_MODE_HALFTONE, PROCESS_MODE_VECTOR, SOURCE_TYPE_DXF,
-    SOURCE_TYPE_IMAGE3D,
-    SOURCE_TYPE_RASTER,
-    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT,
+    PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
     TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR
 } from '../constants';
 
@@ -43,29 +40,24 @@ const getMap = (key) => {
     return toolPathTypeMap.get(JSON.stringify(key));
 };
 
-crossKeys([SOURCE_TYPE_RASTER], [PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE])
+crossKeys([PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_HALFTONE])
     .forEach(v => {
         setMap(v, TOOLPATH_TYPE_IMAGE);
     });
 
-crossKeys([SOURCE_TYPE_RASTER], [PROCESS_MODE_VECTOR])
+crossKeys([PROCESS_MODE_VECTOR])
     .forEach(v => {
         setMap(v, TOOLPATH_TYPE_VECTOR);
     });
 
-crossKeys([SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_DXF], [PROCESS_MODE_VECTOR])
-    .forEach(v => {
-        setMap(v, TOOLPATH_TYPE_VECTOR);
-    });
-
-crossKeys([SOURCE_TYPE_IMAGE3D], [PROCESS_MODE_GREYSCALE])
+crossKeys([PROCESS_MODE_MESH])
     .forEach(v => {
         setMap(v, TOOLPATH_TYPE_SCULPT);
     });
 
 
 export const getToolPathType = (models) => {
-    let types = models.map(v => getMap([v.sourceType, v.mode]));
+    let types = models.map(v => getMap([v.mode]));
     types = Array.from(new Set(types));
     return types;
 };

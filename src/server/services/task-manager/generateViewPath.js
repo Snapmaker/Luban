@@ -7,7 +7,7 @@ import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DX
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
-import { PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D } from '../../constants';
+import { PROCESS_MODE_MESH } from '../../constants';
 import { polyUnion } from '../../lib/clipper/cLipper-adapter';
 import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
 
@@ -53,7 +53,7 @@ const generateCncViewPath = async (modelInfo, onProgress) => {
         return new Promise((resolve) => {
             resolve(viewPath);
         });
-    } else if (sourceType === SOURCE_TYPE_IMAGE3D && mode === PROCESS_MODE_GREYSCALE) {
+    } else if (mode === PROCESS_MODE_MESH) {
         const generator = new CncMeshToolPathGenerator(modelInfo);
         generator.on('progress', (p) => onProgress(p));
 

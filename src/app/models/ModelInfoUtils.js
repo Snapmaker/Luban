@@ -6,7 +6,7 @@ import {
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER,
-    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT
+    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, PROCESS_MODE_MESH, SOURCE_TYPE_3DP, SOURCE_TYPE_DXF
 } from '../constants';
 import { round } from '../../shared/lib/utils';
 
@@ -60,10 +60,10 @@ const checkParams = (headType, sourceType, mode) => {
     if (headType !== 'laser' && headType !== 'cnc' && headType !== '3dp') {
         return false;
     }
-    if (!['3d', 'raster', 'svg', 'dxf', 'text', 'image3d'].includes(sourceType)) {
+    if (![SOURCE_TYPE_3DP, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_IMAGE3D, SOURCE_TYPE_DXF].includes(sourceType)) {
         return false;
     }
-    if (!['bw', 'greyscale', 'vector', 'trace', 'text', 'halftone'].includes(mode)) {
+    if (![PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH].includes(mode)) {
         return false;
     }
     return true;
@@ -118,7 +118,7 @@ const defaultConfigs = {
     [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE)]: {
         invert: false
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
         direction: FRONT,
         placement: BOTTOM,
         minGray: 0,
@@ -255,7 +255,7 @@ const defaultGcodeConfigs = {
         plungeSpeed: 600,
         dwellTime: ABSENT_VALUE
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,
@@ -270,7 +270,7 @@ const defaultGcodeConfigs = {
         dwellTime: ABSENT_VALUE,
         isModel: true
     },
-    [toKey(HEAD_CNC, PROCESS_MODE_GREYSCALE, SOURCE_TYPE_IMAGE3D, true)]: {
+    [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D, true)]: {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
         smoothY: true,
         targetDepth: 2.0,
