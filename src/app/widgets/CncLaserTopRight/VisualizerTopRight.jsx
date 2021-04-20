@@ -39,7 +39,6 @@ class VisualizerTopRight extends PureComponent {
                 this.props.showSimulationInPreview(!this.props.showSimulation);
                 return;
             }
-            console.log('isChangedAfterGcodeGenerating', this.props.simulationNeedToPreview);
             if (this.props.canGenerateGcode) {
                 if (this.props.simulationNeedToPreview) {
                     this.props.commitGenerateViewPath();
