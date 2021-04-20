@@ -3,7 +3,7 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
-import { PAGE_EDITOR } from '../../constants';
+import { PAGE_EDITOR, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../constants';
 import modal from '../../lib/modal';
 import { actions as editorActions } from '../../flux/editor';
 
@@ -20,12 +20,14 @@ class VisualizerTopLeft extends PureComponent {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
             let uploadMode;
-            if (extname === '.svg') {
-                uploadMode = 'vector';
-            } else if (extname === '.dxf') {
-                uploadMode = 'vector';
+            if (extname.toLowerCase() === '.svg') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.dxf') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.stl') {
+                uploadMode = PROCESS_MODE_MESH;
             } else {
-                uploadMode = 'greyscale';
+                uploadMode = PROCESS_MODE_GREYSCALE;
             }
 
             // Switch to PAGE_EDITOR page if new image being uploaded

@@ -13,6 +13,7 @@ import { actions as widgetActions } from '../../flux/widget';
 import { actions as editorActions } from '../../flux/editor';
 import CncToolManager from '../../views/CncToolManager/CncToolManager';
 import styles from './styles.styl';
+import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../constants';
 
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
@@ -31,11 +32,18 @@ class Cnc extends Component {
 
     actions = {
         onDropAccepted: (file) => {
-            let mode = 'greyscale';
-            if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
-                mode = 'vector';
+            const extname = path.extname(file.name).toLowerCase();
+            let uploadMode;
+            if (extname.toLowerCase() === '.svg') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.dxf') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.stl') {
+                uploadMode = PROCESS_MODE_MESH;
+            } else {
+                uploadMode = PROCESS_MODE_GREYSCALE;
             }
-            this.props.uploadImage(file, mode, () => {
+            this.props.uploadImage(file, uploadMode, () => {
                 modal({
                     title: i18n._('Parse Error'),
                     body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })

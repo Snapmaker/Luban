@@ -10,10 +10,9 @@ import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerat
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
 import {
-    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH,
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE_DXF,
-    SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_SVG
 } from '../../constants';
 import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
@@ -120,7 +119,7 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
                 }
             });
         });
-    } else if (sourceType === SOURCE_TYPE_IMAGE3D && mode === PROCESS_MODE_GREYSCALE) {
+    } else if (mode === PROCESS_MODE_MESH) {
         const generator = new CncMeshToolPathGenerator(modelInfo);
         generator.on('progress', (p) => onProgress(p));
 
