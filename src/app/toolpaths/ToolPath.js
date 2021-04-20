@@ -1,5 +1,5 @@
 import uuid from 'uuid';
-import _ from 'lodash';
+import { includes } from 'lodash';
 import * as THREE from 'three';
 import { controller } from '../lib/controller';
 import { DATA_PREFIX } from '../constants';
@@ -117,7 +117,7 @@ class ToolPath {
 
     _getModels() {
         const models = this.modelGroup.getModels();
-        return models.filter(model => _.includes(this.modelIDs, model.modelID));
+        return models.filter(model => includes(this.modelIDs, model.modelID));
     }
 
     /**
@@ -167,7 +167,6 @@ class ToolPath {
                     sourceWidth: v.sourceWidth,
                     originalName: v.originalName,
                     uploadName: v.uploadName,
-                    processImageName: v.processImageName,
                     transformation: v.transformation,
                     config: v.config
                 };
@@ -195,22 +194,22 @@ class ToolPath {
      */
     onGenerateToolPath(result) {
         return new Promise((resolve, reject) => {
-            const model = this.modelMap.get(result.data.modelID);
+            const modelMapResult = this.modelMap.get(result.data.modelID);
 
-            if (model) {
+            if (modelMapResult) {
                 if (result.status === 'failed') {
-                    model.status = FAILED;
+                    modelMapResult.status = FAILED;
 
                     this.checkoutStatus();
                     reject();
                 } else {
-                    model.status = SUCCESS;
-                    model.toolPathFile = result.filename;
+                    modelMapResult.status = SUCCESS;
+                    modelMapResult.toolPathFile = result.filename;
                     this.loadToolPathFile(result.filename).then((toolPathObj3D) => {
-                        const oldMeshObj = model.meshObj;
-                        model.meshObj = toolPathObj3D;
+                        const oldMeshObj = modelMapResult.meshObj;
 
                         oldMeshObj && this.object.remove(oldMeshObj);
+                        modelMapResult.meshObj = toolPathObj3D;
                         this.object.add(toolPathObj3D);
 
                         this.checkoutStatus();
@@ -252,6 +251,7 @@ class ToolPath {
         }
 
         const lastConfigJson = JSON.stringify(taskInfos);
+
 
         if (this.lastConfigJson !== lastConfigJson) {
             this.status = WARNING;

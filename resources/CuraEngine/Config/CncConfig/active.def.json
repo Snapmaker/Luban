@@ -25,7 +25,7 @@
             "label": "Shaft Diameter"
         },
         "jog_speed": {
-            "default_value": 300,
+            "default_value": 1500,
             "min": 1,
             "max": 6000,
             "unit": "mm/min",

@@ -227,7 +227,8 @@ class ToolPathConfigurations extends PureComponent {
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body style={{
-                        overflowY: 'auto'
+                        overflowY: 'auto',
+                        height: '546px'
                     }}
                     >
                         {this.props.headType === HEAD_CNC && (

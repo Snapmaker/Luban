@@ -457,7 +457,7 @@ const mapDispatchToProps = (dispatch) => {
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
-        openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
+        openProject: (file, history) => dispatch(projectActions.open(file, history)),
         clearSavedEnvironment: (headType) => dispatch(projectActions.clearSavedEnvironment(headType)),
         resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };

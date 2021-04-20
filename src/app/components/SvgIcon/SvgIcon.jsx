@@ -43,6 +43,7 @@ class SvgIcon extends PureComponent {
             onClick,
             spanText,
             spanClassName,
+            color,
             ...props
         } = this.props;
         const Component = Icons[name];
@@ -64,7 +65,7 @@ class SvgIcon extends PureComponent {
                     <Component
                         {...props}
                         disabled={disabled}
-                        color={isHovered ? '#272829' : ''}
+                        color={isHovered ? '#272829' : color}
                     />
                     { spanText && (
                         <span className={spanClassName}>

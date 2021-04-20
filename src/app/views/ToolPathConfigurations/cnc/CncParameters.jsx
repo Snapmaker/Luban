@@ -201,7 +201,7 @@ class CncParameters extends PureComponent {
                                             <span className="sm-parameter-row__label">{i18n._('Slicing Mode')}</span>
                                             <Select
                                                 disabled={false}
-                                                className="sm-parameter-row__select"
+                                                className="sm-parameter-row__select-md"
                                                 backspaceRemoves={false}
                                                 clearable={false}
                                                 searchable={false}
@@ -222,7 +222,6 @@ class CncParameters extends PureComponent {
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
                                         checked={smoothY}
-                                        style={{ width: '160px' }}
                                         onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}
                                     />
                                 </div>

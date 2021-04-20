@@ -61,8 +61,10 @@ class DataStorage {
      constructor() {
          if (isElectron()) {
              this.userDataDir = app.getPath('userData');
+             this.userCaseDir = `${this.userDataDir}/UserCase`;
          } else {
              this.userDataDir = './userData';
+             this.userCaseDir = './UserCase';
          }
          mkdirp.sync(this.userDataDir);
 
@@ -70,7 +72,6 @@ class DataStorage {
          this.tmpDir = `${this.userDataDir}/Tmp`;
          this.configDir = `${this.userDataDir}/Config`;
          this.fontDir = `${this.userDataDir}/Fonts`;
-         this.userCaseDir = `${this.userDataDir}/UserCase`;
          this.envDir = `${this.userDataDir}/env`;
      }
 
