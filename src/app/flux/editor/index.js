@@ -62,7 +62,7 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
         width = scale * sourceWidth;
         height = scale * sourceHeight;
     } else {
-        const max = Math.max(materials.x, 90);
+        const max = Math.max(materials.x - 1, 90);
         const min = Math.min(90);
 
         if (width >= max) {
