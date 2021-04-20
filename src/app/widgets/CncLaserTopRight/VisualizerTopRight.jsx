@@ -9,6 +9,7 @@ import Space from '../../components/Space';
 
 class VisualizerTopRight extends PureComponent {
     static propTypes = {
+        simulationNeedToPreview: PropTypes.bool,
         canGenerateGcode: PropTypes.bool.isRequired,
         headType: PropTypes.string.isRequired,
         displayedType: PropTypes.string.isRequired,
@@ -38,8 +39,13 @@ class VisualizerTopRight extends PureComponent {
                 this.props.showSimulationInPreview(!this.props.showSimulation);
                 return;
             }
+            console.log('isChangedAfterGcodeGenerating', this.props.simulationNeedToPreview);
             if (this.props.canGenerateGcode) {
-                this.props.commitGenerateViewPath();
+                if (this.props.simulationNeedToPreview) {
+                    this.props.commitGenerateViewPath();
+                } else {
+                    this.props.showSimulationInPreview(!this.props.showSimulation);
+                }
             }
         }
     };
@@ -109,10 +115,11 @@ class VisualizerTopRight extends PureComponent {
 }
 const mapStateToProps = (state, ownProps) => {
     const headType = ownProps.headType;
-    const { displayedType, showToolPath, showSimulation, toolPathGroup } = state[headType];
+    const { displayedType, showToolPath, showSimulation, toolPathGroup, simulationNeedToPreview } = state[headType];
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
 
     return {
+        simulationNeedToPreview,
         canGenerateGcode,
         headType,
         displayedType,

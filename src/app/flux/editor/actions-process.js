@@ -80,6 +80,13 @@ export const processActions = {
         dispatch(baseActions.render(headType));
     },
 
+    resetSimulationPreviewState: (headType) => (dispatch) => {
+        dispatch(baseActions.updateState(headType, {
+            simulationNeedToPreview: true
+        }));
+        dispatch(baseActions.render(headType));
+    },
+
     selectModelInProcess: (headType, intersect, selectEvent) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
 
@@ -166,6 +173,7 @@ export const processActions = {
         const { toolPathGroup, materials } = getState()[headType];
         toolPathGroup.updateToolPath(toolPathId, newState, { materials });
         dispatch(processActions.showSimulationInPreview(headType, false));
+        dispatch(processActions.resetSimulationPreviewState(headType));
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
@@ -314,6 +322,7 @@ export const processActions = {
         });
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.GENERATING_GCODE,
+            simulationNeedToPreview: false,
             progress: 0
         }));
     },
