@@ -51,7 +51,11 @@ class ToolPath {
         this.modelIDs = modelIDs.map(v => v);
 
         for (const modelID of this.modelIDs) {
-            this.modelMap.set(modelID, { meshObj: null, status: IDLE, toolPathFile: null });
+            this.modelMap.set(modelID, {
+                meshObj: null,
+                status: IDLE,
+                toolPathFile: null
+            });
         }
 
         this.gcodeConfig = { ...gcodeConfig };
@@ -213,11 +217,33 @@ class ToolPath {
                         this.object.add(toolPathObj3D);
 
                         this.checkoutStatus();
+                        this.removeAllNonMeshObj();
                         resolve();
                     });
                 }
             }
         });
+    }
+
+    removeAllNonMeshObj() {
+        const reObjs = [];
+        for (const child of this.object.children) {
+            let removed = true;
+            for (const value of this.modelMap.values()) {
+                if (value.meshObj === child) {
+                    removed = false;
+                }
+            }
+            if (removed) {
+                reObjs.push(child);
+            }
+        }
+        if (reObjs.length > 0) {
+            console.warn('Toolpath has abnormal threejs object');
+        }
+        for (const reObj of reObjs) {
+            this.object.remove(reObj);
+        }
     }
 
     checkoutStatus() {
