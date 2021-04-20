@@ -114,7 +114,7 @@ class CaseLibrary extends PureComponent {
                 }
             }
         }
-    };
+    }
 
     loadCase = (config) => {
         this.props.openProject(config.pathConfig, this.props.history);

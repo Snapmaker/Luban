@@ -62,10 +62,29 @@ export const getToolPathType = (models) => {
     return types;
 };
 
-let count = 1;
+export const getModelsByToolPathType = (models) => {
+    const types = getToolPathType(models);
+    const modelObj = {};
+    types.forEach((type) => {
+        modelObj[type] = [];
+    });
+    models.forEach(v => {
+        const eachType = getMap([v.mode]);
+        if (modelObj[eachType]) {
+            modelObj[eachType].push(v);
+        }
+    });
+    console.log('modelObj', modelObj);
+    return modelObj;
+};
 
-export const createToolPathName = () => {
-    return `Toolpath ${count++}`;
+export const createToolPathNameByType = (count, type) => {
+    console.log('Vector', type);
+    if (type === 'Vector') {
+        return `Toolpath - ${type}${count++}`;
+    } else {
+        return `Toolpath - Picture ${type}${count++}`;
+    }
 };
 
 export const IDLE = 'idle';

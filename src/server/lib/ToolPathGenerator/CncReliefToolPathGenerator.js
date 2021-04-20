@@ -137,6 +137,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         return Jimp
             .read(this.modelPath)
             .then(async img => {
+                console.log('_processImage', img, this.modelPath);
                 if (this.invert) {
                     img.invert();
                 }

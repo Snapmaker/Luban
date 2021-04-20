@@ -1,6 +1,7 @@
-import React, { PureComponent } from 'react';
+// import React, { PureComponent } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import path from 'path';
 import Anchor from '../../components/Anchor';
@@ -10,97 +11,69 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { limitStringLength } from '../../lib/normalize-range';
 
-class PrintingObjectListBox extends PureComponent {
-    static propTypes = {
-        setTitle: PropTypes.func.isRequired,
-        selectTargetModel: PropTypes.func.isRequired,
-        hideSelectedModel: PropTypes.func.isRequired,
-        showSelectedModel: PropTypes.func.isRequired,
-
-        modelGroup: PropTypes.object.isRequired,
-        selectedModelIDArray: PropTypes.array
+const PrintingObjectListBox = (props) => {
+    const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray);
+    const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const dispatch = useDispatch();
+    const selectTargetModel = (model, shiftKey) => {
+        dispatch(printingActions.selectTargetModel(model, shiftKey));
     };
 
-
-    actions = {
-        onClickSelectModel: (model, event) => {
-            this.props.selectTargetModel(model, event.shiftKey);
-        },
-        onClickHideShowSelectedModel: (model) => {
-            const visible = model.visible;
-            this.props.selectTargetModel(model);
-            if (visible === true) {
-                this.props.hideSelectedModel();
-            } else {
-                this.props.showSelectedModel();
-            }
+    function onClickHideShowSelectedModel(model) {
+        const visible = model.visible;
+        selectTargetModel(model);
+        if (visible === true) {
+            dispatch(printingActions.hideSelectedModel());
+        } else {
+            dispatch(printingActions.showSelectedModel());
         }
-    };
-
-    constructor(props) {
-        super(props);
-        this.props.setTitle(i18n._('Object List'));
     }
+    useEffect(() => {
+        props.setTitle(i18n._('Object List'));
+    }, []); // << super important array
 
-    render() {
-        const { modelGroup, selectedModelIDArray } = this.props;
-
-        return (
-            <div className={styles['object-list-box']}>
-                {(modelGroup.models) && modelGroup.models.filter(model => !model.supportTag).map((model) => {
-                    const modelName = path.basename(model.modelName);
-                    const displayModelName = limitStringLength(modelName, 36);
-                    return (
-                        <TipTrigger
-                            key={model.modelID}
-                            title={i18n._('Object')}
-                            content={model.modelName}
+    return (
+        <div className={styles['object-list-box']}>
+            {(models) && models.filter(model => !model.supportTag).map((model) => {
+                const modelName = path.basename(model.modelName);
+                const displayModelName = limitStringLength(modelName, 36);
+                return (
+                    <TipTrigger
+                        key={model.modelID}
+                        title={i18n._('Object')}
+                        content={model.modelName}
+                    >
+                        <div
+                            className={classNames(
+                                styles['object-list-item'],
+                                selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0 ? styles.selected : null,
+                            )}
                         >
-                            <div
-                                className={classNames(
-                                    styles['object-list-item'],
-                                    selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0 ? styles.selected : null,
-                                )}
+                            <Anchor
+                                className={classNames(styles.name, styles.bt)}
+                                onClick={(event) => selectTargetModel(model, event.shiftKey)}
                             >
-                                <Anchor
-                                    className={classNames(styles.name, styles.bt)}
-                                    onClick={(event) => this.actions.onClickSelectModel(model, event)}
-                                >
-                                    <span className={classNames(styles.icon, styles['icon-shape'])} />
-                                    <span>{displayModelName}</span>
-                                </Anchor>
-                                <button
-                                    type="button"
-                                    className={classNames(
-                                        styles.icon,
-                                        model.visible ? styles.iconHideOpen : styles.iconHideClose,
-                                        styles.bt
-                                    )}
-                                    onClick={() => this.actions.onClickHideShowSelectedModel(model)}
-                                />
-                            </div>
-                        </TipTrigger>
-                    );
-                })}
-            </div>
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    const { modelGroup } = state.printing;
-    return {
-        modelGroup,
-        selectedModelIDArray: modelGroup.selectedModelIDArray
-    };
+                                <span className={classNames(styles.icon, styles['icon-shape'])} />
+                                <span>{displayModelName}</span>
+                            </Anchor>
+                            <button
+                                type="button"
+                                className={classNames(
+                                    styles.icon,
+                                    model.visible ? styles.iconHideOpen : styles.iconHideClose,
+                                    styles.bt
+                                )}
+                                onClick={() => onClickHideShowSelectedModel(model)}
+                            />
+                        </div>
+                    </TipTrigger>
+                );
+            })}
+        </div>
+    );
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        selectTargetModel: (model, shiftKey) => dispatch(printingActions.selectTargetModel(model, shiftKey)),
-        hideSelectedModel: () => dispatch(printingActions.hideSelectedModel()),
-        showSelectedModel: () => dispatch(printingActions.showSelectedModel())
-    };
+PrintingObjectListBox.propTypes = {
+    setTitle: PropTypes.func
 };
-
-export default connect(mapStateToProps, mapDispatchToProps)(PrintingObjectListBox);
+export default PrintingObjectListBox;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import ToolPath from './ToolPath';
-import { createToolPathName, getToolPathType, SUCCESS } from './utils';
+import { createToolPathNameByType, getModelsByToolPathType, getToolPathType, SUCCESS } from './utils';
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
@@ -46,6 +46,10 @@ class ToolPathGroup {
      */
     show() {
         this.object.visible = true;
+    }
+
+    get count() {
+        return this.toolPaths.length + 1;
     }
 
     /**
@@ -130,9 +134,8 @@ class ToolPathGroup {
         const { gcodeConfig } = generateModelDefaultConfigs(this.headType, models[0].sourceType, models[0].mode, materials.isRotate);
 
         this._updated();
-
-        return new ToolPath({
-            name: createToolPathName(),
+        const toolPathInfo = new ToolPath({
+            name: createToolPathNameByType(this.count, type),
             baseName: models[0].uploadName,
             headType: this.headType,
             type,
@@ -141,13 +144,39 @@ class ToolPathGroup {
             gcodeConfig,
             materials
         }).getState();
-        // this.toolPaths.push(toolPathModel);
+        console.log('createToolPath', toolPathInfo);
+        return toolPathInfo;
+    }
 
-        // toolPathModel.commitGenerateToolPath(options);
+    fastCreateToolPath(options) {
+        const models = this.modelGroup?.models;
+        if (models.length === 0) {
+            return null;
+        }
+        const modelObj = getModelsByToolPathType(models);
+        const { materials } = options;
+        Object.entries(modelObj).forEach(async ([type, modelsWithSameType]) => {
+            const toolPathModelIDs = modelsWithSameType.map((model) => model.modelID);
+            const { gcodeConfig } = generateModelDefaultConfigs(this.headType, modelsWithSameType[0].sourceType, modelsWithSameType[0].mode, materials.isRotate);
+            const toolPathInfo = new ToolPath({
+                name: createToolPathNameByType(this.count, type),
+                baseName: modelsWithSameType[0].uploadName,
+                headType: this.headType,
+                type,
+                modelIDs: toolPathModelIDs,
+                modelGroup: this.modelGroup,
+                gcodeConfig
+            }).getState();
+            console.log('...', type, modelsWithSameType, toolPathInfo);
+            await this.saveToolPath(toolPathInfo, options);
+        });
+        this._updated();
+        return null;
     }
 
     saveToolPath(toolPathInfo, options, shouldCommitGenerate = true) {
         let toolPath = this._getToolPath(toolPathInfo.id);
+        console.log('saveToolPath', toolPathInfo, toolPath);
         if (toolPath) {
             toolPath.updateState({ ...toolPathInfo, ...options });
         } else {
