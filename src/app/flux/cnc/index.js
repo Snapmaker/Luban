@@ -44,6 +44,7 @@ const INITIAL_STATE = {
     updatingToolPath: null,
     showToolPath: false,
     showSimulation: false,
+    simulationNeedToPreview: true,
 
     SVGActions: new SVGActionsFactory(initModelGroup),
 
