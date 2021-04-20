@@ -140,7 +140,7 @@ export const actions = {
         // await dispatch(modActions.init(envHeadType));
         modelGroup.removeAllModels();
 
-        modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
+        await modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
         let { models, toolpaths, materials, machineInfo, ...restState } = envObj;
 
@@ -150,7 +150,7 @@ export const actions = {
         models = bubbleSortByAttribute(models, ['transformation', 'positionZ']);
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
-            dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
+            await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
                 sourceType, config, gcodeConfig, transformation, modelID));
         }
         const { toolPathGroup } = modState;
@@ -159,7 +159,7 @@ export const actions = {
         }
         if (toolpaths && toolpaths.length) {
             for (let k = 0; k < toolpaths.length; k++) {
-                toolPathGroup.saveToolPath(toolpaths[k], { materials });
+                toolPathGroup.saveToolPath(toolpaths[k], { materials }, false);
             }
         }
         dispatch(modActions.updateState(envHeadType, restState));

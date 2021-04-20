@@ -146,7 +146,6 @@ class ToolPathListBox extends PureComponent {
             <div>
                 <div className={styles['object-list-box']}>
                     {toolPaths.map((toolPath) => {
-                        console.log('toolPath', toolPath.visible);
                         return (
                             <TipTrigger
                                 key={toolPath.id}
@@ -171,6 +170,7 @@ class ToolPathListBox extends PureComponent {
                                         <Anchor
                                             className={classNames(
                                                 styles.name,
+                                                styles.process,
                                                 styles.bt
                                             )}
                                             onClick={() => this.actions.selectToolPathId(toolPath.id)}
@@ -201,11 +201,12 @@ class ToolPathListBox extends PureComponent {
                                             {!toolPath.visible && (
                                                 <SvgIcon
                                                     size={22}
+                                                    color="#BFBFBF"
                                                     name="Hide"
                                                     className={classNames(
                                                         styles.icon,
                                                     )}
-                                                    title={i18n._('Show')}
+                                                    title={i18n._('Hide')}
                                                     onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                                                 />
                                             )}
@@ -216,7 +217,7 @@ class ToolPathListBox extends PureComponent {
                                                     className={classNames(
                                                         styles.icon,
                                                     )}
-                                                    title={i18n._('Hide')}
+                                                    title={i18n._('Show')}
                                                     onClick={() => this.actions.onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
                                                 />
                                             )}

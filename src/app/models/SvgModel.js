@@ -194,7 +194,7 @@ class SvgModel extends BaseModel {
         this.processMode(modelInfo.mode, modelInfo.config);
         // use model info to refresh element
         this.refresh();
-        // trigger update source
+        // trigger update source, should add parmas to togger this func
         this.onTransform();
     }
 

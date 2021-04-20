@@ -146,7 +146,7 @@ class ToolPathGroup {
         // toolPathModel.commitGenerateToolPath(options);
     }
 
-    saveToolPath(toolPathInfo, options) {
+    saveToolPath(toolPathInfo, options, shouldCommitGenerate = true) {
         let toolPath = this._getToolPath(toolPathInfo.id);
         if (toolPath) {
             toolPath.updateState({ ...toolPathInfo, ...options });
@@ -160,7 +160,9 @@ class ToolPathGroup {
             this.toolPathObjects.add(toolPath.object);
             this.selectedToolPathId = toolPath.id;
         }
-        toolPath.commitGenerateToolPath();
+        if (shouldCommitGenerate) {
+            toolPath.commitGenerateToolPath();
+        }
     }
 
     addSelectedToolpathColor() {
