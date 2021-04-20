@@ -167,7 +167,6 @@
         "material_diameter": {
             "label": "Diameter",
             "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
-            "enabled": true,
             "default_value": 1.75
         },
         "material_final_print_temperature": {

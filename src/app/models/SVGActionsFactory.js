@@ -325,6 +325,10 @@ class SVGActionsFactory {
                 scaleX, width, scaleY, height
             });
         }
+
+        for (const model of selectedSVGModels) {
+            model.onTransform();
+        }
     }
 
     // when single select
