@@ -80,11 +80,11 @@ const getMeshSize = (mesh) => {
 };
 
 
-const setMeshTransform = (mesh, transformation, isRotate, direction = FRONT, placement = BOTTOM) => {
+const setMeshTransform = (mesh, sourceScale, transformation, isRotate, direction = FRONT, placement = BOTTOM) => {
     mesh.applyMatrix(new Matrix4().getInverse(mesh.matrix));
     mesh.applyMatrix(isRotate ? placementMatrixes[placement] : directionMatrixes[direction]);
 
-    mesh.applyMatrix(new Matrix4().makeScale(transformation.scaleX, Math.abs(transformation.scaleY), transformation.scaleY));
+    mesh.applyMatrix(new Matrix4().makeScale(transformation.scaleX * sourceScale, Math.abs(transformation.scaleY * sourceScale), transformation.scaleY * sourceScale));
 };
 
 
@@ -140,6 +140,7 @@ class Cnc3DVisualizer extends PureComponent {
         hasModel: PropTypes.bool,
         mesh: PropTypes.object,
         materials: PropTypes.object,
+        sourceScale: PropTypes.number,
         transformation: PropTypes.object,
         machineSize: PropTypes.object,
         direction: PropTypes.string,
@@ -163,7 +164,7 @@ class Cnc3DVisualizer extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.hasModel) {
-            const { mesh, materials, transformation, direction, placement, machineSize } = nextProps;
+            const { mesh, materials, sourceScale, transformation, direction, placement, machineSize } = nextProps;
             if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
                 || materials.diameter !== this.props.materials.diameter
                 || materials.length !== this.props.materials.length
@@ -173,7 +174,7 @@ class Cnc3DVisualizer extends PureComponent {
                 mesh.remove(...mesh.children);
                 mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
-                setMeshTransform(mesh, t, materials.isRotate, direction, placement);
+                setMeshTransform(mesh, sourceScale, t, materials.isRotate, direction, placement);
                 if (!this.cameraInitialPosition || machineSize.z !== this.props.machineSize.z) {
                     this.cameraInitialPosition = new Vector3(0, -machineSize.z * 1.3, 0);
                 }
@@ -267,7 +268,7 @@ class Cnc3DVisualizer extends PureComponent {
 const mapStateToProps = (state) => {
     const { modelGroup, materials, SVGActions } = state.cnc;
     const { size } = state.machine;
-    let hasModel = false, mesh = null, transformation = null, direction = null, placement = null;
+    let hasModel = false, mesh = null, transformation = null, direction = null, placement = null, sourceScale = null;
     if (modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].image3dObj) {
         const model = modelGroup.selectedModelArray[0];
         hasModel = true;
@@ -275,10 +276,11 @@ const mapStateToProps = (state) => {
         transformation = SVGActions.getSelectedElementsTransformation();
         direction = model.config.direction;
         placement = model.config.placement;
+        sourceScale = model.scale;
     }
 
     return {
-        hasModel, mesh, materials, transformation, direction, placement, machineSize: size
+        hasModel, mesh, materials, sourceScale, transformation, direction, placement, machineSize: size
     };
 };
 
