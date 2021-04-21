@@ -44,7 +44,6 @@ class ToolPathConfigurations extends PureComponent {
                 ...this.state.toolPath.gcodeConfig
             };
 
-            console.log('id', this.props.activeToolListDefinition);
             if (this.state.activeToolDefinition) {
                 toolParams.definitionId = this.props.activeToolListDefinition.definitionId;
                 toolParams.definitionName = this.props.activeToolListDefinition.name;
