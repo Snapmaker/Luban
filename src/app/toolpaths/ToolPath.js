@@ -264,7 +264,14 @@ class ToolPath {
 
     checkoutToolPathStatus() {
         const taskInfos = this.getSelectModelsAndToolPathInfo();
-        if (!taskInfos || taskInfos.length === 0) {
+        const lastConfigJson = JSON.stringify(taskInfos);
+
+        if (this.lastConfigJson !== lastConfigJson) {
+            this.status = WARNING;
+            this.lastConfigJson = lastConfigJson;
+        }
+
+        if (!taskInfos || taskInfos.length !== this.modelIDs.length) {
             console.error('The models of tool path is empty');
             this.status = FAILED;
         }
@@ -273,15 +280,6 @@ class ToolPath {
         if (types.length !== 1 || types[0] !== this.type) {
             console.error('Inconsistent models types for tool path');
             this.status = FAILED;
-            return;
-        }
-
-        const lastConfigJson = JSON.stringify(taskInfos);
-
-
-        if (this.lastConfigJson !== lastConfigJson) {
-            this.status = WARNING;
-            this.lastConfigJson = lastConfigJson;
         }
     }
 
