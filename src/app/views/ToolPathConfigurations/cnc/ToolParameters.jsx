@@ -51,7 +51,6 @@ class ToolParameters extends PureComponent {
 
     componentDidMount() {
         const { toolPath, activeToolDefinition } = this.props;
-        console.log('toolpath', toolPath, activeToolDefinition);
         const selectedTool = {
             definitionId: toolPath.toolParams.definitionId ?? activeToolDefinition.definitionId,
             name: toolPath.toolParams.definitionName ?? activeToolDefinition.name
@@ -62,8 +61,6 @@ class ToolParameters extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.trace();
-        console.log('toolpath2', nextProps.toolPath, nextProps.activeToolDefinition);
         const { selectedTool } = this.state;
         if (nextProps.activeToolDefinition.definitionId !== this.props.activeToolDefinition.definitionId) {
             selectedTool.definitionId = nextProps.activeToolDefinition.definitionId;
