@@ -180,9 +180,16 @@ class Configurations extends PureComponent {
                                         return (
                                             <tr key={key}>
                                                 <td>{i18n._(label)}</td>
-                                                { type !== 'bool' && (
+                                                { type === 'float' && (
                                                     <td>
                                                         <span>{i18n._(defaultValue)}</span>
+                                                        <Space width="4" />
+                                                        <span>{i18n._(unit)}</span>
+                                                    </td>
+                                                )}
+                                                { type === 'enum' && (
+                                                    <td>
+                                                        <span>{i18n._(setting.options[defaultValue])}</span>
                                                         <Space width="4" />
                                                         <span>{i18n._(unit)}</span>
                                                     </td>
