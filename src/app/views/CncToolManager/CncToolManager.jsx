@@ -42,7 +42,7 @@ class CncToolManager extends PureComponent {
     static propTypes = {
         showCncToolManager: PropTypes.bool,
         toolDefinitions: PropTypes.array.isRequired,
-        activeToolListDefinition: PropTypes.object.isRequired,
+        activeToolListDefinition: PropTypes.object,
         duplicateToolCategoryDefinition: PropTypes.func.isRequired,
         duplicateToolListDefinition: PropTypes.func.isRequired,
 
