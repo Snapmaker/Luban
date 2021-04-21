@@ -465,6 +465,11 @@ class CncToolManager extends PureComponent {
             });
             this.setState(newState);
         }
+        if (nextProps.activeToolListDefinition !== this.props.activeToolListDefinition) {
+            this.setState({
+                activeToolListDefinition: nextProps.activeToolListDefinition
+            });
+        }
     }
 
     render() {

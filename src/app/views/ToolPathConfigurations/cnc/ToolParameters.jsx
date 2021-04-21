@@ -26,6 +26,13 @@ class ToolParameters extends PureComponent {
         updateShowCncToolManager: PropTypes.func.isRequired
     };
 
+    state = {
+        selectedTool: {
+            definitionId: '',
+            name: ''
+        }
+    };
+
     actions = {
         onShowCncToolManager: () => {
             this.props.updateShowCncToolManager(true);
@@ -41,6 +48,33 @@ class ToolParameters extends PureComponent {
             }
         }
     };
+
+    componentDidMount() {
+        const { toolPath, activeToolDefinition } = this.props;
+        console.log('toolpath', toolPath, activeToolDefinition);
+        const selectedTool = {
+            definitionId: toolPath.toolParams.definitionId ?? activeToolDefinition.definitionId,
+            name: toolPath.toolParams.definitionName ?? activeToolDefinition.name
+        };
+        this.setState({
+            selectedTool
+        });
+    }
+
+    componentWillReceiveProps(nextProps) {
+        console.trace();
+        console.log('toolpath2', nextProps.toolPath, nextProps.activeToolDefinition);
+        const { selectedTool } = this.state;
+        if (nextProps.activeToolDefinition.definitionId !== this.props.activeToolDefinition.definitionId) {
+            selectedTool.definitionId = nextProps.activeToolDefinition.definitionId;
+        }
+        if (nextProps.activeToolDefinition.name !== this.props.activeToolDefinition.name) {
+            selectedTool.name = nextProps.activeToolDefinition.name;
+        }
+        this.setState({
+            selectedTool
+        });
+    }
 
     render() {
         const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition } = this.props;
@@ -72,11 +106,14 @@ class ToolParameters extends PureComponent {
             };
             toolDefinitionOptions.push(groupOptions);
         });
+        const foundDefinition = toolDefinitionOptions.find(d => d.definitionId === (this.state.selectedTool.definitionId));
+
+        console.log('state', this.state.selectedTool);
         const valueObj = {
             firstKey: 'definitionId',
-            firstValue: activeToolDefinition.definitionId,
+            firstValue: this.state.selectedTool.definitionId,
             secondKey: 'name',
-            secondValue: activeToolDefinition.name
+            secondValue: this.state.selectedTool.name
         };
         if (isModifiedDefinition) {
             toolDefinitionOptions.push({
@@ -86,8 +123,6 @@ class ToolParameters extends PureComponent {
                 value: 'new-modified'
             });
         }
-        const foundDefinition = toolDefinitionOptions.find(d => d.definitionId === activeToolDefinition.definitionId);
-
         return (
             <div>
                 <React.Fragment>
