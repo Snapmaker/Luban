@@ -47,7 +47,8 @@ cp -r resources/CuraEngine/Config "$CURA_DIR"
 # Copy other resources
 #
 pushd luban-case-library
-    git checkout main
+    git checkout .
+    git checkout master
     git pull
 popd
 cp -r resources/fonts "$RESOURCES_DIR"
