@@ -74,10 +74,22 @@ class CreateToolPath extends PureComponent {
 const CreateToolPath = (props) => {
     const headTypeState = useSelector(state => state[props.headType]);
     const page = headTypeState?.page;
+    const activeToolListDefinition = headTypeState?.activeToolListDefinition;
     const toolPathTypes = headTypeState?.toolPathGroup?.getToolPathTypes();
     const dispatch = useDispatch();
     const createToolPath = () => dispatch(editorActions.createToolPath(props.headType));
-    const fastCreateToolPath = () => dispatch(editorActions.fastCreateToolPath(props.headType));
+    const fastCreateToolPathDispatch = (toolParams) => dispatch(editorActions.fastCreateToolPath(props.headType, toolParams));
+    const actions = {
+        fastCreateToolPath: () => {
+            const toolParams = {};
+            toolParams.definitionId = activeToolListDefinition.definitionId;
+            toolParams.definitionName = activeToolListDefinition.name;
+            toolParams.toolDiameter = activeToolListDefinition.config.diameter.default_value;
+            toolParams.toolAngle = activeToolListDefinition.config.angle.default_value;
+            toolParams.toolShaftDiameter = activeToolListDefinition.config.shaft_diameter.default_value;
+            fastCreateToolPathDispatch(toolParams);
+        }
+    };
     useEffect(() => {
         props.setTitle(i18n._('Create Toolpath'));
         props.setDisplay(page === PAGE_PROCESS);
@@ -123,7 +135,7 @@ const CreateToolPath = (props) => {
             <button
                 type="button"
                 className="sm-btn-large sm-btn-default "
-                onClick={fastCreateToolPath}
+                onClick={actions.fastCreateToolPath}
                 style={{ display: 'inline-block', float: 'right', width: '40%' }}
             >
                 {i18n._('Fast Create')}

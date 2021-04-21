@@ -28,30 +28,25 @@ const ToolPathConfigurations = (props) => {
 
     const updateCncActiveToolDefinition = async (toolPath) => {
         const { toolParams, gcodeConfig } = toolPath;
-        let activeToolDefinition = activeToolListDefinition;
+        const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
+
         toolDefinitions.forEach((d) => {
-            d.toolList.forEach((toolDefinition) => {
-                const config = toolDefinition.config;
-                if (config.diameter.default_value === toolParams.toolDiameter && config.angle.default_value === toolParams.toolAngle && config.shaft_diameter.default_value === toolParams.toolShaftDiameter) {
-                    activeToolDefinition = { ...toolDefinition };
-                    activeToolDefinition.definitionId = d.definitionId;
-                    if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
-                        config.jog_speed.default_value = gcodeConfig.jogSpeed;
+            if (d.definitionId === toolParams.definitionId) {
+                d.toolList.forEach((toolDefinition) => {
+                    if (toolDefinition.name === toolParams.definitionName) {
+                        activeToolDefinition.definitionId = d.definitionId;
+                        activeToolDefinition.name = toolDefinition.name;
+                        activeToolDefinition.config.angle.default_value = toolParams?.toolAngle;
+                        activeToolDefinition.config.diameter.default_value = toolParams?.toolDiameter;
+                        activeToolDefinition.config.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
+                        activeToolDefinition.config.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                        activeToolDefinition.config.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                        activeToolDefinition.config.work_speed.default_value = gcodeConfig?.workSpeed;
+                        activeToolDefinition.config.step_down.default_value = gcodeConfig?.stepDown;
+                        activeToolDefinition.config.density.default_value = gcodeConfig?.density;
                     }
-                    if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
-                        config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
-                    }
-                    if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
-                        config.work_speed.default_value = gcodeConfig.workSpeed;
-                    }
-                    if (config.step_down.default_value !== gcodeConfig.stepDown) {
-                        config.step_down.default_value = gcodeConfig.stepDown;
-                    }
-                    if (config.density.default_value !== gcodeConfig.density) {
-                        config.density.default_value = gcodeConfig.density;
-                    }
-                }
-            });
+                });
+            }
         });
         await dispatch(cncActions.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name));
         setCurrentToolDefinition(activeToolDefinition);
@@ -169,33 +164,6 @@ const ToolPathConfigurations = (props) => {
                 }
             };
             setToolPath(nToolPath);
-        },
-        updateCncActiveToolDefinition: async (updatingToolPath) => {
-            const { toolDefinitions } = this.props;
-            const { toolParams, gcodeConfig } = updatingToolPath;
-            const activeToolDefinition = _.cloneDeep(this.props.activeToolListDefinition);
-            toolDefinitions.forEach((d) => {
-                if (d.definitionId === toolParams.definitionId) {
-                    d.toolList.forEach((toolDefinition) => {
-                        if (toolDefinition.name === toolParams.definitionName) {
-                            activeToolDefinition.definitionId = d.definitionId;
-                            activeToolDefinition.name = toolDefinition.name;
-                            activeToolDefinition.config.angle.default_value = toolParams?.toolAngle;
-                            activeToolDefinition.config.diameter.default_value = toolParams?.toolDiameter;
-                            activeToolDefinition.config.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
-                            activeToolDefinition.config.jog_speed.default_value = gcodeConfig?.jogSpeed;
-                            activeToolDefinition.config.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
-                            activeToolDefinition.config.work_speed.default_value = gcodeConfig?.workSpeed;
-                            activeToolDefinition.config.step_down.default_value = gcodeConfig?.stepDown;
-                            activeToolDefinition.config.density.default_value = gcodeConfig?.density;
-                        }
-                    });
-                }
-            });
-            await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
-            this.setState({
-                activeToolDefinition
-            });
         }
     };
     if (!toolPath) {

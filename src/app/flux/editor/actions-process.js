@@ -133,9 +133,9 @@ export const processActions = {
         }
     },
 
-    fastCreateToolPath: (headType) => async (dispatch, getState) => {
+    fastCreateToolPath: (headType, toolParams) => async (dispatch, getState) => {
         const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
-        await toolPathGroup.fastCreateToolPath({ materials });
+        await toolPathGroup.fastCreateToolPath({ materials, toolParams });
         if (autoPreviewEnabled) {
             dispatch(processActions.preview(headType));
         }

@@ -62,7 +62,7 @@ class DataStorage {
          if (isElectron()) {
              this.userDataDir = app.getPath('userData');
          } else {
-             this.userDataDir = './userData';
+             this.userDataDir = '.';
          }
          mkdirp.sync(this.userDataDir);
 
