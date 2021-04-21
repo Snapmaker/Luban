@@ -1,4 +1,4 @@
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME } from '../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME, SOURCE_TYPE_IMAGE3D, PROCESS_MODE_MESH } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -148,6 +148,14 @@ export const actions = {
             dispatch(modActions.updateMaterials(envHeadType, materials));
         }
         models = bubbleSortByAttribute(models, ['transformation', 'positionZ']);
+
+        // Compatible with mesh mode
+        for (const model of models) {
+            if (model.sourceType === SOURCE_TYPE_IMAGE3D) {
+                model.mode = PROCESS_MODE_MESH;
+            }
+        }
+
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
             await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
