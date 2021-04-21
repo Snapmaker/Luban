@@ -366,6 +366,10 @@ export const uploadFileToTmp = (req, res) => {
 
 export const recoverProjectFile = async (req, res) => {
     const file = req.files.file || JSON.parse(req.body.file);
+    if (JSON.parse(req.body.file)?.isDatastoragePath) {
+        file.path = `${DataStorage.userDataDir}${file.path}`;
+    }
+    console.log('recoverProjectFile', JSON.parse(req.body.file).isDatastoragePath, req.files?.file?.isDatastoragePath, file);
     const { uploadName } = await cpFileToTmp(file);
     let content;
     try {
