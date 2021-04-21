@@ -861,7 +861,7 @@ class SvgModel extends BaseModel {
             }
 
             const path = `${DATA_PREFIX}/${this.uploadName}`;
-            new ThreeDxfLoader({ width: this.transformation.width }).load(path, (group) => {
+            new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
                 this.modelObject3D = group;
                 this.meshObject.add(this.modelObject3D);
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
