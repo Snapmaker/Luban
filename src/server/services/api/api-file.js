@@ -369,7 +369,6 @@ export const recoverProjectFile = async (req, res) => {
     if (JSON.parse(req.body.file)?.isDatastoragePath) {
         file.path = `${DataStorage.userDataDir}${file.path}`;
     }
-    console.log('recoverProjectFile', JSON.parse(req.body.file).isDatastoragePath, req.files?.file?.isDatastoragePath, file);
     const { uploadName } = await cpFileToTmp(file);
     let content;
     try {
