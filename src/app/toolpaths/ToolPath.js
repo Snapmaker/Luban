@@ -124,6 +124,13 @@ class ToolPath {
         return models.filter(model => includes(this.modelIDs, model.modelID));
     }
 
+    deleteModel(modelId) {
+        this.modelIDs = this.modelIDs.filter(v => v !== modelId);
+        const modelObj = this.modelMap.get(modelId);
+        modelObj.meshObj && this.object.remove(modelObj.meshObj);
+        this.modelMap.delete(modelId);
+    }
+
     /**
      * Commit generate toolpath task to server
      */
@@ -139,6 +146,15 @@ class ToolPath {
         }
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
+
+        if (taskInfos.length !== this.modelIDs.length) {
+            const newIds = taskInfos.map(v => v.modelID);
+            const filterIds = this.modelIDs.filter(v => !newIds.includes(v)) || [];
+            for (const filterId of filterIds) {
+                this.deleteModel(filterId);
+            }
+        }
+
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
 
@@ -209,17 +225,18 @@ class ToolPath {
                 } else {
                     modelMapResult.status = SUCCESS;
                     modelMapResult.toolPathFile = result.filename;
-                    this.loadToolPathFile(result.filename).then((toolPathObj3D) => {
-                        const oldMeshObj = modelMapResult.meshObj;
+                    this.loadToolPathFile(result.filename)
+                        .then((toolPathObj3D) => {
+                            const oldMeshObj = modelMapResult.meshObj;
 
-                        oldMeshObj && this.object.remove(oldMeshObj);
-                        modelMapResult.meshObj = toolPathObj3D;
-                        this.object.add(toolPathObj3D);
+                            oldMeshObj && this.object.remove(oldMeshObj);
+                            modelMapResult.meshObj = toolPathObj3D;
+                            this.object.add(toolPathObj3D);
 
-                        this.checkoutStatus();
-                        this.removeAllNonMeshObj();
-                        resolve();
-                    });
+                            this.checkoutStatus();
+                            this.removeAllNonMeshObj();
+                            resolve();
+                        });
                 }
             }
         });
@@ -271,7 +288,11 @@ class ToolPath {
             this.lastConfigJson = lastConfigJson;
         }
 
-        if (!taskInfos || taskInfos.length !== this.modelIDs.length) {
+        if (taskInfos.length !== this.modelIDs.length) {
+            this.status = WARNING;
+        }
+
+        if (!taskInfos || taskInfos.length === 0) {
             console.error('The models of tool path is empty');
             this.status = FAILED;
         }
