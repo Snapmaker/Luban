@@ -5,7 +5,7 @@
     "toolList": [
         {
             "definitionId": "Default",
-            "name": "Carving V bit",
+            "name": "Carving V-bit",
             "config": {
                 "diameter": {
                     "default_value": 0.2,
@@ -220,7 +220,7 @@
                     "label": "Point Angle"
                 },
                 "shaft_diameter": {
-                    "default_value": 3.715,
+                    "default_value": 3.175,
                     "min": 0.1,
                     "max": 10,
                     "unit": "mm",

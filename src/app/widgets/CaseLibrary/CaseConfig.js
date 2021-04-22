@@ -145,20 +145,7 @@ export const CaseConfig350 = [
 
     }
 ];
-
-export const CaseConfigFourAxis = [
-    {
-        tag: 'laser',
-        title: 'Rotary Laser Engraved Lion',
-        // sourceType: 'svg', // raster/svg/text
-        mode: 'greyscale', // mode: 'v
-        imgSrc: '../../images/user-case/FourAxis/4th-Laser-A250&A350.png',
-        pathConfig: {
-            isDatastoragePath: true,
-            path: '/UserCase/A250/4th_Laser_A250.snaplzr',
-            name: '4th_Laser_A250.snaplzr'
-        }
-    },
+const DEFAULT_CASE = [
     {
         tag: 'cnc',
         title: 'Rotary CNC Carved Chess Piece',
@@ -166,7 +153,7 @@ export const CaseConfigFourAxis = [
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-A250&A350.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: '/UserCase/A250/A250_4th_lion_CNC.snapcnc',
+            path: '/UserCase/A250/4th_CNC.snapcnc',
             name: '4th_lion_CNC.snapcnc'
         }
     },
@@ -177,9 +164,40 @@ export const CaseConfigFourAxis = [
         imgSrc: '../../images/user-case/FourAxis/4th-CNC-Gcode-A250&A350.png',
         pathConfig: {
             isDatastoragePath: true,
-            path: '/UserCase/A250/A250_4th_CNC.snapcnc',
+            path: '/UserCase/A250/4th_lion_CNC.snapcnc',
             name: '4th_CNC.snapcnc'
         }
 
+    }
+];
+export const CaseConfigA250FourAxis = [
+    ...DEFAULT_CASE,
+    {
+        tag: 'laser',
+        title: 'Rotary Laser Engraved Lion',
+        // sourceType: 'svg', // raster/svg/text
+        mode: 'greyscale', // mode: 'v
+        imgSrc: '../../images/user-case/FourAxis/4th-Laser-A250&A350.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: '/UserCase/A250/A250_4th_Laser.snaplzr',
+            name: 'A250_4th_Laser.snaplzr'
+        }
+    }
+];
+
+export const CaseConfigA350FourAxis = [
+    ...DEFAULT_CASE,
+    {
+        tag: 'laser',
+        title: 'Rotary Laser Engraved Lion',
+        // sourceType: 'svg', // raster/svg/text
+        mode: 'greyscale', // mode: 'v
+        imgSrc: '../../images/user-case/FourAxis/4th-Laser-A250&A350.png',
+        pathConfig: {
+            isDatastoragePath: true,
+            path: '/UserCase/A350/A350_4th_Laser.snaplzr',
+            name: 'A350_4th_Laser.snaplzr'
+        }
     }
 ];
