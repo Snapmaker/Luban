@@ -416,10 +416,10 @@ class CncToolManager extends PureComponent {
         if (nextProps.toolDefinitions !== this.props.toolDefinitions) {
             const newState = {};
             let activeToolCategory;
-            let activeToolListDefinition;
+            let activeToolListDefinition = {};
             if (this.props.toolDefinitions.length === 0) {
                 activeToolCategory = nextProps.toolDefinitions.find(d => d.definitionId === 'Default');
-                activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === defaultToolListNames[0]);
+                activeToolListDefinition = activeToolCategory.toolList.find(k => k.name === defaultToolListNames[0]) || activeToolCategory.toolList[0];
                 activeToolListDefinition.definitionId = activeToolCategory && activeToolCategory.definitionId;
                 Object.assign(newState, {
                     activeToolCategory,

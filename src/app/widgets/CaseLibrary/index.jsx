@@ -8,7 +8,7 @@ import { MACHINE_SERIES } from '../../constants';
 // import api from '../../api';
 import modal from '../../lib/modal';
 import { timestamp } from '../../../shared/lib/random-utils';
-import { CaseConfigOriginal, CaseConfig150, CaseConfig250, CaseConfig350, CaseConfigFourAxis } from './CaseConfig';
+import { CaseConfigOriginal, CaseConfig150, CaseConfig250, CaseConfig350, CaseConfigA350FourAxis, CaseConfigA250FourAxis } from './CaseConfig';
 import { actions as projectActions } from '../../flux/project';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
@@ -136,6 +136,13 @@ class CaseLibrary extends PureComponent {
         } else {
             CaseConfig = CaseConfig150;
         }
+        let CaseConfigFourAxis;
+        if (this.props.series === MACHINE_SERIES.A250.value) {
+            CaseConfigFourAxis = CaseConfigA250FourAxis;
+        } else if (this.props.series === MACHINE_SERIES.A350.value) {
+            CaseConfigFourAxis = CaseConfigA350FourAxis;
+        }
+
         return (
             <div className={styles.caselibrary}>
 
@@ -177,7 +184,7 @@ class CaseLibrary extends PureComponent {
                             );
                         })}
                     </div>
-                    {this.props.use4Axis && (
+                    {this.props.use4Axis && CaseConfigFourAxis && (
                         <div>
                             <h2 className={styles.subTitle}>
                                 {i18n._('4-axis')}

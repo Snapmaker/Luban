@@ -147,25 +147,27 @@ class ToolPathConfigurations extends PureComponent {
                         if (toolDefinition.name === toolParams.definitionName) {
                             activeToolDefinition = { ...toolDefinition };
                             activeToolDefinition.definitionId = d.definitionId;
+                            console.log('activeToolDefinition', activeToolDefinition);
                             if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
-                                config.jog_speed.default_value = gcodeConfig.jogSpeed;
+                                activeToolDefinition.config.jog_speed.default_value = gcodeConfig.jogSpeed;
                             }
                             if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
-                                config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
+                                activeToolDefinition.config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
                             }
                             if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
-                                config.work_speed.default_value = gcodeConfig.workSpeed;
+                                activeToolDefinition.config.work_speed.default_value = gcodeConfig.workSpeed;
                             }
                             if (config.step_down.default_value !== gcodeConfig.stepDown) {
-                                config.step_down.default_value = gcodeConfig.stepDown;
+                                activeToolDefinition.config.step_down.default_value = gcodeConfig.stepDown;
                             }
                             if (config.density.default_value !== gcodeConfig.density) {
-                                config.density.default_value = gcodeConfig.density;
+                                activeToolDefinition.config.density.default_value = gcodeConfig.density;
                             }
                         }
                     });
                 }
             });
+
             await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
             this.setState({
                 activeToolDefinition
