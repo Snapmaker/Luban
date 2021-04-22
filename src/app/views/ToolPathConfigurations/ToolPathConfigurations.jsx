@@ -139,14 +139,14 @@ class ToolPathConfigurations extends PureComponent {
         updateCncActiveToolDefinition: async (updatingToolPath) => {
             const { toolDefinitions } = this.props;
             const { toolParams, gcodeConfig } = updatingToolPath;
-            let activeToolDefinition = this.props.activeToolListDefinition;
+            const activeToolDefinition = this.props.activeToolListDefinition;
             toolDefinitions.forEach((d) => {
-                if (activeToolDefinition.definitionId === toolParams.definitionId) {
+                if (d.definitionId === toolParams.definitionId) {
                     d.toolList.forEach((toolDefinition) => {
                         const config = toolDefinition.config;
-                        if (config.diameter.default_value === toolParams.toolDiameter && config.angle.default_value === toolParams.toolAngle && config.shaft_diameter.default_value === toolParams.toolShaftDiameter) {
-                            activeToolDefinition = { ...toolDefinition };
+                        if (toolDefinition.name === toolParams.definitionName) {
                             activeToolDefinition.definitionId = d.definitionId;
+                            activeToolDefinition.name = d.definitionName;
                             if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
                                 config.jog_speed.default_value = gcodeConfig.jogSpeed;
                             }
