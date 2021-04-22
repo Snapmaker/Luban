@@ -167,7 +167,6 @@ class ToolPathConfigurations extends PureComponent {
                     });
                 }
             });
-            console.log('updateCncActiveToolDefinition', toolParams, activeToolDefinition);
 
             await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
             this.setState({
