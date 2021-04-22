@@ -141,28 +141,30 @@ class ToolPathConfigurations extends PureComponent {
             const { toolParams, gcodeConfig } = updatingToolPath;
             let activeToolDefinition = this.props.activeToolListDefinition;
             toolDefinitions.forEach((d) => {
-                d.toolList.forEach((toolDefinition) => {
-                    const config = toolDefinition.config;
-                    if (config.diameter.default_value === toolParams.toolDiameter && config.angle.default_value === toolParams.toolAngle && config.shaft_diameter.default_value === toolParams.toolShaftDiameter) {
-                        activeToolDefinition = { ...toolDefinition };
-                        activeToolDefinition.definitionId = d.definitionId;
-                        if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
-                            config.jog_speed.default_value = gcodeConfig.jogSpeed;
+                if (activeToolDefinition.definitionId === toolParams.definitionId) {
+                    d.toolList.forEach((toolDefinition) => {
+                        const config = toolDefinition.config;
+                        if (config.diameter.default_value === toolParams.toolDiameter && config.angle.default_value === toolParams.toolAngle && config.shaft_diameter.default_value === toolParams.toolShaftDiameter) {
+                            activeToolDefinition = { ...toolDefinition };
+                            activeToolDefinition.definitionId = d.definitionId;
+                            if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
+                                config.jog_speed.default_value = gcodeConfig.jogSpeed;
+                            }
+                            if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
+                                config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
+                            }
+                            if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
+                                config.work_speed.default_value = gcodeConfig.workSpeed;
+                            }
+                            if (config.step_down.default_value !== gcodeConfig.stepDown) {
+                                config.step_down.default_value = gcodeConfig.stepDown;
+                            }
+                            if (config.density.default_value !== gcodeConfig.density) {
+                                config.density.default_value = gcodeConfig.density;
+                            }
                         }
-                        if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
-                            config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
-                        }
-                        if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
-                            config.work_speed.default_value = gcodeConfig.workSpeed;
-                        }
-                        if (config.step_down.default_value !== gcodeConfig.stepDown) {
-                            config.step_down.default_value = gcodeConfig.stepDown;
-                        }
-                        if (config.density.default_value !== gcodeConfig.density) {
-                            config.density.default_value = gcodeConfig.density;
-                        }
-                    }
-                });
+                    });
+                }
             });
             await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
             this.setState({
