@@ -143,30 +143,21 @@ class ToolPathConfigurations extends PureComponent {
             toolDefinitions.forEach((d) => {
                 if (d.definitionId === toolParams.definitionId) {
                     d.toolList.forEach((toolDefinition) => {
-                        const config = toolDefinition.config;
                         if (toolDefinition.name === toolParams.definitionName) {
                             activeToolDefinition.definitionId = d.definitionId;
                             activeToolDefinition.name = toolDefinition.name;
-                            if (config.jog_speed.default_value !== gcodeConfig.jogSpeed) {
-                                activeToolDefinition.config.jog_speed.default_value = gcodeConfig.jogSpeed;
-                            }
-                            if (config.plunge_speed.default_value !== gcodeConfig.plungeSpeed) {
-                                activeToolDefinition.config.plunge_speed.default_value = gcodeConfig.plungeSpeed;
-                            }
-                            if (config.work_speed.default_value !== gcodeConfig.workSpeed) {
-                                activeToolDefinition.config.work_speed.default_value = gcodeConfig.workSpeed;
-                            }
-                            if (config.step_down.default_value !== gcodeConfig.stepDown) {
-                                activeToolDefinition.config.step_down.default_value = gcodeConfig.stepDown;
-                            }
-                            if (config.density.default_value !== gcodeConfig.density) {
-                                activeToolDefinition.config.density.default_value = gcodeConfig.density;
-                            }
+                            activeToolDefinition.config.angle.default_value = toolParams?.toolAngle;
+                            activeToolDefinition.config.diameter.default_value = toolParams?.toolDiameter;
+                            activeToolDefinition.config.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
+                            activeToolDefinition.config.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                            activeToolDefinition.config.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                            activeToolDefinition.config.work_speed.default_value = gcodeConfig?.workSpeed;
+                            activeToolDefinition.config.step_down.default_value = gcodeConfig?.stepDown;
+                            activeToolDefinition.config.density.default_value = gcodeConfig?.density;
                         }
                     });
                 }
             });
-
             await this.props.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name);
             this.setState({
                 activeToolDefinition
