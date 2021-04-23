@@ -42,7 +42,6 @@ class CncToolManager extends PureComponent {
     static propTypes = {
         showCncToolManager: PropTypes.bool,
         toolDefinitions: PropTypes.array.isRequired,
-        activeToolListDefinition: PropTypes.object,
         duplicateToolCategoryDefinition: PropTypes.func.isRequired,
         duplicateToolListDefinition: PropTypes.func.isRequired,
 
@@ -736,10 +735,6 @@ class CncToolManager extends PureComponent {
                                                 actions.hideCncToolManager();
                                             }}
                                             className="sm-btn-large sm-btn-primary"
-                                            disabled={
-                                                activeToolListDefinition.definitionId === this.props.activeToolListDefinition.definitionId
-                                                && activeToolListDefinition.name === this.props.activeToolListDefinition.name
-                                            }
                                         >
                                             {i18n._('Select')}
                                         </Anchor>
