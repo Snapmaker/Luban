@@ -7,6 +7,10 @@ module.exports = async function notarizing(context) {
         return;
     }
 
+    if (!process.env.CI) {
+        return;
+    }
+
     // Notarize only when running on Travis-CI and has a tag.
     console.log('Notarizing application...');
 
