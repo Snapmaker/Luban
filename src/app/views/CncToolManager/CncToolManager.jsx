@@ -21,7 +21,7 @@ import { CNC_TOOL_CONFIG_GROUP } from '../../constants';
 
 const SUBCATEGORY = 'CncConfig';
 const defaultToolListNames = [
-    'Carving V bit',
+    'Carving V-bit',
     'Flat End Mill',
     'Ball End Mill',
     'Straight Groove V-bit'
@@ -476,7 +476,6 @@ class CncToolManager extends PureComponent {
         const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
         const unEditable = (isCategorySelected && this.state.activeToolCategory.category === 'Default Material')
             || (!isCategorySelected && activeToolListDefinition && isOfficialListDefinition(activeToolListDefinition));
-
         return (
             <React.Fragment>
                 {showCncToolManager && (
