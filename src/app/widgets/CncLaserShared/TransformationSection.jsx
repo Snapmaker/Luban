@@ -266,7 +266,7 @@ class TransformationSection extends PureComponent {
                                             min={1}
                                             max={size.y}
                                             onChange={(value) => {
-                                                actions.onChangeWidth(value);
+                                                actions.onChangeHeight(value);
                                             }}
                                         />
                                         <span
