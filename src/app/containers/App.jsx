@@ -296,7 +296,7 @@ class App extends PureComponent {
                         footer: (
                             <button
                                 type="button"
-                                className="btn sm-btn-default sm-btn-primary"
+                                className="btn sm-btn-default sm-btn-large sm-btn-primary"
                                 onClick={async () => {
                                     await this.props.onRecovery(headType);
                                     popupActions.close();
@@ -306,7 +306,10 @@ class App extends PureComponent {
                                 {i18n._('Yes')}
                             </button>
                         ),
-                        onClose: () => { this.setState({ [keyRecoveringProject]: false }); }
+                        onClose: () => {
+                            this.setState({ [keyRecoveringProject]: false });
+                            this.props.clearSavedEnvironment(headType);
+                        }
                     });
                 }
             } else if (this.state[keyRecoveringProject]) {
@@ -441,7 +444,8 @@ const mapDispatchToProps = (dispatch) => {
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
-        openProject: (headType, history) => dispatch(projectActions.open(headType, history)),
+        openProject: (file, history) => dispatch(projectActions.open(file, history)),
+        clearSavedEnvironment: (headType) => dispatch(projectActions.clearSavedEnvironment(headType)),
         resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };
 };
