@@ -19,7 +19,7 @@ const processImage3d = (modelInfo) => {
 
 export const editorProcess = (modelInfo) => {
     const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) {
+    if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG || sourceType === SOURCE_TYPE_DXF) {
         if (mode === PROCESS_MODE_GREYSCALE) {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo);
@@ -37,8 +37,9 @@ export const editorProcess = (modelInfo) => {
                 filename: ''
             });
         }
-    } else if (sourceType === SOURCE_TYPE_DXF) {
-        return processDxf(modelInfo);
+        //  else if (sourceType === SOURCE_TYPE_DXF) {
+        //     return processDxf(modelInfo);
+        // }
     } else if (sourceType === SOURCE_TYPE_IMAGE3D) {
         return processImage3d(modelInfo);
     } else {

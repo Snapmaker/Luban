@@ -248,6 +248,7 @@ export async function processHalftone(modelInfo, onProgress) {
  * @returns {Promise<any>}
  */
 export function processVector(modelInfo, onProgress) {
+    console.log('processVector', modelInfo);
     onProgress && onProgress(0.2);
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
@@ -288,7 +289,7 @@ function processDxf(modelInfo, onProgress) {
 // eslint-disable-next-line no-unused-vars
 function process(modelInfo, onProgress) {
     const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === 'raster' || sourceType === 'svg') {
+    if (sourceType === 'raster' || sourceType === 'svg' || sourceType === 'dxf') {
         if (mode === 'greyscale') {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo, onProgress);
@@ -307,8 +308,9 @@ function process(modelInfo, onProgress) {
                 filename: ''
             });
         }
-    } else if (sourceType === 'dxf') {
-        return processDxf(modelInfo, onProgress);
+        // else if (sourceType === 'dxf') {
+        //     return processDxf(modelInfo, onProgress);
+        // }
     } else {
         return Promise.resolve({
             filename: ''

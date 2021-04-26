@@ -23,24 +23,24 @@ const generateCncViewPath = async (modelInfo, onProgress) => {
 
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         let viewPath;
-        if (sourceType === 'dxf') {
-            let { svg } = await parseDxf(modelPath);
-            svg = dxfToSvg(svg);
-            updateDxfBoundingBox(svg);
+        // if (sourceType === 'dxf') {
+        //     let { svg } = await parseDxf(modelPath);
+        //     svg = dxfToSvg(svg);
+        //     updateDxfBoundingBox(svg);
+        //
+        //     const generator = new CncToolPathGenerator(modelInfo);
+        //     generator.on('progress', (p) => onProgress(p));
+        //     viewPath = await generator.generateViewPathObj(svg, modelInfo);
+        // } else {
+        const svgParser = new SVGParser();
+        const svg = await svgParser.parseFile(modelPath);
 
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => onProgress(p));
-            viewPath = await generator.generateViewPathObj(svg, modelInfo);
-        } else {
-            const svgParser = new SVGParser();
-            const svg = await svgParser.parseFile(modelPath);
-
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => {
-                onProgress(p);
-            });
-            viewPath = await generator.generateViewPathObj(svg, modelInfo);
-        }
+        const generator = new CncToolPathGenerator(modelInfo);
+        generator.on('progress', (p) => {
+            onProgress(p);
+        });
+        viewPath = await generator.generateViewPathObj(svg, modelInfo);
+        // }
         return new Promise((resolve) => {
             resolve(viewPath);
         });

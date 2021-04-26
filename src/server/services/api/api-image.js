@@ -5,7 +5,7 @@ import jimp from 'jimp';
 import async from 'async';
 import logger from '../../lib/logger';
 import SVGParser from '../../../shared/lib/SVGParser';
-import { parseDxf } from '../../../shared/lib/DXFParser/Parser';
+import { parseDxf, generateSvgFromDxf } from '../../../shared/lib/DXFParser/Parser';
 import { unzipFile } from '../../lib/archive';
 import { editorProcess } from '../../lib/editor/process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
@@ -23,31 +23,31 @@ const log = logger('api:image');
 export const set = (req, res) => {
     const files = req.files;
     const { isRotate } = req.body;
-    let originalName, uploadName, uploadPath, originalPath;
+    let originalName, tempName, tempPath, originalPath;
     // if 'files' does not exist, the model in the case library is being loaded
     if (files) {
         const file = files.image;
         originalName = path.basename(file.name);
-        uploadName = pathWithRandomSuffix(removeSpecialChars(originalName));
-        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        tempName = pathWithRandomSuffix(removeSpecialChars(originalName));
+        tempPath = `${DataStorage.tmpDir}/${tempName}`;
         originalPath = file.path;
     } else {
         const { name, casePath } = req.body;
         originalName = name;
         originalPath = `${DataStorage.userCaseDir}/${casePath}/${name}`;
-        uploadName = pathWithRandomSuffix(removeSpecialChars(originalName));
-        uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+        tempName = pathWithRandomSuffix(removeSpecialChars(originalName));
+        tempPath = `${DataStorage.tmpDir}/${tempName}`;
     }
-    const extname = path.extname(uploadName).toLowerCase();
+    const extname = path.extname(tempName).toLowerCase();
 
     async.series([
         (next) => {
             if (files) {
-                mv(originalPath, uploadPath, () => {
+                mv(originalPath, tempPath, () => {
                     next();
                 });
             } else {
-                fs.copyFile(originalPath, uploadPath, () => {
+                fs.copyFile(originalPath, tempPath, () => {
                     next();
                 });
             }
@@ -55,23 +55,24 @@ export const set = (req, res) => {
         async (next) => {
             if (extname === '.svg') {
                 const svgParser = new SVGParser();
-                const svg = await svgParser.parseFile(uploadPath);
+                const svg = await svgParser.parseFile(tempPath);
 
                 res.send({
                     originalName: originalName,
-                    uploadName: uploadName,
+                    uploadName: svg.uploadName,
                     width: svg.width,
                     height: svg.height
                 });
 
                 next();
             } else if (extname === '.dxf') {
-                const result = await parseDxf(uploadPath);
+                const result = await parseDxf(tempPath);
+                const svg = await generateSvgFromDxf(result.svg, tempPath, tempName);
                 const { width, height } = result;
 
                 res.send({
                     originalName: originalName,
-                    uploadName: uploadName,
+                    uploadName: svg.uploadName,
                     width,
                     height
                 });
@@ -79,23 +80,23 @@ export const set = (req, res) => {
                 next();
             } else if (extname === '.stl' || extname === '.zip') {
                 if (extname === '.zip') {
-                    await unzipFile(`${uploadName}`, `${DataStorage.tmpDir}`);
+                    await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
                     originalName = originalName.replace(/\.zip$/, '');
                     uploadName = originalName;
                 }
-                const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${uploadName}`, isRotate === 'true' || isRotate === true);
+                const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${tempName}`, isRotate === 'true' || isRotate === true);
                 res.send({
                     originalName: originalName,
-                    uploadName: uploadName,
+                    uploadName: tempName,
                     width: width,
                     height: height
                 });
                 next();
             } else {
-                jimp.read(uploadPath).then((image) => {
+                jimp.read(tempPath).then((image) => {
                     res.send({
                         originalName: originalName,
-                        uploadName: uploadName,
+                        uploadName: tempName,
                         width: image.bitmap.width,
                         height: image.bitmap.height
                     });
@@ -107,7 +108,7 @@ export const set = (req, res) => {
         }
     ], (err) => {
         if (err) {
-            log.error(`Failed to read image ${uploadName}`);
+            log.error(`Failed to read image ${tempName}`);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();
         } else {
             res.end();

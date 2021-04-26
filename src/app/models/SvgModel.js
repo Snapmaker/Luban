@@ -7,7 +7,7 @@ import { NS } from '../ui/SVGEditor/lib/namespaces';
 import { DATA_PREFIX } from '../constants';
 
 
-import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
+// import ThreeDxfLoader from '../lib/threejs/ThreeDxfLoader';
 
 import api from '../api';
 import { checkIsImageSuffix } from '../../shared/lib/utils';
@@ -854,19 +854,20 @@ class SvgModel extends BaseModel {
 
 
     generateModelObject3D() {
-        if (this.sourceType === 'dxf') {
-            if (this.modelObject3D) {
-                this.meshObject.remove(this.modelObject3D);
-                this.modelObject3D = null;
-            }
-
-            const path = `${DATA_PREFIX}/${this.uploadName}`;
-            new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
-                this.modelObject3D = group;
-                this.meshObject.add(this.modelObject3D);
-                this.meshObject.dispatchEvent(EVENTS.UPDATE);
-            });
-        } else if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
+        // if (this.sourceType === 'dxf') {
+        //     if (this.modelObject3D) {
+        //         this.meshObject.remove(this.modelObject3D);
+        //         this.modelObject3D = null;
+        //     }
+        //
+        //     const path = `${DATA_PREFIX}/${this.uploadName}`;
+        //     new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
+        //         this.modelObject3D = group;
+        //         this.meshObject.add(this.modelObject3D);
+        //         this.meshObject.dispatchEvent(EVENTS.UPDATE);
+        //     });
+        // } else
+        if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
