@@ -207,7 +207,7 @@ export const actions = {
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, { svgNodeName: 'image' }));
+                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, 'image'));
                 // dispatch(actions.generateMoldFromImage(headType, { originalName, uploadName, width, height }));
             })
             .catch((err) => {
@@ -216,34 +216,6 @@ export const actions = {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
                     progress: 1
                 }));
-            });
-    },
-
-    uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
-        dispatch(actions.updateState(headType, {
-            stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
-            progress: 0.25
-        }));
-        const { materials } = getState()[headType];
-        file.isRotate = materials.isRotate;
-        api.uploadImage(file)
-            .then((res) => {
-                dispatch(actions.updateState(headType, {
-                    stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
-                    progress: 1
-                }));
-                const { width, height, originalName, uploadName } = res.body;
-                const { config } = caseConfigs;
-                const { gcodeConfig } = caseConfigs;
-                if (gcodeConfig.toolSnap) {
-                    dispatch(baseActions.updateState(headType, {
-                        toolSnap: gcodeConfig.toolSnap
-                    }));
-                }
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, null, { svgNodeName: 'image', ...config }, gcodeConfig, caseTransformation));
-            })
-            .catch((err) => {
-                onError && onError(err);
             });
     },
 
@@ -309,25 +281,27 @@ export const actions = {
      * @param mode - bw | greyscale | ...
      * @param sourceType - raster | svg | dxf | text | image3d | ...
      * @param config - model config (TODO: can be removed?)
+     * @param processNodeName - 'text' | 'image'
      * @param gcodeConfig - G-code config (TODO: can be removed?)
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
+    generateModel: (headType, sourceOriginalName, sourceUploadName, sourceWidth, sourceHeight, processMode, sourceType, processNodeName = 'image', gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
 
-        sourceType = sourceType || getSourceType(originalName);
+        sourceType = sourceType || getSourceType(sourceOriginalName);
 
-        if (!checkParams(headType, sourceType, mode)) {
-            console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${mode}`);
+        if (!checkParams(headType, sourceType, processMode)) {
+            console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${processMode}`);
             return;
         }
 
         // Get default configurations
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, processMode, materials.isRotate);
 
-        const defaultConfig = modelDefaultConfigs.config;
+        // todo
+        // const defaultConfig = modelDefaultConfigs.config;
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
@@ -338,7 +312,7 @@ export const actions = {
         let { width, height } = newModelSize;
         const { scale } = newModelSize;
 
-        if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
+        if (`${headType}-${sourceType}-${processMode}` === 'cnc-raster-greyscale') {
             width = 40;
             height = 40 * sourceHeight / sourceWidth;
         }
@@ -348,10 +322,9 @@ export const actions = {
             height
         };
 
-        config = {
-            ...defaultConfig,
-            ...config
-        };
+        // const config = {
+        //     ...defaultConfig
+        // };
         gcodeConfig = {
             ...defaultGcodeConfig,
             ...gcodeConfig
@@ -374,21 +347,22 @@ export const actions = {
             limitSize: size,
             headType,
             sourceType,
-            mode,
-            originalName,
-            uploadName,
+            processMode,
+            sourceOriginalName,
+            sourceUploadName,
             sourceWidth,
             sourceHeight,
             width,
             height,
-            scale,
+            sourceScale: scale,
             transformation,
-            config,
+            // config,
+            processNodeName,
             gcodeConfig,
             zIndex,
             isRotate: materials.isRotate,
             elem: contentGroup.addSVGElement({
-                element: config.svgNodeName || 'image',
+                element: processNodeName,
                 attr: { id: modelID }
             }),
             size: size
@@ -399,7 +373,7 @@ export const actions = {
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
 
-        if (path.extname(uploadName).toLowerCase() === '.stl') {
+        if (path.extname(sourceUploadName).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
         }
 
@@ -552,46 +526,6 @@ export const actions = {
             headType: headType,
             data: options
         });
-        // =======
-        //         api.processImage(options)
-        //             .then((res) => {
-        //                 const processImageName = res.body.filename;
-        //                 if (!processImageName) {
-        //                     return;
-        //                 }
-        //
-        //                 const svgModel = selectedModel.relatedModels.svgModel;
-        //
-        //                 if (selectedModel.sourceType === 'image3d') {
-        //                     const modelOptions = {
-        //                         sourceWidth: res.body.width * DEFAULT_SCALE,
-        //                         sourceHeight: res.body.height * DEFAULT_SCALE,
-        //                         width: res.body.width,
-        //                         height: res.body.height,
-        //                         transformation: {
-        //                             width: Math.abs(res.body.width * selectedModel.transformation.scaleX),
-        //                             height: Math.abs(res.body.height * selectedModel.transformation.scaleY)
-        //                         }
-        //                     };
-        //                     selectedModel.updateAndRefresh(modelOptions);
-        //                     SVGActions.resetSelection();
-        //                 }
-        //
-        //                 // modelGroup.updateSelectedModelProcessImage(processImageName);
-        //                 selectedModel.updateProcessImageName(processImageName);
-        //
-        //                 // SVGActions.updateElementImage(processImageName);
-        //                 SVGActions.updateSvgModelImage(svgModel, processImageName);
-        //
-        //                 // dispatch(baseActions.recordSnapshot(headType));
-        //                 dispatch(baseActions.resetCalculatedState(headType));
-        //                 dispatch(baseActions.render(headType));
-        //             })
-        //             .catch((e) => {
-        //                 // TODO: use log
-        //                 console.error(e);
-        //             });
-        // >>>>>>> Feature: Add 4 axis module
     },
 
 
@@ -769,8 +703,8 @@ export const actions = {
             return;
         }
 
-        const processImageName = taskResult.filename;
-        if (!processImageName) {
+        const processFilePath = taskResult.filename;
+        if (!processFilePath) {
             return;
         }
 
@@ -792,11 +726,10 @@ export const actions = {
             }
         }
 
-        // modelGroup.updateSelectedModelProcessImage(processImageName);
-        model.updateProcessImageName(processImageName);
+        model.updateProcessFilePath(processFilePath);
 
-        // SVGActions.updateElementImage(processImageName);
-        SVGActions.updateSvgModelImage(model, processImageName);
+        // SVGActions.updateElementImage(processFilePath);
+        SVGActions.updateSvgModelImage(model, processFilePath);
 
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));

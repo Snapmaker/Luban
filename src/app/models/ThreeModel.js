@@ -28,7 +28,7 @@ class ThreeModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { width, height, processImageName } = modelInfo;
+        const { width, height, processFilePath } = modelInfo;
 
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
@@ -36,7 +36,7 @@ class ThreeModel extends BaseModel {
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
-        this.processImageName = processImageName;
+        this.processFilePath = processFilePath;
 
         if (!this.transformation.width && !this.transformation.height) {
             this.transformation.width = width;
@@ -527,7 +527,7 @@ class ThreeModel extends BaseModel {
     getSerializableConfig() {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName
+            transformation, processFilePath
         } = this;
 
         return {
@@ -542,7 +542,7 @@ class ThreeModel extends BaseModel {
             config,
             mode,
             transformation,
-            processImageName
+            processFilePath
         };
     }
 }

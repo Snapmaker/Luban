@@ -82,7 +82,9 @@ function genModelConfig(elem, size) {
             text: elem.textContent,
             'font-size': elem.getAttribute('font-size'),
             'font-family': elem.getAttribute('font-family')
-        }
+        },
+        nodeName: elem.nodeName,
+        text: elem.textContent
     };
 
     return model;

@@ -1065,13 +1065,6 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    updateSelectedModelProcessImage(processImageName) {
-        if (this.selectedModelArray.length === 1) {
-            const selectedModel = this.selectedModelArray[0];
-            selectedModel.updateProcessImageName(processImageName);
-        }
-    }
-
     hideAllModelsObj3D() {
         this.object.visible = false;
     }
@@ -1272,9 +1265,9 @@ class ModelGroup extends EventEmitter {
         if (!modelInfo.modelName) {
             modelInfo.modelName = this._createNewModelName({
                 sourceType: modelInfo.sourceType,
-                mode: modelInfo.mode,
-                originalName: modelInfo.originalName,
-                config: modelInfo.config
+                processMode: modelInfo.processMode,
+                sourceOriginalName: modelInfo.sourceOriginalName,
+                processNodeName: modelInfo.processNodeName
             });
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
@@ -1394,7 +1387,7 @@ class ModelGroup extends EventEmitter {
      *
      * @param model - information needed to create new model name.
      *      options = {
-     *            config,
+     *            nodeName,
      *            mode,
      *            sourceType,
      *            originalName
@@ -1406,9 +1399,8 @@ class ModelGroup extends EventEmitter {
         if (model.sourceType === '3d') {
             baseName = model.originalName;
         } else {
-            const { config } = model;
-            const isText = (config && config.svgNodeName === 'text');
-            const isShape = (model.mode === 'vector' && config && config.svgNodeName !== 'image');
+            const isText = (model.nodeName === 'text');
+            const isShape = (model.mode === 'vector' && model.nodeName !== 'image');
             if (isText) {
                 baseName = 'Text';
             } else if (isShape) {
