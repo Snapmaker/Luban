@@ -189,7 +189,7 @@ export const actions = {
      * 1. Upload image to backend
      * 2. Create Mold from image information
      */
-    uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
+    uploadImage: (headType, file, processMode, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
             progress: 0.25
@@ -207,7 +207,7 @@ export const actions = {
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, undefined, 'image'));
+                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, processMode, undefined, 'image'));
                 // dispatch(actions.generateMoldFromImage(headType, { originalName, uploadName, width, height }));
             })
             .catch((err) => {
@@ -278,7 +278,7 @@ export const actions = {
      * @param uploadName - modified name of uploaded image file
      * @param sourceWidth - source width of image
      * @param sourceHeight - source height of image
-     * @param mode - bw | greyscale | ...
+     * @param processMode - bw | greyscale | ...
      * @param sourceType - raster | svg | dxf | text | image3d | ...
      * @param config - model config (TODO: can be removed?)
      * @param processNodeName - 'text' | 'image'
@@ -293,7 +293,7 @@ export const actions = {
         sourceType = sourceType || getSourceType(sourceOriginalName);
 
         if (!checkParams(headType, sourceType, processMode)) {
-            console.error(`sourceType or mode error, sourceType: ${sourceType}, mode: ${processMode}`);
+            console.error(`sourceType or processMode error, sourceType: ${sourceType}, processMode: ${processMode}`);
             return;
         }
 
@@ -389,9 +389,9 @@ export const actions = {
                 // const { name, filename, width, height } = res.body;
                 const { originalName, uploadName, width, height } = res.body;
                 const sourceType = 'text';
-                const mode = 'vector';
+                const processMode = 'vector';
 
-                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, mode, sourceType));
+                dispatch(actions.generateModel(headType, originalName, uploadName, width, height, processMode, sourceType));
             });
     },
 
@@ -409,7 +409,7 @@ export const actions = {
         SVGActions.resetSelection();
     },
 
-    changeSelectedModelMode: (headType, sourceType, mode) => async (dispatch, getState) => {
+    changeSelectedModelMode: (headType, sourceType, processMode) => async (dispatch, getState) => {
         const { modelGroup, materials } = getState()[headType];
 
         const selectedModels = modelGroup.getSelectedModelArray();
@@ -417,7 +417,7 @@ export const actions = {
             return;
         }
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, mode, materials.isRotate);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, processMode, materials.isRotate);
 
         const selectedModel = selectedModels[0];
 
@@ -425,9 +425,9 @@ export const actions = {
         const config = {
             ...selectedModel.config,
             ...modelDefaultConfigs.config,
-            ...selectedModel.getModeConfig(mode)
+            ...selectedModel.getModeConfig(processMode)
         };
-        modelGroup.updateSelectedMode(mode, config);
+        modelGroup.updateSelectedMode(processMode, config);
 
         dispatch(actions.processSelectedModel(headType));
     },
@@ -479,7 +479,7 @@ export const actions = {
 
         const selectedModel = selectedModels[0];
 
-        const modelDefaultConfigs = generateModelDefaultConfigs(headType, selectedModel.sourceType, selectedModel.mode, materials.isRotate);
+        const modelDefaultConfigs = generateModelDefaultConfigs(headType, selectedModel.sourceType, selectedModel.processMode, materials.isRotate);
         const newConfig = {
             ...modelDefaultConfigs.config,
             ...selectedModel.config,
@@ -533,11 +533,11 @@ export const actions = {
         const { page, modelGroup } = getState()[headType];
         if (page === PAGE_PROCESS) return;
 
-        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode } = modelGroup.getSelectedModel();
+        const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, processMode } = modelGroup.getSelectedModel();
         const transformation = { ...modelGroup.getSelectedModel().transformation };
         transformation.positionX += 5;
         transformation.positionY -= 5;
-        dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
+        dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, processMode,
             sourceType, config, undefined, transformation));
         dispatch(actions.resetProcessState(headType));
     },

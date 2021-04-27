@@ -23,7 +23,7 @@ class LaserParameters extends PureComponent {
         selectedModelVisible: PropTypes.bool,
         modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         headType: PropTypes.string,
@@ -111,7 +111,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelArray, selectedModelVisible, sourceType, mode,
+            selectedModelArray, selectedModelVisible, sourceType, processMode,
             config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
@@ -145,7 +145,7 @@ class LaserParameters extends PureComponent {
                     <ImageProcessMode
                         disabled={!selectedModelVisible}
                         sourceType={sourceType}
-                        mode={mode}
+                        processMode={processMode}
                         showOrigin={showOrigin}
                         changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
                         changeSelectedModelMode={changeSelectedModelMode}
@@ -172,12 +172,12 @@ const mapStateToProps = (state) => {
         // modelGroup.mockModel
         mock: true,
         sourceType: '',
-        mode: '',
+        processMode: '',
         config: {},
         visible: true
     });
     const {
-        mode,
+        processMode,
         sourceType,
         showOrigin,
         config,
@@ -192,7 +192,7 @@ const mapStateToProps = (state) => {
         selectedModelVisible: visible,
         modelGroup,
         sourceType,
-        mode,
+        processMode,
         showOrigin,
         config
     };
@@ -200,11 +200,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        uploadImage: (file, processMode, onFailure) => dispatch(editorActions.uploadImage('laser', file, processMode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
+        changeSelectedModelMode: (sourceType, processMode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, processMode)),
         onModelAfterTransform: () => {},
         modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))

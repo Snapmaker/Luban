@@ -131,11 +131,11 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         boundingBox.max.y += this.transformation.positionY;
         boundingBox.min.y += this.transformation.positionY;
 
-        const { headType, mode } = this.modelInfo;
+        const { headType, processMode } = this.modelInfo;
 
         return {
             headType: headType,
-            mode: mode,
+            processMode: processMode,
             movementMode: '',
             data: this.toolPath.commands,
             estimatedTime: this.toolPath.estimatedTime * 1.6,

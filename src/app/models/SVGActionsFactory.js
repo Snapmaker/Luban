@@ -627,9 +627,9 @@ class SVGActionsFactory {
 
             const { originalName, uploadName } = res.body;
             const sourceType = 'svg';
-            const mode = 'vector';
+            const processMode = 'vector';
 
-            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
+            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, processMode, isRotate);
 
             config = { ...config, ...elemConfig };
             gcodeConfig = { ...gcodeConfig };
@@ -638,7 +638,7 @@ class SVGActionsFactory {
                 limitSize: this.size,
                 headType,
                 sourceType,
-                mode,
+                processMode,
                 originalName,
                 uploadName,
                 sourceWidth: res.body.width,

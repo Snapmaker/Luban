@@ -241,8 +241,8 @@ class SvgModel extends BaseModel {
         this.generateModelObject3D();
 
         // Todo: remove this.config
-        // this.processMode(modelInfo.mode, modelInfo.config);
-        this.processMode(processMode, processNodeName);
+        // this.changeProcessMode(modelInfo.mode, modelInfo.config);
+        this.changeProcessMode(processMode, processNodeName);
         // use model info to refresh element
         this.refresh();
         // trigger update source, should add parmas to togger this func
@@ -1000,23 +1000,23 @@ class SvgModel extends BaseModel {
     //     }
     // }
 
-    getModeConfig(mode) {
+    getModeConfig(processMode) {
         if (this.sourceType !== 'raster') {
             return null;
         }
-        return this.modeConfigs[mode];
+        return this.modeConfigs[processMode];
     }
 
-    processMode(mode, config) {
-        if (this.mode !== mode) {
-            this.modeConfigs[this.mode] = {
+    changeProcessMode(processMode, config) {
+        if (this.processMode !== processMode) {
+            this.modeConfigs[this.processMode] = {
                 config: {
                     ...this.config
                 }
             };
-            if (this.modeConfigs[mode]) {
+            if (this.modeConfigs[processMode]) {
                 this.config = {
-                    ...this.modeConfigs[mode].config
+                    ...this.modeConfigs[processMode].config
                 };
             } else {
                 this.config = {
@@ -1024,7 +1024,7 @@ class SvgModel extends BaseModel {
                 };
             }
 
-            this.mode = mode;
+            this.processMode = processMode;
             this.processFilePath = null;
         }
 
@@ -1048,7 +1048,7 @@ class SvgModel extends BaseModel {
             modelName: this.modelName,
             headType: this.headType,
             sourceType: this.sourceType,
-            mode: this.mode,
+            processMode: this.processMode,
 
             visible: this.visible,
 
@@ -1067,7 +1067,7 @@ class SvgModel extends BaseModel {
             }
         };
         // svg process as image
-        if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
+        if (taskInfo.sourceType === 'svg' && taskInfo.processMode !== 'vector') {
             taskInfo.sourceUploadPath = this.sourceUploadPath;
         }
         return taskInfo;
@@ -1148,11 +1148,10 @@ class SvgModel extends BaseModel {
             ...this.config,
             ...config
         };
-        this.processMode(this.mode, this.config);
+        this.changeProcessMode(this.processMode, this.config);
     }
 
     updateProcessFilePath(processFilePath) {
-        // this.processMode(this.mode, this.config, processFilePath);
         this.processFilePath = processFilePath;
 
         this.generateProcessObject3D();
@@ -1161,7 +1160,7 @@ class SvgModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, sourceUploadPath, config, mode,
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, sourceUploadPath, config, processMode,
             transformation, processFilePath
         } = this;
         return {
@@ -1174,7 +1173,7 @@ class SvgModel extends BaseModel {
             originalName,
             sourceUploadPath,
             config,
-            mode,
+            processMode,
             transformation,
             processFilePath
         };

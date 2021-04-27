@@ -813,7 +813,7 @@ class ModelGroup extends EventEmitter {
     updateSelectedMode(mode, config) {
         if (this.selectedModelArray.length === 1) {
             const selectedModel = this.selectedModelArray[0];
-            selectedModel.processMode(mode, config);
+            selectedModel.changeProcessMode(mode, config);
         }
         return this._getEmptyState();
     }

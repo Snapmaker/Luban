@@ -20,7 +20,7 @@ class CNCPath extends PureComponent {
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         // transformation: PropTypes.object.isRequired,
@@ -70,7 +70,7 @@ class CNCPath extends PureComponent {
     render() {
         const {
             page, selectedModelArray,
-            selectedModelVisible, sourceType, mode,
+            selectedModelVisible, sourceType, processMode,
             showOrigin,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
@@ -98,7 +98,7 @@ class CNCPath extends PureComponent {
                         {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                             <ImageProcessMode
                                 sourceType={sourceType}
-                                mode={mode}
+                                processMode={processMode}
                                 disabled={!selectedNotHide}
                                 showOrigin={showOrigin}
                                 changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
@@ -134,7 +134,7 @@ const mapStateToProps = (state) => {
     const selectedModelID = selectedModel.modelID;
     const {
         sourceType,
-        mode,
+        processMode,
         showOrigin,
         transformation,
         config
@@ -150,7 +150,7 @@ const mapStateToProps = (state) => {
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
         sourceType,
-        mode,
+        processMode,
         showOrigin,
         config
     };
@@ -163,7 +163,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode)),
+        changeSelectedModelMode: (sourceType, processMode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, processMode)),
         modifyText: (element, options) => dispatch(editorActions.modifyText('cnc', element, options))
     };
 };
