@@ -21,6 +21,7 @@ class CNCPath extends PureComponent {
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
         processMode: PropTypes.string.isRequired,
+        processNodeName: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         // transformation: PropTypes.object.isRequired,
@@ -70,7 +71,7 @@ class CNCPath extends PureComponent {
     render() {
         const {
             page, selectedModelArray,
-            selectedModelVisible, sourceType, processMode,
+            selectedModelVisible, sourceType, processMode, processNodeName,
             showOrigin,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
@@ -81,10 +82,10 @@ class CNCPath extends PureComponent {
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
-        const isTextVector = (config.svgNodeName === 'text');
+        const isTextVector = (processNodeName === 'text');
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && processNodeName === 'image';
         return (
             <React.Fragment>
                 {isEditor && (
@@ -135,6 +136,7 @@ const mapStateToProps = (state) => {
     const {
         sourceType,
         processMode,
+        processNodeName,
         showOrigin,
         transformation,
         config
@@ -151,6 +153,7 @@ const mapStateToProps = (state) => {
         modelGroup,
         sourceType,
         processMode,
+        processNodeName,
         showOrigin,
         config
     };

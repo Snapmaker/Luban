@@ -24,8 +24,9 @@ class LaserParameters extends PureComponent {
         modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
         processMode: PropTypes.string.isRequired,
+        processNodeName: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
-        config: PropTypes.object.isRequired,
+        // config: PropTypes.object.isRequired,
         headType: PropTypes.string,
 
         setDisplay: PropTypes.func.isRequired,
@@ -111,8 +112,8 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelArray, selectedModelVisible, sourceType, processMode,
-            config,
+            selectedModelArray, selectedModelVisible, sourceType, processMode, processNodeName,
+            // config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
             modifyText
@@ -121,8 +122,8 @@ class LaserParameters extends PureComponent {
         const actions = this.actions;
 
         const isEditor = this.props.page === PAGE_EDITOR;
-        const isTextVector = (config.svgNodeName === 'text');
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+        const isTextVector = (processNodeName === 'text');
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && processNodeName === 'image';
 
         return (
             <React.Fragment>
@@ -156,7 +157,7 @@ class LaserParameters extends PureComponent {
                     <TextParameters
                         disabled={!selectedModelVisible}
                         headType={headType}
-                        config={config}
+                        // config={config}
                         modifyText={modifyText}
                     />
                 )}
@@ -180,6 +181,7 @@ const mapStateToProps = (state) => {
         processMode,
         sourceType,
         showOrigin,
+        processNodeName,
         config,
         visible
     } = selectedModel;
@@ -193,6 +195,7 @@ const mapStateToProps = (state) => {
         modelGroup,
         sourceType,
         processMode,
+        processNodeName,
         showOrigin,
         config
     };

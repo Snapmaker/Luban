@@ -1279,6 +1279,7 @@ class ModelGroup extends EventEmitter {
             }
         }
         const model = this.newModel(modelInfo);
+        console.log('after new model');
 
         model.computeBoundingBox();
 

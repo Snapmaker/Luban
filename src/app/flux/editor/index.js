@@ -300,8 +300,7 @@ export const actions = {
         // Get default configurations
         const modelDefaultConfigs = generateModelDefaultConfigs(headType, sourceType, processMode, materials.isRotate);
 
-        // todo
-        // const defaultConfig = modelDefaultConfigs.config;
+        const defaultConfig = modelDefaultConfigs.config;
         const defaultGcodeConfig = modelDefaultConfigs.gcodeConfig;
 
         // Limit image size by machine size
@@ -322,9 +321,9 @@ export const actions = {
             height
         };
 
-        // const config = {
-        //     ...defaultConfig
-        // };
+        const processConfig = {
+            ...defaultConfig
+        };
         gcodeConfig = {
             ...defaultGcodeConfig,
             ...gcodeConfig
@@ -356,7 +355,7 @@ export const actions = {
             height,
             sourceScale: scale,
             transformation,
-            // config,
+            processConfig,
             processNodeName,
             gcodeConfig,
             zIndex,
@@ -368,6 +367,7 @@ export const actions = {
             size: size
         };
 
+        console.log('before add');
         const model = modelGroup.addModel(options);
 
         SVGActions.clearSelection();
@@ -379,6 +379,7 @@ export const actions = {
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
+        console.log('after process');
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
@@ -499,7 +500,7 @@ export const actions = {
         }
         const selectedModel = selectedModels[0];
 
-        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'svg' && selectedModel.sourceType !== 'image3d' && selectedModel.config.svgNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
+        if (selectedModel.sourceType !== 'raster' && selectedModel.sourceType !== 'svg' && selectedModel.sourceType !== 'image3d' && selectedModel.processNodeName !== 'text' && selectedModel.sourceType !== 'dxf') {
             return;
         }
         // svg process as image

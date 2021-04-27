@@ -350,8 +350,8 @@ class SvgModel extends BaseModel {
                 positionX: positionX,
                 positionY: positionY
             },
-            config: {
-                svgNodeName: elem.nodeName,
+            processNodeName: elem.nodeName,
+            processTextInfo: {
                 text: elem.textContent,
                 'font-size': elem.getAttribute('font-size'),
                 'font-family': elem.getAttribute('font-family')
@@ -423,7 +423,7 @@ class SvgModel extends BaseModel {
         let blob, file, res;
         if (this.type === 'text') {
             // eslint-disable-next-line prefer-const
-            let { text, 'font-family': font, 'font-size': size } = this.config;
+            let { text, 'font-family': font, 'font-size': size } = this.processTextInfo;
             // enlarge font-size to make process image clear enough
             size *= 16;
             const cloneElement = this.elem.cloneNode(true);
@@ -467,17 +467,27 @@ class SvgModel extends BaseModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, sourceUploadPath, width, height } = this;
+        const { processConfig = {}, processTextInfo = {}, transformation, sourceUploadPath, width, height } = this;
         const href = `${DATA_PREFIX}/${sourceUploadPath}`;
         const { positionX, positionY } = transformation;
 
-        for (const key of Object.keys(config)) {
+        console.log(processConfig, processTextInfo, 'key value {');
+        // for (const key of Object.keys(processTextInfo)) {
+        //     if (key === 'text') {
+        //         elem.textContent = processTextInfo[key];
+        //     } else {
+        //         elem.setAttribute(key, processTextInfo[key]);
+        //     }
+        // }
+        for (const key of Object.keys(processConfig)) {
+            console.log(key, processConfig[key]);
             if (key === 'text') {
-                elem.textContent = config[key];
+                elem.textContent = processConfig[key];
             } else {
-                elem.setAttribute(key, config[key]);
+                elem.setAttribute(key, processConfig[key]);
             }
         }
+        console.log('}');
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
         switch (this.type) {
