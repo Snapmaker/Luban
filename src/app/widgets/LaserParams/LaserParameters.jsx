@@ -25,6 +25,7 @@ class LaserParameters extends PureComponent {
         sourceType: PropTypes.string,
         processMode: PropTypes.string.isRequired,
         processNodeName: PropTypes.string.isRequired,
+        processTextInfo: PropTypes.object.isRequired,
         showOrigin: PropTypes.bool,
         // config: PropTypes.object.isRequired,
         headType: PropTypes.string,
@@ -112,7 +113,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelArray, selectedModelVisible, sourceType, processMode, processNodeName,
+            selectedModelArray, selectedModelVisible, sourceType, processMode, processNodeName, processTextInfo,
             // config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
@@ -157,7 +158,7 @@ class LaserParameters extends PureComponent {
                     <TextParameters
                         disabled={!selectedModelVisible}
                         headType={headType}
-                        // config={config}
+                        processTextInfo={processTextInfo}
                         modifyText={modifyText}
                     />
                 )}
@@ -174,7 +175,8 @@ const mapStateToProps = (state) => {
         mock: true,
         sourceType: '',
         processMode: '',
-        config: {},
+        processTextInfo: {},
+        // config: {},
         visible: true
     });
     const {
@@ -182,7 +184,8 @@ const mapStateToProps = (state) => {
         sourceType,
         showOrigin,
         processNodeName,
-        config,
+        processTextInfo,
+        // config,
         visible
     } = selectedModel;
     return {
@@ -196,8 +199,9 @@ const mapStateToProps = (state) => {
         sourceType,
         processMode,
         processNodeName,
-        showOrigin,
-        config
+        processTextInfo,
+        showOrigin
+        // config
     };
 };
 

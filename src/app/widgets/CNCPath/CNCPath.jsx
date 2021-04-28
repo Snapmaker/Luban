@@ -22,6 +22,7 @@ class CNCPath extends PureComponent {
         sourceType: PropTypes.string,
         processMode: PropTypes.string.isRequired,
         processNodeName: PropTypes.string.isRequired,
+        processTextInfo: PropTypes.object.isRequired,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         // transformation: PropTypes.object.isRequired,
@@ -71,7 +72,7 @@ class CNCPath extends PureComponent {
     render() {
         const {
             page, selectedModelArray,
-            selectedModelVisible, sourceType, processMode, processNodeName,
+            selectedModelVisible, sourceType, processMode, processNodeName, processTextInfo,
             showOrigin,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
@@ -109,7 +110,7 @@ class CNCPath extends PureComponent {
                         {isEditor && isTextVector && (
                             <TextParameters
                                 disabled={!selectedModelVisible}
-                                config={config}
+                                processTextInfo={processTextInfo}
                                 headType="cnc"
                                 selectedModel={selectedModel}
                                 modifyText={modifyText}
@@ -137,6 +138,7 @@ const mapStateToProps = (state) => {
         sourceType,
         processMode,
         processNodeName,
+        processTextInfo,
         showOrigin,
         transformation,
         config
@@ -154,6 +156,7 @@ const mapStateToProps = (state) => {
         sourceType,
         processMode,
         processNodeName,
+        processTextInfo,
         showOrigin,
         config
     };

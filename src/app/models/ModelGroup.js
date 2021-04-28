@@ -1279,7 +1279,6 @@ class ModelGroup extends EventEmitter {
             }
         }
         const model = this.newModel(modelInfo);
-        console.log('after new model');
 
         model.computeBoundingBox();
 
@@ -1464,8 +1463,9 @@ class ModelGroup extends EventEmitter {
 ModelGroup.prototype.MOCK_MODEL = {
     mock: true,
     sourceType: '',
-    mode: '',
-    config: {},
+    processMode: '',
+    processNodeName: '',
+    processTextInfo: {},
     visible: true,
     transformation: {
         rotationZ: 0,

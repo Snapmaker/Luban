@@ -77,13 +77,12 @@ function genModelConfig(elem, size) {
             positionX: positionX,
             positionY: positionY
         },
-        config: {
-            svgNodeName: elem.nodeName,
+        processNodeName: elem.nodeName,
+        processTextInfo: {
             text: elem.textContent,
             'font-size': elem.getAttribute('font-size'),
             'font-family': elem.getAttribute('font-family')
         },
-        nodeName: elem.nodeName,
         text: elem.textContent
     };
 
@@ -614,8 +613,7 @@ class SVGActionsFactory {
 
         const data = genModelConfig(element, this.size);
 
-
-        const { modelID, content, width, height, transformation, config: elemConfig } = data;
+        const { modelID, content, width, height, transformation, processTextInfo, processNodeName } = data;
         const blob = new Blob([content], { type: 'image/svg+xml' });
         const file = new File([blob], `${modelID}.svg`);
 
@@ -629,10 +627,8 @@ class SVGActionsFactory {
             const sourceType = 'svg';
             const processMode = 'vector';
 
-            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, processMode, isRotate);
+            const { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, processMode, isRotate);
 
-            config = { ...config, ...elemConfig };
-            gcodeConfig = { ...gcodeConfig };
             const options = {
                 modelID,
                 limitSize: this.size,
@@ -647,6 +643,8 @@ class SVGActionsFactory {
                 height,
                 transformation,
                 config,
+                processTextInfo,
+                processNodeName,
                 gcodeConfig,
                 elem: element,
                 size: this.size

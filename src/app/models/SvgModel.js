@@ -472,21 +472,22 @@ class SvgModel extends BaseModel {
         const { positionX, positionY } = transformation;
 
         console.log(processConfig, processTextInfo, 'key value {');
-        // for (const key of Object.keys(processTextInfo)) {
-        //     if (key === 'text') {
-        //         elem.textContent = processTextInfo[key];
-        //     } else {
-        //         elem.setAttribute(key, processTextInfo[key]);
-        //     }
-        // }
-        for (const key of Object.keys(processConfig)) {
-            console.log(key, processConfig[key]);
+        for (const key of Object.keys(processTextInfo)) {
+            console.log(key, processTextInfo[key]);
             if (key === 'text') {
-                elem.textContent = processConfig[key];
+                elem.textContent = processTextInfo[key];
             } else {
-                elem.setAttribute(key, processConfig[key]);
+                elem.setAttribute(key, processTextInfo[key]);
             }
         }
+        // for (const key of Object.keys(processConfig)) {
+        //     console.log(key, processConfig[key]);
+        //     if (key === 'text') {
+        //         elem.textContent = processConfig[key];
+        //     } else {
+        //         elem.setAttribute(key, processConfig[key]);
+        //     }
+        // }
         console.log('}');
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });

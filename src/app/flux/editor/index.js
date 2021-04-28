@@ -367,7 +367,6 @@ export const actions = {
             size: size
         };
 
-        console.log('before add');
         const model = modelGroup.addModel(options);
 
         SVGActions.clearSelection();
@@ -379,7 +378,6 @@ export const actions = {
 
         // Process image right after created
         dispatch(actions.processSelectedModel(headType));
-        console.log('after process');
     },
 
     insertDefaultTextVector: (headType) => (dispatch) => {
