@@ -18,19 +18,19 @@ const processImage3d = (modelInfo) => {
 };
 
 export const editorProcess = (modelInfo) => {
-    const { headType, sourceType, processMode } = modelInfo;
+    const { headType, sourceType, mode } = modelInfo;
     if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) {
-        if (processMode === PROCESS_MODE_GREYSCALE) {
+        if (mode === PROCESS_MODE_GREYSCALE) {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo);
             } else {
                 return processCNCGreyscale(modelInfo);
             }
-        } else if (processMode === PROCESS_MODE_BW) {
+        } else if (mode === PROCESS_MODE_BW) {
             return processBW(modelInfo);
-        } else if (processMode === PROCESS_MODE_VECTOR) {
+        } else if (mode === PROCESS_MODE_VECTOR) {
             return processVector(modelInfo);
-        } else if (processMode === PROCESS_MODE_HALFTONE) {
+        } else if (mode === PROCESS_MODE_HALFTONE) {
             return processHalftone(modelInfo);
         } else {
             return Promise.resolve({

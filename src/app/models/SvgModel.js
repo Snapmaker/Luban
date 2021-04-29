@@ -976,6 +976,7 @@ class SvgModel extends BaseModel {
             this.meshObject.remove(this.processObject3D);
             this.processObject3D = null;
         }
+        console.log('process object', this.width, this.height);
         this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
         this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
@@ -987,6 +988,7 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
+    // image only
     changeShowOrigin() {
         this.showOrigin = !this.showOrigin;
         this.modelObject3D.visible = this.showOrigin;
@@ -994,9 +996,38 @@ class SvgModel extends BaseModel {
             this.processObject3D.visible = !this.showOrigin;
         }
 
+        if (this.showOrigin) {
+            const imagePath = `${DATA_PREFIX}/${this.sourceUploadPath}`;
+            this.elem.setAttribute('href', imagePath);
+            console.log('t1', this.transformation, this.width, this.height, this.elem);
+            const { x, y } = this.pointModelToSvg({ x: this.transformation.positionX, y: this.transformation.positionY });
+            this.elem.setAttribute('x', x - this.transformation.width / 2);
+            this.elem.setAttribute('y', y - this.transformation.height / 2);
+            this.elem.setAttribute('width', this.transformation.width);
+            this.elem.setAttribute('height', this.transformation.height);
+            this.transformation.scaleX = this.transformation.scaleX > 0 ? 1 : -1;
+            this.transformation.scaleY = this.transformation.scaleY > 0 ? 1 : -1;
+
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        } else {
+            const imagePath = `${DATA_PREFIX}/${this.processFilePath}`;
+            this.elem.setAttribute('href', imagePath);
+            console.log('t2', this.transformation.width, this.transformation.height, this.width, this.height, this.elem);
+
+            // this.transformation.width = this.width;
+            // this.transformation.height = this.height;
+            const { x, y } = this.pointModelToSvg({ x: this.transformation.positionX, y: this.transformation.positionY });
+            this.elem.setAttribute('x', x - this.transformation.width / 2);
+            this.elem.setAttribute('y', y - this.transformation.height / 2);
+            this.elem.setAttribute('width', this.transformation.width);
+            this.elem.setAttribute('height', this.transformation.height);
+            this.transformation.scaleX = this.transformation.scaleX > 0 ? 1 : -1;
+            this.transformation.scaleY = this.transformation.scaleY > 0 ? 1 : -1;
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        }
+
         return {
-            showOrigin: this.showOrigin,
-            showImageName: this.showOrigin ? this.sourceUploadPath : this.processFilePath
+            showOrigin: this.showOrigin
         };
     }
 
@@ -1018,20 +1049,20 @@ class SvgModel extends BaseModel {
         return this.modeConfigs[processMode];
     }
 
-    changeProcessMode(processMode, config) {
+    changeProcessMode(processMode, processConfig) {
         if (this.processMode !== processMode) {
             this.modeConfigs[this.processMode] = {
-                config: {
-                    ...this.config
+                processConfig: {
+                    ...this.processConfig
                 }
             };
             if (this.modeConfigs[processMode]) {
-                this.config = {
-                    ...this.modeConfigs[processMode].config
+                this.processConfig = {
+                    ...this.modeConfigs[processMode].processConfig
                 };
             } else {
-                this.config = {
-                    ...config
+                this.processConfig = {
+                    ...processConfig
                 };
             }
 
@@ -1059,20 +1090,24 @@ class SvgModel extends BaseModel {
             modelName: this.modelName,
             headType: this.headType,
             sourceType: this.sourceType,
+            sourceScale: this.sourceScale,
             processMode: this.processMode,
+            processTextInfo: this.processTextInfo,
 
             visible: this.visible,
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
             scale: this.scale,
-            originalName: this.originalName,
+            sourceOriginalName: this.sourceOriginalName,
             sourceUploadPath: this.sourceUploadPath,
             processFilePath: this.processFilePath,
+            showOrigin: this.showOrigin,
 
             transformation: {
                 ...this.transformation
             },
+            processConfig: this.processConfig,
             config: {
                 ...this.config
             }
@@ -1128,7 +1163,7 @@ class SvgModel extends BaseModel {
 
         this.refresh();
         this.modelGroup.modelChanged();
-        if (this.config.svgNodeName === 'text') {
+        if (this.processNodeName === 'text') {
             updateTimer && clearTimeout(updateTimer);
             updateTimer = setTimeout(() => {
                 this.updateSource();

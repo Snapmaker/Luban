@@ -191,15 +191,6 @@ class SVGActionsFactory {
         };
     }
 
-    updateElementImage(iamgeName) {
-        const selected = this.svgContentGroup.getSelected();
-        if (!selected) {
-            return;
-        }
-        const imagePath = `${DATA_PREFIX}/${iamgeName}`;
-        selected.setAttribute('href', imagePath);
-    }
-
     updateSvgModelImage(svgModel, imageName) {
         const imagePath = `${DATA_PREFIX}/${imageName}`;
         svgModel.elem.setAttribute('href', imagePath);

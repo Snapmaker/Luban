@@ -67,6 +67,7 @@ const algorithms = {
 };
 
 export async function processLaserGreyscale(modelInfo, onProgress) {
+    console.log('modelInfo', modelInfo, modelInfo.uploadName);
     onProgress && onProgress(0.2);
     const { uploadName } = modelInfo;
     const { rotationZ = 0 } = modelInfo.transformation;

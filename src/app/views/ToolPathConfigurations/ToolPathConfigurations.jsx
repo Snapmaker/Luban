@@ -285,6 +285,7 @@ class ToolPathConfigurations extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { page, toolDefinitions, activeToolListDefinition, updatingToolPath } = state[ownProps.headType];
 
+    console.log(toolDefinitions);
     return {
         page,
         toolDefinitions,

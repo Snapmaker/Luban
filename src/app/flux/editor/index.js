@@ -274,8 +274,8 @@ export const actions = {
      * Generate model by given parameters.
      *
      * @param headType
-     * @param originalName - original name of uploaded image file
-     * @param uploadName - modified name of uploaded image file
+     * @param sourceOriginalName - original name of uploaded image file
+     * @param sourceUploadPath - modified name of uploaded image file
      * @param sourceWidth - source width of image
      * @param sourceHeight - source height of image
      * @param processMode - bw | greyscale | ...
@@ -286,7 +286,7 @@ export const actions = {
      * @param transformation - ?
      * @param modelID - optional, used in project recovery
      */
-    generateModel: (headType, sourceOriginalName, sourceUploadName, sourceWidth, sourceHeight, processMode, sourceType, processNodeName = 'image', gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
+    generateModel: (headType, sourceOriginalName, sourceUploadPath, sourceWidth, sourceHeight, processMode, sourceType, processNodeName = 'image', gcodeConfig, transformation, modelID, zIndex) => (dispatch, getState) => {
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup } = getState()[headType];
 
@@ -348,7 +348,7 @@ export const actions = {
             sourceType,
             processMode,
             sourceOriginalName,
-            sourceUploadName,
+            sourceUploadPath,
             sourceWidth,
             sourceHeight,
             width,
@@ -372,7 +372,7 @@ export const actions = {
         SVGActions.clearSelection();
         SVGActions.addSelectedSvgModelsByModels([model]);
 
-        if (path.extname(sourceUploadName).toLowerCase() === '.stl') {
+        if (path.extname(sourceUploadPath).toLowerCase() === '.stl') {
             dispatch(actions.prepareStlVisualizer(headType, model));
         }
 
@@ -432,9 +432,8 @@ export const actions = {
     },
 
     changeSelectedModelShowOrigin: (headType) => (dispatch, getState) => {
-        const { SVGActions, modelGroup } = getState()[headType];
+        const { modelGroup } = getState()[headType];
         const res = modelGroup.changeShowOrigin();
-        SVGActions.updateElementImage(res.showImageName);
 
         dispatch(baseActions.updateState(headType, {
             showOrigin: res.showOrigin,
@@ -523,7 +522,19 @@ export const actions = {
         controller.commitProcessImage({
             taskId: uuid.v4(),
             headType: headType,
-            data: options
+            data: {
+                headType: options.headType,
+                modelID: options.modelID,
+                sourceType: options.sourceType,
+                mode: options.processMode,
+                transformation: options.transformation,
+                config: options.processConfig,
+                gcodeConfig: options.gcodeConfig,
+                uploadName: options.sourceUploadPath,
+
+                materials: options.materials,
+                scale: options.sourceScale
+            }
         });
     },
 
@@ -724,6 +735,8 @@ export const actions = {
                 SVGActions.resetSelection();
             }
         }
+
+        console.log('received', taskResult, model, model.showOrigin);
 
         model.updateProcessFilePath(processFilePath);
 

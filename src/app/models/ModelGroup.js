@@ -1399,14 +1399,14 @@ class ModelGroup extends EventEmitter {
         if (model.sourceType === '3d') {
             baseName = model.originalName;
         } else {
-            const isText = (model.nodeName === 'text');
-            const isShape = (model.mode === 'vector' && model.nodeName !== 'image');
+            const isText = (model.processNodeName === 'text');
+            const isShape = (model.processMode === 'vector' && model.processNodeName !== 'image');
             if (isText) {
                 baseName = 'Text';
             } else if (isShape) {
                 baseName = 'Shape';
             } else {
-                baseName = model.originalName;
+                baseName = model.sourceOriginalName;
             }
         }
 
