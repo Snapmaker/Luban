@@ -77,12 +77,13 @@ function genModelConfig(elem, size) {
             positionX: positionX,
             positionY: positionY
         },
-        config: {
-            svgNodeName: elem.nodeName,
+        processNodeName: elem.nodeName,
+        processTextInfo: {
             text: elem.textContent,
             'font-size': elem.getAttribute('font-size'),
             'font-family': elem.getAttribute('font-family')
-        }
+        },
+        text: elem.textContent
     };
 
     return model;
@@ -188,15 +189,6 @@ class SVGActionsFactory {
         return {
             modelID: elem.getAttribute('id')
         };
-    }
-
-    updateElementImage(iamgeName) {
-        const selected = this.svgContentGroup.getSelected();
-        if (!selected) {
-            return;
-        }
-        const imagePath = `${DATA_PREFIX}/${iamgeName}`;
-        selected.setAttribute('href', imagePath);
     }
 
     updateSvgModelImage(svgModel, imageName) {
@@ -612,8 +604,7 @@ class SVGActionsFactory {
 
         const data = genModelConfig(element, this.size);
 
-
-        const { modelID, content, width, height, transformation, config: elemConfig } = data;
+        const { modelID, content, width, height, transformation, processTextInfo, processNodeName } = data;
         const blob = new Blob([content], { type: 'image/svg+xml' });
         const file = new File([blob], `${modelID}.svg`);
 
@@ -625,18 +616,16 @@ class SVGActionsFactory {
 
             const { originalName, uploadName } = res.body;
             const sourceType = 'svg';
-            const mode = 'vector';
+            const processMode = 'vector';
 
-            let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
+            const { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, processMode, isRotate);
 
-            config = { ...config, ...elemConfig };
-            gcodeConfig = { ...gcodeConfig };
             const options = {
                 modelID,
                 limitSize: this.size,
                 headType,
                 sourceType,
-                mode,
+                processMode,
                 originalName,
                 uploadName,
                 sourceWidth: res.body.width,
@@ -645,6 +634,8 @@ class SVGActionsFactory {
                 height,
                 transformation,
                 config,
+                processTextInfo,
+                processNodeName,
                 gcodeConfig,
                 elem: element,
                 size: this.size

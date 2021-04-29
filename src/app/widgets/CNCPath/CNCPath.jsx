@@ -20,7 +20,9 @@ class CNCPath extends PureComponent {
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        processNodeName: PropTypes.string,
+        processTextInfo: PropTypes.object,
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         // transformation: PropTypes.object.isRequired,
@@ -70,7 +72,7 @@ class CNCPath extends PureComponent {
     render() {
         const {
             page, selectedModelArray,
-            selectedModelVisible, sourceType, mode,
+            selectedModelVisible, sourceType, processMode, processNodeName, processTextInfo,
             showOrigin,
             config,
             changeSelectedModelShowOrigin, changeSelectedModelMode,
@@ -81,10 +83,10 @@ class CNCPath extends PureComponent {
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
 
-        const isTextVector = (config.svgNodeName === 'text');
+        const isTextVector = (processNodeName === 'text');
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && processNodeName === 'image';
         return (
             <React.Fragment>
                 {isEditor && (
@@ -98,7 +100,7 @@ class CNCPath extends PureComponent {
                         {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                             <ImageProcessMode
                                 sourceType={sourceType}
-                                mode={mode}
+                                processMode={processMode}
                                 disabled={!selectedNotHide}
                                 showOrigin={showOrigin}
                                 changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
@@ -108,7 +110,7 @@ class CNCPath extends PureComponent {
                         {isEditor && isTextVector && (
                             <TextParameters
                                 disabled={!selectedModelVisible}
-                                config={config}
+                                processTextInfo={processTextInfo}
                                 headType="cnc"
                                 selectedModel={selectedModel}
                                 modifyText={modifyText}
@@ -134,7 +136,9 @@ const mapStateToProps = (state) => {
     const selectedModelID = selectedModel.modelID;
     const {
         sourceType,
-        mode,
+        processMode,
+        processNodeName,
+        processTextInfo,
         showOrigin,
         transformation,
         config
@@ -150,7 +154,9 @@ const mapStateToProps = (state) => {
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,
         sourceType,
-        mode,
+        processMode,
+        processNodeName,
+        processTextInfo,
         showOrigin,
         config
     };
@@ -163,7 +169,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelConfig: (params) => dispatch(editorActions.updateSelectedModelConfig('cnc', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('cnc')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, mode)),
+        changeSelectedModelMode: (sourceType, processMode) => dispatch(editorActions.changeSelectedModelMode('cnc', sourceType, processMode)),
         modifyText: (element, options) => dispatch(editorActions.modifyText('cnc', element, options))
     };
 };

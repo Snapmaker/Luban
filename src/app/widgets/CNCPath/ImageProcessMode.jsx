@@ -9,7 +9,7 @@ import ReliefParameters from './config/ReliefParameters';
 class ImageProcessMode extends PureComponent {
     static propTypes = {
         sourceType: PropTypes.string.isRequired,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         disabled: PropTypes.bool,
 
@@ -25,16 +25,16 @@ class ImageProcessMode extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        changeSelectedModelMode: (mode) => {
+        changeSelectedModelMode: (processMode) => {
             const { sourceType } = this.props;
-            this.props.changeSelectedModelMode(sourceType, mode);
+            this.props.changeSelectedModelMode(sourceType, processMode);
         }
     };
 
     render() {
-        const { sourceType, mode, showOrigin, disabled } = this.props;
+        const { sourceType, processMode, showOrigin, disabled } = this.props;
         const actions = this.actions;
-        const isGreyscale = mode === 'greyscale';
+        const isGreyscale = processMode === 'greyscale';
         const isSvg = sourceType === 'svg';
 
         return (
@@ -60,7 +60,7 @@ class ImageProcessMode extends PureComponent {
                             <div
                                 className={styles['laser-modes']}
                             >
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'greyscale' })}>
                                     <Anchor
                                         className={styles['laser-mode__btn']}
                                         onClick={() => actions.changeSelectedModelMode('greyscale')}
@@ -70,7 +70,7 @@ class ImageProcessMode extends PureComponent {
                                     <span className={styles['laser-mode__text']}>{i18n._('RELIEF')}</span>
                                 </div>
                                 {isSvg && (
-                                    <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'vector' })}>
+                                    <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'vector' })}>
                                         <Anchor
                                             disabled={disabled}
                                             className={styles['laser-mode__btn']}

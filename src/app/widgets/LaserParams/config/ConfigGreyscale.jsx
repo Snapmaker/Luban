@@ -217,7 +217,7 @@ const mapStateToProps = (state) => {
     const selectedModels = modelGroup.getSelectedModelArray();
     const model = selectedModels[0];
 
-    const { invert, contrast, brightness, whiteClip, algorithm } = model.config;
+    const { invert, contrast, brightness, whiteClip, algorithm } = model.processConfig;
 
     return {
         invert,

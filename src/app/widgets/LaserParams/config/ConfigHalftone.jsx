@@ -180,7 +180,7 @@ const mapStateToProps = (state) => {
     const selectedModels = modelGroup.getSelectedModelArray();
     const model = selectedModels[0];
 
-    const { npType, npSize, npAngle, threshold } = model.config;
+    const { npType, npSize, npAngle, threshold } = model.processConfig;
 
     return {
         npType,

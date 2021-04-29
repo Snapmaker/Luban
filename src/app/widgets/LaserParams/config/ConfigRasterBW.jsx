@@ -98,7 +98,7 @@ const mapStateToProps = (state) => {
     const selectedModels = modelGroup.getSelectedModelArray();
     const model = selectedModels[0];
 
-    const { invert, bwThreshold } = model.config;
+    const { invert, bwThreshold } = model.processConfig;
 
     return {
         invert,

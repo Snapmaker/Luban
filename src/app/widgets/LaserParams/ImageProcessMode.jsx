@@ -12,7 +12,7 @@ import ConfigHalftone from './config/ConfigHalftone';
 class ImageProcessMode extends PureComponent {
     static propTypes = {
         sourceType: PropTypes.string.isRequired,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
         disabled: PropTypes.bool,
 
@@ -28,19 +28,19 @@ class ImageProcessMode extends PureComponent {
         onToggleExpand: () => {
             this.setState(state => ({ expanded: !state.expanded }));
         },
-        changeSelectedModelMode: (mode) => {
+        changeSelectedModelMode: (processMode) => {
             const { sourceType } = this.props;
-            this.props.changeSelectedModelMode(sourceType, mode);
+            this.props.changeSelectedModelMode(sourceType, processMode);
         }
     };
 
     render() {
-        const { sourceType, mode, showOrigin, disabled } = this.props;
+        const { sourceType, processMode, showOrigin, disabled } = this.props;
         const actions = this.actions;
-        const isBW = mode === 'bw';
-        const isGreyscale = mode === 'greyscale';
-        const isRasterVector = sourceType === 'raster' && mode === 'vector';
-        const isHalftone = mode === 'halftone';
+        const isBW = processMode === 'bw';
+        const isGreyscale = processMode === 'greyscale';
+        const isRasterVector = sourceType === 'raster' && processMode === 'vector';
+        const isHalftone = processMode === 'halftone';
 
         return (
             <React.Fragment>
@@ -62,7 +62,7 @@ class ImageProcessMode extends PureComponent {
                         }}
                         >
                             <div className={styles['laser-modes']}>
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'bw' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'bw' })}>
                                     <Anchor
 
                                         disabled={disabled}
@@ -73,7 +73,7 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('B&W')}</span>
                                 </div>
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'greyscale' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'greyscale' })}>
                                     <Anchor
                                         disabled={disabled}
                                         className={styles['laser-mode__btn']}
@@ -83,7 +83,7 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('GREYSCALE')}</span>
                                 </div>
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'vector' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'vector' })}>
                                     <Anchor
                                         disabled={disabled}
                                         className={styles['laser-mode__btn']}
@@ -93,7 +93,7 @@ class ImageProcessMode extends PureComponent {
                                     </Anchor>
                                     <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                                 </div>
-                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.mode === 'halftone' })}>
+                                <div className={classNames(styles['laser-mode'], { [styles.selected]: this.props.processMode === 'halftone' })}>
                                     <Anchor
                                         disabled={disabled}
                                         className={styles['laser-mode__btn']}

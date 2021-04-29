@@ -9,14 +9,14 @@ import CncMeshLinkageToolPathGenerator from './CncMeshLinkageToolPathGenerator';
 export default class CncMeshToolPathGenerator extends EventEmitter {
     constructor(modelInfo) {
         super();
-        const { uploadName, gcodeConfig = {}, transformation = {}, processImageName, materials } = modelInfo;
+        const { uploadName, gcodeConfig = {}, transformation = {}, processFilePath, materials } = modelInfo;
         const { isRotate, diameter } = materials;
 
         const { density = 5, toolAngle = 20, sliceMode = CNC_MESH_SLICE_MODE_ROTATION } = gcodeConfig;
 
         this.modelInfo = modelInfo;
         this.uploadName = uploadName;
-        this.processImageName = processImageName;
+        this.processFilePath = processFilePath;
         this.transformation = transformation;
         this.gcodeConfig = gcodeConfig;
 
@@ -131,11 +131,11 @@ export default class CncMeshToolPathGenerator extends EventEmitter {
         boundingBox.max.y += this.transformation.positionY;
         boundingBox.min.y += this.transformation.positionY;
 
-        const { headType, mode } = this.modelInfo;
+        const { headType, processMode } = this.modelInfo;
 
         return {
             headType: headType,
-            mode: mode,
+            processMode: processMode,
             movementMode: '',
             data: this.toolPath.commands,
             estimatedTime: this.toolPath.estimatedTime * 1.6,

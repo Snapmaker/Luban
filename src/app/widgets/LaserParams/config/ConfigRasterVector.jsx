@@ -127,7 +127,7 @@ const mapStateToProps = (state) => {
     const selectedModels = modelGroup.getSelectedModelArray();
     const model = selectedModels[0];
 
-    const { vectorThreshold, invert, turdSize } = model.config;
+    const { vectorThreshold, invert, turdSize } = model.processConfig;
 
     return {
         vectorThreshold,

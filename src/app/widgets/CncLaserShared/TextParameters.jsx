@@ -13,7 +13,7 @@ class TextParameters extends PureComponent {
     static propTypes = {
         fontOptions: PropTypes.array,
         disabled: PropTypes.bool,
-        config: PropTypes.shape({
+        processTextInfo: PropTypes.shape({
             text: PropTypes.string,
             'font-size': PropTypes.string,
             'font-family': PropTypes.string,
@@ -65,8 +65,8 @@ class TextParameters extends PureComponent {
     };
 
     render() {
-        const { config, fontOptions, disabled } = this.props;
-        const { text, 'font-size': fontSize, 'font-family': fontFamily } = config;
+        const { processTextInfo, fontOptions, disabled } = this.props;
+        const { text, 'font-size': fontSize, 'font-family': fontFamily } = processTextInfo;
         const actions = this.actions;
 
         return (
@@ -143,70 +143,6 @@ Start a new line manually according to your needs.')}
                                 <span className="sm-parameter-row__input-unit">pt</span>
                             </div>
                         </TipTrigger>
-                        {/* <TipTrigger
-                            title={i18n._('Line Height')}
-                            content={i18n._('Set the distance between each line in the text. The value you enter is the multiple of the font size.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Line Height')}</span>
-
-                                <Select
-                                    disabled={disabled}
-                                    className="sm-parameter-row__select"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={[
-                                    ]}
-                                    value={lineHeight}
-                                    onChange={actions.onChangeLineHeight}
-                                />
-                            </div>
-                        </TipTrigger>
-
-                        <TipTrigger
-                            title={i18n._('Alignment')}
-                            content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Alignment')}</span>
-                                <span className={styles.textAlignWrap}>
-                                    <button
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'left' }
-                                        )}
-                                        type="button"
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('left'); }}
-                                    >
-                                        <IconAlignLeft size={16} color="#666666" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'middle' },
-                                        )}
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('middle'); }}
-                                    >
-                                        <IconAlignCenter size={16} color="#666666" />
-                                    </button>
-                                    <button
-                                        className={classNames(
-                                            styles.textAlignButton,
-                                            { [styles.active]: alignment === 'right' },
-                                        )}
-                                        type="button"
-                                        disabled={disabled}
-                                        onClick={() => { actions.onChangeAlignment('right'); }}
-                                    >
-                                        <IconAlignRight size={16} color="#666666" />
-                                    </button>
-                                </span>
-                            </div>
-                        </TipTrigger> */}
                     </React.Fragment>
                 )}
             </div>

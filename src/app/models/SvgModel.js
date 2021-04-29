@@ -173,14 +173,63 @@ function setElementTransformToList(transformList, transformation, size) {
     transformList.getItem(0).tag = 'translateBack';
 }
 
+/**
+ * Params:
+ *    (from baseModel)
+ *    modelID
+ *    modelName
+ *    transformation
+ *    visible
+ *    size: 机型参数
+ *
+ *    (for svg model)
+ *    headType
+ *    elem
+ *
+ *    sourceType
+ *    sourceOriginalName
+ *    sourceUploadPath
+ *    sourceHeight
+ *    sourceWidth
+ *    sourceScale
+ *
+ *    processMode
+ *    processFilePath
+ *    processNodeName
+ *    processText
+ *    processFont
+ *    processSize
+ *    processTransformation
+ *
+ *    modeConfigs
+ *    geometry
+ *    material
+ *    meshObject
+ *    modelObject3D
+ *    processObject3D
+ *    showOrigin
+ *
+ */
 class SvgModel extends BaseModel {
-    isSvgModel = true;
-
     modeConfigs = {};
 
+    /**
+     *
+     * @param modelInfo - information needed to create new svg model.
+     *      modelInfo = {
+     *          elem,
+     *          size,
+     *          mode,
+     *          config
+     *      };
+     *
+     * @returns {Model}
+     */
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { elem, size } = modelInfo;
+        // super:
+        //     Object.keys(modelInfo).map(key => this[key] = modelInfo[key]);
+        const { elem, size, processMode, processNodeName } = modelInfo;
         this.elem = elem;
         this.size = size;
 
@@ -191,7 +240,9 @@ class SvgModel extends BaseModel {
 
         this.generateModelObject3D();
 
-        this.processMode(modelInfo.mode, modelInfo.config);
+        // Todo: remove this.config
+        // this.changeProcessMode(modelInfo.mode, modelInfo.config);
+        this.changeProcessMode(processMode, processNodeName);
         // use model info to refresh element
         this.refresh();
         // trigger update source, should add parmas to togger this func
@@ -299,8 +350,8 @@ class SvgModel extends BaseModel {
                 positionX: positionX,
                 positionY: positionY
             },
-            config: {
-                svgNodeName: elem.nodeName,
+            processNodeName: elem.nodeName,
+            processTextInfo: {
                 text: elem.textContent,
                 'font-size': elem.getAttribute('font-size'),
                 'font-family': elem.getAttribute('font-family')
@@ -312,12 +363,12 @@ class SvgModel extends BaseModel {
 
     // just for svg file
     async uploadSourceImage() {
-        const { uploadName } = this;
+        const { sourceUploadPath } = this;
 
-        if (uploadName.indexOf('.svg') === -1) {
+        if (sourceUploadPath.indexOf('.svg') === -1) {
             return;
         }
-        const content = await fetch(`${DATA_PREFIX}/${uploadName}`, { method: 'GET' })
+        const content = await fetch(`${DATA_PREFIX}/${sourceUploadPath}`, { method: 'GET' })
             .then(res => res.text());
         const canvas = document.createElement('canvas');
         // set canvas size to get image of exactly same size
@@ -334,7 +385,7 @@ class SvgModel extends BaseModel {
         formData.append('image', file);
         const res = await api.uploadImage(formData);
 
-        this.uploadImageName = res.body.uploadName;
+        this.sourceUploadPath = res.body.uploadName;
         this.generateModelObject3D();
         this.generateProcessObject3D();
     }
@@ -345,7 +396,8 @@ class SvgModel extends BaseModel {
         if (this.type === 'image') return;
         const { width, height } = this.elem.getBBox();
         const uploadName = await this.uploadSourceFile();
-        const processImageName = uploadName,
+        const sourceUploadPath = uploadName,
+            processFilePath = uploadName,
             // !!!source file size MUST NOT apply scale
             sourceWidth = width,
             sourceHeight = height;
@@ -355,11 +407,11 @@ class SvgModel extends BaseModel {
         this.sourceWidth = sourceWidth || this.sourceWidth;
         this.width = width || this.width;
         this.height = height || this.height;
-        this.uploadName = uploadName || this.uploadName;
-        this.processImageName = processImageName || this.processImageName;
+        this.sourceUploadPath = sourceUploadPath || this.sourceUploadPath;
+        this.processFilePath = processFilePath || this.processFilePath;
 
 
-        // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
+        // this.displayModelObject3D(sourceUploadPath, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
         // const height = sourceHeight / sourceWidth * width;
         this.generateModelObject3D();
@@ -371,7 +423,7 @@ class SvgModel extends BaseModel {
         let blob, file, res;
         if (this.type === 'text') {
             // eslint-disable-next-line prefer-const
-            let { text, 'font-family': font, 'font-size': size } = this.config;
+            let { text, 'font-family': font, 'font-size': size } = this.processTextInfo;
             // enlarge font-size to make process image clear enough
             size *= 16;
             const cloneElement = this.elem.cloneNode(true);
@@ -415,17 +467,28 @@ class SvgModel extends BaseModel {
 
     refreshElemAttrs() {
         const elem = this.elem;
-        const { config, transformation, uploadName, width, height } = this;
-        const href = `${DATA_PREFIX}/${uploadName}`;
+        const { processConfig = {}, processTextInfo = {}, transformation, sourceUploadPath, width, height } = this;
+        const href = `${DATA_PREFIX}/${sourceUploadPath}`;
         const { positionX, positionY } = transformation;
 
-        for (const key of Object.keys(config)) {
+        console.log(processConfig, processTextInfo, 'key value {');
+        for (const key of Object.keys(processTextInfo)) {
+            console.log(key, processTextInfo[key]);
             if (key === 'text') {
-                elem.textContent = config[key];
+                elem.textContent = processTextInfo[key];
             } else {
-                elem.setAttribute(key, config[key]);
+                elem.setAttribute(key, processTextInfo[key]);
             }
         }
+        // for (const key of Object.keys(processConfig)) {
+        //     console.log(key, processConfig[key]);
+        //     if (key === 'text') {
+        //         elem.textContent = processConfig[key];
+        //     } else {
+        //         elem.setAttribute(key, processConfig[key]);
+        //     }
+        // }
+        console.log('}');
 
         const { x, y } = this.pointModelToSvg({ x: positionX, y: positionY });
         switch (this.type) {
@@ -860,16 +923,16 @@ class SvgModel extends BaseModel {
                 this.modelObject3D = null;
             }
 
-            const path = `${DATA_PREFIX}/${this.uploadName}`;
+            const path = `${DATA_PREFIX}/${this.sourceUploadPath}`;
             new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
                 this.modelObject3D = group;
                 this.meshObject.add(this.modelObject3D);
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
         } else if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
-            const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
+            const sourceUploadPath = `${DATA_PREFIX}/${this.sourceUploadPath}`;
             // const texture = new THREE.TextureLoader().load(uploadPath);
-            const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            const texture = new THREE.TextureLoader().load(sourceUploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
             // TODO make the 'MeshBasicMaterial' to be transparent
@@ -894,10 +957,10 @@ class SvgModel extends BaseModel {
     }
 
     generateProcessObject3D() {
-        if (!this.processImageName) {
+        if (!this.processFilePath) {
             return;
         }
-        const uploadPath = `${DATA_PREFIX}/${this.processImageName}`;
+        const uploadPath = `${DATA_PREFIX}/${this.processFilePath}`;
         // const texture = new THREE.TextureLoader().load(uploadPath);
         const texture = new THREE.TextureLoader().load(uploadPath, () => {
             this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -913,6 +976,7 @@ class SvgModel extends BaseModel {
             this.meshObject.remove(this.processObject3D);
             this.processObject3D = null;
         }
+        console.log('process object', this.width, this.height);
         this.meshObject.geometry = new THREE.PlaneGeometry(this.width, this.height);
         this.processObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
@@ -924,6 +988,7 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
+    // image only
     changeShowOrigin() {
         this.showOrigin = !this.showOrigin;
         this.modelObject3D.visible = this.showOrigin;
@@ -931,9 +996,38 @@ class SvgModel extends BaseModel {
             this.processObject3D.visible = !this.showOrigin;
         }
 
+        if (this.showOrigin) {
+            const imagePath = `${DATA_PREFIX}/${this.sourceUploadPath}`;
+            this.elem.setAttribute('href', imagePath);
+            console.log('t1', this.transformation, this.width, this.height, this.elem);
+            const { x, y } = this.pointModelToSvg({ x: this.transformation.positionX, y: this.transformation.positionY });
+            this.elem.setAttribute('x', x - this.transformation.width / 2);
+            this.elem.setAttribute('y', y - this.transformation.height / 2);
+            this.elem.setAttribute('width', this.transformation.width);
+            this.elem.setAttribute('height', this.transformation.height);
+            this.transformation.scaleX = this.transformation.scaleX > 0 ? 1 : -1;
+            this.transformation.scaleY = this.transformation.scaleY > 0 ? 1 : -1;
+
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        } else {
+            const imagePath = `${DATA_PREFIX}/${this.processFilePath}`;
+            this.elem.setAttribute('href', imagePath);
+            console.log('t2', this.transformation.width, this.transformation.height, this.width, this.height, this.elem);
+
+            // this.transformation.width = this.width;
+            // this.transformation.height = this.height;
+            const { x, y } = this.pointModelToSvg({ x: this.transformation.positionX, y: this.transformation.positionY });
+            this.elem.setAttribute('x', x - this.transformation.width / 2);
+            this.elem.setAttribute('y', y - this.transformation.height / 2);
+            this.elem.setAttribute('width', this.transformation.width);
+            this.elem.setAttribute('height', this.transformation.height);
+            this.transformation.scaleX = this.transformation.scaleX > 0 ? 1 : -1;
+            this.transformation.scaleY = this.transformation.scaleY > 0 ? 1 : -1;
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        }
+
         return {
-            showOrigin: this.showOrigin,
-            showImageName: this.showOrigin ? this.uploadName : this.processImageName
+            showOrigin: this.showOrigin
         };
     }
 
@@ -948,53 +1042,35 @@ class SvgModel extends BaseModel {
     //     }
     // }
 
-    getModeConfig(mode) {
+    getModeConfig(processMode) {
         if (this.sourceType !== 'raster') {
             return null;
         }
-        return this.modeConfigs[mode];
+        return this.modeConfigs[processMode];
     }
 
-    processMode(mode, config) {
-        if (this.mode !== mode) {
-            this.modeConfigs[this.mode] = {
-                config: {
-                    ...this.config
+    changeProcessMode(processMode, processConfig) {
+        if (this.processMode !== processMode) {
+            this.modeConfigs[this.processMode] = {
+                processConfig: {
+                    ...this.processConfig
                 }
             };
-            if (this.modeConfigs[mode]) {
-                this.config = {
-                    ...this.modeConfigs[mode].config
+            if (this.modeConfigs[processMode]) {
+                this.processConfig = {
+                    ...this.modeConfigs[processMode].processConfig
                 };
             } else {
-                this.config = {
-                    ...config
+                this.processConfig = {
+                    ...processConfig
                 };
             }
 
-            this.mode = mode;
-            this.processImageName = null;
+            this.processMode = processMode;
+            this.processFilePath = null;
         }
 
         this.generateProcessObject3D();
-
-        // const res = await api.processImage({
-        //     headType: this.headType,
-        //     uploadName: this.uploadName,
-        //     config: {
-        //         ...this.config,
-        //         density: 4
-        //     },
-        //     sourceType: this.sourceType,
-        //     mode: mode,
-        //     transformation: {
-        //         width: this.width,
-        //         height: this.height,
-        //         rotationZ: 0
-        //     }
-        // });
-        //
-        // this.processImageName = res.body.filename;
     }
 
     computeBoundingBox() {
@@ -1014,27 +1090,31 @@ class SvgModel extends BaseModel {
             modelName: this.modelName,
             headType: this.headType,
             sourceType: this.sourceType,
-            mode: this.mode,
+            sourceScale: this.sourceScale,
+            processMode: this.processMode,
+            processTextInfo: this.processTextInfo,
 
             visible: this.visible,
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
             scale: this.scale,
-            originalName: this.originalName,
-            uploadName: this.uploadName,
-            processImageName: this.processImageName,
+            sourceOriginalName: this.sourceOriginalName,
+            sourceUploadPath: this.sourceUploadPath,
+            processFilePath: this.processFilePath,
+            showOrigin: this.showOrigin,
 
             transformation: {
                 ...this.transformation
             },
+            processConfig: this.processConfig,
             config: {
                 ...this.config
             }
         };
         // svg process as image
-        if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
-            taskInfo.uploadName = this.uploadImageName;
+        if (taskInfo.sourceType === 'svg' && taskInfo.processMode !== 'vector') {
+            taskInfo.sourceUploadPath = this.sourceUploadPath;
         }
         return taskInfo;
     }
@@ -1083,7 +1163,7 @@ class SvgModel extends BaseModel {
 
         this.refresh();
         this.modelGroup.modelChanged();
-        if (this.config.svgNodeName === 'text') {
+        if (this.processNodeName === 'text') {
             updateTimer && clearTimeout(updateTimer);
             updateTimer = setTimeout(() => {
                 this.updateSource();
@@ -1114,12 +1194,11 @@ class SvgModel extends BaseModel {
             ...this.config,
             ...config
         };
-        this.processMode(this.mode, this.config);
+        this.changeProcessMode(this.processMode, this.config);
     }
 
-    updateProcessImageName(processImageName) {
-        // this.processMode(this.mode, this.config, processImageName);
-        this.processImageName = processImageName;
+    updateProcessFilePath(processFilePath) {
+        this.processFilePath = processFilePath;
 
         this.generateProcessObject3D();
     }
@@ -1127,8 +1206,8 @@ class SvgModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, sourceUploadPath, config, processMode,
+            transformation, processFilePath
         } = this;
         return {
             modelID,
@@ -1138,11 +1217,11 @@ class SvgModel extends BaseModel {
             sourceHeight,
             sourceWidth,
             originalName,
-            uploadName,
+            sourceUploadPath,
             config,
-            mode,
+            processMode,
             transformation,
-            processImageName
+            processFilePath
         };
     }
 }

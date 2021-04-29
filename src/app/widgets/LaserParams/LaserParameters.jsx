@@ -23,9 +23,11 @@ class LaserParameters extends PureComponent {
         selectedModelVisible: PropTypes.bool,
         modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
-        mode: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        processNodeName: PropTypes.string,
+        processTextInfo: PropTypes.object,
         showOrigin: PropTypes.bool,
-        config: PropTypes.object.isRequired,
+        // config: PropTypes.object.isRequired,
         headType: PropTypes.string,
 
         setDisplay: PropTypes.func.isRequired,
@@ -111,8 +113,8 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            selectedModelArray, selectedModelVisible, sourceType, mode,
-            config,
+            selectedModelArray, selectedModelVisible, sourceType, processMode, processNodeName, processTextInfo,
+            // config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
             modifyText
@@ -121,8 +123,8 @@ class LaserParameters extends PureComponent {
         const actions = this.actions;
 
         const isEditor = this.props.page === PAGE_EDITOR;
-        const isTextVector = (config.svgNodeName === 'text');
-        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+        const isTextVector = (processNodeName === 'text');
+        const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && processNodeName === 'image';
 
         return (
             <React.Fragment>
@@ -145,7 +147,7 @@ class LaserParameters extends PureComponent {
                     <ImageProcessMode
                         disabled={!selectedModelVisible}
                         sourceType={sourceType}
-                        mode={mode}
+                        processMode={processMode}
                         showOrigin={showOrigin}
                         changeSelectedModelShowOrigin={changeSelectedModelShowOrigin}
                         changeSelectedModelMode={changeSelectedModelMode}
@@ -156,7 +158,7 @@ class LaserParameters extends PureComponent {
                     <TextParameters
                         disabled={!selectedModelVisible}
                         headType={headType}
-                        config={config}
+                        processTextInfo={processTextInfo}
                         modifyText={modifyText}
                     />
                 )}
@@ -172,15 +174,18 @@ const mapStateToProps = (state) => {
         // modelGroup.mockModel
         mock: true,
         sourceType: '',
-        mode: '',
-        config: {},
+        processMode: '',
+        processTextInfo: {},
+        // config: {},
         visible: true
     });
     const {
-        mode,
+        processMode,
         sourceType,
         showOrigin,
-        config,
+        processNodeName,
+        processTextInfo,
+        // config,
         visible
     } = selectedModel;
     return {
@@ -192,19 +197,21 @@ const mapStateToProps = (state) => {
         selectedModelVisible: visible,
         modelGroup,
         sourceType,
-        mode,
-        showOrigin,
-        config
+        processMode,
+        processNodeName,
+        processTextInfo,
+        showOrigin
+        // config
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        uploadImage: (file, processMode, onFailure) => dispatch(editorActions.uploadImage('laser', file, processMode, onFailure)),
         insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser')),
         updateSelectedModelUniformScalingState: (params) => dispatch(editorActions.updateSelectedModelTransformation('laser', params)),
         changeSelectedModelShowOrigin: () => dispatch(editorActions.changeSelectedModelShowOrigin('laser')),
-        changeSelectedModelMode: (sourceType, mode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, mode)),
+        changeSelectedModelMode: (sourceType, processMode) => dispatch(editorActions.changeSelectedModelMode('laser', sourceType, processMode)),
         onModelAfterTransform: () => {},
         modifyText: (element, options) => dispatch(editorActions.modifyText('laser', element, options)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page))

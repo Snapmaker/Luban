@@ -28,7 +28,7 @@ class ThreeModel extends BaseModel {
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
-        const { width, height, processImageName } = modelInfo;
+        const { width, height, processFilePath } = modelInfo;
 
 
         this.geometry = modelInfo.geometry || new THREE.PlaneGeometry(width, height);
@@ -36,7 +36,7 @@ class ThreeModel extends BaseModel {
 
         this.meshObject = new THREE.Mesh(this.geometry, material);
 
-        this.processImageName = processImageName;
+        this.processFilePath = processFilePath;
 
         if (!this.transformation.width && !this.transformation.height) {
             this.transformation.width = width;
@@ -128,98 +128,6 @@ class ThreeModel extends BaseModel {
 
     updateTransformation(transformation) {
         super.updateTransformation(transformation);
-        // const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip, uniformScalingState } = transformation;
-        // const { width, height } = transformation;
-
-        // if (uniformScalingState !== undefined) {
-        //     this.meshObject.uniformScalingState = uniformScalingState;
-        //     this.transformation.uniformScalingState = uniformScalingState;
-        // }
-
-        // if (positionX !== undefined) {
-        //     this.meshObject.position.x = positionX;
-        //     this.transformation.positionX = positionX;
-        // }
-        // if (positionY !== undefined) {
-        //     this.meshObject.position.y = positionY;
-        //     this.transformation.positionY = positionY;
-        // }
-        // if (positionZ !== undefined) {
-        //     this.meshObject.position.z = positionZ;
-        //     this.transformation.positionZ = positionZ;
-        // }
-        // if (rotationX !== undefined) {
-        //     this.meshObject.rotation.x = rotationX;
-        //     this.transformation.rotationX = rotationX;
-        // }
-        // if (rotationY !== undefined) {
-        //     this.meshObject.rotation.y = rotationY;
-        //     this.transformation.rotationY = rotationY;
-        // }
-        // if (rotationZ !== undefined) {
-        //     this.meshObject.rotation.z = rotationZ;
-        //     this.transformation.rotationZ = rotationZ;
-        // }
-        // if (scaleX !== undefined) {
-        //     this.meshObject.scale.x = scaleX;
-        //     this.transformation.scaleX = scaleX;
-        // }
-        // if (scaleY !== undefined) {
-        //     this.meshObject.scale.y = scaleY;
-        //     this.transformation.scaleY = scaleY;
-        // }
-        // if (scaleZ !== undefined) {
-        //     this.meshObject.scale.z = scaleZ;
-        //     this.transformation.scaleZ = scaleZ;
-        // }
-        // if (flip !== undefined) {
-        //     this.transformation.flip = flip;
-        //     if (this.modelObject3D) {
-        //         if (flip === 0) {
-        //             this.modelObject3D.rotation.x = 0;
-        //             this.modelObject3D.rotation.y = 0;
-        //         }
-        //         if (flip === 1) {
-        //             this.modelObject3D.rotation.x = Math.PI;
-        //             this.modelObject3D.rotation.y = 0;
-        //         }
-        //         if (flip === 2) {
-        //             this.modelObject3D.rotation.x = 0;
-        //             this.modelObject3D.rotation.y = Math.PI;
-        //         }
-        //         if (flip === 3) {
-        //             this.modelObject3D.rotation.x = Math.PI;
-        //             this.modelObject3D.rotation.y = Math.PI;
-        //         }
-        //     }
-        //     if (this.processObject3D) {
-        //         if (flip === 0) {
-        //             this.processObject3D.rotation.x = 0;
-        //             this.processObject3D.rotation.y = 0;
-        //         }
-        //         if (flip === 1) {
-        //             this.processObject3D.rotation.x = Math.PI;
-        //             this.processObject3D.rotation.y = 0;
-        //         }
-        //         if (flip === 2) {
-        //             this.processObject3D.rotation.x = 0;
-        //             this.processObject3D.rotation.y = Math.PI;
-        //         }
-        //         if (flip === 3) {
-        //             this.processObject3D.rotation.x = Math.PI;
-        //             this.processObject3D.rotation.y = Math.PI;
-        //         }
-        //     }
-        // }
-        // // width & height dont effected on meshobject any more
-        // if (width) {
-        //     this.transformation.width = width;
-        // }
-        // if (height) {
-        //     this.transformation.height = height;
-        // }
-        // this.transformation = { ...this.transformation };
-        // return this.transformation;
     }
 
     computeBoundingBox() {
@@ -526,8 +434,8 @@ class ThreeModel extends BaseModel {
 
     getSerializableConfig() {
         const {
-            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName
+            modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, processMode,
+            transformation, processFilePath
         } = this;
 
         return {
@@ -540,9 +448,9 @@ class ThreeModel extends BaseModel {
             originalName,
             uploadName,
             config,
-            mode,
+            processMode,
             transformation,
-            processImageName
+            processFilePath
         };
     }
 }
