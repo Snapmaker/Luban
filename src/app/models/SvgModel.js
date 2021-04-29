@@ -386,6 +386,7 @@ class SvgModel extends BaseModel {
 
             const name = this.originalName;
             const alignment = 'middle';
+            console.log('uploadSourceFile', font);
             res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });

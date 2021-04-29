@@ -4,7 +4,7 @@ import xml2js from 'xml2js';
 import { cloneDeep } from 'lodash';
 import AttributesParser from './AttributesParser';
 import SVGTagParser from './SVGTagParser';
-import DefsTagParser from './DefsTagParser';
+// import DefsTagParser from './DefsTagParser';
 import CircleTagParser from './CircleTagParser';
 import EllipseTagParser from './EllipseTagParser';
 import LineTagParser from './LineTagParser';
@@ -12,6 +12,7 @@ import PathTagParser from './PathTagParser';
 import PolygonTagParser from './PolygonTagParser';
 import PolylineTagParser from './PolylineTagParser';
 import RectTagParser from './RectTagParser';
+import TextParser from './TextParser';
 
 // const DEFAULT_DPI = 72;
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
@@ -32,14 +33,18 @@ class SVGParser {
             'polyline': new PolylineTagParser(TOLERANCE),
             'rect': new RectTagParser(TOLERANCE)
         };
+        this.previousElementAttributes = {
+            actualX: 0,
+            actualY: 0
+        };
         // this.image = {
         //     shapes: []
         // };
     }
 
-    readFile(path) {
+    readFile(filePath) {
         return new Promise((resolve, reject) => {
-            fs.readFile(path, 'utf8', async (err, xml) => {
+            fs.readFile(filePath, 'utf8', async (err, xml) => {
                 if (err) {
                     reject(err);
                     return;
@@ -69,48 +74,70 @@ class SVGParser {
 
     generateString(newNode, filePath) {
         return new Promise((resolve, reject) => {
-            // keep the orders of children coz they can overlap each other
-            const options = {
-                explicitChildren: true,
-                preserveChildrenOrder: true
-            };
             const builder = new xml2js.Builder();
             let result = builder.buildObject(newNode);
             result = result.replace(/^\<\?xml.+\?\>/, '');
             const newUploadName = filePath.replace(/\.svg$/, 'parsed.svg');
             fs.writeFile(newUploadName, result, (error) => {
-                if (error) throw error;
+                if (error) reject(error);
                 resolve(newUploadName);
             });
         });
     }
 
-    async parse(s) {
+    async parse(s, element = 'svg') {
         const node = await this.readString(s);
-        return this.parseObject(node);
+        return this.parseObject(node, element);
     }
+
 
     async parseFile(filePath) {
         const node = await this.readFile(filePath);
-        // return this.parseObject(node);
         const result = await this.parseObject(node);
         const newUploadName = await this.generateString(result.parsedNode, filePath);
         result.uploadName = path.basename(newUploadName);
+        // console.log('filePath', filePath, result);
         return result;
     }
 
-    async parseObject(node) {
+    dragTextPathToParent(parent) {
+        const textElement = parent.text;
+        if (textElement) {
+            if (!Array.isArray(parent.path)) {
+                parent.path = [];
+            }
+            textElement.forEach((item) => {
+                // eslint-disable-next-line guard-for-in
+                for (const variable in item) {
+                    // console.log('dddd', variable, variable === 'path', Array.isArray(item[variable]));
+                    if (variable === 'path' && Array.isArray(item[variable])) {
+                        for (const shape of item[variable]) {
+                            parent.path.push(shape);
+                        }
+                    }
+                }
+            });
+            delete parent.text;
+        }
+    }
+
+    async parseObject(node, element = 'svg') {
         const initialAttributes = {
             fill: '#000000',
             stroke: null,
             strokeWidth: 1,
+            fontSize: 16,
+            // fontFamily: 'auto',
+            actualX: 0,
+            actualY: 0,
             visibility: true,
             xform: [1, 0, 0, 1, 0, 0]
         };
-
         const parsedNode = cloneDeep(node);
-        const root = await this.parseNode('svg', parsedNode.svg, parsedNode, initialAttributes);
+        const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
         parsedNode.svg = root.parsedSvg;
+
+        this.dragTextPathToParent(root.parsedSvg);
 
         const boundingBox = {
             minX: Infinity,
@@ -137,11 +164,15 @@ class SVGParser {
         };
     }
 
-    parseNode(tag, node, parent, parentAttributes) {
+    async parseNode(tag, node, parent, parentAttributes) {
         // const tag = node['#name'];
-        const shapes = [];
+        let shapes = [];
         if (node) {
-            const attributes = this.attributeParser.parse(node, parentAttributes);
+            let isText = false;
+            if (tag === 'text' || tag === 'tspan') {
+                isText = true;
+            }
+            const attributes = this.attributeParser.parse(node, parentAttributes, isText);
 
             let shouldParseChildren = true;
             switch (tag) {
@@ -174,13 +205,34 @@ class SVGParser {
                     shapes.push(this.tagParses.rect.parse(node, attributes));
                     break;
                 }
-
+                case 'text':
+                case 'tspan': {
+                    const textParser = new TextParser(this);
+                    const textObject = await textParser.parse(node, attributes, this.previousElementAttributes);
+                    if (textObject.shapes) {
+                        shapes = shapes.concat(textObject.shapes);
+                        attributes.textBoundingBox = textObject.boundingBox;
+                        if (Array.isArray(parent.path)) {
+                            parent.path.push(textObject.parsedNode.path);
+                        } else {
+                            const newPath = [];
+                            newPath.push(textObject.parsedNode.path);
+                            parent.path = newPath;
+                        }
+                    }
+                    this.previousElementAttributes = attributes;
+                    // shouldParseChildren = false;
+                    break;
+                }
                 // container elements
                 case 'svg': {
                     const tagParser = new SVGTagParser(this);
                     tagParser.parse(node, attributes);
                     break;
                 }
+                case '-':
+                case 'g':
+                case 'd':
                 case '$': {
                     break;
                 }
@@ -189,28 +241,28 @@ class SVGParser {
                 //     tagParser.parse(node, attributes);
                 //     break;
                 // }
-                case 'pattern': {
-                    shouldParseChildren = false;
-                    break;
-                }
                 default:
                     shouldParseChildren = false;
                     break;
             }
             // parse childrend
+            // eslint-disable-next-line guard-for-in
             for (const variable in node) {
-                // 'mask'
                 if (shouldParseChildren && Array.isArray(node[variable])) {
-                    node[variable].forEach((child) => {
-                        const childNode = this.parseNode(variable, child, node, attributes);
+                    for (let i = 0; i < node[variable].length; i++) {
+                        const child = node[variable][i];
+                        const childNode = await this.parseNode(variable, child, node, attributes);
                         for (const shape of childNode.shapes) {
                             shapes.push(shape);
                         }
-                    });
-                } else if (node && variable !== '$' && !shouldParseChildren) {
+                    }
+                } else if (node && !shouldParseChildren) {
                     delete node[variable];
                 }
             }
+
+            // console.log('result -----> ', node,
+            //     'shapes -----> ', shapes,);
             return {
                 attributes,
                 shapes,

@@ -56,6 +56,7 @@ export const generate = async (req, res) => {
             const svgParser = new SVGParser();
             try {
                 const svg = await svgParser.parseFile(inputFilePath);
+                console.log('api-tool-path', svg);
                 const toolPathGenerator = new CncToolPathGenerator(modelInfo);
                 const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
                 fs.writeFile(outputFilePath, JSON.stringify(toolPathObject), () => {

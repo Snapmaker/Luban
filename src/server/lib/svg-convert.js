@@ -3,9 +3,10 @@ import _ from 'lodash';
 import potrace from 'potrace';
 import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
-import fontManager from './FontManager';
+// import fontManager from './FontManager';
 import logger from './logger';
 import SVGParser from '../../shared/lib/SVGParser';
+import fontManager from '../../shared/lib/FontManager';
 import DataStorage from '../DataStorage';
 import { svgToString } from '../../shared/lib/SVGParser/SvgToString';
 
@@ -153,14 +154,14 @@ const convertTextToSvg = async (options) => {
 // just process one line text, multi-line text can be transfered to text elements in front end
 const convertOneLineTextToSvg = async (options) => {
     const { text, font, name, size, x, y, bbox } = options;
-
+    console.log('convertOneLineTextToSvg', text, font, name, size, x, y, bbox);
     const uploadName = pathWithRandomSuffix(name);
     const fontObj = await fontManager.getFont(font);
     const fullPath = new opentype.Path();
     const p = fontObj.getPath(text, x, y, Math.floor(size));
     fullPath.extend(p);
     fullPath.stroke = 'black';
-
+    console.log('convertOneLineTextToSvg fullPath', p, typeof fullPath.toSVG());
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),
         x0: bbox.x,

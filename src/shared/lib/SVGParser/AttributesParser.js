@@ -1,4 +1,5 @@
 import logger from 'universal-logger';
+import { isUndefined } from 'lodash';
 import { parseFloats, cssColor2Hex, xformMultiply } from './Utils';
 
 const log = logger();
@@ -26,8 +27,9 @@ function parseDAttribute(value) {
     return items;
 }
 
-function parseCoordinate(value) {
-    const re = /(-?[0-9]+\.?[0-9]*(e-?[0-9]*)?)(px|pt|pc|mm|cm|in|%|em|ex)?/;
+function parseCoordinate(value, fontSizeValue) {
+    // const re = /(-?[0-9]+\.?[0-9]*(e-?[0-9]*)?)(px|pt|pc|mm|cm|in|%|em|ex)?/;
+    const re = /(-?[0-9]+\.?[0-9]*(e-?[0-9]+)?)(px|pt|pc|mm|cm|in|%|em|ex)?/;
     const m = re.exec(value);
     if (m) {
         const num = parseFloat(m[1]);
@@ -50,11 +52,13 @@ function parseCoordinate(value) {
             case 'in':
                 return num * 25.4;
 
-            // Not supported
             case 'em':
-                log.warn('No supported unit em');
-                // fontSize needed
+                if (!(isUndefined(fontSizeValue))) {
+                    return fontSizeValue * num;
+                }
+                // fontSize, dx, dy, x, y needed
                 return num;
+            // Not supported
             case 'ex':
                 log.warn('No supported unit ex');
                 // fontSize needed
@@ -214,30 +218,67 @@ class AttributesParser {
         this.parser = parser;
     }
 
-    parse(node, parentAttributes) {
+    parse(node, parentAttributes, isText) {
         const attributes = {};
-        for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'width', 'height']) {
+        for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'width', 'height', 'fontFamily', 'dx', 'dy', 'fontSize']) {
             attributes[key] = parentAttributes[key];
         }
+        // for (const key of ['dx', 'dy', 'fontSize']) {
+        //     if (isUndefined(parentAttributes[key])) {
+        //         attributes[key] = parentAttributes[key];
+        //     }
+        // }
         // make a copy of parentAttributes
         attributes.xform = [1, 0, 0, 1, 0, 0];
         // Regardless of whether 'node.$' is exited, 'xform' in 'attributes' must be applied to 'node' element
         xformMultiply(attributes.xform, parentAttributes.xform);
-
+        // Used for text
+        if (node._) {
+            // how to deal with '\\ntspan line 6' and '\n        tspan line 6\n    '
+            attributes._ = (node._).trim();
+        }
+        // // TODO: Before or after isText
         if (!node.$) {
             return attributes;
         }
 
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
-            this.parseAttribute(attributes, parentAttributes, key, value);
+            // this.parseAttribute(attributes, parentAttributes, key, value);
+            this.parseAttribute(attributes, parentAttributes, key, value, isText);
         });
-
+        // make text have the right x
+        if (isText) {
+            if ((isUndefined(attributes.x))) {
+                attributes.actualX = parentAttributes.actualX;
+            } else {
+                attributes.actualX = attributes.x;
+            }
+            if ((isUndefined(attributes.y))) {
+                attributes.actualY = parentAttributes.actualY;
+            } else {
+                attributes.actualY = attributes.y;
+            }
+        } else {
+            attributes.actualX = 0;
+            attributes.actualY = 0;
+        }
         return attributes;
     }
 
-    parseAttribute(attributes, parentAttributes, key, value) {
+    parseAttribute(attributes, parentAttributes, key, value, isText) {
+        if (isText && key === 'font-family') {
+            attributes.fontFamily = value;
+        }
         switch (key) {
+            case 'font-size': {
+                attributes.fontSize = parseCoordinate(value, parentAttributes.fontSize);
+                if (value.endsWith('%')) {
+                    // width & height
+                    attributes[key] *= parentAttributes[key];
+                }
+                break;
+            }
             case 'width':
             case 'height':
             case 'cx':
@@ -250,8 +291,10 @@ class AttributesParser {
             case 'x1':
             case 'y1':
             case 'x2':
-            case 'y2': {
-                attributes[key] = parseCoordinate(value);
+            case 'y2':
+            case 'dy':
+            case 'dx': {
+                attributes[key] = parseCoordinate(value, attributes.fontSize);
                 if (value.endsWith('%')) {
                     // width & height
                     attributes[key] *= parentAttributes[key];
