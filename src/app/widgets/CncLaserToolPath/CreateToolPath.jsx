@@ -3,8 +3,10 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { PAGE_PROCESS } from '../../constants';
 import { actions as editorActions } from '../../flux/editor';
+import SvgIcon from '../../components/SvgIcon';
 
 import i18n from '../../lib/i18n';
+import styles from './styles.styl';
 
 class CreateToolPath extends PureComponent {
     static propTypes = {
@@ -35,41 +37,37 @@ class CreateToolPath extends PureComponent {
         return (
             <div>
                 <div>
-                    {this.props.toolPathTypes.length === 0 && (
-                        <div style={{ height: '20px', textAlign: 'center' }}>
-                            <img
-                                src="../../images/cnc-laser/ic_warning_20x20.png"
-                                style={{
-                                    marginTop: '-4px',
-                                    width: '20px',
-                                    height: '20px'
-                                }}
-                                alt="......"
-                            />
-                            <div style={{
-                                display: 'inline-block',
-                                color: '#979899',
-                                fontSize: '14px',
-                                fontFamily: 'Roboto-Regular, Roboto',
-                                height: '19px',
-                                lineHeight: '19px',
-                                marginLeft: '9px'
-                            }}
-                            >
-                                {i18n._('Select Object to Create Toolpath')}
-                            </div>
-                        </div>
-                    )}
-                    { this.props.toolPathTypes.length === 1 && (
-                        <button
-                            type="button"
-                            className="sm-btn-large sm-btn-default"
-                            onClick={this.props.createToolPath}
-                            style={{ display: 'block', width: '100%' }}
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-default"
+                        onClick={this.props.createToolPath}
+                        style={{ display: 'block', width: '100%' }}
+                        disabled={this.props.toolPathTypes.length === 0}
+                    >
+                        {i18n._('Create Toolpath')}
+                    </button>
+                    <div style={{ marginTop: '10px', height: '20px', textAlign: 'center' }}>
+                        <SvgIcon
+                            name="Information"
+                            size={18}
+                            color="#979899"
+                            className={styles['focus-icon']}
+                        />
+
+                        <div style={{
+                            display: 'inline-block',
+                            color: '#979899',
+                            fontSize: '14px',
+                            fontFamily: 'Roboto-Regular, Roboto',
+                            height: '19px',
+                            lineHeight: '19px',
+                            marginLeft: '9px'
+                        }}
                         >
-                            {i18n._('Create Toolpath')}
-                        </button>
-                    )}
+                            {i18n._('Select Object to Create Toolpath')}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         );
