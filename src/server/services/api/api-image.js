@@ -82,7 +82,7 @@ export const set = (req, res) => {
                 if (extname === '.zip') {
                     await unzipFile(`${tempName}`, `${DataStorage.tmpDir}`);
                     originalName = originalName.replace(/\.zip$/, '');
-                    uploadName = originalName;
+                    tempName = originalName;
                 }
                 const { width, height } = Mesh.loadSize(`${DataStorage.tmpDir}/${tempName}`, isRotate === 'true' || isRotate === true);
                 res.send({

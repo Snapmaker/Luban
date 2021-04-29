@@ -1,9 +1,10 @@
-import fs from 'fs';
-import path from 'path';
+// import fs from 'fs';
+// import path from 'path';
 
 import Jimp from '../jimp';
-import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
-import { svgInverse, svgToString } from '../../../shared/lib/SVGParser/SvgToString';
+// import { dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
+// import { dxfToSvg, parseDxf, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
+// import { svgInverse, svgToString } from '../../../shared/lib/SVGParser/SvgToString';
 
 import { pathWithRandomSuffix } from '../random-utils';
 import { convertRasterToSvg } from '../svg-convert';
@@ -248,7 +249,6 @@ export async function processHalftone(modelInfo, onProgress) {
  * @returns {Promise<any>}
  */
 export function processVector(modelInfo, onProgress) {
-    console.log('processVector', modelInfo);
     onProgress && onProgress(0.2);
     // options: { filename, vectorThreshold, invert, turdSize }
     const { vectorThreshold, invert, turdSize } = modelInfo.config;
@@ -263,27 +263,26 @@ export function processVector(modelInfo, onProgress) {
     return convertRasterToSvg(options);
 }
 
-function processDxf(modelInfo, onProgress) {
-    // todo: add onProgress in this return function
-    onProgress && onProgress(0.2);
-    return new Promise(async (resolve) => {
-        const { uploadName } = modelInfo;
-
-        let outputFilename = pathWithRandomSuffix(uploadName);
-        outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
-
-        const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
-        const svg = dxfToSvg(result.svg);
-        updateDxfBoundingBox(svg);
-        svgInverse(svg, 2);
-
-        fs.writeFile(`${DataStorage.tmpDir}/${outputFilename}`, svgToString(svg), 'utf8', () => {
-            resolve({
-                filename: outputFilename
-            });
-        });
-    });
-}
+// function processDxf(modelInfo, onProgress) {
+//     onProgress && onProgress(0.2);
+//     return new Promise(async (resolve) => {
+//         const { uploadName } = modelInfo;
+//
+//         let outputFilename = pathWithRandomSuffix(uploadName);
+//         outputFilename = `${path.basename(outputFilename, '.dxf')}.svg`;
+//
+//         const result = await parseDxf(`${DataStorage.tmpDir}/${uploadName}`);
+//         const svg = dxfToSvg(result.svg);
+//         updateDxfBoundingBox(svg);
+//         svgInverse(svg, 2);
+//
+//         fs.writeFile(`${DataStorage.tmpDir}/${outputFilename}`, svgToString(svg), 'utf8', () => {
+//             resolve({
+//                 filename: outputFilename
+//             });
+//         });
+//     });
+// }
 
 
 // eslint-disable-next-line no-unused-vars

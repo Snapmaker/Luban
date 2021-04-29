@@ -9,7 +9,7 @@ import {
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER
 } from '../../constants';
-import { processDxf } from './dxf-process';
+// import { processDxf } from './dxf-process';
 import { MeshProcess } from '../MeshProcess/MeshProcess';
 
 const processImage3d = (modelInfo) => {

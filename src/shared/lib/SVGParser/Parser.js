@@ -76,7 +76,8 @@ class SVGParser {
         return new Promise((resolve, reject) => {
             const builder = new xml2js.Builder();
             let result = builder.buildObject(newNode);
-            result = result.replace(/^\<\?xml.+\?\>/, '');
+            /* eslint no-useless-escape: "error"*/
+            result = result.replace(/^<\?xml.+\?>/, '');
             const newUploadName = filePath.replace(/\.svg$/, 'parsed.svg');
             fs.writeFile(newUploadName, result, (error) => {
                 if (error) reject(error);
@@ -100,26 +101,6 @@ class SVGParser {
         return result;
     }
 
-    dragTextPathToParent(parent) {
-        const textElement = parent.text;
-        if (textElement) {
-            if (!Array.isArray(parent.path)) {
-                parent.path = [];
-            }
-            textElement.forEach((item) => {
-                // eslint-disable-next-line guard-for-in
-                for (const variable in item) {
-                    // console.log('dddd', variable, variable === 'path', Array.isArray(item[variable]));
-                    if (variable === 'path' && Array.isArray(item[variable])) {
-                        for (const shape of item[variable]) {
-                            parent.path.push(shape);
-                        }
-                    }
-                }
-            });
-            delete parent.text;
-        }
-    }
 
     async parseObject(node, element = 'svg') {
         const initialAttributes = {
@@ -137,7 +118,6 @@ class SVGParser {
         const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
         parsedNode.svg = root.parsedSvg;
 
-        this.dragTextPathToParent(root.parsedSvg);
 
         const boundingBox = {
             minX: Infinity,
@@ -247,7 +227,7 @@ class SVGParser {
             }
             // parse childrend
             // eslint-disable-next-line guard-for-in
-            for (const variable in node) {
+            for (const variable of Object.keys(node)) {
                 if (shouldParseChildren && Array.isArray(node[variable])) {
                     for (let i = 0; i < node[variable].length; i++) {
                         const child = node[variable][i];
