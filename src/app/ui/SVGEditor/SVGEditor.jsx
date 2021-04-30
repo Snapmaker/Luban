@@ -16,6 +16,7 @@ class SVGEditor extends PureComponent {
         SVGActions: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
+        coordinateMode: PropTypes.string.isRequired,
         use3DVisualizer: PropTypes.bool,
 
         updateScale: PropTypes.func.isRequired,
@@ -115,6 +116,7 @@ class SVGEditor extends PureComponent {
                             target={this.props.target}
                             updateScale={this.props.updateScale}
                             updateTarget={this.props.updateTarget}
+                            coordinateMode={this.props.coordinateMode}
                             ref={this.canvas}
                             onCreateElement={this.props.onCreateElement}
                             onSelectElements={this.props.onSelectElements}

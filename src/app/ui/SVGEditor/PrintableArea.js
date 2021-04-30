@@ -13,6 +13,7 @@ class PrintableArea {
         this.materials = {
             ...svgFactory.materials
         };
+        this.coordinateMode = svgFactory.coordinateMode;
         this.scale = svgFactory.scale;
         this.printableAreaGroup = createSVGElement({
             element: 'g',

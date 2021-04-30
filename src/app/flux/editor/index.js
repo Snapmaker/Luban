@@ -22,7 +22,6 @@ import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
 
-
 const getSourceType = (fileName) => {
     let sourceType;
     const extname = path.extname(fileName)
@@ -1263,8 +1262,17 @@ export const actions = {
         }
 
         dispatch(baseActions.render(headType));
-    }
+    },
 
+    /**
+     * Change Coordinate Mode
+     *
+     * @param headType
+     * @parame coordinateMode
+     */
+    changeCoordinateMode: (headType, coordinateMode) => (dispatch) => {
+        dispatch(actions.updateState(headType, { coordinateMode }));
+    }
 };
 
 export default function reducer() {

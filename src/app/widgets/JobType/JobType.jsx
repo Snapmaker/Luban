@@ -6,8 +6,10 @@ import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import styles from './styles.styl';
 import { actions as editorActions } from '../../flux/editor';
-import { HEAD_CNC, HEAD_LASER, PAGE_EDITOR } from '../../constants';
+import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
+    COORDINATE_MODE_TOP_RIGHT, HEAD_CNC, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import { NumberInput as Input } from '../../components/Input';
+import Select from '../../components/Select';
 
 
 class JobType extends PureComponent {
@@ -19,18 +21,24 @@ class JobType extends PureComponent {
         page: PropTypes.string.isRequired,
 
         size: PropTypes.object.isRequired,
+        coordinateMode: PropTypes.string.isRequired,
 
         materials: PropTypes.object.isRequired,
 
         updateMaterials: PropTypes.func.isRequired,
 
-        use4Axis: PropTypes.bool.isRequired
+        use4Axis: PropTypes.bool.isRequired,
+
+        changeCoordinateMode: PropTypes.func.isRequired
     };
 
     state = {
     };
 
     actions = {
+        changeCoordinateMode: (option) => {
+            this.props.changeCoordinateMode(option.value);
+        }
     };
 
     constructor(props) {
@@ -40,15 +48,52 @@ class JobType extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log('mode', this.props.coordinateMode, nextProps.coordinateMode);
         this.props.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
     }
 
     render() {
-        const { size, materials, headType } = this.props;
+        const { size, materials, headType, coordinateMode } = this.props;
         const { isRotate, diameter, length } = materials;
+
+        const coordinateModeList = [
+            {
+                label: COORDINATE_MODE_CENTER,
+                value: i18n._(COORDINATE_MODE_CENTER)
+            },
+            {
+                label: COORDINATE_MODE_BOTTOM_LEFT,
+                value: i18n._(COORDINATE_MODE_BOTTOM_LEFT)
+            },
+            {
+                label: COORDINATE_MODE_BOTTOM_RIGHT,
+                value: i18n._(COORDINATE_MODE_BOTTOM_RIGHT)
+            },
+            {
+                label: COORDINATE_MODE_TOP_LEFT,
+                value: i18n._(COORDINATE_MODE_TOP_LEFT)
+            },
+            {
+                label: COORDINATE_MODE_TOP_RIGHT,
+                value: i18n._(COORDINATE_MODE_TOP_RIGHT)
+            }
+        ];
 
         return (
             <React.Fragment>
+                <div className="sm-parameter-row">
+                    <span className="sm-parameter-row__label">{i18n._('Origin Mode')}</span>
+                    <Select
+                        className="sm-parameter-row__font-select"
+                        backspaceRemoves={false}
+                        clearable={false}
+                        options={coordinateModeList}
+                        isGroup={false}
+                        placeholder={i18n._('Choose font')}
+                        value={coordinateMode ?? 'Center'}
+                        onChange={this.actions.changeCoordinateMode}
+                    />
+                </div>
                 <div className="">
                     <div className="sm-tabs" style={{ marginBottom: '1rem' }}>
                         <button
@@ -158,10 +203,11 @@ class JobType extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
     const { size, use4Axis } = state.machine;
-    const { page, materials } = state[headType];
+    const { page, materials, coordinateMode } = state[headType];
 
     return {
         size,
+        coordinateMode,
         page,
         materials,
         use4Axis
@@ -172,7 +218,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     const { headType } = ownProps;
 
     return {
-        updateMaterials: (materials) => dispatch(editorActions.updateMaterials(headType, materials))
+        updateMaterials: (materials) => dispatch(editorActions.updateMaterials(headType, materials)),
+        changeCoordinateMode: (coordinateMode) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode))
     };
 };
 

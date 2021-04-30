@@ -9,7 +9,7 @@ import {
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
-import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL } from '../../constants';
+import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL, COORDINATE_MODE_CENTER } from '../../constants';
 import definitionManager from './DefinitionManager';
 import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
@@ -87,7 +87,10 @@ const INITIAL_STATE = {
     autoPreviewEnabled: false,
 
     // rendering
-    renderingTimestamp: 0
+    renderingTimestamp: 0,
+
+    // coordinateMode
+    coordinateMode: COORDINATE_MODE_CENTER
 };
 
 export const actions = {

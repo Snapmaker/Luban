@@ -78,6 +78,7 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
+        coordinateMode: PropTypes.string.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
@@ -293,7 +294,8 @@ class SVGCanvas extends PureComponent {
         this.printableArea = new PrintableArea({
             size: this.props.size,
             scale: this.scale,
-            getRoot
+            getRoot,
+            coordinateMode: this.props.coordinateMode
         });
     }
 

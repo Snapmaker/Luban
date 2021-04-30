@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
-import { DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
+import { COORDINATE_MODE_CENTER, DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 
@@ -82,7 +82,10 @@ const INITIAL_STATE = {
     autoPreviewEnabled: false,
 
     // rendering
-    renderingTimestamp: 0
+    renderingTimestamp: 0,
+
+    // coordinateMode
+    coordinateMode: COORDINATE_MODE_CENTER
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

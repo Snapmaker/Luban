@@ -32,6 +32,7 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
         materials: PropTypes.object,
 
+        coordinateMode: PropTypes.string,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
@@ -317,6 +318,7 @@ class Visualizer extends Component {
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
                         target={this.props.target}
+                        coordinateMode={this.props.coordinateMode}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -505,7 +507,7 @@ const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -515,6 +517,7 @@ const mapStateToProps = (state) => {
         target,
         SVGActions,
         size,
+        coordinateMode,
         materials,
         hasModel: modelGroup.hasModel(),
         selectedModelID,
