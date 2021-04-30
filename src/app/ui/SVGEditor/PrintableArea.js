@@ -57,15 +57,15 @@ class PrintableArea {
 
     _setGridLine() {
         const { x, y } = this.size;
-        const yi = Math.floor(y / 10);
+        const yi = Math.floor(y / 20);
         for (let i = -yi; i <= yi; i++) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: 0,
+                    x1: x / 2,
                     y1: i * 10 + y,
-                    x2: 2 * x,
+                    x2: x * 3 / 2,
                     y2: i * 10 + y,
                     id: uuid.v4(),
                     stroke: color,
@@ -97,16 +97,16 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const xi = Math.floor(x / 10);
+        const xi = Math.floor(x / 20);
         for (let i = -xi; i <= xi; i++) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
                     x1: i * 10 + x,
-                    y1: 0,
+                    y1: y / 2,
                     x2: i * 10 + x,
-                    y2: 2 * y,
+                    y2: y * 3 / 2,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
@@ -180,10 +180,10 @@ class PrintableArea {
 
     _setCoordinateAxes() {
         const { x, y } = this.size;
-        this._setAxes(0, y, x, y, 'red', true);
-        this._setAxes(x, 0, x, y, 'green', false);
-        this._setAxes(2 * x, y, x, y, 'red', false);
-        this._setAxes(x, 2 * y, x, y, 'green', true);
+        this._setAxes(x / 2, y, x, y, 'red', true);
+        this._setAxes(x, y / 2, x, y, 'green', false);
+        this._setAxes(x * 3 / 2, y, x, y, 'red', false);
+        this._setAxes(x, y * 3 / 2, x, y, 'green', true);
 
         const origin = createSVGElement({
             element: 'circle',
