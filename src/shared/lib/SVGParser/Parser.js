@@ -191,7 +191,8 @@ class SVGParser {
                     const textObject = await textParser.parse(node, attributes, this.previousElementAttributes);
                     if (textObject.shapes) {
                         shapes = shapes.concat(textObject.shapes);
-                        attributes.textBoundingBox = textObject.boundingBox;
+                        attributes.positionX = textObject.positionX;
+                        attributes.positionY = textObject.positionY;
                         if (Array.isArray(parent.path)) {
                             parent.path.push(textObject.parsedNode.path);
                         } else {

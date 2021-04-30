@@ -168,31 +168,35 @@ class textParser extends BaseTagParser {
         const dy = _.isUndefined(attributes.dy) ? 0 : attributes.dy;
         const x = attributes.x;
         const y = attributes.y;
-        const boundingBox = _.isUndefined(previousElementAttributes.textBoundingBox)
-            ? {
-                'minX': 0,
-                'maxX': 0,
-                'minY': 0,
-                'maxY': 0
-            } : previousElementAttributes.textBoundingBox;
+        const baselineX = _.isUndefined(previousElementAttributes.positionX)
+            ? 0 : previousElementAttributes.positionX;
+        const baselineY = _.isUndefined(previousElementAttributes.positionY)
+            ? 0 : previousElementAttributes.positionY;
         let positionX = 0;
         let positionY = 0;
 
         if (_.isUndefined(x)) {
-            positionX = boundingBox.maxX - boundingBox.minX + dx;
+            positionX = baselineX + dx;
         } else if (!_.isUndefined(x)) {
             positionX = actualX + dx;
         }
 
         if (_.isUndefined(y)) {
-            positionY = boundingBox.maxY - boundingBox.minY + dy;
+            positionY = baselineY + dy;
         } else {
             positionY = actualY + dy;
         }
 
-        let result = {};
+        const result = {
+            positionX,
+            positionY
+        };
+        let addResult = {};
         if (!_.isUndefined(text)) {
-            const fontObj = await fontManager.getFont(font);
+            let fontObj = await fontManager.getFont(font);
+            if (!fontObj) {
+                fontObj = await fontManager.getFont('Arial');
+            }
 
             const fullPath = new opentype.Path();
             // Calculate size and render SVG template
@@ -204,9 +208,12 @@ class textParser extends BaseTagParser {
             // const svgParser = new SVGParser();
 
             const svgString = fullPath.toSVG();
-            result = await this.parseString(svgString, 'path');
+            addResult = await this.parseString(svgString, 'path');
         }
-        return result;
+        return {
+            ...result,
+            ...addResult
+        };
     }
 }
 
