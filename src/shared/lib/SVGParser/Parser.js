@@ -97,8 +97,35 @@ class SVGParser {
         const result = await this.parseObject(node);
         const newUploadName = await this.generateString(result.parsedNode, filePath);
         result.uploadName = path.basename(newUploadName);
-        // console.log('filePath', filePath, result);
         return result;
+    }
+
+    dragTextPathToParent(parent) {
+        const textElement = parent.text || parent.tspan;
+        const gElement = parent.g;
+        let paths = [];
+        if (textElement) {
+            textElement.forEach((item) => {
+                for (const variable of Object.keys(item)) {
+                    if (variable === 'path' && Array.isArray(item[variable])) {
+                        for (const shape of item[variable]) {
+                            paths.push(shape);
+                        }
+                    }
+                    if (variable === 'tspan') {
+                        const childPaths = this.dragTextPathToParent(item);
+                        paths = paths.concat(childPaths);
+                    }
+                }
+            });
+            delete parent.text;
+        } else if (gElement) {
+            gElement.forEach((item) => {
+                const childPaths = this.dragTextPathToParent(item);
+                paths = paths.concat(childPaths);
+            });
+        }
+        return paths;
     }
 
 
@@ -116,7 +143,14 @@ class SVGParser {
         };
         const parsedNode = cloneDeep(node);
         const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
-        parsedNode.svg = root.parsedSvg;
+        const newSvg = root.parsedSvg;
+        const textPaths = this.dragTextPathToParent(newSvg);
+        if (newSvg.path && Array.isArray(newSvg.path)) {
+            newSvg.path = newSvg.path.concat(textPaths);
+        } else {
+            newSvg.path = textPaths;
+        }
+        parsedNode.svg = newSvg;
 
 
         const boundingBox = {
@@ -242,8 +276,6 @@ class SVGParser {
                 }
             }
 
-            // console.log('result -----> ', node,
-            //     'shapes -----> ', shapes,);
             return {
                 attributes,
                 shapes,

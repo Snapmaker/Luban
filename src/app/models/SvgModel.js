@@ -386,7 +386,6 @@ class SvgModel extends BaseModel {
 
             const name = this.originalName;
             const alignment = 'middle';
-            console.log('uploadSourceFile', font);
             res = await api.convertOneLineTextToSvg({ text, font, name, size, x, y, bbox, alignment });
         } else {
             blob = new Blob([content], { type: 'image/svg+xml' });
@@ -870,7 +869,11 @@ class SvgModel extends BaseModel {
         // } else
         if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
-            // const texture = new THREE.TextureLoader().load(uploadPath);
+            // new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
+            //     this.modelObject3D = group;
+            //     this.meshObject.add(this.modelObject3D);
+            //     this.meshObject.dispatchEvent(EVENTS.UPDATE);
+            // });
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });

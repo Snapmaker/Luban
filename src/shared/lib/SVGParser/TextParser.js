@@ -38,25 +38,6 @@ class textParser extends BaseTagParser {
         });
     }
 
-    dragTextPathToParent(parent) {
-        const textElement = parent.text;
-        if (textElement) {
-            if (!Array.isArray(parent.path)) {
-                parent.path = [];
-            }
-            textElement.forEach((item) => {
-                for (const variable of Object.keys(item)) {
-                    if (variable === 'path' && Array.isArray(item[variable])) {
-                        for (const shape of item[variable]) {
-                            parent.path.push(shape);
-                        }
-                    }
-                }
-            });
-            delete parent.text;
-        }
-    }
-
     async parseObject(node, element = 'svg') {
         const initialAttributes = {
             fill: '#000000',
@@ -70,10 +51,10 @@ class textParser extends BaseTagParser {
             xform: [1, 0, 0, 1, 0, 0]
         };
         const parsedNode = _.cloneDeep(node);
-        const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
+        const root = await this.parseNode(element, parsedNode[element], initialAttributes);
+
         parsedNode.svg = root.parsedSvg;
 
-        this.dragTextPathToParent(root.parsedSvg);
 
         const boundingBox = {
             minX: Infinity,
@@ -100,7 +81,7 @@ class textParser extends BaseTagParser {
         };
     }
 
-    async parseNode(tag, node, parent, parentAttributes) {
+    async parseNode(tag, node, parentAttributes) {
         // const tag = node['#name'];
         const shapes = [];
         if (node) {
@@ -133,7 +114,7 @@ class textParser extends BaseTagParser {
                 if (shouldParseChildren && Array.isArray(node[variable])) {
                     for (let i = 0; i < node[variable].length; i++) {
                         const child = node[variable][i];
-                        const childNode = await this.parseNode(variable, child, node, attributes);
+                        const childNode = await this.parseNode(variable, child, attributes);
                         for (const shape of childNode.shapes) {
                             shapes.push(shape);
                         }
@@ -207,7 +188,19 @@ class textParser extends BaseTagParser {
             // const boundingBox = fullPath.getBoundingBox();
             // const svgParser = new SVGParser();
 
-            const svgString = fullPath.toSVG();
+            let svgString = fullPath.toSVG();
+            let textAttributes = '';
+            if (node.$) {
+                Object.keys(node.$).forEach((key) => {
+                    const value = node.$[key];
+                    if (key === 'transform') {
+                        textAttributes += `transform='${value}' `;
+                    } else if (key === 'style') {
+                        textAttributes += `style='${value}' `;
+                    }
+                });
+            }
+            svgString = svgString.replace(/\/>$/, ` ${textAttributes}/>`);
             addResult = await this.parseString(svgString, 'path');
         }
         return {

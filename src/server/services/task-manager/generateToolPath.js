@@ -5,7 +5,7 @@ import DataStorage from '../../DataStorage';
 import { editorProcess } from '../../lib/editor/process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../../shared/lib/SVGParser';
-import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
+// import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
@@ -90,23 +90,23 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
-        let toolPath;
-        if (sourceType === 'dxf') {
-            let { svg } = await parseDxf(modelPath);
-            svg = dxfToSvg(svg);
-            updateDxfBoundingBox(svg);
+        // let toolPath;
+        // if (sourceType === 'dxf') {
+        //     let { svg } = await parseDxf(modelPath);
+        //     svg = dxfToSvg(svg);
+        //     updateDxfBoundingBox(svg);
+        //
+        //     const generator = new CncToolPathGenerator(modelInfo);
+        //     generator.on('progress', (p) => onProgress(p));
+        //     toolPath = await generator.generateToolPathObj(svg, modelInfo);
+        // } else {
+        const svgParser = new SVGParser();
+        const svg = await svgParser.parseFile(modelPath);
 
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => onProgress(p));
-            toolPath = await generator.generateToolPathObj(svg, modelInfo);
-        } else {
-            const svgParser = new SVGParser();
-            const svg = await svgParser.parseFile(modelPath);
-
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => onProgress(p));
-            toolPath = await generator.generateToolPathObj(svg, modelInfo);
-        }
+        const generator = new CncToolPathGenerator(modelInfo);
+        generator.on('progress', (p) => onProgress(p));
+        const toolPath = await generator.generateToolPathObj(svg, modelInfo);
+        // }
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                 if (err) {

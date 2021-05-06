@@ -118,26 +118,26 @@ function parseColor(value) {
     return null;
 }
 
-function parsePaint(value) {
-    // https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
-    // <paint> = none | child | child(<integer>) | <color> | <url> [none | <color>]? | context-fill | context-stroke
-    if (value === 'none') {
-        return null;
-    }
-
-    // TODO
-    if (value.startsWith('url')) {
-        return null;
-    }
-
-    const color = parseColor(value);
-    if (color) {
-        return color;
-    }
-
-    // default value: black
-    return '#000000';
-}
+// function parsePaint(value) {
+//     // https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+//     // <paint> = none | child | child(<integer>) | <color> | <url> [none | <color>]? | context-fill | context-stroke
+//     if (value === 'none') {
+//         return null;
+//     }
+//
+//     // TODO
+//     if (value.startsWith('url')) {
+//         return null;
+//     }
+//
+//     const color = parseColor(value);
+//     if (color) {
+//         return color;
+//     }
+//
+//     // default value: black
+//     return '#000000';
+// }
 
 function parseTransform(value) {
     // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
@@ -153,7 +153,6 @@ function parseTransform(value) {
     const re = /([a-z]+)\s*\(([^)]*)\)/gi;
 
     const xform = [1, 0, 0, 1, 0, 0];
-
     let m = re.exec(value);
     while (m) {
         const func = m[1].toLowerCase();
@@ -223,11 +222,6 @@ class AttributesParser {
         for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'width', 'height', 'fontFamily', 'dx', 'dy', 'fontSize']) {
             attributes[key] = parentAttributes[key];
         }
-        // for (const key of ['dx', 'dy', 'fontSize']) {
-        //     if (isUndefined(parentAttributes[key])) {
-        //         attributes[key] = parentAttributes[key];
-        //     }
-        // }
         // make a copy of parentAttributes
         attributes.xform = [1, 0, 0, 1, 0, 0];
         // Regardless of whether 'node.$' is exited, 'xform' in 'attributes' must be applied to 'node' element
@@ -237,14 +231,19 @@ class AttributesParser {
             // how to deal with '\\ntspan line 6' and '\n        tspan line 6\n    '
             attributes._ = (node._).trim();
         }
-        // // TODO: Before or after isText
         if (!node.$) {
             return attributes;
         }
 
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
-            // this.parseAttribute(attributes, parentAttributes, key, value);
+            if (key === 'fill') {
+                node.$.fill = 'none';
+            } else if (key === 'stroke') {
+                node.$.stroke = '#000000';
+            } else if (key === 'strokeWidth') {
+                node.$.strokeWidth = 1;
+            }
             this.parseAttribute(attributes, parentAttributes, key, value, isText);
         });
         // make text have the right x
@@ -301,10 +300,10 @@ class AttributesParser {
                 }
                 break;
             }
-            case 'stroke-width': {
-                attributes.strokeWidth = parseCoordinate(value);
-                break;
-            }
+            // case 'stroke-width': {
+            //     attributes.strokeWidth = parseCoordinate(value);
+            //     break;
+            // }
             case 'd': {
                 attributes.d = parseDAttribute(value);
                 break;
@@ -316,12 +315,12 @@ class AttributesParser {
                 }
                 break;
             }
-            case 'fill':
-            case 'stroke': {
-                const color = parsePaint(value);
-                attributes[key] = color;
-                break;
-            }
+            // case 'fill':
+            // case 'stroke': {
+            //     const color = parsePaint(value);
+            //     attributes[key] = color;
+            //     break;
+            // }
             case 'transform': {
                 const xform = parseTransform(value);
                 xformMultiply(attributes.xform, xform);

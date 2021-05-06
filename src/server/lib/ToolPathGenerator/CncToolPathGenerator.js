@@ -233,7 +233,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
         if (isRotate) {
             targetDepth = Math.min(targetDepth, diameter);
         }
-        console.log('generateToolPath', svg);
         const normalizer = new Normalizer(
             'Center',
             svg.viewBox[0],
