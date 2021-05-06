@@ -157,8 +157,8 @@ class Visualizer extends Component {
     constructor(props) {
         super(props);
 
-        const { size, materials } = props;
-        this.printableArea = new PrintablePlate(size, materials);
+        const { size, materials, coordinateMode } = props;
+        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
     }
 
     // hideContextMenu = () => {
@@ -227,6 +227,11 @@ class Visualizer extends Component {
             } else {
                 this.canvas.current.controls.enableClick();
             }
+        }
+
+        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+            const { size, materials } = nextProps;
+            this.printableArea = new PrintablePlate(size, materials, nextProps.coordinateMode);
         }
     }
 
@@ -357,6 +362,7 @@ class Visualizer extends Component {
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
                         target={this.props.target}
+                        coordinateMode={this.props.coordinateMode}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"

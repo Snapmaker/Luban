@@ -248,6 +248,11 @@ class Visualizer extends Component {
                 this.canvas.current.controls.attach(selectedToolPathModel.meshObject, SELECTEVENT.ADDSELECT);
             }
         }
+
+        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+            const { size, materials } = nextProps;
+            this.printableArea = new PrintablePlate(size, materials, nextProps.coordinateMode);
+        }
     }
 
     getNotice() {
@@ -417,6 +422,7 @@ class Visualizer extends Component {
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
                         target={this.props.target}
+                        coordinateMode={this.props.coordinateMode}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"

@@ -72,10 +72,17 @@ class PrintableArea {
 
     updateCoordinateMode(coordinateMode) {
         console.log('coordinateMode', coordinateMode);
+        while (this.printableAreaGroup.firstChild) {
+            this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
+        }
         this._setCoordinateMode(coordinateMode);
         this._setGridLine();
         this._setCoordinateAxes();
         this._setMaterialsRect();
+    }
+
+    _removeAll() {
+
     }
 
     _setCoordinateMode(coordinateMode) {
