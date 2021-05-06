@@ -448,7 +448,7 @@ export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';
 
 // SVG Canvas coordinateMode
 export const COORDINATE_MODE_CENTER = 'center';
-export const COORDINATE_MODE_BOTTOM_LEFT = 'bottom-left';
+export const COORDINATE_MODE_TOP_RIGHT = 'top-right';
 export const COORDINATE_MODE_BOTTOM_RIGHT = 'bottom-right';
 export const COORDINATE_MODE_TOP_LEFT = 'top-left';
-export const COORDINATE_MODE_TOP_RIGHT = 'top-right';
+export const COORDINATE_MODE_BOTTOM_LEFT = 'bottom-left';

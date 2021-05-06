@@ -11,7 +11,14 @@ import {
     limitModelSizeByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
+import {
+    PAGE_EDITOR,
+    PAGE_PROCESS,
+    SOURCE_TYPE_IMAGE3D,
+    DATA_PREFIX,
+    // COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_TOP_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_BOTTOM_LEFT
+} from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
@@ -1270,7 +1277,54 @@ export const actions = {
      * @param headType
      * @parame coordinateMode
      */
-    changeCoordinateMode: (headType, coordinateMode) => (dispatch) => {
+    changeCoordinateMode: (headType, coordinateMode) => (dispatch, getState) => {
+        const oldCoordinateMode = getState()[headType].coordinateMode;
+        const { size } = getState().machine;
+        const coorDelta = {
+            dx: 0,
+            dy: 0
+        };
+        if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            coorDelta.dx -= size.x / 2;
+            coorDelta.dy += size.y / 2;
+        }
+        if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
+            coorDelta.dx += size.x / 2;
+            coorDelta.dy += size.y / 2;
+        }
+        if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+            coorDelta.dx -= size.x / 2;
+            coorDelta.dy -= size.y / 2;
+        }
+        if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            coorDelta.dx += size.x / 2;
+            coorDelta.dy -= size.y / 2;
+        }
+
+        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            coorDelta.dx += size.x / 2;
+            coorDelta.dy -= size.y / 2;
+        }
+        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+            coorDelta.dx -= size.x / 2;
+            coorDelta.dy -= size.y / 2;
+        }
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+            coorDelta.dx += size.x / 2;
+            coorDelta.dy += size.y / 2;
+        }
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            coorDelta.dx -= size.x / 2;
+            coorDelta.dy += size.y / 2;
+        }
+        // move all elements
+        const { SVGActions, modelGroup } = getState()[headType];
+        const elements = modelGroup.getAllModelElements();
+        SVGActions.moveElementsStart(elements);
+        SVGActions.moveElements(elements, coorDelta);
+        SVGActions.moveElementsFinish(elements, coorDelta);
+        dispatch(baseActions.render(headType));
+
         dispatch(actions.updateState(headType, { coordinateMode }));
     }
 };

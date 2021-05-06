@@ -176,6 +176,10 @@ class SVGCanvas extends PureComponent {
         if (nextProps.materials !== this.props.materials) {
             this.updateCanvas(null, nextProps.materials);
         }
+        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+            this.printableArea.updateCoordinateMode(nextProps.coordinateMode);
+            this.updateCanvas();
+        }
     }
 
 
