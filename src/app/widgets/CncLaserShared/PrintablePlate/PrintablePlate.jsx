@@ -137,8 +137,8 @@ class PrintablePlate extends Object3D {
             group.add(axisYLabel);
 
             const textSize = (10 / 3);
-            const minX = Math.floor((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
-            const minY = Math.floor((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
+            const minX = Math.round((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const minY = Math.round((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
             const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
             const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
 

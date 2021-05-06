@@ -15,7 +15,7 @@ class GridLine {
         maxY = maxY ?? maxX;
         stepY = stepY ?? stepX;
 
-        for (let x = Math.floor(minX / stepX) * stepX; x <= Math.floor(maxX / stepX) * stepX; x += stepX) {
+        for (let x = Math.round(minX / stepX) * stepX; x <= Math.floor(maxX / stepX) * stepX; x += stepX) {
             const geometry = new THREE.Geometry();
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
@@ -31,7 +31,7 @@ class GridLine {
             this.group.add(new THREE.Line(geometry, material));
         }
 
-        for (let y = Math.floor(minY / stepY) * stepY; y <= Math.floor(maxY / stepY) * stepY; y += stepY) {
+        for (let y = Math.round(minY / stepY) * stepY; y <= Math.floor(maxY / stepY) * stepY; y += stepY) {
             const geometry = new THREE.Geometry();
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
