@@ -121,16 +121,17 @@ class PrintableArea {
 
     _setGridLine() {
         const { x, y } = this.size;
-        const yi = Math.floor(y / 20);
-        for (let i = -yi; i <= yi; i++) {
+        const minY = Math.floor((y / 2 + this.coorDelta.y) / 10);
+        const maxY = Math.floor((y * 3 / 2 + this.coorDelta.y) / 10);
+        for (let i = minY; i <= maxY; i++) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
                     x1: x / 2 + this.coorDelta.x,
-                    y1: i * 10 + y + this.coorDelta.y,
+                    y1: i * 10,
                     x2: x * 3 / 2 + this.coorDelta.x,
-                    y2: i * 10 + y + this.coorDelta.y,
+                    y2: i * 10,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
@@ -142,7 +143,7 @@ class PrintableArea {
                 element: 'text',
                 attr: {
                     x: x - 4,
-                    y: i * 10 + y + 1.2 + this.coorDelta.y,
+                    y: i * 10 + 0.2,
                     id: uuid.v4(),
                     'font-size': 4,
                     'font-family': 'serif',
@@ -154,22 +155,23 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i * 10 + this.coorDelta.y !== 0) {
-                label.innerHTML = -(i * 10 + this.coorDelta.y);
+            if (-(i * 10 - y) !== 0) {
+                label.innerHTML = -(i * 10 - y);
                 label.style.cursor = 'default';
             }
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const xi = Math.floor(x / 20);
-        for (let i = -xi; i <= xi; i++) {
+        const minX = Math.floor((x / 2 + this.coorDelta.x) / 10);
+        const maxX = Math.floor((x * 3 / 2 + this.coorDelta.x) / 10);
+        for (let i = minX; i <= maxX; i++) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: i * 10 + x + this.coorDelta.x,
+                    x1: i * 10,
                     y1: y / 2 + this.coorDelta.y,
-                    x2: i * 10 + x + this.coorDelta.x,
+                    x2: i * 10,
                     y2: y * 3 / 2 + this.coorDelta.y,
                     id: uuid.v4(),
                     stroke: color,
@@ -181,7 +183,7 @@ class PrintableArea {
             const label = createSVGElement({
                 element: 'text',
                 attr: {
-                    x: i * 10 + x + this.coorDelta.x,
+                    x: i * 10,
                     y: y + 5,
                     id: uuid.v4(),
                     'font-size': 4,
@@ -194,8 +196,8 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i * 10 + this.coorDelta.x !== 0) {
-                label.innerHTML = i * 10 + this.coorDelta.x;
+            if (i * 10 - x !== 0) {
+                label.innerHTML = i * 10 - x;
             }
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
