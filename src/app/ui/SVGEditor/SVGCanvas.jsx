@@ -17,7 +17,13 @@ import {
 import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
-import { DATA_PREFIX } from '../../constants';
+import {
+    COORDINATE_MODE_BOTTOM_LEFT,
+    COORDINATE_MODE_BOTTOM_RIGHT,
+    COORDINATE_MODE_TOP_LEFT,
+    COORDINATE_MODE_TOP_RIGHT,
+    DATA_PREFIX
+} from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
@@ -178,6 +184,49 @@ class SVGCanvas extends PureComponent {
         }
         if (nextProps.coordinateMode !== this.props.coordinateMode) {
             this.printableArea.updateCoordinateMode(nextProps.coordinateMode);
+
+            const { size } = this.props;
+            const coorDelta = {
+                dx: 0,
+                dy: 0
+            };
+            if (this.props.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+                coorDelta.dx += size.x / 2;
+                coorDelta.dy -= size.y / 2;
+            }
+            if (this.props.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+                coorDelta.dx -= size.x / 2;
+                coorDelta.dy -= size.y / 2;
+            }
+            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx += size.x / 2;
+                coorDelta.dy += size.y / 2;
+            }
+            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+                coorDelta.dx -= size.x / 2;
+                coorDelta.dy += size.y / 2;
+            }
+
+            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+                coorDelta.dx -= size.x / 2;
+                coorDelta.dy += size.y / 2;
+            }
+            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+                coorDelta.dx += size.x / 2;
+                coorDelta.dy += size.y / 2;
+            }
+            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx -= size.x / 2;
+                coorDelta.dy -= size.y / 2;
+            }
+            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+                coorDelta.dx += size.x / 2;
+                coorDelta.dy -= size.y / 2;
+            }
+            this.offsetX += coorDelta.dx / 1.5;
+            this.offsetY += coorDelta.dy / 1.5;
+            this.target = { x: -this.offsetX, y: this.offsetY };
+            this.props.updateTarget(this.target);
             this.updateCanvas();
         }
     }
