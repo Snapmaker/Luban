@@ -74,12 +74,10 @@ export const getModelsByToolPathType = (models) => {
             modelObj[eachType].push(v);
         }
     });
-    console.log('modelObj', modelObj);
     return modelObj;
 };
 
 export const createToolPathNameByType = (count, type) => {
-    console.log('Vector', type);
     if (type === 'Vector') {
         return `Toolpath - ${type}${count++}`;
     } else {

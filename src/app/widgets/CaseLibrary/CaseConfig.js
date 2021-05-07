@@ -154,7 +154,7 @@ const DEFAULT_CASE = [
         pathConfig: {
             isDatastoragePath: true,
             path: './UserCase/A250/4th_CNC.snapcnc',
-            name: '4th_lion_CNC.snapcnc'
+            name: '4th_CNC.snapcnc'
         }
     },
     {
@@ -165,7 +165,7 @@ const DEFAULT_CASE = [
         pathConfig: {
             isDatastoragePath: true,
             path: './UserCase/A250/4th_lion_CNC.snapcnc',
-            name: '4th_CNC.snapcnc'
+            name: '4th_lion_CNC.snapcnc'
         }
 
     }

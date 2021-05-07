@@ -165,7 +165,6 @@ export const processActions = {
 
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
         const { toolPathGroup, materials, autoPreviewEnabled } = getState()[headType];
-        console.log('saveToolPath', toolPath);
         if (toolPathGroup.getToolPath(toolPath.id)) {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {

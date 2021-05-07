@@ -12,9 +12,59 @@ import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../constants';
 
+const SettingItem = (props) => {
+    const { setting, isSVG, settingName, updateToolConfig } = props;
+    if (!setting) {
+        return null;
+    }
+    const defaultValue = setting.default_value;
+    const label = setting.label;
+    const unit = setting.unit;
+    const min = setting.min || 0;
+    const max = setting.max || 6000;
+    const content = setting.description || '';
+
+    const isToolParams = (k) => {
+        return _.includes(['angle', 'shaft_diameter', 'diameter'], k);
+    };
+
+    if (settingName === 'density' && isSVG) {
+        return null;
+    }
+
+    return (
+        <div key={settingName} className="sm-parameter-row">
+            <TipTrigger
+                title={i18n._(label)}
+                content={i18n._(content)}
+            >
+                <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
+                <Input
+                    className="sm-parameter-row__input"
+                    value={defaultValue}
+                    min={min}
+                    max={max}
+                    style={{ width: '160px' }}
+                    onChange={value => {
+                        updateToolConfig(settingName, value);
+                    }}
+                    disabled={isToolParams(settingName)}
+                />
+                <span className="sm-parameter-row__input-unit">{unit}</span>
+            </TipTrigger>
+        </div>
+    );
+};
+SettingItem.propTypes = {
+    settingName: PropTypes.string,
+    updateToolConfig: PropTypes.func.isRequired,
+    setting: PropTypes.object.isRequired,
+    isSVG: PropTypes.bool.isRequired
+};
+
 const ToolParameters = (props) => {
     const dispatch = useDispatch();
-    const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition } = props;
+    const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition, updateToolConfig } = props;
     const type = toolPath?.type;
     const isSVG = type === TOOLPATH_TYPE_VECTOR;
 
@@ -131,42 +181,14 @@ const ToolParameters = (props) => {
 
                     {(Object.keys(activeToolDefinition.config).map(key => {
                         const setting = activeToolDefinition.config[key];
-                        const defaultValue = setting.default_value;
-                        const label = setting.label;
-                        const unit = setting.unit;
-                        const min = setting.min || 0;
-                        const max = setting.max || 6000;
-                        const content = setting.description || '';
-
-                        const isToolParams = (k) => {
-                            return _.includes(['angle', 'shaft_diameter', 'diameter'], k);
-                        };
-
-                        if (key === 'density' && isSVG) {
-                            return null;
-                        }
-
                         return (
-                            <div key={key} className="sm-parameter-row">
-                                <TipTrigger
-                                    title={i18n._(label)}
-                                    content={i18n._(content)}
-                                >
-                                    <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                                    <Input
-                                        className="sm-parameter-row__input"
-                                        value={defaultValue}
-                                        min={min}
-                                        max={max}
-                                        style={{ width: '160px' }}
-                                        onChange={value => {
-                                            props.updateToolConfig(key, value);
-                                        }}
-                                        disabled={isToolParams(key)}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">{unit}</span>
-                                </TipTrigger>
-                            </div>
+                            <SettingItem
+                                setting={setting}
+                                updateToolConfig={updateToolConfig}
+                                key={key}
+                                settingName={key}
+                                isSVG={isSVG}
+                            />
                         );
                     }))}
 
@@ -175,8 +197,6 @@ const ToolParameters = (props) => {
         </div>
     );
 };
-
-
 ToolParameters.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     activeToolDefinition: PropTypes.object.isRequired,
@@ -185,4 +205,5 @@ ToolParameters.propTypes = {
     updateToolConfig: PropTypes.func.isRequired,
     setCurrentValueAsProfile: PropTypes.func.isRequired
 };
+
 export default ToolParameters;
