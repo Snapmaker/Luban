@@ -25,8 +25,10 @@ class PrintableArea {
             x: 0,
             y: 0
         };
+        console.log('xx', svgFactory.coordinateSize);
         this.coordinateMode = svgFactory.coordinateMode;
-        this._setCoordinateMode(this.coordinateMode);
+        this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
+        this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
 
         this.scale = svgFactory.scale;
         this.printableAreaGroup = createSVGElement({
@@ -70,11 +72,11 @@ class PrintableArea {
         }
     }
 
-    updateCoordinateMode(coordinateMode) {
-        console.log('coordinateMode', coordinateMode);
+    updateCoordinateMode(coordinateMode, coordinateSize) {
         while (this.printableAreaGroup.firstChild) {
             this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
         }
+        this.coordinateSize = coordinateSize;
         this._setCoordinateMode(coordinateMode);
         this._setGridLine();
         this._setCoordinateAxes();
@@ -95,42 +97,43 @@ class PrintableArea {
         }
         if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
             this.coorDelta = {
-                x: this.size.x / 2,
-                y: -this.size.y / 2
+                x: this.coordinateSize.x / 2,
+                y: -this.coordinateSize.y / 2
             };
         }
         if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
             this.coorDelta = {
-                x: -this.size.x / 2,
-                y: -this.size.y / 2
+                x: -this.coordinateSize.x / 2,
+                y: -this.coordinateSize.y / 2
             };
         }
         if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
             this.coorDelta = {
-                x: this.size.x / 2,
-                y: this.size.y / 2
+                x: this.coordinateSize.x / 2,
+                y: this.coordinateSize.y / 2
             };
         }
         if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
             this.coorDelta = {
-                x: -this.size.x / 2,
-                y: +this.size.y / 2
+                x: -this.coordinateSize.x / 2,
+                y: +this.coordinateSize.y / 2
             };
         }
     }
 
     _setGridLine() {
         const { x, y } = this.size;
-        const minY = Math.round((y / 2 + this.coorDelta.y) / 10) * 10;
-        const maxY = Math.floor((y * 3 / 2 + this.coorDelta.y) / 10) * 10;
+        const { x: cx, y: cy } = this.coordinateSize;
+        const minY = Math.round((y - cy / 2 + this.coorDelta.y) / 10) * 10;
+        const maxY = Math.floor((y + cy / 2 + this.coorDelta.y) / 10) * 10;
         for (let i = minY; i <= maxY; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: x / 2 + this.coorDelta.x,
+                    x1: x - cx / 2 + this.coorDelta.x,
                     y1: i,
-                    x2: x * 3 / 2 + this.coorDelta.x,
+                    x2: x + cx / 2 + this.coorDelta.x,
                     y2: i,
                     id: uuid.v4(),
                     stroke: color,
@@ -162,17 +165,17 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const minX = Math.round((x / 2 + this.coorDelta.x) / 10) * 10;
-        const maxX = Math.floor((x * 3 / 2 + this.coorDelta.x) / 10) * 10;
+        const minX = Math.round((x - cx / 2 + this.coorDelta.x) / 10) * 10;
+        const maxX = Math.floor((x + cx / 2 + this.coorDelta.x) / 10) * 10;
         for (let i = minX; i <= maxX; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
                     x1: i,
-                    y1: y / 2 + this.coorDelta.y,
+                    y1: y - cy / 2 + this.coorDelta.y,
                     x2: i,
-                    y2: y * 3 / 2 + this.coorDelta.y,
+                    y2: y + cy / 2 + this.coorDelta.y,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
@@ -246,17 +249,18 @@ class PrintableArea {
 
     _setCoordinateAxes() {
         const { x, y } = this.size;
-        if (x / 2 + this.coorDelta.x < x) {
-            this._setAxes(x / 2 + this.coorDelta.x, y, x, y, 'red', true);
+        const { x: cx, y: cy } = this.coordinateSize;
+        if (x - cx / 2 + this.coorDelta.x < x) {
+            this._setAxes(x - cx / 2 + this.coorDelta.x, y, x, y, 'red', true);
         }
-        if (y / 2 + this.coorDelta.y < y) {
-            this._setAxes(x, y / 2 + this.coorDelta.y, x, y, 'green', false);
+        if (y - cy / 2 + this.coorDelta.y < y) {
+            this._setAxes(x, y - cy / 2 + this.coorDelta.y, x, y, 'green', false);
         }
-        if (x * 3 / 2 + this.coorDelta.x > x) {
-            this._setAxes(x * 3 / 2 + this.coorDelta.x, y, x, y, 'red', false);
+        if (x + cx / 2 + this.coorDelta.x > x) {
+            this._setAxes(x + cx / 2 + this.coorDelta.x, y, x, y, 'red', false);
         }
-        if (y * 3 / 2 + this.coorDelta.y > y) {
-            this._setAxes(x, y * 3 / 2 + this.coorDelta.y, x, y, 'green', true);
+        if (y + cy / 2 + this.coorDelta.y > y) {
+            this._setAxes(x, y + cy / 2 + this.coorDelta.y, x, y, 'green', true);
         }
 
         const origin = createSVGElement({

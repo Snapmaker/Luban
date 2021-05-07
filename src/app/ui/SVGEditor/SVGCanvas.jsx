@@ -85,6 +85,7 @@ class SVGCanvas extends PureComponent {
         className: PropTypes.string,
         size: PropTypes.object,
         coordinateMode: PropTypes.string.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
@@ -182,46 +183,47 @@ class SVGCanvas extends PureComponent {
         if (nextProps.materials !== this.props.materials) {
             this.updateCanvas(null, nextProps.materials);
         }
-        if (nextProps.coordinateMode !== this.props.coordinateMode) {
-            this.printableArea.updateCoordinateMode(nextProps.coordinateMode);
+        if (nextProps.coordinateMode !== this.props.coordinateMode
+            || nextProps.coordinateSize !== this.props.coordinateSize) {
+            this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
 
-            const { size } = this.props;
+            const { coordinateSize } = this.props;
             const coorDelta = {
                 dx: 0,
                 dy: 0
             };
             if (this.props.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx += size.x / 2;
-                coorDelta.dy -= size.y / 2;
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
             }
             if (this.props.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx -= size.x / 2;
-                coorDelta.dy -= size.y / 2;
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
             }
             if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx += size.x / 2;
-                coorDelta.dy += size.y / 2;
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
             }
             if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx -= size.x / 2;
-                coorDelta.dy += size.y / 2;
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
             }
 
             if (nextProps.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx -= size.x / 2;
-                coorDelta.dy += size.y / 2;
+                coorDelta.dx -= nextProps.coordinateSize.x / 2;
+                coorDelta.dy += nextProps.coordinateSize.y / 2;
             }
             if (nextProps.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx += size.x / 2;
-                coorDelta.dy += size.y / 2;
+                coorDelta.dx += nextProps.coordinateSize.x / 2;
+                coorDelta.dy += nextProps.coordinateSize.y / 2;
             }
             if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx -= size.x / 2;
-                coorDelta.dy -= size.y / 2;
+                coorDelta.dx -= nextProps.coordinateSize.x / 2;
+                coorDelta.dy -= nextProps.coordinateSize.y / 2;
             }
             if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx += size.x / 2;
-                coorDelta.dy -= size.y / 2;
+                coorDelta.dx += nextProps.coordinateSize.x / 2;
+                coorDelta.dy -= nextProps.coordinateSize.y / 2;
             }
             this.offsetX += coorDelta.dx / 1.5;
             this.offsetY += coorDelta.dy / 1.5;
@@ -345,7 +347,7 @@ class SVGCanvas extends PureComponent {
         const getRoot = () => this.svgBackground;
 
         this.printableArea = new PrintableArea({
-            size: this.props.size,
+            size: this.props.coordinateSize,
             scale: this.scale,
             getRoot,
             coordinateMode: this.props.coordinateMode

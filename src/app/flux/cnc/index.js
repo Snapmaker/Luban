@@ -90,7 +90,8 @@ const INITIAL_STATE = {
     renderingTimestamp: 0,
 
     // coordinateMode
-    coordinateMode: COORDINATE_MODE_CENTER
+    coordinateMode: COORDINATE_MODE_CENTER,
+    coordinateSize: { x: 0, y: 0 }
 };
 
 export const actions = {

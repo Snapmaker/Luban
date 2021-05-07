@@ -22,6 +22,7 @@ class JobType extends PureComponent {
 
         size: PropTypes.object.isRequired,
         coordinateMode: PropTypes.string.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
 
         materials: PropTypes.object.isRequired,
 
@@ -48,12 +49,11 @@ class JobType extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log('mode', this.props.coordinateMode, nextProps.coordinateMode);
         this.props.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
     }
 
     render() {
-        const { size, materials, headType, coordinateMode } = this.props;
+        const { size, materials, headType, coordinateMode, coordinateSize } = this.props;
         const { isRotate, diameter, length } = materials;
 
         const coordinateModeList = [
@@ -119,16 +119,69 @@ class JobType extends PureComponent {
                     </div>
                 </div>
                 {!isRotate && (
-                    <img
-                        draggable="false"
-                        style={{
-                            margin: '8px 0px 0px 0px',
-                            width: '316px'
+                    <div>
+                        <img
+                            draggable="false"
+                            style={{
+                                margin: '8px 0px 0px 0px',
+                                width: '316px'
+                            }}
+                            src="images/cnc-laser/3axis.png"
+                            role="presentation"
+                            alt="3 Axis"
+                        />
+                        <div style={{
+                            marginTop: '16px'
                         }}
-                        src="images/cnc-laser/3axis.png"
-                        role="presentation"
-                        alt="3 Axis"
-                    />
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Height (mm)')}</span>
+                                <Input
+                                    disabled={false}
+                                    className={styles['input-box-left']}
+                                    value={toFixed(coordinateSize.y, 1)}
+                                    max={size.y}
+                                    min={10}
+                                    onChange={(value) => {
+                                        this.props.changeCoordinateMode(
+                                            coordinateMode, {
+                                                x: coordinateSize.x,
+                                                y: value
+                                            }
+                                        );
+                                    }}
+                                />
+                                <span
+                                    className={styles['input-box-inner-text']}
+                                >
+                                    W
+                                </span>
+                            </div>
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Width (mm)')}</span>
+                                <Input
+                                    disabled={false}
+                                    className={styles['input-box-left']}
+                                    value={toFixed(coordinateSize.x, 1)}
+                                    max={size.x}
+                                    min={2}
+                                    onChange={(value) => {
+                                        this.props.changeCoordinateMode(
+                                            coordinateMode, {
+                                                x: value,
+                                                y: coordinateSize.y
+                                            }
+                                        );
+                                    }}
+                                />
+                                <span
+                                    className={styles['input-box-inner-text']}
+                                >
+                                    H
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 )}
                 {isRotate && (
                     <div>
@@ -203,11 +256,12 @@ class JobType extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
     const { size, use4Axis } = state.machine;
-    const { page, materials, coordinateMode } = state[headType];
+    const { page, materials, coordinateMode, coordinateSize } = state[headType];
 
     return {
         size,
         coordinateMode,
+        coordinateSize,
         page,
         materials,
         use4Axis
@@ -219,7 +273,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 
     return {
         updateMaterials: (materials) => dispatch(editorActions.updateMaterials(headType, materials)),
-        changeCoordinateMode: (coordinateMode) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode))
+        changeCoordinateMode: (coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize))
     };
 };
 

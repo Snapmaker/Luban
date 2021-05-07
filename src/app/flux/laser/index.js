@@ -85,7 +85,8 @@ const INITIAL_STATE = {
     renderingTimestamp: 0,
 
     // coordinateMode
-    coordinateMode: COORDINATE_MODE_CENTER
+    coordinateMode: COORDINATE_MODE_CENTER,
+    coordinateSize: { x: 100, y: 100 }
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

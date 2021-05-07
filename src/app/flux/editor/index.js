@@ -1277,55 +1277,60 @@ export const actions = {
      * @param headType
      * @parame coordinateMode
      */
-    changeCoordinateMode: (headType, coordinateMode) => (dispatch, getState) => {
+    changeCoordinateMode: (headType, coordinateMode, coordinateSize) => (dispatch, getState) => {
         const oldCoordinateMode = getState()[headType].coordinateMode;
         const { size } = getState().machine;
+        coordinateSize = coordinateSize ?? {
+            x: size.x,
+            y: size.y
+        };
         const coorDelta = {
             dx: 0,
             dy: 0
         };
-        if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-            coorDelta.dx -= size.x / 2;
-            coorDelta.dy += size.y / 2;
-        }
-        if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            coorDelta.dx += size.x / 2;
-            coorDelta.dy += size.y / 2;
-        }
-        if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-            coorDelta.dx -= size.x / 2;
-            coorDelta.dy -= size.y / 2;
-        }
-        if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-            coorDelta.dx += size.x / 2;
-            coorDelta.dy -= size.y / 2;
+        if (coordinateMode !== oldCoordinateMode) { // move all elements
+            if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
+            }
+            if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
+            }
+            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+
+            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
+            }
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
+            }
+            const { SVGActions, modelGroup } = getState()[headType];
+            const elements = modelGroup.getAllModelElements();
+            SVGActions.moveElementsStart(elements);
+            SVGActions.moveElements(elements, coorDelta);
+            SVGActions.moveElementsFinish(elements, coorDelta);
+            dispatch(baseActions.render(headType));
         }
 
-        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-            coorDelta.dx += size.x / 2;
-            coorDelta.dy -= size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            coorDelta.dx -= size.x / 2;
-            coorDelta.dy -= size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-            coorDelta.dx += size.x / 2;
-            coorDelta.dy += size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-            coorDelta.dx -= size.x / 2;
-            coorDelta.dy += size.y / 2;
-        }
-        // move all elements
-        const { SVGActions, modelGroup } = getState()[headType];
-        const elements = modelGroup.getAllModelElements();
-        SVGActions.moveElementsStart(elements);
-        SVGActions.moveElements(elements, coorDelta);
-        SVGActions.moveElementsFinish(elements, coorDelta);
-        dispatch(baseActions.render(headType));
-
-        dispatch(actions.updateState(headType, { coordinateMode }));
+        dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
     }
 };
 

@@ -34,6 +34,7 @@ class Visualizer extends Component {
         hasModel: PropTypes.bool.isRequired,
 
         coordinateMode: PropTypes.string.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number,
         target: PropTypes.object,
@@ -253,6 +254,10 @@ class Visualizer extends Component {
             const { size, materials } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, nextProps.coordinateMode);
         }
+
+        if (nextProps.coordinateSize !== this.props.coordinateSize) {
+            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+        }
     }
 
     getNotice() {
@@ -384,6 +389,7 @@ class Visualizer extends Component {
                         scale={this.props.scale}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -423,6 +429,7 @@ class Visualizer extends Component {
                         scale={this.props.scale}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"
@@ -568,8 +575,8 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
-    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode } = state.cnc;
+    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -581,6 +588,7 @@ const mapStateToProps = (state) => {
         materials,
         size,
         coordinateMode,
+        coordinateSize,
         // model,
         modelGroup,
         SVGActions,

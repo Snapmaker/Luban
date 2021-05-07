@@ -32,7 +32,8 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
         materials: PropTypes.object,
 
-        coordinateMode: PropTypes.string,
+        coordinateMode: PropTypes.string.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
@@ -324,6 +325,7 @@ class Visualizer extends Component {
                         scale={this.props.scale}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -363,6 +365,7 @@ class Visualizer extends Component {
                         scale={this.props.scale}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"
@@ -513,7 +516,7 @@ const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -524,6 +527,7 @@ const mapStateToProps = (state) => {
         SVGActions,
         size,
         coordinateMode,
+        coordinateSize,
         materials,
         hasModel: modelGroup.hasModel(),
         selectedModelID,
