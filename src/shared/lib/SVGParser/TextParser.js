@@ -185,9 +185,6 @@ class textParser extends BaseTagParser {
             fullPath.extend(p);
             fullPath.stroke = 'black';
 
-            // const boundingBox = fullPath.getBoundingBox();
-            // const svgParser = new SVGParser();
-
             let svgString = fullPath.toSVG();
             let textAttributes = '';
             if (node.$) {

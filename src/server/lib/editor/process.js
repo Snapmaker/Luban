@@ -4,12 +4,10 @@ import {
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE_DXF,
     SOURCE_TYPE_SVG,
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER
 } from '../../constants';
-// import { processDxf } from './dxf-process';
 import { MeshProcess } from '../MeshProcess/MeshProcess';
 
 const processImage3d = (modelInfo) => {
@@ -19,7 +17,7 @@ const processImage3d = (modelInfo) => {
 
 export const editorProcess = (modelInfo) => {
     const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG || sourceType === SOURCE_TYPE_DXF) {
+    if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) {
         if (mode === PROCESS_MODE_GREYSCALE) {
             if (headType === 'laser') {
                 return processLaserGreyscale(modelInfo);
@@ -37,9 +35,6 @@ export const editorProcess = (modelInfo) => {
                 filename: ''
             });
         }
-        //  else if (sourceType === SOURCE_TYPE_DXF) {
-        //     return processDxf(modelInfo);
-        // }
     } else if (sourceType === SOURCE_TYPE_IMAGE3D) {
         return processImage3d(modelInfo);
     } else {

@@ -5,14 +5,12 @@ import DataStorage from '../../DataStorage';
 import { editorProcess } from '../../lib/editor/process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../../shared/lib/SVGParser';
-// import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
 import {
     PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE_DXF,
     SOURCE_TYPE_SVG
 } from '../../constants';
 import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
@@ -29,7 +27,7 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
 
     let modelPath = null;
     // no need to process model
-    if (((sourceType === SOURCE_TYPE_SVG || sourceType === SOURCE_TYPE_DXF)
+    if (((sourceType === SOURCE_TYPE_SVG)
         && (mode === PROCESS_MODE_VECTOR))) {
         modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
@@ -89,17 +87,7 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
-        // let toolPath;
-        // if (sourceType === 'dxf') {
-        //     let { svg } = await parseDxf(modelPath);
-        //     svg = dxfToSvg(svg);
-        //     updateDxfBoundingBox(svg);
-        //
-        //     const generator = new CncToolPathGenerator(modelInfo);
-        //     generator.on('progress', (p) => onProgress(p));
-        //     toolPath = await generator.generateToolPathObj(svg, modelInfo);
-        // } else {
+    if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(modelPath);
 

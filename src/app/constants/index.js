@@ -415,7 +415,6 @@ export const SOURCE_TYPE_3DP = '3dp';
 export const SOURCE_TYPE_SVG = 'svg';
 export const SOURCE_TYPE_TEXT = 'text';
 export const SOURCE_TYPE_RASTER = 'raster';
-export const SOURCE_TYPE_DXF = 'dxf';
 export const SOURCE_TYPE_IMAGE3D = 'image3d';
 
 export const PROCESS_MODE_BW = 'bw';

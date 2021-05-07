@@ -27,10 +27,8 @@ const getSourceType = (fileName) => {
     let sourceType;
     const extname = path.extname(fileName)
         .toLowerCase();
-    if (extname === '.svg') {
+    if (extname === '.svg' || extname === '.dxf') {
         sourceType = 'svg';
-    } else if (extname === '.dxf') {
-        sourceType = 'dxf';
     } else if (extname === '.stl') {
         sourceType = 'image3d';
     } else {

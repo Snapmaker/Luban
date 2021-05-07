@@ -854,26 +854,8 @@ class SvgModel extends BaseModel {
 
 
     generateModelObject3D() {
-        // if (this.sourceType === 'dxf') {
-        //     if (this.modelObject3D) {
-        //         this.meshObject.remove(this.modelObject3D);
-        //         this.modelObject3D = null;
-        //     }
-        //
-        //     const path = `${DATA_PREFIX}/${this.uploadName}`;
-        //     new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
-        //         this.modelObject3D = group;
-        //         this.meshObject.add(this.modelObject3D);
-        //         this.meshObject.dispatchEvent(EVENTS.UPDATE);
-        //     });
-        // } else
         if (this.sourceType !== '3d' && this.sourceType !== 'image3d') {
             const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
-            // new ThreeDxfLoader({ width: this.width }).load(path, (group) => {
-            //     this.modelObject3D = group;
-            //     this.meshObject.add(this.modelObject3D);
-            //     this.meshObject.dispatchEvent(EVENTS.UPDATE);
-            // });
             const texture = new THREE.TextureLoader().load(uploadPath, () => {
                 this.meshObject.dispatchEvent(EVENTS.UPDATE);
             });
