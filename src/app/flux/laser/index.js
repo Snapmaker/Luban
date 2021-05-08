@@ -86,18 +86,25 @@ const INITIAL_STATE = {
 
     // coordinateMode
     coordinateMode: COORDINATE_MODE_CENTER,
-    coordinateSize: { x: 100, y: 100 }
+    coordinateSize: { x: 0, y: 0 }
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    init: () => (dispatch) => {
+    init: () => (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
 
         const materials = machineStore.get('laser.materials');
         if (materials) {
             dispatch(editorActions.updateMaterials('laser', materials));
+        }
+
+        const { size } = getState().machine;
+        if (size) {
+            dispatch(editorActions.updateState('laser', {
+                coordinateSize: size
+            }));
         }
     },
 

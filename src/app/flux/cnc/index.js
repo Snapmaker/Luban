@@ -95,7 +95,7 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
-    init: () => async (dispatch) => {
+    init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
 
         await definitionManager.init();
@@ -108,6 +108,12 @@ export const actions = {
         const materials = machineStore.get('cnc.materials');
         if (materials) {
             dispatch(editorActions.updateMaterials('cnc', materials));
+        }
+        const { size } = getState().machine;
+        if (size) {
+            dispatch(editorActions.updateState('cnc', {
+                coordinateSize: size
+            }));
         }
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {

@@ -1,4 +1,12 @@
-import { HEAD_CNC, HEAD_LASER, HEAD_3DP, HEAD_TYPE_ENV_NAME, SOURCE_TYPE_IMAGE3D, PROCESS_MODE_MESH } from '../../constants';
+import {
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_3DP,
+    HEAD_TYPE_ENV_NAME,
+    SOURCE_TYPE_IMAGE3D,
+    PROCESS_MODE_MESH,
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER
+} from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
 import { actions as editorActions } from '../editor';
@@ -83,8 +91,10 @@ export const actions = {
 
         const envObj = { machineInfo, defaultMaterialId, defaultQualityId, isRecommended, models: [], toolpaths: [] };
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            const { materials } = getState()[headType];
+            const { materials, coordinateMode, coordinateSize } = getState()[headType];
             envObj.materials = materials;
+            envObj.coordinateMode = coordinateMode;
+            envObj.coordinateSize = coordinateSize;
         }
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
@@ -142,10 +152,24 @@ export const actions = {
 
         await modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
-        let { models, toolpaths, materials, machineInfo, ...restState } = envObj;
+        let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
 
-        if (materials && (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER)) {
-            dispatch(modActions.updateMaterials(envHeadType, materials));
+        if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
+            if (materials) {
+                dispatch(editorActions.updateMaterials(envHeadType, materials));
+            }
+            console.log('recover', materials, coordinateMode, coordinateSize);
+            const isRotate = materials ? materials.isRotate : false;
+            if (coordinateMode) {
+                dispatch(editorActions.updateState(envHeadType, {
+                    coordinateMode: coordinateMode ?? (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER)
+                }));
+            }
+            if (coordinateSize) {
+                dispatch(editorActions.updateState(envHeadType, {
+                    coordinateSize: coordinateSize ?? machineInfo.size
+                }));
+            }
         }
         models = bubbleSortByAttribute(models, ['transformation', 'positionZ']);
 
