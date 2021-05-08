@@ -95,25 +95,25 @@ class PrintableArea {
                 y: 0
             };
         }
-        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
             this.coorDelta = {
                 x: this.coordinateSize.x / 2,
-                y: -this.coordinateSize.y / 2
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            this.coorDelta = {
-                x: -this.coordinateSize.x / 2,
                 y: -this.coordinateSize.y / 2
             };
         }
         if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
             this.coorDelta = {
+                x: -this.coordinateSize.x / 2,
+                y: -this.coordinateSize.y / 2
+            };
+        }
+        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+            this.coorDelta = {
                 x: this.coordinateSize.x / 2,
                 y: this.coordinateSize.y / 2
             };
         }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
             this.coorDelta = {
                 x: -this.coordinateSize.x / 2,
                 y: +this.coordinateSize.y / 2

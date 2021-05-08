@@ -36,19 +36,19 @@ class PrintablePlate extends Object3D {
             dx: 0,
             dy: 0
         };
-        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
             this.coorDelta.dx += this.size.x / 2;
-            this.coorDelta.dy += this.size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            this.coorDelta.dx -= this.size.x / 2;
             this.coorDelta.dy += this.size.y / 2;
         }
         if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+            this.coorDelta.dx -= this.size.x / 2;
+            this.coorDelta.dy += this.size.y / 2;
+        }
+        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
             this.coorDelta.dx += this.size.x / 2;
             this.coorDelta.dy -= this.size.y / 2;
         }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
             this.coorDelta.dx -= this.size.x / 2;
             this.coorDelta.dy -= this.size.y / 2;
         }

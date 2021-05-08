@@ -1289,36 +1289,36 @@ export const actions = {
             dy: 0
         };
         if (coordinateMode !== oldCoordinateMode) { // move all elements
-            if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx += coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
             if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx += coordinateSize.x / 2;
+                coorDelta.dy += coordinateSize.y / 2;
+            }
+            if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
                 coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy -= coordinateSize.y / 2;
             }
-            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
                 coorDelta.dx += coordinateSize.x / 2;
                 coorDelta.dy -= coordinateSize.y / 2;
             }
 
-            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy -= coordinateSize.y / 2;
             }
             if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
                 coorDelta.dx += coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
                 coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }

@@ -192,36 +192,36 @@ class SVGCanvas extends PureComponent {
                 dx: 0,
                 dy: 0
             };
-            if (this.props.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (this.props.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy -= coordinateSize.y / 2;
             }
             if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx -= coordinateSize.x / 2;
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
+            if (this.props.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
                 coorDelta.dx += coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
-            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            if (this.props.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
                 coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
 
-            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx -= nextProps.coordinateSize.x / 2;
-                coorDelta.dy += nextProps.coordinateSize.y / 2;
-            }
-            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx += nextProps.coordinateSize.x / 2;
                 coorDelta.dy += nextProps.coordinateSize.y / 2;
             }
             if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                coorDelta.dx += nextProps.coordinateSize.x / 2;
+                coorDelta.dy += nextProps.coordinateSize.y / 2;
+            }
+            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
                 coorDelta.dx -= nextProps.coordinateSize.x / 2;
                 coorDelta.dy -= nextProps.coordinateSize.y / 2;
             }
-            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
                 coorDelta.dx += nextProps.coordinateSize.x / 2;
                 coorDelta.dy -= nextProps.coordinateSize.y / 2;
             }
