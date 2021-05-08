@@ -35,7 +35,7 @@ class Canvas extends Component {
         cameraUp: PropTypes.object,
         scale: PropTypes.number,
         target: PropTypes.object,
-        coordinateMode: PropTypes.string,
+        // coordinateMode: PropTypes.object,
         supportActions: PropTypes.object,
 
         // callback
@@ -140,12 +140,6 @@ class Canvas extends Component {
             this.group.remove(this.printableArea);
             this.group.add(nextProps.printableArea);
             this.printableArea = nextProps.printableArea;
-        }
-
-        if (nextProps.coordinateMode !== this.props.coordinateMode) {
-            // this.group.remove(this.printableArea);
-            // this.group.add(nextProps.printableArea);
-            // this.printableArea = nextProps.printableArea;
         }
     }
 

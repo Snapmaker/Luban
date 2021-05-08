@@ -447,9 +447,63 @@ export const DISPLAYED_TYPE_MODEL = 'model';
 export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';
 
 // SVG Canvas coordinateMode
-export const COORDINATE_MODE_CENTER = 'center';
-export const COORDINATE_MODE_TOP_RIGHT = 'top-right';
-export const COORDINATE_MODE_BOTTOM_RIGHT = 'bottom-right';
-export const COORDINATE_MODE_TOP_LEFT = 'top-left';
-export const COORDINATE_MODE_BOTTOM_LEFT = 'bottom-left';
-export const COORDINATE_MODE_BOTTOM_CENTER = 'bottom-center';
+export const COORDINATE_MODE_CENTER = {
+    label: 'Center',
+    value: 'center',
+    setting: {
+        sizeMultiple: {
+            x: 0,
+            y: 0
+        }
+    }
+};
+export const COORDINATE_MODE_TOP_RIGHT = {
+    label: 'Top-Right',
+    value: 'top-right',
+    setting: {
+        sizeMultiple: {
+            x: -1,
+            y: -1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_RIGHT = {
+    label: 'Bottom-Right',
+    value: 'bottom-right',
+    setting: {
+        sizeMultiple: {
+            x: -1,
+            y: 1
+        }
+    }
+};
+export const COORDINATE_MODE_TOP_LEFT = {
+    label: 'Top-Left',
+    value: 'top-left',
+    setting: {
+        sizeMultiple: {
+            x: 1,
+            y: -1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_LEFT = {
+    label: 'Bottom-Left',
+    value: 'bottom-left',
+    setting: {
+        sizeMultiple: {
+            x: 1,
+            y: 1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_CENTER = {
+    label: 'Bottom-Center',
+    value: 'bottom-center',
+    setting: {
+        sizeMultiple: {
+            x: 0,
+            y: 1
+        }
+    }
+};

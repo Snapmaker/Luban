@@ -20,9 +20,6 @@ import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 import LaserCameraAidBackground from '../LaserCameraAidBackground';
 import styles from './styles.styl';
 import {
-    COORDINATE_MODE_BOTTOM_CENTER,
-    COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT,
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_TOP_LEFT, COORDINATE_MODE_TOP_RIGHT,
     DISPLAYED_TYPE_TOOLPATH,
     PAGE_EDITOR,
     SELECTEVENT
@@ -39,7 +36,7 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
         materials: PropTypes.object,
 
-        coordinateMode: PropTypes.string.isRequired,
+        coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
@@ -128,43 +125,13 @@ class Visualizer extends Component {
             this.props.updateScale(1);
             // this.props.updateTarget({ x: 0, y: 0 });
             const { coordinateMode, coordinateSize } = this.props;
-            let target;
-            if (coordinateMode === COORDINATE_MODE_CENTER) {
-                target = {
-                    x: 0,
-                    y: 0
-                };
-            }
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                target = {
-                    x: +coordinateSize.x / 2,
-                    y: +coordinateSize.y / 2
-                };
-            }
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                target = {
-                    x: -coordinateSize.x / 2,
-                    y: +coordinateSize.y / 2
-                };
-            }
-            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                target = {
-                    x: +coordinateSize.x / 2,
-                    y: -coordinateSize.y / 2
-                };
-            }
-            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                target = {
-                    x: -coordinateSize.x / 2,
-                    y: -coordinateSize.y / 2
-                };
-            }
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-                target = {
-                    x: 0,
-                    y: +coordinateSize.y / 2
-                };
-            }
+            const target = {
+                x: 0,
+                y: 0
+            };
+            target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
+            target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
+
             target.x /= 1.5;
             target.y /= 1.5;
             this.props.updateTarget(target);
@@ -278,9 +245,9 @@ class Visualizer extends Component {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode) {
-            const { size, materials } = nextProps;
-            this.printableArea = new PrintablePlate(size, materials, nextProps.coordinateMode);
+        if (nextProps.coordinateMode.value !== this.props.coordinateMode.value) {
+            const { size, materials, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
         }
 
         if (nextProps.coordinateSize !== this.props.coordinateSize) {

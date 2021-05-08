@@ -18,11 +18,6 @@ import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import {
-    COORDINATE_MODE_BOTTOM_LEFT,
-    COORDINATE_MODE_BOTTOM_RIGHT,
-    COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT,
-    COORDINATE_MODE_BOTTOM_CENTER,
     DATA_PREFIX
 } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
@@ -85,7 +80,7 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
-        coordinateMode: PropTypes.string.isRequired,
+        coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
@@ -184,54 +179,21 @@ class SVGCanvas extends PureComponent {
         if (nextProps.materials !== this.props.materials) {
             this.updateCanvas(null, nextProps.materials);
         }
-        if (nextProps.coordinateMode !== this.props.coordinateMode
+        if (nextProps.coordinateMode.value !== this.props.coordinateMode.value
             || nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
 
-            const { coordinateSize } = this.props;
+            const { coordinateSize, coordinateMode } = this.props;
             const coorDelta = {
                 dx: 0,
                 dy: 0
             };
-            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (this.props.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            if (this.props.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
+            coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
+            coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
 
-            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx -= nextProps.coordinateSize.x / 2;
-                coorDelta.dy += nextProps.coordinateSize.y / 2;
-            }
-            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx += nextProps.coordinateSize.x / 2;
-                coorDelta.dy += nextProps.coordinateSize.y / 2;
-            }
-            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx -= nextProps.coordinateSize.x / 2;
-                coorDelta.dy -= nextProps.coordinateSize.y / 2;
-            }
-            if (nextProps.coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx += nextProps.coordinateSize.x / 2;
-                coorDelta.dy -= nextProps.coordinateSize.y / 2;
-            }
-            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-                coorDelta.dy += nextProps.coordinateSize.y / 2;
-            }
+            coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiple.x;
+            coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiple.y;
+
             this.offsetX += coorDelta.dx / 1.5;
             this.offsetY += coorDelta.dy / 1.5;
             this.target = { x: -this.offsetX, y: this.offsetY };

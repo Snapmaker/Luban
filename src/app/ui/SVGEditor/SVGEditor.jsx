@@ -16,7 +16,7 @@ class SVGEditor extends PureComponent {
         SVGActions: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
-        coordinateMode: PropTypes.string.isRequired,
+        coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         use3DVisualizer: PropTypes.bool,
 

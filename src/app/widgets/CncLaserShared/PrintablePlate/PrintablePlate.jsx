@@ -8,13 +8,7 @@ import TargetPoint from '../../../components/three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
 import CoordinateAxes from './CoordinateAxes';
-import {
-    COORDINATE_MODE_BOTTOM_LEFT,
-    COORDINATE_MODE_BOTTOM_RIGHT,
-    COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT,
-    COORDINATE_MODE_BOTTOM_CENTER
-} from '../../../constants';
+import { COORDINATE_MODE_CENTER } from '../../../constants';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 
@@ -32,30 +26,13 @@ class PrintablePlate extends Object3D {
             ...materials
         };
 
-        this.coordinateMode = coordinateMode;
+        this.coordinateMode = coordinateMode ?? COORDINATE_MODE_CENTER;
         this.coorDelta = {
             dx: 0,
             dy: 0
         };
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-            this.coorDelta.dx += this.size.x / 2;
-            this.coorDelta.dy += this.size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-            this.coorDelta.dx -= this.size.x / 2;
-            this.coorDelta.dy += this.size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            this.coorDelta.dx += this.size.x / 2;
-            this.coorDelta.dy -= this.size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-            this.coorDelta.dx -= this.size.x / 2;
-            this.coorDelta.dy -= this.size.y / 2;
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-            this.coorDelta.dy += this.size.y / 2;
-        }
+        this.coorDelta.dx += this.size.x / 2 * this.coordinateMode.setting.sizeMultiple.x;
+        this.coorDelta.dy += this.size.y / 2 * this.coordinateMode.setting.sizeMultiple.y;
 
         this._setup();
     }

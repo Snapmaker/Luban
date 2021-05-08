@@ -16,9 +16,7 @@ import {
     PAGE_PROCESS,
     SOURCE_TYPE_IMAGE3D,
     DATA_PREFIX,
-    // COORDINATE_MODE_CENTER,
-    // COORDINATE_MODE_BOTTOM_CENTER,
-    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_TOP_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_BOTTOM_LEFT
+    COORDINATE_MODE_BOTTOM_CENTER
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -1293,50 +1291,21 @@ export const actions = {
             x: size.x,
             y: size.y
         };
-        const coorDelta = {
-            dx: 0,
-            dy: 0
-        };
-        if (coordinateMode !== oldCoordinateMode) { // move all elements
-            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
+        if (coordinateMode.value !== oldCoordinateMode.value) { // move all elements
+            const coorDelta = {
+                dx: 0,
+                dy: 0
+            };
+            if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
+                coorDelta.dx -= coordinateSize.x / 2 * oldCoordinateMode.setting.sizeMultiple.x;
+                coorDelta.dy += coordinateSize.y / 2 * oldCoordinateMode.setting.sizeMultiple.y;
             }
-            if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            if (oldCoordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (oldCoordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            // if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-            //     coorDelta.dy += coordinateSize.y / 2;
-            // }
 
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
+            if (coordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
+                coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
+                coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
             }
-            if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy -= coordinateSize.y / 2;
-            }
-            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-                coorDelta.dx += coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-                coorDelta.dx -= coordinateSize.x / 2;
-                coorDelta.dy += coordinateSize.y / 2;
-            }
-            // if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-            //     coorDelta.dy -= coordinateSize.y / 2;
-            // }
+
             const { SVGActions, modelGroup } = getState()[headType];
             const elements = modelGroup.getAllModelElements();
             SVGActions.moveElementsStart(elements);

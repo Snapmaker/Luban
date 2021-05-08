@@ -13,7 +13,6 @@ import {
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
 
-
 class JobType extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
@@ -23,7 +22,7 @@ class JobType extends PureComponent {
         page: PropTypes.string.isRequired,
 
         size: PropTypes.object.isRequired,
-        coordinateMode: PropTypes.string.isRequired,
+        coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
 
         materials: PropTypes.object.isRequired,
@@ -35,12 +34,41 @@ class JobType extends PureComponent {
         changeCoordinateMode: PropTypes.func.isRequired
     };
 
+    coordinateModeList = [
+        {
+            label: COORDINATE_MODE_CENTER.value,
+            value: i18n._(COORDINATE_MODE_CENTER.label),
+            mode: COORDINATE_MODE_CENTER
+        },
+        {
+            label: COORDINATE_MODE_BOTTOM_LEFT.value,
+            value: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
+            mode: COORDINATE_MODE_BOTTOM_LEFT
+        },
+        {
+            label: COORDINATE_MODE_BOTTOM_RIGHT.value,
+            value: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
+            mode: COORDINATE_MODE_BOTTOM_RIGHT
+        },
+        {
+            label: COORDINATE_MODE_TOP_LEFT.value,
+            value: i18n._(COORDINATE_MODE_TOP_LEFT.label),
+            mode: COORDINATE_MODE_TOP_LEFT
+        },
+        {
+            label: COORDINATE_MODE_TOP_RIGHT.value,
+            value: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
+            mode: COORDINATE_MODE_TOP_RIGHT
+        }
+    ];
+
     state = {
     };
 
     actions = {
         changeCoordinateMode: (option) => {
-            this.props.changeCoordinateMode(option.value);
+            const newCoordinateMode = this.coordinateModeList.find(d => d.value === option.value);
+            this.props.changeCoordinateMode(newCoordinateMode.mode);
         }
     };
 
@@ -58,33 +86,6 @@ class JobType extends PureComponent {
         const { size, materials, headType, coordinateMode, coordinateSize } = this.props;
         const { isRotate, diameter, length } = materials;
 
-        const coordinateModeList = [
-            {
-                label: COORDINATE_MODE_CENTER,
-                value: i18n._(COORDINATE_MODE_CENTER)
-            },
-            {
-                label: COORDINATE_MODE_BOTTOM_LEFT,
-                value: i18n._(COORDINATE_MODE_BOTTOM_LEFT)
-            },
-            {
-                label: COORDINATE_MODE_BOTTOM_RIGHT,
-                value: i18n._(COORDINATE_MODE_BOTTOM_RIGHT)
-            },
-            {
-                label: COORDINATE_MODE_TOP_LEFT,
-                value: i18n._(COORDINATE_MODE_TOP_LEFT)
-            },
-            {
-                label: COORDINATE_MODE_TOP_RIGHT,
-                value: i18n._(COORDINATE_MODE_TOP_RIGHT)
-            }
-            // {
-            //     label: COORDINATE_MODE_BOTTOM_CENTER,
-            //     value: i18n._(COORDINATE_MODE_BOTTOM_CENTER)
-            // }
-        ];
-
         return (
             <React.Fragment>
                 {!isRotate && (
@@ -94,10 +95,10 @@ class JobType extends PureComponent {
                             className="sm-parameter-row__font-select"
                             backspaceRemoves={false}
                             clearable={false}
-                            options={coordinateModeList}
+                            options={this.coordinateModeList}
                             isGroup={false}
                             placeholder={i18n._('Choose font')}
-                            value={coordinateMode ?? 'Center'}
+                            value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
                             onChange={this.actions.changeCoordinateMode}
                         />
                     </div>

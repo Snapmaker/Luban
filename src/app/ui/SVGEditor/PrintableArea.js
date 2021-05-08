@@ -1,12 +1,6 @@
 import uuid from 'uuid';
 import { createSVGElement } from './element-utils';
 import {
-    COORDINATE_MODE_BOTTOM_LEFT,
-    COORDINATE_MODE_BOTTOM_RIGHT,
-    COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT,
-    COORDINATE_MODE_BOTTOM_CENTER,
     EPSILON
 } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
@@ -89,42 +83,12 @@ class PrintableArea {
 
     _setCoordinateMode(coordinateMode) {
         this.coordinateMode = coordinateMode;
-        if (coordinateMode === COORDINATE_MODE_CENTER) {
-            this.coorDelta = {
-                x: 0,
-                y: 0
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
-            this.coorDelta = {
-                x: +this.coordinateSize.x / 2,
-                y: -this.coordinateSize.y / 2
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
-            this.coorDelta = {
-                x: -this.coordinateSize.x / 2,
-                y: -this.coordinateSize.y / 2
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
-            this.coorDelta = {
-                x: +this.coordinateSize.x / 2,
-                y: +this.coordinateSize.y / 2
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
-            this.coorDelta = {
-                x: -this.coordinateSize.x / 2,
-                y: +this.coordinateSize.y / 2
-            };
-        }
-        if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
-            this.coorDelta = {
-                x: 0,
-                y: -this.coordinateSize.y / 2
-            };
-        }
+        this.coorDelta = {
+            x: 0,
+            y: 0
+        };
+        this.coorDelta.x += this.coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
+        this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
     }
 
     _setGridLine() {
