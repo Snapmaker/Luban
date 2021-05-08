@@ -111,7 +111,9 @@ If you want to contribute to Luban, you can follow the instructions below to set
 
 - Install `Git` from https://git-scm.com/.
 - Install Node.js 12 from https://nodejs.org/dist/latest-v12.x/.
-- Open `Git Bash` as administrator and install node-gyp compilation environment for the third-party denpendencies. This will take about half hour.
+- Install node-gyp compilation environment for the third-party denpendencies.
+  - **Official:** You can follow [node-gyp installation instructions](https://github.com/nodejs/node-gyp#on-windows).
+  - **Alternative:** Open `Git Bash` as administrator and follow the steps below. This will take about half an hour.
 
     ```Bash
     > npm install -g windows-build-tools
