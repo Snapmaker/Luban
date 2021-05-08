@@ -20,6 +20,7 @@ const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 //  the tolerance should be calculated base on scale of image.
 // change the default PIXEL to make sure TOLERANCE close to 0.1mm
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
+let parentTextAttributes = '';
 
 class SVGParser {
     constructor() {
@@ -103,18 +104,18 @@ class SVGParser {
     dragTextPathToParent(parent) {
         const textElement = parent.text || parent.tspan;
         const gElement = parent.g;
-        let paths = [];
+        let gArray = [];
         if (textElement) {
             textElement.forEach((item) => {
                 for (const variable of Object.keys(item)) {
-                    if (variable === 'path' && Array.isArray(item[variable])) {
+                    if (variable === 'g' && Array.isArray(item[variable])) {
                         for (const shape of item[variable]) {
-                            paths.push(shape);
+                            gArray.push(shape);
                         }
                     }
                     if (variable === 'tspan') {
                         const childPaths = this.dragTextPathToParent(item);
-                        paths = paths.concat(childPaths);
+                        gArray = gArray.concat(childPaths);
                     }
                 }
             });
@@ -122,10 +123,10 @@ class SVGParser {
         } else if (gElement) {
             gElement.forEach((item) => {
                 const childPaths = this.dragTextPathToParent(item);
-                paths = paths.concat(childPaths);
+                gArray = gArray.concat(childPaths);
             });
         }
-        return paths;
+        return gArray;
     }
 
 
@@ -144,11 +145,11 @@ class SVGParser {
         const parsedNode = cloneDeep(node);
         const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
         const newSvg = root.parsedSvg;
-        const textPaths = this.dragTextPathToParent(newSvg);
-        if (newSvg.path && Array.isArray(newSvg.path)) {
-            newSvg.path = newSvg.path.concat(textPaths);
+        const gArray = this.dragTextPathToParent(newSvg);
+        if (newSvg.g && Array.isArray(newSvg.g)) {
+            newSvg.g = newSvg.g.concat(gArray);
         } else {
-            newSvg.path = textPaths;
+            newSvg.g = gArray;
         }
         parsedNode.svg = newSvg;
 
@@ -182,13 +183,10 @@ class SVGParser {
         // const tag = node['#name'];
         let shapes = [];
         if (node) {
-            let isText = false;
-            if (tag === 'text' || tag === 'tspan') {
-                isText = true;
-            }
-            const attributes = this.attributeParser.parse(node, parentAttributes, isText);
+            const attributes = this.attributeParser.parse(node, parentAttributes, tag);
 
             let shouldParseChildren = true;
+            node.tag = tag;
             switch (tag) {
                 // graphics elements
                 case 'circle': {
@@ -219,24 +217,49 @@ class SVGParser {
                     shapes.push(this.tagParses.rect.parse(node, attributes));
                     break;
                 }
-                case 'text':
-                case 'tspan': {
+                case 'text': {
                     const textParser = new TextParser(this);
-                    const textObject = await textParser.parse(node, attributes, this.previousElementAttributes);
+                    const textObject = await textParser.parse(node, attributes, this.previousElementAttributes, true);
                     if (textObject.shapes) {
                         shapes = shapes.concat(textObject.shapes);
                         attributes.positionX = textObject.positionX;
                         attributes.positionY = textObject.positionY;
-                        if (Array.isArray(parent.path)) {
-                            parent.path.push(textObject.parsedNode.path);
+                        if (Array.isArray(parent.g)) {
+                            parent.g.push(textObject.parsedNode.g);
                         } else {
-                            const newPath = [];
-                            newPath.push(textObject.parsedNode.path);
-                            parent.path = newPath;
+                            const gArray = [];
+                            gArray.push(textObject.parsedNode.g);
+                            parent.g = gArray;
                         }
                     }
+                    if (textObject.textAttributes) {
+                        attributes.textAttributes = textObject.textAttributes;
+                        parentTextAttributes = textObject.textAttributes;
+                    }
                     this.previousElementAttributes = attributes;
-                    // shouldParseChildren = false;
+                    break;
+                }
+                case 'tspan': {
+                    if (parent.tag === 'text' || parent.tag === 'tspan') {
+                        const textParser = new TextParser(this);
+                        const textObject = await textParser.parse(node, attributes, this.previousElementAttributes, false);
+                        if (textObject.shapes) {
+                            shapes = shapes.concat(textObject.shapes);
+                            attributes.positionX = textObject.positionX;
+                            attributes.positionY = textObject.positionY;
+                            if (Array.isArray(parent.g)) {
+                                parent.g.push(textObject.parsedNode.g);
+                            } else {
+                                const gArray = [];
+                                gArray.push(textObject.parsedNode.g);
+                                parent.g = gArray;
+                            }
+                        }
+                        if (parentTextAttributes) {
+                            attributes.textAttributes = parentTextAttributes;
+                        }
+                        this.previousElementAttributes = attributes;
+                    }
                     break;
                 }
                 // container elements

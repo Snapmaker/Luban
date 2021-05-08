@@ -217,7 +217,7 @@ class AttributesParser {
         this.parser = parser;
     }
 
-    parse(node, parentAttributes, isText) {
+    parse(node, parentAttributes, tag) {
         const attributes = {};
         for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'width', 'height', 'fontFamily', 'dx', 'dy', 'fontSize']) {
             attributes[key] = parentAttributes[key];
@@ -234,6 +234,10 @@ class AttributesParser {
         if (!node.$) {
             return attributes;
         }
+        let isTextElement = false;
+        if (tag === 'text' || tag === 'tspan') {
+            isTextElement = true;
+        }
 
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
@@ -244,10 +248,10 @@ class AttributesParser {
             } else if (key === 'strokeWidth') {
                 node.$.strokeWidth = 1;
             }
-            this.parseAttribute(attributes, parentAttributes, key, value, isText);
+            this.parseAttribute(attributes, parentAttributes, key, value, isTextElement);
         });
         // make text have the right x
-        if (isText) {
+        if (isTextElement) {
             if ((isUndefined(attributes.x))) {
                 attributes.actualX = parentAttributes.actualX;
             } else {
@@ -265,8 +269,8 @@ class AttributesParser {
         return attributes;
     }
 
-    parseAttribute(attributes, parentAttributes, key, value, isText) {
-        if (isText && key === 'font-family') {
+    parseAttribute(attributes, parentAttributes, key, value, isTextElement) {
+        if (isTextElement && key === 'font-family') {
             attributes.fontFamily = value;
         }
         switch (key) {

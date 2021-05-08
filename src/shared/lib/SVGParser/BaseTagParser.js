@@ -8,6 +8,7 @@ class BaseTagParser {
 
     initialize(attributes = {}) {
         this.attributes = attributes;
+
         this.points = [];
 
         this.paths = [];

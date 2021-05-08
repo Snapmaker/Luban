@@ -50,7 +50,7 @@ class LaserToolPathGenerator extends EventEmitter {
             await this.generateGcodeBW(modelInfo, modelPath);
         } else if ((mode === 'bw' || mode === 'halftone' || mode === 'greyscale') && movementMode === 'greyscale-dot') {
             await this.generateGcodeGreyscale(modelInfo, modelPath);
-        } else if (mode === 'vector' && sourceType === 'dxf') {
+        } else if (mode === 'vector') {
             await this.generateGcodeVector(modelInfo, modelPath);
         } else if (mode === 'vector' || mode === 'trace') {
             await this.generateGcodeVector(modelInfo, modelPath);

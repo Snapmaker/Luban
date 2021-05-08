@@ -9,6 +9,9 @@ import AttributesParser from './AttributesParser';
 
 const DEFAULT_MILLIMETER_PER_PIXEL = 25.4 / 72;
 const TOLERANCE = 0.3 * DEFAULT_MILLIMETER_PER_PIXEL;
+const TEMPLATE = `<g>
+                    <%= path %>
+                  </g>`;
 
 class textParser extends BaseTagParser {
     constructor() {
@@ -138,7 +141,7 @@ class textParser extends BaseTagParser {
         }
     }
 
-    async parse(node, attributes, previousElementAttributes) {
+    async parse(node, attributes, previousElementAttributes, isText) {
         this.initialize(attributes);
         const font = attributes.fontFamily || 'Arial';
         const size = attributes.fontSize;
@@ -153,6 +156,8 @@ class textParser extends BaseTagParser {
             ? 0 : previousElementAttributes.positionX;
         const baselineY = _.isUndefined(previousElementAttributes.positionY)
             ? 0 : previousElementAttributes.positionY;
+        const previousTextAttributes = _.isUndefined(previousElementAttributes.textAttributes)
+            ? '' : previousElementAttributes.textAttributes;
         let positionX = 0;
         let positionY = 0;
 
@@ -173,6 +178,21 @@ class textParser extends BaseTagParser {
             positionY
         };
         let addResult = {};
+        let textAttributes = '';
+        if (node.$) {
+            Object.keys(node.$).forEach((key) => {
+                let value = node.$[key];
+                if (key === 'transform') {
+                    textAttributes += `transform='${value}' `;
+                } else if (key === 'style') {
+                    value = value.replace(/'/g, '"');
+                    textAttributes += `style='${value}' `;
+                }
+            });
+        }
+        if (isText) {
+            result.textAttributes = textAttributes;
+        }
         if (!_.isUndefined(text)) {
             let fontObj = await fontManager.getFont(font);
             if (!fontObj) {
@@ -185,20 +205,15 @@ class textParser extends BaseTagParser {
             fullPath.extend(p);
             fullPath.stroke = 'black';
 
-            let svgString = fullPath.toSVG();
-            let textAttributes = '';
-            if (node.$) {
-                Object.keys(node.$).forEach((key) => {
-                    const value = node.$[key];
-                    if (key === 'transform') {
-                        textAttributes += `transform='${value}' `;
-                    } else if (key === 'style') {
-                        textAttributes += `style='${value}' `;
-                    }
-                });
+            let pathString = fullPath.toSVG();
+            pathString = pathString.replace(/\/>$/, ` ${textAttributes}/>`);
+            let gString = _.template(TEMPLATE)({
+                path: pathString
+            });
+            if (!isText) {
+                gString = gString.replace(/^<g/, `<g ${previousTextAttributes}`);
             }
-            svgString = svgString.replace(/\/>$/, ` ${textAttributes}/>`);
-            addResult = await this.parseString(svgString, 'path');
+            addResult = await this.parseString(gString, 'g');
         }
         return {
             ...result,
