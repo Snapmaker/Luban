@@ -20,7 +20,14 @@ import styles from './styles.styl';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
-import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
+import {
+    COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT,
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_TOP_LEFT, COORDINATE_MODE_TOP_RIGHT,
+    DISPLAYED_TYPE_TOOLPATH,
+    PAGE_EDITOR,
+    SELECTEVENT
+} from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
@@ -121,7 +128,48 @@ class Visualizer extends Component {
         autoFocus: () => {
             this.canvas.current.setCameraOnTop();
             this.props.updateScale(1);
-            this.props.updateTarget({ x: 0, y: 0 });
+            // this.props.updateTarget({ x: 0, y: 0 });
+            const { coordinateMode, coordinateSize } = this.props;
+            let target;
+            if (coordinateMode === COORDINATE_MODE_CENTER) {
+                target = {
+                    x: 0,
+                    y: 0
+                };
+            }
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
+                target = {
+                    x: +coordinateSize.x / 2,
+                    y: +coordinateSize.y / 2
+                };
+            }
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_RIGHT) {
+                target = {
+                    x: -coordinateSize.x / 2,
+                    y: +coordinateSize.y / 2
+                };
+            }
+            if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
+                target = {
+                    x: +coordinateSize.x / 2,
+                    y: -coordinateSize.y / 2
+                };
+            }
+            if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
+                target = {
+                    x: -coordinateSize.x / 2,
+                    y: -coordinateSize.y / 2
+                };
+            }
+            if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+                target = {
+                    x: 0,
+                    y: +coordinateSize.y / 2
+                };
+            }
+            target.x /= 1.5;
+            target.y /= 1.5;
+            this.props.updateTarget(target);
         },
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectModelInProcess(intersect, selectEvent);

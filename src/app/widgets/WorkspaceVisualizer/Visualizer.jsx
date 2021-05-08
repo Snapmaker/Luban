@@ -464,7 +464,10 @@ class Visualizer extends Component {
         super(props);
 
         const size = props.size;
-        this.printableArea = new PrintablePlate(size);
+        this.printableArea = new PrintablePlate({
+            x: size.x * 2,
+            y: size.y * 2
+        });
     }
 
     componentDidMount() {
@@ -485,7 +488,10 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
-            this.printableArea.updateSize(size);
+            this.printableArea.updateSize({
+                x: size.x * 2,
+                y: size.y * 2
+            });
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z * 2, 300)), new THREE.Vector3());
         }
 

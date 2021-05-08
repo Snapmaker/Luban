@@ -158,7 +158,6 @@ export const actions = {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
             }
-            console.log('recover', materials, coordinateMode, coordinateSize);
             const isRotate = materials ? materials.isRotate : false;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {

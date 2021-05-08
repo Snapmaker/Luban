@@ -144,9 +144,15 @@ export const actions = {
     },
 
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, materials } = getState()[headType];
 
         SVGActions.updateSize(size);
+
+        const isRotate = materials.isRotate;
+        dispatch(actions.changeCoordinateMode(headType, null, (!isRotate ? size : {
+            x: materials.diameter * Math.PI,
+            y: materials.length
+        })));
     },
 
     /**
@@ -1276,10 +1282,12 @@ export const actions = {
      * Change Coordinate Mode
      *
      * @param headType
-     * @parame coordinateMode
+     * @param coordinateMode
+     * @param coordinateSize {x, y}
      */
     changeCoordinateMode: (headType, coordinateMode, coordinateSize) => (dispatch, getState) => {
         const oldCoordinateMode = getState()[headType].coordinateMode;
+        coordinateMode = coordinateMode ?? oldCoordinateMode;
         const { size } = getState().machine;
         coordinateSize = coordinateSize ?? {
             x: size.x,
