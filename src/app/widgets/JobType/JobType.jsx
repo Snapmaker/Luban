@@ -6,8 +6,10 @@ import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import styles from './styles.styl';
 import { actions as editorActions } from '../../flux/editor';
-import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT, HEAD_CNC, HEAD_LASER, PAGE_EDITOR } from '../../constants';
+import {
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
+    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_CNC, HEAD_LASER, PAGE_EDITOR
+} from '../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
 
@@ -77,23 +79,29 @@ class JobType extends PureComponent {
                 label: COORDINATE_MODE_TOP_RIGHT,
                 value: i18n._(COORDINATE_MODE_TOP_RIGHT)
             }
+            // {
+            //     label: COORDINATE_MODE_BOTTOM_CENTER,
+            //     value: i18n._(COORDINATE_MODE_BOTTOM_CENTER)
+            // }
         ];
 
         return (
             <React.Fragment>
-                <div className="sm-parameter-row">
-                    <span className="sm-parameter-row__label">{i18n._('Origin Mode')}</span>
-                    <Select
-                        className="sm-parameter-row__font-select"
-                        backspaceRemoves={false}
-                        clearable={false}
-                        options={coordinateModeList}
-                        isGroup={false}
-                        placeholder={i18n._('Choose font')}
-                        value={coordinateMode ?? 'Center'}
-                        onChange={this.actions.changeCoordinateMode}
-                    />
-                </div>
+                {!isRotate && (
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Origin Mode')}</span>
+                        <Select
+                            className="sm-parameter-row__font-select"
+                            backspaceRemoves={false}
+                            clearable={false}
+                            options={coordinateModeList}
+                            isGroup={false}
+                            placeholder={i18n._('Choose font')}
+                            value={coordinateMode ?? 'Center'}
+                            onChange={this.actions.changeCoordinateMode}
+                        />
+                    </div>
+                )}
                 <div className="">
                     <div className="sm-tabs" style={{ marginBottom: '1rem' }}>
                         <button
@@ -101,6 +109,9 @@ class JobType extends PureComponent {
                             style={{ width: '50%' }}
                             className={classNames('sm-tab', { 'sm-selected': !isRotate })}
                             onClick={() => {
+                                this.props.changeCoordinateMode(
+                                    COORDINATE_MODE_CENTER
+                                );
                                 this.props.updateMaterials({ isRotate: false });
                             }}
                         >
@@ -111,6 +122,12 @@ class JobType extends PureComponent {
                             style={{ width: '50%' }}
                             className={classNames('sm-tab', { 'sm-selected': isRotate })}
                             onClick={() => {
+                                this.props.changeCoordinateMode(
+                                    COORDINATE_MODE_BOTTOM_CENTER, {
+                                        x: diameter * Math.PI,
+                                        y: length
+                                    }
+                                );
                                 this.props.updateMaterials({ isRotate: true });
                             }}
                         >
@@ -221,7 +238,15 @@ class JobType extends PureComponent {
                                     value={toFixed(length, 1)}
                                     max={size.y}
                                     min={10}
-                                    onChange={(value) => { this.props.updateMaterials({ length: value }); }}
+                                    onChange={(value) => {
+                                        this.props.changeCoordinateMode(
+                                            COORDINATE_MODE_BOTTOM_CENTER, {
+                                                x: diameter * Math.PI,
+                                                y: value
+                                            }
+                                        );
+                                        this.props.updateMaterials({ length: value });
+                                    }}
                                 />
                                 <span
                                     className={styles['input-box-inner-text']}
@@ -237,7 +262,15 @@ class JobType extends PureComponent {
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
                                     min={2}
-                                    onChange={(value) => { this.props.updateMaterials({ diameter: value }); }}
+                                    onChange={(value) => {
+                                        this.props.changeCoordinateMode(
+                                            COORDINATE_MODE_BOTTOM_CENTER, {
+                                                x: value * Math.PI,
+                                                y: length
+                                            }
+                                        );
+                                        this.props.updateMaterials({ diameter: value });
+                                    }}
                                 />
                                 <span
                                     className={styles['input-box-inner-text']}

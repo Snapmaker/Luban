@@ -22,6 +22,7 @@ import {
     COORDINATE_MODE_BOTTOM_RIGHT,
     COORDINATE_MODE_TOP_LEFT,
     COORDINATE_MODE_TOP_RIGHT,
+    COORDINATE_MODE_BOTTOM_CENTER,
     DATA_PREFIX
 } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
@@ -208,6 +209,9 @@ class SVGCanvas extends PureComponent {
                 coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
+            if (this.props.coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dy -= coordinateSize.y / 2;
+            }
 
             if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx -= nextProps.coordinateSize.x / 2;
@@ -225,11 +229,14 @@ class SVGCanvas extends PureComponent {
                 coorDelta.dx += nextProps.coordinateSize.x / 2;
                 coorDelta.dy -= nextProps.coordinateSize.y / 2;
             }
+            if (nextProps.coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dy += nextProps.coordinateSize.y / 2;
+            }
             this.offsetX += coorDelta.dx / 1.5;
             this.offsetY += coorDelta.dy / 1.5;
             this.target = { x: -this.offsetX, y: this.offsetY };
             this.props.updateTarget(this.target);
-            this.updateCanvas();
+            this.updateCanvas(null, nextProps.materials);
         }
     }
 

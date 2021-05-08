@@ -17,6 +17,7 @@ import {
     SOURCE_TYPE_IMAGE3D,
     DATA_PREFIX,
     // COORDINATE_MODE_CENTER,
+    // COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_TOP_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_BOTTOM_LEFT
 } from '../../constants';
 import { baseActions } from './actions-base';
@@ -1305,6 +1306,9 @@ export const actions = {
                 coorDelta.dx += coordinateSize.x / 2;
                 coorDelta.dy -= coordinateSize.y / 2;
             }
+            // if (oldCoordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+            //     coorDelta.dy += coordinateSize.y / 2;
+            // }
 
             if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
                 coorDelta.dx += coordinateSize.x / 2;
@@ -1322,6 +1326,9 @@ export const actions = {
                 coorDelta.dx -= coordinateSize.x / 2;
                 coorDelta.dy += coordinateSize.y / 2;
             }
+            // if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+            //     coorDelta.dy -= coordinateSize.y / 2;
+            // }
             const { SVGActions, modelGroup } = getState()[headType];
             const elements = modelGroup.getAllModelElements();
             SVGActions.moveElementsStart(elements);

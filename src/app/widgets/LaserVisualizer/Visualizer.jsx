@@ -234,6 +234,10 @@ class Visualizer extends Component {
             const { size, materials } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, nextProps.coordinateMode);
         }
+
+        if (nextProps.coordinateSize !== this.props.coordinateSize) {
+            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+        }
     }
 
     getNotice() {

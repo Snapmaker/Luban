@@ -12,7 +12,8 @@ import {
     COORDINATE_MODE_BOTTOM_LEFT,
     COORDINATE_MODE_BOTTOM_RIGHT,
     COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT
+    COORDINATE_MODE_TOP_RIGHT,
+    COORDINATE_MODE_BOTTOM_CENTER
 } from '../../../constants';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
@@ -51,6 +52,9 @@ class PrintablePlate extends Object3D {
         if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
             this.coorDelta.dx -= this.size.x / 2;
             this.coorDelta.dy -= this.size.y / 2;
+        }
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+            this.coorDelta.dy += this.size.y / 2;
         }
 
         this._setup();
@@ -136,8 +140,8 @@ class PrintablePlate extends Object3D {
             // group.add(axisYLabel);
 
             const textSize = (10 / 3);
-            const minX = Math.round((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
-            const minY = Math.round((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
+            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
             const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
             const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
 

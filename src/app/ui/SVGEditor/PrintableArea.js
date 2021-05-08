@@ -6,6 +6,7 @@ import {
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_TOP_LEFT,
     COORDINATE_MODE_TOP_RIGHT,
+    COORDINATE_MODE_BOTTOM_CENTER,
     EPSILON
 } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
@@ -25,7 +26,6 @@ class PrintableArea {
             x: 0,
             y: 0
         };
-        console.log('xx', svgFactory.coordinateSize);
         this.coordinateMode = svgFactory.coordinateMode;
         this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
         this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
@@ -97,7 +97,7 @@ class PrintableArea {
         }
         if (coordinateMode === COORDINATE_MODE_BOTTOM_LEFT) {
             this.coorDelta = {
-                x: this.coordinateSize.x / 2,
+                x: +this.coordinateSize.x / 2,
                 y: -this.coordinateSize.y / 2
             };
         }
@@ -109,8 +109,8 @@ class PrintableArea {
         }
         if (coordinateMode === COORDINATE_MODE_TOP_LEFT) {
             this.coorDelta = {
-                x: this.coordinateSize.x / 2,
-                y: this.coordinateSize.y / 2
+                x: +this.coordinateSize.x / 2,
+                y: +this.coordinateSize.y / 2
             };
         }
         if (coordinateMode === COORDINATE_MODE_TOP_RIGHT) {
@@ -119,12 +119,18 @@ class PrintableArea {
                 y: +this.coordinateSize.y / 2
             };
         }
+        if (coordinateMode === COORDINATE_MODE_BOTTOM_CENTER) {
+            this.coorDelta = {
+                x: 0,
+                y: -this.coordinateSize.y / 2
+            };
+        }
     }
 
     _setGridLine() {
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
-        const minY = Math.round((y - cy / 2 + this.coorDelta.y) / 10) * 10;
+        const minY = Math.ceil((y - cy / 2 + this.coorDelta.y) / 10) * 10;
         const maxY = Math.floor((y + cy / 2 + this.coorDelta.y) / 10) * 10;
         for (let i = minY; i <= maxY; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
@@ -165,7 +171,7 @@ class PrintableArea {
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const minX = Math.round((x - cx / 2 + this.coorDelta.x) / 10) * 10;
+        const minX = Math.ceil((x - cx / 2 + this.coorDelta.x) / 10) * 10;
         const maxX = Math.floor((x + cx / 2 + this.coorDelta.x) / 10) * 10;
         for (let i = minX; i <= maxX; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
@@ -283,19 +289,19 @@ class PrintableArea {
         if (!x || !y) {
             return;
         }
-        const editableArea = createSVGElement({
-            element: 'rect',
-            attr: {
-                x: this.size.x - x / 2,
-                y: this.size.y - y - 0.1,
-                width: x,
-                height: y,
-                fill: '#FFFFFF',
-                stroke: '#000',
-                'stroke-width': 1 / this.scale,
-                opacity: 1
-            }
-        });
+        // const editableArea = createSVGElement({
+        //     element: 'rect',
+        //     attr: {
+        //         x: this.size.x - x / 2,
+        //         y: this.size.y - y - 0.1,
+        //         width: x,
+        //         height: y,
+        //         fill: '#FFFFFF',
+        //         stroke: '#000',
+        //         'stroke-width': 1 / this.scale,
+        //         opacity: 1
+        //     }
+        // });
         // eslint-disable-next-line no-unused-vars
         const nonEditableArea = createSVGElement({
             element: 'rect',
@@ -310,7 +316,7 @@ class PrintableArea {
                 opacity: 1
             }
         });
-        this.printableAreaGroup.append(editableArea);
+        // this.printableAreaGroup.append(editableArea);
         this.printableAreaGroup.append(nonEditableArea);
     }
 }
