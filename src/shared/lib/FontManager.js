@@ -6,7 +6,7 @@ import request from 'superagent';
 import * as opentype from 'opentype.js';
 // eslint-disable-next-line import/no-unresolved
 import libFontManager from 'font-scanner';
-import logger from './logger';
+import logger from 'universal-logger';
 
 
 const log = logger('lib:FontManager');

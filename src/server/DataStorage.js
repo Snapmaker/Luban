@@ -6,7 +6,7 @@ import isElectron from 'is-electron';
 // import semver from 'semver';
 import { CNC_CONFIG_SUBCATEGORY } from './constants';
 import logger from './lib/logger';
-import { initFonts } from './lib/FontManager';
+import { initFonts } from '../shared/lib/FontManager';
 // import settings from './config/settings';
 
 

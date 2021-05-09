@@ -6,7 +6,7 @@ import {
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER,
-    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, PROCESS_MODE_MESH, SOURCE_TYPE_3DP, SOURCE_TYPE_DXF
+    SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, PROCESS_MODE_MESH, SOURCE_TYPE_3DP
 } from '../constants';
 import { round } from '../../shared/lib/utils';
 
@@ -60,7 +60,7 @@ const checkParams = (headType, sourceType, mode) => {
     if (headType !== 'laser' && headType !== 'cnc' && headType !== '3dp') {
         return false;
     }
-    if (![SOURCE_TYPE_3DP, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_IMAGE3D, SOURCE_TYPE_DXF].includes(sourceType)) {
+    if (![SOURCE_TYPE_3DP, SOURCE_TYPE_RASTER, SOURCE_TYPE_SVG, SOURCE_TYPE_TEXT, SOURCE_TYPE_IMAGE3D].includes(sourceType)) {
         return false;
     }
     if (![PROCESS_MODE_BW, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR, PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH].includes(mode)) {

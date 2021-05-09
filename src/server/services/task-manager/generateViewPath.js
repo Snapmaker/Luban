@@ -3,7 +3,6 @@ import _ from 'lodash';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import DataStorage from '../../DataStorage';
 import SVGParser from '../../../shared/lib/SVGParser';
-import { parseDxf, dxfToSvg, updateDxfBoundingBox } from '../../../shared/lib/DXFParser/Parser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 import logger from '../../lib/logger';
@@ -21,26 +20,15 @@ const generateCncViewPath = async (modelInfo, onProgress) => {
     //     modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     // }
 
-    if (((sourceType === 'svg' || sourceType === 'dxf') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
-        let viewPath;
-        if (sourceType === 'dxf') {
-            let { svg } = await parseDxf(modelPath);
-            svg = dxfToSvg(svg);
-            updateDxfBoundingBox(svg);
+    if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
+        const svgParser = new SVGParser();
+        const svg = await svgParser.parseFile(modelPath);
 
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => onProgress(p));
-            viewPath = await generator.generateViewPathObj(svg, modelInfo);
-        } else {
-            const svgParser = new SVGParser();
-            const svg = await svgParser.parseFile(modelPath);
-
-            const generator = new CncToolPathGenerator(modelInfo);
-            generator.on('progress', (p) => {
-                onProgress(p);
-            });
-            viewPath = await generator.generateViewPathObj(svg, modelInfo);
-        }
+        const generator = new CncToolPathGenerator(modelInfo);
+        generator.on('progress', (p) => {
+            onProgress(p);
+        });
+        const viewPath = await generator.generateViewPathObj(svg, modelInfo);
         return new Promise((resolve) => {
             resolve(viewPath);
         });

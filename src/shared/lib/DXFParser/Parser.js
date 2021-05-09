@@ -2,6 +2,7 @@ import fs from 'fs';
 import * as THREE from 'three';
 import { isUndefined } from 'lodash';
 import DxfParser from './DxfParser';
+import { svgInverse, svgToString } from '../SVGParser/SvgToString';
 
 const EPSILON = 1e-6;
 
@@ -457,4 +458,17 @@ export const parseDxf = async (originalPath) => {
         width: dxfStr.width,
         height: dxfStr.height
     };
+};
+export const generateSvgFromDxf = (dxf, tempPath, tempName) => {
+    return new Promise((resolve, reject) => {
+        const svg = dxfToSvg(dxf, 0.1);
+        const uploadPath = tempPath.replace(/\.dxf$/, 'parsed.svg');
+        const uploadName = tempName.replace(/\.dxf$/, 'parsed.svg');
+        updateDxfBoundingBox(svg);
+        svgInverse(svg, 2);
+        fs.writeFile(uploadPath, svgToString(svg), 'utf8', (error) => {
+            if (error) throw reject(error);
+            resolve({ uploadName });
+        });
+    });
 };
