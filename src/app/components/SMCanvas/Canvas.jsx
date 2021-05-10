@@ -35,7 +35,7 @@ class Canvas extends Component {
         cameraUp: PropTypes.object,
         scale: PropTypes.number,
         target: PropTypes.object,
-        // coordinateMode: PropTypes.object,
+
         supportActions: PropTypes.object,
 
         // callback
