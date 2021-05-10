@@ -87,8 +87,8 @@ class PrintableArea {
             x: 0,
             y: 0
         };
-        this.coorDelta.x += this.coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
-        this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
+        this.coorDelta.x += this.coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+        this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
     }
 
     _setGridLine() {
@@ -253,19 +253,7 @@ class PrintableArea {
         if (!x || !y) {
             return;
         }
-        // const editableArea = createSVGElement({
-        //     element: 'rect',
-        //     attr: {
-        //         x: this.size.x - x / 2,
-        //         y: this.size.y - y - 0.1,
-        //         width: x,
-        //         height: y,
-        //         fill: '#FFFFFF',
-        //         stroke: '#000',
-        //         'stroke-width': 1 / this.scale,
-        //         opacity: 1
-        //     }
-        // });
+
         // eslint-disable-next-line no-unused-vars
         const nonEditableArea = createSVGElement({
             element: 'rect',
@@ -280,7 +268,6 @@ class PrintableArea {
                 opacity: 1
             }
         });
-        // this.printableAreaGroup.append(editableArea);
         this.printableAreaGroup.append(nonEditableArea);
     }
 }

@@ -110,17 +110,6 @@ class ModelGroup extends EventEmitter {
         return this.models.find(d => d.modelID === modelID);
     }
 
-    /**
-     * Note: just for svg elements
-     */
-    getAllModelElements() {
-        const elements = [];
-        for (const model of this.models) {
-            elements.push(model.elem);
-        }
-        return elements;
-    }
-
     getModelByModelName(modelName) {
         return this.models.find(d => d.modelName === modelName);
     }

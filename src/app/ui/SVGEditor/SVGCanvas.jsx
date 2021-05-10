@@ -179,7 +179,7 @@ class SVGCanvas extends PureComponent {
         if (nextProps.materials !== this.props.materials) {
             this.updateCanvas(null, nextProps.materials);
         }
-        if (nextProps.coordinateMode.value !== this.props.coordinateMode.value
+        if (nextProps.coordinateMode !== this.props.coordinateMode
             || nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
 
@@ -188,11 +188,11 @@ class SVGCanvas extends PureComponent {
                 dx: 0,
                 dy: 0
             };
-            coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
-            coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
+            coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+            coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
 
-            coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiple.x;
-            coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiple.y;
+            coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.x;
+            coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.y;
 
             this.offsetX += coorDelta.dx / 1.5;
             this.offsetY += coorDelta.dy / 1.5;

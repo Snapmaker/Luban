@@ -451,7 +451,7 @@ export const COORDINATE_MODE_CENTER = {
     label: 'Center',
     value: 'center',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: 0,
             y: 0
         }
@@ -461,7 +461,7 @@ export const COORDINATE_MODE_TOP_RIGHT = {
     label: 'Top-Right',
     value: 'top-right',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: -1,
             y: -1
         }
@@ -471,7 +471,7 @@ export const COORDINATE_MODE_BOTTOM_RIGHT = {
     label: 'Bottom-Right',
     value: 'bottom-right',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: -1,
             y: 1
         }
@@ -481,7 +481,7 @@ export const COORDINATE_MODE_TOP_LEFT = {
     label: 'Top-Left',
     value: 'top-left',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: 1,
             y: -1
         }
@@ -491,7 +491,7 @@ export const COORDINATE_MODE_BOTTOM_LEFT = {
     label: 'Bottom-Left',
     value: 'bottom-left',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: 1,
             y: 1
         }
@@ -501,7 +501,7 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
     label: 'Bottom-Center',
     value: 'bottom-center',
     setting: {
-        sizeMultiple: {
+        sizeMultiplyFactor: {
             x: 0,
             y: 1
         }

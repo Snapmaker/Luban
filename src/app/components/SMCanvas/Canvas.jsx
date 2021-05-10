@@ -70,7 +70,6 @@ class Canvas extends Component {
 
         // frozen
         this.backgroundGroup = this.props.backgroundGroup;
-        this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.transformSourceType = this.props.transformSourceType || '3D'; // '3D' | '2D'
         this.toolPathGroupObject = this.props.toolPathGroupObject;
@@ -101,8 +100,8 @@ class Canvas extends Component {
             this.setupScene();
             this.setupControls();
 
-            this.group.add(this.printableArea);
-            this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+            this.group.add(this.props.printableArea);
+            this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
             this.group.add(this.modelGroup.object);
             this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
             this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
@@ -137,9 +136,8 @@ class Canvas extends Component {
         // }
 
         if (nextProps.printableArea !== this.props.printableArea) {
-            this.group.remove(this.printableArea);
+            this.group.remove(this.props.printableArea);
             this.group.add(nextProps.printableArea);
-            this.printableArea = nextProps.printableArea;
         }
     }
 

@@ -687,6 +687,17 @@ class SVGActionsFactory {
     }
 
     /**
+     * Get all elements.
+     */
+    getAllModelElements() {
+        const elements = [];
+        for (const model of this.modelGroup.models) {
+            elements.push(model.elem);
+        }
+        return elements;
+    }
+
+    /**
      * Get selected elements.
      *
      * @returns {SVGElement[]} - returns list of selected elements.

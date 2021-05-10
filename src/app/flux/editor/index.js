@@ -1281,9 +1281,9 @@ export const actions = {
      *
      * @param headType
      * @param coordinateMode
-     * @param coordinateSize {x, y}
+     * @param coordinateSize
      */
-    changeCoordinateMode: (headType, coordinateMode, coordinateSize) => (dispatch, getState) => {
+    changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
         const oldCoordinateMode = getState()[headType].coordinateMode;
         coordinateMode = coordinateMode ?? oldCoordinateMode;
         const { size } = getState().machine;
@@ -1291,23 +1291,23 @@ export const actions = {
             x: size.x,
             y: size.y
         };
-        if (coordinateMode.value !== oldCoordinateMode.value) { // move all elements
+        if (coordinateMode !== oldCoordinateMode) { // move all elements
             const coorDelta = {
                 dx: 0,
                 dy: 0
             };
-            if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
-                coorDelta.dx -= coordinateSize.x / 2 * oldCoordinateMode.setting.sizeMultiple.x;
-                coorDelta.dy += coordinateSize.y / 2 * oldCoordinateMode.setting.sizeMultiple.y;
+            if (oldCoordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dx -= coordinateSize.x / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy += coordinateSize.y / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.y;
             }
 
-            if (coordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
-                coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
-                coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
+            if (coordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
             }
 
-            const { SVGActions, modelGroup } = getState()[headType];
-            const elements = modelGroup.getAllModelElements();
+            const { SVGActions } = getState()[headType];
+            const elements = SVGActions.getAllModelElements();
             SVGActions.moveElementsStart(elements);
             SVGActions.moveElements(elements, coorDelta);
             SVGActions.moveElementsFinish(elements, coorDelta);

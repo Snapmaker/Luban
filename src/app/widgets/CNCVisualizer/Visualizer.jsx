@@ -125,14 +125,14 @@ class Visualizer extends Component {
         autoFocus: () => {
             this.canvas.current.setCameraOnTop();
             this.props.updateScale(1);
-            // this.props.updateTarget({ x: 0, y: 0 });
+
             const { coordinateMode, coordinateSize } = this.props;
             const target = {
                 x: 0,
                 y: 0
             };
-            target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiple.x;
-            target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiple.y;
+            target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+            target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
 
             target.x /= 1.5;
             target.y /= 1.5;
@@ -265,7 +265,7 @@ class Visualizer extends Component {
             }
         }
 
-        if (nextProps.coordinateMode.value !== this.props.coordinateMode.value) {
+        if (nextProps.coordinateMode !== this.props.coordinateMode) {
             const { size, materials, coordinateMode } = nextProps;
             this.printableArea = new PrintablePlate(size, materials, coordinateMode);
         }

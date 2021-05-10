@@ -109,6 +109,8 @@ export const actions = {
         if (materials) {
             dispatch(editorActions.updateMaterials('cnc', materials));
         }
+
+        // Set machine size into coordinate default size
         const { size } = getState().machine;
         if (size) {
             dispatch(editorActions.updateState('cnc', {

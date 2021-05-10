@@ -31,8 +31,8 @@ class PrintablePlate extends Object3D {
             dx: 0,
             dy: 0
         };
-        this.coorDelta.dx += this.size.x / 2 * this.coordinateMode.setting.sizeMultiple.x;
-        this.coorDelta.dy += this.size.y / 2 * this.coordinateMode.setting.sizeMultiple.y;
+        this.coorDelta.dx += this.size.x / 2 * this.coordinateMode.setting.sizeMultiplyFactor.x;
+        this.coorDelta.dy += this.size.y / 2 * this.coordinateMode.setting.sizeMultiplyFactor.y;
 
         this._setup();
     }
@@ -79,43 +79,9 @@ class PrintablePlate extends Object3D {
             );
             coordinateAxes.name = 'CoordinateAxes';
             group.add(coordinateAxes);
-
-            // const arrowX = new Mesh(
-            //     new CylinderBufferGeometry(0, 1, 4),
-            //     new MeshBasicMaterial({ color: RED })
-            // );
-            // arrowX.position.set(this.size.x / 2 + this.coorDelta.dx + 2, 0, 0);
-            // arrowX.rotation.set(0, 0, -Math.PI / 2);
-            // group.add(arrowX);
-            //
-            // const arrowY = new Mesh(
-            //     new CylinderBufferGeometry(0, 1, 4),
-            //     new MeshBasicMaterial({ color: GREEN })
-            // );
-            // arrowY.position.set(0, this.size.y / 2 + this.coorDelta.dy + 2, 0);
-            // group.add(arrowY);
         }
 
         { // Axis Labels
-            // const axisXLabel = new TextSprite({
-            //     x: this.size.x / 2 + this.coorDelta.dx + 10,
-            //     y: 0,
-            //     z: 0,
-            //     size: 10,
-            //     text: 'X',
-            //     color: RED
-            // });
-            // const axisYLabel = new TextSprite({
-            //     x: 0,
-            //     y: this.size.y / 2 + this.coorDelta.dy + 10,
-            //     z: 0,
-            //     size: 10,
-            //     text: 'Y',
-            //     color: GREEN
-            // });
-            // group.add(axisXLabel);
-            // group.add(axisYLabel);
-
             const textSize = (10 / 3);
             const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
             const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;

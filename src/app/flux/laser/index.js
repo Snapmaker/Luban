@@ -100,6 +100,7 @@ export const actions = {
             dispatch(editorActions.updateMaterials('laser', materials));
         }
 
+        // // Set machine size into coordinate default size
         const { size } = getState().machine;
         if (size) {
             dispatch(editorActions.updateState('laser', {
