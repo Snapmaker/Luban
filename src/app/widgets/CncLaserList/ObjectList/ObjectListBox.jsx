@@ -11,7 +11,7 @@ import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 
-const ModelItem = (props) => {
+function ModelItem(props) {
     const { model, selectedModelArray = [], onClickModelNameBox, onClickModelHideBox } = props;
     if (!model) {
         return null;
@@ -69,7 +69,7 @@ const ModelItem = (props) => {
             </div>
         </TipTrigger>
     );
-};
+}
 ModelItem.propTypes = {
     model: PropTypes.object.isRequired,
     selectedModelArray: PropTypes.array.isRequired,
@@ -77,7 +77,7 @@ ModelItem.propTypes = {
     onClickModelHideBox: PropTypes.func.isRequired
 };
 
-const ObjectListBox = (props) => {
+function ObjectListBox(props) {
     // https://github.com/tc39/proposal-optional-chaining
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray);
     const models = useSelector(state => state[props.headType]?.modelGroup?.models);
@@ -85,7 +85,7 @@ const ObjectListBox = (props) => {
     const dispatch = useDispatch();
 
     const actions = {
-        onClickModelNameBox: (model, event) => {
+        onClickModelNameBox: function (model, event) {
             let isMultiSelect = event.shiftKey;
             if (selectedModelArray.length === 1 && selectedModelArray[0].visible === false) {
                 isMultiSelect = false;
@@ -95,7 +95,7 @@ const ObjectListBox = (props) => {
             }
             dispatch(editorActions.selectTargetModel(model, props.headType, isMultiSelect));
         },
-        onClickModelHideBox: (model) => {
+        onClickModelHideBox: function (model) {
             const visible = model.visible;
             dispatch(editorActions.selectTargetModel(model, props.headType));
             if (visible) {
@@ -135,7 +135,7 @@ const ObjectListBox = (props) => {
             </div>
         </div>
     );
-};
+}
 ObjectListBox.propTypes = {
     setTitle: PropTypes.func,
     headType: PropTypes.string

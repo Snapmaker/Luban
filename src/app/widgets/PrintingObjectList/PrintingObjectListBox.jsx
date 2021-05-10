@@ -10,7 +10,7 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { limitStringLength } from '../../lib/normalize-range';
 
-const ModelItem = (props) => {
+function ModelItem(props) {
     const { model, selectedModelIDArray = [], selectTargetModel, onClickHideShowSelectedModel } = props;
     if (!model) {
         return null;
@@ -48,7 +48,7 @@ const ModelItem = (props) => {
             </div>
         </TipTrigger>
     );
-};
+}
 ModelItem.propTypes = {
     model: PropTypes.object.isRequired,
     selectedModelIDArray: PropTypes.array.isRequired,
@@ -56,15 +56,15 @@ ModelItem.propTypes = {
     onClickHideShowSelectedModel: PropTypes.func.isRequired
 };
 
-const PrintingObjectListBox = (props) => {
+function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
     const dispatch = useDispatch();
     const actions = {
-        selectTargetModel: (targetModel, shiftKey) => {
+        selectTargetModel(targetModel, shiftKey) {
             dispatch(printingActions.selectTargetModel(targetModel, shiftKey));
         },
-        onClickHideShowSelectedModel: (targetModel) => {
+        onClickHideShowSelectedModel(targetModel) {
             const visible = targetModel.visible;
             actions.selectTargetModel(targetModel);
             if (visible === true) {
@@ -91,7 +91,7 @@ const PrintingObjectListBox = (props) => {
             })}
         </div>
     );
-};
+}
 PrintingObjectListBox.propTypes = {
     setTitle: PropTypes.func
 };

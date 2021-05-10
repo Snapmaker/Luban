@@ -12,7 +12,7 @@ import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../constants';
 
-const SettingItem = (props) => {
+function SettingItem(props) {
     const { setting, isSVG, settingName, updateToolConfig } = props;
     if (!setting) {
         return null;
@@ -54,7 +54,7 @@ const SettingItem = (props) => {
             </TipTrigger>
         </div>
     );
-};
+}
 SettingItem.propTypes = {
     settingName: PropTypes.string,
     updateToolConfig: PropTypes.func.isRequired,
@@ -62,7 +62,7 @@ SettingItem.propTypes = {
     isSVG: PropTypes.bool.isRequired
 };
 
-const ToolParameters = (props) => {
+function ToolParameters(props) {
     const dispatch = useDispatch();
     const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition, updateToolConfig } = props;
     const type = toolPath?.type;
@@ -196,7 +196,7 @@ const ToolParameters = (props) => {
             </React.Fragment>
         </div>
     );
-};
+}
 ToolParameters.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     activeToolDefinition: PropTypes.object.isRequired,

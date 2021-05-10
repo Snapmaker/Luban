@@ -2,7 +2,6 @@ import path from 'path';
 import mv from 'mv';
 import fs from 'fs';
 import uuid from 'uuid';
-import process from 'process';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import logger from '../../lib/logger';
 import DataStorage, { rmDir } from '../../DataStorage';
@@ -367,7 +366,6 @@ export const uploadFileToTmp = (req, res) => {
 
 export const recoverProjectFile = async (req, res) => {
     const file = req.files.file || JSON.parse(req.body.file);
-    console.log('recoverProjectFile', process.cwd(), file.path);
     file.path = DataStorage.resolveRelativePath(file.path);
     const { uploadName } = await cpFileToTmp(file);
     let content;

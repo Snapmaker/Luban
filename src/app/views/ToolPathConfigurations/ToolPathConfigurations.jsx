@@ -14,7 +14,7 @@ import CncParameters from './cnc/CncParameters';
 import { toHump } from '../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
 
-const ToolPathConfigurations = (props) => {
+function ToolPathConfigurations(props) {
     const headTypeState = useSelector(state => state[props.headType]);
     const activeToolListDefinition = headTypeState?.activeToolListDefinition;
     const updatingToolPath = headTypeState?.updatingToolPath;
@@ -63,7 +63,7 @@ const ToolPathConfigurations = (props) => {
     }, [updatingToolPath]);
 
     const actions = {
-        updateToolConfig: (key, value) => {
+        updateToolConfig(key, value) {
             const newDefinition = _.cloneDeep(currentToolDefinition);
             newDefinition.config[key].default_value = value;
             setCurrentToolDefinition(newDefinition);
@@ -77,10 +77,10 @@ const ToolPathConfigurations = (props) => {
                 return false;
             }
         },
-        cancelUpdateToolPath: () => {
+        cancelUpdateToolPath() {
             dispatch(editorActions.cancelUpdateToolPath(props.headType));
         },
-        saveToolPath: () => {
+        saveToolPath() {
             const toolParams = {};
             const gcodeConfig = {
                 ...toolPath.gcodeConfig
@@ -108,7 +108,7 @@ const ToolPathConfigurations = (props) => {
             };
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
         },
-        updateToolPath: (option) => {
+        updateToolPath(option) {
             setToolPath({
                 ...toolPath,
                 ...option
@@ -232,7 +232,7 @@ const ToolPathConfigurations = (props) => {
             </Modal>
         </React.Fragment>
     );
-};
+}
 ToolPathConfigurations.propTypes = {
     headType: PropTypes.string
 };

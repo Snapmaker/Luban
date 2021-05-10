@@ -78,9 +78,7 @@ class DataStorage {
          const regex = new RegExp(/^\.\//);
          if (isElectron() && regex.test(pathString)) {
              pathString = path.resolve(app.getPath('userData'), pathString);
-             console.log('inside pathString', pathString);
          }
-         console.log('pathString', pathString, regex.test(pathString));
          return pathString;
      }
 
