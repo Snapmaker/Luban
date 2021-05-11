@@ -17,7 +17,9 @@ import {
 import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
-import { DATA_PREFIX } from '../../constants';
+import {
+    DATA_PREFIX
+} from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
@@ -78,6 +80,8 @@ class SVGCanvas extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
+        coordinateMode: PropTypes.object.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
@@ -173,6 +177,27 @@ class SVGCanvas extends PureComponent {
             this.updateCanvas(nextProps.size);
         }
         if (nextProps.materials !== this.props.materials) {
+            this.updateCanvas(null, nextProps.materials);
+        }
+        if (nextProps.coordinateMode !== this.props.coordinateMode
+            || nextProps.coordinateSize !== this.props.coordinateSize) {
+            this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
+
+            const { coordinateSize, coordinateMode } = this.props;
+            const coorDelta = {
+                dx: 0,
+                dy: 0
+            };
+            coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+            coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
+
+            coorDelta.dx -= nextProps.coordinateSize.x / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.x;
+            coorDelta.dy += nextProps.coordinateSize.y / 2 * nextProps.coordinateMode.setting.sizeMultiplyFactor.y;
+
+            this.offsetX += coorDelta.dx / 1.5;
+            this.offsetY += coorDelta.dy / 1.5;
+            this.target = { x: -this.offsetX, y: this.offsetY };
+            this.props.updateTarget(this.target);
             this.updateCanvas(null, nextProps.materials);
         }
     }
@@ -291,9 +316,10 @@ class SVGCanvas extends PureComponent {
         const getRoot = () => this.svgBackground;
 
         this.printableArea = new PrintableArea({
-            size: this.props.size,
+            size: this.props.coordinateSize,
             scale: this.scale,
-            getRoot
+            getRoot,
+            coordinateMode: this.props.coordinateMode
         });
     }
 

@@ -445,3 +445,65 @@ export const TOOLPATH_TYPE_SCULPT = 'sculpt';
 
 export const DISPLAYED_TYPE_MODEL = 'model';
 export const DISPLAYED_TYPE_TOOLPATH = 'toolpath';
+
+// SVG Canvas coordinateMode
+export const COORDINATE_MODE_CENTER = {
+    label: 'Center',
+    value: 'center',
+    setting: {
+        sizeMultiplyFactor: {
+            x: 0,
+            y: 0
+        }
+    }
+};
+export const COORDINATE_MODE_TOP_RIGHT = {
+    label: 'Top-Right',
+    value: 'top-right',
+    setting: {
+        sizeMultiplyFactor: {
+            x: -1,
+            y: -1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_RIGHT = {
+    label: 'Bottom-Right',
+    value: 'bottom-right',
+    setting: {
+        sizeMultiplyFactor: {
+            x: -1,
+            y: 1
+        }
+    }
+};
+export const COORDINATE_MODE_TOP_LEFT = {
+    label: 'Top-Left',
+    value: 'top-left',
+    setting: {
+        sizeMultiplyFactor: {
+            x: 1,
+            y: -1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_LEFT = {
+    label: 'Bottom-Left',
+    value: 'bottom-left',
+    setting: {
+        sizeMultiplyFactor: {
+            x: 1,
+            y: 1
+        }
+    }
+};
+export const COORDINATE_MODE_BOTTOM_CENTER = {
+    label: 'Bottom-Center',
+    value: 'bottom-center',
+    setting: {
+        sizeMultiplyFactor: {
+            x: 0,
+            y: 1
+        }
+    }
+};

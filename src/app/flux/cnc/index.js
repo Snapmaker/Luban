@@ -9,7 +9,7 @@ import {
 } from '../actionType';
 import { timestamp } from '../../../shared/lib/random-utils';
 import { actions as editorActions } from '../editor';
-import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL } from '../../constants';
+import { PAGE_EDITOR, HEAD_CNC, DISPLAYED_TYPE_MODEL, COORDINATE_MODE_CENTER } from '../../constants';
 import definitionManager from './DefinitionManager';
 import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
@@ -87,11 +87,15 @@ const INITIAL_STATE = {
     autoPreviewEnabled: false,
 
     // rendering
-    renderingTimestamp: 0
+    renderingTimestamp: 0,
+
+    // coordinateMode
+    coordinateMode: COORDINATE_MODE_CENTER,
+    coordinateSize: { x: 0, y: 0 }
 };
 
 export const actions = {
-    init: () => async (dispatch) => {
+    init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
 
         await definitionManager.init();
@@ -104,6 +108,14 @@ export const actions = {
         const materials = machineStore.get('cnc.materials');
         if (materials) {
             dispatch(editorActions.updateMaterials('cnc', materials));
+        }
+
+        // Set machine size into coordinate default size
+        const { size } = getState().machine;
+        if (size) {
+            dispatch(editorActions.updateState('cnc', {
+                coordinateSize: size
+            }));
         }
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {

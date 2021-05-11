@@ -1,6 +1,8 @@
 import uuid from 'uuid';
 import { createSVGElement } from './element-utils';
-import { EPSILON } from '../../constants';
+import {
+    EPSILON
+} from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
 
 class PrintableArea {
@@ -13,6 +15,15 @@ class PrintableArea {
         this.materials = {
             ...svgFactory.materials
         };
+
+        this.coorDelta = {
+            x: 0,
+            y: 0
+        };
+        this.coordinateMode = svgFactory.coordinateMode;
+        this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
+        this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
+
         this.scale = svgFactory.scale;
         this.printableAreaGroup = createSVGElement({
             element: 'g',
@@ -55,18 +66,45 @@ class PrintableArea {
         }
     }
 
+    updateCoordinateMode(coordinateMode, coordinateSize) {
+        while (this.printableAreaGroup.firstChild) {
+            this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
+        }
+        this.coordinateSize = coordinateSize;
+        this._setCoordinateMode(coordinateMode);
+        this._setGridLine();
+        this._setCoordinateAxes();
+        this._setMaterialsRect();
+    }
+
+    _removeAll() {
+
+    }
+
+    _setCoordinateMode(coordinateMode) {
+        this.coordinateMode = coordinateMode;
+        this.coorDelta = {
+            x: 0,
+            y: 0
+        };
+        this.coorDelta.x += this.coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+        this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
+    }
+
     _setGridLine() {
         const { x, y } = this.size;
-        const yi = Math.floor(y / 10);
-        for (let i = -yi; i <= yi; i++) {
+        const { x: cx, y: cy } = this.coordinateSize;
+        const minY = Math.ceil((y - cy / 2 + this.coorDelta.y) / 10) * 10;
+        const maxY = Math.floor((y + cy / 2 + this.coorDelta.y) / 10) * 10;
+        for (let i = minY; i <= maxY; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: 0,
-                    y1: i * 10 + y,
-                    x2: 2 * x,
-                    y2: i * 10 + y,
+                    x1: x - cx / 2 + this.coorDelta.x,
+                    y1: i,
+                    x2: x + cx / 2 + this.coorDelta.x,
+                    y2: i,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
@@ -78,7 +116,7 @@ class PrintableArea {
                 element: 'text',
                 attr: {
                     x: x - 4,
-                    y: i * 10 + y + 1.2,
+                    y: i + 1.2,
                     id: uuid.v4(),
                     'font-size': 4,
                     'font-family': 'serif',
@@ -90,23 +128,24 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i !== 0) {
-                label.innerHTML = -i * 10;
+            if (i - y !== 0) {
+                label.innerHTML = -(i - y);
                 label.style.cursor = 'default';
             }
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
         }
-        const xi = Math.floor(x / 10);
-        for (let i = -xi; i <= xi; i++) {
+        const minX = Math.ceil((x - cx / 2 + this.coorDelta.x) / 10) * 10;
+        const maxX = Math.floor((x + cx / 2 + this.coorDelta.x) / 10) * 10;
+        for (let i = minX; i <= maxX; i += 10) {
             const color = i === 0 ? '#444444' : '#888888';
             const line = createSVGElement({
                 element: 'line',
                 attr: {
-                    x1: i * 10 + x,
-                    y1: 0,
-                    x2: i * 10 + x,
-                    y2: 2 * y,
+                    x1: i,
+                    y1: y - cy / 2 + this.coorDelta.y,
+                    x2: i,
+                    y2: y + cy / 2 + this.coorDelta.y,
                     id: uuid.v4(),
                     stroke: color,
                     fill: 'none',
@@ -117,7 +156,7 @@ class PrintableArea {
             const label = createSVGElement({
                 element: 'text',
                 attr: {
-                    x: i * 10 + x,
+                    x: i,
                     y: y + 5,
                     id: uuid.v4(),
                     'font-size': 4,
@@ -130,8 +169,8 @@ class PrintableArea {
                     'stroke-opacity': 0
                 }
             });
-            if (i !== 0) {
-                label.innerHTML = i * 10;
+            if (i - x !== 0) {
+                label.innerHTML = i - x;
             }
             this.printableAreaGroup.append(line);
             this.printableAreaGroup.append(label);
@@ -180,10 +219,19 @@ class PrintableArea {
 
     _setCoordinateAxes() {
         const { x, y } = this.size;
-        this._setAxes(0, y, x, y, 'red', true);
-        this._setAxes(x, 0, x, y, 'green', false);
-        this._setAxes(2 * x, y, x, y, 'red', false);
-        this._setAxes(x, 2 * y, x, y, 'green', true);
+        const { x: cx, y: cy } = this.coordinateSize;
+        if (x - cx / 2 + this.coorDelta.x < x) {
+            this._setAxes(x - cx / 2 + this.coorDelta.x, y, x, y, 'red', true);
+        }
+        if (y - cy / 2 + this.coorDelta.y < y) {
+            this._setAxes(x, y - cy / 2 + this.coorDelta.y, x, y, 'green', false);
+        }
+        if (x + cx / 2 + this.coorDelta.x > x) {
+            this._setAxes(x + cx / 2 + this.coorDelta.x, y, x, y, 'red', false);
+        }
+        if (y + cy / 2 + this.coorDelta.y > y) {
+            this._setAxes(x, y + cy / 2 + this.coorDelta.y, x, y, 'green', true);
+        }
 
         const origin = createSVGElement({
             element: 'circle',
@@ -205,19 +253,7 @@ class PrintableArea {
         if (!x || !y) {
             return;
         }
-        const editableArea = createSVGElement({
-            element: 'rect',
-            attr: {
-                x: this.size.x - x / 2,
-                y: this.size.y - y - 0.1,
-                width: x,
-                height: y,
-                fill: '#FFFFFF',
-                stroke: '#000',
-                'stroke-width': 1 / this.scale,
-                opacity: 1
-            }
-        });
+
         // eslint-disable-next-line no-unused-vars
         const nonEditableArea = createSVGElement({
             element: 'rect',
@@ -232,7 +268,6 @@ class PrintableArea {
                 opacity: 1
             }
         });
-        this.printableAreaGroup.append(editableArea);
         this.printableAreaGroup.append(nonEditableArea);
     }
 }

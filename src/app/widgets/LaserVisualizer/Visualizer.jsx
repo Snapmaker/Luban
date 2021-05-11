@@ -19,7 +19,11 @@ import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 import LaserCameraAidBackground from '../LaserCameraAidBackground';
 import styles from './styles.styl';
-import { DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, SELECTEVENT } from '../../constants';
+import {
+    DISPLAYED_TYPE_TOOLPATH,
+    PAGE_EDITOR,
+    SELECTEVENT
+} from '../../constants';
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
@@ -32,6 +36,8 @@ class Visualizer extends Component {
         progress: PropTypes.number.isRequired,
         materials: PropTypes.object,
 
+        coordinateMode: PropTypes.object.isRequired,
+        coordinateSize: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
@@ -117,7 +123,18 @@ class Visualizer extends Component {
         autoFocus: () => {
             this.canvas.current.setCameraOnTop();
             this.props.updateScale(1);
-            this.props.updateTarget({ x: 0, y: 0 });
+            // this.props.updateTarget({ x: 0, y: 0 });
+            const { coordinateMode, coordinateSize } = this.props;
+            const target = {
+                x: 0,
+                y: 0
+            };
+            target.x += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+            target.y += coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
+
+            target.x /= 1.5;
+            target.y /= 1.5;
+            this.props.updateTarget(target);
         },
         onSelectModels: (intersect, selectEvent) => { // this is a toolpath model? mesh object??
             // todo
@@ -156,8 +173,8 @@ class Visualizer extends Component {
     constructor(props) {
         super(props);
 
-        const { size, materials } = props;
-        this.printableArea = new PrintablePlate(size, materials);
+        const { size, materials, coordinateMode } = props;
+        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
     }
 
     // hideContextMenu = () => {
@@ -226,6 +243,15 @@ class Visualizer extends Component {
             } else {
                 this.canvas.current.controls.enableClick();
             }
+        }
+
+        if (nextProps.coordinateMode !== this.props.coordinateMode) {
+            const { size, materials, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        }
+
+        if (nextProps.coordinateSize !== this.props.coordinateSize) {
+            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
         }
     }
 
@@ -317,6 +343,8 @@ class Visualizer extends Component {
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
                         target={this.props.target}
+                        coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -355,6 +383,8 @@ class Visualizer extends Component {
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
                         target={this.props.target}
+                        coordinateMode={this.props.coordinateMode}
+                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"
@@ -505,7 +535,7 @@ const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
 
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -515,6 +545,8 @@ const mapStateToProps = (state) => {
         target,
         SVGActions,
         size,
+        coordinateMode,
+        coordinateSize,
         materials,
         hasModel: modelGroup.hasModel(),
         selectedModelID,

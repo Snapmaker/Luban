@@ -11,7 +11,13 @@ import {
     limitModelSizeByMachineSize
 } from '../../models/ModelInfoUtils';
 
-import { PAGE_EDITOR, PAGE_PROCESS, SOURCE_TYPE_IMAGE3D, DATA_PREFIX } from '../../constants';
+import {
+    PAGE_EDITOR,
+    PAGE_PROCESS,
+    SOURCE_TYPE_IMAGE3D,
+    DATA_PREFIX,
+    COORDINATE_MODE_BOTTOM_CENTER
+} from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
 
@@ -21,7 +27,6 @@ import { isEqual, round } from '../../../shared/lib/utils';
 import { machineStore } from '../../store/local-storage';
 
 import { CNC_LASER_STAGE } from './utils';
-
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -137,9 +142,15 @@ export const actions = {
     },
 
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, materials } = getState()[headType];
 
         SVGActions.updateSize(size);
+
+        const isRotate = materials.isRotate;
+        dispatch(actions.changeCoordinateMode(headType, null, (!isRotate ? size : {
+            x: materials.diameter * Math.PI,
+            y: materials.length
+        })));
     },
 
     /**
@@ -1263,8 +1274,48 @@ export const actions = {
         }
 
         dispatch(baseActions.render(headType));
-    }
+    },
 
+    /**
+     * Change Coordinate Mode
+     *
+     * @param headType
+     * @param coordinateMode
+     * @param coordinateSize
+     */
+    changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
+        const oldCoordinateMode = getState()[headType].coordinateMode;
+        coordinateMode = coordinateMode ?? oldCoordinateMode;
+        const { size } = getState().machine;
+        coordinateSize = coordinateSize ?? {
+            x: size.x,
+            y: size.y
+        };
+        if (coordinateMode !== oldCoordinateMode) { // move all elements
+            const coorDelta = {
+                dx: 0,
+                dy: 0
+            };
+            if (oldCoordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dx -= coordinateSize.x / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy += coordinateSize.y / 2 * oldCoordinateMode.setting.sizeMultiplyFactor.y;
+            }
+
+            if (coordinateMode !== COORDINATE_MODE_BOTTOM_CENTER) {
+                coorDelta.dx += coordinateSize.x / 2 * coordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy -= coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
+            }
+
+            const { SVGActions } = getState()[headType];
+            const elements = SVGActions.getAllModelElements();
+            SVGActions.moveElementsStart(elements);
+            SVGActions.moveElements(elements, coorDelta);
+            SVGActions.moveElementsFinish(elements, coorDelta);
+            dispatch(baseActions.render(headType));
+        }
+
+        dispatch(actions.updateState(headType, { coordinateMode, coordinateSize }));
+    }
 };
 
 export default function reducer() {

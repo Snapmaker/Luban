@@ -1,4 +1,4 @@
-import { MeshBasicMaterial, Object3D, Group, CylinderBufferGeometry, Mesh, PlaneGeometry, DoubleSide } from 'three';
+import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide } from 'three';
 import each from 'lodash/each';
 import colornames from 'colornames';
 
@@ -8,12 +8,13 @@ import TargetPoint from '../../../components/three-extensions/TargetPoint';
 
 import GridLine from './GridLine';
 import CoordinateAxes from './CoordinateAxes';
+import { COORDINATE_MODE_CENTER } from '../../../constants';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 
 
 class PrintablePlate extends Object3D {
-    constructor(size, materials) {
+    constructor(size, materials, coordinateMode) {
         super();
         this.isPrintPlane = true;
         this.type = 'PrintPlane';
@@ -24,6 +25,15 @@ class PrintablePlate extends Object3D {
         this.materials = {
             ...materials
         };
+
+        this.coordinateMode = coordinateMode ?? COORDINATE_MODE_CENTER;
+        this.coorDelta = {
+            dx: 0,
+            dy: 0
+        };
+        this.coorDelta.dx += this.size.x / 2 * this.coordinateMode.setting.sizeMultiplyFactor.x;
+        this.coorDelta.dy += this.size.y / 2 * this.coordinateMode.setting.sizeMultiplyFactor.y;
+
         this._setup();
     }
 
@@ -37,16 +47,16 @@ class PrintablePlate extends Object3D {
     _setup() {
         // Metric
         const gridSpacing = METRIC_GRID_SPACING;
-        const axisXLength = Math.floor(this.size.x / gridSpacing) * gridSpacing;
-        const axisYLength = Math.floor(this.size.y / gridSpacing) * gridSpacing;
 
         const group = new Group();
 
         { // Coordinate Grid
             const gridLine = new GridLine(
-                this.size.x,
+                -this.size.x / 2 + this.coorDelta.dx,
+                this.size.x / 2 + this.coorDelta.dx,
                 gridSpacing,
-                this.size.y,
+                -this.size.y / 2 + this.coorDelta.dy,
+                this.size.y / 2 + this.coorDelta.dy,
                 gridSpacing,
                 colornames('blue'), // center line
                 colornames('gray 44') // grid
@@ -61,49 +71,24 @@ class PrintablePlate extends Object3D {
         }
 
         { // Coordinate Control
-            const coordinateAxes = new CoordinateAxes(this.size.x, this.size.y);
+            const coordinateAxes = new CoordinateAxes(
+                -this.size.x / 2 + this.coorDelta.dx,
+                this.size.x / 2 + this.coorDelta.dx,
+                -this.size.y / 2 + this.coorDelta.dy,
+                this.size.y / 2 + this.coorDelta.dy
+            );
             coordinateAxes.name = 'CoordinateAxes';
             group.add(coordinateAxes);
-
-            const arrowX = new Mesh(
-                new CylinderBufferGeometry(0, 1, 4),
-                new MeshBasicMaterial({ color: RED })
-            );
-            arrowX.position.set(this.size.x + 2, 0, 0);
-            arrowX.rotation.set(0, 0, -Math.PI / 2);
-            group.add(arrowX);
-
-            const arrowY = new Mesh(
-                new CylinderBufferGeometry(0, 1, 4),
-                new MeshBasicMaterial({ color: GREEN })
-            );
-            arrowY.position.set(0, this.size.y + 2, 0);
-            group.add(arrowY);
         }
 
         { // Axis Labels
-            const axisXLabel = new TextSprite({
-                x: this.size.x + 10,
-                y: 0,
-                z: 0,
-                size: 10,
-                text: 'X',
-                color: RED
-            });
-            const axisYLabel = new TextSprite({
-                x: 0,
-                y: this.size.y + 10,
-                z: 0,
-                size: 10,
-                text: 'Y',
-                color: GREEN
-            });
-
-            group.add(axisXLabel);
-            group.add(axisYLabel);
-
             const textSize = (10 / 3);
-            for (let x = -axisXLength; x <= axisXLength; x += gridSpacing) {
+            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
+            const maxX = Math.floor((this.size.x / 2 + this.coorDelta.dx) / gridSpacing) * gridSpacing;
+            const maxY = Math.floor((this.size.y / 2 + this.coorDelta.dy) / gridSpacing) * gridSpacing;
+
+            for (let x = minX; x <= maxX; x += gridSpacing) {
                 if (x !== 0) {
                     const textLabel = new TextSprite({
                         x: x,
@@ -119,7 +104,7 @@ class PrintablePlate extends Object3D {
                     group.add(textLabel);
                 }
             }
-            for (let y = -axisYLength; y <= axisYLength; y += gridSpacing) {
+            for (let y = minY; y <= maxY; y += gridSpacing) {
                 if (y !== 0) {
                     const textLabel = new TextSprite({
                         x: -4,
