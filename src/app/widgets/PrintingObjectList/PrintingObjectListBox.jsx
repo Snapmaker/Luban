@@ -1,60 +1,10 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
-import classNames from 'classnames';
-import path from 'path';
-import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import i18n from '../../lib/i18n';
-import TipTrigger from '../../components/TipTrigger';
-import { limitStringLength } from '../../lib/normalize-range';
-
-function ModelItem(props) {
-    const { model, selectedModelIDArray = [], selectTargetModel, onClickHideShowSelectedModel } = props;
-    if (!model) {
-        return null;
-    }
-    const modelName = path.basename(model.modelName);
-    const displayModelName = limitStringLength(modelName, 36);
-    return (
-        <TipTrigger
-            key={model.modelID}
-            title={i18n._('Object')}
-            content={model.modelName}
-        >
-            <div
-                className={classNames(
-                    styles['object-list-item'],
-                    selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0 ? styles.selected : null,
-                )}
-            >
-                <Anchor
-                    className={classNames(styles.name, styles.bt)}
-                    onClick={(event) => selectTargetModel(model, event.shiftKey)}
-                >
-                    <span className={classNames(styles.icon, styles['icon-shape'])} />
-                    <span>{displayModelName}</span>
-                </Anchor>
-                <button
-                    type="button"
-                    className={classNames(
-                        styles.icon,
-                        model.visible ? styles.iconHideOpen : styles.iconHideClose,
-                        styles.bt
-                    )}
-                    onClick={() => onClickHideShowSelectedModel(model)}
-                />
-            </div>
-        </TipTrigger>
-    );
-}
-ModelItem.propTypes = {
-    model: PropTypes.object.isRequired,
-    selectedModelIDArray: PropTypes.array.isRequired,
-    selectTargetModel: PropTypes.func.isRequired,
-    onClickHideShowSelectedModel: PropTypes.func.isRequired
-};
+import ModelItem from '../../rehooks/model-item';
 
 function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray);
@@ -82,10 +32,12 @@ function PrintingObjectListBox(props) {
             {(models) && models.filter(model => !model.supportTag).map((model) => {
                 return (
                     <ModelItem
+                        key={model.modelID}
                         model={model}
-                        selectedModelIDArray={selectedModelIDArray}
-                        selectTargetModel={actions.selectTargetModel}
-                        onClickHideShowSelectedModel={actions.onClickHideShowSelectedModel}
+                        styles={styles}
+                        isSelected={selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0}
+                        onSelect={actions.selectTargetModel}
+                        onToggleVisible={actions.onClickHideShowSelectedModel}
                     />
                 );
             })}

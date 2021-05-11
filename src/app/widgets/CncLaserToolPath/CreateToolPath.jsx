@@ -14,7 +14,11 @@ const CreateToolPath = (props) => {
     const page = headTypeState?.page;
     const toolPathTypes = headTypeState?.toolPathGroup?.getToolPathTypes();
     const dispatch = useDispatch();
-    const createToolPath = () => dispatch(editorActions.createToolPath(props.headType));
+    const actions = {
+        createToolPath() {
+            dispatch(editorActions.createToolPath(props.headType));
+        }
+    };
     // const fastCreateToolPath = () => dispatch(editorActions.fastCreateToolPath(props.headType));
     useEffect(() => {
         props.setTitle(i18n._('Create Toolpath'));
@@ -29,7 +33,7 @@ const CreateToolPath = (props) => {
                 <button
                     type="button"
                     className="sm-btn-large sm-btn-default"
-                    onClick={createToolPath}
+                    onClick={actions.createToolPath}
                     style={{ display: 'block', width: '100%' }}
                     disabled={toolPathTypes.length === 0}
                 >
@@ -66,7 +70,3 @@ CreateToolPath.propTypes = {
     setDisplay: PropTypes.func
 };
 export default CreateToolPath;
-
-// export const createToolPathNameByType = (type) => {
-//     return `Toolpath - Picture${type}${count++}`;
-// };
