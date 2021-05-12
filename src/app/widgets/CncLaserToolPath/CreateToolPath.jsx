@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 
 import PropTypes from 'prop-types';
 import { PAGE_PROCESS } from '../../constants';
@@ -9,23 +9,22 @@ import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 
-const CreateToolPath = (props) => {
-    const headTypeState = useSelector(state => state[props.headType]);
-    const page = headTypeState?.page;
-    const toolPathTypes = headTypeState?.toolPathGroup?.getToolPathTypes();
+const CreateToolPath = ({ headType, setTitle, setDisplay }) => {
+    const page = useSelector(state => state[headType]?.page, shallowEqual);
+    const toolPathTypes = useSelector(state => state[headType]?.toolPathGroup?.getToolPathTypes(), shallowEqual);
     const dispatch = useDispatch();
     const actions = {
         createToolPath() {
-            dispatch(editorActions.createToolPath(props.headType));
+            dispatch(editorActions.createToolPath(headType));
         }
     };
-    // const fastCreateToolPath = () => dispatch(editorActions.fastCreateToolPath(props.headType));
+    // const fastCreateToolPath = () => dispatch(editorActions.fastCreateToolPath(headType));
     useEffect(() => {
-        props.setTitle(i18n._('Create Toolpath'));
-        props.setDisplay(page === PAGE_PROCESS);
+        setTitle(i18n._('Create Toolpath'));
+        setDisplay(page === PAGE_PROCESS);
     }, []); // << super important array
     useEffect(() => {
-        props.setDisplay(page === PAGE_PROCESS);
+        setDisplay(page === PAGE_PROCESS);
     }, [page]);
     return (
         <div>

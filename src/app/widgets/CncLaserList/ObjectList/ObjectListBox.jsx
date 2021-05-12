@@ -1,7 +1,7 @@
 // import React, { PureComponent } from 'react';
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
 import modal from '../../../lib/modal';
@@ -11,11 +11,10 @@ import ModelItem from '../../../rehooks/model-item';
 
 function ObjectListBox(props) {
     // https://github.com/tc39/proposal-optional-chaining
-    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray);
-    const models = useSelector(state => state[props.headType]?.modelGroup?.models);
-    const previewFailed = useSelector(state => state[props.headType]?.previewFailed);
+    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray, shallowEqual);
+    const models = useSelector(state => state[props.headType]?.modelGroup?.models, shallowEqual);
+    const previewFailed = useSelector(state => state[props.headType]?.previewFailed, shallowEqual);
     const dispatch = useDispatch();
-
     const actions = {
         onClickModelNameBox(model, event) {
             let isMultiSelect = event.shiftKey;

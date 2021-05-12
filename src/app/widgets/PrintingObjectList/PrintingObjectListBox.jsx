@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../flux/printing';
 import i18n from '../../lib/i18n';
 import ModelItem from '../../rehooks/model-item';
 
 function PrintingObjectListBox(props) {
-    const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray);
-    const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray, shallowEqual);
+    const models = useSelector(state => state?.printing?.modelGroup?.models, shallowEqual);
     const dispatch = useDispatch();
     const actions = {
         selectTargetModel(targetModel, shiftKey) {

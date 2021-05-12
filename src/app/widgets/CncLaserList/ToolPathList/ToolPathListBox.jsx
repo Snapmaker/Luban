@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import SvgIcon from '../../../components/SvgIcon';
 import Anchor from '../../../components/Anchor';
@@ -21,8 +21,7 @@ const getIconStatus = (status) => {
     }
     return '';
 };
-const ToolpathItem = (props) => {
-    const { toolPath, selectedToolPathId, selectToolPathId, onClickVisible, updatingToolPath } = props;
+const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, updatingToolPath }) => {
     if (!toolPath) {
         return null;
     }
@@ -108,8 +107,8 @@ ToolpathItem.propTypes = {
 };
 
 const ToolPathListBox = (props) => {
-    const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths());
-    const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId);
+    const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
+    const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId, shallowEqual);
     const dispatch = useDispatch();
     const actions = {
         selectToolPathId: (id) => {

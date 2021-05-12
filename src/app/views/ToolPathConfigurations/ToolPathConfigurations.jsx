@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
@@ -15,10 +15,10 @@ import { toHump } from '../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
 
 function ToolPathConfigurations(props) {
-    const headTypeState = useSelector(state => state[props.headType]);
-    const activeToolListDefinition = headTypeState?.activeToolListDefinition;
-    const updatingToolPath = headTypeState?.updatingToolPath;
-    const toolDefinitions = headTypeState?.toolDefinitions;
+    const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
+    const updatingToolPath = useSelector(state => state[props.headType]?.updatingToolPath, shallowEqual);
+    const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
+
     const dispatch = useDispatch();
 
     const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
