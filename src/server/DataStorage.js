@@ -62,7 +62,7 @@ class DataStorage {
          if (isElectron()) {
              this.userDataDir = app.getPath('userData');
          } else {
-             this.userDataDir = './userData';
+             this.userDataDir = '.';
          }
          mkdirp.sync(this.userDataDir);
 
@@ -72,6 +72,14 @@ class DataStorage {
          this.configDir = `${this.userDataDir}/Config`;
          this.fontDir = `${this.userDataDir}/Fonts`;
          this.envDir = `${this.userDataDir}/env`;
+     }
+
+     resolveRelativePath(pathString) {
+         const regex = new RegExp(/^\.\//);
+         if (isElectron() && regex.test(pathString)) {
+             pathString = path.resolve(app.getPath('userData'), pathString);
+         }
+         return pathString;
      }
 
      async init() {
