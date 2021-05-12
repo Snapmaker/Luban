@@ -6,7 +6,6 @@ import semver from 'semver';
 import api from '../../api';
 import Anchor from '../../components/Anchor';
 import settings from '../../config/settings';
-import combokeys from '../../lib/combokeys';
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
@@ -63,13 +62,6 @@ class Header extends PureComponent {
         }
     };
 
-    actionHandlers = {
-        CONTROLLER_COMMAND: (event, { command }) => {
-            // feedhold, cyclestart, homing, unlock, reset
-            controller.command(command);
-        }
-    };
-
     _isMounted = false;
 
     getInitialState() {
@@ -83,32 +75,12 @@ class Header extends PureComponent {
     componentDidMount() {
         this._isMounted = true;
 
-        this.addActionHandlers();
-
         // Initial actions
         this.actions.checkForUpdates();
     }
 
     componentWillUnmount() {
         this._isMounted = false;
-
-        this.removeActionHandlers();
-    }
-
-    addActionHandlers() {
-        Object.keys(this.actionHandlers)
-            .forEach(eventName => {
-                const callback = this.actionHandlers[eventName];
-                combokeys.on(eventName, callback);
-            });
-    }
-
-    removeActionHandlers() {
-        Object.keys(this.actionHandlers)
-            .forEach(eventName => {
-                const callback = this.actionHandlers[eventName];
-                combokeys.removeListener(eventName, callback);
-            });
     }
 
     render() {

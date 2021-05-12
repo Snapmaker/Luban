@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
 import isEqual from 'lodash/isEqual';
 import { Vector3, Box3 } from 'three';
 
 
+import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -35,8 +37,15 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
+        offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
+        selectAllModels: PropTypes.func.isRequired,
+        unselectAllModels: PropTypes.func.isRequired,
+        copy: PropTypes.func.isRequired,
+        paste: PropTypes.func.isRequired,
+        undo: PropTypes.func.isRequired,
+        redo: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
         arrangeAllModels: PropTypes.func.isRequired,
@@ -104,6 +113,7 @@ class Visualizer extends PureComponent {
             this.actions.updateBoundingBox();
             this.props.onModelAfterTransform();
         },
+
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
         },
@@ -208,6 +218,37 @@ class Visualizer extends PureComponent {
         }
     };
 
+    shortcutResponder = (() => {
+        const that = this;
+        return {
+            title: that.constructor.name,
+            get active() {
+                return that.props.isActive;
+            },
+            priority: priorities.VIEW,
+            shortcuts: {
+                [shortcutActions.SELECTALL]: this.props.selectAllModels,
+                [shortcutActions.UNSELECT]: this.props.unselectAllModels,
+                [shortcutActions.DELETE]: this.props.removeSelectedModel,
+                [shortcutActions.COPY]: this.props.copy,
+                [shortcutActions.PASTE]: this.props.paste,
+                [shortcutActions.DUPLICATE]: this.props.duplicateSelectedModel,
+                [shortcutActions.UNDO]: this.props.undo,
+                [shortcutActions.REDO]: this.props.redo,
+                // optimize: accelerate when continuous click
+                'SHOWGCODELAYERS_ADD': {
+                    keys: ['alt+up'],
+                    callback: () => { this.props.offsetGcodeLayers(1); }
+                },
+                'SHOWGCODELAYERS_MINUS': {
+                    keys: ['alt+down'],
+                    callback: () => { this.props.offsetGcodeLayers(-1); }
+                }
+            }
+        };
+    })()
+
+
     constructor(props) {
         super(props);
         const size = props.size;
@@ -221,6 +262,7 @@ class Visualizer extends PureComponent {
     componentDidMount() {
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
+        ShortcutManager.register(this.shortcutResponder);
         window.addEventListener(
             'hashchange',
             (event) => {
@@ -535,14 +577,14 @@ class Visualizer extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
     const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
-
     return {
+        isActive: ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
         size,
         allModel: modelGroup.models,
@@ -560,7 +602,14 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
+    offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),
+    unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
+    selectAllModels: () => dispatch(printingActions.selectAllModels()),
+    copy: () => dispatch(printingActions.copy()),
+    paste: () => dispatch(printingActions.paste()),
+    undo: () => dispatch(printingActions.undo()),
+    redo: () => dispatch(printingActions.redo()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
@@ -575,6 +624,7 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     clearAllManualSupport: () => dispatch(printingActions.clearAllManualSupport()),
     saveSupport: (model) => dispatch(printingActions.saveSupport(model))
+
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
+
+import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
 import styles from './index.styl';
 import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
@@ -11,6 +13,8 @@ import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 
 class SVGEditor extends PureComponent {
     static propTypes = {
+        // eslint-disable-next-line react/no-unused-prop-types
+        isActive: PropTypes.bool,
         size: PropTypes.object.isRequired,
         materials: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
@@ -23,6 +27,7 @@ class SVGEditor extends PureComponent {
 
         initContentGroup: PropTypes.func.isRequired,
         showContextMenu: PropTypes.func,
+
         // insertDefaultTextVector: PropTypes.func.isRequired
 
         // editor actions
@@ -42,11 +47,15 @@ class SVGEditor extends PureComponent {
             resizeElementsFinish: PropTypes.func.isRequired,
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired
+            rotateElementsFinish: PropTypes.func.isRequired,
+            moveElementsOnKeyDown: PropTypes.func.isRequired
         }).isRequired,
+        editorActions: PropTypes.object.isRequired,
 
         createText: PropTypes.func.isRequired
     };
+
+    flag = (Math.random() * 100).toFixed();
 
     canvas = React.createRef();
 
@@ -54,10 +63,62 @@ class SVGEditor extends PureComponent {
         mode: 'select'
     };
 
+    /**
+     * responder.active probably decided by component status,
+     * so we use get property to get active status.
+     * but get property function is binded to responder,
+     * we use closure function or define in constructor to solve this problem.
+     *  */
+    shortcutResponder = (() => {
+        const that = this;
+        return {
+            title: that.constructor.name,
+            get active() {
+                return that.props.isActive;
+            },
+            priority: priorities.VIEW,
+            shortcuts: {
+                // [shortcutActions.SELECTALL]: this.props.editorActions.selectAll,
+                [shortcutActions.UNSELECT]: () => { this.props.onClearSelection(); },
+                [shortcutActions.DELETE]: this.props.editorActions.deleteSelectedModel,
+                // [shortcutActions.COPY]: this.props.editorActions.copy,
+                // [shortcutActions.PASTE]: this.props.editorActions.paste,
+                // [shortcutActions.DUPLICATE]: this.props.editorActions.duplicate,
+                // optimize: accelerate when continuous click
+                'MOVE-UP': {
+                    keys: ['alt+up'],
+                    callback: () => {
+                        this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: -1 });
+                    }
+                },
+                'MOVE-DOWM': {
+                    keys: ['alt+down'],
+                    callback: () => {
+                        this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: 1 });
+                    }
+                },
+                'MOVE-LEFT': {
+                    keys: ['alt+left'],
+                    callback: () => {
+                        this.props.elementActions.moveElementsOnKeyDown({ dx: -1, dy: 0 });
+                    }
+                },
+                'MOVE-RIGHT': {
+                    keys: ['alt+right'],
+                    callback: () => {
+                        this.props.elementActions.moveElementsOnKeyDown({ dx: 1, dy: 0 });
+                    }
+                }
+
+            }
+        };
+    })()
+
     constructor(props) {
         super(props);
 
         this.setMode = this.setMode.bind(this);
+        ShortcutManager.register(this.shortcutResponder);
     }
 
     componentDidMount() {

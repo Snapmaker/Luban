@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import noop from 'lodash/noop';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
@@ -27,6 +28,8 @@ import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
 class Visualizer extends Component {
     static propTypes = {
+        ...withRouter.propTypes,
+        pathname: PropTypes.string,
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
@@ -84,7 +87,8 @@ class Visualizer extends Component {
             resizeElementsFinish: PropTypes.func.isRequired,
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired
+            rotateElementsFinish: PropTypes.func.isRequired,
+            moveElementsOnKeyDown: PropTypes.func.isRequired
         })
     };
 
@@ -312,6 +316,7 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
+                        isActive={this.props.pathname.indexOf('laser') > 0 && isEditor}
                         ref={this.svgCanvas}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
@@ -326,6 +331,7 @@ class Visualizer extends Component {
                         onCreateElement={this.props.onCreateElement}
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
+                        editorActions={this.actions}
                         elementActions={this.props.elementActions}
                         getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
@@ -498,7 +504,7 @@ class Visualizer extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
 
     const { background } = state.laser;
@@ -510,6 +516,8 @@ const mapStateToProps = (state) => {
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
     return {
+        // switch pages trigger pathname change
+        pathname: ownProps.location.pathname,
         page,
         scale,
         target,
@@ -568,11 +576,12 @@ const mapDispatchToProps = (dispatch) => {
             resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsFinish('laser', elements, options)),
             rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('laser', elements, options)),
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('laser', elements, options)),
-            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options))
+            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options)),
+            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('laser', null, options))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));
