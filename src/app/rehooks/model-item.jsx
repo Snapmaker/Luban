@@ -8,6 +8,7 @@ import Anchor from '../components/Anchor';
 import { limitStringLength } from '../lib/normalize-range';
 
 function ModelItem(props) {
+    console.log('ModelItem dddd');
     const { model, isSelected, styles, onSelect, onToggleVisible } = props;
     if (!model) {
         return null;
