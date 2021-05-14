@@ -952,6 +952,8 @@ export const actions = {
         dispatch(actions.render());
     },
 
+    // make an offset of gcode layer count
+    // offset can be negative
     offsetGcodeLayers: (offset) => (dispatch, getState) => {
         const { layerCountDisplayed } = getState().printing;
         dispatch(actions.showGcodeLayers(layerCountDisplayed + offset));

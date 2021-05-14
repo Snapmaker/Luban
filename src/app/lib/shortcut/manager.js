@@ -13,7 +13,7 @@ function parseCombokeys(comboKeys) {
 class CShortcutManger {
     _responders = [];
 
-    _comboKeyCallbackMap={};
+    _comboKeyCallbackMap = {};
 
     /**
      *

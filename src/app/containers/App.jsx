@@ -88,7 +88,7 @@ class App extends PureComponent {
      * so we use get property to get active status.
      * but get property function is binded to responder,
      * we use closure function or define in constructor to solve this problem.
-     *  */
+     *  **/
     shortcutResponder = (() => {
         const that = this;
         return {
