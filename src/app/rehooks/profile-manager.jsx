@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import { cloneDeep } from 'lodash';
 import { PRINTING_QUALITY_CONFIG_GROUP } from '../constants';
 import modal from '../lib/modal';
 import i18n from '../lib/i18n';
@@ -33,18 +34,30 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
     }).call({}));
     const refs = {
         fileInput: useRef(null),
-        // qualityFileInput: useRef(null),
         renameInput: useRef(null),
         scrollDom: useRef(null)
     };
 
     const actions = {
-        onSelectDefinitionById: (definitionId) => {
-            if (definitionId === definitionState?.definitionForManager?.definitionId) {
-                return;
+        onSelectDefinitionById: (definitionId, name) => {
+            const definitionForManager = definitionState?.definitionForManager;
+            let selected;
+            if (!name) {
+                if (definitionId === definitionForManager?.definitionId) {
+                    return;
+                }
+                selected = allDefinitions.find(d => d.definitionId === definitionId);
+            } else {
+                if (definitionId === definitionForManager?.definitionId && name === definitionForManager?.name) {
+                    return;
+                }
+                selected = allDefinitions.find(d => d.definitionId === definitionId && d.name === name);
             }
-            const selected = allDefinitions.find(d => d.definitionId === definitionId);
-            actions.setRenamingStatus(false);
+
+            if (definitionState?.renamingStatus) {
+                actions.setRenamingStatus(false);
+            }
+            console.log('onSelectDefinitionById', definitionId, name);
             if (selected) {
                 setDefinitionState({
                     definitionForManager: selected,
@@ -52,8 +65,8 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 });
             }
         },
-        foldCategory: (cateName) => {
-            configExpanded[cateName] = !configExpanded[cateName];
+        foldCategory: (category) => {
+            configExpanded[category] = !configExpanded[category];
             setConfigExpanded(JSON.parse(JSON.stringify(configExpanded)));
         },
         onSelectDefinition: (definitionForManager) => {
@@ -99,7 +112,6 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 )
             });
         },
-
         showNewModal: () => {
             actions.showInputModal({
                 title: i18n._('Create Profile'),
@@ -131,7 +143,9 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
-                            await onComplete(definitionState.definitionForManager, popupActions.getInputValue());
+                            const newDefinition = await onComplete(definitionState.definitionForManager, popupActions.getInputValue());
+                            console.log('ddd newDefinition', newDefinition);
+                            actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
                             popupActions.close();
                         }}
                     >
@@ -207,7 +221,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
         onChangeDefinition: (key, value, checkboxKeyArray) => {
             // now setDefinitionState is synchronize, so remove setTimeout
             const { definitionOptions, definitionForManager } = definitionState;
-            const newDefinitionForManager = JSON.parse(JSON.stringify(definitionForManager));
+            const newDefinitionForManager = cloneDeep(definitionForManager);
             newDefinitionForManager.settings[key].default_value = value;
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
@@ -245,21 +259,45 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
             });
             checkboxAndSelectGroup.label = d.name;
             checkboxAndSelectGroup.value = d.definitionId;
+            if (d?.category) {
+                checkboxAndSelectGroup.category = d.category;
+            }
             return checkboxAndSelectGroup;
         });
+        console.log('definitionForManager', definitionForManager);
         Object.assign(newState, {
             definitionOptions: definitionOptions
         });
 
         setDefinitionState(newState);
     }, [allDefinitions]);
-
+    console.log('definitionState.definitionState', definitionState.definitionForManager);
     const optionList = definitionState.definitionOptions;
-    const cates = [{ cateName: 'Default', items: [] }, { cateName: 'Custom', items: [] }];
+    const cates = [];
     const regex = /^[a-z]+.[0-9]+$/;
     optionList.forEach(option => {
-        const idx = regex.test(option.value) ? 1 : 0;
-        cates[idx].items.push(option);
+        if (option.category) {
+            const cateItem = cates.find((cate) => cate.category === option.category);
+            if (cateItem) {
+                cateItem.items.push(option);
+            } else {
+                const eachCate = { items: [] };
+                eachCate.category = option.category;
+                eachCate.items.push(option);
+                cates.push(eachCate);
+            }
+        } else {
+            const idx = regex.test(option.value) ? 'Custom' : 'Default';
+            const cateItem = cates.find((cate) => cate.category === idx);
+            if (cateItem) {
+                cateItem.items.push(option);
+            } else {
+                const eachCate = { items: [] };
+                eachCate.category = idx;
+                eachCate.items.push(option);
+                cates.push(eachCate);
+            }
+        }
     });
     return (
         <React.Fragment>
@@ -267,7 +305,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 <Modal
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={outsideActions.hidePrintingManager}
+                    onClose={outsideActions.hideManager}
                 >
                     <Modal.Body
                         style={{ margin: '0', padding: '20px 0 0', height: '100%', minHeight: '525px', textAlign: 'center' }}
@@ -286,37 +324,38 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                             <div className={classNames(styles['manager-name'])}>
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
-                                        const displayCategory = limitStringLength(cate.cateName, 28);
+                                        const displayCategory = limitStringLength(cate.category, 28);
 
                                         return !!cate.items.length && (
-                                            <li key={`${cate.cateName}`}>
+                                            <li key={`${cate.category}`}>
                                                 <Anchor
                                                     className={classNames(styles['manager-btn'])}
 
                                                 >
                                                     <div className={classNames(styles['manager-btn-unfold'])}>
                                                         <span
-                                                            className={classNames(styles['manager-btn-unfold-bg'], { [styles.unfold]: !configExpanded[cate.cateName] })}
+                                                            className={classNames(styles['manager-btn-unfold-bg'], { [styles.unfold]: !configExpanded[cate.category] })}
                                                             onKeyDown={() => {}}
                                                             role="button"
                                                             tabIndex={0}
-                                                            onClick={() => { actions.foldCategory(cate.cateName); }}
+                                                            onClick={() => { actions.foldCategory(cate.category); }}
                                                         />
                                                     </div>
                                                     <span>{displayCategory}</span>
                                                 </Anchor>
-                                                {!configExpanded[cate.cateName] && (
+                                                {!configExpanded[cate.category] && (
                                                     <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                         {(cate.items.map((currentOption) => {
                                                             const displayName = limitStringLength(i18n._(currentOption.label), 24);
-                                                            const isSelected = currentOption.value === definitionState.definitionForManager.definitionId;
+                                                            const definitionForManager = definitionState?.definitionForManager;
+                                                            const isSelected = currentOption.value === definitionForManager.definitionId && currentOption.label === definitionForManager.name;
                                                             return (
-                                                                <li key={`${currentOption.value}`}>
+                                                                <li key={`${currentOption.value}${currentOption.label}`}>
                                                                     <Anchor
                                                                         className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
                                                                         style={{ paddingLeft: '42px' }}
                                                                         title={currentOption.label}
-                                                                        onClick={() => actions.onSelectDefinitionById(currentOption.value)}
+                                                                        onClick={() => actions.onSelectDefinitionById(currentOption.value, currentOption.label)}
                                                                         onDoubleClick={() => actions.setRenamingStatus(true, definitionState.definitionForManager)}
                                                                     >
                                                                         {(isSelected && definitionState.renamingStatus) ? (
@@ -414,7 +453,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                 </div>
                             </div>
 
-                            {(optionConfigGroup.length > 1) && (
+                            {(optionConfigGroup.length > 2) && (
                                 <div className={classNames(styles['manager-grouplist'])}>
                                     <div className="sm-parameter-container">
                                         {optionConfigGroup.map((group, idx) => {
@@ -614,7 +653,18 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                                                         options={opts}
                                                                         value={defaultValue}
                                                                         onChange={(option) => {
-                                                                            outsideActions.onChangeDefinition(key, option.value, defaultKeysAndId.keysArray);
+                                                                            actions.onChangeDefinition(key, option.value, defaultKeysAndId.keysArray);
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                                {type === undefined && (
+                                                                    <Input
+                                                                        className="sm-parameter-row__input"
+                                                                        style={{ width: '160px' }}
+                                                                        value={defaultValue}
+                                                                        disabled={!isDefinitionEditable(definitionState.definitionForManager)}
+                                                                        onChange={(value) => {
+                                                                            actions.onChangeDefinition(key, value);
                                                                         }}
                                                                     />
                                                                 )}
@@ -634,7 +684,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                         <div className={classNames(styles['manager-settings'], 'clearfix')}>
                             <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                 <Anchor
-                                    onClick={() => { outsideActions.hidePrintingManager(); }}
+                                    onClick={() => { outsideActions.hideManager(); }}
                                     className="sm-btn-large sm-btn-default"
                                     style={{ marginRight: '11px' }}
                                 >
@@ -644,7 +694,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                 <Anchor
                                     onClick={() => {
                                         outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
-                                        outsideActions.hidePrintingManager();
+                                        outsideActions.hideManager();
                                     }}
                                     className="sm-btn-large sm-btn-primary"
                                 >

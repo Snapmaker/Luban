@@ -51,7 +51,7 @@ function PrintingManager() {
     }
 
     const actions = {
-        hidePrintingManager: () => {
+        hideManager: () => {
             dispatch(printingActions.updateShowPrintingManager(false));
         },
         onChangeFileForManager: (event) => {
@@ -108,7 +108,8 @@ function PrintingManager() {
 
         // TODO
         onCreateManagerDefinition: async (definition, name) => {
-            await dispatch(printingActions.duplicateDefinitionByType(managerDisplayType, definition, undefined, name));
+            const newDefinition = await dispatch(printingActions.duplicateDefinitionByType(managerDisplayType, definition, undefined, name));
+            return newDefinition;
         },
         removeDefinitionByType: async (definition) => {
             await dispatch(printingActions.removeDefinitionByType(managerDisplayType, definition));

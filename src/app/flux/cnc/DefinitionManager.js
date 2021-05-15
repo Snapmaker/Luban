@@ -59,6 +59,7 @@ class DefinitionManager {
     }
 
     async changeActiveToolListDefinition(definitionId, name) {
+        console.trace('changeActiveToolListDefinition', definitionId, name);
         const res = await api.cncConfigs.changeActiveToolListDefinition(definitionId, name);
         return res.body.definition;
     }

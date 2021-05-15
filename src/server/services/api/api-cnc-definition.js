@@ -41,6 +41,7 @@ export const getToolListDefinition = (req, res) => {
 export const changeActiveToolListDefinition = (req, res) => {
     const { definitionId } = req.params;
     const name = req.query.name;
+    console.log('changeActiveToolListDefinition', definitionId, name);
     if (!definitionId) {
         res.status(ERR_BAD_REQUEST).send({
             err: 'Parameter "definitionId" is required.'

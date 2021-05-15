@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
@@ -120,7 +121,7 @@ export const actions = {
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {
         const { toolDefinitions } = getState().cnc;
-        const newToolCategory = toolDefinitions.find((d) => d.definitionId === activeToolList.definitionId);
+        const newToolCategory = cloneDeep(toolDefinitions).find((d) => d.definitionId === activeToolList.definitionId);
         const newToolList = newToolCategory.toolList;
         // find the old tool list definition and replace it
         const isReplacedTool = (d) => d.name === activeToolList.name;
@@ -211,7 +212,7 @@ export const actions = {
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
-        return newToolListDefinition.name;
+        return newToolListDefinition;
     },
     removeToolCategoryDefinition: (definitionId) => async (dispatch, getState) => {
         const state = getState().cnc;
@@ -229,6 +230,7 @@ export const actions = {
         const isReplacedDefinition = (d) => d.definitionId === createdDefinition.definitionId;
         const index = newToolDefinitions.findIndex(isReplacedDefinition);
         newToolDefinitions.splice(index, 1, createdDefinition);
+        console.log('removeToolListDefinition', newToolDefinitions);
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
