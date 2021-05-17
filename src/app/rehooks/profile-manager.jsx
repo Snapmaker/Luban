@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import { cloneDeep } from 'lodash';
+import { isUndefined, cloneDeep, uniqWith, isEqual } from 'lodash';
 import { PRINTING_QUALITY_CONFIG_GROUP } from '../constants';
 import modal from '../lib/modal';
+import CreateModal from './CreateModal';
 import i18n from '../lib/i18n';
 import SvgIcon from '../components/SvgIcon';
 import Select from '../components/Select';
@@ -15,12 +16,12 @@ import TipTrigger from '../components/TipTrigger';
 import useSetState from './set-state';
 import { limitStringLength } from '../lib/normalize-range';
 
-
-function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, styles, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition }) {
+function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, defaultKeysAndId, styles, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition }) {
     const [definitionState, setDefinitionState] = useSetState({
         definitionForManager: null,
         definitionOptions: [],
         selectedName: '',
+        isCategorySelected: false,
         renamingStatus: false
     });
     const [configExpanded, setConfigExpanded] = useState({});
@@ -35,10 +36,34 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
     const refs = {
         fileInput: useRef(null),
         renameInput: useRef(null),
+        refCreateModal: useRef(null),
         scrollDom: useRef(null)
     };
 
     const actions = {
+        isCategorySelectedNow: (category) => {
+            const { definitionForManager, isCategorySelected } = definitionState;
+            return isCategorySelected && definitionForManager.category === category;
+        },
+        onSelectToolCategory: (category) => {
+            if (disableCategory) return;
+            const { definitionForManager, isCategorySelected, renamingStatus } = definitionState;
+            if (isCategorySelected && category === definitionForManager.category) {
+                return;
+            }
+            if (renamingStatus) {
+                actions.setRenamingStatus(false);
+            }
+            let activeToolCategory = allDefinitions.find(d => d.category === category);
+            if (!activeToolCategory) {
+                activeToolCategory = allDefinitions[0];
+            }
+            setDefinitionState({
+                definitionForManager: activeToolCategory,
+                selectedName: activeToolCategory.category,
+                isCategorySelected: true
+            });
+        },
         onSelectDefinitionById: (definitionId, name) => {
             const definitionForManager = definitionState?.definitionForManager;
             let selected;
@@ -48,19 +73,16 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 }
                 selected = allDefinitions.find(d => d.definitionId === definitionId);
             } else {
-                if (definitionId === definitionForManager?.definitionId && name === definitionForManager?.name) {
-                    return;
-                }
                 selected = allDefinitions.find(d => d.definitionId === definitionId && d.name === name);
             }
 
             if (definitionState?.renamingStatus) {
                 actions.setRenamingStatus(false);
             }
-            console.log('onSelectDefinitionById', definitionId, name);
             if (selected) {
                 setDefinitionState({
                     definitionForManager: selected,
+                    isCategorySelected: false,
                     selectedName: selected.name
                 });
             }
@@ -72,10 +94,11 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
         onSelectDefinition: (definitionForManager) => {
             setDefinitionState({
                 definitionForManager: definitionForManager,
+                isCategorySelected: false,
                 selectedName: definitionForManager.name
             });
         },
-        onRemoveManagerDefinition: async (definition) => {
+        onRemoveManagerDefinition: async (definition, isCategorySelected) => {
             if (isOfficialDefinition(definitionState.definitionForManager)) {
                 return;
             }
@@ -99,7 +122,11 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
-                            await outsideActions.removeDefinitionByType(definition);
+                            if (!isCategorySelected) {
+                                await outsideActions.removeDefinitionByType(definition);
+                            } else if (isCategorySelected && outsideActions.removeToolCategoryDefinition) {
+                                await outsideActions.removeToolCategoryDefinition(definition.definitionId);
+                            }
                             // After removal, select the first definition
                             if (shouldSelectDefinition) {
                                 actions.onSelectDefinition(newDefinition);
@@ -114,39 +141,84 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
         },
         showNewModal: () => {
             actions.showInputModal({
-                title: i18n._('Create Profile'),
-                label: i18n._('Enter Profile Name:'),
-                defaultInputValue: 'New Profile',
-                onComplete: outsideActions.onCreateManagerDefinition
+                isCreate: true
             });
         },
         showDuplicateModal: () => {
             actions.showInputModal({
-                title: i18n._('Copy Profile'),
-                label: i18n._('Enter Profile Name:'),
-                defaultInputValue: definitionState?.definitionForManager?.name,
-                onComplete: outsideActions.onCreateManagerDefinition
+                isCreate: false
             });
         },
-        showInputModal: ({ title, label, defaultInputValue, onComplete }) => {
+        showInputModal: ({ isCreate }) => {
+            const definitionForManager = definitionState?.definitionForManager;
+            const isCategorySelected = definitionState?.isCategorySelected;
+            let title = i18n._('Create');
+            let copyType = '', copyTargetName = '';
+            if (isCreate && disableCategory) {
+                title = i18n._('Create');
+                copyType = 'Tool';
+                copyTargetName = 'new profile';
+            }
+            if (!isCreate) {
+                title = i18n._('Copy');
+                copyType = isCategorySelected ? 'Material' : 'Tool';
+                copyTargetName = isCategorySelected ? definitionForManager.category : definitionForManager.name;
+            }
+            isCreate = isCreate && !disableCategory;
+            let materialOptions = definitionState?.definitionOptions.map(option => {
+                return {
+                    label: option.category,
+                    value: option.value
+                };
+            });
+            materialOptions = uniqWith(materialOptions, isEqual);
+
             const popupActions = modal({
                 title: title,
                 body: (
                     <React.Fragment>
-                        <p>{label}</p>
+                        <CreateModal
+                            isCreate={isCreate}
+                            disableCategory={disableCategory}
+                            ref={refs.refCreateModal}
+                            materialOptions={materialOptions}
+                            copyType={copyType}
+                            copyTargetName={copyTargetName}
+                        />
                     </React.Fragment>
-
                 ),
-                defaultInputValue,
                 footer: (
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
-                            const newDefinition = await onComplete(definitionState.definitionForManager, popupActions.getInputValue());
-                            console.log('ddd newDefinition', newDefinition);
-                            actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                            const data = refs.refCreateModal.current.getData();
+                            const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
+                            let isEmptyCategory = false;
+                            let newName = '';
                             popupActions.close();
+                            if (!isCreate) {
+                                if (isCategorySelected) {
+                                    newName = data.materialName;
+                                } else {
+                                    newDefinitionForManager.definitionId = data.materialDefinitionId;
+                                    newName = data.toolName;
+                                }
+                                const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, isCategorySelected);
+                                actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                            } else {
+                                if (data.createType === 'Material') {
+                                    newDefinitionForManager.category = data.materialName;
+                                    newName = data.materialName;
+                                    isEmptyCategory = true;
+                                } else {
+                                    newDefinitionForManager.definitionId = data.materialDefinitionId;
+                                    newDefinitionForManager.category = data.materialName;
+                                    newName = data.toolName;
+                                }
+                                const newDefinition = await outsideActions.onCreateManagerDefinition(newDefinitionForManager, newName, data.createType === 'Material', isEmptyCategory);
+                                actions.onSelectDefinitionById(newDefinition.definitionId, newDefinition.name);
+                            }
                         }}
                     >
                         {i18n._('OK')}
@@ -159,15 +231,36 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 selectedName: event.target.value
             });
         },
-        updaterDefinitionName: async () => {
+        updateDefinitionName: async () => {
             const definition = definitionState?.definitionForManager;
             const options = definitionState?.definitionOptions;
             const selectedName = definitionState.selectedName;
             if (selectedName !== definition.name) { // changed
                 try {
-                    outsideActions.updaterDefinitionName(definition, selectedName);
+                    await outsideActions.updateDefinitionName(definition, selectedName);
                     const option = options.find(o => o.value === definition.definitionId);
                     option.label = selectedName;
+                    setDefinitionState({
+                        definitionOptions: [...options]
+                    });
+                } catch (err) {
+                    actions.showNotification(err);
+                }
+            }
+        },
+        updateCategoryName: async () => {
+            const definition = definitionState?.definitionForManager;
+            let options = definitionState?.definitionOptions;
+            const selectedName = definitionState.selectedName;
+            if (selectedName !== definition.category) { // changed
+                try {
+                    await outsideActions.updateCategoryName(definition, selectedName);
+                    options = options.map(o => {
+                        if (o.category === definition.category) {
+                            o.category = selectedName;
+                        }
+                        return o;
+                    });
                     setDefinitionState({
                         definitionOptions: [...options]
                     });
@@ -200,8 +293,9 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
             ref.current.value = null;
             ref.current.click();
         },
-        setRenamingStatus: (status, currentDefinition) => {
-            if (isOfficialDefinition(definitionState.definitionForManager)) {
+        setRenamingStatus: (status) => {
+            const currentDefinition = definitionState?.definitionForManager;
+            if (isOfficialDefinition(currentDefinition)) {
                 return;
             } else if (!status) {
                 setDefinitionState({
@@ -209,14 +303,17 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                 });
                 return;
             }
-            setDefinitionState({
-                selectedName: currentDefinition.name,
-                renamingStatus: status
-            });
+            if (status) {
+                const title = definitionState.isCategorySelected ? currentDefinition.category : currentDefinition.name;
+                setDefinitionState({
+                    selectedName: title,
+                    renamingStatus: status
+                });
 
-            status && setTimeout(() => {
-                refs.renameInput.current.focus();
-            }, 0);
+                setTimeout(() => {
+                    refs.renameInput.current.focus();
+                }, 0);
+            }
         },
         onChangeDefinition: (key, value, checkboxKeyArray) => {
             // now setDefinitionState is synchronize, so remove setTimeout
@@ -246,8 +343,13 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
     };
     useEffect(() => {
         const newState = {};
-        const definitionForManager = allDefinitions.find(d => d.definitionId === definitionState?.definitionForManager?.definitionId)
-        || allDefinitions.find(d => d.definitionId === defaultKeysAndId.id);
+        const lastDefinitionForManager = definitionState?.definitionForManager;
+        let definitionForManager = allDefinitions.find(d => d.definitionId === lastDefinitionForManager?.definitionId && d.name === lastDefinitionForManager?.name);
+        if (!definitionForManager && defaultKeysAndId?.name) {
+            definitionForManager = allDefinitions.find(d => d.definitionId === defaultKeysAndId?.id && d.name === defaultKeysAndId?.name);
+        } else if (!definitionForManager && !defaultKeysAndId?.name) {
+            definitionForManager = allDefinitions.find(d => d.definitionId === defaultKeysAndId?.id);
+        }
         Object.assign(newState, {
             definitionForManager: definitionForManager
         });
@@ -262,16 +364,19 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
             if (d?.category) {
                 checkboxAndSelectGroup.category = d.category;
             }
+            // if (isOfficialDefinition(d)) {
+            //     checkboxAndSelectGroup.category = 'Default';
+            // }else {
+            //     checkboxAndSelectGroup.category = 'Custom';
+            // }
             return checkboxAndSelectGroup;
         });
-        console.log('definitionForManager', definitionForManager);
         Object.assign(newState, {
             definitionOptions: definitionOptions
         });
 
         setDefinitionState(newState);
     }, [allDefinitions]);
-    console.log('definitionState.definitionState', definitionState.definitionForManager);
     const optionList = definitionState.definitionOptions;
     const cates = [];
     const regex = /^[a-z]+.[0-9]+$/;
@@ -299,6 +404,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
             }
         }
     });
+
     return (
         <React.Fragment>
             {definitionState?.definitionForManager && (
@@ -325,12 +431,13 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category, 28);
-
+                                        const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
                                                 <Anchor
-                                                    className={classNames(styles['manager-btn'])}
-
+                                                    className={classNames(styles['manager-btn'], { [styles.selected]: actions.isCategorySelectedNow(cate.category) })}
+                                                    onClick={() => actions.onSelectToolCategory(cate.category)}
+                                                    onDoubleClick={() => actions.setRenamingStatus(true)}
                                                 >
                                                     <div className={classNames(styles['manager-btn-unfold'])}>
                                                         <span
@@ -341,47 +448,69 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                                             onClick={() => { actions.foldCategory(cate.category); }}
                                                         />
                                                     </div>
-                                                    <span>{displayCategory}</span>
+                                                    {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
+                                                        <input
+                                                            ref={refs.renameInput}
+                                                            className="sm-parameter-row__input"
+                                                            value={definitionState?.selectedName}
+                                                            onChange={actions.onChangeSelectedName}
+                                                            onKeyPress={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    actions.setRenamingStatus(false);
+                                                                    actions.updateCategoryName();
+                                                                }
+                                                            }}
+                                                            onBlur={() => {
+                                                                actions.setRenamingStatus(false);
+                                                                actions.updateCategoryName();
+                                                            }}
+                                                        />
+                                                    ) : displayCategory}
                                                 </Anchor>
                                                 {!configExpanded[cate.category] && (
                                                     <ul style={{ listStyle: 'none', paddingLeft: '0' }}>
                                                         {(cate.items.map((currentOption) => {
                                                             const displayName = limitStringLength(i18n._(currentOption.label), 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
-                                                            const isSelected = currentOption.value === definitionForManager.definitionId && currentOption.label === definitionForManager.name;
-                                                            return (
-                                                                <li key={`${currentOption.value}${currentOption.label}`}>
-                                                                    <Anchor
-                                                                        className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
-                                                                        style={{ paddingLeft: '42px' }}
-                                                                        title={currentOption.label}
-                                                                        onClick={() => actions.onSelectDefinitionById(currentOption.value, currentOption.label)}
-                                                                        onDoubleClick={() => actions.setRenamingStatus(true, definitionState.definitionForManager)}
-                                                                    >
-                                                                        {(isSelected && definitionState.renamingStatus) ? (
-                                                                            <input
-                                                                                ref={refs.renameInput}
-                                                                                className="sm-parameter-row__input"
-                                                                                value={definitionState.selectedName}
-                                                                                onChange={actions.onChangeSelectedName}
-                                                                                onKeyPress={(e) => {
-                                                                                    if (e.key === 'Enter') {
-                                                                                        e.preventDefault();
-                                                                                        actions.setRenamingStatus(false, definitionState.definitionForManager);
-                                                                                        actions.updaterDefinitionName();
-                                                                                    }
-                                                                                }}
-                                                                                onBlur={() => {
-                                                                                    actions.setRenamingStatus(false, definitionState.definitionForManager);
-                                                                                    actions.updaterDefinitionName();
-                                                                                }}
-                                                                            // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
-                                                                            />
-                                                                        ) : displayName}
+                                                            const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId && currentOption.label === definitionForManager.name;
+                                                            if (isUndefined(currentOption.label)) {
+                                                                return null;
+                                                            } else {
+                                                                return (
+                                                                    <li key={`${currentOption.value}${currentOption.label}`}>
+                                                                        <Anchor
+                                                                            className={classNames(styles['manager-btn'], { [styles.selected]: isSelected })}
+                                                                            style={{ paddingLeft: '42px' }}
+                                                                            title={currentOption.label}
+                                                                            onClick={() => actions.onSelectDefinitionById(currentOption.value, currentOption.label)}
+                                                                            onDoubleClick={() => actions.setRenamingStatus(true)}
+                                                                        >
+                                                                            {(isSelected && definitionState.renamingStatus) ? (
+                                                                                <input
+                                                                                    ref={refs.renameInput}
+                                                                                    className="sm-parameter-row__input"
+                                                                                    value={definitionState.selectedName}
+                                                                                    onChange={actions.onChangeSelectedName}
+                                                                                    onKeyPress={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                            e.preventDefault();
+                                                                                            actions.setRenamingStatus(false);
+                                                                                            actions.updateDefinitionName();
+                                                                                        }
+                                                                                    }}
+                                                                                    onBlur={() => {
+                                                                                        actions.setRenamingStatus(false);
+                                                                                        actions.updateDefinitionName();
+                                                                                    }}
+                                                                                // disabled={!isDefinitionEditable(qualityDefinitionForManager)}
+                                                                                />
+                                                                            ) : displayName}
 
-                                                                    </Anchor>
-                                                                </li>
-                                                            );
+                                                                        </Anchor>
+                                                                    </li>
+                                                                );
+                                                            }
                                                         }))}
                                                     </ul>
 
@@ -401,7 +530,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                         disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                         size={18}
                                         title={i18n._('Edit')}
-                                        onClick={() => actions.setRenamingStatus(true, definitionState.definitionForManager)}
+                                        onClick={() => actions.setRenamingStatus(true)}
                                     />
                                     <input
                                         ref={refs.fileInput}
@@ -427,7 +556,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                         name="Delete"
                                         size={18}
                                         title={i18n._('Delete')}
-                                        onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager)}
+                                        onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
                                         disabled={isOfficialDefinition(definitionState.definitionForManager)}
                                     />
                                 </div>
@@ -494,7 +623,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                 )}
 
                                 <div className="sm-parameter-container" ref={refs.scrollDom}>
-                                    {optionConfigGroup.map((group, idx) => {
+                                    {!definitionState?.isCategorySelected && optionConfigGroup.map((group, idx) => {
                                         return (
                                             <div key={i18n._(idx)}>
                                                 {group.name && (
@@ -681,6 +810,7 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
 
                         </div>
 
+
                         <div className={classNames(styles['manager-settings'], 'clearfix')}>
                             <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                 <Anchor
@@ -691,15 +821,17 @@ function ProfileManager({ optionConfigGroup, managerTitle, defaultKeysAndId, sty
                                     {i18n._('Close')}
                                 </Anchor>
 
-                                <Anchor
-                                    onClick={() => {
-                                        outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
-                                        outsideActions.hideManager();
-                                    }}
-                                    className="sm-btn-large sm-btn-primary"
-                                >
-                                    {i18n._('Select')}
-                                </Anchor>
+                                {!definitionState?.isCategorySelected && (
+                                    <Anchor
+                                        onClick={() => {
+                                            outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
+                                            outsideActions.hideManager();
+                                        }}
+                                        className="sm-btn-large sm-btn-primary"
+                                    >
+                                        {i18n._('Select')}
+                                    </Anchor>
+                                )}
 
                             </div>
                         </div>
@@ -713,6 +845,7 @@ ProfileManager.propTypes = {
     outsideActions: PropTypes.object.isRequired,
     defaultKeysAndId: PropTypes.object.isRequired,
     managerTitle: PropTypes.string.isRequired,
+    disableCategory: PropTypes.bool,
     styles: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.array.isRequired,
     allDefinitions: PropTypes.array.isRequired,

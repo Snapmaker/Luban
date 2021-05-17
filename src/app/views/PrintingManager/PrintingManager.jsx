@@ -8,7 +8,7 @@ import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
     PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
 import ProfileManager from '../../rehooks/profile-manager';
-
+import i18n from '../../lib/i18n';
 
 // checkbox and select
 const MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY = [
@@ -102,8 +102,13 @@ function PrintingManager() {
             dispatch(printingActions.updateDefinitionsForManager(newDefinition.definitionId, type));
         },
 
-        updaterDefinitionName: (definition, selectedName) => {
-            dispatch(printingActions.updateDefinitionNameByType(managerDisplayType, definition, selectedName));
+        updateDefinitionName: async (definition, selectedName) => {
+            try {
+                await dispatch(printingActions.updateDefinitionNameByType(managerDisplayType, definition, selectedName));
+                return null;
+            } catch (e) {
+                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+            }
         },
 
         // TODO

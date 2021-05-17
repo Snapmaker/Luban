@@ -8,6 +8,7 @@ import styles from './styles.styl';
 
 import { CNC_TOOL_CONFIG_GROUP } from '../../constants';
 import ProfileManager from '../../rehooks/profile-manager';
+import i18n from '../../lib/i18n';
 
 const SUBCATEGORY = 'CncConfig';
 const defaultToolListNames = [
@@ -45,16 +46,22 @@ function adaptateToProfileDefinitions(toolDefinitions) {
                 result.push(item);
             }
         });
+        if (toolCategory.toolList.length === 0) {
+            const item = {};
+            item.category = toolCategory.category;
+            item.definitionId = toolCategory.definitionId;
+            item.settings = {};
+            result.push(item);
+        }
     });
     return result;
 }
-function adaptateToToolDefinition(toolDefinitions, definition, name) {
+function adaptateToToolDefinition(toolDefinitions, definition, newName) {
     const newDefinitions = cloneDeep(toolDefinitions);
     const activeToolCategory = newDefinitions.find((toolCategory) => toolCategory?.definitionId === definition?.definitionId);
-    const activeToolList = name ? { ...definition, name: name } : definition;
+    const activeToolList = newName ? { ...definition, name: newName } : definition;
     const oldConfig = activeToolList.settings;
     activeToolList.config = oldConfig;
-    // delete activeToolList.settings;
     return {
         activeToolCategory,
         activeToolList
@@ -89,31 +96,56 @@ function CncToolManager() {
         },
         onSaveDefinitionForManager: async (definition) => {
             const { activeToolList } = adaptateToToolDefinition(toolDefinitions, definition);
-            console.log('onSaveDefinitionForManager', definition, activeToolList);
             dispatch(cncActions.updateToolListDefinition(activeToolList));
         },
-        updaterDefinitionName: (definition, selectedName) => {
-            definition.name = selectedName;
-            console.log('updaterDefinitionName', definition);
-            dispatch(cncActions.updateToolListDefinition(definition));
+        updateDefinitionName: async (definition, selectedName) => {
+            try {
+                const { activeToolList } = adaptateToToolDefinition(toolDefinitions, definition);
+                await dispatch(cncActions.updateToolDefinitionName(false, activeToolList.definitionId, activeToolList.name, selectedName));
+                return null;
+            } catch (e) {
+                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+            }
         },
-        onCreateManagerDefinition: async (definition, name) => {
+        updateCategoryName: async (definition, selectedName) => {
+            try {
+                const { activeToolList } = adaptateToToolDefinition(toolDefinitions, definition);
+                await dispatch(cncActions.updateToolDefinitionName(true, activeToolList.definitionId, activeToolList.category, selectedName));
+                return null;
+            } catch (e) {
+                return Promise.reject(i18n._('Failed to rename. Name already exists.'));
+            }
+        },
+        onCreateManagerDefinition: async (definition, name, isCategorySelected, isEmptyCategory = false) => {
             const { activeToolCategory, activeToolList } = adaptateToToolDefinition(toolDefinitions, definition, name);
-            const result = await dispatch(cncActions.duplicateToolListDefinition(activeToolCategory, activeToolList));
+            let result = {};
+            if (isCategorySelected) {
+                activeToolCategory.category = name;
+                if (isEmptyCategory) {
+                    activeToolCategory.toolList = [];
+                }
+                result = await dispatch(cncActions.duplicateToolCategoryDefinition(activeToolCategory));
+            } else {
+                result = await dispatch(cncActions.duplicateToolListDefinition(activeToolCategory, activeToolList));
+            }
             return result;
         },
         removeDefinitionByType: async (definition) => {
             const { activeToolCategory, activeToolList } = adaptateToToolDefinition(toolDefinitions, definition);
             await dispatch(cncActions.removeToolListDefinition(activeToolCategory, activeToolList));
+        },
+        removeToolCategoryDefinition: (definitionId) => {
+            dispatch(cncActions.removeToolCategoryDefinition(definitionId));
         }
     };
     const optionConfigGroup = CNC_TOOL_CONFIG_GROUP;
     const allDefinitions = adaptateToProfileDefinitions(toolDefinitions);
     const defaultKeysAndId = {
         id: 'Default',
+        name: 'Carving V-bit',
         keysArray: []
     };
-    console.log('cnc allDefinitions', allDefinitions);
+    // console.log('cnc allDefinitions', allDefinitions);
     return (
         <ProfileManager
             styles={styles}
@@ -122,6 +154,7 @@ function CncToolManager() {
             isOfficialDefinition={isOfficialDefinition}
             optionConfigGroup={optionConfigGroup}
             allDefinitions={allDefinitions}
+            disableCategory={false}
             managerTitle="Tool"
             defaultKeysAndId={defaultKeysAndId}
         />

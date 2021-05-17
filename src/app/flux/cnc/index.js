@@ -130,7 +130,7 @@ export const actions = {
             name: activeToolList.name,
             config: activeToolList.config
         });
-
+        console.log('updateToolListDefinition', newToolCategory);
         await definitionManager.updateToolDefinition(newToolCategory);
         const isReplacedDefinition = (d) => d.definitionId === newToolCategory.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
@@ -183,6 +183,11 @@ export const actions = {
         };
         const definitionId = `${activeToolCategory.definitionId}${timestamp()}`;
         newToolCategory.definitionId = definitionId;
+        newToolCategory.toolList.forEach((item) => {
+            item.definitionId = definitionId;
+        });
+        console.log('duplicateToolCategoryDefinition', activeToolCategory, newToolCategory);
+
         // make sure category is not repeated
         while (state.toolDefinitions.find(d => d.category === newToolCategory.category)) {
             newToolCategory.category = `#${newToolCategory.category}`;
