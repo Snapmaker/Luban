@@ -1065,13 +1065,6 @@ class ModelGroup extends EventEmitter {
         }
     }
 
-    updateSelectedModelProcessImage(processImageName) {
-        if (this.selectedModelArray.length === 1) {
-            const selectedModel = this.selectedModelArray[0];
-            selectedModel.updateProcessImageName(processImageName);
-        }
-    }
-
     hideAllModelsObj3D() {
         this.object.visible = false;
     }

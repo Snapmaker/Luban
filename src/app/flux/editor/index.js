@@ -572,46 +572,6 @@ export const actions = {
             headType: headType,
             data: options
         });
-        // =======
-        //         api.processImage(options)
-        //             .then((res) => {
-        //                 const processImageName = res.body.filename;
-        //                 if (!processImageName) {
-        //                     return;
-        //                 }
-        //
-        //                 const svgModel = selectedModel.relatedModels.svgModel;
-        //
-        //                 if (selectedModel.sourceType === 'image3d') {
-        //                     const modelOptions = {
-        //                         sourceWidth: res.body.width * DEFAULT_SCALE,
-        //                         sourceHeight: res.body.height * DEFAULT_SCALE,
-        //                         width: res.body.width,
-        //                         height: res.body.height,
-        //                         transformation: {
-        //                             width: Math.abs(res.body.width * selectedModel.transformation.scaleX),
-        //                             height: Math.abs(res.body.height * selectedModel.transformation.scaleY)
-        //                         }
-        //                     };
-        //                     selectedModel.updateAndRefresh(modelOptions);
-        //                     SVGActions.resetSelection();
-        //                 }
-        //
-        //                 // modelGroup.updateSelectedModelProcessImage(processImageName);
-        //                 selectedModel.updateProcessImageName(processImageName);
-        //
-        //                 // SVGActions.updateElementImage(processImageName);
-        //                 SVGActions.updateSvgModelImage(svgModel, processImageName);
-        //
-        //                 // dispatch(baseActions.recordSnapshot(headType));
-        //                 dispatch(baseActions.resetCalculatedState(headType));
-        //                 dispatch(baseActions.render(headType));
-        //             })
-        //             .catch((e) => {
-        //                 // TODO: use log
-        //                 console.error(e);
-        //             });
-        // >>>>>>> Feature: Add 4 axis module
     },
 
 
@@ -817,7 +777,7 @@ export const actions = {
         model.updateProcessImageName(processImageName);
 
         // SVGActions.updateElementImage(processImageName);
-        SVGActions.updateSvgModelImage(model, processImageName);
+        // SVGActions.updateSvgModelImage(model, processImageName);
 
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));

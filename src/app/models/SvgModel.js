@@ -919,17 +919,17 @@ class SvgModel extends BaseModel {
         this.showOrigin = showOrigin ?? !this.showOrigin;
 
         if (this.showOrigin) {
-            this.transformation = this.transformationOrigin;
+            // this.transformation = this.transformationOrigin;
             this.elem.setAttribute('href', this.uploadName);
-            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+            // setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         } else {
-            this.transformation = this.transformationProcess;
+            // this.transformation = this.transformationProcess;
             this.elem.setAttribute('href', this.processImageName);
-            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+            // setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         }
-        console.log('tx', this.transformationProcess.scaleX, this.transformationOrigin.scaleX, this.transformation.scaleX);
-        console.log('ty', this.transformationProcess.scaleY, this.transformationOrigin.scaleY, this.transformation.scaleY);
-        console.log('t', this.transformation);
+        // console.log('tx', this.transformationProcess.scaleX, this.transformationOrigin.scaleX, this.transformation.scaleX);
+        // console.log('ty', this.transformationProcess.scaleY, this.transformationOrigin.scaleY, this.transformation.scaleY);
+        // console.log('t', this.transformation);
         this.modelObject3D.visible = this.showOrigin;
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;
@@ -1126,6 +1126,9 @@ class SvgModel extends BaseModel {
         this.processImageName = processImageName;
 
         this.generateProcessObject3D();
+        const imagePath = `${DATA_PREFIX}/${processImageName}`;
+        this.changeShowOrigin(false);
+        this.elem.setAttribute('href', imagePath);
     }
     // --Model functions--
 
