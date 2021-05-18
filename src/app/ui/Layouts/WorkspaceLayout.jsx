@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import styles from './styles/workspace.styl';
 
-
 class WorkspaceLayout extends PureComponent {
     static propTypes = {
         renderLeftView: PropTypes.func,

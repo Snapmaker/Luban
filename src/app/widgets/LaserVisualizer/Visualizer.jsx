@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
+import path from 'path';
 
 import i18n from '../../lib/i18n';
 import { humanReadableTime } from '../../lib/time-utils';
@@ -16,7 +17,6 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
-import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 import LaserCameraAidBackground from '../LaserCameraAidBackground';
 import styles from './styles.styl';
@@ -28,6 +28,7 @@ import {
 // eslint-disable-next-line no-unused-vars
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
+import modal from '../../lib/modal';
 
 
 class Visualizer extends Component {
@@ -83,6 +84,8 @@ class Visualizer extends Component {
         createText: PropTypes.func.isRequired,
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
+        uploadImage: PropTypes.func.isRequired,
+        switchToPage: PropTypes.func.isRequired,
 
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
@@ -108,7 +111,36 @@ class Visualizer extends Component {
 
     canvas = React.createRef();
 
+    fileInput = React.createRef();
+
     actions = {
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            const extname = path.extname(file.name).toLowerCase();
+            let uploadMode;
+            if (extname === '.svg') {
+                uploadMode = 'vector';
+            } else if (extname === '.dxf') {
+                uploadMode = 'vector';
+            } else {
+                uploadMode = 'bw';
+            }
+
+            // Switch to PAGE_EDITOR page if new image being uploaded
+            this.props.switchToPage(PAGE_EDITOR);
+
+            this.props.uploadImage(file, uploadMode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
+        },
+        onClickToUpload: () => {
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
+        },
+
         // canvas footer
         zoomIn: () => {
             if (this.props.page === PAGE_EDITOR) {
@@ -324,11 +356,6 @@ class Visualizer extends Component {
             <div
                 ref={this.visualizerRef}
             >
-                {isEditor && (
-                    <div className={styles['visualizer-top-left']}>
-                        <VisualizerTopLeft />
-                    </div>
-                )}
                 {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
                     <div>
                         <VisualizerTopRight
@@ -368,6 +395,10 @@ class Visualizer extends Component {
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
+                        onChangeFile={this.actions.onChangeFile}
+                        onClickToUpload={this.actions.onClickToUpload}
+                        fileInput={this.fileInput}
+                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf"
                     />
                 </div>
                 <div
@@ -601,6 +632,9 @@ const mapDispatchToProps = (dispatch) => {
 
         createText: (text) => dispatch(editorActions.createText('laser', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('laser', element, transformation)),
+
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

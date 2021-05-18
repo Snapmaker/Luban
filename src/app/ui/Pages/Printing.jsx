@@ -33,7 +33,7 @@ function Printing({ history, location }) {
             if (!headType) {
                 return;
             }
-            dispatch(projectActions.save(headType));
+            await dispatch(projectActions.save(headType));
         };
     }, [location.pathname]);
     async function onDropAccepted(file) {

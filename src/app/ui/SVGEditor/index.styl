@@ -45,6 +45,142 @@ $padding = 10px
     width: 20px
     float: left
 
+.svg-left-bar
+    position: absolute
+    left: 0
+    top: 0
+    bottom: 0
+
+    background-color: $sidebar-background-color
+    border-right: 1px solid $border-color
+    box-shadow: 1px 0 3px $shadow-color
+
+    .center-tool,
+    .center-ext
+        z-index: $z-index-float
+        position: relative
+        border: 1px solid $grey-color2
+
+        .btn-center-ext,
+        .btn-center
+            display: block
+            position: relative
+            width: 56px
+            height: 56px
+            padding: 0
+            border: 0
+            background-color: $background-color
+
+            &.selected
+                //background-color: #cbe3f9
+                background-color: #e6f2fd
+
+            &:hover
+                background-color: #e6f2fd
+
+
+            > i
+                display: block
+                height: 100%
+                width: 100%
+                background-size: 100%
+
+            // Todo, the same to others after change image
+            .btn-add
+                background: url("/images/224x224/toolbar_add_files.jpg") no-repeat 5px 5px
+                background-size 80%
+
+            .btn-select
+                background: url("../../images/224x224/toolbar_select_unchecked_224x224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-rectangle
+                background: url("../../images/224x224/toolbar_rectangle _unchecked_224x224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-round
+                background: url("../../images/224x224/toolbar_round _unchecked_224x224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-text
+                background: url("../../images/224x224/toolbar_text _unchecked_224x224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext
+                background: url("../../images/224x224/toolbar_add _unchecked_224x224.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-heart
+                background: url("../../images/svg-ext/small/heart.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-pentagon
+                background: url("../../images/svg-ext/small/pentagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-pentagram
+                background: url("../../images/svg-ext/small/pentagram.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-trapezoid
+                background: url("../../images/svg-ext/small/trapezoid.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-right_triangle
+                background: url("../../images/svg-ext/small/right_triangle.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-diamond
+                background: url("../../images/svg-ext/small/diamond.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-hexagon
+                background: url("../../images/svg-ext/small/hexagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-heart
+                background: url("../../images/svg-ext/big/heart.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-pentagon
+                background: url("../../images/svg-ext/big/pentagon.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-pentagram
+                background: url("../../images/svg-ext/big/pentagram.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-trapezoid
+                background: url("../../images/svg-ext/big/trapezoid.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-right_triangle
+                background: url("../../images/svg-ext/big/right_triangle.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-diamond
+                background: url("../../images/svg-ext/big/diamond.png") no-repeat 0 0
+                background-size: 100%
+
+            .btn-ext-hexagon
+                background: url("../../images/svg-ext/big/hexagon.png") no-repeat 0 0
+                background-size: 100%
+
+
+
+        .btn-center-ext
+            width: 72px
+            height: 72px
+            padding: 8px
+
+    .center-ext
+        display: flex
+        flex-wrap: wrap
+        width: 218px
+        background-color: $background-color
+        left: 66px
+        top: 112px
+
 
 .visualizer-center
     position: absolute

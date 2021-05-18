@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import styles from './styles/project.styl';
 
-
 class ProjectLayout extends PureComponent {
     static propTypes = {
         renderRightView: PropTypes.func,
@@ -22,7 +21,6 @@ class ProjectLayout extends PureComponent {
     rightView = React.createRef();
 
     subToolBar = React.createRef();
-
 
     componentDidMount() {
         window.addEventListener('resize', this.resizeWindow, false);
@@ -56,7 +54,6 @@ class ProjectLayout extends PureComponent {
                     )}
                 </div>
                 <div className={styles['content-flex']}>
-
                     <div
                         ref={this.rightView}
                         className={classNames(

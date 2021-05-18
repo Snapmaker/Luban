@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import path from 'path';
 
 import i18n from '../../lib/i18n';
 import { controller } from '../../lib/controller';
@@ -18,16 +19,16 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as editorActions } from '../../flux/editor';
 import styles from './styles.styl';
-import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import {
     DISPLAYED_TYPE_TOOLPATH,
-    PAGE_EDITOR,
+    PAGE_EDITOR, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
     SELECTEVENT
 } from '../../constants';
 import SVGEditor from '../../ui/SVGEditor';
 import { CNC_LASER_STAGE } from '../../flux/editor/utils';
+import modal from '../../lib/modal';
 
 
 class Visualizer extends Component {
@@ -86,6 +87,9 @@ class Visualizer extends Component {
         updateTextTransformationAfterEdit: PropTypes.func.isRequired,
         getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
 
+        uploadImage: PropTypes.func.isRequired,
+        switchToPage: PropTypes.func.isRequired,
+
         elementActions: PropTypes.shape({
             moveElementsStart: PropTypes.func.isRequired,
             moveElements: PropTypes.func.isRequired,
@@ -110,7 +114,38 @@ class Visualizer extends Component {
 
     canvas = React.createRef();
 
+    fileInput = React.createRef();
+
     actions = {
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            const extname = path.extname(file.name).toLowerCase();
+            let uploadMode;
+            if (extname.toLowerCase() === '.svg') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.dxf') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.stl') {
+                uploadMode = PROCESS_MODE_MESH;
+            } else {
+                uploadMode = PROCESS_MODE_GREYSCALE;
+            }
+
+            // Switch to PAGE_EDITOR page if new image being uploaded
+            this.props.switchToPage(PAGE_EDITOR);
+
+            this.props.uploadImage(file, uploadMode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
+        },
+        onClickToUpload: () => {
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
+        },
+
         // canvas footer
         zoomIn: () => {
             if (this.props.page === PAGE_EDITOR) {
@@ -387,11 +422,6 @@ class Visualizer extends Component {
             <div
                 ref={this.visualizerRef}
             >
-                {isEditor && (
-                    <div className={styles['visualizer-top-left']}>
-                        <VisualizerTopLeft />
-                    </div>
-                )}
                 {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
                     <div>
                         <VisualizerTopRight
@@ -429,6 +459,10 @@ class Visualizer extends Component {
                         createText={this.props.createText}
                         updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
                         use3DVisualizer
+                        onChangeFile={this.actions.onChangeFile}
+                        onClickToUpload={this.actions.onClickToUpload}
+                        fileInput={this.fileInput}
+                        allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl"
                     />
                 </div>
                 <div
@@ -656,6 +690,9 @@ const mapDispatchToProps = (dispatch) => {
 
         createText: (text) => dispatch(editorActions.createText('cnc', text)),
         updateTextTransformationAfterEdit: (element, transformation) => dispatch(editorActions.updateModelTransformationByElement('cnc', element, transformation)),
+
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
+        switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

@@ -15,8 +15,7 @@ import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing';
-import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerModelTransformation from './VisualizerModelTransformation';
+import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
@@ -406,18 +405,16 @@ class Visualizer extends PureComponent {
                 className={styles['printing-visualizer']}
                 ref={this.visualizerRef}
             >
-                <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft />
-                </div>
-
-                <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation
+                <div className={styles['visualizer-left-bar']}>
+                    <VisualizerLeftBar
                         updateBoundingBox={this.actions.updateBoundingBox}
                         setTransformMode={this.actions.setTransformMode}
                         supportActions={this.supportActions}
                         defaultSupportSize={this.state.defaultSupportSize}
                         isSupporting={this.state.isSupporting}
-
+                        arrangeAllModels={this.actions.arrangeAllModels}
+                        scaleToFitSelectedModel={this.actions.scaleToFitSelectedModel}
+                        autoRotateSelectedModel={this.actions.autoRotateSelectedModel}
                     />
                 </div>
 

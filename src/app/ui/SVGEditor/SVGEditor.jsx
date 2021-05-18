@@ -6,7 +6,7 @@ import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut
 import styles from './index.styl';
 import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
-import SvgTool from './SvgTool';
+import SVGLeftBar from './SVGLeftBar';
 
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 
@@ -54,7 +54,12 @@ class SVGEditor extends PureComponent {
         }).isRequired,
         editorActions: PropTypes.object.isRequired,
 
-        createText: PropTypes.func.isRequired
+        createText: PropTypes.func.isRequired,
+
+        onChangeFile: PropTypes.func.isRequired,
+        onClickToUpload: PropTypes.func.isRequired,
+        fileInput: PropTypes.object.isRequired,
+        allowedFiles: PropTypes.string.isRequired
     };
 
     flag = (Math.random() * 100).toFixed();
@@ -158,44 +163,49 @@ class SVGEditor extends PureComponent {
 
     render() {
         return (
-            <div className={styles['laser-table']} style={{ position: 'relative' }}>
-                <div className={styles['laser-table-row']}>
-                    <div className={styles['view-space']}>
-                        <SVGCanvas
-                            className={styles['svg-content']}
-                            editable={this.props.editable}
-                            SVGActions={this.props.SVGActions}
-                            size={this.props.size}
-                            materials={this.props.materials}
-                            scale={this.props.scale}
-                            target={this.props.target}
-                            updateScale={this.props.updateScale}
-                            updateTarget={this.props.updateTarget}
-                            coordinateMode={this.props.coordinateMode}
-                            coordinateSize={this.props.coordinateSize}
-                            ref={this.canvas}
-                            onCreateElement={this.props.onCreateElement}
-                            onSelectElements={this.props.onSelectElements}
-                            onClearSelection={this.props.onClearSelection}
-                            onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
-                            updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
-                            getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
-                            elementActions={this.props.elementActions}
-                        />
+            <React.Fragment>
+                <div className={styles['laser-table']} style={{ position: 'relative' }}>
+                    <div className={styles['laser-table-row']}>
+                        <div className={styles['view-space']}>
+                            <SVGCanvas
+                                className={styles['svg-content']}
+                                editable={this.props.editable}
+                                SVGActions={this.props.SVGActions}
+                                size={this.props.size}
+                                materials={this.props.materials}
+                                scale={this.props.scale}
+                                target={this.props.target}
+                                updateScale={this.props.updateScale}
+                                updateTarget={this.props.updateTarget}
+                                coordinateMode={this.props.coordinateMode}
+                                coordinateSize={this.props.coordinateSize}
+                                ref={this.canvas}
+                                onCreateElement={this.props.onCreateElement}
+                                onSelectElements={this.props.onSelectElements}
+                                onClearSelection={this.props.onClearSelection}
+                                onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
+                                updateTextTransformationAfterEdit={this.props.updateTextTransformationAfterEdit}
+                                getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
+                                elementActions={this.props.elementActions}
+                            />
+                        </div>
+                        {this.props.editable && (
+                            <SVGLeftBar
+                                mode={this.state.mode}
+                                insertDefaultTextVector={this.insertDefaultTextVector}
+                                setMode={this.setMode}
+                                onChangeFile={this.props.onChangeFile}
+                                onClickToUpload={this.props.onClickToUpload}
+                                fileInput={this.props.fileInput}
+                                allowedFiles={this.props.allowedFiles}
+                            />
+                        )}
                     </div>
-                    {this.props.editable && (
-                        <SvgTool
-                            mode={this.state.mode}
-                            insertDefaultTextVector={this.insertDefaultTextVector}
-                            setMode={this.setMode}
-                        />
+                    {this.props.use3DVisualizer && (
+                        <Cnc3DVisualizer />
                     )}
-
                 </div>
-                {this.props.use3DVisualizer && (
-                    <Cnc3DVisualizer />
-                )}
-            </div>
+            </React.Fragment>
         );
     }
 }

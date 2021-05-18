@@ -257,7 +257,7 @@ class Canvas extends Component {
     }
 
     setTransformMode(mode) {
-        if (['translate', 'scale', 'rotate'].includes(mode)) {
+        if (['translate', 'scale', 'rotate', 'mirror'].includes(mode)) {
             this.transformControls && this.transformControls.setMode(mode);
             this.controls && this.controls.setTransformMode(mode);
         } else {

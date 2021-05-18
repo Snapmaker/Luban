@@ -435,7 +435,7 @@ class TransformControls extends Object3D {
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
-                this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
+                this.scalePeripheral.visible = ((this.mode === 'scale') && child.visible);
             });
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
