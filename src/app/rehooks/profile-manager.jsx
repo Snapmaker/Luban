@@ -54,9 +54,9 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (renamingStatus) {
                 actions.setRenamingStatus(false);
             }
-            let activeToolCategory = allDefinitions.find(d => d.category === category);
-            if (!activeToolCategory) {
-                activeToolCategory = allDefinitions[0];
+            const activeToolCategory = allDefinitions.find(d => d.category === category);
+            if (Object.keys(activeToolCategory.settings).length === 0) {
+                activeToolCategory.settings = cloneDeep(allDefinitions[0].settings);
             }
             setDefinitionState({
                 definitionForManager: activeToolCategory,
