@@ -27,6 +27,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
 import Printing from './Printing';
+import OperateLayout from '../ui/Layouts/OperateLayout';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
@@ -358,6 +359,7 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
+            '/layout',
             '/caselibrary',
             '/settings/general',
             '/settings/machine',
@@ -391,12 +393,6 @@ class App extends PureComponent {
                             }}
                         />
 
-                        {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
-                            <Printing
-                                {...this.props}
-                                hidden={location.pathname !== '/3dp'}
-                            />
-                        )}
 
                         <Laser
                             {...this.props}
@@ -411,6 +407,20 @@ class App extends PureComponent {
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
                             }}
                         />
+                        {location.pathname.indexOf('/layout') === 0 && (
+                            <OperateLayout
+                                {...this.props}
+                                leftView={['3dp-material', '3dp-configurations']}
+                                rightView={['3dp-object-list']}
+                                centerView={['printing-visualizer']}
+                            />
+                        )}
+                        {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
+                            <Printing
+                                {...this.props}
+                                hidden={location.pathname !== '/3dp'}
+                            />
+                        )}
 
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings

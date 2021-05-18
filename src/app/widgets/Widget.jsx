@@ -23,6 +23,7 @@ import CncLaserObjectList from './CncLaserList';
 import PrintingObjectList from './PrintingObjectList';
 import JobType from './JobType';
 import CreateToolPath from './CncLaserToolPath';
+import PrintingVisualizer from './PrintingVisualizer';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -37,6 +38,7 @@ const getWidgetByName = (name) => {
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
+        'printing-visualizer': PrintingVisualizer,
         'wifi-transport': WifiTransport,
         'enclosure': EnclosureWidget,
         '3dp-object-list': PrintingObjectList,
