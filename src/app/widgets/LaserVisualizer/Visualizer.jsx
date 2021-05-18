@@ -334,11 +334,12 @@ class Visualizer extends Component {
                     <LaserCameraAidBackground />
                 </div>
                 <div style={{
-                    visibility: isEditor ? 'visible' : 'hidden'
+                    visibility: (isEditor || displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}
                 >
                     <SVGEditor
                         ref={this.svgCanvas}
+                        page={this.props.page}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -364,7 +365,7 @@ class Visualizer extends Component {
                 <div
                     className={styles['canvas-content']}
                     style={{
-                        visibility: !isEditor ? 'visible' : 'hidden'
+                        visibility: (!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
                 >
                     <Canvas

@@ -18,7 +18,7 @@ import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import {
-    DATA_PREFIX
+    DATA_PREFIX, PAGE_PROCESS
 } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 import { library } from './lib/ext-shapes';
@@ -103,11 +103,13 @@ class SVGCanvas extends PureComponent {
 
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
+
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
-        materials: PropTypes.object
+        materials: PropTypes.object,
+        page: PropTypes.string // add cnc, add isRequired
     };
 
     updateTime = 0;
@@ -1401,6 +1403,9 @@ class SVGCanvas extends PureComponent {
      */
     addToSelection(elements) {
         this.props.onSelectElements(elements);
+        if (this.props.page === PAGE_PROCESS) {
+            this.svgContentGroup.showSelectorResizeAndRotateGrips(false);
+        }
     }
 
     /**
