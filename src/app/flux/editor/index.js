@@ -378,6 +378,15 @@ export const actions = {
             transformation.scaleY = transformation.height / height;
         }
 
+        const transformationOrigin = {
+            ...transformation
+        };
+        const transformationProcess = {
+            ...transformation,
+            scaleX: (transformation.scaleX > 0 ? 1 : -1),
+            scaleY: (transformation.scaleY > 0 ? 1 : -1)
+        };
+
         const options = {
             modelID,
             limitSize: size,
@@ -392,6 +401,8 @@ export const actions = {
             height,
             scale,
             transformation,
+            transformationOrigin,
+            transformationProcess,
             config,
             gcodeConfig,
             zIndex,
@@ -772,6 +783,7 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
+        console.log('res', taskResult);
         const { SVGActions, modelGroup } = getState()[headType];
         const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {

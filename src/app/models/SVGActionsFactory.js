@@ -201,6 +201,7 @@ class SVGActionsFactory {
 
     updateSvgModelImage(svgModel, imageName) {
         const imagePath = `${DATA_PREFIX}/${imageName}`;
+        svgModel.changeShowOrigin(false);
         svgModel.elem.setAttribute('href', imagePath);
     }
 

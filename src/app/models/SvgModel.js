@@ -196,6 +196,10 @@ class SvgModel extends BaseModel {
         this.refresh();
         // trigger update source, should add parmas to togger this func
         this.onTransform();
+
+        this.maxWdith = this.width * this.transformation.scaleX;
+        this.maxHeight = this.height * this.transformation.scaleY;
+        console.log('svgModel', this.maxWdith, this.maxHeight);
     }
 
     get type() {
@@ -911,8 +915,21 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
-    changeShowOrigin() {
-        this.showOrigin = !this.showOrigin;
+    changeShowOrigin(showOrigin) {
+        this.showOrigin = showOrigin ?? !this.showOrigin;
+
+        if (this.showOrigin) {
+            this.transformation = this.transformationOrigin;
+            this.elem.setAttribute('href', this.uploadName);
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        } else {
+            this.transformation = this.transformationProcess;
+            this.elem.setAttribute('href', this.processImageName);
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        }
+        console.log('tx', this.transformationProcess.scaleX, this.transformationOrigin.scaleX, this.transformation.scaleX);
+        console.log('ty', this.transformationProcess.scaleY, this.transformationOrigin.scaleY, this.transformation.scaleY);
+        console.log('t', this.transformation);
         this.modelObject3D.visible = this.showOrigin;
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;
