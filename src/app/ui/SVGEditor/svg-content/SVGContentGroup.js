@@ -6,6 +6,7 @@ import OperatorPoints from './OperatorPoints';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
 import SvgModel from '../../../models/SvgModel';
+import { PAGE_PROCESS } from '../../../constants';
 
 class SVGContentGroup {
     svgId = null;
@@ -13,10 +14,11 @@ class SVGContentGroup {
     selectedElements = [];
 
     constructor(options) {
-        const { svgContent, scale } = options;
+        const { svgContent, scale, page } = options;
 
         this.svgContent = svgContent;
         this.scale = scale;
+        this.page = page;
 
         this.backgroundGroup = document.createElementNS(NS.SVG, 'g');
         this.backgroundGroup.setAttribute('id', 'svg-data-background');
@@ -34,6 +36,7 @@ class SVGContentGroup {
             getRoot: () => this.svgContent,
             scale: this.scale
         });
+        this.operatorPoints.showGrips(true);
     }
 
     // for create new elem
@@ -493,8 +496,16 @@ class SVGContentGroup {
         return transformList[idx].angle;
     }
 
+    setPage(page) {
+        this.page = page;
+    }
+
     showSelectorGrips(show) {
-        this.operatorPoints.showGrips(show);
+        if (this.page !== PAGE_PROCESS) {
+            this.showSelectorResizeAndRotateGripsAndBox(show);
+        } else {
+            this.operatorPoints.showBox(show);
+        }
     }
 
     showSelectorResizeAndRotateGripsAndBox(show) {

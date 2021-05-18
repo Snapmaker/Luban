@@ -299,6 +299,9 @@ class Visualizer extends Component {
         if (this.props.modelGroup.selectedModelArray.length > 1) {
             return;
         }
+        if (this.props.page !== PAGE_EDITOR) {
+            return;
+        }
         this.contextMenuRef.current.show(event);
     };
 

@@ -162,6 +162,9 @@ class SVGCanvas extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.page !== this.props.page) {
+            this.svgContentGroup.setPage(nextProps.page);
+        }
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
             this.lastScale = nextProps.scale;
@@ -295,7 +298,8 @@ class SVGCanvas extends PureComponent {
 
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
-            scale: this.scale
+            scale: this.scale,
+            page: this.props.page
         });
     }
 
@@ -692,6 +696,9 @@ class SVGCanvas extends PureComponent {
             case 'move': {
                 const dx = x - draw.startX;
                 const dy = y - draw.startY;
+                if (this.props.page === PAGE_PROCESS) {
+                    break;
+                }
                 if (dx === 0 && dy === 0) {
                     break;
                 }
@@ -714,6 +721,9 @@ class SVGCanvas extends PureComponent {
             case 'resize': {
                 // TODO: resize multiple elements
                 const elements = this.svgContentGroup.selectedElements;
+                if (this.props.page === PAGE_PROCESS) {
+                    break;
+                }
                 if (elements.length !== 1) {
                     break;
                 }
@@ -800,6 +810,9 @@ class SVGCanvas extends PureComponent {
                 return;
             }
             case 'rotate': {
+                if (this.props.page === PAGE_PROCESS) {
+                    break;
+                }
                 const center = draw.center;
 
                 // calculate handle angle (in degree)
@@ -1138,6 +1151,9 @@ class SVGCanvas extends PureComponent {
         const mouseTarget = this.getMouseTarget(evt);
         const { tagName } = mouseTarget;
 
+        if (this.props.page === PAGE_PROCESS) {
+            return;
+        }
         if (tagName === 'text' && this.mode !== 'textedit') {
             const matrix = this.svgContentGroup.getScreenCTM().inverse();
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
@@ -1403,9 +1419,6 @@ class SVGCanvas extends PureComponent {
      */
     addToSelection(elements) {
         this.props.onSelectElements(elements);
-        if (this.props.page === PAGE_PROCESS) {
-            this.svgContentGroup.showSelectorResizeAndRotateGrips(false);
-        }
     }
 
     /**
