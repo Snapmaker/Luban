@@ -743,7 +743,6 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        console.log('res', taskResult);
         const { SVGActions, modelGroup } = getState()[headType];
         const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {
@@ -772,12 +771,9 @@ export const actions = {
                 SVGActions.resetSelection();
             }
         }
+        model.updateTransformationProcess();
 
-        // modelGroup.updateSelectedModelProcessImage(processImageName);
         model.updateProcessImageName(processImageName);
-
-        // SVGActions.updateElementImage(processImageName);
-        // SVGActions.updateSvgModelImage(model, processImageName);
 
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));

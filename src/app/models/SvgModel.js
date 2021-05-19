@@ -197,9 +197,10 @@ class SvgModel extends BaseModel {
         // trigger update source, should add parmas to togger this func
         this.onTransform();
 
-        this.maxWdith = this.width * this.transformation.scaleX;
-        this.maxHeight = this.height * this.transformation.scaleY;
-        console.log('svgModel', this.maxWdith, this.maxHeight);
+        this.widthOrigin = this.width;
+        this.heightOrigin = this.height;
+        this.widthProcess = this.transformation.width;
+        this.heightProcess = this.transformation.height;
     }
 
     get type() {
@@ -916,20 +917,40 @@ class SvgModel extends BaseModel {
     }
 
     changeShowOrigin(showOrigin) {
+        function pointModelToSvg({ x, y }, size) {
+            return { x: size.x + x, y: size.y - y };
+        }
+
         this.showOrigin = showOrigin ?? !this.showOrigin;
 
         if (this.showOrigin) {
             // this.transformation = this.transformationOrigin;
+            this.transformation.scaleX = this.transformationOrigin.scaleX;
+            this.transformation.scaleY = this.transformationOrigin.scaleY;
             this.elem.setAttribute('href', this.uploadName);
-            // setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+            this.elem.setAttribute('width', this.widthOrigin);
+            this.elem.setAttribute('height', this.heightOrigin);
+            const topLeft = pointModelToSvg({
+                x: this.transformation.positionX - this.widthOrigin / 2,
+                y: this.transformation.positionY + this.heightOrigin / 2
+            }, this.size);
+            this.elem.setAttribute('x', topLeft.x);
+            this.elem.setAttribute('y', topLeft.y);
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         } else {
-            // this.transformation = this.transformationProcess;
+            this.transformation.scaleX = this.transformationProcess.scaleX;
+            this.transformation.scaleY = this.transformationProcess.scaleY;
             this.elem.setAttribute('href', this.processImageName);
-            // setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+            this.elem.setAttribute('width', this.widthProcess);
+            this.elem.setAttribute('height', this.heightProcess);
+            const topLeft = pointModelToSvg({
+                x: this.transformation.positionX - this.widthProcess / 2,
+                y: this.transformation.positionY + this.heightProcess / 2
+            }, this.size);
+            this.elem.setAttribute('x', topLeft.x);
+            this.elem.setAttribute('y', topLeft.y);
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         }
-        // console.log('tx', this.transformationProcess.scaleX, this.transformationOrigin.scaleX, this.transformation.scaleX);
-        // console.log('ty', this.transformationProcess.scaleY, this.transformationOrigin.scaleY, this.transformation.scaleY);
-        // console.log('t', this.transformation);
         this.modelObject3D.visible = this.showOrigin;
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;
@@ -1034,6 +1055,13 @@ class SvgModel extends BaseModel {
             },
             config: {
                 ...this.config
+            },
+            widthOrigin: this.widthOrigin,
+            heightOrigin: this.heightOrigin,
+            widthProcess: this.widthProcess,
+            heightProcess: this.heightProcess,
+            transformationOrigin: {
+                ...this.transformationOrigin
             }
         };
         // svg process as image
@@ -1092,6 +1120,42 @@ class SvgModel extends BaseModel {
             updateTimer = setTimeout(() => {
                 this.updateSource();
             }, 300); // to prevent continuous input cause frequently update
+        }
+    }
+
+    updateTransformationProcess() {
+        if (this.showOrigin) {
+            this.transformationOrigin = {
+                ...this.transformation
+            };
+            this.transformationProcess = {
+                ...this.transformation,
+                scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
+                scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+            };
+            this.widthProcess = this.transformation.width;
+            this.heightProcess = this.transformation.height;
+        }
+        if (!this.showOrigin) {
+            this.transformationOrigin = {
+                ...this.transformation,
+                scaleX: Math.abs(this.transformationOrigin.scaleX) * this.transformation.scaleX,
+                scaleY: Math.abs(this.transformationOrigin.scaleY) * this.transformation.scaleY
+            };
+            this.transformationProcess = {
+                ...this.transformation,
+                scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
+                scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+            };
+            // this.widthProcess *= Math.abs(this.transformation.scaleX);
+            // this.heightProcess *= Math.abs(this.transformation.scaleY);
+            this.widthProcess = this.transformation.width;
+            this.heightProcess = this.transformation.height;
+            this.transformation = {
+                ...this.transformationProcess
+            };
+            this.width = this.widthProcess;
+            this.height = this.heightProcess;
         }
     }
 
