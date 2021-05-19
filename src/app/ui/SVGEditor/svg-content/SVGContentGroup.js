@@ -35,7 +35,7 @@ class SVGContentGroup {
             getRoot: () => this.svgContent,
             scale: this.scale
         });
-        this.operatorPoints.showGrips(true);
+        this.operatorPoints.showOperator(true);
     }
 
     // for create new elem
@@ -167,11 +167,8 @@ class SVGContentGroup {
                 this.selectedElements.push(elem);
             }
         }
-        const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
+        const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements, this.editable);
         this.showSelectorGrips(true);
-        if (!this.editable) {
-            this.operatorPoints.showResizeGrips(false);
-        }
         // todo
         return posAndsize;
     }
@@ -184,10 +181,7 @@ class SVGContentGroup {
     // after element transform
     resetSelection(size, transformation) {
         // Resize grip of each selected element, and get their whole position and size
-        const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
-        if (!this.editable) {
-            this.operatorPoints.showResizeGrips(false);
-        }
+        const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements, this.editable);
 
         // Update operator points
         this.setSelectorTransformList(size, transformation);
@@ -204,10 +198,7 @@ class SVGContentGroup {
     resetSelector(elements) {
         if (elements.length === 1) {
             // keep rotation if only one element selected
-            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (!this.editable) {
-                this.operatorPoints.showResizeGrips(false);
-            }
+            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements, this.editable);
 
             const selectorElement = this.operatorPoints.operatorPointsGroup;
             const element = elements[0];
@@ -222,10 +213,7 @@ class SVGContentGroup {
             });
         } else if (elements.length > 1) {
             // re-create axis-aligned selector if multiple elements are selected
-            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (!this.editable) {
-                this.operatorPoints.showResizeGrips(false);
-            }
+            const { positionX, positionY } = this.operatorPoints.resizeGrips(elements, this.editable);
 
             const selectorElement = this.operatorPoints.operatorPointsGroup;
             SvgModel.recalculateElementTransformList(selectorElement, {
@@ -520,11 +508,14 @@ class SVGContentGroup {
     }
 
     showSelectorResizeAndRotateGripsAndBox(show) {
-        this.operatorPoints.showResizeAndRotateGripsAndBox(show);
+        this.operatorPoints.showResizeGrips(show);
+        this.operatorPoints.showRotateGrips(show);
+        this.operatorPoints.showBox(show);
     }
 
     showSelectorResizeAndRotateGrips(show) {
-        this.operatorPoints.showResizeAndRotateGrips(show);
+        this.operatorPoints.showResizeGrips(show);
+        this.operatorPoints.showRotateGrips(show);
     }
 
     appendTextCursor(cursor) {
