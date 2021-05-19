@@ -24,10 +24,10 @@ import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 
 import Header from './Header';
-import Sidebar from './Sidebar';
-import Workspace from './Workspace';
-import Printing from './Printing';
-import OperateLayout from '../ui/Layouts/OperateLayout';
+// import Sidebar from './Sidebar';
+// import Workspace from './Workspace';
+import Workspace from '../ui/Pages/Workspace';
+import Printing from '../ui/Pages/Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
@@ -334,6 +334,7 @@ class App extends PureComponent {
         ReactGA.pageview(path);
     }
 
+
     render() {
         const { location } = this.props;
         const accepted = ([
@@ -362,21 +363,16 @@ class App extends PureComponent {
                 />
             );
         }
-
         return (
             <div>
                 <Header {...this.props} />
-                <Sidebar {...this.props} platform={this.state.platform} />
                 <div className={styles.main}>
                     <div className={styles.content}>
-                        <Workspace
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/workspace') ? 'none' : 'block'
-                            }}
-                        />
-
-
+                        {location.pathname === '/workspace' && (
+                            <Workspace
+                                {...this.props}
+                            />
+                        )}
                         <Laser
                             {...this.props}
                             style={{
@@ -390,14 +386,6 @@ class App extends PureComponent {
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
                             }}
                         />
-                        {location.pathname.indexOf('/layout') === 0 && (
-                            <OperateLayout
-                                {...this.props}
-                                leftView={['3dp-material', '3dp-configurations']}
-                                rightView={['3dp-object-list']}
-                                centerView={['printing-visualizer']}
-                            />
-                        )}
                         {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
                             <Printing
                                 {...this.props}

@@ -26,7 +26,7 @@ function PrintingObjectListBox(props) {
     };
     useEffect(() => {
         props.setTitle(i18n._('Object List'));
-    }, []);
+    }, [props.setTitle]);
     return (
         <div className={styles['object-list-box']}>
             {(models) && models.filter(model => !model.supportTag).map((model) => {

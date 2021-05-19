@@ -5,8 +5,8 @@ import styles from '../styles.styl';
 
 
 const PrintingVisualizerWidget = () => (
-    <Widget borderless>
-        <Widget.Content className={styles['visualizer-content']}>
+    <Widget borderless className={styles.visualizer}>
+        <Widget.Content className={styles['visualizer-content-wrapper']}>
             <Visualizer />
         </Widget.Content>
     </Widget>

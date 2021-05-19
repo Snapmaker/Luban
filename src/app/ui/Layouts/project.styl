@@ -1,0 +1,41 @@
+@import "../../styles/variables.styl"
+// TODO: refactor;
+@import "../../widgets/styles.styl"
+
+//display: table-cell;
+//position: fixed;
+//top: $navbar-height;
+//left: $sidebar-width;
+//right: $controls-width;
+//bottom: 0;
+.content-flex
+    display: flex;
+    height: 'calc(100vh - %s)' % $navbar-height;
+    overflow-x: hidden;
+.main-bar
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 50px;
+    width: 100%;
+.visualizer
+    flex: 1;
+    order: 0;
+.controls
+    flex: 0 0 auto;
+    padding: 10px 6px;
+    background-color: $background-color;
+    border-left: 1px solid $border-color;
+    overflow: auto;
+    height: 100%;
+.sub-bar
+    flex: 0 0 auto;
+    //width: 64px;
+    order: -1;
+    background-color: $sidebar-background-color
+    border-right: 1px solid $border-color
+    box-shadow: 1px 0 3px $shadow-color
+.controls-right
+    //width: $controls-width;
+    order: 1;

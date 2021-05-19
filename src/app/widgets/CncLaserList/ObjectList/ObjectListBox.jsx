@@ -39,7 +39,7 @@ function ObjectListBox(props) {
 
     useEffect(() => {
         props.setTitle(i18n._('Object List'));
-    }, []);
+    }, [props.setTitle]);
     useEffect(() => {
         if (previewFailed) {
             modal({
