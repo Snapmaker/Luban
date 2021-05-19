@@ -157,12 +157,24 @@ class ToolPath {
 
         for (let i = 0; i < taskInfos.length; i++) {
             const taskInfo = taskInfos[i];
-
+            const transformation = {
+                positionX: taskInfo.transformation.positionX,
+                positionY: taskInfo.transformation.positionY,
+                rotationZ: taskInfo.transformation.rotationZ,
+                width: taskInfo.transformation.width,
+                height: taskInfo.transformation.height,
+                scaleX: (taskInfo.scaleOrigin.scaleX > 0 ? 1 : -1),
+                scaleY: (taskInfo.scaleOrigin.scaleY > 0 ? 1 : -1)
+            };
             const task = {
                 taskId: this.id,
                 modelId: taskInfo.modelID,
                 headType: this.headType,
-                data: taskInfo
+                // TODO: List taskInfo key:value
+                data: {
+                    ...taskInfo,
+                    transformation
+                }
             };
 
             controller.commitToolPathTask(task);
@@ -188,7 +200,8 @@ class ToolPath {
                     originalName: v.originalName,
                     uploadName: v.uploadName,
                     transformation: v.transformation,
-                    config: v.config
+                    config: v.config,
+                    scaleOrigin: v.scaleOrigin
                 };
             });
         return modelInfos;

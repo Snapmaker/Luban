@@ -1141,21 +1141,21 @@ class SvgModel extends BaseModel {
                 scaleY: this.transformation.scaleY
             };
             this.scaleProcess = {
-                scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
-                scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+                scaleX: 1,
+                scaleY: 1
             };
             this.widthProcess = this.transformation.width;
             this.heightProcess = this.transformation.height;
         }
         if (!this.showOrigin) {
             this.scaleOrigin = {
-                scaleX: Math.abs(this.scaleOrigin.scaleX) * this.transformation.scaleX,
-                scaleY: Math.abs(this.scaleOrigin.scaleY) * this.transformation.scaleY
+                scaleX: this.scaleOrigin.scaleX * this.transformation.scaleX,
+                scaleY: this.scaleOrigin.scaleY * this.transformation.scaleY
             };
 
             this.scaleProcess = {
-                scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
-                scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+                scaleX: 1,
+                scaleY: 1
             };
             // this.widthProcess *= Math.abs(this.transformation.scaleX);
             // this.heightProcess *= Math.abs(this.transformation.scaleY);

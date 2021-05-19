@@ -544,6 +544,9 @@ export const actions = {
 
         const options = selectedModel.getTaskInfo();
         options.transformation = {
+            // TODO: add rotationZ, need to fix erorr in halftone
+            scaleX: (options.scaleOrigin.scaleX * options.transformation.scaleX > 0 ? 1 : -1),
+            scaleY: (options.scaleOrigin.scaleY * options.transformation.scaleY > 0 ? 1 : -1),
             width: options.transformation.width,
             height: options.transformation.height
         };
@@ -1068,9 +1071,19 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.flipElementsHorizontally(elements);
+
+        dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1081,9 +1094,19 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsVertically: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.flipElementsVertically(elements);
+
+        dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
