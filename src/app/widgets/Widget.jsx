@@ -75,7 +75,9 @@ const Widget = (props) => {
     const Component = getWidgetByName(name);
 
     return (
-        <Component {...props} />
+        <div style={{ width: '360px' }}>
+            <Component {...props} />
+        </div>
     );
 };
 
