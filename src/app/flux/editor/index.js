@@ -1257,7 +1257,7 @@ export const actions = {
      * @param page
      */
     switchToPage: (headType, page) => (dispatch, getState) => {
-        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
+        const { toolPathGroup, autoPreviewEnabled, SVGActions } = getState()[headType];
         if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
             return;
         }
@@ -1272,6 +1272,7 @@ export const actions = {
                 dispatch(actions.preview(headType));
             }
         }
+        SVGActions.clearSelection();
 
         dispatch(baseActions.render(headType));
     },
