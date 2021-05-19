@@ -109,7 +109,7 @@ class SVGCanvas extends PureComponent {
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
         materials: PropTypes.object,
-        editDisabled: PropTypes.bool.isRequired
+        editable: PropTypes.bool.isRequired
     };
 
     updateTime = 0;
@@ -162,8 +162,8 @@ class SVGCanvas extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.editDisabled !== this.props.editDisabled) {
-            this.svgContentGroup.setEditDisabled(nextProps.editDisabled);
+        if (nextProps.editable !== this.props.editable) {
+            this.svgContentGroup.setEditable(nextProps.editable);
         }
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
@@ -299,7 +299,7 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
             scale: this.scale,
-            editDisabled: this.props.editDisabled
+            editable: this.props.editable
         });
     }
 
@@ -692,13 +692,13 @@ class SVGCanvas extends PureComponent {
         const element = this.svgContentGroup.findSVGElement(this.svgContentGroup.getId());
 
 
+        if (!this.props.editable && ['move', 'resize', 'rotate'].includes(this.mode)) {
+            return;
+        }
         switch (this.mode) {
             case 'move': {
                 const dx = x - draw.startX;
                 const dy = y - draw.startY;
-                if (this.props.editDisabled) {
-                    break;
-                }
                 if (dx === 0 && dy === 0) {
                     break;
                 }
@@ -706,24 +706,11 @@ class SVGCanvas extends PureComponent {
                 const elements = this.svgContentGroup.selectedElements;
                 this.props.elementActions.moveElements(elements, { dx, dy });
 
-                /* TODO: remove
-                const transform = this.svgContainer.createSVGTransform();
-                transform.setTranslate(dx, dy);
-                this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-                const transformBox = this.svgContainer.createSVGTransform();
-                const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
-                transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
-                this.svgContentGroup.translateSelectorOnMouseMove(transform);
-                */
                 return;
             }
             case 'resize': {
                 // TODO: resize multiple elements
                 const elements = this.svgContentGroup.selectedElements;
-                if (this.props.editDisabled) {
-                    break;
-                }
                 if (elements.length !== 1) {
                     break;
                 }
@@ -810,9 +797,6 @@ class SVGCanvas extends PureComponent {
                 return;
             }
             case 'rotate': {
-                if (this.props.editDisabled) {
-                    break;
-                }
                 const center = draw.center;
 
                 // calculate handle angle (in degree)
@@ -1151,10 +1135,7 @@ class SVGCanvas extends PureComponent {
         const mouseTarget = this.getMouseTarget(evt);
         const { tagName } = mouseTarget;
 
-        if (this.props.editDisabled) {
-            return;
-        }
-        if (tagName === 'text' && this.mode !== 'textedit') {
+        if (this.props.editable && tagName === 'text' && this.mode !== 'textedit') {
             const matrix = this.svgContentGroup.getScreenCTM().inverse();
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
             this.textActions.select(mouseTarget, pt.x, pt.y);

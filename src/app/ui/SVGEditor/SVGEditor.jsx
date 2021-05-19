@@ -18,7 +18,7 @@ class SVGEditor extends PureComponent {
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         use3DVisualizer: PropTypes.bool,
-        editDisabled: PropTypes.bool.isRequired,
+        editable: PropTypes.bool.isRequired,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -110,7 +110,7 @@ class SVGEditor extends PureComponent {
                     <div className={styles['view-space']}>
                         <SVGCanvas
                             className={styles['svg-content']}
-                            editDisabled={this.props.editDisabled}
+                            editable={this.props.editable}
                             SVGActions={this.props.SVGActions}
                             size={this.props.size}
                             materials={this.props.materials}
@@ -130,7 +130,7 @@ class SVGEditor extends PureComponent {
                             elementActions={this.props.elementActions}
                         />
                     </div>
-                    {(!this.props.editDisabled) && (
+                    {this.props.editable && (
                         <SvgTool
                             mode={this.state.mode}
                             insertDefaultTextVector={this.insertDefaultTextVector}

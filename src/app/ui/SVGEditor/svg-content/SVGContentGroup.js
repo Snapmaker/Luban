@@ -13,11 +13,11 @@ class SVGContentGroup {
     selectedElements = [];
 
     constructor(options) {
-        const { svgContent, scale, editDisabled } = options;
+        const { svgContent, scale, editable } = options;
 
         this.svgContent = svgContent;
         this.scale = scale;
-        this.editDisabled = editDisabled;
+        this.editable = editable;
 
         this.backgroundGroup = document.createElementNS(NS.SVG, 'g');
         this.backgroundGroup.setAttribute('id', 'svg-data-background');
@@ -169,7 +169,7 @@ class SVGContentGroup {
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.showSelectorGrips(true);
-        if (this.editDisabled) {
+        if (!this.editable) {
             this.operatorPoints.showResizeGrips(false);
         }
         // todo
@@ -185,7 +185,7 @@ class SVGContentGroup {
     resetSelection(size, transformation) {
         // Resize grip of each selected element, and get their whole position and size
         const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
-        if (this.editDisabled) {
+        if (!this.editable) {
             this.operatorPoints.showResizeGrips(false);
         }
 
@@ -205,7 +205,7 @@ class SVGContentGroup {
         if (elements.length === 1) {
             // keep rotation if only one element selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (this.editDisabled) {
+            if (!this.editable) {
                 this.operatorPoints.showResizeGrips(false);
             }
 
@@ -223,7 +223,7 @@ class SVGContentGroup {
         } else if (elements.length > 1) {
             // re-create axis-aligned selector if multiple elements are selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (this.editDisabled) {
+            if (!this.editable) {
                 this.operatorPoints.showResizeGrips(false);
             }
 
@@ -507,12 +507,12 @@ class SVGContentGroup {
         return transformList[idx].angle;
     }
 
-    setEditDisabled(editDisabled) {
-        this.editDisabled = editDisabled;
+    setEditable(editable) {
+        this.editable = editable;
     }
 
     showSelectorGrips(show) {
-        if (show && this.editDisabled) {
+        if (show && !this.editable) {
             this.operatorPoints.showBox(show);
         } else {
             this.showSelectorResizeAndRotateGripsAndBox(show);

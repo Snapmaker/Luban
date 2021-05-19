@@ -402,7 +402,7 @@ class Visualizer extends Component {
                 >
                     <SVGEditor
                         ref={this.svgCanvas}
-                        editDisabled={!isEditor}
+                        editable={isEditor}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
