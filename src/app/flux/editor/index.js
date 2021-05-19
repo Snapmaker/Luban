@@ -378,15 +378,6 @@ export const actions = {
             transformation.scaleY = transformation.height / height;
         }
 
-        const transformationOrigin = {
-            ...transformation
-        };
-        const transformationProcess = {
-            ...transformation,
-            scaleX: (transformation.scaleX > 0 ? 1 : -1),
-            scaleY: (transformation.scaleY > 0 ? 1 : -1)
-        };
-
         const options = {
             modelID,
             limitSize: size,
@@ -401,8 +392,6 @@ export const actions = {
             height,
             scale,
             transformation,
-            transformationOrigin,
-            transformationProcess,
             config,
             gcodeConfig,
             zIndex,
@@ -1057,10 +1046,19 @@ export const actions = {
      * Resize elements immediately.
      */
     resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.resizeElementsImmediately(elements, options);
 
+        dispatch(actions.resetProcessState(headType));
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
         dispatch(baseActions.render(headType));
     },
 

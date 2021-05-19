@@ -201,6 +201,15 @@ class SvgModel extends BaseModel {
         this.heightOrigin = this.height;
         this.widthProcess = this.transformation.width;
         this.heightProcess = this.transformation.height;
+        this.scaleProcess = this.scaleProcess;
+        this.scaleProcess = {
+            scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
+            scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+        };
+        this.scaleOrigin = {
+            scaleX: this.transformation.scaleX,
+            scaleY: this.transformation.scaleY
+        };
     }
 
     get type() {
@@ -924,9 +933,9 @@ class SvgModel extends BaseModel {
         this.showOrigin = showOrigin ?? !this.showOrigin;
 
         if (this.showOrigin) {
-            // this.transformation = this.transformationOrigin;
-            this.transformation.scaleX = this.transformationOrigin.scaleX;
-            this.transformation.scaleY = this.transformationOrigin.scaleY;
+            // this.transformation = this.scaleOrigin;
+            this.transformation.scaleX = this.scaleOrigin.scaleX;
+            this.transformation.scaleY = this.scaleOrigin.scaleY;
             this.elem.setAttribute('href', this.uploadName);
             this.elem.setAttribute('width', this.widthOrigin);
             this.elem.setAttribute('height', this.heightOrigin);
@@ -938,8 +947,8 @@ class SvgModel extends BaseModel {
             this.elem.setAttribute('y', topLeft.y);
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         } else {
-            this.transformation.scaleX = this.transformationProcess.scaleX;
-            this.transformation.scaleY = this.transformationProcess.scaleY;
+            this.transformation.scaleX = this.scaleProcess.scaleX;
+            this.transformation.scaleY = this.scaleProcess.scaleY;
             this.elem.setAttribute('href', this.processImageName);
             this.elem.setAttribute('width', this.widthProcess);
             this.elem.setAttribute('height', this.heightProcess);
@@ -1058,11 +1067,10 @@ class SvgModel extends BaseModel {
             },
             widthOrigin: this.widthOrigin,
             heightOrigin: this.heightOrigin,
+            scaleOrigin: this.scaleOrigin,
             widthProcess: this.widthProcess,
             heightProcess: this.heightProcess,
-            transformationOrigin: {
-                ...this.transformationOrigin
-            }
+            scaleProcess: this.scaleProcess
         };
         // svg process as image
         if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
@@ -1123,13 +1131,16 @@ class SvgModel extends BaseModel {
         }
     }
 
+    /**
+     * Reset the width, height, transformation.scaleX, transformation.scaleY value after update new process image
+     */
     updateTransformationProcess() {
         if (this.showOrigin) {
-            this.transformationOrigin = {
-                ...this.transformation
+            this.scaleOrigin = {
+                scaleX: this.transformation.scaleX,
+                scaleY: this.transformation.scaleY
             };
-            this.transformationProcess = {
-                ...this.transformation,
+            this.scaleProcess = {
                 scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
                 scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
             };
@@ -1137,13 +1148,12 @@ class SvgModel extends BaseModel {
             this.heightProcess = this.transformation.height;
         }
         if (!this.showOrigin) {
-            this.transformationOrigin = {
-                ...this.transformation,
-                scaleX: Math.abs(this.transformationOrigin.scaleX) * this.transformation.scaleX,
-                scaleY: Math.abs(this.transformationOrigin.scaleY) * this.transformation.scaleY
+            this.scaleOrigin = {
+                scaleX: Math.abs(this.scaleOrigin.scaleX) * this.transformation.scaleX,
+                scaleY: Math.abs(this.scaleOrigin.scaleY) * this.transformation.scaleY
             };
-            this.transformationProcess = {
-                ...this.transformation,
+
+            this.scaleProcess = {
                 scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
                 scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
             };
@@ -1151,9 +1161,9 @@ class SvgModel extends BaseModel {
             // this.heightProcess *= Math.abs(this.transformation.scaleY);
             this.widthProcess = this.transformation.width;
             this.heightProcess = this.transformation.height;
-            this.transformation = {
-                ...this.transformationProcess
-            };
+
+            this.transformation.scaleX = this.scaleProcess.scaleX;
+            this.transformation.scaleY = this.scaleProcess.scaleY;
             this.width = this.widthProcess;
             this.height = this.heightProcess;
         }
