@@ -6,7 +6,6 @@ import OperatorPoints from './OperatorPoints';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
 import SvgModel from '../../../models/SvgModel';
-import { PAGE_PROCESS } from '../../../constants';
 
 class SVGContentGroup {
     svgId = null;
@@ -14,11 +13,11 @@ class SVGContentGroup {
     selectedElements = [];
 
     constructor(options) {
-        const { svgContent, scale, page } = options;
+        const { svgContent, scale, editDisabled } = options;
 
         this.svgContent = svgContent;
         this.scale = scale;
-        this.page = page;
+        this.editDisabled = editDisabled;
 
         this.backgroundGroup = document.createElementNS(NS.SVG, 'g');
         this.backgroundGroup.setAttribute('id', 'svg-data-background');
@@ -170,7 +169,7 @@ class SVGContentGroup {
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.showSelectorGrips(true);
-        if (this.page === PAGE_PROCESS) {
+        if (this.editDisabled) {
             this.operatorPoints.showResizeGrips(false);
         }
         // todo
@@ -186,7 +185,7 @@ class SVGContentGroup {
     resetSelection(size, transformation) {
         // Resize grip of each selected element, and get their whole position and size
         const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
-        if (this.page === PAGE_PROCESS) {
+        if (this.editDisabled) {
             this.operatorPoints.showResizeGrips(false);
         }
 
@@ -206,7 +205,7 @@ class SVGContentGroup {
         if (elements.length === 1) {
             // keep rotation if only one element selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (this.page === PAGE_PROCESS) {
+            if (this.editDisabled) {
                 this.operatorPoints.showResizeGrips(false);
             }
 
@@ -224,7 +223,7 @@ class SVGContentGroup {
         } else if (elements.length > 1) {
             // re-create axis-aligned selector if multiple elements are selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
-            if (this.page === PAGE_PROCESS) {
+            if (this.editDisabled) {
                 this.operatorPoints.showResizeGrips(false);
             }
 
@@ -508,12 +507,12 @@ class SVGContentGroup {
         return transformList[idx].angle;
     }
 
-    setPage(page) {
-        this.page = page;
+    setEditDisabled(editDisabled) {
+        this.editDisabled = editDisabled;
     }
 
     showSelectorGrips(show) {
-        if (show && this.page === PAGE_PROCESS) {
+        if (show && this.editDisabled) {
             this.operatorPoints.showBox(show);
         } else {
             this.showSelectorResizeAndRotateGripsAndBox(show);

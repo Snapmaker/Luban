@@ -18,7 +18,7 @@ import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
 import PrintableArea from './PrintableArea';
 import {
-    DATA_PREFIX, PAGE_PROCESS
+    DATA_PREFIX
 } from '../../constants';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 import { library } from './lib/ext-shapes';
@@ -109,7 +109,7 @@ class SVGCanvas extends PureComponent {
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
         materials: PropTypes.object,
-        page: PropTypes.string // add cnc, add isRequired
+        editDisabled: PropTypes.bool.isRequired
     };
 
     updateTime = 0;
@@ -162,8 +162,8 @@ class SVGCanvas extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.page !== this.props.page) {
-            this.svgContentGroup.setPage(nextProps.page);
+        if (nextProps.editDisabled !== this.props.editDisabled) {
+            this.svgContentGroup.setEditDisabled(nextProps.editDisabled);
         }
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
@@ -299,7 +299,7 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
             scale: this.scale,
-            page: this.props.page
+            editDisabled: this.props.editDisabled
         });
     }
 
@@ -696,7 +696,7 @@ class SVGCanvas extends PureComponent {
             case 'move': {
                 const dx = x - draw.startX;
                 const dy = y - draw.startY;
-                if (this.props.page === PAGE_PROCESS) {
+                if (this.props.editDisabled) {
                     break;
                 }
                 if (dx === 0 && dy === 0) {
@@ -721,7 +721,7 @@ class SVGCanvas extends PureComponent {
             case 'resize': {
                 // TODO: resize multiple elements
                 const elements = this.svgContentGroup.selectedElements;
-                if (this.props.page === PAGE_PROCESS) {
+                if (this.props.editDisabled) {
                     break;
                 }
                 if (elements.length !== 1) {
@@ -810,7 +810,7 @@ class SVGCanvas extends PureComponent {
                 return;
             }
             case 'rotate': {
-                if (this.props.page === PAGE_PROCESS) {
+                if (this.props.editDisabled) {
                     break;
                 }
                 const center = draw.center;
@@ -1151,7 +1151,7 @@ class SVGCanvas extends PureComponent {
         const mouseTarget = this.getMouseTarget(evt);
         const { tagName } = mouseTarget;
 
-        if (this.props.page === PAGE_PROCESS) {
+        if (this.props.editDisabled) {
             return;
         }
         if (tagName === 'text' && this.mode !== 'textedit') {

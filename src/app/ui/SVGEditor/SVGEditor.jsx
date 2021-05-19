@@ -7,8 +7,6 @@ import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
 
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
-import { PAGE_EDITOR } from '../../constants';
-
 
 class SVGEditor extends PureComponent {
     static propTypes = {
@@ -20,7 +18,7 @@ class SVGEditor extends PureComponent {
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         use3DVisualizer: PropTypes.bool,
-        page: PropTypes.string, // add cnc, add isRequired
+        editDisabled: PropTypes.bool.isRequired,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -112,7 +110,7 @@ class SVGEditor extends PureComponent {
                     <div className={styles['view-space']}>
                         <SVGCanvas
                             className={styles['svg-content']}
-                            page={this.props.page}
+                            editDisabled={this.props.editDisabled}
                             SVGActions={this.props.SVGActions}
                             size={this.props.size}
                             materials={this.props.materials}
@@ -132,7 +130,7 @@ class SVGEditor extends PureComponent {
                             elementActions={this.props.elementActions}
                         />
                     </div>
-                    {(this.props.page === PAGE_EDITOR) && (
+                    {(!this.props.editDisabled) && (
                         <SvgTool
                             mode={this.state.mode}
                             insertDefaultTextVector={this.insertDefaultTextVector}
