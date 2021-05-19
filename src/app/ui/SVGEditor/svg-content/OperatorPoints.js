@@ -163,6 +163,10 @@ class OperatorPoints {
 
     showBox(show) {
         this.allSelectedElementsBox.setAttribute('display', show ? 'inline' : 'none');
+        Object.entries(this.selectedElementsBox).forEach(([dir]) => {
+            const box = this.selectedElementsBox[dir];
+            box.setAttribute('display', show ? 'inline' : 'none');
+        });
     }
 
     showResizeAndRotateGrips(show) {
@@ -374,8 +378,11 @@ class OperatorPoints {
             const grip = this.operatorGrips[dir];
             grip.setAttribute('cx', coords[0]);
             grip.setAttribute('cy', coords[1]);
-            grip.setAttribute('display', ((elements.length === 1) ? 'inline' : 'none'));
+            grip.setAttribute('display', 'inline');
         });
+        if (elements.length !== 1) {
+            this.showResizeGrips(false);
+        }
 
         this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y1', minY);

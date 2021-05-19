@@ -170,6 +170,9 @@ class SVGContentGroup {
         }
         const posAndsize = this.operatorPoints.resizeGrips(this.selectedElements);
         this.showSelectorGrips(true);
+        if (this.page === PAGE_PROCESS) {
+            this.operatorPoints.showResizeGrips(false);
+        }
         // todo
         return posAndsize;
     }
@@ -183,6 +186,9 @@ class SVGContentGroup {
     resetSelection(size, transformation) {
         // Resize grip of each selected element, and get their whole position and size
         const posAndSize = this.operatorPoints.resizeGrips(this.selectedElements);
+        if (this.page === PAGE_PROCESS) {
+            this.operatorPoints.showResizeGrips(false);
+        }
 
         // Update operator points
         this.setSelectorTransformList(size, transformation);
@@ -200,6 +206,9 @@ class SVGContentGroup {
         if (elements.length === 1) {
             // keep rotation if only one element selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
+            if (this.page === PAGE_PROCESS) {
+                this.operatorPoints.showResizeGrips(false);
+            }
 
             const selectorElement = this.operatorPoints.operatorPointsGroup;
             const element = elements[0];
@@ -215,6 +224,9 @@ class SVGContentGroup {
         } else if (elements.length > 1) {
             // re-create axis-aligned selector if multiple elements are selected
             const { positionX, positionY } = this.operatorPoints.resizeGrips(elements);
+            if (this.page === PAGE_PROCESS) {
+                this.operatorPoints.showResizeGrips(false);
+            }
 
             const selectorElement = this.operatorPoints.operatorPointsGroup;
             SvgModel.recalculateElementTransformList(selectorElement, {
@@ -501,10 +513,10 @@ class SVGContentGroup {
     }
 
     showSelectorGrips(show) {
-        if (this.page !== PAGE_PROCESS) {
-            this.showSelectorResizeAndRotateGripsAndBox(show);
-        } else {
+        if (show && this.page === PAGE_PROCESS) {
             this.operatorPoints.showBox(show);
+        } else {
+            this.showSelectorResizeAndRotateGripsAndBox(show);
         }
     }
 
