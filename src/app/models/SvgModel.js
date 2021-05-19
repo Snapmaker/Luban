@@ -933,9 +933,11 @@ class SvgModel extends BaseModel {
         this.showOrigin = showOrigin ?? !this.showOrigin;
 
         if (this.showOrigin) {
-            // this.transformation = this.scaleOrigin;
+            // set transformation
             this.transformation.scaleX = this.scaleOrigin.scaleX;
             this.transformation.scaleY = this.scaleOrigin.scaleY;
+
+            // set elem attributes
             this.elem.setAttribute('href', this.uploadName);
             this.elem.setAttribute('width', this.widthOrigin);
             this.elem.setAttribute('height', this.heightOrigin);
@@ -945,10 +947,15 @@ class SvgModel extends BaseModel {
             }, this.size);
             this.elem.setAttribute('x', topLeft.x);
             this.elem.setAttribute('y', topLeft.y);
+
+            // set elem transformList form transformation
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         } else {
+            // set transformation
             this.transformation.scaleX = this.scaleProcess.scaleX;
             this.transformation.scaleY = this.scaleProcess.scaleY;
+
+            // set elem attributes
             this.elem.setAttribute('href', this.processImageName);
             this.elem.setAttribute('width', this.widthProcess);
             this.elem.setAttribute('height', this.heightProcess);
@@ -958,8 +965,12 @@ class SvgModel extends BaseModel {
             }, this.size);
             this.elem.setAttribute('x', topLeft.x);
             this.elem.setAttribute('y', topLeft.y);
+
+            // set elem transformList from transformation
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         }
+
+        // TODO: use svgCanvas, remove modelObject and processObject
         this.modelObject3D.visible = this.showOrigin;
         if (this.processObject3D) {
             this.processObject3D.visible = !this.showOrigin;
