@@ -22,6 +22,8 @@ export const processActions = {
     preview: (headType) => (dispatch, getState) => {
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
+        
+        // Different models cannot be selected in process page
         const { SVGActions } = getState()[headType];
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
