@@ -118,6 +118,19 @@ export const processActions = {
         }
     },
 
+    checkAndSelectModelsInProcess: (headType, elements) => async (dispatch, getState) => {
+        const { modelGroup, SVGActions } = getState()[headType];
+        const selectedModels = modelGroup.getSelectedModelArray();
+        const models = SVGActions.getModelsByElements(elements);
+        if (getToolPathType([...selectedModels, ...models]).length !== 1) {
+            if (!toastId || !toast.isActive(toastId)) {
+                toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+            }
+            return;
+        }
+        SVGActions.selectElements(elements);
+    },
+
     selectAllToolPathModels: (headType) => (dispatch, getState) => {
         const { modelGroup } = getState()[headType];
         modelGroup.setAllSelectedToolPathModelIDs();

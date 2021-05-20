@@ -25,7 +25,6 @@ import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
 import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 
-
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
 const ZOOM_RATE = 2.15;

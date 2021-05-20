@@ -965,8 +965,12 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        SVGActions.selectElements(elements);
+        const { SVGActions, page } = getState()[headType];
+        if (page === PAGE_PROCESS) { // in process page
+            dispatch(actions.checkAndSelectModelsInProcess(headType, elements));
+        } else {
+            SVGActions.selectElements(elements);
+        }
 
         dispatch(baseActions.render(headType));
     },
