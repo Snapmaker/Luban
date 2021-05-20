@@ -119,7 +119,7 @@ class OperatorPoints {
 
         this.operatorPointsGroup.append(this.rotateGripConnector);
         this.operatorPointsGroup.append(this.rotateGrip);
-        this.showGrips(false);
+        this.showOperator(false);
     }
 
     updateScale(scale) { // just change the engineer scale
@@ -144,9 +144,11 @@ class OperatorPoints {
         return this.allSelectedElementsBox;
     }
 
-    showGrips(show) {
+    showOperator(show) {
         this.operatorPointsGroup.setAttribute('display', show ? 'inline' : 'none');
-        this.showResizeAndRotateGripsAndBox(show);
+        this.showResizeGrips(show);
+        this.showRotateGrips(show);
+        this.showBox(show);
     }
 
     showResizeGrips(show) {
@@ -163,17 +165,10 @@ class OperatorPoints {
 
     showBox(show) {
         this.allSelectedElementsBox.setAttribute('display', show ? 'inline' : 'none');
-    }
-
-    showResizeAndRotateGrips(show) {
-        this.showResizeGrips(show);
-        this.showRotateGrips(show);
-    }
-
-    showResizeAndRotateGripsAndBox(show) {
-        this.showResizeGrips(show);
-        this.showRotateGrips(show);
-        this.showBox(show);
+        Object.entries(this.selectedElementsBox).forEach(([dir]) => {
+            const box = this.selectedElementsBox[dir];
+            box.setAttribute('display', show ? 'inline' : 'none');
+        });
     }
 
     resetTransformList() {
@@ -246,13 +241,13 @@ class OperatorPoints {
     /**
      * TODO: Refactor this method
      */
-    resizeGrips(elements) {
+    resizeGrips(elements, showEditGrips = true) {
         for (const elemRect of this.selectedElementsBox) {
             elemRect.remove();
         }
         this.selectedElementsBox = [];
         if (!elements || elements.length === 0) {
-            this.showGrips(false);
+            this.showOperator(false);
             return {
                 positionX: 0,
                 positionY: 0,
@@ -370,12 +365,14 @@ class OperatorPoints {
             s: [(minX + maxX) / 2, maxY]
         };
 
-        Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
-            const grip = this.operatorGrips[dir];
-            grip.setAttribute('cx', coords[0]);
-            grip.setAttribute('cy', coords[1]);
-            grip.setAttribute('display', ((elements.length === 1) ? 'inline' : 'none'));
-        });
+        if (showEditGrips) {
+            Object.entries(this.operatorGripCoords).forEach(([dir, coords]) => {
+                const grip = this.operatorGrips[dir];
+                grip.setAttribute('cx', coords[0]);
+                grip.setAttribute('cy', coords[1]);
+                grip.setAttribute('display', ((elements.length === 1) ? 'inline' : 'none'));
+            });
+        }
 
         this.rotateGripConnector.setAttribute('x1', (minX + maxX) / 2);
         this.rotateGripConnector.setAttribute('y1', minY);

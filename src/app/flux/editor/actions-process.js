@@ -19,9 +19,13 @@ export const processActions = {
         });
     },
 
-    preview: (headType) => (dispatch) => {
+    preview: (headType) => (dispatch, getState) => {
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
+        
+        // Different models cannot be selected in process page
+        const { SVGActions } = getState()[headType];
+        SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
     },
 
@@ -114,6 +118,19 @@ export const processActions = {
                 modelGroup.setSelectedToolPathModelIDs([]);
             }
         }
+    },
+
+    checkAndSelectModelsInProcess: (headType, elements) => async (dispatch, getState) => {
+        const { modelGroup, SVGActions } = getState()[headType];
+        const selectedModels = modelGroup.getSelectedModelArray();
+        const models = SVGActions.getModelsByElements(elements);
+        if (getToolPathType([...selectedModels, ...models]).length !== 1) {
+            if (!toastId || !toast.isActive(toastId)) {
+                toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
+            }
+            return;
+        }
+        SVGActions.selectElements(elements);
     },
 
     selectAllToolPathModels: (headType) => (dispatch, getState) => {

@@ -299,6 +299,9 @@ class Visualizer extends Component {
         if (this.props.modelGroup.selectedModelArray.length > 1) {
             return;
         }
+        if (this.props.page !== PAGE_EDITOR) {
+            return;
+        }
         this.contextMenuRef.current.show(event);
     };
 
@@ -334,11 +337,12 @@ class Visualizer extends Component {
                     <LaserCameraAidBackground />
                 </div>
                 <div style={{
-                    visibility: isEditor ? 'visible' : 'hidden'
+                    visibility: (isEditor || displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}
                 >
                     <SVGEditor
                         ref={this.svgCanvas}
+                        editable={isEditor}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -364,7 +368,7 @@ class Visualizer extends Component {
                 <div
                     className={styles['canvas-content']}
                     style={{
-                        visibility: !isEditor ? 'visible' : 'hidden'
+                        visibility: (!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
                 >
                     <Canvas

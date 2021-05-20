@@ -94,7 +94,8 @@ class ToolPathGroup {
     }
 
     getToolPathTypes() {
-        return getToolPathType(this.modelGroup.getSelectedToolPathModels());
+        // return getToolPathType(this.modelGroup.getSelectedToolPathModels());
+        return getToolPathType(this.modelGroup.getSelectedModelArray());
     }
 
     _getToolPaths() {
@@ -117,7 +118,8 @@ class ToolPathGroup {
     createToolPath(options) {
         const { materials } = options;
 
-        const models = this.modelGroup.getSelectedToolPathModels();
+        // const models = this.modelGroup.getSelectedToolPathModels();
+        const models = this.modelGroup.getSelectedModelArray();
 
         if (models.length === 0) {
             return null;
@@ -139,7 +141,7 @@ class ToolPathGroup {
             baseName: models[0].uploadName,
             headType: this.headType,
             type,
-            modelIDs: this.modelGroup.selectedToolPathModelIDs,
+            modelIDs: this.modelGroup.selectedModelIDArray,
             modelGroup: this.modelGroup,
             gcodeConfig,
             materials
