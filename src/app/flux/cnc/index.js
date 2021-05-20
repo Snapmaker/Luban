@@ -130,7 +130,6 @@ export const actions = {
             name: activeToolList.name,
             config: activeToolList.config
         });
-        console.log('updateToolListDefinition', newToolCategory);
         await definitionManager.updateToolDefinition(newToolCategory);
         const isReplacedDefinition = (d) => d.definitionId === newToolCategory.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
@@ -186,7 +185,6 @@ export const actions = {
         newToolCategory.toolList.forEach((item) => {
             item.definitionId = definitionId;
         });
-        console.log('duplicateToolCategoryDefinition', activeToolCategory, newToolCategory);
 
         // make sure category is not repeated
         while (state.toolDefinitions.find(d => d.category === newToolCategory.category)) {
@@ -235,7 +233,6 @@ export const actions = {
         const isReplacedDefinition = (d) => d.definitionId === createdDefinition.definitionId;
         const index = newToolDefinitions.findIndex(isReplacedDefinition);
         newToolDefinitions.splice(index, 1, createdDefinition);
-        console.log('removeToolListDefinition', newToolDefinitions);
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));

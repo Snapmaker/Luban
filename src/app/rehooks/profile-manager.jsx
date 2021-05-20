@@ -157,7 +157,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             if (isCreate && disableCategory) {
                 title = i18n._('Create');
                 copyType = 'Tool';
-                copyTargetName = 'new profile';
+                copyTargetName = 'New Profile';
             }
             if (!isCreate) {
                 title = i18n._('Copy');
@@ -165,6 +165,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 copyTargetName = isCategorySelected ? definitionForManager.category : definitionForManager.name;
             }
             isCreate = isCreate && !disableCategory;
+
             let materialOptions = definitionState?.definitionOptions.map(option => {
                 return {
                     label: option.category,

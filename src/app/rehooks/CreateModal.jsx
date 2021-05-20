@@ -26,11 +26,11 @@ class CreateModal extends PureComponent {
         materialDefinitionId: 'Default'
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.copyTargetName !== this.props.copyTargetName) {
+    componentDidMount() {
+        if (this.props.copyTargetName) {
             this.setState({
-                materialName: nextProps.copyTargetName,
-                toolName: nextProps.copyTargetName
+                materialName: this.props.copyTargetName,
+                toolName: this.props.copyTargetName
             });
         }
     }
