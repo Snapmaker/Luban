@@ -25,6 +25,7 @@ import styles from './styles.styl';
 
 class Visualizer extends PureComponent {
     static propTypes = {
+        isActive: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
         selectedModelArray: PropTypes.array,
@@ -218,35 +219,32 @@ class Visualizer extends PureComponent {
         }
     };
 
-    shortcutResponder = (() => {
-        const that = this;
-        return {
-            title: that.constructor.name,
-            get active() {
-                return that.props.isActive;
+
+    shortcutHandler = {
+        title: this.constructor.name,
+        isActive: () => this.props.isActive,
+
+        priority: priorities.VIEW,
+        shortcuts: {
+            [shortcutActions.SELECTALL]: this.props.selectAllModels,
+            [shortcutActions.UNSELECT]: this.props.unselectAllModels,
+            [shortcutActions.DELETE]: this.props.removeSelectedModel,
+            [shortcutActions.COPY]: this.props.copy,
+            [shortcutActions.PASTE]: this.props.paste,
+            [shortcutActions.DUPLICATE]: this.props.duplicateSelectedModel,
+            [shortcutActions.UNDO]: this.props.undo,
+            [shortcutActions.REDO]: this.props.redo,
+            // optimize: accelerate when continuous click
+            'SHOWGCODELAYERS_ADD': {
+                keys: ['alt+up'],
+                callback: () => { this.props.offsetGcodeLayers(1); }
             },
-            priority: priorities.VIEW,
-            shortcuts: {
-                [shortcutActions.SELECTALL]: this.props.selectAllModels,
-                [shortcutActions.UNSELECT]: this.props.unselectAllModels,
-                [shortcutActions.DELETE]: this.props.removeSelectedModel,
-                [shortcutActions.COPY]: this.props.copy,
-                [shortcutActions.PASTE]: this.props.paste,
-                [shortcutActions.DUPLICATE]: this.props.duplicateSelectedModel,
-                [shortcutActions.UNDO]: this.props.undo,
-                [shortcutActions.REDO]: this.props.redo,
-                // optimize: accelerate when continuous click
-                'SHOWGCODELAYERS_ADD': {
-                    keys: ['alt+up'],
-                    callback: () => { this.props.offsetGcodeLayers(1); }
-                },
-                'SHOWGCODELAYERS_MINUS': {
-                    keys: ['alt+down'],
-                    callback: () => { this.props.offsetGcodeLayers(-1); }
-                }
+            'SHOWGCODELAYERS_MINUS': {
+                keys: ['alt+down'],
+                callback: () => { this.props.offsetGcodeLayers(-1); }
             }
-        };
-    })()
+        }
+    };
 
 
     constructor(props) {
@@ -262,7 +260,7 @@ class Visualizer extends PureComponent {
     componentDidMount() {
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
-        ShortcutManager.register(this.shortcutResponder);
+        ShortcutManager.register(this.shortcutHandler);
         window.addEventListener(
             'hashchange',
             (event) => {

@@ -1,8 +1,13 @@
 import Mousetrap from 'mousetrap';
 
+
 import { actionKeys, priorities } from './constants';
 
 function parseCombokeys(comboKeys) {
+    if (typeof comboKeys === 'string') {
+        comboKeys = [comboKeys];
+    }
+
     const keyMap = {};
     for (const comboKey of comboKeys) {
         keyMap[comboKey.toLocaleLowerCase()] = true;
@@ -11,7 +16,7 @@ function parseCombokeys(comboKeys) {
 }
 
 class CShortcutManger {
-    _responders = [];
+    _handlers = [];
 
     _comboKeyCallbackMap = {};
 
@@ -20,24 +25,24 @@ class CShortcutManger {
      * @param {
      *  title: string(option),
      *  priority: number,
-     *  active: boolean,
+     *  isActive: function,
      *  shortcuts:{
      *      [actionName]:function || {keys,callback:function}
      *  }
-     * } responder : readonly
+     * } handler : readonly
      */
-    register(responder) {
-        if (!(responder.priority in Object.values(priorities))) {
-            console.warn(`ShortcutManger: responder(${responder.title || 'unNamed'}).priority not set!`);
-            responder.priority = -1;
+    register(handler) {
+        if (!(handler.priority in Object.values(priorities))) {
+            console.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).priority not set!`);
+            handler.priority = -1;
         }
-        if (typeof responder.active !== 'boolean') {
-            console.warn(`ShortcutManger: responder(${responder.title || 'unNamed'}).active not set!`);
+        if (typeof handler.isActive !== 'function') {
+            console.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).isActive not set!`);
         }
-        this._responders.push(responder);
+        this._handlers.push(handler);
 
-        for (const actionName of Reflect.ownKeys(responder.shortcuts)) {
-            const shortcut = responder.shortcuts[actionName];
+        for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
+            const shortcut = handler.shortcuts[actionName];
             let comboKeys;
             if (!shortcut) {
                 console.error('ShortcutManger: shortcut ignored, can\'t find shortcut callback', actionName);
@@ -53,23 +58,23 @@ class CShortcutManger {
                 continue;
             }
             comboKeys = parseCombokeys(comboKeys);
-            this._bind(comboKeys, responder, actionName);
+            this._bind(comboKeys, handler, actionName);
         }
     }
     // TODO: unregister
-    // responder should be unregistered when parent component destroyed
+    // handler should be unregistered when parent component destroyed
 
     printList() {
-        this._responders.sort((a, b) => a.priority - b.priority);
+        this._handlers.sort((a, b) => a.priority - b.priority);
         const titles = [];
-        for (const responder of this._responders) {
-            if (titles.indexOf(responder.title) === -1) {
-                titles.push(responder.title);
+        for (const handler of this._handlers) {
+            if (titles.indexOf(handler.title) === -1) {
+                titles.push(handler.title);
             } else {
                 continue;
             }
-            for (let actionName of Reflect.ownKeys(responder.shortcuts)) {
-                const shortcut = responder.shortcuts[actionName];
+            for (let actionName of Reflect.ownKeys(handler.shortcuts)) {
+                const shortcut = handler.shortcuts[actionName];
                 let comboKeys;
                 if (!shortcut) {
                     continue;
@@ -84,31 +89,33 @@ class CShortcutManger {
                 }
                 if (typeof actionName === 'symbol') actionName = actionName.toString();
 
-                console.log(`${responder.title}-P${responder.priority} ${actionName} [${comboKeys.join(' , ')}]`);
+                console.info(`${handler.title}-P${handler.priority} ${actionName} [${comboKeys.join(' , ')}]`);
             }
         }
     }
 
-    _bind(comboKeys, responder, actionName) {
+    _bind(comboKeys, handler, actionName) {
         for (const comboKey of comboKeys) {
-            let mapItem = this._comboKeyCallbackMap[comboKey];
-            if (!mapItem) {
-                mapItem = [];
-                this._comboKeyCallbackMap[comboKey] = mapItem;
+            if (!this._comboKeyCallbackMap[comboKey]) {
+                this._comboKeyCallbackMap[comboKey] = [];
             }
-            mapItem.push({ responder, actionName });
-            Mousetrap.bind(comboKey, (e, pressedKeys) => {
+            const mapItem = this._comboKeyCallbackMap[comboKey];
+            if (mapItem.length && mapItem.find((item) => item.handler.priority !== handler.priority)) {
+                console.warn('ShortcutManger: same combokey exists in handlers of different priority', actionName);
+            }
+
+            mapItem.push({ handler, actionName });
+            Mousetrap.bind(comboKey, (/* e, pressedKeys*/) => {
                 const matched = mapItem.reduce((prev, current) => {
-                    // console.log(current.title, current.active);
-                    if (!current.responder.active) {
+                    if (!current.handler.isActive()) {
                         return prev;
                     }
                     if (!prev) {
                         return current;
                     }
-                    if (prev.responder.priority <= current.responder.priority) {
-                        if (prev.responder.priority === current.responder.priority) {
-                            console.warn(`comboKey [${comboKey}] has multiple active responder with same priority`);
+                    if (prev.handler.priority <= current.handler.priority) {
+                        if (prev.handler.priority === current.handler.priority) {
+                            console.warn(`comboKey [${comboKey}] has multiple active handler with same priority`);
                         }
                         return current;
                     }
@@ -118,14 +125,14 @@ class CShortcutManger {
                     // console.warn(`actionName [${actionName}] ignored, no matched active responser`);
                     return true;
                 }
-                const matchedResponder = matched.responder;
+                const matchedHandler = matched.handler;
 
-                let callback = matchedResponder.shortcuts[matched.actionName];
+                let callback = matchedHandler.shortcuts[matched.actionName];
                 if (typeof callback !== 'function' && callback.callback) {
                     callback = callback.callback;
                 }
                 if (typeof callback === 'function') {
-                    console.log('keyboard event trigger:', pressedKeys, matchedResponder.title, matched.actionName);
+                    // console.info('keyboard event trigger:', pressedKeys, matchedHandler.title, matched.actionName);
                     callback();
                     return false; // prevent default
                 }

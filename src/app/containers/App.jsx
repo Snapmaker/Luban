@@ -82,35 +82,23 @@ class App extends PureComponent {
         recoveringProject: false
     };
 
-
-    /**
-     * responder.active probably decided by component status,
-     * so we use get property to get active status.
-     * but get property function is binded to responder,
-     * we use closure function or define in constructor to solve this problem.
-     *  **/
-    shortcutResponder = (() => {
-        const that = this;
-        return {
-            title: that.constructor.name,
-            get active() {
-                return true;
-            },
-            // active: false,
-            priority: priorities.APP,
-            shortcuts: {
-                // TODO: implement file menu actions
-                // [shortcutActions.OPEN]: () => { console.log('app.open'); },
-                'LISTALLSHORTCUTS': {
-                    keys: ['mod+alt+k l'],
-                    callback: () => {
-                        ShortcutManager.printList();
-                    }
+    shortcutHandler = {
+        title: this.constructor.name,
+        isActive: () => true,
+        // active: false,
+        priority: priorities.APP,
+        shortcuts: {
+            // TODO: implement file menu actions
+            // [shortcutActions.OPEN]: () => { console.log('app.open'); },
+            'LISTALLSHORTCUTS': {
+                keys: ['mod+alt+k l'],
+                callback: () => {
+                    ShortcutManager.printList();
                 }
-
             }
-        };
-    })()
+        }
+    };
+
 
     actions = {
         onChangeShouldShowWarning: (event) => {
@@ -301,7 +289,7 @@ class App extends PureComponent {
             }
         }, 200);
 
-        ShortcutManager.register(this.shortcutResponder);
+        ShortcutManager.register(this.shortcutHandler);
     }
 
     componentWillReceiveProps(nextProps) {
