@@ -186,7 +186,9 @@ class SVGParser {
             const attributes = this.attributeParser.parse(node, parentAttributes, tag);
 
             let shouldParseChildren = true;
-            node.tag = tag;
+            if (Object.prototype.toString.call(node) === '[object Object]') {
+                node.tag = tag;
+            }
             switch (tag) {
                 // graphics elements
                 case 'circle': {
@@ -271,6 +273,7 @@ class SVGParser {
                 case '-':
                 case 'g':
                 case 'd':
+                case 'title':
                 case '$': {
                     break;
                 }
