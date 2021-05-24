@@ -8,7 +8,7 @@ import ModelItem from '../../views/model-item';
 
 function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray, shallowEqual);
-    const models = useSelector(state => state?.printing?.modelGroup?.models, shallowEqual);
+    const models = useSelector(state => state?.printing?.modelGroup?.models);
     const dispatch = useDispatch();
     const actions = {
         selectTargetModel(targetModel, shiftKey) {

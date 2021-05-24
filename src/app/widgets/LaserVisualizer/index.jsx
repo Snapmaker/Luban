@@ -6,7 +6,7 @@ import styles from './styles.styl';
 
 const LaserVisualizerWidget = () => (
     <Widget borderless>
-        <Widget.Content className={styles['visualizer-content']}>
+        <Widget.Content className={styles['visualizer-content-wrapper']}>
             <Visualizer />
         </Widget.Content>
     </Widget>

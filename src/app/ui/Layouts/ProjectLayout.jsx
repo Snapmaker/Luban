@@ -2,74 +2,100 @@ import React, { PureComponent } from 'react';
 // import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import styles from './project.styl';
+import styles from './styles/project.styl';
 
 
 class ProjectLayout extends PureComponent {
     static propTypes = {
-        rightView: PropTypes.func,
-        centerView: PropTypes.func,
-        modalView: PropTypes.func,
-        mainToolBar: PropTypes.func,
-        subToolBar: PropTypes.func
+        renderRightView: PropTypes.func,
+        renderCenterView: PropTypes.func,
+        renderModalView: PropTypes.func,
+        renderMainToolBar: PropTypes.func,
+        renderSubToolBar: PropTypes.func
     };
 
     state = {
     };
 
-    actions = {
-    };
+    centerView = React.createRef();
 
+    rightView = React.createRef();
+
+    subToolBar = React.createRef();
+
+
+    componentDidMount() {
+        window.addEventListener('resize', this.resizeWindow, false);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.resizeWindow, false);
+    }
+
+    resizeWindow = () => {
+        const rightView = this.rightView.current;
+        const subToolBar = this.subToolBar.current;
+        const centerView = this.centerView.current;
+        if (centerView) {
+            centerView.style.width = `calc(100vw - ${rightView.clientWidth}px - ${subToolBar.clientWidth}px)`;
+        }
+    }
 
     render() {
-        const { rightView, centerView, mainToolBar, subToolBar, modalView } = this.props;
+        const { renderRightView, renderCenterView, renderMainToolBar, renderSubToolBar, renderModalView } = this.props;
         return (
-            <div className={styles['content-flex']}>
+            <div>
+
                 <div
                     className={classNames(
                         styles['main-bar'],
                     )}
                 >
-                    {mainToolBar && (
-
-                        mainToolBar()
+                    {renderMainToolBar && (
+                        renderMainToolBar()
                     )}
                 </div>
-                <form
-                    className={classNames(
-                        styles.controls,
-                        styles['controls-right'],
-                    )}
-                    noValidate
-                >
-                    {rightView && (
-                        rightView()
-                    )}
-                </form>
+                <div className={styles['content-flex']}>
 
-                {centerView && (
                     <div
+                        ref={this.rightView}
+                        className={classNames(
+                            styles.controls,
+                            styles['controls-right'],
+                        )}
+                    >
+                        {renderRightView && (
+                            renderRightView()
+                        )}
+                    </div>
+
+                    <div
+                        ref={this.centerView}
                         className={classNames(
                             styles.visualizer,
                         )}
                     >
-                        {centerView()}
+                        {renderCenterView && (
+                            renderCenterView()
+                        )}
                     </div>
-                )}
 
-                <div
-                    className={classNames(
-                        styles['sub-bar'],
+                    <div
+                        ref={this.subToolBar}
+                        className={classNames(
+                            styles['sub-bar'],
+                        )}
+                    >
+                        {renderSubToolBar && (
+                            renderSubToolBar()
+                        )}
+                    </div>
+
+                    {renderModalView && (
+                        renderModalView()
                     )}
-                >
-                    {subToolBar && (
-                        subToolBar()
-                    )}
+
                 </div>
-
-                {modalView && (
-                    modalView()
-                )}
             </div>
         );
     }

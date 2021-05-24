@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 // import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import styles from './workspace.styl';
+import styles from './styles/workspace.styl';
 
 
 class WorkspaceLayout extends PureComponent {
