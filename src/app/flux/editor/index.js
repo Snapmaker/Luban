@@ -761,9 +761,7 @@ export const actions = {
             }
         }
         model.updateTransformationProcess();
-
         model.updateProcessImageName(processImageName);
-
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));

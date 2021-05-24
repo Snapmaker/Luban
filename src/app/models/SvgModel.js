@@ -981,12 +981,6 @@ class SvgModel extends BaseModel {
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         }
 
-        // TODO: use svgCanvas, remove modelObject and processObject
-        this.modelObject3D.visible = this.showOrigin;
-        if (this.processObject3D) {
-            this.processObject3D.visible = !this.showOrigin;
-        }
-
         return {
             showOrigin: this.showOrigin,
             showImageName: this.showOrigin ? this.uploadName : this.processImageName
@@ -1236,7 +1230,7 @@ class SvgModel extends BaseModel {
         // this.processMode(this.mode, this.config, processImageName);
         this.processImageName = processImageName;
 
-        this.generateProcessObject3D();
+        // this.generateProcessObject3D();
         const imagePath = `${DATA_PREFIX}/${processImageName}`;
         this.changeShowOrigin(false);
         this.elem.setAttribute('href', imagePath);
