@@ -14,7 +14,7 @@ import DefaultWidgets from './WorkspaceWidgets/DefaultWidgets';
 import PrimaryWidgets from './WorkspaceWidgets/PrimaryWidgets';
 import SecondaryWidgets from './WorkspaceWidgets/SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
-import styles from '../Layouts/workspace.styl';
+import styles from '../Layouts/styles/workspace.styl';
 import WorkspaceLayout from '../Layouts/WorkspaceLayout';
 
 import {

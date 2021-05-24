@@ -223,7 +223,6 @@ class SVGCanvas extends PureComponent {
 
     setupSVGContainer() {
         this.svgContainer = document.createElementNS(NS.SVG, 'svg');
-
         setAttributes(this.svgContainer, {
             width: this.props.size.x * 2,
             height: this.props.size.y * 2,
@@ -1146,7 +1145,6 @@ class SVGCanvas extends PureComponent {
 
     onMouseWheel = (event) => {
         event.preventDefault();
-
         if (event.deltaY < 0) {
             this.scale = this.scale / SCALE_RATE;
             this.updateCanvas();
@@ -1238,10 +1236,8 @@ class SVGCanvas extends PureComponent {
             return;
         }
         const $container = jQuery(this.node.current);
-
         const width = $container.width();
         const height = $container.height();
-
         const ratio = Math.min(width, height) / 900;
         this.svgContainer.setAttribute('width', width);
         this.svgContainer.setAttribute('height', height);
@@ -1256,7 +1252,6 @@ class SVGCanvas extends PureComponent {
         const x = (width - svgWidth) / 2 + this.offsetX * this.scale;
         const y = (height - svgHeight) / 2 + this.offsetY * this.scale;
 
-
         setAttributes(this.svgContent, {
             width: svgWidth,
             height: svgHeight,
@@ -1264,7 +1259,6 @@ class SVGCanvas extends PureComponent {
             y: y,
             viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`
         });
-
         setAttributes(this.svgBackground, {
             width: this.svgContent.getAttribute('width'),
             height: this.svgContent.getAttribute('height'),
@@ -1561,7 +1555,7 @@ class SVGCanvas extends PureComponent {
 
         return (
             <React.Fragment>
-                <div ref={this.node} className={className} />
+                <div ref={this.node} style={{ height: 'calc(100vh - 61px)' }} className={className} />
                 <input ref={this.input} type="text" size="35" autoComplete="off" />
             </React.Fragment>
         );

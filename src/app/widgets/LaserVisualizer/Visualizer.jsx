@@ -316,7 +316,6 @@ class Visualizer extends Component {
         return (
             <div
                 ref={this.visualizerRef}
-                style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
                 {isEditor && (
                     <div className={styles['visualizer-top-left']}>

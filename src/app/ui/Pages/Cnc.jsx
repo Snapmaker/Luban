@@ -1,26 +1,31 @@
-import React, { PureComponent } from 'react';
-import Sortable from 'react-sortablejs';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import Widget from '../../widgets/Widget';
-import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-import PrintingManager from '../../views/PrintingManager';
+import { withRouter } from 'react-router-dom';
+import Sortable from 'react-sortablejs';
+import path from 'path';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
-import { actions as printingActions } from '../../flux/printing';
-import { actions as widgetActions } from '../../flux/widget';
+import CNCVisualizer from '../../widgets/CNCVisualizer';
+import Widget from '../../widgets/Widget';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
+import { actions as widgetActions } from '../../flux/widget';
+import { actions as editorActions } from '../../flux/editor';
+import CncToolManager from '../../views/CncToolManager/CncToolManager';
+import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../constants';
 
-class Printing extends PureComponent {
+
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
+
+class Cnc extends Component {
     static propTypes = {
         ...withRouter.propTypes,
+        style: PropTypes.object,
         widgets: PropTypes.array.isRequired,
-        hidden: PropTypes.bool.isRequired,
-        uploadModel: PropTypes.func.isRequired,
+        uploadImage: PropTypes.func.isRequired,
         updateTabContainer: PropTypes.func.isRequired
     };
 
@@ -29,22 +34,29 @@ class Printing extends PureComponent {
     };
 
     actions = {
-        onDropAccepted: async (file) => {
-            try {
-                await this.props.uploadModel(file);
-            } catch (e) {
-                modal({
-                    title: i18n._('Failed to open model.'),
-                    body: e.message
-                });
+        onDropAccepted: (file) => {
+            const extname = path.extname(file.name).toLowerCase();
+            let uploadMode;
+            if (extname.toLowerCase() === '.svg') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.dxf') {
+                uploadMode = PROCESS_MODE_VECTOR;
+            } else if (extname.toLowerCase() === '.stl') {
+                uploadMode = PROCESS_MODE_MESH;
+            } else {
+                uploadMode = PROCESS_MODE_GREYSCALE;
             }
+            this.props.uploadImage(file, uploadMode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
         },
         onDropRejected: () => {
-            const title = i18n._('Warning');
-            const body = i18n._('Only STL/OBJ files are supported.');
             modal({
-                title: title,
-                body: body
+                title: i18n._('Warning'),
+                body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         },
         onDragWidgetStart: () => {
@@ -54,7 +66,7 @@ class Printing extends PureComponent {
             this.setState({ isDraggingWidget: false });
         },
         onChangeWidgetOrder: (widgets) => {
-            this.props.updateTabContainer({ widgets: widgets });
+            this.props.updateTabContainer({ widgets });
         }
     };
 
@@ -83,18 +95,18 @@ class Printing extends PureComponent {
         return (
             <Dropzone
                 disabled={this.state.isDraggingWidget}
-                accept=".stl, .obj"
-                dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
+                accept={ACCEPT}
+                dragEnterMsg={i18n._('Drop an image file here.')}
                 onDropAccepted={this.actions.onDropAccepted}
                 onDropRejected={this.actions.onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" />
+                <CNCVisualizer />
             </Dropzone>
         );
     };
 
     renderModalView = () => {
-        return (<PrintingManager />);
+        return (<CncToolManager />);
     };
 
     renderRightView = (widgets) => {
@@ -104,7 +116,7 @@ class Printing extends PureComponent {
                     animation: 150,
                     delay: 0,
                     group: {
-                        name: '3dp-control'
+                        name: 'cnc-control'
                     },
                     handle: '.sortable-handle',
                     filter: '.sortable-filter',
@@ -116,10 +128,10 @@ class Printing extends PureComponent {
                 }}
                 onChange={this.actions.onChangeWidgetOrder}
             >
-                { widgets.map(widget => {
+                {widgets.map(widget => {
                     return (
                         <div data-widget-id={widget} key={widget}>
-                            <Widget widgetId={widget} />
+                            <Widget widgetId={widget} headType="cnc" />
                         </div>
                     );
                 })}
@@ -128,9 +140,10 @@ class Printing extends PureComponent {
     }
 
     render() {
-        const { hidden } = this.props;
+        const style = this.props.style;
+
         return (
-            <div style={{ display: hidden ? 'none' : 'block' }}>
+            <div style={style}>
                 <ProjectLayout
                     renderCenterView={this.renderCenterView}
                     renderMainToolBar={this.renderMainToolBar}
@@ -143,7 +156,7 @@ class Printing extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget['3dp'].default.widgets;
+    const widgets = widget.cnc.default.widgets;
     return {
         widgets
     };
@@ -151,9 +164,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
-        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('3dp', 'default', widgets))
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('cnc', 'default', widgets))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Printing));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Cnc));

@@ -1,23 +1,12 @@
-@import "../../styles/variables.styl"
+@import "../../../styles/variables.styl"
 // TODO: refactor;
-@import "../../widgets/styles.styl"
+@import "../../../widgets/styles.styl"
 
-//display: table-cell;
-//position: fixed;
-//top: $navbar-height;
-//left: $sidebar-width;
-//right: $controls-width;
-//bottom: 0;
 .content-flex
     display: flex;
-    height: 'calc(100vh - %s)' % $navbar-height;
-    overflow-x: hidden;
+    height: calc(100vh - 61px);
+    overflow: hidden;
 .main-bar
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 50px;
     width: 100%;
 .visualizer
     flex: 1;

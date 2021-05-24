@@ -10,11 +10,16 @@ class SvgIcon extends PureComponent {
         title: PropTypes.string,
         onClick: PropTypes.func,
         disabled: PropTypes.bool,
+        isHorizontal: PropTypes.bool,
         color: PropTypes.string,
         spanText: PropTypes.string,
         spanClassName: PropTypes.string,
         size: PropTypes.number
     };
+
+    static defaultProps = {
+        isHorizontal: true
+    }
 
     state = {
         isHovered: false
@@ -44,6 +49,7 @@ class SvgIcon extends PureComponent {
             spanText,
             spanClassName,
             color,
+            isHorizontal,
             ...props
         } = this.props;
         const Component = Icons[name];
@@ -67,10 +73,15 @@ class SvgIcon extends PureComponent {
                         disabled={disabled}
                         color={isHovered ? '#272829' : color}
                     />
-                    { spanText && (
+                    { spanText && isHorizontal && (
                         <span className={spanClassName}>
                             {spanText}
                         </span>
+                    )}
+                    { spanText && !isHorizontal && (
+                        <div className={spanClassName}>
+                            {spanText}
+                        </div>
                     )}
                 </Anchor>
             );

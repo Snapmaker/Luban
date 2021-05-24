@@ -1,26 +1,28 @@
-import React, { PureComponent } from 'react';
-import Sortable from 'react-sortablejs';
+import React, { Component } from 'react';
+import path from 'path';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import Widget from '../../widgets/Widget';
-import PrintingVisualizer from '../../widgets/PrintingVisualizer';
-import PrintingManager from '../../views/PrintingManager';
+import { withRouter } from 'react-router-dom';
+import Sortable from 'react-sortablejs';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
+import LaserVisualizer from '../../widgets/LaserVisualizer';
+import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
-import { actions as printingActions } from '../../flux/printing';
+import { actions as editorActions } from '../../flux/editor';
 import { actions as widgetActions } from '../../flux/widget';
+// import styles from './styles.styl';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
-class Printing extends PureComponent {
+class Laser extends Component {
     static propTypes = {
         ...withRouter.propTypes,
         widgets: PropTypes.array.isRequired,
-        hidden: PropTypes.bool.isRequired,
-        uploadModel: PropTypes.func.isRequired,
+        style: PropTypes.object,
+        uploadImage: PropTypes.func.isRequired,
         updateTabContainer: PropTypes.func.isRequired
     };
 
@@ -29,22 +31,23 @@ class Printing extends PureComponent {
     };
 
     actions = {
-        onDropAccepted: async (file) => {
-            try {
-                await this.props.uploadModel(file);
-            } catch (e) {
-                modal({
-                    title: i18n._('Failed to open model.'),
-                    body: e.message
-                });
+        // todo: show UI then select process mode
+        onDropAccepted: (file) => {
+            let mode = 'bw';
+            if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
+                mode = 'vector';
             }
+            this.props.uploadImage(file, mode, () => {
+                modal({
+                    title: i18n._('Parse Error'),
+                    body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
+                });
+            });
         },
         onDropRejected: () => {
-            const title = i18n._('Warning');
-            const body = i18n._('Only STL/OBJ files are supported.');
             modal({
-                title: title,
-                body: body
+                title: i18n._('Warning'),
+                body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         },
         onDragWidgetStart: () => {
@@ -54,7 +57,7 @@ class Printing extends PureComponent {
             this.setState({ isDraggingWidget: false });
         },
         onChangeWidgetOrder: (widgets) => {
-            this.props.updateTabContainer({ widgets: widgets });
+            this.props.updateTabContainer({ widgets });
         }
     };
 
@@ -83,18 +86,16 @@ class Printing extends PureComponent {
         return (
             <Dropzone
                 disabled={this.state.isDraggingWidget}
-                accept=".stl, .obj"
-                dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
+                accept={ACCEPT}
+                dragEnterMsg={i18n._('Drop an image file here.')}
                 onDropAccepted={this.actions.onDropAccepted}
                 onDropRejected={this.actions.onDropRejected}
             >
-                <PrintingVisualizer widgetId="printingVisualizer" />
+                <LaserVisualizer
+                    widgetId="laserVisualizer"
+                />
             </Dropzone>
         );
-    };
-
-    renderModalView = () => {
-        return (<PrintingManager />);
     };
 
     renderRightView = (widgets) => {
@@ -104,7 +105,7 @@ class Printing extends PureComponent {
                     animation: 150,
                     delay: 0,
                     group: {
-                        name: '3dp-control'
+                        name: 'laser-control'
                     },
                     handle: '.sortable-handle',
                     filter: '.sortable-filter',
@@ -116,10 +117,10 @@ class Printing extends PureComponent {
                 }}
                 onChange={this.actions.onChangeWidgetOrder}
             >
-                { widgets.map(widget => {
+                {widgets.map(widget => {
                     return (
                         <div data-widget-id={widget} key={widget}>
-                            <Widget widgetId={widget} />
+                            <Widget widgetId={widget} headType="laser" />
                         </div>
                     );
                 })}
@@ -127,15 +128,16 @@ class Printing extends PureComponent {
         );
     }
 
+
     render() {
-        const { hidden } = this.props;
+        const style = this.props.style;
+
         return (
-            <div style={{ display: hidden ? 'none' : 'block' }}>
+            <div style={style}>
                 <ProjectLayout
                     renderCenterView={this.renderCenterView}
                     renderMainToolBar={this.renderMainToolBar}
                     renderRightView={() => this.renderRightView(this.props.widgets)}
-                    renderModalView={this.renderModalView}
                 />
             </div>
         );
@@ -143,7 +145,7 @@ class Printing extends PureComponent {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
-    const widgets = widget['3dp'].default.widgets;
+    const widgets = widget.laser.default.widgets;
     return {
         widgets
     };
@@ -151,9 +153,10 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
-        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('3dp', 'default', widgets))
+        uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('laser', 'default', widgets))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Printing));
+// https://stackoverflow.com/questions/47657365/can-i-mapdispatchtoprops-without-mapstatetoprops-in-redux
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Laser));
