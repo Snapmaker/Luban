@@ -32,6 +32,11 @@ class CShortcutManger {
      * } handler : readonly
      */
     register(handler) {
+        if (!handler) {
+            console.error('ShortcutManger: handler should be an object!');
+            return;
+        }
+
         if (!(handler.priority in Object.values(priorities))) {
             console.warn(`ShortcutManger: handler(${handler.title || 'unNamed'}).priority not set!`);
             handler.priority = -1;
@@ -64,6 +69,7 @@ class CShortcutManger {
     // TODO: unregister
     // handler should be unregistered when parent component destroyed
 
+    // TODO: class name changed after building
     printList() {
         this._handlers.sort((a, b) => a.priority - b.priority);
         const titles = [];
