@@ -501,7 +501,6 @@ export const actions = {
         if (transformation.scaleX || transformation.scaleY) {
             dispatch(actions.processSelectedModel(headType));
         }
-        dispatch(actions.resetProcessState(headType));
     },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
@@ -577,7 +576,6 @@ export const actions = {
         transformation.positionY -= 5;
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, undefined, transformation));
-        dispatch(actions.resetProcessState(headType));
     },
 
 
@@ -607,7 +605,6 @@ export const actions = {
             });
         }
         dispatch(actions.processSelectedModel(headType));
-        dispatch(actions.resetProcessState(headType));
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
@@ -891,22 +888,6 @@ export const actions = {
     },
 
     /**
-     * Reset process state after model changes
-     */
-    // eslint-disable-next-line no-unused-vars
-    resetProcessState: (headType) => (dispatch, getState) => {
-        // const { isAllModelsPreviewed } = getState()[headType];
-        // if (isAllModelsPreviewed) {
-        //     dispatch(baseActions.updateState(headType, {
-        //         isAllModelsPreviewed: false
-        //     }));
-        // }
-        // dispatch(baseActions.updateState(headType, {
-        //     gcodeFile: null
-        // }));
-    },
-
-    /**
      * SVG Actions below
      **************************************************************************/
 
@@ -917,8 +898,6 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         await SVGActions.createModelFromElement(element);
-
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1003,7 +982,6 @@ export const actions = {
     moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
         SVGActions.moveElementsOnArrowKeyUp();
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1032,7 +1010,6 @@ export const actions = {
 
         SVGActions.resizeElementsFinish(elements, options);
 
-        dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
@@ -1053,7 +1030,6 @@ export const actions = {
 
         SVGActions.resizeElementsImmediately(elements, options);
 
-        dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
@@ -1075,7 +1051,6 @@ export const actions = {
 
         SVGActions.flipElementsHorizontally(elements);
 
-        dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
@@ -1098,7 +1073,6 @@ export const actions = {
 
         SVGActions.flipElementsVertically(elements);
 
-        dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
@@ -1147,7 +1121,6 @@ export const actions = {
 
         // FIXME: remove this
         SVGActions.rotateElement(element, options);
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**

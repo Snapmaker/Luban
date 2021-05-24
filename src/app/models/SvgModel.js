@@ -946,7 +946,13 @@ class SvgModel extends BaseModel {
                 y: this.transformation.positionY + this.heightOrigin / 2
             }, this.size);
             this.elem.setAttribute('x', topLeft.x);
-            this.elem.setAttribute('y', topLeft.y);
+
+            if (this.config.svgNodeName === 'text') {
+                const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                this.elem.setAttribute('y', topLeft.y + diffY);
+            } else {
+                this.elem.setAttribute('y', topLeft.y);
+            }
 
             // set elem transformList form transformation
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
@@ -964,7 +970,12 @@ class SvgModel extends BaseModel {
                 y: this.transformation.positionY + this.heightProcess / 2
             }, this.size);
             this.elem.setAttribute('x', topLeft.x);
-            this.elem.setAttribute('y', topLeft.y);
+            if (this.config.svgNodeName === 'text') {
+                const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                this.elem.setAttribute('y', topLeft.y + diffY);
+            } else {
+                this.elem.setAttribute('y', topLeft.y);
+            }
 
             // set elem transformList from transformation
             setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
@@ -1151,27 +1162,42 @@ class SvgModel extends BaseModel {
                 scaleX: this.transformation.scaleX,
                 scaleY: this.transformation.scaleY
             };
-            this.scaleProcess = {
-                scaleX: 1,
-                scaleY: 1
-            };
-            this.widthProcess = this.transformation.width;
-            this.heightProcess = this.transformation.height;
+            if (this.mode === 'vector') {
+                this.scaleProcess = {
+                    ...this.scaleOrigin
+                };
+                this.widthProcess = this.widthOrigin;
+                this.heightProcess = this.heightOrigin;
+            } else {
+                this.scaleProcess = {
+                    scaleX: 1,
+                    scaleY: 1
+                };
+                this.widthProcess = this.transformation.width;
+                this.heightProcess = this.transformation.height;
+            }
         }
         if (!this.showOrigin) {
             this.scaleOrigin = {
-                scaleX: this.scaleOrigin.scaleX * this.transformation.scaleX,
-                scaleY: this.scaleOrigin.scaleY * this.transformation.scaleY
+                scaleX: this.scaleOrigin.scaleX * this.transformation.scaleX / this.scaleProcess.scaleX,
+                scaleY: this.scaleOrigin.scaleY * this.transformation.scaleY / this.scaleProcess.scaleY
             };
-
-            this.scaleProcess = {
-                scaleX: 1,
-                scaleY: 1
-            };
-            // this.widthProcess *= Math.abs(this.transformation.scaleX);
-            // this.heightProcess *= Math.abs(this.transformation.scaleY);
-            this.widthProcess = this.transformation.width;
-            this.heightProcess = this.transformation.height;
+            if (this.mode === 'vector') {
+                this.scaleProcess = {
+                    ...this.scaleOrigin
+                };
+                this.widthProcess = this.widthOrigin;
+                this.heightProcess = this.heightOrigin;
+            } else {
+                this.scaleProcess = {
+                    scaleX: 1,
+                    scaleY: 1
+                };
+                // this.widthProcess *= Math.abs(this.transformation.scaleX);
+                // this.heightProcess *= Math.abs(this.transformation.scaleY);
+                this.widthProcess = this.transformation.width;
+                this.heightProcess = this.transformation.height;
+            }
 
             this.transformation.scaleX = this.scaleProcess.scaleX;
             this.transformation.scaleY = this.scaleProcess.scaleY;
