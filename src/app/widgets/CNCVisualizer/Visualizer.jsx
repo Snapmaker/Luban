@@ -632,7 +632,7 @@ const mapDispatchToProps = (dispatch) => {
             rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('cnc', elements, options)),
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
-            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('laser', null, options))
+            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))

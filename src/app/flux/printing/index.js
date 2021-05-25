@@ -943,6 +943,12 @@ export const actions = {
             return;
         }
 
+        if (count >= layerCount) {
+            dispatch(actions.displayModel());
+        } else {
+            dispatch(actions.displayGcode());
+        }
+
         count = (count > layerCount) ? layerCount : count;
         count = (count < 0) ? 0 : count;
         gcodeLine.material.uniforms.u_visible_layer_count.value = count;
