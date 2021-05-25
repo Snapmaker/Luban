@@ -932,26 +932,29 @@ class SvgModel extends BaseModel {
 
         this.showOrigin = showOrigin ?? !this.showOrigin;
 
+
         if (this.showOrigin) {
             // set transformation
             this.transformation.scaleX = this.scaleOrigin.scaleX;
             this.transformation.scaleY = this.scaleOrigin.scaleY;
 
             // set elem attributes
-            this.elem.setAttribute('href', this.uploadName);
-            this.elem.setAttribute('width', this.widthOrigin);
-            this.elem.setAttribute('height', this.heightOrigin);
-            const topLeft = pointModelToSvg({
-                x: this.transformation.positionX - this.widthOrigin / 2,
-                y: this.transformation.positionY + this.heightOrigin / 2
-            }, this.size);
-            this.elem.setAttribute('x', topLeft.x);
+            if (this.config.svgNodeName === 'image' || this.config.svgNodeName === 'text') {
+                this.elem.setAttribute('href', this.uploadName);
+                this.elem.setAttribute('width', this.widthOrigin);
+                this.elem.setAttribute('height', this.heightOrigin);
+                const topLeft = pointModelToSvg({
+                    x: this.transformation.positionX - this.widthOrigin / 2,
+                    y: this.transformation.positionY + this.heightOrigin / 2
+                }, this.size);
+                this.elem.setAttribute('x', topLeft.x);
 
-            if (this.config.svgNodeName === 'text') {
-                const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
-                this.elem.setAttribute('y', topLeft.y + diffY);
-            } else {
-                this.elem.setAttribute('y', topLeft.y);
+                if (this.config.svgNodeName === 'text') {
+                    const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                    this.elem.setAttribute('y', topLeft.y + diffY);
+                } else {
+                    this.elem.setAttribute('y', topLeft.y);
+                }
             }
 
             // set elem transformList form transformation
@@ -962,19 +965,21 @@ class SvgModel extends BaseModel {
             this.transformation.scaleY = this.scaleProcess.scaleY;
 
             // set elem attributes
-            this.elem.setAttribute('href', this.processImageName);
-            this.elem.setAttribute('width', this.widthProcess);
-            this.elem.setAttribute('height', this.heightProcess);
-            const topLeft = pointModelToSvg({
-                x: this.transformation.positionX - this.widthProcess / 2,
-                y: this.transformation.positionY + this.heightProcess / 2
-            }, this.size);
-            this.elem.setAttribute('x', topLeft.x);
-            if (this.config.svgNodeName === 'text') {
-                const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
-                this.elem.setAttribute('y', topLeft.y + diffY);
-            } else {
-                this.elem.setAttribute('y', topLeft.y);
+            if (this.config.svgNodeName === 'image' || this.config.svgNodeName === 'text') {
+                this.elem.setAttribute('href', this.processImageName);
+                this.elem.setAttribute('width', this.widthProcess);
+                this.elem.setAttribute('height', this.heightProcess);
+                const topLeft = pointModelToSvg({
+                    x: this.transformation.positionX - this.widthProcess / 2,
+                    y: this.transformation.positionY + this.heightProcess / 2
+                }, this.size);
+                this.elem.setAttribute('x', topLeft.x);
+                if (this.config.svgNodeName === 'text') {
+                    const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                    this.elem.setAttribute('y', topLeft.y + diffY);
+                } else {
+                    this.elem.setAttribute('y', topLeft.y);
+                }
             }
 
             // set elem transformList from transformation
