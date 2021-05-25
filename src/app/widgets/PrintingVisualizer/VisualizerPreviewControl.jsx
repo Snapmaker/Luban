@@ -39,8 +39,6 @@ class VisualizerPreviewControl extends PureComponent {
         gcodeTypeInitialVisibility: PropTypes.object.isRequired,
         showGcodeLayers: PropTypes.func.isRequired,
         setGcodeVisibilityByType: PropTypes.func.isRequired,
-        displayModel: PropTypes.func.isRequired,
-        displayGcode: PropTypes.func.isRequired,
         displayedType: PropTypes.string.isRequired
     };
 
@@ -65,11 +63,6 @@ class VisualizerPreviewControl extends PureComponent {
             }));
         },
         onChangeShowLayer: (value) => {
-            if (value === this.props.layerCount) {
-                this.props.displayModel();
-            } else {
-                this.props.displayGcode();
-            }
             this.props.showGcodeLayers(value);
         }
     };

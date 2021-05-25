@@ -939,6 +939,16 @@ export const actions = {
 
     showGcodeLayers: (count) => (dispatch, getState) => {
         const { layerCount, gcodeLine } = getState().printing;
+        if (!gcodeLine) {
+            return;
+        }
+
+        if (count >= layerCount) {
+            dispatch(actions.displayModel());
+        } else {
+            dispatch(actions.displayGcode());
+        }
+
         count = (count > layerCount) ? layerCount : count;
         count = (count < 0) ? 0 : count;
         gcodeLine.material.uniforms.u_visible_layer_count.value = count;
@@ -946,6 +956,13 @@ export const actions = {
             layerCountDisplayed: count
         }));
         dispatch(actions.render());
+    },
+
+    // make an offset of gcode layer count
+    // offset can be negative
+    offsetGcodeLayers: (offset) => (dispatch, getState) => {
+        const { layerCountDisplayed } = getState().printing;
+        dispatch(actions.showGcodeLayers(layerCountDisplayed + offset));
     },
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {
@@ -1055,7 +1072,11 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
     },
-
+    unselectAllModels: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.unselectAllModels();
+        dispatch(actions.render());
+    },
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.removeSelectedModel();

@@ -6,7 +6,6 @@ import { connect } from 'react-redux';
 import ChangedReactSelect from '../../components/Select';
 
 import i18n from '../../lib/i18n';
-import combokeys from '../../lib/combokeys';
 import { controller } from '../../lib/controller';
 import { preventDefault } from '../../lib/dom-events';
 import { in2mm, mm2in } from '../../lib/units';
@@ -470,17 +469,17 @@ class Control extends PureComponent {
     }
 
     addShuttleControlEvents() {
-        Object.keys(this.shuttleControlEvents).forEach(eventName => {
-            const callback = this.shuttleControlEvents[eventName];
-            combokeys.on(eventName, callback);
-        });
+        // Object.keys(this.shuttleControlEvents).forEach(eventName => {
+        //     const callback = this.shuttleControlEvents[eventName];
+        //     combokeys.on(eventName, callback);
+        // });
     }
 
     removeShuttleControlEvents() {
-        Object.keys(this.shuttleControlEvents).forEach(eventName => {
-            const callback = this.shuttleControlEvents[eventName];
-            combokeys.removeListener(eventName, callback);
-        });
+        // Object.keys(this.shuttleControlEvents).forEach(eventName => {
+        //     const callback = this.shuttleControlEvents[eventName];
+        //     combokeys.removeListener(eventName, callback);
+        // });
     }
 
 
