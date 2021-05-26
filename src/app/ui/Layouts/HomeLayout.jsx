@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import styles from './styles/project.styl';
+import styles from './styles/homepage.styl';
 
 
 class ProjectLayout extends PureComponent {

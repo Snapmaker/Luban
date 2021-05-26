@@ -90,7 +90,7 @@ class Material extends PureComponent {
 
                 this.props.updateActiveDefinition(definition);
             } else {
-                const definition = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinition.definitionId)
+                const definition = nextProps.materialDefinitions.find(d => d.definitionId === (this.state.materialDefinition?.definitionId))
                     || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 Object.assign(newState, {
                     materialDefinition: definition

@@ -210,7 +210,11 @@ const createWindow = async () => {
     // Setup menu
     const menuBuilder = new MenuBuilder(window, { url: loadUrl });
     menuBuilder.buildMenu();
-
+    // Init homepage recent files
+    ipcMain.on('getRecentFile', () => {
+        const fileArr = menuBuilder.getInitRecentFile();
+        window.webContents.send('update-recent-file', fileArr);
+    });
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.handle('popFile', () => {
         const newProjectFile = config.get('projectFile');

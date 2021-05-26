@@ -1,3 +1,5 @@
+import cloneDeep from 'lodash/cloneDeep';
+import find from 'lodash/find';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -38,6 +40,10 @@ const INITIAL_STATE = {
         unSaved: false,
         content: null,
         initState: true
+    },
+    general: {
+        recentFiles: [],
+        recentFilesLength: -1
     }
 };
 const ACTION_UPDATE_STATE = 'EDITOR_ACTION_UPDATE_STATE';
@@ -283,6 +289,7 @@ export const actions = {
 
     open: (file, history) => async (dispatch) => {
         // file: { path, name }
+        console.log('openfile', file);
         const [, tail] = file.name.split('.');
         if (!tail) return;
 
@@ -356,6 +363,25 @@ export const actions = {
 
     cleanAllRecentFiles: () => async () => {
         UniApi.Menu.cleanAllRecentFiles();
+    },
+
+    updateRecentFile: (arr, type) => (dispatch, getState) => {
+        console.log('dispatchUpdateRecent', arr, type);
+        const state = getState().project.general;
+        let newRecentFiles = cloneDeep(state.recentFiles);
+        if (type === 'reset') {
+            newRecentFiles = [];
+        } else {
+            arr.forEach(fileItem => {
+                if (!find(newRecentFiles, { 'name': fileItem.name })) {
+                    newRecentFiles.push(fileItem);
+                }
+            });
+        }
+        console.log({ newRecentFiles });
+        state.recentFiles = newRecentFiles;
+        state.recentFilesLength = newRecentFiles.length;
+        dispatch(actions.updateState('general', state));
     }
 };
 

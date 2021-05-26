@@ -121,6 +121,84 @@ function PrintingManager() {
         }
     };
 
+<<<<<<< HEAD
+=======
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.showPrintingManager !== this.props.showPrintingManager) {
+            this.setState({ showPrintingManager: nextProps.showPrintingManager });
+        }
+        // Load 'materialDefinitions' and compose the content of the manager
+        if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
+            const newState = {};
+            if (this.props.materialDefinitions.length === 0) {
+                const materialDefinitionForManager = nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
+                Object.assign(newState, {
+                    materialDefinitionForManager: materialDefinitionForManager
+                });
+            } else {
+                const materialDefinitionForManager = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinitionForManager?.definitionId)
+                || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
+                Object.assign(newState, {
+                    materialDefinitionForManager: materialDefinitionForManager
+                });
+            }
+
+            const materialDefinitionOptions = nextProps.materialDefinitions.map(d => {
+                const checkboxAndSelectGroup = {};
+                MATERIAL_CHECKBOX_AND_SELECT_KEY_ARRAY.forEach((key) => {
+                    checkboxAndSelectGroup[key] = d.settings[key].default_value;
+                });
+                checkboxAndSelectGroup.label = d.name;
+                checkboxAndSelectGroup.value = d.definitionId;
+                return checkboxAndSelectGroup;
+            });
+            Object.assign(newState, {
+                materialDefinitionOptions: materialDefinitionOptions
+            });
+
+            this.setState(newState);
+        }
+        const { qualityDefinitions } = this.props;
+        // selected quality ID or definitions changed
+        if (qualityDefinitions !== nextProps.qualityDefinitions) {
+            // re-select definition based on new properties
+            const newState = {};
+            if (this.props.qualityDefinitions.length === 0) {
+                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                Object.assign(newState, {
+                    qualityDefinitionForManager: qualityDefinitionForManager
+                });
+            } else {
+                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager?.definitionId)
+                || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+                Object.assign(newState, {
+                    qualityDefinitionForManager: qualityDefinitionForManager
+                });
+            }
+            const qualityDefinitionOptions = nextProps.qualityDefinitions.map(d => {
+                const checkboxAndSelectGroup = {};
+                QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY.forEach((key) => {
+                    checkboxAndSelectGroup[key] = d.settings[key].default_value;
+                });
+                checkboxAndSelectGroup.label = d.name;
+                checkboxAndSelectGroup.value = d.definitionId;
+                return checkboxAndSelectGroup;
+            });
+            Object.assign(newState, {
+                qualityDefinitionOptions: qualityDefinitionOptions
+            });
+            this.setState(newState);
+        }
+    }
+
+    render() {
+        const state = this.state;
+        const actions = this.actions;
+        const { managerDisplayType } = this.props;
+        const { materialDefinitionOptions, materialDefinitionForManager, showPrintingManager,
+            qualityDefinitionOptions, qualityDefinitionForManager, qualityConfigExpanded } = state;
+        const { configExpanded, renamingStatus, selectedName, activeCateId } = state;
+>>>>>>> Feature: Add home page
 
     const optionConfigGroup = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? PRINTING_MATERIAL_CONFIG_GROUP : PRINTING_QUALITY_CONFIG_GROUP;
     const allDefinitions = managerDisplayType === PRINTING_MANAGER_TYPE_MATERIAL ? materialDefinitions : qualityDefinitions;

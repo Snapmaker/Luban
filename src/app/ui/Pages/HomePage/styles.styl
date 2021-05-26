@@ -1,0 +1,200 @@
+// .homepageContainer
+//     margin 0 auto
+//     min-width 700px
+//     overflow hidden
+.icon
+    width: 5.5vw
+    height: 5.5vw
+    min-width 35px
+    min-height 35px
+    display: inline-block
+    vertical-align: middle
+    filter: invert(60%)
+.title-label
+    font-size: 1.8vw
+    line-height 1.8vw
+    font-weight: bold
+.sub-title
+    font-size 1.2vw
+    line-height 1.2vw
+
+.create-new-project
+    width 95vw
+    height auto
+    min-width 670px
+    min-height 150px
+    margin 16px auto 0
+    .beginPart
+        width 95vw
+        height auto
+        @media (max-width 1440px)
+            flex-wrap wrap
+        min-width 670px;
+        min-height 150px
+        border: 1px solid #cbcbcb
+        border-radius: 8px
+        margin 24px auto 0
+        background: #fff
+        padding: 20px 20px 0
+        display: flex
+        justify-content space-between
+        .beginContainer
+            width: 65%
+            min-width 450px
+            @media (max-width 1440px)
+                width 100%
+            display flex
+            flex-direction column
+            .link-bar
+                height 100%
+                display: flex
+                align-items: center
+                justify-content space-between
+                .icon-3dp
+                    background: url('./images/3dp.svg') no-repeat 0 0
+                .icon-laser
+                    background: url('./images/laser.svg') no-repeat 0 0
+                .icon-cnc
+                    background: url('./images/cnc.svg') no-repeat 0 0
+                .icon-xyz
+                    background: url('./images/xyz.svg') no-repeat 0 0
+
+                .workspace, .3dp, .laser, .cnc
+                    width 13vw
+                    min-width 90px
+                    height 13vw
+                    min-height 90px
+                    > a
+                        height 100%
+                        display flex
+                        flex-direction column
+                        align-items center
+                        justify-content space-around
+                        .common-label 
+                            font-size 1.2vw
+                            line-height 1.2vw
+                    &:hover
+                        .common-label
+                            color: #3aabff
+                        .icon
+                            filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
+        
+        .nearly-container
+            // flex-grow 3
+            width 30%
+            font-size 1.2vw
+            line-height 1.2vw
+            @media (max-width 1440px)
+                width 100%
+                margin 20px 0
+            .file-container
+                height 13vw
+                min-height 90px
+                font-size 1vw
+                line-height 1.2vw
+                display flex
+                flex-direction column
+                justify-content space-around
+                .open-file-btn
+                    width 90%
+                    @media (max-width 1440px)
+                        width 35%
+                    > button
+                        width 100%
+                .recent-file-list
+                    height 5.5vw
+                    display flex
+                    flex-wrap wrap
+                    .file-item
+                        width 50%
+                        overflow hidden
+                        white-space nowrap
+                        text-overflow ellipsis
+                        cursor pointer
+                        // max-width 250px
+                        @media (max-width 1440px)
+                            width 25%
+
+
+.quick-start-container
+    width 95vw
+    min-width 670px
+    margin 50px auto 0
+    
+    .case-list
+        // display flex
+        // flex-wrap wrap
+        // justify-content space-between
+        // align-items center
+        display grid
+        grid-template-columns repeat(auto-fill, 15vw)
+        justify-content space-between
+        margin-top 24px
+        @media (max-width 1440px)
+            display grid
+            grid-template-columns repeat(auto-fill, 240px)
+            justify-content space-between
+
+        .case-item
+            width 13.37vw
+            height auto
+            min-width 90px
+            min-height 90px
+            @media (max-width 1440px)
+                min-width 240px
+                min-height 247px
+            cursor pointer
+            font-size 12px
+            .case-title
+                font-size 1.3vw
+                line-height 20px
+                margin: 0.9vw 0 0.5vw
+                width 13vw
+                overflow hidden
+                text-overflow ellipsis
+                white-space nowrap
+                line-height 1.4vw
+                @media (max-width 1440px)
+                    width 100%
+            .tag-icon
+                background #cbcbcb
+                padding 2px 4px
+                width: 100%
+                border-radius 2px
+                margin-top 4px
+                font-size: 0.8vw
+                line-height 0.9vw
+            img 
+                // height 138px
+                // width: 200px
+                width 100%
+                height 60%
+                border 2px solid #cbcbcb
+                border-radius 4px
+                background #fff
+                padding 20px
+                @media (max-width 1024px)
+                    height 60%
+
+.more-info
+    width 95vw
+    min-width 670px
+    margin 50px auto 20px
+    font-size 1.3vw
+    .resource-list
+        display flex
+        justify-content space-between
+        align-items center
+        margin-top 24px
+        @media (max-width 1440px)
+            display grid
+            grid-template-columns repeat(auto-fill, 240px)
+            justify-content space-between
+        > a
+            width 13vw
+            min-width 90px
+            line-height 1.5vw
+            @media (max-width 1440px)
+                min-width 240px
+                line-height 2.5vw
+            
