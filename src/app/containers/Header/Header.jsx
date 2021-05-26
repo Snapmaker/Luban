@@ -17,7 +17,8 @@ import PageControl from './PageControl';
 const Logo = memo(() => (
     <Anchor
         className="navbar-brand"
-        href="/#/workspace"
+        // href="/#/workspace"
+        href="/#/homepage"
         title={`${settings.name} ${settings.version}`}
         style={{ position: 'relative' }}
     >

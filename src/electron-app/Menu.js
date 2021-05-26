@@ -40,7 +40,7 @@ function saveRecentFile(file) {
 }
 
 
-export function addRecentFile(file, isSave = true) {
+export function addRecentFile(file, isSave = true, mainWindow) {
     const menu = Menu.getApplicationMenu();
     const itemRecentFiles = menu.getMenuItemById('recent-files');
 
@@ -51,16 +51,16 @@ export function addRecentFile(file, isSave = true) {
             openFile(browserWindow, file);
         }
     });
-
     itemRecentFiles.submenu.insert(0, item);
     Menu.setApplicationMenu(menu);
+    // mainWindow && mainWindow.webContents.send('update-recent-file', [file], 'update');
     if (isSave) saveRecentFile(file);
 }
 
-function recoverRecentFiles() {
+function recoverRecentFiles(mainWindow) {
     const arr = getSavedRecentFile();
     for (const file of arr) {
-        addRecentFile(file, false);
+        addRecentFile(file, false, mainWindow);
     }
 }
 
@@ -100,7 +100,8 @@ async function openFile(browserWindow, file) {
         file = { path: filePaths[0], name: path.basename(filePaths[0]) };
         addRecentFile(file);
     }
-    browserWindow.webContents.send('open-file', file);
+    const arr = getSavedRecentFile();
+    browserWindow.webContents.send('open-file', file, arr);
 }
 
 function saveAsFile(browserWindow) {
@@ -146,12 +147,14 @@ function getMenuTemplate(options) {
                             id: 'remove-recent',
                             label: 'Clean All Recent Files',
 
-                            click: (menuItem) => {
+                            click: (menuItem, browserWindow) => {
                                 for (const item of menuItem.menu.items) {
                                     if (item !== menuItem) item.visible = false;
                                 }
                                 const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
+                                const type = 'reset';
                                 fs.writeFileSync(recentFileName, JSON.stringify([]), 'utf-8');
+                                browserWindow.webContents.send('update-recent-file', [], type);
                             }
                         }
                     ]
@@ -254,6 +257,11 @@ export default class MenuBuilder {
         const menu = Menu.buildFromTemplate(template);
         Menu.setApplicationMenu(menu);
 
-        recoverRecentFiles();
+        recoverRecentFiles(this.mainWindow);
+        this.mainWindow.webContents.send('message', 'testtesttest')
+    }
+    getInitRecentFile() {
+        const arr = getSavedRecentFile();
+        return arr;
     }
 }

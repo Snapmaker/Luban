@@ -513,7 +513,7 @@ class PrintingManager extends PureComponent {
                     materialDefinitionForManager: materialDefinitionForManager
                 });
             } else {
-                const materialDefinitionForManager = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinitionForManager.definitionId)
+                const materialDefinitionForManager = nextProps.materialDefinitions.find(d => d.definitionId === this.state.materialDefinitionForManager?.definitionId)
                 || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
                 Object.assign(newState, {
                     materialDefinitionForManager: materialDefinitionForManager
@@ -546,7 +546,7 @@ class PrintingManager extends PureComponent {
                     qualityDefinitionForManager: qualityDefinitionForManager
                 });
             } else {
-                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager.definitionId)
+                const qualityDefinitionForManager = nextProps.qualityDefinitions.find(d => d.definitionId === this.state.qualityDefinitionForManager?.definitionId)
                 || nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
                 Object.assign(newState, {
                     qualityDefinitionForManager: qualityDefinitionForManager
