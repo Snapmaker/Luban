@@ -16,6 +16,7 @@ import SecondaryWidgets from './WorkspaceWidgets/SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
 import styles from '../Layouts/styles/workspace.styl';
 import WorkspaceLayout from '../Layouts/WorkspaceLayout';
+import MainToolBar from '../Layouts/MainToolBar';
 
 import {
     WORKFLOW_STATE_IDLE,
@@ -136,11 +137,11 @@ class Workspace extends PureComponent {
         const sidebar = {
             offsetWidth: 0
         };
-        const primaryContainer = this.primaryContainer.current;
-        const primaryToggler = this.primaryToggler.current;
-        const secondaryContainer = this.secondaryContainer.current;
-        const secondaryToggler = this.secondaryToggler.current;
-        const defaultContainer = this.defaultContainer.current;
+        const primaryContainer = this.primaryContainer.current?.parentElement;
+        const primaryToggler = this.primaryToggler.current?.parentElement;
+        const secondaryContainer = this.secondaryContainer.current?.parentElement;
+        const secondaryToggler = this.secondaryToggler.current?.parentElement;
+        const defaultContainer = this.defaultContainer.current?.parentElement;
         const { showPrimaryContainer, showSecondaryContainer } = this.props;
 
         { // Mobile-Friendly View
@@ -178,6 +179,7 @@ class Workspace extends PureComponent {
 
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.props;
+        console.log('togglePrimaryContainer', showPrimaryContainer);
         this.props.updateTabContainer('left', { show: !showPrimaryContainer });
         this.setState({
             havePrimaryWidget: !showPrimaryContainer
@@ -188,6 +190,7 @@ class Workspace extends PureComponent {
 
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.props;
+        console.log('toggleSecondaryContainer', showSecondaryContainer);
         this.props.updateTabContainer('right', { show: !showSecondaryContainer });
         this.setState({
             haveSecondaryWidget: !showSecondaryContainer
@@ -252,15 +255,10 @@ class Workspace extends PureComponent {
         }
     }
 
-    renderLeftView(showPrimaryContainer, defaultWidgets, primaryWidgets) {
-        const hidePrimaryContainer = !showPrimaryContainer;
+    renderLeftView(defaultWidgets, primaryWidgets) {
         return (
             <div
                 ref={this.primaryContainer}
-                className={classNames(
-                    styles.primaryContainer,
-                    { [styles.hidden]: hidePrimaryContainer }
-                )}
             >
                 <PrimaryWidgets
                     defaultWidgets={defaultWidgets}
@@ -279,7 +277,6 @@ class Workspace extends PureComponent {
         return (
             <div
                 ref={this.primaryToggler}
-                className={classNames(styles.primaryToggler)}
             >
                 <button
                     type="button"
@@ -320,6 +317,7 @@ class Workspace extends PureComponent {
                         styles.fixed
                     )}
                 >
+
                     <DefaultWidgets
                         defaultWidgets={this.props.defaultWidgets}
                         toggleFromDefault={this.actions.toggleFromDefault}
@@ -334,7 +332,6 @@ class Workspace extends PureComponent {
         return (
             <div
                 ref={this.secondaryToggler}
-                className={classNames(styles.secondaryToggler)}
             >
                 <button
                     type="button"
@@ -352,15 +349,10 @@ class Workspace extends PureComponent {
         );
     }
 
-    renderRightView(showSecondaryContainer, defaultWidgets, secondaryWidgets) {
-        const hideSecondaryContainer = !showSecondaryContainer;
+    renderRightView(defaultWidgets, secondaryWidgets) {
         return (
             <div
                 ref={this.secondaryContainer}
-                className={classNames(
-                    styles.secondaryContainer,
-                    { [styles.hidden]: hideSecondaryContainer }
-                )}
             >
                 <SecondaryWidgets
                     defaultWidgets={defaultWidgets}
@@ -374,6 +366,26 @@ class Workspace extends PureComponent {
         );
     }
 
+    renderMainToolBar = () => {
+        const locationArray = [
+            {
+                title: 'Copy',
+                action: () => this.props.history.push('laser')
+            }
+        ];
+        const projectArray = [
+            {
+                title: 'Edit',
+                action: () => this.props.history.push('cnc')
+            }
+        ];
+        return (
+            <MainToolBar
+                locationArray={locationArray}
+                projectArray={projectArray}
+            />
+        );
+    }
 
     render() {
         const { style, className, primaryWidgets, secondaryWidgets, defaultWidgets, showPrimaryContainer, showSecondaryContainer } = this.props;
@@ -384,11 +396,14 @@ class Workspace extends PureComponent {
         return (
             <div style={style} className={classNames(className)}>
                 <WorkspaceLayout
+                    hideSecondaryContainer={!showSecondaryContainer}
+                    hidePrimaryContainer={!showPrimaryContainer}
+                    renderMainToolBar={this.renderMainToolBar}
                     renderModalView={() => this.renderModalView(connected)}
-                    renderLeftView={() => this.renderLeftView(showPrimaryContainer, defaultWidgets, primaryWidgets)}
+                    renderLeftView={() => this.renderLeftView(defaultWidgets, primaryWidgets)}
                     renderLeftTogglerView={() => this.renderLeftTogglerView(showPrimaryContainer)}
                     renderCenterView={() => this.renderCenterView(this.state)}
-                    renderRightView={() => this.renderRightView(showSecondaryContainer, defaultWidgets, secondaryWidgets)}
+                    renderRightView={() => this.renderRightView(defaultWidgets, secondaryWidgets)}
                     renderRightTogglerView={() => this.renderRightTogglerView(showSecondaryContainer)}
                 />
             </div>

@@ -65,7 +65,7 @@ const getWidgetByName = (name) => {
  * Widget Wrapper for getting Widget from widget id.
  */
 const Widget = (props) => {
-    const { widgetId } = props;
+    const { widgetId, width } = props;
 
     if (typeof widgetId !== 'string') {
         return null;
@@ -75,7 +75,7 @@ const Widget = (props) => {
     const Component = getWidgetByName(name);
 
     return (
-        <div style={{ width: '360px' }}>
+        <div style={{ width: width || 'auto' }}>
             <Component {...props} />
         </div>
     );
@@ -83,6 +83,7 @@ const Widget = (props) => {
 
 Widget.propTypes = {
     widgetId: PropTypes.string.isRequired,
+    width: PropTypes.string,
     headType: PropTypes.string
 };
 
