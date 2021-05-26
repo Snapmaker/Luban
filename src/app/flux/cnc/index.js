@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import ModelGroup from '../../models/ModelGroup';
 import i18n from '../../lib/i18n';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
@@ -120,7 +121,7 @@ export const actions = {
     },
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {
         const { toolDefinitions } = getState().cnc;
-        const newToolCategory = toolDefinitions.find((d) => d.definitionId === activeToolList.definitionId);
+        const newToolCategory = cloneDeep(toolDefinitions).find((d) => d.definitionId === activeToolList.definitionId);
         const newToolList = newToolCategory.toolList;
         // find the old tool list definition and replace it
         const isReplacedTool = (d) => d.name === activeToolList.name;
@@ -129,7 +130,6 @@ export const actions = {
             name: activeToolList.name,
             config: activeToolList.config
         });
-
         await definitionManager.updateToolDefinition(newToolCategory);
         const isReplacedDefinition = (d) => d.definitionId === newToolCategory.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
@@ -182,6 +182,10 @@ export const actions = {
         };
         const definitionId = `${activeToolCategory.definitionId}${timestamp()}`;
         newToolCategory.definitionId = definitionId;
+        newToolCategory.toolList.forEach((item) => {
+            item.definitionId = definitionId;
+        });
+
         // make sure category is not repeated
         while (state.toolDefinitions.find(d => d.category === newToolCategory.category)) {
             newToolCategory.category = `#${newToolCategory.category}`;
@@ -211,7 +215,7 @@ export const actions = {
         dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
-        return newToolListDefinition.name;
+        return newToolListDefinition;
     },
     removeToolCategoryDefinition: (definitionId) => async (dispatch, getState) => {
         const state = getState().cnc;

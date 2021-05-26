@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import path from 'path';
 import { isNil } from 'lodash';
-import FileSaver from 'file-saver';
+// import FileSaver from 'file-saver';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX, PRINTING_MANAGER_TYPE_MATERIAL } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 
 
@@ -24,6 +24,16 @@ const isDefaultQualityDefinition = (definitionId) => {
         );
 };
 
+const defaultDefinitionKeys = {
+    material: {
+        definitions: 'materialDefinitions',
+        id: 'defaultMaterialId'
+    },
+    quality: {
+        definitions: 'qualityDefinitions',
+        id: 'defaultQualityId'
+    }
+};
 // eslint-disable-next-line no-unused-vars
 /*
 const customCompareTransformation = (tran1, tran2) => {
@@ -443,79 +453,23 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
-    duplicateMaterialDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
-        const state = getState().printing;
-        const name = newDefinitionName || definition.name;
-
-        let metadata = definition.metadata;
-        // newDefinitionId is the same as newDefinitionName
-        if (isNil(newDefinitionId)) {
-            metadata = {
-                ...definition.metadata,
-                readonly: false
-            };
-        }
-
-        const newDefinition = {
-            definitionId: newDefinitionId || `material.${timestamp()}`,
-            name,
-            inherits: definition.inherits,
-            ownKeys: definition.ownKeys,
-            metadata,
-            settings: {}
-        };
-
-        // Find a name not being used
-        while (state.materialDefinitions.find(d => d.name === newDefinition.name)) {
-            newDefinition.name = `#${newDefinition.name}`;
-        }
-
-        // Simplify settings
-        for (const key of definition.ownKeys) {
-            newDefinition.settings[key] = {
-                default_value: definition.settings[key].default_value
-            };
-        }
-
-        const createdDefinition = await definitionManager.createDefinition(newDefinition);
-
-
-        dispatch(actions.updateState({
-            materialDefinitions: [...state.materialDefinitions, createdDefinition]
-        }));
-
-
-        return createdDefinition;
-    },
     updateDefinitionsForManager: (definitionId, type) => async (dispatch, getState) => {
         const state = getState().printing;
         const savedDefinition = await definitionManager.getDefinition(definitionId);
         if (!savedDefinition) {
             return;
         }
-        if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-            const newDefinitions = state.materialDefinitions.map((item) => {
-                if (item.definitionId === definitionId) {
-                    return savedDefinition;
-                } else {
-                    return item;
-                }
-            });
-            dispatch(actions.updateState({
-                materialDefinitions: [...newDefinitions]
-            }));
-        } else if (type === PRINTING_MANAGER_TYPE_QUALITY) {
-            const newDefinitions = state.qualityDefinitions.map((item) => {
-                if (item.definitionId === definitionId) {
-                    return savedDefinition;
-                } else {
-                    return item;
-                }
-            });
-            dispatch(actions.updateState({
-                qualityDefinitions: [...newDefinitions]
-            }));
-        }
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+        const newDefinitions = state[definitionsKey].map((item) => {
+            if (item.definitionId === definitionId) {
+                return savedDefinition;
+            } else {
+                return item;
+            }
+        });
+        dispatch(actions.updateState({
+            [definitionsKey]: [...newDefinitions]
+        }));
     },
 
     onUploadManagerDefinition: (file, type) => (dispatch, getState) => {
@@ -527,56 +481,62 @@ export const actions = {
                 const definitionId = `${type}.${timestamp()}`;
                 const definition = await definitionManager.uploadDefinition(definitionId, response.uploadName);
                 let name = definition.name;
-                if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
-                    const { materialDefinitions } = getState().printing;
-                    while (materialDefinitions.find(e => e.name === name)) {
-                        name = `#${name}`;
-                    }
-                    definition.name = name;
-                    await definitionManager.updateDefinition({
-                        definitionId: definition.definitionId,
-                        name
-                    });
-                    dispatch(actions.updateState({
-                        materialDefinitions: [...materialDefinitions, definition],
-                        defaultMaterialId: definitionId
-                    }));
-                } else if (type === PRINTING_MANAGER_TYPE_QUALITY) {
-                    const { qualityDefinitions } = getState().printing;
-                    while (qualityDefinitions.find(e => e.name === name)) {
-                        name = `#${name}`;
-                    }
-                    definition.name = name;
-                    await definitionManager.updateDefinition({
-                        definitionId: definition.definitionId,
-                        name
-                    });
-                    dispatch(actions.updateState({
-                        qualityDefinitions: [...qualityDefinitions, definition],
-                        defaultQualityId: definitionId
-                    }));
+                const definitionsKey = defaultDefinitionKeys[type].definitions;
+                const defaultId = defaultDefinitionKeys[type].id;
+                const definitions = getState().printing[definitionsKey];
+                while (definitions.find(e => e.name === name)) {
+                    name = `#${name}`;
                 }
+                definition.name = name;
+                await definitionManager.updateDefinition({
+                    definitionId: definition.definitionId,
+                    name
+                });
+                dispatch(actions.updateState({
+                    [definitionsKey]: [...definitions, definition],
+                    [defaultId]: definitionId
+                }));
             })
             .catch(() => {
                 // Ignore error
             });
     },
-    // TODO: not use and need to be deleted
-    onDownloadQualityDefinition: (definitionId) => async () => {
-        const result = await definitionManager.getRawDefinition(definitionId);
-        const blob = new Blob([JSON.stringify(result.definition)], { type: 'text/plain;charset=utf-8' });
-        FileSaver.saveAs(blob, result.filename, true);
-    },
 
-    duplicateQualityDefinition: (definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
-        const state = getState().printing;
-        // eslint-disable-next-line no-unused-vars
-        const machine = getState().machine;
-        let name = newDefinitionName || definition.name;
-        if (isDefaultQualityDefinition(definition.definitionId)) {
-            name = `${machine.series}-${name}`;
+    updateDefinitionNameByType: (type, definition, name) => async (dispatch, getState) => {
+        if (!name || name.trim().length === 0) {
+            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
+        }
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
+
+        const definitions = getState().printing[definitionsKey];
+        const duplicated = definitions.find(d => d.name === name);
+
+        if (duplicated && duplicated !== definition) {
+            return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
         }
 
+        await definitionManager.updateDefinition({
+            definitionId: definition.definitionId,
+            name
+        });
+
+        definition.name = name;
+        return null;
+    },
+
+    duplicateDefinitionByType: (type, definition, newDefinitionId, newDefinitionName) => async (dispatch, getState) => {
+        const state = getState().printing;
+        let name = newDefinitionName || definition.name;
+        let definitionId;
+        if (type === 'quality' && isDefaultQualityDefinition(definition.definitionId)) {
+            const machine = getState().machine;
+            name = `${machine.series}-${name}`;
+        }
+        if (newDefinitionId) {
+            definitionId = newDefinitionId;
+        } else {
+            definitionId = `${type}.${timestamp()}`;
+        }
         let metadata = definition.metadata;
         // newDefinitionId is the same as newDefinitionName
         if (isNil(newDefinitionId)) {
@@ -585,17 +545,19 @@ export const actions = {
                 readonly: false
             };
         }
+
         const newDefinition = {
-            definitionId: newDefinitionId || `quality.${timestamp()}`,
+            definitionId,
             name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
             metadata,
             settings: {}
         };
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
 
         // Find a name not being used
-        while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
+        while (state[definitionsKey].find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }
 
@@ -608,20 +570,23 @@ export const actions = {
 
         const createdDefinition = await definitionManager.createDefinition(newDefinition);
 
+
         dispatch(actions.updateState({
-            qualityDefinitions: [...state.qualityDefinitions, createdDefinition]
+            [definitionsKey]: [...state[definitionsKey], createdDefinition]
         }));
+
 
         return createdDefinition;
     },
 
-    removeMaterialDefinition: (definition) => async (dispatch, getState) => {
+    removeDefinitionByType: (type, definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
         await definitionManager.removeDefinition(definition);
+        const definitionsKey = defaultDefinitionKeys[type].definitions;
 
         dispatch(actions.updateState({
-            materialDefinitions: state.materialDefinitions.filter(d => d.definitionId !== definition.definitionId)
+            [definitionsKey]: state[definitionsKey].filter(d => d.definitionId !== definition.definitionId)
         }));
     },
 
@@ -644,16 +609,6 @@ export const actions = {
         }));
     },
 
-    removeQualityDefinition: (definition) => async (dispatch, getState) => {
-        const state = getState().printing;
-
-        await definitionManager.removeDefinition(definition);
-
-        dispatch(actions.updateState({
-            qualityDefinitions: state.qualityDefinitions.filter(d => d.definitionId !== definition.definitionId)
-        }));
-    },
-
     // removes all non-predefined definitions
     removeAllQualityDefinitions: () => async (dispatch, getState) => {
         const state = getState().printing;
@@ -673,53 +628,13 @@ export const actions = {
         }));
     },
 
-    updateMaterialDefinitionName: (definition, name) => async (dispatch, getState) => {
-        if (!name || name.trim().length === 0) {
-            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
-        }
-
-        const { materialDefinitions } = getState().printing;
-        const duplicated = materialDefinitions.find(d => d.name === name);
-
-        if (duplicated && duplicated !== definition) {
-            return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
-        }
-
-        await definitionManager.updateDefinition({
-            definitionId: definition.definitionId,
-            name
-        });
-
-        definition.name = name;
-        return null;
-    },
-
-    updateQualityDefinitionName: (definition, name) => async (dispatch, getState) => {
-        if (!name || name.trim().length === 0) {
-            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
-        }
-
-        const { qualityDefinitions } = getState().printing;
-        const duplicated = qualityDefinitions.find(d => d.name === name);
-
-        if (duplicated && duplicated !== definition) {
-            return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
-        }
-
-        await definitionManager.updateDefinition({
-            definitionId: definition.definitionId,
-            name
-        });
-
-        definition.name = name;
-
-        return null;
-    },
-
     updateIsRecommended: (isRecommended) => (dispatch) => {
         dispatch(actions.updateState({ isRecommended }));
     },
-
+    updateDefaultIdByType: (type, materialId) => (dispatch) => {
+        const defaultId = defaultDefinitionKeys[type].id;
+        dispatch(actions.updateState({ [defaultId]: materialId }));
+    },
     updateDefaultMaterialId: (materialId) => (dispatch) => {
         dispatch(actions.updateState({ defaultMaterialId: materialId }));
     },
