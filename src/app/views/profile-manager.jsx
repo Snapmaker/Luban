@@ -13,7 +13,7 @@ import Modal from '../components/Modal';
 import Anchor from '../components/Anchor';
 import { NumberInput as Input } from '../components/Input';
 import TipTrigger from '../components/TipTrigger';
-import useSetState from './set-state';
+import useSetState from '../lib/hooks/set-state';
 import { limitStringLength } from '../lib/normalize-range';
 
 function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitle, defaultKeysAndId, styles, allDefinitions, outsideActions, isDefinitionEditable, isOfficialDefinition }) {
@@ -123,7 +123,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
                             if (!isCategorySelected) {
-                                await outsideActions.removeDefinitionByType(definition);
+                                await outsideActions.removeManagerDefinition(definition);
                             } else if (isCategorySelected && outsideActions.removeToolCategoryDefinition) {
                                 await outsideActions.removeToolCategoryDefinition(definition.definitionId);
                             }
@@ -412,7 +412,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 <Modal
                     className={classNames(styles['manager-body'])}
                     style={{ minWidth: '700px' }}
-                    onClose={outsideActions.hideManager}
+                    onClose={outsideActions.closeManager}
                 >
                     <Modal.Body
                         style={{ margin: '0', padding: '20px 0 0', height: '100%', minHeight: '525px', textAlign: 'center' }}
@@ -815,7 +815,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         <div className={classNames(styles['manager-settings'], 'clearfix')}>
                             <div className={classNames(styles['manager-settings-save'], styles['manager-settings-btn'])}>
                                 <Anchor
-                                    onClick={() => { outsideActions.hideManager(); }}
+                                    onClick={() => { outsideActions.closeManager(); }}
                                     className="sm-btn-large sm-btn-default"
                                     style={{ marginRight: '11px' }}
                                 >
@@ -826,7 +826,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     <Anchor
                                         onClick={() => {
                                             outsideActions.onUpdateDefaultDefinition(definitionState.definitionForManager);
-                                            outsideActions.hideManager();
+                                            outsideActions.closeManager();
                                         }}
                                         className="sm-btn-large sm-btn-primary"
                                     >

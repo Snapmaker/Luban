@@ -7,7 +7,7 @@ import { actions as projectActions } from '../../flux/project';
 import styles from './styles.styl';
 
 import { CNC_TOOL_CONFIG_GROUP } from '../../constants';
-import ProfileManager from '../../rehooks/profile-manager';
+import ProfileManager from '../profile-manager';
 import i18n from '../../lib/i18n';
 
 const SUBCATEGORY = 'CncConfig';
@@ -78,7 +78,7 @@ function CncToolManager() {
     }
 
     const actions = {
-        hideManager: () => {
+        closeManager: () => {
             dispatch(cncActions.updateShowCncToolManager(false));
         },
         onChangeFileForManager: (event) => {
@@ -130,7 +130,7 @@ function CncToolManager() {
             }
             return result;
         },
-        removeDefinitionByType: async (definition) => {
+        removeManagerDefinition: async (definition) => {
             const { activeToolCategory, activeToolList } = adaptateToToolDefinition(toolDefinitions, definition);
             await dispatch(cncActions.removeToolListDefinition(activeToolCategory, activeToolList));
         },

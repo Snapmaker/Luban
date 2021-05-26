@@ -7,7 +7,7 @@ import { actions as projectActions } from '../../flux/project';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
     PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
-import ProfileManager from '../../rehooks/profile-manager';
+import ProfileManager from '../profile-manager';
 import i18n from '../../lib/i18n';
 
 // checkbox and select
@@ -51,7 +51,7 @@ function PrintingManager() {
     }
 
     const actions = {
-        hideManager: () => {
+        closeManager: () => {
             dispatch(printingActions.updateShowPrintingManager(false));
         },
         onChangeFileForManager: (event) => {
@@ -116,7 +116,7 @@ function PrintingManager() {
             const newDefinition = await dispatch(printingActions.duplicateDefinitionByType(managerDisplayType, definition, undefined, name));
             return newDefinition;
         },
-        removeDefinitionByType: async (definition) => {
+        removeManagerDefinition: async (definition) => {
             await dispatch(printingActions.removeDefinitionByType(managerDisplayType, definition));
         }
     };
