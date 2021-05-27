@@ -186,9 +186,6 @@ class SVGParser {
             const attributes = this.attributeParser.parse(node, parentAttributes, tag);
 
             let shouldParseChildren = true;
-            if (Object.prototype.toString.call(node) === '[object Object]') {
-                node.tag = tag;
-            }
             switch (tag) {
                 // graphics elements
                 case 'circle': {
@@ -242,26 +239,24 @@ class SVGParser {
                     break;
                 }
                 case 'tspan': {
-                    if (parent.tag === 'text' || parent.tag === 'tspan') {
-                        const textParser = new TextParser(this);
-                        const textObject = await textParser.parse(node, attributes, this.previousElementAttributes, false);
-                        if (textObject.shapes) {
-                            shapes = shapes.concat(textObject.shapes);
-                            attributes.positionX = textObject.positionX;
-                            attributes.positionY = textObject.positionY;
-                            if (Array.isArray(parent.g)) {
-                                parent.g.push(textObject.parsedNode.g);
-                            } else {
-                                const gArray = [];
-                                gArray.push(textObject.parsedNode.g);
-                                parent.g = gArray;
-                            }
+                    const textParser = new TextParser(this);
+                    const textObject = await textParser.parse(node, attributes, this.previousElementAttributes, false);
+                    if (textObject.shapes) {
+                        shapes = shapes.concat(textObject.shapes);
+                        attributes.positionX = textObject.positionX;
+                        attributes.positionY = textObject.positionY;
+                        if (Array.isArray(parent.g)) {
+                            parent.g.push(textObject.parsedNode.g);
+                        } else {
+                            const gArray = [];
+                            gArray.push(textObject.parsedNode.g);
+                            parent.g = gArray;
                         }
-                        if (parentTextAttributes) {
-                            attributes.textAttributes = parentTextAttributes;
-                        }
-                        this.previousElementAttributes = attributes;
                     }
+                    if (parentTextAttributes) {
+                        attributes.textAttributes = parentTextAttributes;
+                    }
+                    this.previousElementAttributes = attributes;
                     break;
                 }
                 // container elements
@@ -298,7 +293,9 @@ class SVGParser {
                         }
                     }
                 } else if (node && !shouldParseChildren) {
-                    delete node[variable];
+                    if (Object.prototype.toString.call(node) === '[object Object]') {
+                        delete node[variable];
+                    }
                 }
             }
 
