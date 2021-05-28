@@ -289,7 +289,6 @@ export const actions = {
 
     open: (file, history) => async (dispatch) => {
         // file: { path, name }
-        console.log('openfile', file);
         const [, tail] = file.name.split('.');
         if (!tail) return;
 
@@ -366,7 +365,6 @@ export const actions = {
     },
 
     updateRecentFile: (arr, type) => (dispatch, getState) => {
-        console.log('dispatchUpdateRecent', arr, type);
         const state = getState().project.general;
         let newRecentFiles = cloneDeep(state.recentFiles);
         if (type === 'reset') {
@@ -378,7 +376,6 @@ export const actions = {
                 }
             });
         }
-        console.log({ newRecentFiles });
         state.recentFiles = newRecentFiles;
         state.recentFilesLength = newRecentFiles.length;
         dispatch(actions.updateState('general', state));

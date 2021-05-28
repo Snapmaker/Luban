@@ -211,9 +211,9 @@ const createWindow = async () => {
     const menuBuilder = new MenuBuilder(window, { url: loadUrl });
     menuBuilder.buildMenu();
     // Init homepage recent files
-    ipcMain.on('getRecentFile', () => {
+    ipcMain.on('get-recent-file', () => {
         const fileArr = menuBuilder.getInitRecentFile();
-        window.webContents.send('update-recent-file', fileArr);
+        window.webContents.send('update-recent-file', fileArr, 'update');
     });
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.handle('popFile', () => {

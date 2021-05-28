@@ -1,7 +1,8 @@
 import React from 'react';
+import isElectron from 'is-electron';
 import classNames from 'classnames';
 import { Link, withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
@@ -12,6 +13,9 @@ import { actions as projectActions } from '../../../flux/project';
 const Begin = (props) => {
     const fileInput = React.createRef();
 
+    // redux correlation
+    const dispatch = useDispatch();
+    const project = useSelector(state => state?.project);
     // method
     const onChangeFile = async (e) => {
         const file = e.target.files[0];
@@ -20,8 +24,12 @@ const Begin = (props) => {
             path: file.path || ''
         };
         try {
-            await props.openFile(file, props.history);
-            await props.updateRecentFile([recentFile], 'update');
+            await dispatch(projectActions.open(file, props.history));
+            if (isElectron()) {
+                const ipc = window.require('electron').ipcRenderer;
+                ipc.send('add-recent-file', recentFile);
+            }
+            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
         } catch (error) {
             modal({
                 title: i18n._('Failed to upload model'),
@@ -95,13 +103,13 @@ const Begin = (props) => {
                     <div className={styles['file-container']}>
                         <div
                             className={styles['recent-file-list']}
-                            style={{ display: props.project.general.recentFiles?.length ? 'flex' : 'none' }}
+                            style={{ display: project.general.recentFiles?.length ? 'flex' : 'none' }}
                         >
-                            {props.project.general.recentFiles.map(item => {
+                            {project.general.recentFiles.map(item => {
                                 return (
                                     <div
                                         className={styles['file-item']}
-                                        onClick={() => props.openFile(item, props.history)}
+                                        onClick={() => dispatch(projectActions.open(item, props.history))}
                                         aria-hidden="true"
                                     >
                                         {item.name}
@@ -137,21 +145,7 @@ const Begin = (props) => {
 };
 
 Begin.propTypes = {
-    openFile: PropTypes.func.isRequired,
-    updateRecentFile: PropTypes.func.isRequired,
-    history: PropTypes.object,
-    project: PropTypes.object
+    history: PropTypes.object
 };
 
-const mapStateToProps = (state) => {
-    const project = state.project;
-    return {
-        project
-    };
-};
-const mapDispatchToProps = (dispatch) => ({
-    openFile: (file, history) => dispatch(projectActions.open(file, history)),
-    updateRecentFile: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type))
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Begin));
+export default withRouter(Begin);

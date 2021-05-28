@@ -12,7 +12,7 @@ const HomePage = (props) => {
     useEffect(() => {
         if (isElectron()) {
             const ipc = window.require('electron').ipcRenderer;
-            ipc.send('getRecentFile');
+            ipc.send('get-recent-file');
         }
     }, []);
     // view method

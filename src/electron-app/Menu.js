@@ -40,12 +40,12 @@ function saveRecentFile(file) {
 }
 
 
-export function addRecentFile(file, isSave = true, mainWindow) {
+export function addRecentFile(file, isSave = true) {
     const menu = Menu.getApplicationMenu();
     const itemRecentFiles = menu.getMenuItemById('recent-files');
-
     const item = new MenuItem({
         label: file.name,
+        path: file.path || '',
         click: (menuItem, browserWindow) => {
             // eslint-disable-next-line no-use-before-define
             openFile(browserWindow, file);
@@ -53,7 +53,6 @@ export function addRecentFile(file, isSave = true, mainWindow) {
     });
     itemRecentFiles.submenu.insert(0, item);
     Menu.setApplicationMenu(menu);
-    // mainWindow && mainWindow.webContents.send('update-recent-file', [file], 'update');
     if (isSave) saveRecentFile(file);
 }
 
@@ -261,6 +260,17 @@ export default class MenuBuilder {
     }
 
     getInitRecentFile() {
-        return getSavedRecentFile();
+        const menu = Menu.getApplicationMenu();
+        const itemRecentFiles = menu.getMenuItemById('recent-files').submenu.items;
+        const arr = [];
+        itemRecentFiles.forEach(item => {
+            if (!!item.path && !!item.visible) {
+                arr.push({
+                    name: item.label,
+                    path: item.path
+                })
+            }
+        })
+        return arr;
     }
 }
