@@ -24,11 +24,15 @@ import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 
 import Header from './Header';
-import Sidebar from './Sidebar';
-import Workspace from './Workspace';
-import Printing from './Printing';
-import Laser from './Laser';
-import Cnc from './Cnc';
+// import Sidebar from './Sidebar';
+// import Workspace from './Workspace';
+// import Cnc from './Cnc';
+// import Laser from './Laser';
+import Workspace from '../ui/Pages/Workspace';
+import Printing from '../ui/Pages/Printing';
+import Cnc from '../ui/Pages/Cnc';
+import Laser from '../ui/Pages/Laser';
+
 import Settings from './Settings';
 import CaseLibrary from './CaseLibrary';
 import styles from './App.styl';
@@ -37,6 +41,7 @@ import Space from '../components/Space';
 import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
+import HomePage from '../ui/Pages/HomePage/HomePage';
 
 function getCurrentHeadType(pathname) {
     let headType = null;
@@ -160,6 +165,9 @@ class App extends PureComponent {
                 }
             }
         },
+        updateRecentFile: (arr, type) => {
+            this.props.updateRecentProject(arr, type);
+        },
         initFileOpen: async () => {
             const file = await UniApi.File.popFile();
             if (file) {
@@ -186,8 +194,11 @@ class App extends PureComponent {
                 UniApi.Update.isReplacingAppNow(downloadInfo);
                 this.props.updateIsDownloading(false);
             });
-            UniApi.Event.on('open-file', (event, file) => {
+            UniApi.Event.on('open-file', (event, file, arr) => {
                 this.actions.openProject(file);
+                if (arr.length) {
+                    this.actions.updateRecentFile(arr, 'update');
+                }
             });
             UniApi.Event.on('save-as-file', (event, file) => {
                 this.actions.saveAsFile(file);
@@ -202,8 +213,10 @@ class App extends PureComponent {
             UniApi.Event.on('close-file', async () => {
                 await this.actions.closeFile();
             });
+            UniApi.Event.on('update-recent-file', (event, arr, type) => {
+                this.actions.updateRecentFile(arr, type);
+            });
         }
-
     };
 
     componentDidMount() {
@@ -350,6 +363,7 @@ class App extends PureComponent {
         ReactGA.pageview(path);
     }
 
+
     render() {
         const { location } = this.props;
         const accepted = ([
@@ -358,18 +372,20 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
+            '/layout',
             '/caselibrary',
             '/settings/general',
             '/settings/machine',
             '/settings/config',
-            '/settings/firmware'
+            '/settings/firmware',
+            '/'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
             return (
                 <Redirect
                     to={{
-                        pathname: '/3dp',
+                        pathname: '/',
                         state: {
                             from: location
                         }
@@ -377,65 +393,66 @@ class App extends PureComponent {
                 />
             );
         }
-
         return (
-            <div>
-                <Header {...this.props} />
-                <Sidebar {...this.props} platform={this.state.platform} />
-                <div className={styles.main}>
-                    <div className={styles.content}>
-                        <Workspace
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/workspace') ? 'none' : 'block'
-                            }}
-                        />
-
-                        {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
-                            <Printing
-                                {...this.props}
-                                hidden={location.pathname !== '/3dp'}
-                            />
-                        )}
-
-                        <Laser
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/laser') ? 'none' : 'block'
-                            }}
-                        />
-
-                        <Cnc
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/cnc') ? 'none' : 'block'
-                            }}
-                        />
-
-                        {location.pathname.indexOf('/settings') === 0 && (
-                            <Settings
-                                location={this.props.location}
-                                resetAllUserSettings={this.props.resetAllUserSettings}
-                            />
-                        )}
-
-                        {location.pathname.indexOf('/caselibrary') === 0 && (
-                            <CaseLibrary {...this.props} />
-                        )}
-                    </div>
+            location.pathname === '/' ? (
+                <div>
+                    <HomePage {...this.props} />
                 </div>
-                <ToastContainer
-                    position="top-center"
-                    autoClose={5000}
-                    hideProgressBar
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                />
-            </div>
+            ) : (
+                <div>
+                    <Header {...this.props} />
+                    <div className={styles.main}>
+                        <div className={styles.content}>
+                            {location.pathname === '/workspace' && (
+                                <Workspace
+                                    {...this.props}
+                                />
+                            )}
+                            <Laser
+                                {...this.props}
+                                style={{
+                                    display: (location.pathname !== '/laser') ? 'none' : 'block'
+                                }}
+                            />
+
+                            <Cnc
+                                {...this.props}
+                                style={{
+                                    display: (location.pathname !== '/cnc') ? 'none' : 'block'
+                                }}
+                            />
+
+                            {location.pathname === '/3dp' && (
+                                <Printing
+                                    {...this.props}
+                                />
+                            )}
+
+                            {location.pathname.indexOf('/settings') === 0 && (
+                                <Settings
+                                    location={this.props.location}
+                                    resetAllUserSettings={this.props.resetAllUserSettings}
+                                />
+                            )}
+
+                            {location.pathname.indexOf('/caselibrary') === 0 && (
+                                <CaseLibrary {...this.props} />
+                            )}
+                        </div>
+                    </div>
+                    <ToastContainer
+                        position="top-center"
+                        autoClose={5000}
+                        hideProgressBar
+                        newestOnTop
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
+                </div>
+            )
         );
     }
 }
@@ -477,6 +494,7 @@ const mapDispatchToProps = (dispatch) => {
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.open(file, history)),
+        updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         clearSavedEnvironment: (headType) => dispatch(projectActions.clearSavedEnvironment(headType)),
         resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())
     };

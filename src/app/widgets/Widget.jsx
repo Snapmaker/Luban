@@ -23,6 +23,7 @@ import CncLaserObjectList from './CncLaserList';
 import PrintingObjectList from './PrintingObjectList';
 import JobType from './JobType';
 import CreateToolPath from './CncLaserToolPath';
+import PrintingVisualizer from './PrintingVisualizer';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -37,6 +38,7 @@ const getWidgetByName = (name) => {
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
+        'printing-visualizer': PrintingVisualizer,
         'wifi-transport': WifiTransport,
         'enclosure': EnclosureWidget,
         '3dp-object-list': PrintingObjectList,
@@ -63,7 +65,7 @@ const getWidgetByName = (name) => {
  * Widget Wrapper for getting Widget from widget id.
  */
 const Widget = (props) => {
-    const { widgetId } = props;
+    const { widgetId, width } = props;
 
     if (typeof widgetId !== 'string') {
         return null;
@@ -73,12 +75,15 @@ const Widget = (props) => {
     const Component = getWidgetByName(name);
 
     return (
-        <Component {...props} />
+        <div style={{ width: width || 'auto' }}>
+            <Component {...props} />
+        </div>
     );
 };
 
 Widget.propTypes = {
     widgetId: PropTypes.string.isRequired,
+    width: PropTypes.string,
     headType: PropTypes.string
 };
 

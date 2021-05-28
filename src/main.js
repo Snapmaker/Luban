@@ -19,8 +19,8 @@ let mainWindow = null;
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
-        width: 1280,
-        height: 768,
+        width: 1440,
+        height: 900,
         show: false,
         title: `${pkg.name} ${pkg.version}`,
         webPreferences: {
@@ -210,7 +210,11 @@ const createWindow = async () => {
     // Setup menu
     const menuBuilder = new MenuBuilder(window, { url: loadUrl });
     menuBuilder.buildMenu();
-
+    // Init homepage recent files
+    ipcMain.on('get-recent-file', () => {
+        const fileArr = menuBuilder.getInitRecentFile();
+        window.webContents.send('update-recent-file', fileArr, 'update');
+    });
     // the "open file or folder" dialog can also be triggered from the React app
     ipcMain.handle('popFile', () => {
         const newProjectFile = config.get('projectFile');

@@ -8,7 +8,7 @@ import ModelItem from '../../views/model-item';
 
 function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray, shallowEqual);
-    const models = useSelector(state => state?.printing?.modelGroup?.models, shallowEqual);
+    const models = useSelector(state => state?.printing?.modelGroup?.models);
     const dispatch = useDispatch();
     const actions = {
         selectTargetModel(targetModel, shiftKey) {
@@ -26,7 +26,7 @@ function PrintingObjectListBox(props) {
     };
     useEffect(() => {
         props.setTitle(i18n._('Object List'));
-    }, []);
+    }, [props.setTitle]);
     return (
         <div className={styles['object-list-box']}>
             {(models) && models.filter(model => !model.supportTag).map((model) => {

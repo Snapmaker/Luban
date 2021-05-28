@@ -4,6 +4,11 @@ $z-index-float = 500
 $visualizer-padding = 10px
 
 // separator without margin on top and bottom
+.visualizer
+    position: relative;
+.visualizer-content-wrapper
+    position: relative!important;
+    padding: 0!important;
 .separator
     display: block
     margin: 10px 0
@@ -96,6 +101,10 @@ $visualizer-padding = 10px
     bottom: 32px;
     left: 0;
 }
+.canvas-wrapper {
+    height: calc(100vh - 61px);
+}
+
 
 .canvas-footer {
     border-top: 1px solid #ccc;

@@ -403,7 +403,7 @@ class Visualizer extends PureComponent {
         // }
         return (
             <div
-                className={styles.visualizer}
+                className={styles['printing-visualizer']}
                 ref={this.visualizerRef}
             >
                 <div className={styles['visualizer-top-left']}>
@@ -437,7 +437,7 @@ class Visualizer extends PureComponent {
                     <ProgressBar tips={notice} progress={progress * 100} />
                 </div>
 
-                <div className={styles['canvas-content']} style={{ top: 0 }}>
+                <div className={styles['canvas-wrapper']}>
                     <Canvas
                         ref={this.canvas}
                         size={size}

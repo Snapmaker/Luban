@@ -5,22 +5,21 @@
 // we will refactor them together later. 20190820
 //
 .laser-table {
-    display: table;
     width: 100%;
-    height: 'calc(100vh - %s)' % (50px);
+    height: 'calc(100vh - %s)' % (61px);
 }
 .laser-table-row {
-    display: table-row;
+    //display: table-row;
 }
 
+//TODO
 .view-space {
-  position: fixed;
-  left: $sidebar-width
-  right: 360px;
-  top: 50px;
-  bottom: 32px;
+  position: relative;
+  //left: $sidebar-width
+  //right: 360px;
+  //top: 50px;
+  //bottom: 32px;
   border-right: 1px solid #ccc;
-  display: table-cell;
 }
 
 .control-bar
@@ -179,4 +178,3 @@ $padding = 10px
         background-color: $background-color
         left: 66px
         top: 112px
-
