@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ControlWidget from './Control/index';
-import DevelopAxesWidget from './DevelopAxes/index';
 import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
@@ -29,7 +28,7 @@ import PrintingVisualizer from './PrintingVisualizer';
 const getWidgetByName = (name) => {
     const Widget = {
         'control': ControlWidget,
-        'axesPanel': DevelopAxesWidget,
+        // 'axesPanel': DevelopAxesWidget,
         'connection': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,

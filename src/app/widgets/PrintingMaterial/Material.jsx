@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import Select from '../../components/Select';
 import i18n from '../../lib/i18n';
@@ -24,213 +24,163 @@ const MATERIAL_CONFIG_KEYS = [
     'material_bed_temperature',
     'material_bed_temperature_layer_0'
 ];
+function Material({ setTitle }) {
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
+    const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const dispatch = useDispatch();
+    const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
+    const [currentDefinition, setCurrentDefinition] = useState(null);
+    const [materialDefinitionOptions, setMaterialDefinitionOptions] = useState([]);
 
-class Material extends PureComponent {
-    static propTypes = {
-        setTitle: PropTypes.func.isRequired,
-        defaultMaterialId: PropTypes.string.isRequired,
-        materialDefinitions: PropTypes.array.isRequired,
-        updateActiveDefinition: PropTypes.func.isRequired,
-        updateManagerDisplayType: PropTypes.func.isRequired,
-        updateShowPrintingManager: PropTypes.func.isRequired,
-        updateDefaultMaterialId: PropTypes.func.isRequired
-    };
-
-    fileInput = React.createRef();
-
-    state = {
-        showOfficialMaterialDetails: true,
-        materialDefinition: null,
-        materialDefinitionOptions: []
-    };
-
-    actions = {
-        onShowPrintingManager: () => {
-            this.props.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL);
-            this.props.updateShowPrintingManager(true);
-        },
-        onChangeMaterialValue: (option) => {
-            const definitionId = option.value;
-            const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (definition) {
-                this.setState({
-                    materialDefinition: definition
-                });
-
-                this.props.updateDefaultMaterialId(definition.definitionId);
-                this.props.updateActiveDefinition(definition);
-            }
-        },
-        onChangeMaterial: (definitionId) => {
-            const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-            if (definition) {
-                this.setState({
-                    materialDefinition: definition
-                });
-
-                this.props.updateDefaultMaterialId(definition.definitionId);
-                this.props.updateActiveDefinition(definition);
-            }
-        }
-    };
-
-    constructor(props) {
-        super(props);
-        this.props.setTitle(i18n._('Material'));
+    function onShowPrintingManager() {
+        dispatch(printingActions.updateManagerDisplayType(PRINTING_MANAGER_TYPE_MATERIAL));
+        dispatch(printingActions.updateShowPrintingManager(true));
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
-            const newState = {};
-            if (this.props.materialDefinitions.length === 0) {
-                const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
-                Object.assign(newState, {
-                    materialDefinition: definition
-                });
-
-                this.props.updateActiveDefinition(definition);
-            } else {
-                const definition = nextProps.materialDefinitions.find(d => d.definitionId === (this.state.materialDefinition?.definitionId))
-                    || nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
-                Object.assign(newState, {
-                    materialDefinition: definition
-                });
-                this.props.updateActiveDefinition(definition);
-            }
-
-            const materialDefinitionOptions = nextProps.materialDefinitions.map(d => ({
-                label: d.name,
-                value: d.definitionId
-            }));
-
-            Object.assign(newState, {
-                materialDefinitionOptions: materialDefinitionOptions
-            });
-
-            this.setState(newState);
+    const updateActiveDefinition = useCallback((definition, shouldSave = false) => {
+        if (definition) {
+            dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
+            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
         }
-        if (nextProps.defaultMaterialId !== this.props.defaultMaterialId) {
-            this.actions.onChangeMaterial(nextProps.defaultMaterialId);
+    }, [dispatch]);
+    function onChangeMaterialValue(option) {
+        const definitionId = option.value;
+        const definition = materialDefinitions.find(d => d.definitionId === definitionId);
+        if (definition) {
+            setCurrentDefinition(definition);
+            dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
+            updateActiveDefinition(definition);
         }
     }
 
-    render() {
-        const state = this.state;
-        const { materialDefinition, materialDefinitionOptions } = state;
-        if (!materialDefinition) {
-            return null;
+    const onChangeMaterial = useCallback((definitionId) => {
+        const definition = materialDefinitions.find(d => d.definitionId === definitionId);
+        if (definition) {
+            setCurrentDefinition(definition);
+            dispatch(printingActions.updateState({ defaultMaterialId: definition.definitionId }));
+            updateActiveDefinition(definition);
         }
+    }, [dispatch, updateActiveDefinition, materialDefinitions]);
+    useEffect(() => {
+        if (materialDefinitions.length === 0) {
+            const definition = materialDefinitions.find(d => d.definitionId === 'material.pla');
+            setCurrentDefinition(definition);
+            updateActiveDefinition(definition);
+        } else {
+            const definition = materialDefinitions.find(d => d.definitionId === (currentDefinition?.definitionId))
+                || materialDefinitions.find(d => d.definitionId === 'material.pla');
+            setCurrentDefinition(definition);
+            updateActiveDefinition(definition);
+        }
+        const newMaterialDefinitionOptions = materialDefinitions.map(d => ({
+            label: d.name,
+            value: d.definitionId
+        }));
+        setMaterialDefinitionOptions(newMaterialDefinitionOptions);
+    }, [materialDefinitions, updateActiveDefinition, currentDefinition?.definitionId]);
 
-        return (
-            <React.Fragment>
-                <div className={classNames(
-                    styles['material-select']
-                )}
-                >
-                    <Select
-                        clearable={false}
-                        searchable
-                        options={materialDefinitionOptions}
-                        value={materialDefinition.definitionId}
-                        onChange={this.actions.onChangeMaterialValue}
-                    />
-                </div>
-                <Anchor
-                    onClick={this.actions.onShowPrintingManager}
-                >
-                    <span
-                        className={classNames(
-                            styles['manager-icon'],
-                        )}
-                    />
-                </Anchor>
-                <div>
-                    <OptionalDropdown
-                        draggable="false"
-                        title={i18n._('Show Details')}
-                        hidden={!state.showOfficialMaterialDetails}
-                        onClick={() => {
-                            this.setState({ showOfficialMaterialDetails: !state.showOfficialMaterialDetails });
-                        }}
-                    >
-                        {state.showOfficialMaterialDetails && (
-                            <table className={styles['config-details-table']}>
-                                <tbody>
-                                    {MATERIAL_CONFIG_KEYS.map((key) => {
-                                        const setting = materialDefinition.settings[key];
-                                        const { label, type, unit = '', enabled = '' } = setting;
-                                        const defaultValue = setting.default_value;
-                                        if (typeof enabled === 'string') {
-                                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                                            const conditions = enabled.split('and').map(c => c.trim());
+    useEffect(() => {
+        onChangeMaterial(defaultMaterialId);
+    }, [defaultMaterialId, onChangeMaterial]);
 
-                                            for (const condition of conditions) {
-                                                // Simple implementation of condition
-                                                if (materialDefinition.settings[condition]) {
-                                                    const value = materialDefinition.settings[condition].default_value;
-                                                    if (!value) {
-                                                        return null;
-                                                    }
+    useEffect(() => {
+        setTitle(i18n._('Material'));
+    }, [setTitle]);
+
+    if (!currentDefinition) {
+        return null;
+    }
+
+    return (
+        <React.Fragment>
+            <div className={classNames(
+                styles['material-select']
+            )}
+            >
+                <Select
+                    clearable={false}
+                    searchable
+                    options={materialDefinitionOptions}
+                    value={currentDefinition.definitionId}
+                    onChange={onChangeMaterialValue}
+                />
+            </div>
+            <Anchor
+                onClick={onShowPrintingManager}
+            >
+                <span
+                    className={classNames(
+                        styles['manager-icon'],
+                    )}
+                />
+            </Anchor>
+            <div>
+                <OptionalDropdown
+                    draggable="false"
+                    title={i18n._('Show Details')}
+                    hidden={!showOfficialMaterialDetails}
+                    onClick={() => {
+                        setShowOfficialMaterialDetails(!showOfficialMaterialDetails);
+                    }}
+                >
+                    {showOfficialMaterialDetails && (
+                        <table className={styles['config-details-table']}>
+                            <tbody>
+                                {MATERIAL_CONFIG_KEYS.map((key) => {
+                                    const setting = currentDefinition.settings[key];
+                                    const { label, type, unit = '', enabled = '' } = setting;
+                                    const defaultValue = setting.default_value;
+                                    if (typeof enabled === 'string') {
+                                        // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                        const conditions = enabled.split('and').map(c => c.trim());
+
+                                        for (const condition of conditions) {
+                                            // Simple implementation of condition
+                                            if (currentDefinition.settings[condition]) {
+                                                const value = currentDefinition.settings[condition].default_value;
+                                                if (!value) {
+                                                    return null;
                                                 }
                                             }
                                         }
+                                    }
 
-                                        return (
-                                            <tr key={key}>
-                                                <td>{i18n._(label)}</td>
-                                                { type === 'float' && (
-                                                    <td>
-                                                        <span>{i18n._(defaultValue)}</span>
-                                                        <Space width="4" />
-                                                        <span>{i18n._(unit)}</span>
-                                                    </td>
-                                                )}
-                                                { type === 'enum' && (
-                                                    <td>
-                                                        <span>{i18n._(setting.options[defaultValue])}</span>
-                                                        <Space width="4" />
-                                                        <span>{i18n._(unit)}</span>
-                                                    </td>
-                                                )}
-                                                { type === 'bool' && (
-                                                    <td>
-                                                        {defaultValue ? i18n._('Yes') : i18n._('No')}
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        )}
-                    </OptionalDropdown>
-                </div>
-            </React.Fragment>
-        );
-    }
+                                    return (
+                                        <tr key={key}>
+                                            <td>{i18n._(label)}</td>
+                                            { type === 'float' && (
+                                                <td>
+                                                    <span>{i18n._(defaultValue)}</span>
+                                                    <Space width="4" />
+                                                    <span>{i18n._(unit)}</span>
+                                                </td>
+                                            )}
+                                            { type === 'enum' && (
+                                                <td>
+                                                    <span>{i18n._(setting.options[defaultValue])}</span>
+                                                    <Space width="4" />
+                                                    <span>{i18n._(unit)}</span>
+                                                </td>
+                                            )}
+                                            { type === 'bool' && (
+                                                <td>
+                                                    {defaultValue ? i18n._('Yes') : i18n._('No')}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </OptionalDropdown>
+            </div>
+        </React.Fragment>
+    );
 }
 
-const mapStateToProps = (state) => {
-    const printing = state.printing;
-    return {
-        materialDefinitions: printing.materialDefinitions,
-        defaultMaterialId: printing.defaultMaterialId,
-        activeDefinition: printing.activeDefinition
-    };
+Material.propTypes = {
+    setTitle: PropTypes.func
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateDefaultMaterialId: (defaultMaterialId) => dispatch(printingActions.updateState({ defaultMaterialId })),
-        updateActiveDefinition: (definition, shouldSave = false) => {
-            dispatch(printingActions.updateActiveDefinition(definition, shouldSave));
-            dispatch(projectActions.autoSaveEnvironment(HEAD_3DP, true));
-        },
-        updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
-        updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
-        updateDefinitionsForManager: (definitionId, type) => dispatch(printingActions.updateDefinitionsForManager(definitionId, type))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Material);
+export default Material;

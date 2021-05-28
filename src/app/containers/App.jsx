@@ -5,11 +5,11 @@ import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 import { Trans } from 'react-i18next';
+import { /* shortcutActions, */ priorities, ShortcutManager } from '../lib/shortcut';
 import { ToastContainer } from '../components/Toast';
 
 import { actions as machineActions } from '../flux/machine';
 import { actions as developToolsActions } from '../flux/develop-tools';
-import { actions as keyboardShortcutActions } from '../flux/keyboardShortcut';
 import { actions as laserActions } from '../flux/laser';
 import { actions as editorActions } from '../flux/editor';
 import { actions as cncActions } from '../flux/cnc';
@@ -60,7 +60,6 @@ class App extends PureComponent {
         setShouldShowCncWarning: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
         developToolsInit: PropTypes.func.isRequired,
-        keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         workspaceInit: PropTypes.func.isRequired,
         laserInit: PropTypes.func.isRequired,
@@ -87,6 +86,24 @@ class App extends PureComponent {
         platform: 'unknown',
         recoveringProject: false
     };
+
+    shortcutHandler = {
+        title: this.constructor.name,
+        isActive: () => true,
+        // active: false,
+        priority: priorities.APP,
+        shortcuts: {
+            // TODO: implement file menu actions
+            // [shortcutActions.OPEN]: () => { console.log('app.open'); },
+            'LISTALLSHORTCUTS': {
+                keys: ['mod+alt+k l'],
+                callback: () => {
+                    ShortcutManager.printList();
+                }
+            }
+        }
+    };
+
 
     actions = {
         onChangeShouldShowWarning: (event) => {
@@ -267,8 +284,6 @@ class App extends PureComponent {
         // init machine module
         this.props.machineInit();
         this.props.developToolsInit();
-        // init keyboard shortcut
-        this.props.keyboardShortcutInit();
 
         this.props.functionsInit();
         this.props.workspaceInit();
@@ -286,6 +301,8 @@ class App extends PureComponent {
                 UniApi.Update.checkForUpdate();
             }
         }, 200);
+
+        ShortcutManager.register(this.shortcutHandler);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -361,14 +378,14 @@ class App extends PureComponent {
             '/settings/machine',
             '/settings/config',
             '/settings/firmware',
-            '/homepage'
+            '/'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
             return (
                 <Redirect
                     to={{
-                        pathname: '/homepage',
+                        pathname: '/',
                         state: {
                             from: location
                         }
@@ -377,7 +394,7 @@ class App extends PureComponent {
             );
         }
         return (
-            location.pathname === '/homepage' ? (
+            location.pathname === '/' ? (
                 <div>
                     <HomePage {...this.props} />
                 </div>
@@ -404,10 +421,10 @@ class App extends PureComponent {
                                     display: (location.pathname !== '/cnc') ? 'none' : 'block'
                                 }}
                             />
-                            {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
+
+                            {location.pathname === '/3dp' && (
                                 <Printing
                                     {...this.props}
-                                    hidden={location.pathname !== '/3dp'}
                                 />
                             )}
 
@@ -458,7 +475,6 @@ const mapDispatchToProps = (dispatch) => {
         updateAutoupdateMessage: (message) => dispatch(machineActions.updateAutoupdateMessage(message)),
         updateIsDownloading: (isDownloading) => dispatch(machineActions.updateIsDownloading(isDownloading)),
         developToolsInit: () => dispatch(developToolsActions.init()),
-        keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
         workspaceInit: () => dispatch(workspaceActions.init()),
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),

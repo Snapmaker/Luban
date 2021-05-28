@@ -965,8 +965,12 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        SVGActions.selectElements(elements);
+        const { SVGActions, page } = getState()[headType];
+        if (page === PAGE_PROCESS) { // in process page
+            dispatch(actions.checkAndSelectModelsInProcess(headType, elements));
+        } else {
+            SVGActions.selectElements(elements);
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1257,7 +1261,7 @@ export const actions = {
      * @param page
      */
     switchToPage: (headType, page) => (dispatch, getState) => {
-        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
+        const { toolPathGroup, autoPreviewEnabled, SVGActions } = getState()[headType];
         if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
             return;
         }
@@ -1272,6 +1276,7 @@ export const actions = {
                 dispatch(actions.preview(headType));
             }
         }
+        SVGActions.clearSelection();
 
         dispatch(baseActions.render(headType));
     },

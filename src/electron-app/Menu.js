@@ -258,10 +258,9 @@ export default class MenuBuilder {
         Menu.setApplicationMenu(menu);
 
         recoverRecentFiles(this.mainWindow);
-        this.mainWindow.webContents.send('message', 'testtesttest')
     }
+
     getInitRecentFile() {
-        const arr = getSavedRecentFile();
-        return arr;
+        return getSavedRecentFile();
     }
 }

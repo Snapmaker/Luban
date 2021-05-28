@@ -5,7 +5,6 @@ import laser from './laser';
 import cnc from './cnc';
 import editor from './editor';
 import workspace from './workspace';
-import keyboardShortcut from './keyboardShortcut';
 import widget from './widget';
 import developTools from './develop-tools';
 // import models from './models';
@@ -18,7 +17,6 @@ export default combineReducers({
     printing,
     laser,
     cnc,
-    keyboardShortcut,
     // models,
     text,
     widget,

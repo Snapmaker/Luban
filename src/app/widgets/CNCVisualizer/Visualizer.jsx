@@ -3,6 +3,7 @@ import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import i18n from '../../lib/i18n';
@@ -31,6 +32,8 @@ import { CNC_LASER_STAGE } from '../../flux/editor/utils';
 
 class Visualizer extends Component {
     static propTypes = {
+        ...withRouter.propTypes,
+        pathname: PropTypes.string,
         page: PropTypes.string.isRequired,
         materials: PropTypes.object,
         stage: PropTypes.number.isRequired,
@@ -92,7 +95,8 @@ class Visualizer extends Component {
             resizeElementsFinish: PropTypes.func.isRequired,
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired
+            rotateElementsFinish: PropTypes.func.isRequired,
+            moveElementsOnKeyDown: PropTypes.func.isRequired
         })
     };
 
@@ -321,6 +325,9 @@ class Visualizer extends Component {
         if (this.props.modelGroup.selectedModelArray.length > 1) {
             return;
         }
+        if (this.props.page !== PAGE_EDITOR) {
+            return;
+        }
         this.contextMenuRef.current.show(event);
     };
 
@@ -393,11 +400,13 @@ class Visualizer extends Component {
                     </div>
                 )}
                 <div style={{
-                    visibility: isEditor ? 'visible' : 'hidden'
+                    visibility: (isEditor || displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}
                 >
                     <SVGEditor
+                        isActive={this.props.pathname.indexOf('cnc') > 0 && isEditor}
                         ref={this.svgCanvas}
+                        editable={isEditor}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
@@ -414,6 +423,7 @@ class Visualizer extends Component {
                         onSelectElements={this.props.onSelectElements}
                         onClearSelection={this.props.onClearSelection}
                         elementActions={this.props.elementActions}
+                        editorActions={this.actions}
                         getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                         onMoveSelectedElementsByKey={this.props.onMoveSelectedElementsByKey}
                         createText={this.props.createText}
@@ -424,7 +434,7 @@ class Visualizer extends Component {
                 <div
                     className={styles['canvas-content']}
                     style={{
-                        visibility: !isEditor ? 'visible' : 'hidden'
+                        visibility: (!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
                 >
                     <Canvas
@@ -586,7 +596,7 @@ class Visualizer extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
@@ -596,6 +606,8 @@ const mapStateToProps = (state) => {
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
 
     return {
+        // switch pages trigger pathname change
+        pathname: ownProps.location.pathname,
         page,
         scale,
         target,
@@ -654,11 +666,12 @@ const mapDispatchToProps = (dispatch) => {
             resizeElementsFinish: (elements, options) => dispatch(editorActions.resizeElementsFinish('cnc', elements, options)),
             rotateElementsStart: (elements, options) => dispatch(editorActions.rotateElementsStart('cnc', elements, options)),
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
-            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options))
+            rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
+            moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Visualizer));

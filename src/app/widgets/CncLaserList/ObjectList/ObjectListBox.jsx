@@ -6,7 +6,7 @@ import styles from '../styles.styl';
 import { actions as editorActions } from '../../../flux/editor';
 import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
-import ModelItem from '../../../rehooks/model-item';
+import ModelItem from '../../../views/model-item';
 
 
 function ObjectListBox(props) {

@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
+
+import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
 import styles from './index.styl';
 import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
@@ -8,9 +10,10 @@ import SvgTool from './SvgTool';
 
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 
-
 class SVGEditor extends PureComponent {
     static propTypes = {
+        // eslint-disable-next-line react/no-unused-prop-types
+        isActive: PropTypes.bool,
         size: PropTypes.object.isRequired,
         materials: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
@@ -19,12 +22,14 @@ class SVGEditor extends PureComponent {
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         use3DVisualizer: PropTypes.bool,
+        editable: PropTypes.bool.isRequired,
 
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
 
         initContentGroup: PropTypes.func.isRequired,
         showContextMenu: PropTypes.func,
+
         // insertDefaultTextVector: PropTypes.func.isRequired
 
         // editor actions
@@ -44,11 +49,15 @@ class SVGEditor extends PureComponent {
             resizeElementsFinish: PropTypes.func.isRequired,
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired
+            rotateElementsFinish: PropTypes.func.isRequired,
+            moveElementsOnKeyDown: PropTypes.func.isRequired
         }).isRequired,
+        editorActions: PropTypes.object.isRequired,
 
         createText: PropTypes.func.isRequired
     };
+
+    flag = (Math.random() * 100).toFixed();
 
     canvas = React.createRef();
 
@@ -56,10 +65,53 @@ class SVGEditor extends PureComponent {
         mode: 'select'
     };
 
+    shortcutHandler = {
+        title: this.constructor.name,
+        // TODO: unregister in case of component is destroyed
+        isActive: () => this.props.isActive,
+        priority: priorities.VIEW,
+        shortcuts: {
+            // [shortcutActions.SELECTALL]: this.props.editorActions.selectAll,
+            [shortcutActions.UNSELECT]: () => { this.props.onClearSelection(); },
+            [shortcutActions.DELETE]: this.props.editorActions.deleteSelectedModel,
+            // [shortcutActions.COPY]: this.props.editorActions.copy,
+            // [shortcutActions.PASTE]: this.props.editorActions.paste,
+            // [shortcutActions.DUPLICATE]: this.props.editorActions.duplicate,
+            // optimize: accelerate when continuous click
+            'MOVE-UP': {
+                keys: ['alt+up'],
+                callback: () => {
+                    this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: -1 });
+                }
+            },
+            'MOVE-DOWM': {
+                keys: ['alt+down'],
+                callback: () => {
+                    this.props.elementActions.moveElementsOnKeyDown({ dx: 0, dy: 1 });
+                }
+            },
+            'MOVE-LEFT': {
+                keys: ['alt+left'],
+                callback: () => {
+                    this.props.elementActions.moveElementsOnKeyDown({ dx: -1, dy: 0 });
+                }
+            },
+            'MOVE-RIGHT': {
+                keys: ['alt+right'],
+                callback: () => {
+                    this.props.elementActions.moveElementsOnKeyDown({ dx: 1, dy: 0 });
+                }
+            }
+
+        }
+    };
+
+
     constructor(props) {
         super(props);
 
         this.setMode = this.setMode.bind(this);
+        ShortcutManager.register(this.shortcutHandler);
     }
 
     componentDidMount() {
@@ -76,6 +128,7 @@ class SVGEditor extends PureComponent {
         // Init, Setup SVGContentGroup
         this.props.initContentGroup(this.canvas.current.svgContentGroup);
     }
+
 
     setMode(mode, extShape) {
         // this.mode = mode;
@@ -110,6 +163,7 @@ class SVGEditor extends PureComponent {
                     <div className={styles['view-space']}>
                         <SVGCanvas
                             className={styles['svg-content']}
+                            editable={this.props.editable}
                             SVGActions={this.props.SVGActions}
                             size={this.props.size}
                             materials={this.props.materials}
@@ -129,11 +183,13 @@ class SVGEditor extends PureComponent {
                             elementActions={this.props.elementActions}
                         />
                     </div>
-                    <SvgTool
-                        mode={this.state.mode}
-                        insertDefaultTextVector={this.insertDefaultTextVector}
-                        setMode={this.setMode}
-                    />
+                    {this.props.editable && (
+                        <SvgTool
+                            mode={this.state.mode}
+                            insertDefaultTextVector={this.insertDefaultTextVector}
+                            setMode={this.setMode}
+                        />
+                    )}
 
                 </div>
                 {this.props.use3DVisualizer && (

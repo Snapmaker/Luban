@@ -25,7 +25,6 @@ import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
 import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 
-
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
 const ZOOM_RATE = 2.15;
@@ -103,11 +102,13 @@ class SVGCanvas extends PureComponent {
 
         // TODO: remove it, to flux (for textActions)
         SVGActions: PropTypes.object,
+
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
-        materials: PropTypes.object
+        materials: PropTypes.object,
+        editable: PropTypes.bool.isRequired
     };
 
     updateTime = 0;
@@ -160,6 +161,9 @@ class SVGCanvas extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.editable !== this.props.editable) {
+            this.svgContentGroup.setEditable(nextProps.editable);
+        }
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
             this.lastScale = nextProps.scale;
@@ -292,7 +296,8 @@ class SVGCanvas extends PureComponent {
 
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
-            scale: this.scale
+            scale: this.scale,
+            editable: this.props.editable
         });
     }
 
@@ -685,6 +690,9 @@ class SVGCanvas extends PureComponent {
         const element = this.svgContentGroup.findSVGElement(this.svgContentGroup.getId());
 
 
+        if (!this.props.editable && ['move', 'resize', 'rotate'].includes(this.mode)) {
+            return;
+        }
         switch (this.mode) {
             case 'move': {
                 const dx = x - draw.startX;
@@ -696,16 +704,6 @@ class SVGCanvas extends PureComponent {
                 const elements = this.svgContentGroup.selectedElements;
                 this.props.elementActions.moveElements(elements, { dx, dy });
 
-                /* TODO: remove
-                const transform = this.svgContainer.createSVGTransform();
-                transform.setTranslate(dx, dy);
-                this.svgContentGroup.translateSelectedElementsOnMouseMove(transform);
-
-                const transformBox = this.svgContainer.createSVGTransform();
-                const bbox = getBBox(this.svgContentGroup.operatorPoints.operatorPointsGroup);
-                transformBox.setTranslate(bbox.x + bbox.width / 2 + dx, bbox.y + bbox.height / 2 + dy);
-                this.svgContentGroup.translateSelectorOnMouseMove(transform);
-                */
                 return;
             }
             case 'resize': {
@@ -1135,7 +1133,7 @@ class SVGCanvas extends PureComponent {
         const mouseTarget = this.getMouseTarget(evt);
         const { tagName } = mouseTarget;
 
-        if (tagName === 'text' && this.mode !== 'textedit') {
+        if (this.props.editable && tagName === 'text' && this.mode !== 'textedit') {
             const matrix = this.svgContentGroup.getScreenCTM().inverse();
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
             this.textActions.select(mouseTarget, pt.x, pt.y);

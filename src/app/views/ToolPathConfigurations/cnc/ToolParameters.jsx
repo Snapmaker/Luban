@@ -91,22 +91,25 @@ function ToolParameters(props) {
         const groupOptions = {
             label: category,
             definitionId: definitionId,
-            options: d.toolList.map((item) => {
+            options: []
+        };
+        for (const tool of d.toolList) {
+            if (Object.keys(tool?.config).length > 0) {
                 const checkboxAndSelectGroup = {};
-                const name = item.name;
+                const name = tool.name;
                 let detailName = '';
-                if (item.config.angle.default_value !== '180') {
-                    detailName = `${item.name} (${item.config.angle.default_value}${item.config.angle.unit} ${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                if (tool.config.angle.default_value !== '180') {
+                    detailName = `${tool.name} (${tool.config.angle.default_value}${tool.config.angle.unit} ${tool.config.shaft_diameter.default_value}${tool.config.shaft_diameter.unit} )`;
                 } else {
-                    detailName = `${item.name} (${item.config.shaft_diameter.default_value}${item.config.shaft_diameter.unit} )`;
+                    detailName = `${tool.name} (${tool.config.shaft_diameter.default_value}${tool.config.shaft_diameter.unit} )`;
                 }
                 checkboxAndSelectGroup.name = name;
                 checkboxAndSelectGroup.definitionId = definitionId;
                 checkboxAndSelectGroup.label = `${detailName}`;
                 checkboxAndSelectGroup.value = `${definitionId}-${name}`;
-                return checkboxAndSelectGroup;
-            })
-        };
+                groupOptions.options.push(checkboxAndSelectGroup);
+            }
+        }
         toolDefinitionOptions.push(groupOptions);
     });
     const valueObj = {
