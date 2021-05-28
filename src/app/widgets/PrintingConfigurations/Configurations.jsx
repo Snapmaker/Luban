@@ -33,11 +33,8 @@ class Configurations extends PureComponent {
         qualityDefinitions: PropTypes.array.isRequired,
 
         updateManagerDisplayType: PropTypes.func.isRequired,
-        // updateDefinitionsForManager: PropTypes.func.isRequired,
-        // updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
-        // updateIsRecommended: PropTypes.func.isRequired,
         updateDefaultQualityId: PropTypes.func.isRequired
     };
 
@@ -83,6 +80,25 @@ class Configurations extends PureComponent {
     constructor(props) {
         super(props);
         this.props.setTitle(i18n._('Printing Settings'));
+    }
+
+    componentDidMount() {
+        const { defaultQualityId, qualityDefinitions } = this.props;
+        if (qualityDefinitions.length) {
+            // re-select definition based on new properties
+            let definition = null;
+
+            if (defaultQualityId && qualityDefinitions.length > 0) {
+                definition = qualityDefinitions.find(d => d.definitionId === defaultQualityId);
+            }
+
+            if (!definition) {
+                // definition no found, select first official definition
+                this.actions.onSelectOfficialDefinition(qualityDefinitions[0]);
+            } else {
+                this.actions.onSelectCustomDefinition(definition);
+            }
+        }
     }
 
     componentDidUpdate(prevProps) {
@@ -232,9 +248,7 @@ const mapDispatchToProps = (dispatch) => {
         },
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
-        updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
-        updateDefinitionsForManager: (definitionId, type) => dispatch(printingActions.updateDefinitionsForManager(definitionId, type))
+        updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager))
     };
 };
 

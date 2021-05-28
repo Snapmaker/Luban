@@ -432,6 +432,9 @@ export const actions = {
         };
 
         // Note that activeDefinition can be updated by itself
+        if (!definition) {
+            return;
+        }
         if (definition !== state.activeDefinition) {
             for (const key of definition.ownKeys) {
                 if (activeDefinition.settings[key] === undefined) {

@@ -19,13 +19,10 @@ const Begin = (props) => {
             name: file.name,
             path: file.path || ''
         };
-        console.log(file, file.path, recentFile);
         try {
-            console.log(props.openFile);
             await props.openFile(file, props.history);
             await props.updateRecentFile([recentFile], 'update');
         } catch (error) {
-            console.log({ error });
             modal({
                 title: i18n._('Failed to upload model'),
                 body: error.message

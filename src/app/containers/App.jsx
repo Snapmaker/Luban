@@ -378,14 +378,14 @@ class App extends PureComponent {
             '/settings/machine',
             '/settings/config',
             '/settings/firmware',
-            '/homepage'
+            '/'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
             return (
                 <Redirect
                     to={{
-                        pathname: '/homepage',
+                        pathname: '/',
                         state: {
                             from: location
                         }
@@ -394,7 +394,7 @@ class App extends PureComponent {
             );
         }
         return (
-            location.pathname === '/homepage' ? (
+            location.pathname === '/' ? (
                 <div>
                     <HomePage {...this.props} />
                 </div>
@@ -421,10 +421,10 @@ class App extends PureComponent {
                                     display: (location.pathname !== '/cnc') ? 'none' : 'block'
                                 }}
                             />
-                            {(this.state.platform !== 'unknown' && this.state.platform !== 'win32') && (
+
+                            {location.pathname === '/3dp' && (
                                 <Printing
                                     {...this.props}
-                                    hidden={location.pathname !== '/3dp'}
                                 />
                             )}
 

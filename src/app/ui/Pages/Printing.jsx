@@ -19,7 +19,6 @@ class Printing extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
         widgets: PropTypes.array.isRequired,
-        hidden: PropTypes.bool.isRequired,
         uploadModel: PropTypes.func.isRequired,
         updateTabContainer: PropTypes.func.isRequired
     };
@@ -98,6 +97,7 @@ class Printing extends PureComponent {
     };
 
     renderRightView = (widgets) => {
+        console.log('materialDefinition', widgets);
         return (
             <Sortable
                 options={{
@@ -128,16 +128,13 @@ class Printing extends PureComponent {
     }
 
     render() {
-        const { hidden } = this.props;
         return (
-            <div style={{ display: hidden ? 'none' : 'block' }}>
-                <ProjectLayout
-                    renderCenterView={this.renderCenterView}
-                    renderMainToolBar={this.renderMainToolBar}
-                    renderRightView={() => this.renderRightView(this.props.widgets)}
-                    renderModalView={this.renderModalView}
-                />
-            </div>
+            <ProjectLayout
+                renderCenterView={this.renderCenterView}
+                renderMainToolBar={this.renderMainToolBar}
+                renderRightView={() => this.renderRightView(this.props.widgets)}
+                renderModalView={this.renderModalView}
+            />
         );
     }
 }

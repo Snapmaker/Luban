@@ -260,7 +260,6 @@ export default class MenuBuilder {
     }
 
     getInitRecentFile() {
-        const arr = getSavedRecentFile();
-        return arr;
+        return getSavedRecentFile();
     }
 }

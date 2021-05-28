@@ -14,7 +14,6 @@ import styles from './styles.styl';
 
 const QuickStart = (props) => {
     const { series, history } = props;
-    console.log({ props, history });
     // useState
     const [caseConfig, setCaseConfig] = useState([]);
     const [caseConfigFourAxis, setCaseConfigFourAxis] = useState([]);
