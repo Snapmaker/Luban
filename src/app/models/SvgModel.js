@@ -196,6 +196,20 @@ class SvgModel extends BaseModel {
         this.refresh();
         // trigger update source, should add parmas to togger this func
         this.onTransform();
+
+        this.widthOrigin = this.width;
+        this.heightOrigin = this.height;
+        this.widthProcess = this.transformation.width;
+        this.heightProcess = this.transformation.height;
+        this.scaleProcess = this.scaleProcess;
+        this.scaleProcess = {
+            scaleX: (this.transformation.scaleX > 0 ? 1 : -1),
+            scaleY: (this.transformation.scaleY > 0 ? 1 : -1)
+        };
+        this.scaleOrigin = {
+            scaleX: this.transformation.scaleX,
+            scaleY: this.transformation.scaleY
+        };
     }
 
     get type() {
@@ -911,11 +925,65 @@ class SvgModel extends BaseModel {
         this.updateTransformation(this.transformation);
     }
 
-    changeShowOrigin() {
-        this.showOrigin = !this.showOrigin;
-        this.modelObject3D.visible = this.showOrigin;
-        if (this.processObject3D) {
-            this.processObject3D.visible = !this.showOrigin;
+    changeShowOrigin(showOrigin) {
+        function pointModelToSvg({ x, y }, size) {
+            return { x: size.x + x, y: size.y - y };
+        }
+
+        this.showOrigin = showOrigin ?? !this.showOrigin;
+
+
+        if (this.showOrigin) {
+            // set transformation
+            this.transformation.scaleX = this.scaleOrigin.scaleX;
+            this.transformation.scaleY = this.scaleOrigin.scaleY;
+
+            // set elem attributes
+            if (this.config.svgNodeName === 'image' || this.config.svgNodeName === 'text') {
+                this.elem.setAttribute('href', this.uploadName);
+                this.elem.setAttribute('width', this.widthOrigin);
+                this.elem.setAttribute('height', this.heightOrigin);
+                const topLeft = pointModelToSvg({
+                    x: this.transformation.positionX - this.widthOrigin / 2,
+                    y: this.transformation.positionY + this.heightOrigin / 2
+                }, this.size);
+                this.elem.setAttribute('x', topLeft.x);
+
+                if (this.config.svgNodeName === 'text') {
+                    const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                    this.elem.setAttribute('y', topLeft.y + diffY);
+                } else {
+                    this.elem.setAttribute('y', topLeft.y);
+                }
+            }
+
+            // set elem transformList form transformation
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
+        } else {
+            // set transformation
+            this.transformation.scaleX = this.scaleProcess.scaleX;
+            this.transformation.scaleY = this.scaleProcess.scaleY;
+
+            // set elem attributes
+            if (this.config.svgNodeName === 'image' || this.config.svgNodeName === 'text') {
+                this.elem.setAttribute('href', this.processImageName);
+                this.elem.setAttribute('width', this.widthProcess);
+                this.elem.setAttribute('height', this.heightProcess);
+                const topLeft = pointModelToSvg({
+                    x: this.transformation.positionX - this.widthProcess / 2,
+                    y: this.transformation.positionY + this.heightProcess / 2
+                }, this.size);
+                this.elem.setAttribute('x', topLeft.x);
+                if (this.config.svgNodeName === 'text') {
+                    const diffY = this.elem.getAttribute('y') - this.elem.getBBox().y;
+                    this.elem.setAttribute('y', topLeft.y + diffY);
+                } else {
+                    this.elem.setAttribute('y', topLeft.y);
+                }
+            }
+
+            // set elem transformList from transformation
+            setElementTransformToList(this.elemTransformList(), this.transformation, this.size);
         }
 
         return {
@@ -1017,7 +1085,13 @@ class SvgModel extends BaseModel {
             },
             config: {
                 ...this.config
-            }
+            },
+            widthOrigin: this.widthOrigin,
+            heightOrigin: this.heightOrigin,
+            scaleOrigin: this.scaleOrigin,
+            widthProcess: this.widthProcess,
+            heightProcess: this.heightProcess,
+            scaleProcess: this.scaleProcess
         };
         // svg process as image
         if (taskInfo.sourceType === 'svg' && taskInfo.mode !== 'vector') {
@@ -1079,6 +1153,59 @@ class SvgModel extends BaseModel {
     }
 
     /**
+     * Reset the width, height, transformation.scaleX, transformation.scaleY value after update new process image
+     */
+    updateTransformationProcess() {
+        if (this.showOrigin) {
+            this.scaleOrigin = {
+                scaleX: this.transformation.scaleX,
+                scaleY: this.transformation.scaleY
+            };
+            if (this.mode === 'vector') {
+                this.scaleProcess = {
+                    ...this.scaleOrigin
+                };
+                this.widthProcess = this.widthOrigin;
+                this.heightProcess = this.heightOrigin;
+            } else {
+                this.scaleProcess = {
+                    scaleX: 1,
+                    scaleY: 1
+                };
+                this.widthProcess = this.transformation.width;
+                this.heightProcess = this.transformation.height;
+            }
+        }
+        if (!this.showOrigin) {
+            this.scaleOrigin = {
+                scaleX: this.scaleOrigin.scaleX * this.transformation.scaleX / this.scaleProcess.scaleX,
+                scaleY: this.scaleOrigin.scaleY * this.transformation.scaleY / this.scaleProcess.scaleY
+            };
+            if (this.mode === 'vector') {
+                this.scaleProcess = {
+                    ...this.scaleOrigin
+                };
+                this.widthProcess = this.widthOrigin;
+                this.heightProcess = this.heightOrigin;
+            } else {
+                this.scaleProcess = {
+                    scaleX: 1,
+                    scaleY: 1
+                };
+                // this.widthProcess *= Math.abs(this.transformation.scaleX);
+                // this.heightProcess *= Math.abs(this.transformation.scaleY);
+                this.widthProcess = this.transformation.width;
+                this.heightProcess = this.transformation.height;
+            }
+
+            this.transformation.scaleX = this.scaleProcess.scaleX;
+            this.transformation.scaleY = this.scaleProcess.scaleY;
+            this.width = this.widthProcess;
+            this.height = this.heightProcess;
+        }
+    }
+
+    /**
      * Note that you need to give cloned Model a new model name.
      *
      * @returns {ThreeModel}
@@ -1108,7 +1235,10 @@ class SvgModel extends BaseModel {
         // this.processMode(this.mode, this.config, processImageName);
         this.processImageName = processImageName;
 
-        this.generateProcessObject3D();
+        // this.generateProcessObject3D();
+        const imagePath = `${DATA_PREFIX}/${processImageName}`;
+        this.changeShowOrigin(false);
+        this.elem.setAttribute('href', imagePath);
     }
     // --Model functions--
 

@@ -501,7 +501,6 @@ export const actions = {
         if (transformation.scaleX || transformation.scaleY) {
             dispatch(actions.processSelectedModel(headType));
         }
-        dispatch(actions.resetProcessState(headType));
     },
 
     updateSelectedModelConfig: (headType, config) => (dispatch, getState) => {
@@ -544,6 +543,9 @@ export const actions = {
 
         const options = selectedModel.getTaskInfo();
         options.transformation = {
+            // TODO: add rotationZ, need to fix erorr in halftone
+            scaleX: (options.scaleOrigin.scaleX * options.transformation.scaleX > 0 ? 1 : -1),
+            scaleY: (options.scaleOrigin.scaleY * options.transformation.scaleY > 0 ? 1 : -1),
             width: options.transformation.width,
             height: options.transformation.height
         };
@@ -561,46 +563,6 @@ export const actions = {
             headType: headType,
             data: options
         });
-        // =======
-        //         api.processImage(options)
-        //             .then((res) => {
-        //                 const processImageName = res.body.filename;
-        //                 if (!processImageName) {
-        //                     return;
-        //                 }
-        //
-        //                 const svgModel = selectedModel.relatedModels.svgModel;
-        //
-        //                 if (selectedModel.sourceType === 'image3d') {
-        //                     const modelOptions = {
-        //                         sourceWidth: res.body.width * DEFAULT_SCALE,
-        //                         sourceHeight: res.body.height * DEFAULT_SCALE,
-        //                         width: res.body.width,
-        //                         height: res.body.height,
-        //                         transformation: {
-        //                             width: Math.abs(res.body.width * selectedModel.transformation.scaleX),
-        //                             height: Math.abs(res.body.height * selectedModel.transformation.scaleY)
-        //                         }
-        //                     };
-        //                     selectedModel.updateAndRefresh(modelOptions);
-        //                     SVGActions.resetSelection();
-        //                 }
-        //
-        //                 // modelGroup.updateSelectedModelProcessImage(processImageName);
-        //                 selectedModel.updateProcessImageName(processImageName);
-        //
-        //                 // SVGActions.updateElementImage(processImageName);
-        //                 SVGActions.updateSvgModelImage(svgModel, processImageName);
-        //
-        //                 // dispatch(baseActions.recordSnapshot(headType));
-        //                 dispatch(baseActions.resetCalculatedState(headType));
-        //                 dispatch(baseActions.render(headType));
-        //             })
-        //             .catch((e) => {
-        //                 // TODO: use log
-        //                 console.error(e);
-        //             });
-        // >>>>>>> Feature: Add 4 axis module
     },
 
 
@@ -614,7 +576,6 @@ export const actions = {
         transformation.positionY -= 5;
         dispatch(actions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
             sourceType, config, undefined, transformation));
-        dispatch(actions.resetProcessState(headType));
     },
 
 
@@ -644,7 +605,6 @@ export const actions = {
             });
         }
         dispatch(actions.processSelectedModel(headType));
-        dispatch(actions.resetProcessState(headType));
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
@@ -800,13 +760,8 @@ export const actions = {
                 SVGActions.resetSelection();
             }
         }
-
-        // modelGroup.updateSelectedModelProcessImage(processImageName);
+        model.updateTransformationProcess();
         model.updateProcessImageName(processImageName);
-
-        // SVGActions.updateElementImage(processImageName);
-        SVGActions.updateSvgModelImage(model, processImageName);
-
         // dispatch(baseActions.recordSnapshot(headType));
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
@@ -931,22 +886,6 @@ export const actions = {
     },
 
     /**
-     * Reset process state after model changes
-     */
-    // eslint-disable-next-line no-unused-vars
-    resetProcessState: (headType) => (dispatch, getState) => {
-        // const { isAllModelsPreviewed } = getState()[headType];
-        // if (isAllModelsPreviewed) {
-        //     dispatch(baseActions.updateState(headType, {
-        //         isAllModelsPreviewed: false
-        //     }));
-        // }
-        // dispatch(baseActions.updateState(headType, {
-        //     gcodeFile: null
-        // }));
-    },
-
-    /**
      * SVG Actions below
      **************************************************************************/
 
@@ -957,8 +896,6 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         await SVGActions.createModelFromElement(element);
-
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1043,7 +980,6 @@ export const actions = {
     moveElementsOnKeyUp: (headType) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
         SVGActions.moveElementsOnArrowKeyUp();
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**
@@ -1072,7 +1008,6 @@ export const actions = {
 
         SVGActions.resizeElementsFinish(elements, options);
 
-        dispatch(actions.resetProcessState(headType));
         const selectedModels = modelGroup.getSelectedModelArray();
         if (selectedModels.length !== 1) {
             return;
@@ -1089,10 +1024,18 @@ export const actions = {
      * Resize elements immediately.
      */
     resizeElementsImmediately: (headType, elements, options) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.resizeElementsImmediately(elements, options);
 
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
         dispatch(baseActions.render(headType));
     },
 
@@ -1102,9 +1045,18 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsHorizontally: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.flipElementsHorizontally(elements);
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1115,9 +1067,18 @@ export const actions = {
      * Note that only support flip one element.
      */
     flipElementsVertically: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
+        const { SVGActions, modelGroup } = getState()[headType];
 
         SVGActions.flipElementsVertically(elements);
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length !== 1) {
+            return;
+        }
+        const selectedModel = selectedModels[0];
+        if (selectedModel.sourceType !== 'image3d') {
+            dispatch(actions.processSelectedModel(headType));
+        }
 
         dispatch(baseActions.render(headType));
     },
@@ -1158,7 +1119,6 @@ export const actions = {
 
         // FIXME: remove this
         SVGActions.rotateElement(element, options);
-        dispatch(actions.resetProcessState(headType));
     },
 
     /**
