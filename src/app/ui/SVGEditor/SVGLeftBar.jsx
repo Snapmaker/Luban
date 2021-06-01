@@ -6,11 +6,15 @@ import Anchor from '../components/Anchor';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
 
-class SvgTool extends PureComponent {
+class SVGLeftBar extends PureComponent {
     static propTypes = {
         mode: PropTypes.string.isRequired,
         setMode: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired
+        insertDefaultTextVector: PropTypes.func.isRequired,
+        onChangeFile: PropTypes.func.isRequired,
+        onClickToUpload: PropTypes.func.isRequired,
+        fileInput: PropTypes.object.isRequired,
+        allowedFiles: PropTypes.string.isRequired
     };
 
     state = {
@@ -40,12 +44,28 @@ class SvgTool extends PureComponent {
 
     render() {
         const { mode } = this.props;
-        const { showExtShape /*, extShape */ } = this.state;
+        const { showExtShape, extShape } = this.state;
 
         return (
             <React.Fragment>
-                <div className={classNames(styles['visualizer-center'])}>
+                <div className={classNames(styles['svg-left-bar'])}>
                     <div className={styles['center-tool']}>
+                        <input
+                            ref={this.props.fileInput}
+                            type="file"
+                            accept={this.props.allowedFiles}
+                            style={{ display: 'none' }}
+                            multiple={false}
+                            onChange={this.props.onChangeFile}
+                        />
+                        <Anchor
+                            componentClass="button"
+                            className={classNames(styles['btn-center'],
+                                { [styles.selected]: (mode === 'add') })}
+                            onClick={() => this.props.onClickToUpload()}
+                        >
+                            <i className={styles['btn-add']} />
+                        </Anchor>
                         <Anchor
                             componentClass="button"
                             className={classNames(styles['btn-center'],
@@ -77,7 +97,6 @@ class SvgTool extends PureComponent {
                         >
                             <i className={styles['btn-text']} />
                         </Anchor>
-                        {/*
                         <Anchor
                             componentClass="button"
                             className={classNames(styles['btn-center'],
@@ -86,7 +105,6 @@ class SvgTool extends PureComponent {
                         >
                             <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
                         </Anchor>
-                        */}
                     </div>
                     {showExtShape && (
                         <div className={classNames(styles['center-ext'])}>
@@ -111,15 +129,4 @@ class SvgTool extends PureComponent {
     }
 }
 
-// const mapStateToProps = (state) => {
-//     return {
-//
-//     };
-// };
-//
-// const mapDispatchToProps = (dispatch) => ({
-//     insertDefaultTextVector: () => dispatch(editorActions.insertDefaultTextVector('laser'))
-// });
-
-
-export default SvgTool;
+export default SVGLeftBar;
