@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import GcodeGenerator from '../widgets/GcodeGenerator';
+import GcodeGenerator from '../ui/widgets/GcodeGenerator';
 import ToolPathRenderer from '../lib/renderer/ToolPathRenderer';
 
 const generateGcodeStr = (toolPathObj, gcodeConfig) => {

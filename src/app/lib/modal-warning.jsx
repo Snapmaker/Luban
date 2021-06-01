@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from './i18n';
-import Modal from '../components/Modal';
+import Modal from '../ui/components/Modal';
 
 class WarningModalHOC extends PureComponent {
     static propTypes = {

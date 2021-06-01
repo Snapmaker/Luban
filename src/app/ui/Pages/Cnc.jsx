@@ -6,15 +6,15 @@ import Sortable from 'react-sortablejs';
 import path from 'path';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import Dropzone from '../../components/Dropzone';
-import CNCVisualizer from '../../widgets/CNCVisualizer';
-import Widget from '../../widgets/Widget';
+import Dropzone from '../components/Dropzone';
+import CNCVisualizer from '../widgets/CNCVisualizer';
+import Widget from '../widgets/Widget';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
 import { actions as widgetActions } from '../../flux/widget';
 import { actions as editorActions } from '../../flux/editor';
-import CncToolManager from '../../views/CncToolManager/CncToolManager';
+import CncToolManager from '../views/CncToolManager/CncToolManager';
 import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../constants';
 
 

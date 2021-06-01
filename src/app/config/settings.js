@@ -82,10 +82,10 @@ const settings = {
         // https://github.com/i18next/i18next-xhr-backend
         backend: {
             // path where resources get loaded from
-            loadPath: `${webroot}i18n/{{lng}}/{{ns}}.json`,
+            loadPath: `${webroot}resources/i18n/{{lng}}/{{ns}}.json`,
 
             // path to post missing resources
-            addPath: 'api/i18n/sendMissing/{{lng}}/{{ns}}',
+            addPath: 'api/resources/i18n/sendMissing/{{lng}}/{{ns}}',
 
             // your backend server supports multiloading
             // /locales/resources.json?lng=de+en&ns=ns1+ns2

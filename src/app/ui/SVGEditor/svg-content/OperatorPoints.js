@@ -112,7 +112,7 @@ class OperatorPoints {
                 fill: '#00b7ee',
                 r: GRIP_RADIUS / this.scale,
                 'stroke-width': 2 / this.scale,
-                style: 'cursor:url(../../images/rotate.png) 12 12, auto;'
+                style: 'cursor:url(../../resources/images/rotate.png) 12 12, auto;'
             }
         });
         this.rotateGrip.setAttribute('data-type', 'rotate');

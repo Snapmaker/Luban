@@ -9,8 +9,8 @@ import webpack from 'webpack';
 export function appCopyDevelopment() {
     const files = [
         'src/app/*.{ico,png}',
-        'src/app/{images,textures}/**/*',
-        'src/app/i18n/**/*'
+        'src/app/resources/{images,textures}/**/*',
+        'src/app/resources/i18n/**/*'
     ];
 
     return gulp.src(files, { base: 'src/app' })
@@ -23,8 +23,8 @@ export function appCopyDevelopment() {
 export function appCopyProduction() {
     const files = [
         'src/app/*.{ico,png}',
-        'src/app/{images,textures}/**/*',
-        'src/app/i18n/**/*'
+        'src/app/resources/{images,textures}/**/*',
+        'src/app/resources/i18n/**/*'
     ];
 
     return gulp.src(files, { base: 'src/app' })

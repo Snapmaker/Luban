@@ -5,7 +5,7 @@ import { CNC_LASER_STAGE } from './utils';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, SELECTEVENT } from '../../constants';
 import { getToolPathType } from '../../toolpaths/utils';
 
-import { toast } from '../../components/Toast';
+import { toast } from '../../ui/components/Toast';
 
 import i18n from '../../lib/i18n';
 

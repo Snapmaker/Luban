@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
-import Anchor from '../../components/Anchor';
+import Anchor from '../components/Anchor';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
 

@@ -1,0 +1,87 @@
+@import "../../styles/variables.styl"
+
+.separator
+    display: block
+    margin: 10px 0
+    padding: 0
+    height: 1px
+    border: 0;
+    border-top: 1px solid $border-color
+
+    &.separator-underline
+        margin: 0 0 10px
+
+.select-tools
+    // cancel out last right padding
+    margin: 0 -15px 0 0
+
+    .select-tool
+        display: inline-block
+        padding: 0 18px 15px 0
+        width: 25%
+
+        .select-tool-btn
+            display: block
+            border-radius: $border-radius
+            border: 1px solid $grey-color2
+
+            > img
+                border-radius: $border-radius
+                width: 100%
+
+            &.selected
+                border: 2px solid $dark-blue-color
+
+        .select-tool-text
+            margin-top: 8px
+            float: left
+            width: 100%
+            text-align: center
+            color: $grey-color
+
+
+.connection-state
+    width: 100%
+    &-name
+        font-size: $font-size-lead
+    &-icon
+        float: right;
+        font-size: $font-size-lead
+        margin-right: 12px
+        i
+            vertical-align: middle
+
+.connection-state-head
+    &-name
+        color: $grey-color
+    &-icon
+        float: right;
+        i
+            font-size: $font-size-base
+            vertical-align: middle
+.color-grey-color
+    color: $grey-color
+
+.vertical
+    height: 100%
+    position: absolute
+    top: 0
+    border-right: 1px solid $grey-color
+
+.device-not-recognized
+    font-size: $font-size-h5
+    margin-bottom: 8px
+.device-not-recognized-detail
+    font-size: $font-size-base
+    color: $grey-color
+.which-model
+    margin-bottom: 12px
+    font-size: $font-size-lead
+.which-toolhead
+    margin-top: 16px
+    margin-bottom: 12px
+    font-size: $font-size-lead
+
+
+
+

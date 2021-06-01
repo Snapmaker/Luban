@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Widget from '../../../widgets';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 class DefaultWidgets extends PureComponent {

@@ -29,7 +29,7 @@ import History from './History';
 import FixedArray from './FixedArray';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '../workspace';
-import MachineSelectModal from '../../modals/modal-machine-select';
+import MachineSelectModal from '../../ui/modals/modal-machine-select';
 import setting from '../../config/settings';
 
 
