@@ -10,13 +10,13 @@ function MenuItem({ menuItem, actions }) {
     if (!menuItem) {
         return null;
     }
-    const { type = 'item', title } = menuItem;
+    const { type = 'button', title } = menuItem;
     switch (type) {
         case 'separator':
             return (
                 <div key={title + timestamp()} className={styles.separator} />
             );
-        case 'item':
+        case 'button':
             return (
                 <SvgIcon
                     key={title + timestamp()}

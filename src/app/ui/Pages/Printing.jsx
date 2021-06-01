@@ -68,7 +68,7 @@ function Printing({ history, location }) {
         const leftItems = [
             {
                 title: 'Copy',
-                type: 'item',
+                type: 'button',
                 action: () => history.push('/')
             },
             {
@@ -77,7 +77,7 @@ function Printing({ history, location }) {
         ];
         const centerItems = [
             {
-                type: 'item',
+                type: 'button',
                 title: 'Edit',
                 action: () => history.push('cnc')
             }
