@@ -96,7 +96,6 @@ class SVGParser {
     async parseFile(filePath) {
         const node = await this.readFile(filePath);
         const result = await this.parseObject(node);
-        console.log('result', result);
         const newUploadName = await this.generateString(result.parsedNode, filePath);
         result.uploadName = path.basename(newUploadName);
         return result;

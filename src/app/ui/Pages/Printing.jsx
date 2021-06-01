@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
+import React, { useState, useEffect } from 'react';
+import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
 import Widget from '../../widgets/Widget';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
 import PrintingManager from '../../views/PrintingManager';
@@ -11,93 +11,104 @@ import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as widgetActions } from '../../flux/widget';
+import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../constants';
 
-
-class Printing extends PureComponent {
-    static propTypes = {
-        ...withRouter.propTypes,
-        widgets: PropTypes.array.isRequired,
-        uploadModel: PropTypes.func.isRequired,
-        updateTabContainer: PropTypes.func.isRequired
-    };
-
-    state = {
-        isDraggingWidget: false
-    };
-
-    actions = {
-        onDropAccepted: async (file) => {
-            try {
-                await this.props.uploadModel(file);
-            } catch (e) {
-                modal({
-                    title: i18n._('Failed to open model.'),
-                    body: e.message
-                });
+function getCurrentHeadType(pathname) {
+    let headType = null;
+    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
+    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
+    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
+    return headType;
+}
+function Printing({ history, location }) {
+    const widgets = useSelector(state => state?.widget['3dp'].default.widgets, shallowEqual);
+    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const dispatch = useDispatch();
+    useEffect(() => {
+        return async () => {
+            const headType = getCurrentHeadType(location.pathname);
+            if (!headType) {
+                return;
             }
-        },
-        onDropRejected: () => {
-            const title = i18n._('Warning');
-            const body = i18n._('Only STL/OBJ files are supported.');
+            dispatch(projectActions.save(headType));
+        };
+    }, [location.pathname]);
+    async function onDropAccepted(file) {
+        try {
+            await dispatch(printingActions.uploadModel(file));
+        } catch (e) {
             modal({
-                title: title,
-                body: body
+                title: i18n._('Failed to open model.'),
+                body: e.message
             });
-        },
-        onDragWidgetStart: () => {
-            this.setState({ isDraggingWidget: true });
-        },
-        onDragWidgetEnd: () => {
-            this.setState({ isDraggingWidget: false });
-        },
-        onChangeWidgetOrder: (widgets) => {
-            this.props.updateTabContainer({ widgets: widgets });
         }
-    };
+    }
+    function onDropRejected() {
+        const title = i18n._('Warning');
+        const body = i18n._('Only STL/OBJ files are supported.');
+        modal({
+            title: title,
+            body: body
+        });
+    }
+    function onDragWidgetStart() {
+        setIsDraggingWidget(true);
+    }
+    function onDragWidgetEnd() {
+        setIsDraggingWidget(false);
+    }
+    function onChangeWidgetOrder(newWidgets) {
+        dispatch(widgetActions.updateTabContainer('3dp', 'default', newWidgets));
+    }
 
-    renderMainToolBar = () => {
-        const locationArray = [
+    function renderMainToolBar() {
+        const leftItems = [
             {
                 title: 'Copy',
-                action: () => this.props.history.push('laser')
+                type: 'item',
+                action: () => history.push('/')
+            },
+            {
+                type: 'separator'
             }
         ];
-        const projectArray = [
+        const centerItems = [
             {
+                type: 'item',
                 title: 'Edit',
-                action: () => this.props.history.push('cnc')
+                action: () => history.push('cnc')
             }
         ];
         return (
             <MainToolBar
-                locationArray={locationArray}
-                projectArray={projectArray}
+                leftItems={leftItems}
+                centerItems={centerItems}
             />
         );
     }
 
-    renderCenterView = () => {
+    function renderCenterView() {
         return (
             <Dropzone
-                disabled={this.state.isDraggingWidget}
+                disabled={isDraggingWidget}
                 accept=".stl, .obj"
                 dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
-                onDropAccepted={this.actions.onDropAccepted}
-                onDropRejected={this.actions.onDropRejected}
+                onDropAccepted={onDropAccepted}
+                onDropRejected={onDropRejected}
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
             </Dropzone>
         );
-    };
+    }
 
-    renderModalView = () => {
+    function renderModalView() {
         return (<PrintingManager />);
-    };
+    }
 
-    renderRightView = (widgets) => {
-        console.log('materialDefinition', widgets);
+    function renderRightView(newWidgets) {
         return (
             <Sortable
                 options={{
@@ -111,12 +122,12 @@ class Printing extends PureComponent {
                     chosenClass: 'sortable-chosen',
                     ghostClass: 'sortable-ghost',
                     dataIdAttr: 'data-widget-id',
-                    onStart: this.actions.onDragWidgetStart,
-                    onEnd: this.actions.onDragWidgetEnd
+                    onStart: onDragWidgetStart,
+                    onEnd: onDragWidgetEnd
                 }}
-                onChange={this.actions.onChangeWidgetOrder}
+                onChange={onChangeWidgetOrder}
             >
-                { widgets.map(widget => {
+                { newWidgets.map(widget => {
                     return (
                         <div data-widget-id={widget} key={widget}>
                             <Widget widgetId={widget} width="360px" />
@@ -127,30 +138,18 @@ class Printing extends PureComponent {
         );
     }
 
-    render() {
-        return (
-            <ProjectLayout
-                renderCenterView={this.renderCenterView}
-                renderMainToolBar={this.renderMainToolBar}
-                renderRightView={() => this.renderRightView(this.props.widgets)}
-                renderModalView={this.renderModalView}
-            />
-        );
-    }
+    return (
+        <ProjectLayout
+            renderCenterView={renderCenterView}
+            renderMainToolBar={renderMainToolBar}
+            renderRightView={() => renderRightView(widgets)}
+            renderModalView={renderModalView}
+        />
+    );
 }
-const mapStateToProps = (state) => {
-    const widget = state.widget;
-    const widgets = widget['3dp'].default.widgets;
-    return {
-        widgets
-    };
+Printing.propTypes = {
+    history: PropTypes.object,
+    location: PropTypes.object
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
-        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('3dp', 'default', widgets))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Printing));
+export default (withRouter(Printing));
