@@ -69,45 +69,45 @@ class MachineSelectModal extends PureComponent {
             {
                 value: MACHINE_SERIES.ORIGINAL.value,
                 label: MACHINE_SERIES.ORIGINAL.label,
-                img: 'images/machine/size-1.0-original.jpg'
+                img: '/resources/images/machine/size-1.0-original.jpg'
             },
             {
                 value: MACHINE_SERIES.A150.value,
                 label: MACHINE_SERIES.A150.label,
-                img: 'images/machine/size-2.0-A150.jpg'
+                img: '/resources/images/machine/size-2.0-A150.jpg'
             },
             {
                 value: MACHINE_SERIES.A250.value,
                 label: MACHINE_SERIES.A250.label,
-                img: 'images/machine/size-2.0-A250.jpg'
+                img: '/resources/images/machine/size-2.0-A250.jpg'
             },
             {
                 value: MACHINE_SERIES.A350.value,
                 label: MACHINE_SERIES.A350.label,
-                img: 'images/machine/size-2.0-A350.jpg'
+                img: '/resources/images/machine/size-2.0-A350.jpg'
             },
             {
                 value: MACHINE_SERIES.CUSTOM.value,
                 label: MACHINE_SERIES.CUSTOM.label,
-                img: 'images/machine/size-1.0-original-z-extension.jpg'
+                img: '/resources/images/machine/size-1.0-original-z-extension.jpg'
             }
         ];
         const machineHeadTypeOptions = [
             {
                 value: MACHINE_HEAD_TYPE['3DP'].value,
                 label: MACHINE_HEAD_TYPE['3DP'].label,
-                img: 'images/machine/function-3d-printing.jpg'
+                img: '/resources/images/machine/function-3d-printing.jpg'
             },
             {
                 value: MACHINE_HEAD_TYPE.LASER.value,
                 label: MACHINE_HEAD_TYPE.LASER.label,
-                img: 'images/machine/function-laser.jpg'
+                img: '/resources/images/machine/function-laser.jpg'
 
             },
             {
                 value: MACHINE_HEAD_TYPE.CNC.value,
                 label: MACHINE_HEAD_TYPE.CNC.label,
-                img: 'images/machine/function-cnc.jpg'
+                img: '/resources/images/machine/function-cnc.jpg'
             }
         ];
 

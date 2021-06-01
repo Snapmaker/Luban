@@ -16,7 +16,7 @@ const About = () => {
     return (
         <div className={styles['about-container']}>
             <img
-                src="images/snap-logo-square-256x256.png"
+                src="/resources/images/snap-logo-square-256x256.png"
                 role="presentation"
                 alt="presentation"
                 className={styles['product-logo']}

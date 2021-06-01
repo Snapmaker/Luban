@@ -100,7 +100,7 @@ class TestFocus extends PureComponent {
                             </p>
                             <div className={styles['test-laser-instruction-step']}>
                                 <img
-                                    src="images/laser/laser-test-instructions-01.png"
+                                    src="/resources/images/laser/laser-test-instructions-01.png"
                                     role="presentation"
                                     alt="x"
                                 />
@@ -114,7 +114,7 @@ class TestFocus extends PureComponent {
                             </div>
                             <div className={styles['test-laser-instruction-step']}>
                                 <img
-                                    src="images/laser/laser-test-instructions-02.png"
+                                    src="/resources/images/laser/laser-test-instructions-02.png"
                                     role="presentation"
                                     alt="x"
                                 />
@@ -130,7 +130,7 @@ class TestFocus extends PureComponent {
                             </div>
                             <div className={styles['test-laser-instruction-step']}>
                                 <img
-                                    src="images/laser/laser-test-instructions-03.png"
+                                    src="/resources/images/laser/laser-test-instructions-03.png"
                                     role="presentation"
                                     alt="x"
                                 />

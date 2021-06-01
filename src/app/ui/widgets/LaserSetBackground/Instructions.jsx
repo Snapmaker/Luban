@@ -90,7 +90,7 @@ const Instructions = ({ onClose }) => {
                                     display: 'block',
                                     margin: '4px auto'
                                 }}
-                                src="images/laser/laser_camera-aid-bg-instructions-01-250x321.png"
+                                src="/resources/images/laser/laser_camera-aid-bg-instructions-01-250x321.png"
                                 role="presentation"
                                 alt="x"
                             />
@@ -119,7 +119,7 @@ const Instructions = ({ onClose }) => {
                         </li>
                         <img
                             style={{ width: '250px', height: '251px', display: 'block', margin: '4px auto' }}
-                            src="images/laser/laser_camera-aid-bg-instructions-02-250x251.png"
+                            src="/resources/images/laser/laser_camera-aid-bg-instructions-02-250x251.png"
                             role="presentation"
                             alt="x"
                         />
@@ -137,7 +137,7 @@ const Instructions = ({ onClose }) => {
                         </li>
                         <img
                             style={{ width: '250px', height: '80px', display: 'block', margin: '4px auto' }}
-                            src="images/laser/laser_camera-aid-bg-instructions-03-250x80.png"
+                            src="/resources/images/laser/laser_camera-aid-bg-instructions-03-250x80.png"
                             role="presentation"
                             alt="x"
                         />

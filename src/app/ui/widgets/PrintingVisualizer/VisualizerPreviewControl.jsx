@@ -135,7 +135,7 @@ class VisualizerPreviewControl extends PureComponent {
                         marginLeft: '2px'
                     }}
                 >
-                    <img src="images/3dp/preview-slider.png" alt="" />
+                    <img src="/resources/images/3dp/preview-slider.png" alt="" />
                     <Slider
                         className={styles['vertical-slider']}
                         vertical

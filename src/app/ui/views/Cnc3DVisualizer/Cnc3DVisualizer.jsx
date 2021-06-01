@@ -25,7 +25,7 @@ import {
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
 
-const texture = new TextureLoader().load('../images/wood.png');
+const texture = new TextureLoader().load('../resources/images/wood.png');
 
 const getModelTransformation = (t, size) => {
     return {

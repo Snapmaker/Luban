@@ -135,8 +135,8 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
 
     // I18n
-    app.get(urljoin(settings.route, 'api/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
-    app.post(urljoin(settings.route, 'api/i18n/sendMissing/:lng/:ns'), api.i18n.saveMissing);
+    app.get(urljoin(settings.route, 'api/resources/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
+    app.post(urljoin(settings.route, 'api/resources/i18n/sendMissing/:lng/:ns'), api.i18n.saveMissing);
 
     // print3D
     app.post(urljoin(settings.route, 'api/file'), api.file.set);

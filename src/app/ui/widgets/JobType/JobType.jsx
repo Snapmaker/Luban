@@ -144,7 +144,7 @@ class JobType extends PureComponent {
                                 margin: '8px 0px 0px 0px',
                                 width: '316px'
                             }}
-                            src="images/cnc-laser/3axis.png"
+                            src="/resources/images/cnc-laser/3axis.png"
                             role="presentation"
                             alt="3 Axis"
                         />
@@ -210,7 +210,7 @@ class JobType extends PureComponent {
                                     margin: '8px 0px 0px 0px',
                                     width: '316px'
                                 }}
-                                src="images/cnc-laser/cnc-4axis.png"
+                                src="/resources/images/cnc-laser/cnc-4axis.png"
                                 role="presentation"
                                 alt="4 Axis"
                             />
@@ -222,7 +222,7 @@ class JobType extends PureComponent {
                                     margin: '8px 0px 0px 0px',
                                     width: '316px'
                                 }}
-                                src="images/cnc-laser/laser-4axis.png"
+                                src="/resources/images/cnc-laser/laser-4axis.png"
                                 role="presentation"
                                 alt="4 Axis"
                             />

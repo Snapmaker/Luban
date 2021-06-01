@@ -92,8 +92,8 @@ const appConfig = {
         ],
         defaultNs: 'resource',
         resource: {
-            loadPath: 'src/app/i18n/{{lng}}/{{ns}}.json',
-            savePath: 'src/app/i18n/{{lng}}/{{ns}}.json', // or 'src/app/i18n/${lng}/${ns}.saveAll.json'
+            loadPath: 'src/app/resources/i18n/{{lng}}/{{ns}}.json',
+            savePath: 'src/app/resources/i18n/{{lng}}/{{ns}}.json', // or 'src/app/resources/i18n/${lng}/${ns}.saveAll.json'
             jsonIndent: 4
         },
 

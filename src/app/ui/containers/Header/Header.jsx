@@ -22,7 +22,7 @@ const Logo = memo(() => (
         style={{ position: 'relative' }}
     >
         <img
-            src="images/snapmaker-logo.png"
+            src="/resources/images/snapmaker-logo.png"
             role="presentation"
             draggable='false'
             alt="snapmaker logo"
@@ -130,7 +130,7 @@ class Header extends PureComponent {
                                     width="20"
                                     height="20"
                                     draggable="false"
-                                    src="/images/myminifactory-logo-64x64.png"
+                                    src="/resources/images/myminifactory-logo-64x64.png"
                                     alt="Go to MyMiniFactory to find printable objects."
                                 />
                             </Nav.Link>
