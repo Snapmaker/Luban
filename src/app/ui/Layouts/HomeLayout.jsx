@@ -4,18 +4,12 @@ import classNames from 'classnames';
 import styles from './styles/homepage.styl';
 
 
-class ProjectLayout extends PureComponent {
+class HomeLayout extends PureComponent {
     static propTypes = {
         renderTopView: PropTypes.func,
         renderMiddleView: PropTypes.func,
         renderModalView: PropTypes.func,
         renderBottomBar: PropTypes.func
-    };
-
-    state = {
-    };
-
-    actions = {
     };
 
 
@@ -25,17 +19,16 @@ class ProjectLayout extends PureComponent {
             <div>
                 <div className={styles['content-table']}>
                     <div className={styles['content-row']}>
-                        <form
+                        <div
                             className={classNames(
                                 styles.controls,
                                 styles['controls-right'],
                             )}
-                            noValidate
                         >
                             {renderTopView && (
                                 renderTopView()
                             )}
-                        </form>
+                        </div>
                         <div
                             className={classNames(
                                 styles.visualizer,
@@ -66,4 +59,4 @@ class ProjectLayout extends PureComponent {
     }
 }
 
-export default ProjectLayout;
+export default HomeLayout;

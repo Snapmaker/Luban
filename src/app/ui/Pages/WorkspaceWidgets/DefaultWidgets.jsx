@@ -15,7 +15,6 @@ class DefaultWidgets extends PureComponent {
     render() {
         const { className } = this.props;
         const defaultWidgets = _.slice(this.props.defaultWidgets);
-        console.log('defaultWidgets', defaultWidgets);
         const widgets = _.map(defaultWidgets, (widgetId) => (
             <div data-widget-id={widgetId} key={widgetId}>
                 <Widget

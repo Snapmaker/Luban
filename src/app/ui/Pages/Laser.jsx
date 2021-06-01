@@ -62,13 +62,16 @@ class Laser extends Component {
     };
 
     renderMainToolBar = () => {
-        const locationArray = [
+        const leftItems = [
             {
                 title: 'Copy',
-                action: () => this.props.history.push('laser')
+                action: () => this.props.history.push('/')
+            },
+            {
+                type: 'separator'
             }
         ];
-        const projectArray = [
+        const centerItems = [
             {
                 title: 'Edit',
                 action: () => this.props.history.push('cnc')
@@ -76,8 +79,8 @@ class Laser extends Component {
         ];
         return (
             <MainToolBar
-                locationArray={locationArray}
-                projectArray={projectArray}
+                leftItems={leftItems}
+                centerItems={centerItems}
             />
         );
     }

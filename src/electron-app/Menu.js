@@ -268,9 +268,9 @@ export default class MenuBuilder {
                 arr.push({
                     name: item.label,
                     path: item.path
-                })
+                });
             }
-        })
+        });
         return arr;
     }
 }
