@@ -93,7 +93,7 @@ module.exports = {
         }),*/
         new HtmlWebpackPlugin({
             filename: 'index.hbs',
-            template: path.resolve(__dirname, 'src/app/assets/index.hbs'),
+            template: path.resolve(__dirname, 'src/app/resources/assets/index.hbs'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],

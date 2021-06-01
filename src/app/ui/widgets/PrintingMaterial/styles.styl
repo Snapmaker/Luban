@@ -1,0 +1,51 @@
+@import "../../../styles/variables.styl"
+.material-select {
+    width: 86%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 10px;
+}
+.manager-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 10px;
+    background: #FFFFFF;
+    border-radius: 4px;
+    border: 1px solid #C8C8C8;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 11px;
+    background: url("../../../resources/images/18x18/printing-manager_18x18@2x.png") no-repeat center/18px 18px
+}
+
+table.config-details-table {
+    color: $desc-text-color;
+    margin-left: 15.5px;
+    font-size: 12px;
+
+    td {
+        height: 28px;
+        line-height: 13px;
+    }
+
+    tbody {
+        & > tr {
+            & > td:first-child {
+                width: 200px;
+            }
+            & > td {
+                & > div {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
+        }
+    }
+    .checked {
+        background url("../../../resources/images/56x56/btn_checked@56x56.png") no-repeat center/14px 14px
+    }
+
+    .unchecked {
+        background url("../../../resources/images/56x56/btn_unchecked@56x56.png") no-repeat center/14px 14px
+    }
+}

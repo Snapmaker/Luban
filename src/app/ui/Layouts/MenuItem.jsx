@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
 import styles from './styles/maintoolbar.styl';
-import SvgIcon from '../../components/SvgIcon';
+import SvgIcon from '../components/SvgIcon';
 import { timestamp } from '../../../shared/lib/random-utils';
 
 function MenuItem({ menuItem, actions }) {

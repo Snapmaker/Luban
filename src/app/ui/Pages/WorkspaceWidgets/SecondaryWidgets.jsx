@@ -3,7 +3,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
-import Widget from '../../../widgets';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 

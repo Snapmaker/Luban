@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import ModelLoader from '../widgets/PrintingVisualizer/ModelLoader';
-import ConvexGeometry from '../components/three-extensions/ConvexGeometry';
+import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
+import ConvexGeometry from '../three-extensions/ConvexGeometry';
 // import api from '../api';
 
 onmessage = (e) => {

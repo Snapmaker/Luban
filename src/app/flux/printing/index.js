@@ -13,7 +13,7 @@ import definitionManager from './DefinitionManager';
 import api from '../../api';
 import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
+import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
 
 const isDefaultQualityDefinition = (definitionId) => {

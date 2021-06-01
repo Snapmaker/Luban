@@ -8,7 +8,7 @@ import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SvgTool from './SvgTool';
 
-import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
+import Cnc3DVisualizer from '../views/Cnc3DVisualizer';
 
 class SVGEditor extends PureComponent {
     static propTypes = {

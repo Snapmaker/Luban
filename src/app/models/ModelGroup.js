@@ -9,7 +9,7 @@ import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
 import { SELECTEVENT } from '../constants';
 
-import ThreeUtils from '../components/three-extensions/ThreeUtils';
+import ThreeUtils from '../three-extensions/ThreeUtils';
 
 const EVENTS = {
     UPDATE: { type: 'update' }

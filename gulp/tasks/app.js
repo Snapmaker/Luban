@@ -9,7 +9,7 @@ import webpack from 'webpack';
 export function appCopyDevelopment() {
     const files = [
         'src/app/*.{ico,png}',
-        'src/app/{images,textures}/**/*',
+        'src/app/resources/{images,textures}/**/*',
         'src/app/i18n/**/*'
     ];
 
@@ -23,7 +23,7 @@ export function appCopyDevelopment() {
 export function appCopyProduction() {
     const files = [
         'src/app/*.{ico,png}',
-        'src/app/{images,textures}/**/*',
+        'src/app/resources/{images,textures}/**/*',
         'src/app/i18n/**/*'
     ];
 

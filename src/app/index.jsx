@@ -21,7 +21,7 @@ import { toQueryObject } from './lib/query';
 import user from './lib/user';
 import { machineStore } from './store/local-storage';
 import reducer from './flux';
-import App from './containers/App';
+import App from './ui/containers/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
 

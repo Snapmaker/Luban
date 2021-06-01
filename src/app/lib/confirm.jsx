@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import Confirm from '../components/Confirm';
+import Confirm from '../ui/components/Confirm';
 import i18n from './i18n';
 
 class ConfirmHOC extends PureComponent {

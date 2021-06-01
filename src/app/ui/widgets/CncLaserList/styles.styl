@@ -1,0 +1,181 @@
+@import "../styles.styl"
+
+.object-list-box
+    margin-top: -15px
+    margin-bottom: -15px
+    margin-left: -10px
+    margin-right: -10px
+    max-height: 158px
+    overflow: auto
+    background: #FFFFFF
+.left {
+    float: left;
+    padding-left: 5px
+    height: 100%
+}
+
+.right  {
+    float: right;
+    padding-right: 5px
+    height: 100%
+}
+
+.object-list-item {
+    background-color: unset
+    background-size: 36px
+    display: flex
+
+    &.selected {
+        background-color: #E7F2FD
+    }
+
+    .bt {
+        &:hover {
+            opacity(1)
+        }
+
+        &:active {
+            opacity(.3)
+        }
+    }
+    .process{
+        padding: 0 12px;
+    }
+
+    .name {
+        vertical-align: middle
+        line-height: 36px
+        height: 36px
+        display: inline-block
+        width: 100%
+    }
+    .icon-wrapper{
+        display: flex;
+        margin-right: 5px;
+    }
+    .icon {
+        padding: 6px 2px;
+        box-sizing: content-box;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin: 0 4px;
+
+        &.icon-hide-open, &.icon-hide-close {
+            margin-right: 8px
+            border: 0
+        }
+
+        &.icon-hide-open {
+            background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
+        }
+
+        &.icon-hide-close {
+            background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
+        }
+
+        &.icon-shape {
+            background: url("images/list_ic_shape_18x18@2x.png") no-repeat center center
+            display: inline-block
+        }
+
+        &.icon-pic {
+            background: url("images/list_ic_pic_18x18@2x.png") no-repeat center center
+            display: inline-block
+        }
+
+        &.icon-text {
+            background: url("images/list_ic_text_18x18@2x.png") no-repeat center center
+            display: inline-block
+        }
+
+        &.icon-hide-open {
+            background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
+            border: 0
+        }
+
+        &.icon-hide-close {
+            background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
+            border: 0
+        }
+
+        &.icon-check {
+            background: url("images/ic_box_check_14x14.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-uncheck {
+            background: url("images/ic_box_uncheck_14x14.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-running {
+            background: url("images/list_ic_running_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-warning {
+            background: url("images/list_ic_warning_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-error {
+            background: url("images/list_ic_error_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+    }
+
+}
+
+.tool-path-footer {
+    .rotate180 {
+        transform: rotate(180deg);
+    }
+    .icon {
+        padding: 6px 2px;
+        box-sizing: content-box;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin: 0 4px;
+        //&:active  {
+        //    background-color: #ccc
+        //}
+        &.icon-refresh {
+            background: url("images/list_ic_refresh_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-delete {
+            background: url("images/list_ic_delete_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-edit {
+            background: url("images/list_ic_edit_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-up {
+            background: url("images/list_ic_up_normal_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+
+        &.icon-down {
+            background: url("images/list_ic_down_disable_18x18@2x.png") no-repeat center center
+            background-size: 18px
+            display: inline-block
+        }
+    }
+}

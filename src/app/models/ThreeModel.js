@@ -2,7 +2,7 @@ import uuid from 'uuid';
 import * as THREE from 'three';
 
 
-import ThreeUtils from '../components/three-extensions/ThreeUtils';
+import ThreeUtils from '../three-extensions/ThreeUtils';
 
 import BaseModel from './BaseModel';
 
