@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import styles from './styles/maintoolbar.styl';
 import MenuItem from './MenuItem';
+import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
     static propTypes = {

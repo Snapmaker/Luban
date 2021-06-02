@@ -137,6 +137,7 @@ class Laser extends Component {
         const centerItems = [
             {
                 title: 'Edit',
+                name: 'Edit',
                 action: () => this.props.history.push('cnc')
             }
         ];

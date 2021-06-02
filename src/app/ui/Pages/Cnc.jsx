@@ -87,6 +87,7 @@ class Cnc extends Component {
         style: PropTypes.object,
         widgets: PropTypes.array.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        showCncToolManager: PropTypes.bool.isRequired,
         updateTabContainer: PropTypes.func.isRequired
     };
 
@@ -153,6 +154,7 @@ class Cnc extends Component {
         ];
         const centerItems = [
             {
+                name: 'Edit',
                 title: 'Edit',
                 action: () => this.props.history.push('cnc')
             }
@@ -165,8 +167,10 @@ class Cnc extends Component {
         );
     }
 
-    renderModalView = () => {
-        return (<CncToolManager />);
+    renderModalView = (showCncToolManager) => {
+        return (
+            showCncToolManager && (<CncToolManager />)
+        );
     };
 
     renderWarningModal() {
@@ -254,9 +258,11 @@ class Cnc extends Component {
 }
 const mapStateToProps = (state) => {
     const widget = state.widget;
+    const showCncToolManager = state.cnc?.showCncToolManager;
     const widgets = widget.cnc.default.widgets;
     return {
-        widgets
+        widgets,
+        showCncToolManager
     };
 };
 

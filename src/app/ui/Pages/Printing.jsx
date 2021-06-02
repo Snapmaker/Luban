@@ -119,6 +119,7 @@ function Printing({ history, location }) {
         const centerItems = [
             {
                 type: 'button',
+                name: 'Edit',
                 title: 'Edit',
                 action: () => history.push('cnc')
             }

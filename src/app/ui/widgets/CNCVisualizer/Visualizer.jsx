@@ -223,7 +223,7 @@ class Visualizer extends Component {
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('cnc')) {
-                    this.canvas.current.resizeWindow();
+                    this.canvas.current && this.canvas.current.resizeWindow();
                 }
             },
             false
