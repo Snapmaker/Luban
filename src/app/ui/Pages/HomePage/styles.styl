@@ -23,26 +23,21 @@
     .beginPart
         width 95vw
         height auto
-        @media (max-width 1440px)
-            flex-wrap wrap
         min-width 670px;
         min-height 150px
-        border: 1px solid #cbcbcb
         border-radius: 8px
         margin 24px auto 0
-        background: #fff
-        padding: 20px 20px 0
         display: flex
         justify-content space-between
         .beginContainer
             width: 65%
             min-width 450px
-            @media (max-width 1440px)
-                width 100%
             display flex
             flex-direction column
             .link-bar
                 height 100%
+                background #fff
+                margin-top 15px
                 display: flex
                 align-items: center
                 justify-content space-between
@@ -58,47 +53,96 @@
                 .workspace, .3dp, .laser, .cnc
                     width 13vw
                     min-width 90px
-                    height 13vw
+                    height 15.6vw
                     min-height 90px
+                    padding-bottom 2.2vw
                     > a
                         height 100%
                         display flex
                         flex-direction column
                         align-items center
-                        justify-content space-around
-                        .common-label
-                            font-size 1.2vw
-                            line-height 1.2vw
+                        justify-content flex-end
+                        .common-label 
+                            font-size 18px
+                            line-height 22px
+                            font-weight bold
+                        > i
+                            margin-bottom 2.64vw
                     &:hover
                         .common-label
                             color: #3aabff
                         .icon
                             filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
-
+                .laser
+                    &-axis-select
+                        display none
+                    &:hover
+                        .icon-laser
+                            display none
+                        .laser-axis-select
+                            display flex
+                            flex-direction column
+                            width 6vw
+                            height 5.5vw
+                            margin-bottom 2.64vw
+                            .axis
+                                height 50%
+                                display flex
+                                justify-content center
+                                align-items center
+                                border 2px solid #86868b
+                                font-size 16px
+                                font-weight bold
+                                &:hover
+                                    color #3aabff
+                                    border 2px solid #3aabff
+                .cnc
+                    &-axis-select
+                        display none
+                    &:hover
+                        .icon-cnc
+                            display none
+                        .cnc-axis-select
+                            display flex
+                            flex-direction column
+                            width 6vw
+                            height 5.5vw
+                            margin-bottom 2.64vw
+                            .axis
+                                height 50%
+                                display flex
+                                justify-content center
+                                align-items center
+                                border 2px solid #86868b
+                                font-size 16px
+                                font-weight bold
+                                &:hover
+                                    color #3aabff
+                                    border 2px solid #3aabff
         .nearly-container
             // flex-grow 3
-            width 30%
+            width 32%
             font-size 1.2vw
             line-height 1.2vw
-            @media (max-width 1440px)
-                width 100%
-                margin 20px 0
             .file-container
-                height 13vw
+                height 15.6vw
                 min-height 90px
                 font-size 1vw
                 line-height 1.2vw
+                margin-top 15px
+                padding 2.36vw 1.67vw 1.67vw
+                background #fff
                 display flex
                 flex-direction column
-                justify-content space-around
+                justify-content space-between
                 .open-file-btn
-                    width 90%
-                    @media (max-width 1440px)
-                        width 35%
+                    width 100%
                     > button
                         width 100%
+                        background transparent
+                        border-radius 18.5px
                 .recent-file-list
-                    height 5.5vw
+                    height 8vw
                     display flex
                     flex-wrap wrap
                     .file-item
@@ -107,70 +151,57 @@
                         white-space nowrap
                         text-overflow ellipsis
                         cursor pointer
-                        // max-width 250px
-                        @media (max-width 1440px)
-                            width 25%
 
 
 .quick-start-container
     width 95vw
     min-width 670px
     margin 50px auto 0
-
+    .small-list
+        width 48.75%
     .case-list
-        // display flex
-        // flex-wrap wrap
-        // justify-content space-between
-        // align-items center
-        display grid
-        grid-template-columns repeat(auto-fill, 15vw)
+        display flex
+        align-item center
         justify-content space-between
         margin-top 24px
-        @media (max-width 1440px)
-            display grid
-            grid-template-columns repeat(auto-fill, 240px)
-            justify-content space-between
 
         .case-item
             width 13.37vw
             height auto
             min-width 90px
             min-height 90px
-            @media (max-width 1440px)
-                min-width 240px
-                min-height 247px
             cursor pointer
             font-size 12px
+            position relative
             .case-title
-                font-size 1.3vw
-                line-height 20px
+                font-size 14px
+                line-height 22px
                 margin: 0.9vw 0 0.5vw
                 width 13vw
                 overflow hidden
                 text-overflow ellipsis
                 white-space nowrap
-                line-height 1.4vw
-                @media (max-width 1440px)
-                    width 100%
+
             .tag-icon
-                background #cbcbcb
+                background #D6D6D7
                 padding 2px 4px
-                width: 100%
                 border-radius 2px
                 margin-top 4px
-                font-size: 0.8vw
+                font-size 12px
                 line-height 0.9vw
+                position absolute
+                top -3px
+                left 0px
+                color #86868B
             img
                 // height 138px
                 // width: 200px
                 width 100%
                 height 60%
-                border 2px solid #cbcbcb
+                border 2px solid #D6D6D7
                 border-radius 4px
                 background #fff
                 padding 20px
-                @media (max-width 1024px)
-                    height 60%
 
 .more-info
     width 95vw
@@ -182,14 +213,18 @@
         justify-content space-between
         align-items center
         margin-top 24px
-        @media (max-width 1440px)
-            display grid
-            grid-template-columns repeat(auto-fill, 240px)
-            justify-content space-between
         > a
-            width 13vw
+            width 13.37vw
+            height auto
+            display flex
+            flex-direction column
+            align-items center
             min-width 90px
-            line-height 1.5vw
-            @media (max-width 1440px)
-                min-width 240px
-                line-height 2.5vw
+            font-size 14px
+            line-height 28px
+            > img
+                width 100%
+                padding 2.7vw 4.6vw
+                border 2px solid #D6D6D7
+                margin-bottom 0.9vw
+                height 9.2vw

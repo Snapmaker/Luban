@@ -861,8 +861,8 @@ class SVGActionsFactory {
 
             transformList.insertItemBefore(transform, 0);
         }
-
-        this.svgContentGroup.moveSelectorStart();
+        // link to 4-asix from homepage, this.svgContentGroup is null
+        !!this.svgContentGroup && this.svgContentGroup.moveSelectorStart();
     }
 
     /**
@@ -885,7 +885,7 @@ class SVGActionsFactory {
         // TODO: refactor this
         // const transform = svg.createSVGTransform();
         // transform.setTranslate(dx, dy);
-        this.svgContentGroup.moveSelector(elements, { dx, dy });
+        !!this.svgContentGroup && this.svgContentGroup.moveSelector(elements, { dx, dy });
     }
 
     /**
@@ -898,7 +898,7 @@ class SVGActionsFactory {
         }
 
         // update selector
-        this.svgContentGroup.moveSelectorFinish(elements);
+        !!this.svgContentGroup && this.svgContentGroup.moveSelectorFinish(elements);
 
         // update t
         const t = SVGActionsFactory.calculateElementsTransformation(elements);

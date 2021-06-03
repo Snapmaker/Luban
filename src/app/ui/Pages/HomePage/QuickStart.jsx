@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import { MACHINE_SERIES } from '../../../constants';
 import {
@@ -20,6 +21,7 @@ const QuickStart = (props) => {
 
     // redux correlation
     const series = useSelector(state => state?.machine?.series);
+    const use4Axis = useSelector(state => state?.machine?.use4Axis);
     const dispatch = useDispatch();
 
     //  method
@@ -65,7 +67,12 @@ const QuickStart = (props) => {
             <div className={styles['title-label']}>
                 {i18n._('Fast Start')}
             </div>
-            <div className={styles['case-list']}>
+            <div className={
+                classNames(
+                    styles['case-list'],
+                    { [styles.smallList]: !caseConfigFourAxis.length }
+                )}
+            >
                 {caseConfig.map(caseItem => {
                     return (
                         <div
@@ -76,17 +83,17 @@ const QuickStart = (props) => {
                         >
                             <div>
                                 <img className={styles['case-img']} src={caseItem.imgSrc} alt="" />
+                                <span className={styles['tag-icon']}>
+                                    {i18n._(caseItem.tag_i18n)}
+                                </span>
                             </div>
                             <div className={styles['case-title']}>
                                 {caseItem.title}
                             </div>
-                            <span className={styles['tag-icon']}>
-                                {i18n._(caseItem.tag_i18n)}
-                            </span>
                         </div>
                     );
                 })}
-                {caseConfigFourAxis?.map(caseFourAxisItem => {
+                {use4Axis && caseConfigFourAxis?.map(caseFourAxisItem => {
                     return (
                         <div
                             key={caseFourAxisItem.pathConfig.name + timestamp()}
@@ -96,14 +103,14 @@ const QuickStart = (props) => {
                         >
                             <div>
                                 <img className={styles['case-img']} src={caseFourAxisItem.imgSrc} alt="" />
+                                <span className={styles['tag-icon']}>
+                                    <span style={{ paddingRight: 2 }}>{i18n._('4-axis')}</span>
+                                    <span>{i18n._(caseFourAxisItem.tag_i18n)}</span>
+                                </span>
                             </div>
                             <div className={styles['case-title']}>
                                 {caseFourAxisItem.title}
                             </div>
-                            <span className={styles['tag-icon']}>
-                                <span style={{ paddingRight: 2 }}>{i18n._('4-axis')}</span>
-                                <span>{i18n._(caseFourAxisItem.tag_i18n)}</span>
-                            </span>
                         </div>
                     );
                 })}
