@@ -36,6 +36,7 @@ class Output extends PureComponent {
         hasAnyModelVisible: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
+        inProgress: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired
@@ -147,7 +148,7 @@ class Output extends PureComponent {
     render() {
         // const state = this.state;
         const actions = this.actions;
-        const { workflowState, stage, gcodeLine, hasModel, hasAnyModelVisible, displayedType } = this.props;
+        const { workflowState, stage, gcodeLine, hasModel, hasAnyModelVisible, displayedType, inProgress } = this.props;
 
         const isSlicing = stage === PRINTING_STAGE.SLICING;
         const { isAnyModelOverstepped } = this.props;
@@ -159,7 +160,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped}
+                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || inProgress}
                         style={{ display: gcodeLine ? 'none' : 'block', width: '100%' }}
                     >
                         {i18n._('Generate G-code')}
@@ -170,6 +171,7 @@ class Output extends PureComponent {
                             className="sm-btn-large sm-btn-default"
                             onClick={actions.onToggleDisplayGcode}
                             style={{ position: 'absolute', bottom: '46px', width: '100%' }}
+                            disabled={inProgress}
                         >
                             {displayedType === 'gcode' ? i18n._('Close preview') : i18n._('Preview ')}
                         </button>
@@ -185,6 +187,7 @@ class Output extends PureComponent {
                             type="button"
                             className="sm-btn-large sm-btn-default"
                             style={{ display: gcodeLine ? 'block' : 'none', position: 'absolute', bottom: '0', width: '100%', marginTop: '10px' }}
+                            disabled={inProgress}
                         >
                             {i18n._('Export')}
                         </button>
@@ -194,7 +197,7 @@ class Output extends PureComponent {
                                     type="button"
                                     className="sm-btn-large sm-btn-default"
                                     onClick={actions.onClickLoadGcode}
-                                    disabled={workflowState === 'running' || !gcodeLine}
+                                    disabled={workflowState === 'running' || !gcodeLine || inProgress}
                                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                                 >
                                     {i18n._('Load G-code to Workspace')}
@@ -203,7 +206,7 @@ class Output extends PureComponent {
                                     type="button"
                                     className="sm-btn-large sm-btn-default"
                                     onClick={actions.onClickExportGcode}
-                                    disabled={!gcodeLine}
+                                    disabled={!gcodeLine || inProgress}
                                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                                 >
                                     {i18n._('Export G-code to File')}
@@ -228,7 +231,7 @@ const mapStateToProps = (state) => {
     const {
         stage,
         modelGroup, hasModel, isAnyModelOverstepped,
-        isGcodeOverstepped, gcodeLine, gcodeFile, displayedType
+        isGcodeOverstepped, gcodeLine, gcodeFile, displayedType, inProgress
     } = printing;
 
     return {
@@ -241,7 +244,8 @@ const mapStateToProps = (state) => {
         isGcodeOverstepped,
         gcodeLine,
         displayedType,
-        gcodeFile
+        gcodeFile,
+        inProgress
     };
 };
 

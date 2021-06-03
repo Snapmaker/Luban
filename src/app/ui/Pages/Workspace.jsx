@@ -107,6 +107,11 @@ class Workspace extends PureComponent {
     state = {
         leftItems: [
             {
+                title: 'Back',
+                type: 'button',
+                action: () => this.props.history.goBack()
+            },
+            {
                 title: 'Home',
                 action: () => this.props.history.push('/')
             }

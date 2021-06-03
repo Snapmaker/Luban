@@ -10,6 +10,7 @@ import Begin from './Begin';
 import QuickStart from './QuickStart';
 import MoreInfo from './MoreInfo';
 import SettingGuideModal from './SettingGuideModal';
+// import MainToolBar from '../../Layouts/MainToolBar';
 
 const HomePage = (props) => {
     const [modalShow, setModalShow] = useState(false);
