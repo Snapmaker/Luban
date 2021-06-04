@@ -24,7 +24,7 @@ const MoreInfo = () => {
                     <img src={require('./images/question.png')} alt="" />
                     <div>{i18n._('Forum')}</div>
                 </a>
-                <a href="https://store.snapmakce.com" target="_blank" rel="noopener noreferrer">
+                <a href="https://store.snapmaker.com" target="_blank" rel="noopener noreferrer">
                     <img src={require('./images/question.png')} alt="" />
                     <div>{i18n._('Store')}</div>
                 </a>
