@@ -507,3 +507,7 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
+
+// Laser | CNC canvas min | max scale rate
+export const MAX_LASER_CNC_CANVAS_SCALE = 4;
+export const MIN_LASER_CNC_CANVAS_SCALE = 0.5;

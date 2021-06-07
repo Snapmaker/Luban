@@ -30,6 +30,8 @@ class JobType extends PureComponent {
 
         use4Axis: PropTypes.bool.isRequired,
 
+        inProgress: PropTypes.bool.isRequired,
+
         changeCoordinateMode: PropTypes.func.isRequired
     };
 
@@ -82,7 +84,7 @@ class JobType extends PureComponent {
     }
 
     render() {
-        const { size, materials, headType, coordinateMode, coordinateSize } = this.props;
+        const { size, materials, headType, coordinateMode, coordinateSize, inProgress } = this.props;
         const { isRotate, diameter, length } = materials;
 
         return (
@@ -99,6 +101,7 @@ class JobType extends PureComponent {
                             placeholder={i18n._('Choose font')}
                             value={i18n._(coordinateMode.label ?? COORDINATE_MODE_CENTER.label)}
                             onChange={this.actions.changeCoordinateMode}
+                            disabled={inProgress}
                         />
                     </div>
                 )}
@@ -114,6 +117,7 @@ class JobType extends PureComponent {
                                 );
                                 this.props.updateMaterials({ isRotate: false });
                             }}
+                            disabled={inProgress}
                         >
                             {i18n._('3-axis')}
                         </button>
@@ -130,6 +134,7 @@ class JobType extends PureComponent {
                                 );
                                 this.props.updateMaterials({ isRotate: true });
                             }}
+                            disabled={inProgress}
                         >
                             {i18n._('4-axis')}
                         </button>
@@ -154,7 +159,7 @@ class JobType extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Height (mm)')}</span>
                                 <Input
-                                    disabled={false}
+                                    disabled={inProgress}
                                     className={styles['input-box-left']}
                                     value={toFixed(coordinateSize.y, 1)}
                                     max={size.y}
@@ -177,7 +182,7 @@ class JobType extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Width (mm)')}</span>
                                 <Input
-                                    disabled={false}
+                                    disabled={inProgress}
                                     className={styles['input-box-left']}
                                     value={toFixed(coordinateSize.x, 1)}
                                     max={size.x}
@@ -233,7 +238,7 @@ class JobType extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Length (mm)')}</span>
                                 <Input
-                                    disabled={false}
+                                    disabled={inProgress}
                                     className={styles['input-box-left']}
                                     value={toFixed(length, 1)}
                                     max={size.y}
@@ -257,7 +262,7 @@ class JobType extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Diameter (mm)')}</span>
                                 <Input
-                                    disabled={false}
+                                    disabled={inProgress}
                                     className={styles['input-box-left']}
                                     value={toFixed(diameter, 1)}
                                     max={size.x}
@@ -289,7 +294,7 @@ class JobType extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
     const { size, use4Axis } = state.machine;
-    const { page, materials, coordinateMode, coordinateSize } = state[headType];
+    const { page, materials, coordinateMode, coordinateSize, inProgress } = state[headType];
 
     return {
         size,
@@ -297,7 +302,8 @@ const mapStateToProps = (state, ownProps) => {
         coordinateSize,
         page,
         materials,
-        use4Axis
+        use4Axis,
+        inProgress
     };
 };
 

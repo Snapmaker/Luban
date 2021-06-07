@@ -23,6 +23,7 @@ class Output extends PureComponent {
         autoPreviewEnabled: PropTypes.bool.isRequired,
 
         page: PropTypes.string.isRequired,
+        inProgress: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
@@ -51,6 +52,13 @@ class Output extends PureComponent {
     thumbnail = React.createRef();
 
     actions = {
+        switchToEditPage: () => {
+            if (this.props.displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                this.props.showModelGroupObject();
+            } else {
+                this.props.showToolPathGroupObject();
+            }
+        },
         onGenerateGcode: () => {
             const thumbnail = this.thumbnail.current.getThumbnail();
             this.props.commitGenerateGcode(thumbnail);
@@ -125,7 +133,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled } = this.props;
+        const { page, workflowState, isGcodeGenerating, canGenerateGcode, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled, inProgress, displayedType } = this.props;
         const isEditor = page === PAGE_EDITOR;
         const isProcess = page === PAGE_PROCESS;
 
@@ -142,15 +150,26 @@ class Output extends PureComponent {
                             {i18n._('Process')}
                         </button>
                     )}
-                    {isProcess && (
+                    {isProcess && displayedType !== DISPLAYED_TYPE_TOOLPATH && (
                         <button
                             type="button"
                             className="sm-btn-large sm-btn-default"
                             onClick={this.actions.preview}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                            disabled={!hasToolPathModel ?? false}
+                            disabled={inProgress || (!hasToolPathModel ?? false)}
                         >
                             {i18n._('Preview')}
+                        </button>
+                    )}
+                    {isProcess && displayedType === DISPLAYED_TYPE_TOOLPATH && (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-default"
+                            onClick={this.actions.switchToEditPage}
+                            style={{ display: 'block', width: '100%', marginBottom: '10px' }}
+                            disabled={inProgress || (!hasToolPathModel ?? false)}
+                        >
+                            {i18n._('Back to Object View')}
                         </button>
                     )}
                     {isProcess && (
@@ -164,7 +183,7 @@ class Output extends PureComponent {
                                     <input
                                         type="checkbox"
                                         className="sm-parameter-row__checkbox"
-                                        disabled={isEditor}
+                                        disabled={inProgress || isEditor}
                                         checked={autoPreviewEnabled}
                                         onChange={(event) => { actions.setAutoPreview(event.target.checked); }}
                                     />
@@ -174,7 +193,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onGenerateGcode}
-                                disabled={!canGenerateGcode || isGcodeGenerating}
+                                disabled={inProgress || !canGenerateGcode || isGcodeGenerating}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Generate G-code')}
@@ -183,7 +202,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onLoadGcode}
-                                disabled={!hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Load G-code to Workspace')}
@@ -192,7 +211,7 @@ class Output extends PureComponent {
                                 type="button"
                                 className="sm-btn-large sm-btn-default"
                                 onClick={actions.onExport}
-                                disabled={!hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
                                 style={{ display: 'block', width: '100%', marginTop: '10px' }}
                             >
                                 {i18n._('Export G-code to File')}
@@ -215,7 +234,7 @@ const mapStateToProps = (state, ownProps) => {
     const { widgets } = state.widget;
     const { headType } = ownProps;
     const { page, isGcodeGenerating, autoPreviewEnabled,
-        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile } = state[headType];
+        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile, inProgress } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
@@ -233,8 +252,9 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         previewFailed,
         gcodeFile,
-        autoPreview: widgets['cnc-output'].autoPreview,
-        autoPreviewEnabled
+        autoPreview: widgets['cnc-output'].autoPreview, // todo, laser???
+        autoPreviewEnabled,
+        inProgress
     };
 };
 

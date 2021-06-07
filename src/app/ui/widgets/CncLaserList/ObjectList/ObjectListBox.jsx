@@ -13,6 +13,7 @@ function ObjectListBox(props) {
     // https://github.com/tc39/proposal-optional-chaining
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray, shallowEqual);
     const models = useSelector(state => state[props.headType]?.modelGroup?.models, shallowEqual);
+    const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const previewFailed = useSelector(state => state[props.headType]?.previewFailed, shallowEqual);
     const dispatch = useDispatch();
     const actions = {
@@ -61,6 +62,7 @@ function ObjectListBox(props) {
                             isSelected={selectedModelArray && selectedModelArray.includes(model)}
                             onSelect={actions.onClickModelNameBox}
                             onToggleVisible={actions.onClickModelHideBox}
+                            inProgress={inProgress}
                         />
                     );
                 })}

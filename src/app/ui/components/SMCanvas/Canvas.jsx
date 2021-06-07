@@ -34,6 +34,8 @@ class Canvas extends Component {
         cameraInitialTarget: PropTypes.object.isRequired,
         cameraUp: PropTypes.object,
         scale: PropTypes.number,
+        minScale: PropTypes.number,
+        maxScale: PropTypes.number,
         target: PropTypes.object,
 
         supportActions: PropTypes.object,
@@ -48,7 +50,10 @@ class Canvas extends Component {
         // tmp
         canOperateModel: PropTypes.bool,
         // isToolpathModel: PropTypes.bool,
-        showContextMenu: PropTypes.func
+        showContextMenu: PropTypes.func,
+
+        // inProgress
+        inProgress: PropTypes.func
     };
 
     static defaultProps = {
@@ -111,10 +116,18 @@ class Canvas extends Component {
 
             window.addEventListener('resize', this.resizeWindow, false);
         }
+
+        if (this.controls && this.props.inProgress) {
+            this.controls.setInProgress(this.props.inProgress);
+        }
     }
 
     // just for laser and cnc, dont set scale prop for 3dp
     componentWillReceiveProps(nextProps) {
+        if (nextProps.inProgress !== this.props.inProgress) {
+            this.controls.setInProgress(nextProps.inProgress);
+        }
+
         if (nextProps.scale && nextProps.scale !== this.lastScale) {
             const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
             this.controls.setScale(currentScale / nextProps.scale);
@@ -153,8 +166,14 @@ class Canvas extends Component {
         if (typeof this.props.updateScale !== 'function') {
             return;
         }
-        const currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
+        let currentScale = this.initialDistance / (this.camera.position.distanceTo(this.controls.target));
         if (Math.abs(currentScale - this.lastScale) > EPS) {
+            if (this.props.minScale && currentScale < this.props.minScale) {
+                currentScale = this.props.minScale;
+            }
+            if (this.props.maxScale && currentScale > this.props.maxScale) {
+                currentScale = this.props.maxScale;
+            }
             this.lastScale = currentScale;
             this.props.updateScale(currentScale);
         }

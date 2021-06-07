@@ -13,6 +13,7 @@ import ToolPathConfigurations from '../../views/ToolPathConfigurations/ToolPathC
 const CreateToolPath = ({ headType, widgetActions }) => {
     const page = useSelector(state => state[headType]?.page, shallowEqual);
     const toolPathTypes = useSelector(state => state[headType]?.toolPathGroup?.getToolPathTypes(), shallowEqual);
+    const inProgress = useSelector(state => state[headType]?.inProgress);
     const dispatch = useDispatch();
     const [currentToolpath, setCurrentToolpath] = useState(null);
     const actions = {
@@ -37,7 +38,7 @@ const CreateToolPath = ({ headType, widgetActions }) => {
                     className="sm-btn-large sm-btn-default"
                     onClick={actions.createToolPath}
                     style={{ display: 'block', width: '100%' }}
-                    disabled={toolPathTypes.length === 0}
+                    disabled={inProgress || toolPathTypes.length === 0}
                 >
                     {i18n._('Create Toolpath')}
                 </button>

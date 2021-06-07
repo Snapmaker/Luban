@@ -97,6 +97,7 @@ const INITIAL_STATE = {
 
     // progress bar
     progress: 0,
+    inProgress: false,
 
     // selected model transformation
     transformation: {
@@ -270,6 +271,7 @@ export const actions = {
         controller.on('slice:started', () => {
             dispatch(actions.updateState({
                 stage: PRINTING_STAGE.SLICING,
+                inProgress: true,
                 progress: 0
             }));
         });
@@ -287,6 +289,7 @@ export const actions = {
                 filamentLength,
                 filamentWeight,
                 stage: PRINTING_STAGE.SLICE_SUCCEED,
+                inProgress: false,
                 progress: 1
             }));
 
@@ -301,7 +304,8 @@ export const actions = {
         });
         controller.on('slice:error', () => {
             dispatch(actions.updateState({
-                stage: PRINTING_STAGE.SLICE_FAILED
+                stage: PRINTING_STAGE.SLICE_FAILED,
+                inProgress: false
             }));
         });
 
@@ -358,7 +362,8 @@ export const actions = {
                     dispatch(actions.displayGcode());
 
                     dispatch(actions.updateState({
-                        stage: PRINTING_STAGE.PREVIEW_SUCCEED
+                        stage: PRINTING_STAGE.PREVIEW_SUCCEED,
+                        inProgress: false
                     }));
                     break;
                 }
@@ -372,6 +377,7 @@ export const actions = {
                 case 'err': {
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.PREVIEW_FAILED,
+                        inProgress: false,
                         progress: 0
                     }));
                     break;
@@ -672,6 +678,7 @@ export const actions = {
         // Notice user that model is being loading
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.LOADING_MODEL,
+            inProgress: true,
             progress: 0
         }));
 
@@ -695,6 +702,7 @@ export const actions = {
         // Notice user that model is being loading
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.LOADING_MODEL,
+            inProgress: true,
             progress: 0
         }));
 
@@ -741,6 +749,7 @@ export const actions = {
         // Info user that slice has started
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICE_PREPARING,
+            inProgress: true,
             progress: 0
         }));
 
@@ -754,6 +763,7 @@ export const actions = {
 
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICING,
+            inProgress: true,
             progress: 0
         }));
 
@@ -1001,6 +1011,7 @@ export const actions = {
         if (!modelState.hasModel) {
             dispatch(actions.updateState({
                 stage: PRINTING_STAGE.EMPTY,
+                inProgress: false,
                 progress: 0
             }));
         }
@@ -1019,6 +1030,7 @@ export const actions = {
 
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.EMPTY,
+            inProgress: false,
             progress: 0
         }));
         dispatch(actions.updateState(modelState));
@@ -1190,6 +1202,7 @@ export const actions = {
     loadGcode: (gcodeFilename) => (dispatch) => {
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.PREVIEWING,
+            inProgress: true,
             progress: 0
         }));
         gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
@@ -1255,6 +1268,7 @@ export const actions = {
                     dispatch(actions.recordSnapshot());
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
+                        inProgress: false,
                         progress: 1
                     }));
                     break;
@@ -1282,6 +1296,7 @@ export const actions = {
                 case 'LOAD_MODEL_FAILED': {
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        inProgress: false,
                         progress: 0
                     }));
                     break;

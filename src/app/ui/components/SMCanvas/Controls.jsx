@@ -141,6 +141,12 @@ class Controls extends EventEmitter {
         }
     }
 
+    setInProgress(inProgress) {
+        if (this.transformControl) {
+            this.transformControl.inProgress = inProgress;
+        }
+    }
+
     setTarget(target) {
         this.target = target;
 

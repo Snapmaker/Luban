@@ -22,7 +22,7 @@ const getIconStatus = (status) => {
     }
     return '';
 };
-const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath }) => {
+const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
     }
@@ -69,6 +69,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                             )}
                             title={i18n._('Edit')}
                             onClick={() => setEditingToolpath(toolPath)}
+                            disabled={disabled}
                         />
                         {!toolPath.visible && (
                             <SvgIcon
@@ -80,6 +81,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                                 )}
                                 title={i18n._('Hide')}
                                 onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                disabled={disabled}
                             />
                         )}
                         {toolPath.visible && (
@@ -91,6 +93,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                                 )}
                                 title={i18n._('Show')}
                                 onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                                disabled={disabled}
                             />
                         )}
                     </div>
@@ -104,12 +107,15 @@ ToolpathItem.propTypes = {
     selectedToolPathId: PropTypes.string.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
-    setEditingToolpath: PropTypes.func.isRequired
+
+    setEditingToolpath: PropTypes.func.isRequired,
+    disabled: PropTypes.bool.isRequired
 };
 
 const ToolPathListBox = (props) => {
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId, shallowEqual);
+    const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const dispatch = useDispatch();
     const [editingToolpath, setEditingToolpath] = useState(null);
     const actions = {
@@ -151,6 +157,7 @@ const ToolPathListBox = (props) => {
                             selectToolPathId={actions.selectToolPathId}
                             onClickVisible={actions.onClickVisible}
                             setEditingToolpath={setEditingToolpath}
+                            disabled={inProgress}
                         />
                     );
                 })}

@@ -16,13 +16,13 @@ import Space from '../../components/Space';
 
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
 import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import {
-    DISPLAYED_TYPE_TOOLPATH,
+    DISPLAYED_TYPE_TOOLPATH, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
     SELECTEVENT
 } from '../../../constants';
@@ -38,6 +38,7 @@ class Visualizer extends Component {
         materials: PropTypes.object,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
+        inProgress: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool.isRequired,
 
         coordinateMode: PropTypes.object.isRequired,
@@ -359,9 +360,6 @@ class Visualizer extends Component {
         if (this.props.modelGroup.selectedModelArray.length > 1) {
             return;
         }
-        if (this.props.page !== PAGE_EDITOR) {
-            return;
-        }
         this.contextMenuRef.current.show(event);
     };
 
@@ -433,12 +431,14 @@ class Visualizer extends Component {
                 }}
                 >
                     <SVGEditor
-                        isActive={this.props.pathname.indexOf('cnc') > 0 && isEditor}
+                        isActive={this.props.pathname.indexOf('cnc') > 0}
                         ref={this.svgCanvas}
-                        editable={isEditor}
+                        editable={!this.props.inProgress}
                         size={this.props.size}
                         initContentGroup={this.props.initContentGroup}
                         scale={this.props.scale}
+                        minScale={MIN_LASER_CNC_CANVAS_SCALE}
+                        maxScale={MAX_LASER_CNC_CANVAS_SCALE}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
@@ -484,6 +484,8 @@ class Visualizer extends Component {
                         onModelTransform={noop}
                         showContextMenu={this.showContextMenu}
                         scale={this.props.scale}
+                        minScale={MIN_LASER_CNC_CANVAS_SCALE}
+                        maxScale={MAX_LASER_CNC_CANVAS_SCALE}
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
@@ -492,8 +494,12 @@ class Visualizer extends Component {
                         transformSourceType="2D"
                     />
                 </div>
-                <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar
+                <div className={styles['bottom-left']}>
+                    <VisualizerBottomLeft
+                        scale={this.props.scale}
+                        minScale={MIN_LASER_CNC_CANVAS_SCALE}
+                        maxScale={MAX_LASER_CNC_CANVAS_SCALE}
+                        updateScale={this.props.updateScale}
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}
                         toFront={this.actions.autoFocus}
@@ -633,7 +639,7 @@ const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size } = state.machine;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, inProgress } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -660,7 +666,8 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         isChangedAfterGcodeGenerating,
         stage,
-        progress
+        progress,
+        inProgress
     };
 };
 

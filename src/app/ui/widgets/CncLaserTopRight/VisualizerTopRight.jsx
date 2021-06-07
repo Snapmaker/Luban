@@ -5,7 +5,6 @@ import i18n from '../../../lib/i18n';
 import { HEAD_CNC, DISPLAYED_TYPE_TOOLPATH } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
-import Space from '../../components/Space';
 
 class VisualizerTopRight extends PureComponent {
     static propTypes = {
@@ -59,25 +58,25 @@ class VisualizerTopRight extends PureComponent {
         return (
             <React.Fragment>
                 <div className={styles['visualizer-top-right']}>
-                    <div>
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-primary"
-                            style={{
-                                float: 'left',
-                                height: '40px',
-                                width: '184px'
-                            }}
-                            title={i18n._('Back To Object View')}
-                            onClick={() => this.actions.switchToEditPage()}
-                        >
-                            <div className={styles.topRightDiv11} />
-                            <Space width={8} />
-                            <div className={styles.topRightDiv12}>
-                                {i18n._('Back To Object View')}
-                            </div>
-                        </button>
-                    </div>
+                    {/*<div>*/}
+                    {/*    <button*/}
+                    {/*        type="button"*/}
+                    {/*        className="sm-btn-small sm-btn-primary"*/}
+                    {/*        style={{*/}
+                    {/*            float: 'left',*/}
+                    {/*            height: '40px',*/}
+                    {/*            width: '184px'*/}
+                    {/*        }}*/}
+                    {/*        title={i18n._('Back To Object View')}*/}
+                    {/*        onClick={() => this.actions.switchToEditPage()}*/}
+                    {/*    >*/}
+                    {/*        <div className={styles.topRightDiv11} />*/}
+                    {/*        <Space width={8} />*/}
+                    {/*        <div className={styles.topRightDiv12}>*/}
+                    {/*            {i18n._('Back To Object View')}*/}
+                    {/*        </div>*/}
+                    {/*    </button>*/}
+                    {/*</div>*/}
                     {this.props.headType === HEAD_CNC && (
                         <div
                             className={styles['top-right-div2']}

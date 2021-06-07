@@ -104,6 +104,8 @@ class SVGCanvas extends PureComponent {
         SVGActions: PropTypes.object,
 
         scale: PropTypes.number.isRequired,
+        minScale: PropTypes.number,
+        maxScale: PropTypes.number,
         target: PropTypes.object,
         updateScale: PropTypes.func.isRequired,
         updateTarget: PropTypes.func.isRequired,
@@ -161,9 +163,6 @@ class SVGCanvas extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.editable !== this.props.editable) {
-            this.svgContentGroup.setEditable(nextProps.editable);
-        }
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
             this.lastScale = nextProps.scale;
@@ -214,9 +213,14 @@ class SVGCanvas extends PureComponent {
     set scale(val) {
         this.lastScale = val / DEFAULT_SCALE * ZOOM_RATE;
         // Notify scale updates, this method should be named `onScaleUpdated`
+        if (this.props.minScale && this.lastScale < this.props.minScale) {
+            this.lastScale = this.props.minScale;
+        }
+        if (this.props.maxScale && this.lastScale > this.props.maxScale) {
+            this.lastScale = this.props.maxScale;
+        }
         this.props.updateScale(this.lastScale);
     }
-
 
     setupTextActions() {
         this.textActions = new TextAction(
@@ -296,8 +300,7 @@ class SVGCanvas extends PureComponent {
 
         this.svgContentGroup = new SVGContentGroup({
             svgContent: this.svgContent,
-            scale: this.scale,
-            editable: this.props.editable
+            scale: this.scale
         });
     }
 
@@ -1554,7 +1557,7 @@ class SVGCanvas extends PureComponent {
         return (
             <React.Fragment>
                 <div ref={this.node} style={{ height: 'calc(100vh - 61px)' }} className={className} />
-                <input ref={this.input} style={{ position: 'absolute', bottom: '0' }} type="text" size="35" autoComplete="off" />
+                <input ref={this.input} style={{ position: 'absolute', top: '-45px' }} type="text" size="35" autoComplete="off" />
             </React.Fragment>
         );
     }
