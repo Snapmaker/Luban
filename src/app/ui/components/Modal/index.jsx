@@ -1,6 +1,7 @@
 import '@trendmicro/react-modal/dist/react-modal.css';
 import Modal from '@trendmicro/react-modal';
 import React, { PureComponent } from 'react';
+import UniApi from '../../../lib/uni-api';
 
 class ModalWrapper extends PureComponent {
     static propTypes = {
@@ -12,6 +13,7 @@ class ModalWrapper extends PureComponent {
     };
 
     componentDidMount() {
+        UniApi.Event.emit('appbar-menu:disable');
         this.blockScrolling();
     }
 
@@ -26,6 +28,7 @@ class ModalWrapper extends PureComponent {
     }
 
     componentWillUnmount() {
+        UniApi.Event.emit('appbar-menu:enable');
         this.unblockScrolling();
     }
 

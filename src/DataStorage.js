@@ -2,7 +2,6 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { app } from 'electron';
 
-
 const rmDir = (dirPath, removeSelf) => {
     console.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {

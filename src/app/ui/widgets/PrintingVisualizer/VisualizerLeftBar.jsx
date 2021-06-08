@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import * as THREE from 'three';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
+import UniApi from '../../../lib/uni-api';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -175,8 +176,27 @@ class VisualizerLeftBar extends PureComponent {
         },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
+        },
+        importFile: (fileObj) => {
+            if (fileObj) {
+                this.actions.onChangeFile({
+                    target: {
+                        files: [fileObj]
+                    }
+                });
+            } else {
+                this.actions.onClickToUpload();
+            }
         }
     };
+
+    componentDidMount() {
+        UniApi.Event.on('appbar-menu:printing.import', this.actions.importFile);
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.off('appbar-menu:printing.import', this.actions.importFile);
+    }
 
     render() {
         const actions = this.actions;

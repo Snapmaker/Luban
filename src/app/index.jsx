@@ -23,6 +23,7 @@ import reducer from './flux';
 import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
+import { appbarMenuMiddleware } from './lib/redux-middleware';
 
 
 series([
@@ -108,7 +109,7 @@ series([
 
     ReactGA.initialize('UA-106828154-1');
 
-    const reduxStore = createStore(reducer, applyMiddleware(thunk));
+    const reduxStore = createStore(reducer, applyMiddleware(thunk, appbarMenuMiddleware));
 
     ReactDOM.render(
         <Provider store={reduxStore}>

@@ -5,15 +5,15 @@ import _ from 'lodash';
 import camelCase from 'lodash/camelCase';
 import Uri from 'jsuri';
 import React, { PureComponent } from 'react';
-import { Link, withRouter } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import settings from '../../../config/settings';
-import Breadcrumbs from '../../components/Breadcrumbs';
+// import Breadcrumbs from '../../components/Breadcrumbs';
 import confirm from '../../../lib/confirm';
 import i18n from '../../../lib/i18n';
 // import storeManager from '../../store/local-storage';
 import General from './General';
-import FirmwareTool from './FirmwareTool';
-import Workspace from './Workspace';
+// import FirmwareTool from './FirmwareTool';
+// import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
 
@@ -23,7 +23,7 @@ const mapSectionPathToId = (path = '') => {
 
 class Settings extends PureComponent {
     static propTypes = {
-        resetAllUserSettings: PropTypes.func.isRequired,
+        // resetAllUserSettings: PropTypes.func.isRequired,
         location: PropTypes.object.isRequired
     };
 
@@ -39,19 +39,19 @@ class Settings extends PureComponent {
             path: 'machine',
             title: i18n._('Machine Settings'),
             component: (props) => <MachineSettings {...props} />
-        },
-        {
-            id: 'config',
-            path: 'config',
-            title: i18n._('Config'),
-            component: (props) => <Workspace {...props} />
-        },
-        {
-            id: 'firmware',
-            path: 'firmware',
-            title: i18n._('Firmware Tool'),
-            component: (props) => <FirmwareTool {...props} />
         }
+        // {
+        //     id: 'config',
+        //     path: 'config',
+        //     title: i18n._('Config'),
+        //     component: (props) => <Workspace {...props} />
+        // },
+        // {
+        //     id: 'firmware',
+        //     path: 'firmware',
+        //     title: i18n._('Firmware Tool'),
+        //     component: (props) => <FirmwareTool {...props} />
+        // }
     ];
 
     initialState = this.getInitialState();
@@ -123,7 +123,7 @@ class Settings extends PureComponent {
                 if (!confirmed) {
                     return;
                 }
-                await this.props.resetAllUserSettings();
+                // await this.props.resetAllUserSettings();
                 window.location.reload();
             }
         },
@@ -135,6 +135,7 @@ class Settings extends PureComponent {
 
     getInitialState() {
         return {
+            activePathname: null,
             // General
             general: {
                 // followed by api state
@@ -162,6 +163,12 @@ class Settings extends PureComponent {
         };
     }
 
+    switchTab(pathname) {
+        this.setState({
+            activePathname: pathname
+        });
+    }
+
     render() {
         const state = {
             ...this.state
@@ -169,7 +176,7 @@ class Settings extends PureComponent {
         const actions = {
             ...this.actions
         };
-        const { pathname = '' } = this.props.location;
+        const pathname = state.activePathname || this.props.location.pathname;
         const initialSectionPath = this.sections[0].path;
         const sectionPath = pathname.replace(/^\/settings(\/)?/, ''); // TODO
         const id = mapSectionPathToId(sectionPath || initialSectionPath);
@@ -181,9 +188,17 @@ class Settings extends PureComponent {
                     { [styles.active]: activeSection.id === section.id }
                 )}
             >
-                <Link to={`/settings/${section.path}`}>
+                <span
+                    role="button"
+                    tabIndex="-1"
+                    onKeyPress={() => {}}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        this.switchTab(`/settings/${section.path}`);
+                    }}
+                >
                     {section.title}
-                </Link>
+                </span>
             </li>
         ));
 
@@ -196,9 +211,9 @@ class Settings extends PureComponent {
 
         return (
             <div className={styles.settings}>
-                <Breadcrumbs>
+                {/* <Breadcrumbs>
                     <Breadcrumbs.Item active>{i18n._('Settings')}</Breadcrumbs.Item>
-                </Breadcrumbs>
+                </Breadcrumbs> */}
                 <div className={classNames(styles.container, styles.border)}>
                     <div className={styles.row}>
                         <div className={classNames(styles.col, styles.sidenav)}>
@@ -213,6 +228,7 @@ class Settings extends PureComponent {
                             <div className={styles.heading}>{activeSection.title}</div>
                             <div className={styles.content}>
                                 <Section
+                                    {...this.props}
                                     initialState={sectionInitialState}
                                     state={sectionState}
                                     stateChanged={sectionStateChanged}
@@ -227,4 +243,4 @@ class Settings extends PureComponent {
     }
 }
 
-export default withRouter(Settings);
+export default Settings;

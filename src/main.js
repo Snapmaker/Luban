@@ -209,7 +209,7 @@ const createWindow = async () => {
 
     // Setup menu
     const menuBuilder = new MenuBuilder(window, { url: loadUrl });
-    menuBuilder.buildMenu();
+    // menuBuilder.buildMenu();
     // Init homepage recent files
     ipcMain.on('get-recent-file', () => {
         const fileArr = menuBuilder.getInitRecentFile();

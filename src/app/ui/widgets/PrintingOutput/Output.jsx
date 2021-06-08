@@ -9,6 +9,7 @@ import FileSaver from 'file-saver';
 // import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
+import UniApi from '../../../lib/uni-api';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
@@ -136,6 +137,16 @@ class Output extends PureComponent {
             FileSaver.saveAs(blob, fileName, true);
         }
     };
+
+    componentDidMount() {
+        UniApi.Event.on('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
+        UniApi.Event.on('appbar-menu:printing.export-model', this.actions.onClickExportModel);
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.off('appbar-menu:printing.export-gcode', this.actions.onClickExportGcode);
+        UniApi.Event.off('appbar-menu:printing.export-model', this.actions.onClickExportModel);
+    }
 
     renderWorkspace() {
         const onClose = () => this.setState({ showWorkspace: false });
