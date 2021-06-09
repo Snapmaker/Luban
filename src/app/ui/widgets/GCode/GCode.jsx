@@ -45,7 +45,7 @@ const formatDuration = (value) => {
 
 class GCode extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         boundingBox: PropTypes.object,
         gcodePrintingInfo: PropTypes.shape({
@@ -87,7 +87,7 @@ class GCode extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('G-code Inspect'));
+        this.props.widgetActions.setTitle(i18n._('G-code Inspect'));
     }
 
     getInitialState() {

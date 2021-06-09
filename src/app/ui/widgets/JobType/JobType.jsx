@@ -15,8 +15,7 @@ import Select from '../../components/Select';
 
 class JobType extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
-        setDisplay: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         headType: PropTypes.string.isRequired,
 
         page: PropTypes.string.isRequired,
@@ -74,12 +73,12 @@ class JobType extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Job Type'));
-        this.props.setDisplay(this.props.use4Axis && this.props.page === PAGE_EDITOR);
+        this.props.widgetActions.setTitle(i18n._('Job Type'));
+        this.props.widgetActions.setDisplay(this.props.use4Axis && this.props.page === PAGE_EDITOR);
     }
 
     componentWillReceiveProps(nextProps) {
-        this.props.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
+        this.props.widgetActions.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
     }
 
     render() {

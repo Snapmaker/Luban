@@ -1,47 +1,43 @@
 import React, { PureComponent } from 'react';
-import includes from 'lodash/includes';
+// import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
-import { Redirect, withRouter } from 'react-router-dom';
+import { HashRouter, Route, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
-import { Trans } from 'react-i18next';
-import { /* shortcutActions, */ priorities, ShortcutManager } from '../../lib/shortcut';
-import { ToastContainer } from '../components/Toast';
+// import { Trans } from 'react-i18next';
+import { /* shortcutActions, */ priorities, ShortcutManager } from '../lib/shortcut';
+import { ToastContainer } from './components/Toast';
 
-import { actions as machineActions } from '../../flux/machine';
-import { actions as developToolsActions } from '../../flux/develop-tools';
-import { actions as laserActions } from '../../flux/laser';
-import { actions as editorActions } from '../../flux/editor';
-import { actions as cncActions } from '../../flux/cnc';
-import { actions as printingActions } from '../../flux/printing';
-import { actions as workspaceActions } from '../../flux/workspace';
-import { actions as textActions } from '../../flux/text';
-import { actions as projectActions } from '../../flux/project';
-import { actions as settingActions } from '../../flux/setting';
+import { actions as machineActions } from '../flux/machine';
+import { actions as developToolsActions } from '../flux/develop-tools';
+import { actions as laserActions } from '../flux/laser';
+import { actions as editorActions } from '../flux/editor';
+import { actions as cncActions } from '../flux/cnc';
+import { actions as printingActions } from '../flux/printing';
+import { actions as workspaceActions } from '../flux/workspace';
+import { actions as textActions } from '../flux/text';
+import { actions as projectActions } from '../flux/project';
+import { actions as settingActions } from '../flux/setting';
 
-import api from '../../api';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
 
-import Header from './Header';
-// import Sidebar from './Sidebar';
-// import Workspace from './Workspace';
-// import Cnc from './Cnc';
-// import Laser from './Laser';
-import Workspace from '../Pages/Workspace';
-import Printing from '../Pages/Printing';
-import Cnc from '../Pages/Cnc';
-import Laser from '../Pages/Laser';
+import i18n from '../lib/i18n';
 
-import Settings from './Settings';
-import CaseLibrary from './CaseLibrary';
-import styles from './App.styl';
-import Space from '../components/Space';
+import HomePage from './Pages/HomePage';
+import Workspace from './Pages/Workspace';
+import Printing from './Pages/Printing';
+import Cnc from './Pages/Cnc';
+import Laser from './Pages/Laser';
 
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../../constants';
+import Settings from './Pages/Settings';
+// import CaseLibrary from './CaseLibrary';
+// import styles from './App.styl';
+// import Space from '../components/Space';
 
-import UniApi from '../../lib/uni-api';
-import HomePage from '../Pages/HomePage/HomePage';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
+
+import UniApi from '../lib/uni-api';
+import AppLayout from './Layouts/AppLayout';
+
 
 function getCurrentHeadType(pathname) {
     let headType = null;
@@ -55,7 +51,7 @@ class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
 
-        machineInfo: PropTypes.object.isRequired,
+        // machineInfo: PropTypes.object.isRequired,
 
         setShouldShowCncWarning: PropTypes.func.isRequired,
         machineInit: PropTypes.func.isRequired,
@@ -67,25 +63,27 @@ class App extends PureComponent {
         printingInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
-        projectState: PropTypes.object.isRequired,
-        onRecovery: PropTypes.func.isRequired,
-        quitRecovery: PropTypes.func.isRequired,
+        // projectState: PropTypes.object.isRequired,
+        // onRecovery: PropTypes.func.isRequired,
+        // quitRecovery: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
         updateIsDownloading: PropTypes.func.isRequired,
         updateAutoupdateMessage: PropTypes.func.isRequired,
         updateShouldCheckForUpdate: PropTypes.func.isRequired,
-        shouldCheckForUpdate: PropTypes.bool.isRequired,
-        resetAllUserSettings: PropTypes.func.isRequired
+        shouldCheckForUpdate: PropTypes.bool.isRequired
+        // resetAllUserSettings: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
 
-    state = {
-        platform: 'unknown',
-        recoveringProject: false
-    };
+    router = React.createRef();
+
+    // state = {
+    //     platform: 'unknown',
+    //     recoveringProject: false
+    // };
 
     shortcutHandler = {
         title: this.constructor.name,
@@ -125,26 +123,27 @@ class App extends PureComponent {
             await this.props.save(headType);
         },
         saveAll: async () => {
-            const currentHeadType = getCurrentHeadType(this.props.location.pathname);
-            let message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
-            if (currentHeadType) {
-                await this.props.save(currentHeadType, { message });
-            }
-            const AllType = [HEAD_3DP, HEAD_CNC, HEAD_LASER];
-            const index = AllType.indexOf(currentHeadType);
-            if (index !== -1) {
-                AllType.splice(index, 1);
-            }
-            for (const headType of AllType) {
-                if (!this.props.projectState[headType].unSaved) continue;
-                message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] });
-                this.props.history.push(`/${headType}`);
-                await new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve(this.props.save(headType, { message }));
-                    }, 100);
-                });
-            }
+            // TODO: dont need to save all!
+            // const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            // let message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
+            // if (currentHeadType) {
+            //     await this.props.save(currentHeadType, { message });
+            // }
+            // const AllType = [HEAD_3DP, HEAD_CNC, HEAD_LASER];
+            // const index = AllType.indexOf(currentHeadType);
+            // if (index !== -1) {
+            //     AllType.splice(index, 1);
+            // }
+            // for (const headType of AllType) {
+            //     if (!this.props.projectState[headType].unSaved) continue;
+            //     message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] });
+            //     this.props.history.push(`/${headType}`);
+            //     await new Promise((resolve) => {
+            //         setTimeout(() => {
+            //             resolve(this.props.save(headType, { message }));
+            //         }, 100);
+            //     });
+            // }
         },
         closeFile: async () => {
             const currentHeadType = getCurrentHeadType(this.props.location.pathname);
@@ -225,61 +224,16 @@ class App extends PureComponent {
             return false;
         };
 
-        const { history } = this.props;
-        const actions = this.actions;
-
-        this.unlisten = history.listen(location => {
-            this.logPageView();
-
-            // show warning when open CNC tab for the first time
-            if (this.props.machineInfo.shouldShowCncWarning && location.pathname === '/cnc') {
-                modal({
-                    type: 'buttonRight',
-                    title: i18n._('Warning'),
-                    body: (
-                        <div>
-                            <Trans i18nKey="key_CNC_loading_warning">
-                                This is an alpha feature that helps you get started with CNC Carving. Make sure you
-                                <Space width={4} />
-                                <a
-                                    style={{ color: '#28a7e1' }}
-                                    href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    Read This First - Safety Information
-                                </a>
-                                <Space width={4} />
-                                before proceeding.
-                            </Trans>
-                        </div>
-                    ),
-                    footer: (
-                        <div style={{ display: 'inline-block', marginRight: '8px' }}>
-                            <input
-                                id="footer-input"
-                                type="checkbox"
-                                defaultChecked={false}
-                                onChange={actions.onChangeShouldShowWarning}
-                            />
-                            {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                            <label id="footer-input-label" htmlFor="footer-input" style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again')}</label>
-
-                        </div>
-                    )
-                });
-            }
-        });
         // Make fit-addon loading when loading from the workspace for the first time (console widget)
-        if (history.location && history.location.pathname === '/workspace') {
-            history.push('/workspace');
-        }
+        // if (history.location && history.location.pathname === '/workspace') {
+        //     history.push('/workspace');
+        // }
 
-        // get platform
-        api.utils.getPlatform().then(res => {
-            const { platform } = res.body;
-            this.setState({ platform: platform });
-        });
+        // // get platform
+        // api.utils.getPlatform().then(res => {
+        //     const { platform } = res.body;
+        //     this.setState({ platform: platform });
+        // });
 
         // init machine module
         this.props.machineInit();
@@ -305,57 +259,57 @@ class App extends PureComponent {
         ShortcutManager.register(this.shortcutHandler);
     }
 
-    componentWillReceiveProps(nextProps) {
-        const headType = getCurrentHeadType(nextProps.location.pathname);
+    // componentWillReceiveProps(nextProps) {
+    // const headType = getCurrentHeadType(nextProps.location.pathname);
 
-        if (nextProps.location.pathname !== this.props.location.pathname) {
-            UniApi.Menu.setItemEnabled('save-as', !!headType);
-            UniApi.Menu.setItemEnabled('save', !!headType);
-        }
+    // if (nextProps.location.pathname !== this.props.location.pathname) {
+    //     UniApi.Menu.setItemEnabled('save-as', !!headType);
+    //     UniApi.Menu.setItemEnabled('save', !!headType);
+    // }
 
-        if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
-            const { findLastEnvironment, openedFile } = nextProps.projectState[headType];
-            UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
-            const keyRecoveringProject = `recoveringProject-${headType}`;
+    // if (includes([HEAD_3DP, HEAD_LASER, HEAD_CNC], headType)) {
+    //     const { findLastEnvironment, openedFile } = nextProps.projectState[headType];
+    //     UniApi.Window.setOpenedFile(openedFile ? openedFile.name : undefined);
+    //     const keyRecoveringProject = `recoveringProject-${headType}`;
 
-            if (findLastEnvironment) {
-                if (!this.state[keyRecoveringProject]) {
-                    this.setState({ [keyRecoveringProject]: true });
-                    const popupActions = modal({
-                        title: i18n._('Resume Job'),
-                        body: (
-                            <React.Fragment>
-                                <p>{i18n._('Do you want to resume previous job?')}</p>
-                            </React.Fragment>
-                        ),
-                        footer: (
-                            <button
-                                type="button"
-                                className="btn sm-btn-default sm-btn-large sm-btn-primary"
-                                onClick={async () => {
-                                    await this.props.onRecovery(headType);
-                                    popupActions.close();
-                                    this.setState({ [keyRecoveringProject]: false });
-                                }}
-                            >
-                                {i18n._('Yes')}
-                            </button>
-                        ),
-                        onClose: () => {
-                            this.setState({ [keyRecoveringProject]: false });
-                            this.props.clearSavedEnvironment(headType);
-                        }
-                    });
-                }
-            } else if (this.state[keyRecoveringProject]) {
-                this.setState({ [keyRecoveringProject]: false });
-            }
-        }
-    }
+    //     if (findLastEnvironment) {
+    //         if (!this.state[keyRecoveringProject]) {
+    //             this.setState({ [keyRecoveringProject]: true });
+    //             const popupActions = modal({
+    //                 title: i18n._('Resume Job'),
+    //                 body: (
+    //                     <React.Fragment>
+    //                         <p>{i18n._('Do you want to resume previous job?')}</p>
+    //                     </React.Fragment>
+    //                 ),
+    //                 footer: (
+    //                     <button
+    //                         type="button"
+    //                         className="btn sm-btn-default sm-btn-large sm-btn-primary"
+    //                         onClick={async () => {
+    //                             await this.props.onRecovery(headType);
+    //                             popupActions.close();
+    //                             this.setState({ [keyRecoveringProject]: false });
+    //                         }}
+    //                     >
+    //                         {i18n._('Yes')}
+    //                     </button>
+    //                 ),
+    //                 onClose: () => {
+    //                     this.setState({ [keyRecoveringProject]: false });
+    //                     this.props.clearSavedEnvironment(headType);
+    //                 }
+    //             });
+    //         }
+    //     } else if (this.state[keyRecoveringProject]) {
+    //         this.setState({ [keyRecoveringProject]: false });
+    //     }
+    // }
+    // }
 
-    componentWillUnmount() {
-        this.unlisten();
-    }
+    // componentWillUnmount() {
+    //     this.unlisten();
+    // }
 
     logPageView() {
         const path = window.location.pathname + window.location.search + window.location.hash;
@@ -365,81 +319,45 @@ class App extends PureComponent {
 
 
     render() {
-        const { location } = this.props;
-        const accepted = ([
-            '/workspace',
-            '/3dp',
-            '/laser',
-            '/cnc',
-            '/settings',
-            '/layout',
-            '/caselibrary',
-            '/settings/general',
-            '/settings/machine',
-            '/settings/config',
-            '/settings/firmware',
-            '/'
-        ].indexOf(location.pathname) >= 0);
+        // const { location } = this.props;
+        // const accepted = ([
+        //     '/workspace',
+        //     '/3dp',
+        //     '/laser',
+        //     '/cnc',
+        //     '/settings',
+        //     '/layout',
+        //     '/caselibrary',
+        //     '/settings/general',
+        //     '/settings/machine',
+        //     '/settings/config',
+        //     '/settings/firmware',
+        //     '/'
+        // ].indexOf(location.pathname) >= 0);
 
-        if (!accepted) {
-            return (
-                <Redirect
-                    to={{
-                        pathname: '/',
-                        state: {
-                            from: location
-                        }
-                    }}
-                />
-            );
-        }
+        // if (!accepted) {
+        //     return (
+        //         <Redirect
+        //             to={{
+        //                 pathname: '/',
+        //                 state: {
+        //                     from: location
+        //                 }
+        //             }}
+        //         />
+        //     );
+        // }
+
+
         return (
-            location.pathname === '/' ? (
-                <div>
-                    <HomePage {...this.props} />
-                </div>
-            ) : (
-                <div>
-                    <Header {...this.props} />
-                    <div className={styles.main}>
-                        <div className={styles.content}>
-                            {location.pathname === '/workspace' && (
-                                <Workspace
-                                    {...this.props}
-                                />
-                            )}
-                            <Laser
-                                {...this.props}
-                                style={{
-                                    display: (location.pathname !== '/laser') ? 'none' : 'block'
-                                }}
-                            />
-
-                            <Cnc
-                                {...this.props}
-                                style={{
-                                    display: (location.pathname !== '/cnc') ? 'none' : 'block'
-                                }}
-                            />
-
-                            {location.pathname === '/3dp' && (
-                                <Printing
-                                    {...this.props}
-                                />
-                            )}
-
-                            {location.pathname.indexOf('/settings') === 0 && (
-                                <Settings
-                                    location={this.props.location}
-                                    resetAllUserSettings={this.props.resetAllUserSettings}
-                                />
-                            )}
-
-                            {location.pathname.indexOf('/caselibrary') === 0 && (
-                                <CaseLibrary {...this.props} />
-                            )}
-                        </div>
-                    </div>
+            <HashRouter ref={this.router}>
+                <AppLayout>
+                    <Route path="/" exact component={HomePage} />
+                    <Route path="/workspace" component={Workspace} />
+                    <Route path="/3dp" component={Printing} />
+                    <Route path="/laser" component={Laser} />
+                    <Route path="/cnc" component={Cnc} />
+                    <Route path="/settings" component={Settings} />
                     <ToastContainer
                         position="top-center"
                         autoClose={5000}
@@ -451,8 +369,8 @@ class App extends PureComponent {
                         draggable
                         pauseOnHover
                     />
-                </div>
-            )
+                </AppLayout>
+            </HashRouter>
         );
     }
 }
@@ -500,4 +418,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));
+export default connect(mapStateToProps, mapDispatchToProps)(App);

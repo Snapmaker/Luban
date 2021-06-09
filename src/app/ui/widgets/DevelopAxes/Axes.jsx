@@ -71,7 +71,7 @@
 // class Axes extends PureComponent {
 //     static propTypes = {
 //         widgetId: PropTypes.string.isRequired,
-//         setTitle: PropTypes.func.isRequired,
+//         widgetActions: PropTypes.object.isRequired,
 //
 //         dataSource: PropTypes.string.isRequired,
 //         workflowState: PropTypes.string.isRequired,
@@ -248,7 +248,7 @@
 //
 //     constructor(props) {
 //         super(props);
-//         this.props.setTitle(i18n._('Axes'));
+//         this.props.widgetActions.setTitle(i18n._('Axes'));
 //     }
 //
 //     getInitialState() {

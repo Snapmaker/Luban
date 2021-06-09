@@ -1,4 +1,3 @@
-import { createDefaultWidget } from '../../components/SMWidget';
 import MarlinWidget from './Marlin';
 
-export default createDefaultWidget(MarlinWidget);
+export default (MarlinWidget);

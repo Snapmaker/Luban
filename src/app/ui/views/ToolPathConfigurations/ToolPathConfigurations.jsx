@@ -16,7 +16,7 @@ import LaserParameters from './laser/LaserParameters';
 
 function ToolPathConfigurations(props) {
     const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
-    const updatingToolPath = useSelector(state => state[props.headType]?.updatingToolPath, shallowEqual);
+    const toolpath = props.toolpath;
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
 
     const dispatch = useDispatch();
@@ -52,15 +52,14 @@ function ToolPathConfigurations(props) {
         setCurrentToolDefinition(activeToolDefinition);
     };
 
-    const [toolPath, setToolPath] = useState(updatingToolPath);
+    const [toolPath, setToolPath] = useState(toolpath);
     useEffect(() => {
-        const newToolPath = _.cloneDeep(updatingToolPath);
+        const newToolPath = _.cloneDeep(toolpath);
         setToolPath(newToolPath);
-
-        if (!_.isNull(updatingToolPath) && props.headType === HEAD_CNC) {
+        if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
             updateCncActiveToolDefinition(newToolPath);
         }
-    }, [updatingToolPath]);
+    }, [toolpath]);
 
     const actions = {
         updateToolConfig(key, value) {
@@ -78,7 +77,7 @@ function ToolPathConfigurations(props) {
             }
         },
         cancelUpdateToolPath() {
-            dispatch(editorActions.cancelUpdateToolPath(props.headType));
+            props.onClose && props.onClose();
         },
         saveToolPath() {
             const toolParams = {};
@@ -107,6 +106,7 @@ function ToolPathConfigurations(props) {
                 toolParams
             };
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            props.onClose && props.onClose();
         },
         updateToolPath(option) {
             setToolPath({
@@ -234,6 +234,9 @@ function ToolPathConfigurations(props) {
     );
 }
 ToolPathConfigurations.propTypes = {
-    headType: PropTypes.string
+    onClose: PropTypes.func,
+    headType: PropTypes.string,
+    toolpath: PropTypes.object.isRequired
+
 };
 export default ToolPathConfigurations;

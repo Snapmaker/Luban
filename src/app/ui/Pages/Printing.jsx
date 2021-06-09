@@ -1,39 +1,89 @@
 import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import Sortable from 'react-sortablejs';
+// import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-import Widget from '../widgets/Widget';
+// import Widget from '../widgets/Widget';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PrintingManager from '../views/PrintingManager';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
-import { actions as widgetActions } from '../../flux/widget';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER } from '../../constants';
+import { HEAD_3DP } from '../../constants';
+import { renderWidgetList, renderRecoveryModal, pluginHooksAutoRecovery } from '../utils';
 
-function getCurrentHeadType(pathname) {
-    let headType = null;
-    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
-    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
-    return headType;
-}
+import ControlWidget from '../widgets/Control';
+import ConnectionWidget from '../widgets/Connection';
+import ConsoleWidget from '../widgets/Console';
+import GCodeWidget from '../widgets/GCode';
+import MacroWidget from '../widgets/Macro';
+import PurifierWidget from '../widgets/Purifier';
+import MarlinWidget from '../widgets/Marlin';
+import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import WebcamWidget from '../widgets/Webcam';
+import LaserParamsWidget from '../widgets/LaserParams';
+import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserTestFocusWidget from '../widgets/LaserTestFocus';
+import CNCPathWidget from '../widgets/CNCPath';
+import CncLaserOutputWidget from '../widgets/CncLaserOutput';
+
+import PrintingMaterialWidget from '../widgets/PrintingMaterial';
+import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
+import PrintingOutputWidget from '../widgets/PrintingOutput';
+import WifiTransport from '../widgets/WifiTransport';
+import EnclosureWidget from '../widgets/Enclosure';
+import CncLaserObjectList from '../widgets/CncLaserList';
+import PrintingObjectList from '../widgets/PrintingObjectList';
+import JobType from '../widgets/JobType';
+import CreateToolPath from '../widgets/CncLaserToolPath';
+
+
+const allWidgets = {
+    'control': ControlWidget,
+    // 'axesPanel': DevelopAxesWidget,
+    'connection': ConnectionWidget,
+    'console': ConsoleWidget,
+    'gcode': GCodeWidget,
+    'macro': MacroWidget,
+    'macroPanel': MacroWidget,
+    'purifier': PurifierWidget,
+    'marlin': MarlinWidget,
+    'visualizer': VisualizerWidget,
+    'webcam': WebcamWidget,
+    'printing-visualizer': PrintingVisualizer,
+    'wifi-transport': WifiTransport,
+    'enclosure': EnclosureWidget,
+    '3dp-object-list': PrintingObjectList,
+    '3dp-material': PrintingMaterialWidget,
+    '3dp-configurations': PrintingConfigurationsWidget,
+    '3dp-output': PrintingOutputWidget,
+    'laser-params': LaserParamsWidget,
+    // 'laser-output': CncLaserOutputWidget,
+    'laser-set-background': LaserSetBackground,
+    'laser-test-focus': LaserTestFocusWidget,
+    'cnc-path': CNCPathWidget,
+    'cnc-output': CncLaserOutputWidget,
+    'cnc-laser-object-list': CncLaserObjectList,
+    'job-type': JobType,
+    'create-toolpath': CreateToolPath
+};
+
+const pageHeadType = HEAD_3DP;
+
 function Printing({ history, location }) {
-    const widgets = useSelector(state => state?.widget['3dp'].default.widgets, shallowEqual);
+    const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
+
+    const { recoveringProject, setRecoveringProject } = pluginHooksAutoRecovery(pageHeadType);
+
     useEffect(() => {
         return async () => {
-            const headType = getCurrentHeadType(location.pathname);
-            if (!headType) {
-                return;
-            }
-            dispatch(projectActions.save(headType));
+            dispatch(projectActions.save(pageHeadType));
         };
     }, [location.pathname]);
     async function onDropAccepted(file) {
@@ -54,20 +104,11 @@ function Printing({ history, location }) {
             body: body
         });
     }
-    function onDragWidgetStart() {
-        setIsDraggingWidget(true);
-    }
-    function onDragWidgetEnd() {
-        setIsDraggingWidget(false);
-    }
-    function onChangeWidgetOrder(newWidgets) {
-        dispatch(widgetActions.updateTabContainer('3dp', 'default', newWidgets));
-    }
 
     function renderMainToolBar() {
         const leftItems = [
             {
-                title: 'Copy',
+                title: 'Home',
                 type: 'button',
                 action: () => history.push('/')
             },
@@ -90,8 +131,34 @@ function Printing({ history, location }) {
         );
     }
 
-    function renderCenterView() {
+    function renderModalView() {
+        return (<PrintingManager />);
+    }
+
+    const listActions = {
+        onDragStart: () => {
+            setIsDraggingWidget(true);
+        },
+        onDragEnd: () => {
+            setIsDraggingWidget(false);
+        }
+    };
+    const renderRightView = () => {
+        const widgetProps = { headType: pageHeadType };
         return (
+            <div>
+                {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
+            </div>
+
+        );
+    };
+
+    return (
+        <ProjectLayout
+            renderMainToolBar={renderMainToolBar}
+            renderRightView={renderRightView}
+            renderModalView={renderModalView}
+        >
             <Dropzone
                 disabled={isDraggingWidget}
                 accept=".stl, .obj"
@@ -101,50 +168,8 @@ function Printing({ history, location }) {
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
             </Dropzone>
-        );
-    }
-
-    function renderModalView() {
-        return (<PrintingManager />);
-    }
-
-    function renderRightView(newWidgets) {
-        return (
-            <Sortable
-                options={{
-                    animation: 150,
-                    delay: 0,
-                    group: {
-                        name: '3dp-control'
-                    },
-                    handle: '.sortable-handle',
-                    filter: '.sortable-filter',
-                    chosenClass: 'sortable-chosen',
-                    ghostClass: 'sortable-ghost',
-                    dataIdAttr: 'data-widget-id',
-                    onStart: onDragWidgetStart,
-                    onEnd: onDragWidgetEnd
-                }}
-                onChange={onChangeWidgetOrder}
-            >
-                { newWidgets.map(widget => {
-                    return (
-                        <div data-widget-id={widget} key={widget}>
-                            <Widget widgetId={widget} width="360px" />
-                        </div>
-                    );
-                })}
-            </Sortable>
-        );
-    }
-
-    return (
-        <ProjectLayout
-            renderCenterView={renderCenterView}
-            renderMainToolBar={renderMainToolBar}
-            renderRightView={() => renderRightView(widgets)}
-            renderModalView={renderModalView}
-        />
+            {recoveringProject && renderRecoveryModal(pageHeadType, () => { setRecoveringProject(false); })}
+        </ProjectLayout>
     );
 }
 Printing.propTypes = {

@@ -3,27 +3,29 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import log from '../../../lib/log';
 import Enclosure from './Enclosure';
+import i18n from '../../../lib/i18n';
+
 // import { actions as machineActions } from '../../flux/machine';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
 
 class EnclosureDisplay extends PureComponent {
     static propTypes = {
-        setDisplay: PropTypes.func.isRequired,
         server: PropTypes.object.isRequired,
         isConnected: PropTypes.bool.isRequired,
         enclosureOnline: PropTypes.bool.isRequired,
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         connectionType: PropTypes.string.isRequired
     }
 
     componentDidMount() {
+        this.props.widgetActions.setTitle(i18n._('Enclosure'));
         if (!this.props.isConnected) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
             return;
         }
         if (this.props.isConnected && this.props.enclosureOnline
             && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         }
 
         if (this.props.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
@@ -33,7 +35,7 @@ class EnclosureDisplay extends PureComponent {
                 } else {
                     const { isReady } = res;
                     if (isReady === true) {
-                        this.props.setDisplay(true);
+                        this.props.widgetActions.setDisplay(true);
                     }
                 }
             });
@@ -42,11 +44,11 @@ class EnclosureDisplay extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (!nextProps.isConnected) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
         if (nextProps.enclosureOnline !== this.props.enclosureOnline && nextProps.isConnected
          && nextProps.enclosureOnline && this.props.connectionType === CONNECTION_TYPE_SERIAL) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         }
 
         if (nextProps.isConnected && this.props.connectionType === CONNECTION_TYPE_WIFI) {
@@ -56,7 +58,7 @@ class EnclosureDisplay extends PureComponent {
                 } else {
                     const { isReady } = res;
                     if (isReady === true) {
-                        this.props.setDisplay(true);
+                        this.props.widgetActions.setDisplay(true);
                     }
                 }
             });
@@ -65,9 +67,7 @@ class EnclosureDisplay extends PureComponent {
 
     render() {
         return (
-            <Enclosure
-                setTitle={this.props.setTitle}
-            />
+            <Enclosure />
         );
     }
 }

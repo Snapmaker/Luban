@@ -7,15 +7,16 @@ import styles from './styles/workspace.styl';
 
 class WorkspaceLayout extends PureComponent {
     static propTypes = {
+        children: PropTypes.array,
+        showSecondaryContainer: PropTypes.bool,
+        showPrimaryContainer: PropTypes.bool,
+
         renderLeftView: PropTypes.func,
         renderRightView: PropTypes.func,
-        renderCenterView: PropTypes.func,
-        renderModalView: PropTypes.func,
-        hideSecondaryContainer: PropTypes.bool,
-        hidePrimaryContainer: PropTypes.bool,
-        renderMainToolBar: PropTypes.func,
-        renderLeftTogglerView: PropTypes.func,
-        renderRightTogglerView: PropTypes.func
+
+        updateTabContainer: PropTypes.func,
+        renderMainToolBar: PropTypes.func
+
     };
 
     state = {
@@ -24,16 +25,73 @@ class WorkspaceLayout extends PureComponent {
     actions = {
     };
 
+    togglePrimaryContainer = () => {
+        const { showPrimaryContainer } = this.props;
+        this.props.updateTabContainer('left', { show: !showPrimaryContainer });
+
+        // Publish a 'resize' event
+        // pubsub.publish('resize'); // Also see "widgets/Visualizer"
+    };
+
+    toggleSecondaryContainer = () => {
+        const { showSecondaryContainer } = this.props;
+        this.props.updateTabContainer('right', { show: !showSecondaryContainer });
+
+
+        // Publish a 'resize' event
+        // pubsub.publish('resize'); // Also see "widgets/Visualizer"
+    };
+
+
+    renderLeftTogglerView(showPrimaryContainer) {
+        const hidePrimaryContainer = !showPrimaryContainer;
+        return (
+            <div
+                ref={this.primaryToggler}
+            >
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={this.togglePrimaryContainer}
+                >
+                    {!hidePrimaryContainer && (
+                        <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
+                    )}
+                    {hidePrimaryContainer && (
+                        <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
+                    )}
+                </button>
+            </div>
+        );
+    }
+
+    renderRightTogglerView(showSecondaryContainer) {
+        const hideSecondaryContainer = !showSecondaryContainer;
+        return (
+            <div
+                ref={this.secondaryToggler}
+            >
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={this.toggleSecondaryContainer}
+                >
+                    {!hideSecondaryContainer && (
+                        <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
+                    )}
+                    {hideSecondaryContainer && (
+                        <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
+                    )}
+                </button>
+            </div>
+        );
+    }
 
     render() {
-        const { renderLeftView, renderRightView, renderCenterView, renderMainToolBar,
-            renderLeftTogglerView, hideSecondaryContainer,
-            hidePrimaryContainer, renderRightTogglerView, renderModalView } = this.props;
+        const { renderLeftView, renderRightView, renderMainToolBar,
+            showSecondaryContainer, showPrimaryContainer } = this.props;
         return (
             <div className={styles.workspace}>
-                {renderModalView && (
-                    renderModalView()
-                )}
                 <div
                     className={classNames(
                         styles['main-bar'],
@@ -49,44 +107,39 @@ class WorkspaceLayout extends PureComponent {
 
                             className={classNames(
                                 styles.primaryContainer,
-                                { [styles.hidden]: hidePrimaryContainer }
+                                { [styles.hidden]: !showPrimaryContainer }
                             )}
                         >
-                            {renderLeftView && (
+                            {renderLeftView && showPrimaryContainer && (
                                 renderLeftView()
                             )}
+                            <div
+                                className={classNames(styles.primaryToggler)}
+                            >
+                                {this.renderLeftTogglerView()}
+                            </div>
                         </div>
-                        <div
-                            className={classNames(styles.primaryToggler)}
-                        >
-                            {renderLeftTogglerView && (
-                                renderLeftTogglerView()
-                            )}
-                        </div>
-                        {renderCenterView && (
-                            renderCenterView()
-                        )}
+
+                        {this.props.children}
 
 
-                        <div
-                            className={classNames(
-                                styles.secondaryToggler
-                            )}
-                        >
-                            {renderRightTogglerView && (
-                                renderRightTogglerView()
-                            )}
-                        </div>
                         <div
                             className={
                                 classNames(
                                     styles.secondaryContainer,
-                                    { [styles.hidden]: hideSecondaryContainer }
+                                    { [styles.hidden]: !showSecondaryContainer }
                                 )}
                         >
-                            {renderRightView && (
+                            {renderRightView && showSecondaryContainer && (
                                 renderRightView()
                             )}
+                            <div
+                                className={classNames(
+                                    styles.secondaryToggler
+                                )}
+                            >
+                                { this.renderRightTogglerView()}
+                            </div>
                         </div>
 
                     </div>

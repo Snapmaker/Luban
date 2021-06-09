@@ -2,23 +2,84 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import Sortable from 'react-sortablejs';
+
 import path from 'path';
+import { Trans } from 'react-i18next';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
+import Space from '../components/Space';
+import { renderModal, renderWidgetList } from '../utils';
+
 import CNCVisualizer from '../widgets/CNCVisualizer';
-import Widget from '../widgets/Widget';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
-import { actions as widgetActions } from '../../flux/widget';
+
 import { actions as editorActions } from '../../flux/editor';
 import CncToolManager from '../views/CncToolManager/CncToolManager';
-import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR } from '../../constants';
+import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+
+
+import ControlWidget from '../widgets/Control';
+import ConnectionWidget from '../widgets/Connection';
+import ConsoleWidget from '../widgets/Console';
+import GCodeWidget from '../widgets/GCode';
+import MacroWidget from '../widgets/Macro';
+import PurifierWidget from '../widgets/Purifier';
+import MarlinWidget from '../widgets/Marlin';
+import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import WebcamWidget from '../widgets/Webcam';
+import LaserParamsWidget from '../widgets/LaserParams';
+import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserTestFocusWidget from '../widgets/LaserTestFocus';
+import CNCPathWidget from '../widgets/CNCPath';
+import CncLaserOutputWidget from '../widgets/CncLaserOutput';
+
+import PrintingMaterialWidget from '../widgets/PrintingMaterial';
+import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
+import PrintingOutputWidget from '../widgets/PrintingOutput';
+import WifiTransport from '../widgets/WifiTransport';
+import EnclosureWidget from '../widgets/Enclosure';
+import CncLaserObjectList from '../widgets/CncLaserList';
+import PrintingObjectList from '../widgets/PrintingObjectList';
+import JobType from '../widgets/JobType';
+import CreateToolPath from '../widgets/CncLaserToolPath';
+import PrintingVisualizer from '../widgets/PrintingVisualizer';
+
+const allWidgets = {
+    'control': ControlWidget,
+    // 'axesPanel': DevelopAxesWidget,
+    'connection': ConnectionWidget,
+    'console': ConsoleWidget,
+    'gcode': GCodeWidget,
+    'macro': MacroWidget,
+    'macroPanel': MacroWidget,
+    'purifier': PurifierWidget,
+    'marlin': MarlinWidget,
+    'visualizer': VisualizerWidget,
+    'webcam': WebcamWidget,
+    'printing-visualizer': PrintingVisualizer,
+    'wifi-transport': WifiTransport,
+    'enclosure': EnclosureWidget,
+    '3dp-object-list': PrintingObjectList,
+    '3dp-material': PrintingMaterialWidget,
+    '3dp-configurations': PrintingConfigurationsWidget,
+    '3dp-output': PrintingOutputWidget,
+    'laser-params': LaserParamsWidget,
+    // 'laser-output': CncLaserOutputWidget,
+    'laser-set-background': LaserSetBackground,
+    'laser-test-focus': LaserTestFocusWidget,
+    'cnc-path': CNCPathWidget,
+    'cnc-output': CncLaserOutputWidget,
+    'cnc-laser-object-list': CncLaserObjectList,
+    'job-type': JobType,
+    'create-toolpath': CreateToolPath
+};
 
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
+
 
 class Cnc extends Component {
     static propTypes = {
@@ -30,7 +91,18 @@ class Cnc extends Component {
     };
 
     state = {
+        showWarning: false,
+        // showWorkspace: true,
         isDraggingWidget: false
+    };
+
+    listActions = {
+        onDragStart: () => {
+            this.setState({ isDraggingWidget: true });
+        },
+        onDragEnd: () => {
+            this.setState({ isDraggingWidget: false });
+        }
     };
 
     actions = {
@@ -59,21 +131,20 @@ class Cnc extends Component {
                 body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         },
-        onDragWidgetStart: () => {
-            this.setState({ isDraggingWidget: true });
-        },
-        onDragWidgetEnd: () => {
-            this.setState({ isDraggingWidget: false });
-        },
+
         onChangeWidgetOrder: (widgets) => {
             this.props.updateTabContainer({ widgets });
         }
+        // popupWorkspace: () => {
+        //     this.setState({ showWorkspace: true });
+        // }
     };
+
 
     renderMainToolBar = () => {
         const leftItems = [
             {
-                title: 'Copy',
+                title: 'Home',
                 action: () => this.props.history.push('/')
             },
             {
@@ -94,53 +165,67 @@ class Cnc extends Component {
         );
     }
 
-    renderCenterView = () => {
-        return (
-            <Dropzone
-                disabled={this.state.isDraggingWidget}
-                accept={ACCEPT}
-                dragEnterMsg={i18n._('Drop an image file here.')}
-                onDropAccepted={this.actions.onDropAccepted}
-                onDropRejected={this.actions.onDropRejected}
-            >
-                <CNCVisualizer />
-            </Dropzone>
-        );
-    };
-
     renderModalView = () => {
         return (<CncToolManager />);
     };
 
-    renderRightView = (widgets) => {
-        return (
-            <Sortable
-                options={{
-                    animation: 150,
-                    delay: 0,
-                    group: {
-                        name: 'cnc-control'
-                    },
-                    handle: '.sortable-handle',
-                    filter: '.sortable-filter',
-                    chosenClass: 'sortable-chosen',
-                    ghostClass: 'sortable-ghost',
-                    dataIdAttr: 'data-widget-id',
-                    onStart: this.actions.onDragWidgetStart,
-                    onEnd: this.actions.onDragWidgetEnd
-                }}
-                onChange={this.actions.onChangeWidgetOrder}
-            >
-                {widgets.map(widget => {
-                    return (
-                        <div data-widget-id={widget} key={widget}>
-                            <Widget widgetId={widget} headType="cnc" width="360px" />
-                        </div>
-                    );
-                })}
-            </Sortable>
-        );
+    renderWarningModal() {
+        const onClose = () => this.setState({ showWarning: false });
+        return this.state.showWarning && renderModal({
+            // size: 'small',
+            // title: i18n._('Warning'),
+            onClose,
+            renderBody: () => (
+                <div>
+                    <Trans i18nKey="key_CNC_loading_warning">
+                                This is an alpha feature that helps you get started with CNC Carving. Make sure you
+                        <Space width={4} />
+                        <a
+                            style={{ color: '#28a7e1' }}
+                            href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                                    Read This First - Safety Information
+                        </a>
+                        <Space width={4} />
+                                before proceeding.
+                    </Trans>
+                </div>
+            ),
+            renderFooter: () => (
+
+                <div style={{ display: 'inline-block', marginRight: '8px' }}>
+                    <button type="button" className="sm-btn-large sm-btn-default" onClick={onClose}>
+                        {i18n._('Cancel')}
+                    </button>
+                    <input
+                        id="footer-input"
+                        type="checkbox"
+                        defaultChecked={false}
+                        onChange={this.actions.onChangeShouldShowWarning}
+                    />
+                    {/* eslint-disable-next-line jsx-a11y/label-has-for */}
+                    <label id="footer-input-label" htmlFor="footer-input" style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again')}</label>
+
+                </div>
+            )
+        });
     }
+
+    renderRightView = () => {
+        const widgetProps = { headType: 'cnc' };
+        return (
+            <div>
+                <div>
+                    <button type="button" onClick={() => this.props.switchToPage('cnc', PAGE_EDITOR)}>Editor</button>
+                    <button type="button" onClick={() => this.props.switchToPage('cnc', PAGE_PROCESS)}>Process</button>
+                </div>
+                {renderWidgetList('cnc', 'default', this.props.widgets, allWidgets, this.listActions, widgetProps)}
+            </div>
+
+        );
+    };
 
     render() {
         const style = this.props.style;
@@ -148,11 +233,21 @@ class Cnc extends Component {
         return (
             <div style={style}>
                 <ProjectLayout
-                    renderCenterView={this.renderCenterView}
                     renderMainToolBar={this.renderMainToolBar}
-                    renderRightView={() => this.renderRightView(this.props.widgets)}
+                    renderRightView={this.renderRightView}
                     renderModalView={this.renderModalView}
-                />
+                >
+                    <Dropzone
+                        disabled={this.state.isDraggingWidget}
+                        accept={ACCEPT}
+                        dragEnterMsg={i18n._('Drop an image file here.')}
+                        onDropAccepted={this.actions.onDropAccepted}
+                        onDropRejected={this.actions.onDropRejected}
+                    >
+                        <CNCVisualizer />
+                    </Dropzone>
+                </ProjectLayout>
+                {this.renderWarningModal()}
             </div>
         );
     }
@@ -168,7 +263,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure)),
-        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('cnc', 'default', widgets))
+        switchToPage: (from, page) => dispatch(editorActions.switchToPage(from, page))
     };
 };
 

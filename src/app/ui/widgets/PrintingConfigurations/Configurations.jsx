@@ -28,7 +28,7 @@ const OFFICIAL_CONFIG_KEYS = [
 
 class Configurations extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
 
@@ -79,7 +79,7 @@ class Configurations extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Printing Settings'));
+        this.props.widgetActions.setTitle(i18n._('Printing Settings'));
     }
 
     componentDidMount() {

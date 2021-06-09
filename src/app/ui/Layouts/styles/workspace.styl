@@ -21,6 +21,7 @@
     }
     .secondary-container {
         border-left: 1px solid #ccc;
+        position: relative;
     }
     .primary-container {
         vertical-align: top;
@@ -36,7 +37,7 @@
         left: 0;
 
         &.hidden {
-            display: none;
+            width: 0;
         }
 
         .toolbar {
@@ -51,7 +52,6 @@
         background-color: #f6f7f8;
         width: 360px;
         max-width: 360px;
-        min-width: 360px;
         padding: 10px 10px 10px 6px;
         display: block;
         overflow: auto;
@@ -60,7 +60,7 @@
         right: 0;
 
         &.hidden {
-            display: none;
+            width: 0;
         }
 
         .toolbar {

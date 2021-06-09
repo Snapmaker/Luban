@@ -8,7 +8,7 @@ import styles from './styles/project.styl';
 class ProjectLayout extends PureComponent {
     static propTypes = {
         renderRightView: PropTypes.func,
-        renderCenterView: PropTypes.func,
+        children: PropTypes.array,
         renderModalView: PropTypes.func,
         renderMainToolBar: PropTypes.func,
         renderSubToolBar: PropTypes.func
@@ -42,7 +42,7 @@ class ProjectLayout extends PureComponent {
     }
 
     render() {
-        const { renderRightView, renderCenterView, renderMainToolBar, renderSubToolBar, renderModalView } = this.props;
+        const { renderRightView, children, renderMainToolBar, renderSubToolBar, renderModalView } = this.props;
         return (
             <div>
 
@@ -75,9 +75,7 @@ class ProjectLayout extends PureComponent {
                             styles.visualizer,
                         )}
                     >
-                        {renderCenterView && (
-                            renderCenterView()
-                        )}
+                        {children}
                     </div>
 
                     <div

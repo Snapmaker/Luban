@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { isUndefined, cloneDeep, uniqWith, isEqual } from 'lodash';
 import { PRINTING_QUALITY_CONFIG_GROUP } from '../../constants';
 import modal from '../../lib/modal';
-import CreateModal from './CreateModal';
+import DefinitionCreator from './DefinitionCreator';
 import i18n from '../../lib/i18n';
 import SvgIcon from '../components/SvgIcon';
 import Select from '../components/Select';
@@ -36,7 +36,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
     const refs = {
         fileInput: useRef(null),
         renameInput: useRef(null),
-        refCreateModal: useRef(null),
+        refDefinitionCreator: useRef(null),
         scrollDom: useRef(null)
     };
 
@@ -178,10 +178,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 title: title,
                 body: (
                     <React.Fragment>
-                        <CreateModal
+                        <DefinitionCreator
                             isCreate={isCreate}
                             disableCategory={disableCategory}
-                            ref={refs.refCreateModal}
+                            ref={refs.refDefinitionCreator}
                             materialOptions={materialOptions}
                             copyType={copyType}
                             copyTargetName={copyTargetName}
@@ -193,7 +193,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={async () => {
-                            const data = refs.refCreateModal.current.getData();
+                            const data = refs.refDefinitionCreator.current.getData();
                             const newDefinitionForManager = cloneDeep(definitionState.definitionForManager);
                             let isEmptyCategory = false;
                             let newName = '';

@@ -14,9 +14,8 @@ import { actions as machineActions } from '../../../flux/machine';
 
 class Purifier extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         isConnected: PropTypes.bool.isRequired,
-        setDisplay: PropTypes.func.isRequired,
         connectionType: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired,
         airPurifier: PropTypes.bool.isRequired,
@@ -80,34 +79,34 @@ class Purifier extends PureComponent {
 
     constructor(props) {
         super(props);
-        props.setTitle(i18n._('Air Purifier'));
+        props.widgetActions.setTitle(i18n._('Air Purifier'));
     }
 
     componentDidMount() {
         if (!this.props.isConnected) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
             return;
         }
         if (!this.props.airPurifier) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
             return;
         }
         if (this.props.airPurifier) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         }
     }
 
     componentWillReceiveProps(nextProps) {
         if (!nextProps.isConnected) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
             return;
         }
         if (!nextProps.airPurifier) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
             return;
         }
         if (nextProps.airPurifier) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         }
 
         if (nextProps.airPurifierSwitch !== this.state.isFilterEnable) {
