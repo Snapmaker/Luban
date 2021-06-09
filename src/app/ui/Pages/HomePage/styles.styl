@@ -7,8 +7,8 @@
     vertical-align: middle
     filter: invert(60%)
 .title-label
-    font-size: 1.8vw
-    line-height 1.8vw
+    font-size: 18px
+    line-height 24px
     font-weight: bold
 .sub-title
     font-size 1.2vw
@@ -228,3 +228,42 @@
                 border 2px solid #D6D6D7
                 margin-bottom 0.9vw
                 height 9.2vw
+.setting-modal
+    .title-label
+        font-weight normal
+        margin-bottom 26px
+    .lang-select
+        display flex
+        flex-direction column
+        align-items center
+        > select
+            width 160px
+            height 30px
+    .machine-select
+        display flex
+        flex-direction column
+        align-items center
+        .machine-content
+            width 100%
+            display flex
+            justify-content space-evenly
+            align-items center
+            .machine-img
+                display flex
+                flex-direction column
+                align-items center
+                justify-content space-between
+                > img
+                    width 160px
+            .machine-info
+                min-width 200px
+                .z-axis-select
+                    display flex
+                    align-items center
+                    font-size 14px
+                    margin-bottom 14px
+                    > input
+                        margin-right 8px
+                        cursor pointer
+
+            
