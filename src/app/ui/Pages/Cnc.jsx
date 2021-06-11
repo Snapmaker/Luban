@@ -239,7 +239,7 @@ class Cnc extends Component {
                 <ProjectLayout
                     renderMainToolBar={this.renderMainToolBar}
                     renderRightView={this.renderRightView}
-                    renderModalView={this.renderModalView}
+                    renderModalView={() => this.renderModalView(this.props.showCncToolManager)}
                 >
                     <Dropzone
                         disabled={this.state.isDraggingWidget}

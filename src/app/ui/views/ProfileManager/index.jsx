@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { isUndefined, cloneDeep, uniqWith } from 'lodash';
 // import { PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
 import modal from '../../../lib/modal';
-import CreateModal from '../CreateModal';
+import DefinitionCreator from '../DefinitionCreator';
 import Anchor from '../../components/Anchor';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
@@ -280,7 +280,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 title: title,
                 body: (
                     <React.Fragment>
-                        <CreateModal
+                        <DefinitionCreator
                             isCreate={isCreate}
                             disableCategory={disableCategory}
                             ref={refs.refCreateModal}

@@ -14,7 +14,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderWidgetList, renderRecoveryModal, pluginHooksAutoRecovery } from '../utils';
+import { renderWidgetList, renderRecoveryModal, useGetRecoveringProject } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -79,7 +79,7 @@ function Printing({ history, location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
 
-    const { recoveringProject, setRecoveringProject } = pluginHooksAutoRecovery(pageHeadType);
+    const [recoveringProject, setRecoveringProject] = useGetRecoveringProject(pageHeadType);
 
     useEffect(() => {
         return async () => {

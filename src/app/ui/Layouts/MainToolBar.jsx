@@ -49,7 +49,7 @@ class MainToolBar extends PureComponent {
                 </div>
                 <div className={styles['bar-item']}>
                     {centerItems && (centerItems.map((menuItem) => {
-                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={menuItem.title + timestamp()} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
                 <div
