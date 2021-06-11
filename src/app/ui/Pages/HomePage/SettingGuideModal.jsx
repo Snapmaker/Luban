@@ -14,6 +14,7 @@ import { machineStore } from '../../../store/local-storage';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
+import Select from '../../components/Select';
 
 const SettingGuideModal = (props) => {
     const dispatch = useDispatch();
@@ -53,17 +54,45 @@ const SettingGuideModal = (props) => {
             label: MACHINE_SERIES.A350.label,
             size: MACHINE_SERIES.A350.setting.size,
             img: '/resources/images/machine/size-2.0-A350.jpg'
-        },
+        }
+    ];
+    const languageOptions = [
         {
-            value: MACHINE_SERIES.CUSTOM.value,
-            label: MACHINE_SERIES.CUSTOM.label,
-            size: MACHINE_SERIES.CUSTOM.setting.size,
-            img: '/resources/images/machine/size-1.0-original-z-extension.jpg'
+            value: 'de',
+            label: 'Deutsch'
+        }, {
+            value: 'en',
+            label: 'English'
+        }, {
+            value: 'es',
+            label: 'Español'
+        }, {
+            value: 'fr',
+            label: 'Français'
+        }, {
+            value: 'it',
+            label: 'Italiano'
+        }, {
+            value: 'ru',
+            label: 'Русский'
+        }, {
+            value: 'uk',
+            label: 'Українська'
+        }, {
+            value: 'ko',
+            label: '한국어'
+        }, {
+            value: 'ja',
+            label: '日本語'
+        }, {
+            value: 'zh-cn',
+            label: '中文 (简体)'
         }
     ];
     // change language method
     const handleLanguageChange = (e) => {
-        const nextLang = e.target.value;
+        console.log({ e });
+        const nextLang = e.value;
         i18next.changeLanguage(nextLang, () => {
             setLang(nextLang);
         });
@@ -106,11 +135,11 @@ const SettingGuideModal = (props) => {
             setZAxis(false);
         }
         if (type === 'up') {
-            newMachineSeries = (machineSeries + 1) % 5;
+            newMachineSeries = (machineSeries + 1) % 4;
             setMachineSeries(newMachineSeries);
         } else if (type === 'down') {
             if (newMachineSeries <= 0) {
-                newMachineSeries = 4;
+                newMachineSeries = 3;
             } else {
                 newMachineSeries -= 1;
             }
@@ -132,21 +161,14 @@ const SettingGuideModal = (props) => {
                                 <div className={styles.titleLabel}>
                                     {`${i18n._('Language')}`}
                                 </div>
-                                <select
+                                <Select
+                                    className={styles.langSelectInput}
+                                    clearable={false}
+                                    searchable={false}
+                                    options={languageOptions}
                                     value={lang}
                                     onChange={handleLanguageChange}
-                                >
-                                    <option value="de">Deutsch</option>
-                                    <option value="en">English (US)</option>
-                                    <option value="es">Español</option>
-                                    <option value="fr">Français (France)</option>
-                                    <option value="it">Italiano</option>
-                                    <option value="ru">Русский</option>
-                                    <option value="uk">Українська</option>
-                                    <option value="ko">한국어</option>
-                                    <option value="ja">日本語</option>
-                                    <option value="zh-cn">中文 (简体)</option>
-                                </select>
+                                />
                             </div>
                         )
                     }
