@@ -252,7 +252,7 @@ const mapStateToProps = (state, ownProps) => {
         workflowState,
         previewFailed,
         gcodeFile,
-        autoPreview: widgets['cnc-output'].autoPreview, // todo, laser???
+        autoPreview: widgets[`${headType}-output`].autoPreview, // Todo
         autoPreviewEnabled,
         inProgress
     };

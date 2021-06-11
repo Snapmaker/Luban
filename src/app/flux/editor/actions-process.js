@@ -131,7 +131,7 @@ export const processActions = {
             if (!toastId || !toast.isActive(toastId)) {
                 toastId = toast(i18n._('Cannot generate toolpath; format of objects have to be the same.'));
             }
-            return;
+            return null;
         }
 
         const toolPath = toolPathGroup.createToolPath({ materials });

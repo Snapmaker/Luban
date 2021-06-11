@@ -106,7 +106,7 @@ class Workspace extends PureComponent {
         leftItems: [
             {
                 title: 'Home',
-                action: () => this.props.history.push('home')
+                action: () => this.props.history.push('/')
             }
         ],
         connected: controller.connected,
