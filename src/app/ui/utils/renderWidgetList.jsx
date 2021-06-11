@@ -14,6 +14,7 @@ const getWidgetByName = (name, allWidgets) => {
 export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps) {
     return (
         <div>
+            {console.log({ widgetIds })}
             <WidgetList
                 tab={tab}
                 container={container}

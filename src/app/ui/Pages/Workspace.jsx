@@ -54,6 +54,7 @@ import CncLaserObjectList from '../widgets/CncLaserList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import MachineSettingWidget from '../widgets/MachineSetting';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -78,7 +79,8 @@ const allWidgets = {
     // 'cnc-output': CncLaserOutputWidget,
     'cnc-laser-object-list': CncLaserObjectList,
     'job-type': JobType,
-    'create-toolpath': CreateToolPath
+    'create-toolpath': CreateToolPath,
+    'machine-setting': MachineSettingWidget
 };
 
 
@@ -106,7 +108,7 @@ class Workspace extends PureComponent {
         leftItems: [
             {
                 title: 'Home',
-                action: () => this.props.history.push('home')
+                action: () => this.props.history.push('/')
             }
         ],
         connected: controller.connected,
