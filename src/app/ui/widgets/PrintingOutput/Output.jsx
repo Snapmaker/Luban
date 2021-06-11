@@ -63,8 +63,8 @@ class Output extends PureComponent {
             gcodeFile.thumbnail = this.thumbnail.current.getDataURL();
 
             this.props.renderGcodeFile(gcodeFile);
+            this.setState({ showWorkspace: true });
 
-            this.props.history.push('/workspace');
             window.scrollTo(0, 0);
         },
         changeFilenameExt: (filename) => {

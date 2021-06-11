@@ -358,6 +358,7 @@ class App extends PureComponent {
                     <Route path="/laser" component={Laser} />
                     <Route path="/cnc" component={Cnc} />
                     <Route path="/settings" component={Settings} />
+                    <Route component={HomePage} />
                     <ToastContainer
                         position="top-center"
                         autoClose={5000}

@@ -106,7 +106,7 @@ class Workspace extends PureComponent {
         leftItems: [
             {
                 title: 'Home',
-                action: () => this.props.history.push('home')
+                action: () => this.props.history.push('/')
             }
         ],
         connected: controller.connected,
@@ -209,45 +209,45 @@ class Workspace extends PureComponent {
     }
 
     resizeDefaultContainer = () => {
+        // console.log('resizing');
         // const sidebar = document.querySelector('#sidebar');
-        const sidebar = {
-            offsetWidth: 0
-        };
-        const primaryContainer = this.primaryContainer.current?.parentElement;
-        const primaryToggler = this.primaryToggler.current?.parentElement;
-        const secondaryContainer = this.secondaryContainer.current?.parentElement;
-        const secondaryToggler = this.secondaryToggler.current?.parentElement;
-        const defaultContainer = this.defaultContainer.current?.parentElement;
-        const { showPrimaryContainer, showSecondaryContainer } = this.props;
+        // const sidebar = {
+        //     offsetWidth: 0
+        // };
+        // const primaryContainer = this.primaryContainer.current?.parentElement;
+        // const primaryToggler = this.primaryToggler.current?.parentElement;
+        // const secondaryContainer = this.secondaryContainer.current?.parentElement;
+        // const secondaryToggler = this.secondaryToggler.current?.parentElement;
+        // const defaultContainer = this.defaultContainer.current?.parentElement;
+        // const { showPrimaryContainer, showSecondaryContainer } = this.props;
 
-        { // Mobile-Friendly View
-            const { location } = this.props;
-            const disableHorizontalScroll = !(showPrimaryContainer && showSecondaryContainer);
+        // { // Mobile-Friendly View
+        //     const disableHorizontalScroll = !(showPrimaryContainer && showSecondaryContainer);
 
-            if (location.pathname === '/workspace' && disableHorizontalScroll) {
-                // Disable horizontal scroll
-                document.body.scrollLeft = 0;
-                document.body.style.overflowX = 'hidden';
-            } else {
-                // Enable horizontal scroll
-                document.body.style.overflowX = '';
-            }
-        }
-        if (showPrimaryContainer) {
-            defaultContainer.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
-            primaryToggler.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
-        } else {
-            defaultContainer.style.left = `${sidebar.offsetWidth}px`;
-            primaryToggler.style.left = `${sidebar.offsetWidth}px`;
-        }
+        //     if (disableHorizontalScroll) {
+        //         // Disable horizontal scroll
+        //         document.body.scrollLeft = 0;
+        //         document.body.style.overflowX = 'hidden';
+        //     } else {
+        //         // Enable horizontal scroll
+        //         document.body.style.overflowX = '';
+        //     }
+        // }
+        // if (showPrimaryContainer) {
+        //     defaultContainer.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
+        //     primaryToggler.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
+        // } else {
+        //     defaultContainer.style.left = `${sidebar.offsetWidth}px`;
+        //     primaryToggler.style.left = `${sidebar.offsetWidth}px`;
+        // }
 
-        if (showSecondaryContainer) {
-            defaultContainer.style.right = `${secondaryContainer.offsetWidth}px`;
-            secondaryToggler.style.right = `${secondaryContainer.offsetWidth}px`;
-        } else {
-            defaultContainer.style.right = '0px';
-            secondaryToggler.style.right = '0px';
-        }
+        // if (showSecondaryContainer) {
+        //     defaultContainer.style.right = `${secondaryContainer.offsetWidth}px`;
+        //     secondaryToggler.style.right = `${secondaryContainer.offsetWidth}px`;
+        // } else {
+        //     defaultContainer.style.right = '0px';
+        //     secondaryToggler.style.right = '0px';
+        // }
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
