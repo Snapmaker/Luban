@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import Slider from 'rc-slider';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -9,10 +8,10 @@ import { toFixed } from '../../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as printingActions } from '../../../flux/printing';
+import modal from '../../../lib/modal';
 
-class VisualizerModelTransformation extends PureComponent {
+class VisualizerLeftBar extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         selectedModelArray: PropTypes.array,
@@ -36,19 +35,36 @@ class VisualizerModelTransformation extends PureComponent {
         isSupporting: PropTypes.bool.isRequired,
         isSupportSelected: PropTypes.bool.isRequired,
         modelSize: PropTypes.object.isRequired,
-        // transformation: PropTypes.object,
-        // getControls: PropTypes.func.isRequired,
-        // clearAllManualSupport: PropTypes.func.isRequired,
         updateBoundingBox: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
-        // setDefaultSupportSize: PropTypes.func.isRequired,
-        setTransformMode: PropTypes.func.isRequired
+        setTransformMode: PropTypes.func.isRequired,
+        uploadModel: PropTypes.func.isRequired,
+        arrangeAllModels: PropTypes.func.isRequired,
+        scaleToFitSelectedModel: PropTypes.func.isRequired,
+        autoRotateSelectedModel: PropTypes.func.isRequired
     };
 
     state = {}
 
+    fileInput = React.createRef();
+
     actions = {
+        onClickToUpload: () => {
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
+        },
+        onChangeFile: async (event) => {
+            const file = event.target.files[0];
+            try {
+                await this.props.uploadModel(file);
+            } catch (e) {
+                modal({
+                    title: i18n._('Failed to upload model'),
+                    body: e.message
+                });
+            }
+        },
         changeUniformScalingState: (uniformScalingState) => {
             const transformation = {};
             transformation.uniformScalingState = !uniformScalingState;
@@ -121,28 +137,44 @@ class VisualizerModelTransformation extends PureComponent {
             });
             this.actions.onModelAfterTransform();
         },
+        mirrorSelectedModel: (value) => {
+            switch (value) {
+                case 'X':
+                    this.props.updateSelectedModelTransformation({
+                        scaleX: this.props.transformation.scaleX * -1
+                    }, false);
+                    break;
+                case 'Y':
+                    this.props.updateSelectedModelTransformation({
+                        scaleY: this.props.transformation.scaleY * -1
+                    }, false);
+                    break;
+                case 'Z':
+                    this.props.updateSelectedModelTransformation({
+                        scaleZ: this.props.transformation.scaleZ * -1
+                    }, false);
+                    break;
+                case 'Reset':
+                    this.props.updateSelectedModelTransformation({
+                        scaleX: Math.abs(this.props.transformation.scaleX),
+                        scaleY: Math.abs(this.props.transformation.scaleY),
+                        scaleZ: Math.abs(this.props.transformation.scaleZ)
+                    }, false);
+                    break;
+                default:
+                    break;
+            }
+        },
+        arrangeAllModels: () => {
+            this.props.arrangeAllModels();
+        },
         onModelAfterTransform: () => {
             this.props.onModelAfterTransform();
             this.props.updateBoundingBox();
         },
-        // setDefaultSupportSize: (size) => {
-        //     // size = { ...this.props.defaultSupportSize, ...size };
-        //     this.props.supportActions.setDefaultSize(size);
-        // },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
         }
-        // startSupportMode: () => {
-        //     this.props.getControls().startSupportMode();
-        // },
-        // stopSupportMode: () => {
-        //     // this.props.getControls().stopSupportMode();
-        // },
-        // clearAllManualSupport: () => {
-        //     this.props.clearAllManualSupport();
-        // }
-
-
     };
 
     render() {
@@ -168,7 +200,6 @@ class VisualizerModelTransformation extends PureComponent {
             return model.supportTag;
         }));
 
-
         if (selectedModelArray.length >= 1) {
             moveX = Number(toFixed(transformation.positionX, 1));
             moveY = Number(toFixed(transformation.positionY, 1));
@@ -183,99 +214,166 @@ class VisualizerModelTransformation extends PureComponent {
 
         return (
             <React.Fragment>
-                <div className={classNames(styles['model-transformation__container'])}>
-                    <Anchor
-                        componentClass="button"
-                        className={classNames(
-                            styles['model-operation'],
-                            styles['operation-move'],
-                            { [styles.disabled]: transformDisabled },
-                            {
-                                [styles.selected]: !transformDisabled && transformMode === 'translate'
-                            }
-                        )}
-                        onClick={() => {
-                            actions.setTransformMode('translate');
-                        }}
-                        disabled={transformDisabled}
-                    >
-                        <div className={classNames(
-                            styles.text,
-                            { [styles.disabled]: transformDisabled }
-                        )}
-                        >
-                            {i18n._('MOVE')}
-                        </div>
-                    </Anchor>
-                    <Anchor
-                        componentClass="button"
-                        className={classNames(
-                            styles['model-operation'],
-                            styles['operation-scale'],
-                            { [styles.disabled]: (transformDisabled) },
-                            {
-                                [styles.selected]: !transformDisabled && transformMode === 'scale'
-                            }
-                        )}
-                        onClick={() => {
-                            actions.setTransformMode('scale');
-                        }}
-                        disabled={transformDisabled}
-                    >
-                        <div className={classNames(
-                            styles.text,
-                            { [styles.disabled]: (transformDisabled) }
-                        )}
-                        >
-                            {i18n._('SCALE')}
-                        </div>
-                    </Anchor>
-                    <Anchor
-                        componentClass="button"
-                        className={classNames(
-                            styles['model-operation'],
-                            styles['operation-rotate'],
-                            { [styles.disabled]: transformDisabled || rotateDisabled },
-                            {
-                                [styles.selected]: !(transformDisabled || rotateDisabled) && transformMode === 'rotate'
-                            }
-                        )}
-                        onClick={() => {
-                            actions.setTransformMode('rotate');
-                        }}
-                        disabled={transformDisabled || rotateDisabled}
-                    >
-                        <div className={classNames(
-                            styles.text,
-                            { [styles.disabled]: transformDisabled || rotateDisabled }
-                        )}
-                        >
-                            {i18n._('ROTATE')}
-                        </div>
-                    </Anchor>
-                    <Anchor
-                        componentClass="button"
-                        className={classNames(
-                            styles['model-operation'],
-                            styles['operation-support'],
-                            { [styles.disabled]: supportDisabled },
-                            {
-                                [styles.selected]: !supportDisabled && transformMode === 'support'
-                            }
-                        )}
-                        onClick={() => {
-                            actions.setTransformMode('support');
-                        }}
-                        disabled={supportDisabled}
-                    >
-                        <div className={classNames(
-                            styles.text,
-                            { [styles.disabled]: supportDisabled }
-                        )}
-                        >
-                            {i18n._('SUPPORT')}
-                        </div>
-                    </Anchor>
+                <input
+                    ref={this.fileInput}
+                    type="file"
+                    accept=".stl, .obj"
+                    style={{ display: 'none' }}
+                    multiple={false}
+                    onChange={actions.onChangeFile}
+                />
+                <div className={styles.leftbar} id="sidebar">
+                    <nav className={styles.navbar}>
+                        <ul className={styles.nav}>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['operation-add']
+                                    //     { [styles.disabled]: transformDisabled },
+                                    //     {
+                                    //         [styles.selected]: !transformDisabled && transformMode === 'add'
+                                    //     }
+                                    )}
+                                    onClick={() => {
+                                        actions.onClickToUpload();
+                                    }}
+                                />
+                            </li>
+                        </ul>
+                        <ul className={styles.nav}>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['operation-move'],
+                                        { [styles.disabled]: transformDisabled },
+                                        {
+                                            [styles.selected]: !transformDisabled && transformMode === 'translate'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.setTransformMode('translate');
+                                    }}
+                                    disabled={transformDisabled}
+                                />
+                            </li>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['operation-scale'],
+                                        { [styles.disabled]: (transformDisabled) },
+                                        {
+                                            [styles.selected]: !transformDisabled && transformMode === 'scale'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.setTransformMode('scale');
+                                    }}
+                                    disabled={transformDisabled}
+                                />
+                            </li>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['operation-rotate'],
+                                        { [styles.disabled]: transformDisabled || rotateDisabled },
+                                        {
+                                            [styles.selected]: !(transformDisabled || rotateDisabled) && transformMode === 'rotate'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.setTransformMode('rotate');
+                                    }}
+                                    disabled={transformDisabled || rotateDisabled}
+                                />
+                            </li>
+                        </ul>
+                        <ul className={styles.nav}>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['model-operation'],
+                                        styles['operation-mirror'],
+                                        { [styles.disabled]: transformDisabled },
+                                        {
+                                            [styles.selected]: !transformDisabled && transformMode === 'mirror'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.setTransformMode('mirror');
+                                    }}
+                                    disabled={transformDisabled}
+                                />
+                            </li>
+                        </ul>
+                        <ul className={styles.nav}>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['operation-arrange'],
+                                        {
+                                            [styles.selected]: !transformDisabled && transformMode === 'arrange'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.arrangeAllModels();
+                                    }}
+                                />
+                            </li>
+                        </ul>
+                        <ul className={styles.nav}>
+                            <li
+                                className={classNames(
+                                    'text-center'
+                                )}
+                            >
+                                <Anchor
+                                    componentClass="button"
+                                    className={classNames(
+                                        styles['model-operation'],
+                                        styles['operation-support'],
+                                        { [styles.disabled]: supportDisabled },
+                                        {
+                                            [styles.selected]: !supportDisabled && transformMode === 'support'
+                                        }
+                                    )}
+                                    onClick={() => {
+                                        actions.setTransformMode('support');
+                                    }}
+                                    disabled={supportDisabled}
+                                />
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
                 {!transformDisabled && transformMode === 'translate' && (
                     <div className={classNames(styles.panel, styles['move-panel'])}>
@@ -293,27 +391,6 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                             <span className={styles['axis-unit-1']}>mm</span>
-                            <span className={styles['axis-slider']}>
-                                <Slider
-                                    handleStyle={{
-                                        borderColor: 'white',
-                                        backgroundColor: '#e83100'
-                                    }}
-                                    trackStyle={{
-                                        backgroundColor: '#e9e9e9'
-                                    }}
-                                    value={moveX}
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
-                                    step={0.1}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'moveX': value });
-                                    }}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
                         </div>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
@@ -329,29 +406,6 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                             <span className={styles['axis-unit-1']}>mm</span>
-                            <span className={styles['axis-slider']}>
-                                <Slider
-                                    handleStyle={{
-                                        borderColor: 'white',
-                                        backgroundColor: '#22ac38'
-                                    }}
-                                    trackStyle={{
-                                        backgroundColor: '#e9e9e9'
-                                    }}
-                                    value={moveY}
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
-                                    step={0.1}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'moveY': value });
-                                    }}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
-
-
-                                />
-                            </span>
                         </div>
                         <div className={styles.axis}>
                             <Anchor
@@ -416,6 +470,15 @@ class VisualizerModelTransformation extends PureComponent {
                             >
                                 <i className={classNames(styles.icon, uniformScalingState ? styles['icon-checked'] : styles['icon-unchecked'])} />
                                 <span>{i18n._('Uniform Scaling')}</span>
+                            </Anchor>
+                        </div>
+                        <div className={styles.axis}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                onClick={this.props.scaleToFitSelectedModel}
+                            >
+                                <span>{i18n._('Scale to Fit')}</span>
                             </Anchor>
                         </div>
                         <div className={styles.axis}>
@@ -493,29 +556,6 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                             <span className={styles['axis-unit-3']}>°</span>
-                            <span className={styles['axis-slider']}>
-                                <Slider
-                                    handleStyle={{
-                                        borderColor: 'white',
-                                        backgroundColor: '#e83100'
-                                    }}
-                                    trackStyle={{
-                                        backgroundColor: '#e9e9e9'
-                                    }}
-                                    value={rotateX}
-                                    min={-180}
-                                    max={180}
-                                    step={0.1}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateX': THREE.Math.degToRad(degree) });
-                                    }}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
-
-
-                                />
-                            </span>
                         </div>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
@@ -531,29 +571,6 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                             <span className={styles['axis-unit-3']}>°</span>
-                            <span className={styles['axis-slider']}>
-                                <Slider
-                                    handleStyle={{
-                                        borderColor: 'white',
-                                        backgroundColor: '#22ac38'
-                                    }}
-                                    trackStyle={{
-                                        backgroundColor: '#e9e9e9'
-                                    }}
-                                    value={rotateY}
-                                    min={-180}
-                                    max={180}
-                                    step={0.1}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateY': THREE.Math.degToRad(degree) });
-                                    }}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
-
-
-                                />
-                            </span>
                         </div>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
@@ -569,31 +586,16 @@ class VisualizerModelTransformation extends PureComponent {
                                 />
                             </span>
                             <span className={styles['axis-unit-3']}>°</span>
-                            <span className={styles['axis-slider']}>
-                                <Slider
-                                    handleStyle={{
-                                        borderColor: 'white',
-                                        backgroundColor: '#00b7ee'
-                                    }}
-                                    trackStyle={{
-                                        backgroundColor: '#e9e9e9'
-                                    }}
-                                    value={rotateZ}
-                                    min={-180}
-                                    max={180}
-                                    step={0.1}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateZ': THREE.Math.degToRad(degree) });
-                                    }}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
-
-
-                                />
-                            </span>
                         </div>
-
+                        <div className={styles.axis}>
+                            <Anchor
+                                componentClass="button"
+                                className={styles['reset-button']}
+                                onClick={this.props.autoRotateSelectedModel}
+                            >
+                                <span>{i18n._('Auto Rotate')}</span>
+                            </Anchor>
+                        </div>
                         <div className={styles.axis}>
                             <Anchor
                                 componentClass="button"
@@ -603,6 +605,51 @@ class VisualizerModelTransformation extends PureComponent {
                                 <span>{i18n._('Reset')}</span>
                             </Anchor>
                         </div>
+                    </div>
+                )}
+
+                {!transformDisabled && transformMode === 'mirror' && (
+                    <div className={classNames(styles.panel, styles['mirror-panel'])}>
+                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
+                            <span className={classNames(styles['title-mode'])}>{i18n._('Mirror')}</span>
+                        </div>
+                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
+                            <Anchor
+                                componentClass="button"
+                                style={{ width: '60px' }}
+                                className={styles['reset-button']}
+                                onClick={() => actions.mirrorSelectedModel('X')}
+                            >
+                                <span>{i18n._('X-axis')}</span>
+                            </Anchor>
+                            <Anchor
+                                componentClass="button"
+                                style={{ width: '60px' }}
+                                className={styles['reset-button']}
+                                onClick={() => actions.mirrorSelectedModel('Y')}
+                            >
+                                <span>{i18n._('Y-axis')}</span>
+                            </Anchor>
+                            <Anchor
+                                componentClass="button"
+                                style={{ width: '60px' }}
+                                className={styles['reset-button']}
+                                onClick={() => actions.mirrorSelectedModel('Z')}
+                            >
+                                <span>{i18n._('Z-axis')}</span>
+                            </Anchor>
+                        </div>
+                        {/*TODO: Cannot easily reset because different method to calculate scales*/}
+                        {/*<div className={classNames(styles.axis, styles['axis-padding-left'])}>*/}
+                        {/*    <Anchor*/}
+                        {/*        componentClass="button"*/}
+                        {/*        style={{ width: '198px' }}*/}
+                        {/*        className={styles['reset-button']}*/}
+                        {/*        onClick={() => actions.mirrorSelectedModel('Reset')}*/}
+                        {/*    >*/}
+                        {/*        <span>{i18n._('Reset')}</span>*/}
+                        {/*    </Anchor>*/}
+                        {/*</div>*/}
                     </div>
                 )}
 
@@ -723,11 +770,11 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation))
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState))
     // setDefaultSupportSize: (size) => dispatch(printingActions.setDefaultSupportSize(size)),
 });
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(VisualizerModelTransformation);
+export default connect(mapStateToProps, mapDispatchToProps)(VisualizerLeftBar);

@@ -5,7 +5,6 @@ import DxfParser from './DxfParser';
 import { svgInverse, svgToString } from '../SVGParser/SvgToString';
 
 const EPSILON = 1e-6;
-
 function angle2(p1, p2) {
     const v1 = new THREE.Vector2(p1.x, p1.y);
     const v2 = new THREE.Vector2(p2.x, p2.y);
@@ -338,11 +337,27 @@ export const measureBoundary = (dxfString) => {
                 minY = Math.min(point.y, minY);
             });
         } else if (entities.type === 'POLYLINE') {
-            entities.vertices.forEach((point) => {
-                maxX = Math.max(point.x, maxX);
-                minX = Math.min(point.x, minX);
-                maxY = Math.max(point.y, maxY);
-                minY = Math.min(point.y, minY);
+            const pointsArr = [];
+            for (let i = 0; i < entities.vertices.length; i++) {
+                if (entities.vertices[i].bulge) {
+                    const bulge = entities.vertices[i].bulge;
+                    const startPoint = entities.vertices[i];
+                    const endPoint = i + 1 < entities.vertices.length ? entities.vertices[i + 1] : entities.vertices[0];
+
+                    const bulgeGeometry = new BulgeGeometry(startPoint, endPoint, bulge);
+                    bulgeGeometry.vertices.forEach((vertice) => {
+                        pointsArr.push([vertice.x, vertice.y]);
+                    });
+                } else {
+                    const vertex = entities.vertices[i];
+                    pointsArr.push([vertex.x, vertex.y]);
+                }
+            }
+            pointsArr.forEach((point) => {
+                maxX = Math.max(point[0], maxX);
+                minX = Math.min(point[0], minX);
+                maxY = Math.max(point[1], maxY);
+                minY = Math.min(point[1], minY);
             });
         } else if (entities.type === 'SPLINE') {
             let points;
@@ -379,12 +394,26 @@ export const measureBoundary = (dxfString) => {
             minX = Math.min(position.x, minX);
             maxY = Math.max(position.y, maxY);
             minY = Math.min(position.y, minY);
-        } else if (entities.type === 'CIRCLE' || entities.type === 'ARC') {
+        } else if (entities.type === 'CIRCLE') {
             const { center, radius } = entities;
             maxX = Math.max(center.x + radius, maxX);
             minX = Math.min(center.x - radius, minX);
             maxY = Math.max(center.y + radius, maxY);
             minY = Math.min(center.y - radius, minY);
+        } else if (entities.type === 'ARC') {
+            const { center, radius, startAngle, endAngle } = entities;
+            const anglePer = 180 / Math.PI;
+            const startRadians = anglePer * startAngle,
+                endRadians = anglePer * endAngle;
+
+            for (let i = startRadians; i <= endRadians; i++) {
+                const newX = center.x + radius * Math.cos(i / anglePer),
+                    newY = center.y + radius * Math.sin(i / anglePer);
+                maxX = Math.max(newX, maxX);
+                minX = Math.min(newX, minX);
+                maxY = Math.max(newY, maxY);
+                minY = Math.min(newY, minY);
+            }
         } else if (entities.type === 'ELLIPSE') {
             const centerX = entities.center.x;
             const centerY = entities.center.y;
