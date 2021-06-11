@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
@@ -11,6 +11,7 @@ import i18n from '../../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolPathConfigurations from '../../../views/ToolPathConfigurations/ToolPathConfigurations';
 
+
 const getIconStatus = (status) => {
     if (status === 'running') {
         return styles.iconRunning;
@@ -21,7 +22,7 @@ const getIconStatus = (status) => {
     }
     return '';
 };
-const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, updatingToolPath }) => {
+const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath }) => {
     if (!toolPath) {
         return null;
     }
@@ -67,7 +68,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                                 styles.icon,
                             )}
                             title={i18n._('Edit')}
-                            onClick={() => updatingToolPath(toolPath.id)}
+                            onClick={() => setEditingToolpath(toolPath)}
                         />
                         {!toolPath.visible && (
                             <SvgIcon
@@ -103,13 +104,14 @@ ToolpathItem.propTypes = {
     selectedToolPathId: PropTypes.string.isRequired,
     selectToolPathId: PropTypes.func.isRequired,
     onClickVisible: PropTypes.func.isRequired,
-    updatingToolPath: PropTypes.func.isRequired
+    setEditingToolpath: PropTypes.func.isRequired
 };
 
 const ToolPathListBox = (props) => {
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId, shallowEqual);
     const dispatch = useDispatch();
+    const [editingToolpath, setEditingToolpath] = useState(null);
     const actions = {
         selectToolPathId: (id) => {
             dispatch(editorActions.selectToolPathId(props.headType, id));
@@ -120,14 +122,23 @@ const ToolPathListBox = (props) => {
                 check: !check
             }));
         },
-        updatingToolPath: (toolPathId) => {
-            dispatch(editorActions.updatingToolPath(props.headType, toolPathId));
+        deleteToolPath: (toolPathId) => dispatch(editorActions.deleteToolPath(props.headType, toolPathId)),
+        commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),
+        toolPathToUp: (toolPathId) => dispatch(editorActions.toolPathToUp(props.headType, toolPathId)),
+        toolPathToDown: (toolPathId) => dispatch(editorActions.toolPathToDown(props.headType, toolPathId)),
+        recalculateAllToolPath: () => {
+            toolPaths.forEach((toolPath) => {
+                if (toolPath.status === 'warning') {
+                    actions.commitGenerateToolPath(toolPath.id);
+                }
+            });
         }
     };
     useEffect(() => {
-        props.setTitle(i18n._('Toolpath List'));
+        props.widgetActions.setTitle(i18n._('Toolpath List'));
     }, []);
 
+    const disabled = !selectedToolPathId;
     return (
         <div>
             <div className={styles['object-list-box']}>
@@ -139,19 +150,80 @@ const ToolPathListBox = (props) => {
                             selectedToolPathId={selectedToolPathId}
                             selectToolPathId={actions.selectToolPathId}
                             onClickVisible={actions.onClickVisible}
-                            updatingToolPath={actions.updatingToolPath}
+                            setEditingToolpath={setEditingToolpath}
                         />
                     );
                 })}
             </div>
-            <ToolPathConfigurations
-                headType={props.headType}
-            />
+            <div className={classNames(
+                styles.toolPathFooter,
+                'clearfix'
+            )}
+            >
+                <div className={classNames(
+                    styles.left
+                )}
+                >
+                    <SvgIcon
+                        className={classNames(
+                            styles.icon,
+                        )}
+                        name="Delete"
+                        disabled={disabled}
+                        size={24}
+                        title={i18n._('Delete')}
+                        onClick={() => actions.deleteToolPath(selectedToolPathId)}
+                    />
+                    <SvgIcon
+                        className={classNames(
+                            styles.icon,
+                        )}
+                        title={i18n._('Recalculate All')}
+                        onClick={() => actions.recalculateAllToolPath()}
+                        name="Refresh"
+                        disabled={!toolPaths.length > 0}
+                        size={24}
+                    />
+                </div>
+                <div className={classNames(
+                    styles.right,
+                )}
+                >
+                    <SvgIcon
+                        className={classNames(
+                            styles.icon,
+                        )}
+                        disabled={disabled}
+                        title={i18n._('Prioritize')}
+                        onClick={() => actions.toolPathToUp(selectedToolPathId)}
+                        name="Up"
+                        size={24}
+                    />
+                    <SvgIcon
+                        className={classNames(
+                            styles.icon,
+                            styles.rotate180
+                        )}
+                        disabled={disabled}
+                        title={i18n._('Deprioritize')}
+                        onClick={() => actions.toolPathToDown(selectedToolPathId)}
+                        name="Up"
+                        size={24}
+                    />
+                </div>
+            </div>
+            {editingToolpath && (
+                <ToolPathConfigurations
+                    headType={props.headType}
+                    toolpath={editingToolpath}
+                    onClose={() => setEditingToolpath(null)}
+                />
+            )}
         </div>
     );
 };
 ToolPathListBox.propTypes = {
-    setTitle: PropTypes.func,
+    widgetActions: PropTypes.object.isRequired,
     headType: PropTypes.string
 };
 export default ToolPathListBox;

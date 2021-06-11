@@ -30,7 +30,7 @@ import modalSmallHOC from '../../components/Modal/modal-small';
 
 class WifiTransport extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         gcodeFiles: PropTypes.array.isRequired,
 
@@ -195,7 +195,7 @@ class WifiTransport extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('G-code Files'));
+        this.props.widgetActions.setTitle(i18n._('G-code Files'));
     }
 
     componentDidMount() {

@@ -12,7 +12,7 @@ import { actions as cncActions } from '../../../flux/cnc';
 
 class CNCPath extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         page: PropTypes.string.isRequired,
 
@@ -26,8 +26,6 @@ class CNCPath extends PureComponent {
         // transformation: PropTypes.object.isRequired,
         selectedModel: PropTypes.object,
 
-        // functions
-        setDisplay: PropTypes.func.isRequired,
 
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
         changeSelectedModelMode: PropTypes.func.isRequired,
@@ -46,24 +44,24 @@ class CNCPath extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Configurations'));
+        this.props.widgetActions.setTitle(i18n._('Configurations'));
     }
 
     componentDidMount() {
         const { modelGroup } = this.props;
         if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         } else {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
     }
 
     componentWillReceiveProps(nextProps) {
         const { modelGroup } = nextProps;
         if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         } else {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
     }
 

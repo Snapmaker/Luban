@@ -15,11 +15,14 @@ import { actions as projectActions } from '../../../flux/project';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
+import { renderPopup } from '../../utils';
+
+import Workspace from '../../Pages/Workspace';
 
 class Output extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -115,7 +118,15 @@ class Output extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Actions'));
+        this.props.widgetActions.setTitle(i18n._('Actions'));
+    }
+
+    renderWorkspace() {
+        const onClose = () => this.setState({ showWorkspace: false });
+        return this.state.showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
+        });
     }
 
     render() {
@@ -197,6 +208,7 @@ class Output extends PureComponent {
                     modelGroup={this.props.modelGroup}
                     minimized={this.props.minimized}
                 />
+                {this.renderWorkspace()}
             </div>
         );
     }

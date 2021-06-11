@@ -34,7 +34,7 @@ function MenuItem({ menuItem, actions }) {
     }
 }
 MenuItem.propTypes = {
-    menuItem: PropTypes.array.isRequired,
+    menuItem: PropTypes.object.isRequired,
     actions: PropTypes.object.isRequired
 };
 

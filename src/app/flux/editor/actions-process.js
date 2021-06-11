@@ -143,10 +143,10 @@ export const processActions = {
 
         if (toolPath) {
             dispatch(baseActions.updateState(headType, {
-                updatingToolPath: toolPath,
                 isChangedAfterGcodeGenerating: true
             }));
         }
+        return toolPath;
     },
 
     fastCreateToolPath: (headType, toolParams) => async (dispatch, getState) => {
@@ -157,12 +157,6 @@ export const processActions = {
         }
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
-        }));
-    },
-
-    cancelUpdateToolPath: (headType) => (dispatch) => {
-        dispatch(baseActions.updateState(headType, {
-            updatingToolPath: null
         }));
     },
 

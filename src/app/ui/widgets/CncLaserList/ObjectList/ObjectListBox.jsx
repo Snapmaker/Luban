@@ -38,8 +38,8 @@ function ObjectListBox(props) {
     };
 
     useEffect(() => {
-        props.setTitle(i18n._('Object List'));
-    }, [props.setTitle]);
+        props.widgetActions.setTitle(i18n._('Object List'));
+    }, [props.widgetActions.setTitle]);
     useEffect(() => {
         if (previewFailed) {
             modal({
@@ -69,7 +69,7 @@ function ObjectListBox(props) {
     );
 }
 ObjectListBox.propTypes = {
-    setTitle: PropTypes.func,
+    widgetActions: PropTypes.object.isRequired,
     headType: PropTypes.string
 };
 

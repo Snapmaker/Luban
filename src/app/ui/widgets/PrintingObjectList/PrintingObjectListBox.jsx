@@ -25,8 +25,8 @@ function PrintingObjectListBox(props) {
         }
     };
     useEffect(() => {
-        props.setTitle(i18n._('Object List'));
-    }, [props.setTitle]);
+        props.widgetActions.setTitle(i18n._('Object List'));
+    }, [props.widgetActions.setTitle]);
     return (
         <div className={styles['object-list-box']}>
             {(models) && models.filter(model => !model.supportTag).map((model) => {
@@ -45,7 +45,7 @@ function PrintingObjectListBox(props) {
     );
 }
 PrintingObjectListBox.propTypes = {
-    setTitle: PropTypes.func
+    widgetActions: PropTypes.object
 };
 
 export default PrintingObjectListBox;

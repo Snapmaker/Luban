@@ -43,12 +43,12 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.map((menuItem) => {
-                        return <MenuItem menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
                 <div className={styles['bar-item']}>
                     {centerItems && (centerItems.map((menuItem) => {
-                        return <MenuItem menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
                 <div
@@ -58,7 +58,7 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {rightItems && (rightItems.map((menuItem) => {
-                        return <MenuItem menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
             </div>

@@ -3,7 +3,6 @@ import series from 'async/series';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { HashRouter, Route } from 'react-router-dom';
 import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import thunk from 'redux-thunk';
@@ -21,7 +20,7 @@ import { toQueryObject } from './lib/query';
 import user from './lib/user';
 import { machineStore } from './store/local-storage';
 import reducer from './flux';
-import App from './ui/containers/App';
+import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
 
@@ -113,9 +112,7 @@ series([
 
     ReactDOM.render(
         <Provider store={reduxStore}>
-            <HashRouter>
-                <Route path="/" component={App} />
-            </HashRouter>
+            <App />
         </Provider>,
         container
     );

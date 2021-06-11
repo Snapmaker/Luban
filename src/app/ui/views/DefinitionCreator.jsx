@@ -6,7 +6,7 @@ import Select from '../components/Select';
 import i18n from '../../lib/i18n';
 
 
-class CreateModal extends PureComponent {
+class DefinitionCreator extends PureComponent {
     static propTypes = {
         isCreate: PropTypes.bool,
         disableCategory: PropTypes.bool,
@@ -167,4 +167,4 @@ class CreateModal extends PureComponent {
     }
 }
 
-export default CreateModal;
+export default DefinitionCreator;

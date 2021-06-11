@@ -3,17 +3,79 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import Sortable from 'react-sortablejs';
+// import Sortable from 'react-sortablejs';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
-import Widget from '../widgets/Widget';
+// import Widget from '../widgets/Widget';
+
+import { renderWidgetList } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as widgetActions } from '../../flux/widget';
 // import styles from './styles.styl';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
+
+import { PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
+
+
+import ControlWidget from '../widgets/Control';
+import ConnectionWidget from '../widgets/Connection';
+import ConsoleWidget from '../widgets/Console';
+import GCodeWidget from '../widgets/GCode';
+import MacroWidget from '../widgets/Macro';
+import PurifierWidget from '../widgets/Purifier';
+import MarlinWidget from '../widgets/Marlin';
+import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import WebcamWidget from '../widgets/Webcam';
+import LaserParamsWidget from '../widgets/LaserParams';
+import LaserSetBackground from '../widgets/LaserSetBackground';
+import LaserTestFocusWidget from '../widgets/LaserTestFocus';
+import CNCPathWidget from '../widgets/CNCPath';
+import CncLaserOutputWidget from '../widgets/CncLaserOutput';
+
+import PrintingMaterialWidget from '../widgets/PrintingMaterial';
+import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
+import PrintingOutputWidget from '../widgets/PrintingOutput';
+import WifiTransport from '../widgets/WifiTransport';
+import EnclosureWidget from '../widgets/Enclosure';
+import CncLaserObjectList from '../widgets/CncLaserList';
+import PrintingObjectList from '../widgets/PrintingObjectList';
+import JobType from '../widgets/JobType';
+import CreateToolPath from '../widgets/CncLaserToolPath';
+import PrintingVisualizer from '../widgets/PrintingVisualizer';
+
+const allWidgets = {
+    'control': ControlWidget,
+    // 'axesPanel': DevelopAxesWidget,
+    'connection': ConnectionWidget,
+    'console': ConsoleWidget,
+    'gcode': GCodeWidget,
+    'macro': MacroWidget,
+    'macroPanel': MacroWidget,
+    'purifier': PurifierWidget,
+    'marlin': MarlinWidget,
+    'visualizer': VisualizerWidget,
+    'webcam': WebcamWidget,
+    'printing-visualizer': PrintingVisualizer,
+    'wifi-transport': WifiTransport,
+    'enclosure': EnclosureWidget,
+    '3dp-object-list': PrintingObjectList,
+    '3dp-material': PrintingMaterialWidget,
+    '3dp-configurations': PrintingConfigurationsWidget,
+    '3dp-output': PrintingOutputWidget,
+    'laser-params': LaserParamsWidget,
+    'laser-output': CncLaserOutputWidget,
+    'laser-set-background': LaserSetBackground,
+    'laser-test-focus': LaserTestFocusWidget,
+    'cnc-path': CNCPathWidget,
+    'cnc-output': CncLaserOutputWidget,
+    'cnc-laser-object-list': CncLaserObjectList,
+    'job-type': JobType,
+    'create-toolpath': CreateToolPath
+};
+
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
@@ -23,6 +85,7 @@ class Laser extends Component {
         widgets: PropTypes.array.isRequired,
         style: PropTypes.object,
         uploadImage: PropTypes.func.isRequired,
+        switchToPage: PropTypes.func.isRequired,
         updateTabContainer: PropTypes.func.isRequired
     };
 
@@ -64,7 +127,7 @@ class Laser extends Component {
     renderMainToolBar = () => {
         const leftItems = [
             {
-                title: 'Copy',
+                title: 'Home',
                 action: () => this.props.history.push('/')
             },
             {
@@ -85,51 +148,19 @@ class Laser extends Component {
         );
     }
 
-    renderCenterView = () => {
+    renderRightView = () => {
+        const widgetProps = { headType: 'laser' };
         return (
-            <Dropzone
-                disabled={this.state.isDraggingWidget}
-                accept={ACCEPT}
-                dragEnterMsg={i18n._('Drop an image file here.')}
-                onDropAccepted={this.actions.onDropAccepted}
-                onDropRejected={this.actions.onDropRejected}
-            >
-                <LaserVisualizer
-                    widgetId="laserVisualizer"
-                />
-            </Dropzone>
+            <div>
+                <div>
+                    <button type="button" onClick={() => this.props.switchToPage('laser', PAGE_EDITOR)}>Editor</button>
+                    <button type="button" onClick={() => this.props.switchToPage('laser', PAGE_PROCESS)}>Process</button>
+                </div>
+                {renderWidgetList('laser', 'default', this.props.widgets, allWidgets, this.listActions, widgetProps)}
+            </div>
+
         );
     };
-
-    renderRightView = (widgets) => {
-        return (
-            <Sortable
-                options={{
-                    animation: 150,
-                    delay: 0,
-                    group: {
-                        name: 'laser-control'
-                    },
-                    handle: '.sortable-handle',
-                    filter: '.sortable-filter',
-                    chosenClass: 'sortable-chosen',
-                    ghostClass: 'sortable-ghost',
-                    dataIdAttr: 'data-widget-id',
-                    onStart: this.actions.onDragWidgetStart,
-                    onEnd: this.actions.onDragWidgetEnd
-                }}
-                onChange={this.actions.onChangeWidgetOrder}
-            >
-                {widgets.map(widget => {
-                    return (
-                        <div data-widget-id={widget} key={widget}>
-                            <Widget widgetId={widget} headType="laser" width="360px" />
-                        </div>
-                    );
-                })}
-            </Sortable>
-        );
-    }
 
 
     render() {
@@ -138,10 +169,21 @@ class Laser extends Component {
         return (
             <div style={style}>
                 <ProjectLayout
-                    renderCenterView={this.renderCenterView}
                     renderMainToolBar={this.renderMainToolBar}
                     renderRightView={() => this.renderRightView(this.props.widgets)}
-                />
+                >
+                    <Dropzone
+                        disabled={this.state.isDraggingWidget}
+                        accept={ACCEPT}
+                        dragEnterMsg={i18n._('Drop an image file here.')}
+                        onDropAccepted={this.actions.onDropAccepted}
+                        onDropRejected={this.actions.onDropRejected}
+                    >
+                        <LaserVisualizer
+                            widgetId="laserVisualizer"
+                        />
+                    </Dropzone>
+                </ProjectLayout>
             </div>
         );
     }
@@ -157,7 +199,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(editorActions.uploadImage('laser', file, mode, onFailure)),
-        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('laser', 'default', widgets))
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('laser', 'default', widgets)),
+        switchToPage: (from, page) => dispatch(editorActions.switchToPage(from, page))
     };
 };
 
