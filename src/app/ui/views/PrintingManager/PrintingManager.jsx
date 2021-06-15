@@ -1,13 +1,12 @@
 import React from 'react';
 import { includes } from 'lodash';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import { PRINTING_MANAGER_TYPE_MATERIAL, PRINTING_MANAGER_TYPE_QUALITY,
     PRINTING_MATERIAL_CONFIG_KEYS, PRINTING_QUALITY_CONFIG_KEYS,
     PRINTING_MATERIAL_CONFIG_GROUP, PRINTING_QUALITY_CONFIG_GROUP } from '../../../constants';
-import ProfileManager from '../profile-manager';
+import ProfileManager from '../ProfileManager';
 import i18n from '../../../lib/i18n';
 
 // checkbox and select
@@ -30,7 +29,7 @@ const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
 ];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
-    return !definition.metadata.readonly
+    return !definition?.metadata?.readonly
         && key !== 'material_diameter';
 }
 
@@ -136,7 +135,6 @@ function PrintingManager() {
     };
     return (
         <ProfileManager
-            styles={styles}
             outsideActions={actions}
             isDefinitionEditable={isDefinitionEditable}
             isOfficialDefinition={isOfficialDefinition}

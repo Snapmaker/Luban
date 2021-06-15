@@ -201,6 +201,7 @@ export const actions = {
     uploadImage: (headType, file, mode, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
+            inProgress: true,
             progress: 0.25
         }));
         const { materials } = getState()[headType];
@@ -213,6 +214,7 @@ export const actions = {
             .then((res) => {
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
+                    inProgress: false,
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
@@ -223,6 +225,7 @@ export const actions = {
                 onError && onError(err);
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_FAILED,
+                    inProgress: false,
                     progress: 1
                 }));
             });
@@ -231,6 +234,7 @@ export const actions = {
     uploadCaseImage: (headType, file, mode, caseConfigs, caseTransformation, onError) => (dispatch, getState) => {
         dispatch(actions.updateState(headType, {
             stage: CNC_LASER_STAGE.UPLOADING_IMAGE,
+            inProgress: true,
             progress: 0.25
         }));
         const { materials } = getState()[headType];
@@ -239,6 +243,7 @@ export const actions = {
             .then((res) => {
                 dispatch(actions.updateState(headType, {
                     stage: CNC_LASER_STAGE.UPLOAD_IMAGE_SUCCESS,
+                    inProgress: false,
                     progress: 1
                 }));
                 const { width, height, originalName, uploadName } = res.body;
@@ -297,6 +302,7 @@ export const actions = {
                     worker.terminate();
                     dispatch(actions.updateState(headType, {
                         stage: CNC_LASER_STAGE.PREVIEW_FAILED,
+                        inProgress: false,
                         progress: 0
                     }));
                     break;
@@ -553,6 +559,7 @@ export const actions = {
 
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESSING_IMAGE,
+            inProgress: true,
             progress: 0
         }));
 
@@ -648,9 +655,7 @@ export const actions = {
     },
 
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { page, modelGroup, SVGActions } = getState()[headType];
-
-        if (page === PAGE_PROCESS) return;
+        const { modelGroup, SVGActions } = getState()[headType];
 
         SVGActions.deleteSelectedElements();
 
@@ -662,6 +667,7 @@ export const actions = {
         if (!modelState.hasModel) {
             dispatch(baseActions.updateState(headType, {
                 stage: CNC_LASER_STAGE.EMPTY,
+                inProgress: false,
                 progress: 0
             }));
         }
@@ -812,6 +818,7 @@ export const actions = {
         dispatch(baseActions.render(headType));
         dispatch(baseActions.updateState(headType, {
             stage: CNC_LASER_STAGE.PROCESS_IMAGE_SUCCESS,
+            inProgress: false,
             progress: 1
         }));
     },
@@ -965,12 +972,8 @@ export const actions = {
      * Select models.
      */
     selectElements: (headType, elements) => (dispatch, getState) => {
-        const { SVGActions, page } = getState()[headType];
-        if (page === PAGE_PROCESS) { // in process page
-            dispatch(actions.checkAndSelectModelsInProcess(headType, elements));
-        } else {
-            SVGActions.selectElements(elements);
-        }
+        const { SVGActions } = getState()[headType];
+        SVGActions.selectElements(elements);
 
         dispatch(baseActions.render(headType));
     },
@@ -1261,7 +1264,7 @@ export const actions = {
      * @param page
      */
     switchToPage: (headType, page) => (dispatch, getState) => {
-        const { toolPathGroup, autoPreviewEnabled, SVGActions } = getState()[headType];
+        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
         if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
             return;
         }
@@ -1276,7 +1279,6 @@ export const actions = {
                 dispatch(actions.preview(headType));
             }
         }
-        SVGActions.clearSelection();
 
         dispatch(baseActions.render(headType));
     },

@@ -2,6 +2,7 @@
     "name": "PLA",
     "version": 2,
     "inherits": "snapmaker",
+    "category": "Default",
     "overrides": {
         "material_flow": {
             "default_value": 100

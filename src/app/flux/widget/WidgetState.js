@@ -13,7 +13,7 @@ const DEFAULT_STATE = {
         left: {
             show: true,
             widgets: [
-                'connection', 'console', 'marlin', 'laser-test-focus'
+                'connection', 'console', 'marlin', 'laser-test-focus', 'machine-setting'
             ]
         },
         right: {
@@ -25,7 +25,7 @@ const DEFAULT_STATE = {
     },
     '3dp': {
         default: {
-            widgets: ['3dp-object-list', '3dp-material', '3dp-configurations', '3dp-output']
+            widgets: ['3dp-object-list', '3dp-material', '3dp-configurations']
         }
     },
     laser: {

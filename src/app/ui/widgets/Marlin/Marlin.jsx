@@ -14,8 +14,7 @@ import { actions as widgetActions } from '../../../flux/widget';
 
 class MarlinWidget extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
-        setDisplay: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         headType: PropTypes.string,
         isConnected: PropTypes.bool
@@ -33,16 +32,16 @@ class MarlinWidget extends PureComponent {
             if (headType === MACHINE_HEAD_TYPE.CNC.value) {
                 title = 'CNC';
             }
-            this.props.setTitle(title);
+            this.props.widgetActions.setTitle(title);
         }
     };
 
     componentDidMount() {
         const { isConnected, headType } = this.props;
         if (isConnected) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         } else {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
         this.actions.setTitle(headType);
     }
@@ -50,10 +49,10 @@ class MarlinWidget extends PureComponent {
     componentWillReceiveProps(nextProps) {
         const { isConnected, headType } = nextProps;
         if (isConnected && !this.props.isConnected) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         }
         if (!isConnected) {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
         if (headType !== this.props.headType) {
             this.actions.setTitle(headType);

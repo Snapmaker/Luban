@@ -8,7 +8,7 @@ import Anchor from '../components/Anchor';
 import { limitStringLength } from '../../lib/normalize-range';
 
 function ModelItem(props) {
-    const { model, isSelected, styles, onSelect, onToggleVisible } = props;
+    const { model, isSelected, styles, onSelect, onToggleVisible, inProgress } = props;
     if (!model) {
         return null;
     }
@@ -68,6 +68,7 @@ function ModelItem(props) {
                             styles.bt
                         )}
                         onClick={() => onToggleVisible(model)}
+                        disabled={inProgress}
                     />
                 </div>
             </div>
@@ -79,7 +80,8 @@ ModelItem.propTypes = {
     styles: PropTypes.object.isRequired,
     isSelected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
-    onToggleVisible: PropTypes.func.isRequired
+    onToggleVisible: PropTypes.func.isRequired,
+    inProgress: PropTypes.bool.isRequired
 };
 
 export default ModelItem;

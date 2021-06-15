@@ -179,6 +179,7 @@ class ToolPath {
             .map(v => v.getTaskInfo())
             .map(v => {
                 return {
+                    visible: v.visible,
                     modelID: v.modelID,
                     headType: v.headType,
                     sourceType: v.sourceType,
@@ -292,7 +293,7 @@ class ToolPath {
             this.status = WARNING;
         }
 
-        if (!taskInfos || taskInfos.length === 0) {
+        if (!taskInfos || taskInfos.length === 0 || !taskInfos.find(v => v.visible)) {
             console.error('The models of tool path is empty');
             this.status = FAILED;
         }

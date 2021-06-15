@@ -14,7 +14,7 @@ import { actions as editorActions } from '../../../flux/editor';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         page: PropTypes.string.isRequired,
 
@@ -27,8 +27,7 @@ class LaserParameters extends PureComponent {
         showOrigin: PropTypes.bool,
         config: PropTypes.object.isRequired,
         headType: PropTypes.string,
-
-        setDisplay: PropTypes.func.isRequired,
+        inProgress: PropTypes.bool.isRequired,
 
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired,
@@ -87,24 +86,24 @@ class LaserParameters extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Configurations'));
+        this.props.widgetActions.setTitle(i18n._('Configurations'));
     }
 
     componentDidMount() {
         const { modelGroup } = this.props;
         if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         } else {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
     }
 
     componentWillReceiveProps(nextProps) {
         const { modelGroup } = nextProps;
         if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
-            this.props.setDisplay(true);
+            this.props.widgetActions.setDisplay(true);
         } else {
-            this.props.setDisplay(false);
+            this.props.widgetActions.setDisplay(false);
         }
     }
 
@@ -115,7 +114,7 @@ class LaserParameters extends PureComponent {
             config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
-            modifyText
+            modifyText, inProgress
         } = this.props;
 
         const actions = this.actions;
@@ -139,11 +138,12 @@ class LaserParameters extends PureComponent {
                     <TransformationSection
                         headType={headType}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
+                        disabled={inProgress}
                     />
                 )}
                 {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                     <ImageProcessMode
-                        disabled={!selectedModelVisible}
+                        disabled={inProgress || !selectedModelVisible}
                         sourceType={sourceType}
                         mode={mode}
                         showOrigin={showOrigin}
@@ -154,7 +154,7 @@ class LaserParameters extends PureComponent {
 
                 {isEditor && isTextVector && (selectedModelArray.length === 1) && (
                     <TextParameters
-                        disabled={!selectedModelVisible}
+                        disabled={inProgress || !selectedModelVisible}
                         headType={headType}
                         config={config}
                         modifyText={modifyText}
@@ -166,7 +166,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { page, modelGroup, printOrder } = state.laser;
+    const { page, modelGroup, printOrder, inProgress } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModel = ((selectedModelArray && selectedModelArray.length > 0) ? selectedModelArray[0] : {
         // modelGroup.mockModel
@@ -194,7 +194,8 @@ const mapStateToProps = (state) => {
         sourceType,
         mode,
         showOrigin,
-        config
+        config,
+        inProgress
     };
 };
 

@@ -60,6 +60,7 @@ class TransformationSection extends PureComponent {
             scaleY: PropTypes.number, // not used
             uniformScalingState: PropTypes.bool
         }),
+        disabled: PropTypes.bool.isRequired,
 
         updateSelectedModelUniformScalingState: PropTypes.func.isRequired
     };
@@ -143,7 +144,7 @@ class TransformationSection extends PureComponent {
     }
 
     render() {
-        const { selectedElementsTransformation, size, selectedModelArray, sourceType, transformation } = this.props;
+        const { selectedElementsTransformation, size, selectedModelArray, sourceType, transformation, disabled } = this.props;
 
         const { x, y, width, height, scaleX, scaleY, angle } = selectedElementsTransformation;
 
@@ -187,7 +188,7 @@ class TransformationSection extends PureComponent {
                                 <div className="sm-parameter-row__label-r">
                                     <div className={styles['input-box-left']}>
                                         <Input
-                                            disabled={!selectedNotHide}
+                                            disabled={disabled || !selectedNotHide}
                                             value={toFixed(logicalX, 1)}
                                             min={-size.x}
                                             max={size.x}
@@ -208,7 +209,7 @@ class TransformationSection extends PureComponent {
                                     />
                                     <div className={styles['input-box-left']}>
                                         <Input
-                                            disabled={!selectedNotHide}
+                                            disabled={disabled || !selectedNotHide}
                                             value={toFixed(logicalY, 1)}
                                             min={-size.y}
                                             max={size.y}
@@ -235,7 +236,7 @@ class TransformationSection extends PureComponent {
                                 <div className="sm-parameter-row__label-r">
                                     <div className={styles['input-box-left']}>
                                         <Input
-                                            disabled={!selectedNotHide || canResize === false}
+                                            disabled={disabled || !selectedNotHide || canResize === false}
                                             value={toFixed(logicalWidth, 1)}
                                             min={1}
                                             max={size.x}
@@ -252,7 +253,7 @@ class TransformationSection extends PureComponent {
                                     </div>
                                     <button
                                         type="button"
-                                        disabled={!selectedNotHide || sourceType === 'raster'}
+                                        disabled={disabled || !selectedNotHide || sourceType === 'raster'}
                                         className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
                                         style={{ height: '22px', width: '20px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '4px', marginRight: '2px' }}
                                         onClick={() => {
@@ -261,7 +262,7 @@ class TransformationSection extends PureComponent {
                                     />
                                     <div className={styles['input-box-left']}>
                                         <Input
-                                            disabled={!selectedNotHide || canResize === false}
+                                            disabled={disabled || !selectedNotHide || canResize === false}
                                             value={toFixed(logicalHeight, 1)}
                                             min={1}
                                             max={size.y}
@@ -288,7 +289,7 @@ class TransformationSection extends PureComponent {
                                 <div className="sm-parameter-row__label-r">
                                     <div className={styles['input-box-left']}>
                                         <DegreeInput
-                                            disabled={!selectedNotHide || !canRotate}
+                                            disabled={disabled || !selectedNotHide || !canRotate}
                                             value={toFixed(logicalAngle, 1)}
                                             suffix="°"
                                             onChange={actions.onChangeLogicalAngle}
@@ -307,7 +308,7 @@ class TransformationSection extends PureComponent {
                                     {selectedModelArray.length === 1 && (
                                         <button
                                             type="button"
-                                            disabled={!selectedNotHide}
+                                            disabled={disabled || !selectedNotHide}
                                             className={styles.icon_flip_vertically}
                                             onClick={actions.onFlipHorizontally}
                                         />
@@ -321,7 +322,7 @@ class TransformationSection extends PureComponent {
                                     {selectedModelArray.length === 1 && (
                                         <button
                                             type="button"
-                                            disabled={!selectedNotHide}
+                                            disabled={disabled || !selectedNotHide}
                                             className={styles.icon_flip_horizontal}
                                             onClick={actions.onFlipVertically}
                                         />

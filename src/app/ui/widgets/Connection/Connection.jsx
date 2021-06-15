@@ -22,7 +22,7 @@ import { actions as machineActions } from '../../../flux/machine';
 
 class Connection extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         dataSource: PropTypes.string.isRequired,
         connectionType: PropTypes.string.isRequired,
         series: PropTypes.string.isRequired,
@@ -70,7 +70,7 @@ class Connection extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Connection'));
+        this.props.widgetActions.setTitle(i18n._('Connection'));
     }
 
     componentWillReceiveProps(nextProps) {

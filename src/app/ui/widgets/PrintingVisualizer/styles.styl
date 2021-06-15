@@ -2,6 +2,8 @@
 
 $z-index-float = 500
 $visualizer-padding = 10px
+$left-bar-width = 58px
+$bottom-bar-height = 0px
 
 .visualizer-top-left {
     position: absolute
@@ -90,58 +92,47 @@ $visualizer-padding = 10px
 }
 
 
-.visualizer-camera-operations
+.visualizer-bottom-left
     z-index: $z-index-float
     position: absolute
-    right: $visualizer-padding
-    top: $visualizer-padding
+    left: $visualizer-padding + $left-bar-width
+    bottom: $visualizer-padding + $bottom-bar-height // todo
 
-    .turn-left
-    .turn-right
-    .turn-up
-    .turn-down
-    .camera-reset
-        display: block
-        width: 28px
-        height: 28px
-        line-height: 28px
-        text-align: center
-        background-color: $background-color
+    .camera-operation
         border: 1px solid $border-color
 
-        &:hover
-            opacity(.5)
+        .turn-left
+        .turn-right
+        .turn-up
+        .turn-down
+            width: 28px
+            height: 28px
+            line-height: 28px
+            text-align: center
+            vertical-align: middle
+            background-color: $background-color
+            border: 0
+            &:hover
+                opacity(.5)
 
-        &:active
-            opacity(.3)
+            &:active
+                opacity(.3)
 
-    .turn-left
-        margin-top: 28px
-        border-top-left-radius: $border-radius
-        border-bottom-left-radius: $border-radius
-        border-right: 0
+        .camera-reset
+            display: inline-block
+            width: 28px
+            height: 28px
+            text-align: center
+            vertical-align: middle
+            background-repeat: no-repeat
+            background-position: center
+            background-image: url("/resources/images/18x18/camera-reset-normal-18x18.png")
+            border: 0
+            &:hover
+                opacity(.5)
 
-    .turn-right
-        margin-top: 28px
-        border-top-right-radius: $border-radius
-        border-bottom-right-radius: $border-radius
-        border-left: 0
-
-    .turn-up
-        border-top-left-radius: $border-radius
-        border-top-right-radius: $border-radius
-        border-bottom: 0
-
-    .turn-down
-        border-bottom-left-radius: $border-radius
-        border-bottom-right-radius: $border-radius
-        border-top: 0
-
-    .camera-reset
-        background-repeat: no-repeat
-        background-position: center
-        background-image: url("/resources/images/18x18/camera-reset-normal-18x18.png")
-        border: 0
+            &:active
+                opacity(.3)
 
 .visualizer-preview-control
     z-index: $z-index-float
@@ -241,7 +232,7 @@ $visualizer-padding = 10px
         left: 0
         top: 0
         bottom: 0
-        width: 57px
+        width: $left-bar-width
         background-color: $sidebar-background-color
         border-right: 1px solid $border-color
         box-shadow: 1px 0 3px $shadow-color
@@ -280,6 +271,7 @@ $visualizer-padding = 10px
                 background-image: url('/resources/images/224x224/toolbar_add_files.jpg')
 
                 &:disabled
+                    opacity(.2) // Todo: the same to others after change image
                     background-image: url('/resources/images/224x224/toolbar_add_files.jpg')
 
             &.operation-mirror
@@ -290,9 +282,10 @@ $visualizer-padding = 10px
                     background-image: url('/resources/images/224x224/toolbar_mirror_models.jpg')
 
             &.operation-arrange
-                background-image: url('/resources/224x224/toolbar_arrange_models.jpg')
+                background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg')
 
                 &:disabled
+                    opacity(.2) // Todo: the same to others after change image
                     background-image: url('/resources/images/224x224/toolbar_arrange_models.jpg')
 
             &.operation-move

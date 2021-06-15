@@ -361,6 +361,9 @@ class ToolPathGroup {
         if (toolPaths.find(v => v.status !== SUCCESS)) {
             return null;
         }
+        if (!toolPaths.find(v => v.visible)) {
+            return null;
+        }
         return toolPaths;
     }
 

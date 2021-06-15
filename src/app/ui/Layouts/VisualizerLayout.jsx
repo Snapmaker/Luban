@@ -9,7 +9,6 @@ class VisualizerLayout extends PureComponent {
         renderTop: PropTypes.func,
         renderTopRight: PropTypes.func,
         renderCenterLeft: PropTypes.func,
-        renderCenter: PropTypes.func,
         renderCenterRight: PropTypes.func,
         renderBottomLeft: PropTypes.func,
         renderBottom: PropTypes.func,
@@ -18,7 +17,6 @@ class VisualizerLayout extends PureComponent {
         hideTop: PropTypes.bool,
         hideTopRight: PropTypes.bool,
         hideCenterLeft: PropTypes.bool,
-        hideCenter: PropTypes.bool,
         hideCenterRight: PropTypes.bool,
         hideBottomLeft: PropTypes.bool,
         hideBottom: PropTypes.bool,
@@ -27,10 +25,10 @@ class VisualizerLayout extends PureComponent {
     render() {
         const {
             renderTopLeft, renderTop, renderTopRight,
-            renderCenterLeft, renderCenter, renderCenterRight,
+            renderCenterLeft, renderCenterRight,
             renderBottomLeft, renderBottom, renderBottomRight,
             hideTopLeft, hideTop, hideTopRight,
-            hideCenter, hideCenterLeft, hideCenterRight,
+            hideCenterLeft, hideCenterRight,
             hideBottom, hideBottomLeft, hideBottomRight
         } = this.props;
         return (
@@ -79,17 +77,16 @@ class VisualizerLayout extends PureComponent {
                         {renderCenterLeft()}
                     </div>
                 }
-                {renderCenter && <div
+                {!!this.props.children && <div
                     className={
                         classNames(
                             styles['center-container'],
-                            {[styles.hidden]: hideCenter}
+                            {[styles.hidden]: !!this.props.children}
                         )
                     }
                 >
-                        {renderCenter()}
-                    </div>
-                }
+                    {this.props.children}
+                </div>}
                 {renderCenterRight && <div
                     className={
                         classNames(
