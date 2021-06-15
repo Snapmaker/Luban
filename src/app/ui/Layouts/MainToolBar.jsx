@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import styles from './styles/maintoolbar.styl';
 import MenuItem from './MenuItem';
-import { timestamp } from '../../../shared/lib/random-utils';
+// import { timestamp } from '../../../shared/lib/random-utils';
 
 class MainToolBar extends PureComponent {
     static propTypes = {
@@ -30,6 +30,7 @@ class MainToolBar extends PureComponent {
     render() {
         const actions = this.actions;
         const { leftItems, centerItems, rightItems } = this.props;
+        let key = 0;
         return (
             <div
                 className={classNames(
@@ -44,12 +45,12 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {leftItems && (leftItems.map((menuItem) => {
-                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
                 <div className={styles['bar-item']}>
                     {centerItems && (centerItems.map((menuItem) => {
-                        return <MenuItem key={menuItem.title + timestamp()} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
                 <div
@@ -59,7 +60,7 @@ class MainToolBar extends PureComponent {
                     )}
                 >
                     {rightItems && (rightItems.map((menuItem) => {
-                        return <MenuItem key={menuItem.title} menuItem={menuItem} actions={actions} />;
+                        return <MenuItem key={key++} menuItem={menuItem} actions={actions} />;
                     }))}
                 </div>
             </div>

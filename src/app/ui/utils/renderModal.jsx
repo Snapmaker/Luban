@@ -20,6 +20,7 @@ export default function renderModal(options) {
             <React.Fragment>
                 {actions.map(({ name, isPrimary, onClick }) => (
                     <Button
+                        key={name}
                         btnStyle={isPrimary && 'primary'}
                         onClick={onClick}
                     >

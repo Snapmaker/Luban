@@ -1,7 +1,8 @@
 import React from 'react';
-import { shallowEqual, useSelector, useDispatch } from 'react-redux';
+// import { shallowEqual, useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { includes } from 'lodash';
-
+import PropTypes from 'prop-types';
 import { actions as cncActions } from '../../../flux/cnc';
 import { actions as projectActions } from '../../../flux/project';
 
@@ -26,17 +27,16 @@ function isDefinitionEditable(activeToolList) {
         activeToolList.definitionId));
 }
 
-function CncToolManager() {
-    const showCncToolManager = useSelector(state => state?.cnc?.showCncToolManager, shallowEqual);
+function CncToolManager({ closeToolManager }) {
     const toolDefinitions = useSelector(state => state?.cnc?.toolDefinitions);
     const dispatch = useDispatch();
-    if (!showCncToolManager) {
-        return null;
-    }
+    // if (!showManager) {
+    //     return null;
+    // }
 
     const actions = {
         closeManager: () => {
-            dispatch(cncActions.updateShowCncToolManager(false));
+            closeToolManager && closeToolManager();
         },
         onChangeFileForManager: (event) => {
             const toolFile = event.target.files[0];
@@ -117,4 +117,8 @@ function CncToolManager() {
         />
     );
 }
+CncToolManager.propTypes = {
+    // showManager: PropTypes.bool.isRequired,
+    closeToolManager: PropTypes.func.isRequired
+};
 export default CncToolManager;

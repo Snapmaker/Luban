@@ -219,15 +219,15 @@ class Visualizer extends Component {
         this.canvas.current.resizeWindow();
         // this.canvas.current.disable3D();
 
-        window.addEventListener(
-            'hashchange',
-            (event) => {
-                if (event.newURL.endsWith('cnc')) {
-                    this.canvas.current && this.canvas.current.resizeWindow();
-                }
-            },
-            false
-        );
+        // window.addEventListener(
+        //     'hashchange',
+        //     (event) => {
+        //         if (event.newURL.endsWith('cnc')) {
+        //             this.canvas.current && this.canvas.current.resizeWindow();
+        //         }
+        //     },
+        //     false
+        // );
     }
 
     componentWillReceiveProps(nextProps) {

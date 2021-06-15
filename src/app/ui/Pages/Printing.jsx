@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-// import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Widget from '../widgets/Widget';
@@ -14,7 +13,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderWidgetList, renderRecoveryModal, useGetRecoveringProject } from '../utils';
+import { renderWidgetList, useRenderRecoveryModal } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -79,7 +78,7 @@ function Printing({ history, location }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
 
-    const [recoveringProject, setRecoveringProject] = useGetRecoveringProject(pageHeadType);
+    const renderRecovery = useRenderRecoveryModal(pageHeadType);
 
     useEffect(() => {
         return async () => {
@@ -169,7 +168,7 @@ function Printing({ history, location }) {
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
             </Dropzone>
-            {recoveringProject && renderRecoveryModal(pageHeadType, () => { setRecoveringProject(false); })}
+            {renderRecovery}
         </ProjectLayout>
     );
 }
@@ -177,5 +176,4 @@ Printing.propTypes = {
     history: PropTypes.object,
     location: PropTypes.object
 };
-
 export default (withRouter(Printing));
