@@ -4,6 +4,9 @@ import classNames from 'classnames';
 import { Link, withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
+import slice from 'lodash/slice';
+import cloneDeep from 'lodash/cloneDeep';
+import reverse from 'lodash/reverse';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -19,6 +22,7 @@ const Begin = (props) => {
     const dispatch = useDispatch();
     const project = useSelector(state => state?.project);
     const store = useSelector(state => state);
+    const newRecentFile = reverse(cloneDeep(project.general.recentFiles));
     // method
     const onChangeFile = async (e) => {
         const file = e.target.files[0];
@@ -49,7 +53,6 @@ const Begin = (props) => {
         } else {
             const materials = store?.[type]?.materials;
             const { SVGActions } = store?.[type];
-            console.log({ SVGActions });
             await dispatch(editorActions.changeCoordinateMode(
                 type,
                 COORDINATE_MODE_BOTTOM_CENTER, {
@@ -181,7 +184,7 @@ const Begin = (props) => {
                             className={styles['recent-file-list']}
                             // style={{ display: project.general.recentFiles?.length ? 'flex' : 'none' }}
                         >
-                            {project.general.recentFiles.map(item => {
+                            {slice(newRecentFile, 0, newRecentFile.length >= 10 ? 10 : newRecentFile.length + 1).map(item => {
                                 return (
                                     <div
                                         className={styles['file-item']}
