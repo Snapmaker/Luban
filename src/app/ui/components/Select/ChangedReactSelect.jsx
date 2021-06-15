@@ -51,7 +51,6 @@ const defaultStyles = {
         return { ...provided, padding: '0px 8px' };
     },
     input: (provided,) => {
-        // console.log('isDisabled', state);
         return { ...provided, lineHeight: '20px' };
     },
     menu: (provided) => {
@@ -128,22 +127,18 @@ class ChangedReactSelect extends PureComponent {
                 PropTypes.number,
                 PropTypes.bool,
                 PropTypes.string
-            ]),
-            secondKey: PropTypes.string,
-            secondValue: PropTypes.oneOfType([
-                PropTypes.number,
-                PropTypes.bool,
-                PropTypes.string
             ])
+            // secondKey: PropTypes.string,
+            // secondValue: PropTypes.oneOfType([
+            //     PropTypes.number,
+            //     PropTypes.bool,
+            //     PropTypes.string
+            // ])
         })
     };
 
     static defaultProps = {
         isGroup: false
-        // customValue: false
-    };
-
-    actions = {
     };
 
     render() {
@@ -160,15 +155,14 @@ class ChangedReactSelect extends PureComponent {
         if (isGroup) {
             const {
                 firstKey = '',
-                firstValue = '',
-                secondKey = '',
-                secondValue = ''
+                firstValue = ''
             } = valueObj;
-            if (!isNil(firstValue) && !isNil(secondValue)) {
-                const group = options.find(d => d[firstKey] === firstValue);
-                if (group) {
-                    defaultValue = group.options.find(d => d[secondKey] === secondValue);
-                }
+            if (!isNil(firstValue) && !isNil(firstKey)) {
+                options.forEach((group) => {
+                    if (group.options && group.options.find(d => d[firstKey] === firstValue)) {
+                        defaultValue = group.options.find(d => d[firstKey] === firstValue);
+                    }
+                });
             }
         } else {
             // Compatible with old interfaces

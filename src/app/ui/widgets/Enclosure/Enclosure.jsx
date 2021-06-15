@@ -15,7 +15,6 @@ class Enclosure extends PureComponent {
         enclosureFan: PropTypes.number.isRequired,
         isConnected: PropTypes.bool.isRequired,
         connectionType: PropTypes.string.isRequired,
-        setTitle: PropTypes.func.isRequired,
         server: PropTypes.object.isRequired
     }
 
@@ -99,12 +98,6 @@ class Enclosure extends PureComponent {
                 }
             });
         }
-    }
-
-
-    constructor(props) {
-        super(props);
-        this.props.setTitle(i18n._('Enclosure'));
     }
 
     componentDidMount() {

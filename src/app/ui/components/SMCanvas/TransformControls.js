@@ -53,6 +53,8 @@ class TransformControls extends Object3D {
 
     _axis = null;
 
+    _inProgress= false;
+
     // ray for intersect calculation
     ray = new Raycaster();
 
@@ -394,6 +396,17 @@ class TransformControls extends Object3D {
         }
     }
 
+    get inProgress() {
+        return this._inProgress;
+    }
+
+    set inProgress(inProgress) {
+        if (inProgress !== this._inProgress) {
+            this._inProgress = inProgress;
+            this.dispatchEvent(EVENTS.UPDATE);
+        }
+    }
+
     get axis() {
         return this._axis;
     }
@@ -435,7 +448,7 @@ class TransformControls extends Object3D {
                 // Update peripherals
                 this.translatePeripheral.visible = (this.mode === 'translate' && child.visible);
                 this.rotatePeripheral.visible = (this.mode === 'rotate' && child.visible);
-                this.scalePeripheral.visible = ((this.mode === 'scale') && child.visible);
+                this.scalePeripheral.visible = (this.mode === 'scale' && child.visible);
             });
 
             this.object.matrixWorld.decompose(objectPosition, objectQuaternion, objectScale);
@@ -731,6 +744,9 @@ class TransformControls extends Object3D {
         this.pointEnd.copy(intersect.point);
 
         // translate
+        if (this.inProgress) {
+            return true;
+        }
         switch (this.mode) {
             case 'translate': {
                 const offset = new Vector3().subVectors(this.pointEnd, this.pointStart);

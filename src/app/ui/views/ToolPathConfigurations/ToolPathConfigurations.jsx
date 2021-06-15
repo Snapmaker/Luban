@@ -16,7 +16,7 @@ import LaserParameters from './laser/LaserParameters';
 
 function ToolPathConfigurations(props) {
     const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
-    const updatingToolPath = useSelector(state => state[props.headType]?.updatingToolPath, shallowEqual);
+    const toolpath = props.toolpath;
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
 
     const dispatch = useDispatch();
@@ -30,55 +30,51 @@ function ToolPathConfigurations(props) {
         const { toolParams, gcodeConfig } = toolPath;
         const activeToolDefinition = _.cloneDeep(activeToolListDefinition);
 
-        toolDefinitions.forEach((d) => {
-            if (d.definitionId === toolParams.definitionId) {
-                d.toolList.forEach((toolDefinition) => {
-                    if (toolDefinition.name === toolParams.definitionName) {
-                        activeToolDefinition.definitionId = d.definitionId;
-                        activeToolDefinition.name = toolDefinition.name;
-                        activeToolDefinition.config.angle.default_value = toolParams?.toolAngle;
-                        activeToolDefinition.config.diameter.default_value = toolParams?.toolDiameter;
-                        activeToolDefinition.config.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
-                        activeToolDefinition.config.jog_speed.default_value = gcodeConfig?.jogSpeed;
-                        activeToolDefinition.config.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
-                        activeToolDefinition.config.work_speed.default_value = gcodeConfig?.workSpeed;
-                        activeToolDefinition.config.step_down.default_value = gcodeConfig?.stepDown;
-                        activeToolDefinition.config.density.default_value = gcodeConfig?.density;
-                    }
-                });
-            }
+        const oldTooldefinition = toolDefinitions.find((d) => {
+            return d.name === toolParams.definitionName && d.definitionId === toolParams.definitionId;
         });
+        if (oldTooldefinition) {
+            activeToolDefinition.definitionId = oldTooldefinition.definitionId;
+            activeToolDefinition.name = oldTooldefinition.name;
+            activeToolDefinition.settings.angle.default_value = toolParams?.toolAngle;
+            activeToolDefinition.settings.diameter.default_value = toolParams?.toolDiameter;
+            activeToolDefinition.settings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
+            activeToolDefinition.settings.jog_speed.default_value = gcodeConfig?.jogSpeed;
+            activeToolDefinition.settings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+            activeToolDefinition.settings.work_speed.default_value = gcodeConfig?.workSpeed;
+            activeToolDefinition.settings.step_down.default_value = gcodeConfig?.stepDown;
+            activeToolDefinition.settings.density.default_value = gcodeConfig?.density;
+        }
         await dispatch(cncActions.changeActiveToolListDefinition(activeToolDefinition.definitionId, activeToolDefinition.name));
         setCurrentToolDefinition(activeToolDefinition);
     };
 
-    const [toolPath, setToolPath] = useState(updatingToolPath);
+    const [toolPath, setToolPath] = useState(toolpath);
     useEffect(() => {
-        const newToolPath = _.cloneDeep(updatingToolPath);
+        const newToolPath = _.cloneDeep(toolpath);
         setToolPath(newToolPath);
-
-        if (!_.isNull(updatingToolPath) && props.headType === HEAD_CNC) {
+        if (!_.isNull(toolpath) && props.headType === HEAD_CNC) {
             updateCncActiveToolDefinition(newToolPath);
         }
-    }, [updatingToolPath]);
+    }, [toolpath]);
 
     const actions = {
         updateToolConfig(key, value) {
             const newDefinition = _.cloneDeep(currentToolDefinition);
-            newDefinition.config[key].default_value = value;
+            newDefinition.settings[key].default_value = value;
             setCurrentToolDefinition(newDefinition);
         },
         checkIfDefinitionModified() {
             if (props.headType === HEAD_CNC) {
-                return !Object.entries(activeToolListDefinition.config).every(([key, setting]) => {
-                    return currentToolDefinition && currentToolDefinition.config[key].default_value === setting.default_value;
+                return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+                    return currentToolDefinition && currentToolDefinition.settings[key].default_value === setting.default_value;
                 });
             } else {
                 return false;
             }
         },
         cancelUpdateToolPath() {
-            dispatch(editorActions.cancelUpdateToolPath(props.headType));
+            props.onClose && props.onClose();
         },
         saveToolPath() {
             const toolParams = {};
@@ -89,15 +85,15 @@ function ToolPathConfigurations(props) {
             if (currentToolDefinition) {
                 toolParams.definitionId = currentToolDefinition.definitionId;
                 toolParams.definitionName = currentToolDefinition.name;
-                toolParams.toolDiameter = currentToolDefinition.config.diameter.default_value;
-                toolParams.toolAngle = currentToolDefinition.config.angle.default_value;
-                toolParams.toolShaftDiameter = currentToolDefinition.config.shaft_diameter.default_value;
+                toolParams.toolDiameter = currentToolDefinition.settings.diameter.default_value;
+                toolParams.toolAngle = currentToolDefinition.settings.angle.default_value;
+                toolParams.toolShaftDiameter = currentToolDefinition.settings.shaft_diameter.default_value;
 
-                for (const key of Object.keys(currentToolDefinition.config)) {
+                for (const key of Object.keys(currentToolDefinition.settings)) {
                     if (['diameter', 'angle', 'shaft_diameter'].includes(key)) {
                         continue;
                     }
-                    gcodeConfig[toHump(key)] = currentToolDefinition.config[key].default_value;
+                    gcodeConfig[toHump(key)] = currentToolDefinition.settings[key].default_value;
                 }
             }
 
@@ -107,6 +103,7 @@ function ToolPathConfigurations(props) {
                 toolParams
             };
             dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            props.onClose && props.onClose();
         },
         updateToolPath(option) {
             setToolPath({
@@ -115,20 +112,18 @@ function ToolPathConfigurations(props) {
             });
         },
         onDuplicateToolNameDefinition: async (inputValue) => {
-            const activeToolCategory = toolDefinitions.find(d => d.definitionId === currentToolDefinition.definitionId) || toolDefinitions.find(d => d.definitionId === 'Default');
             const newToolDefinition = {
                 ...currentToolDefinition,
                 name: inputValue
             };
-            await dispatch(cncActions.duplicateToolListDefinition(activeToolCategory, newToolDefinition));
+            await dispatch(cncActions.duplicateToolListDefinition(newToolDefinition));
             await dispatch(cncActions.changeActiveToolListDefinition(newToolDefinition.definitionId, newToolDefinition.name));
         },
         setCurrentValueAsProfile: () => {
             const activeToolDefinition = currentToolDefinition;
-            const activeToolCategoryDefinition = toolDefinitions.find(d => d.definitionId === activeToolDefinition.definitionId);
-
+            const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === activeToolDefinition.category);
             // make sure name is not repeated
-            while (activeToolCategoryDefinition.toolList.find(d => d.name === activeToolDefinition.name)) {
+            while (definitionsWithSameCategory.find(d => d.name === activeToolDefinition.name)) {
                 activeToolDefinition.name = `#${activeToolDefinition.name}`;
             }
 
@@ -234,6 +229,9 @@ function ToolPathConfigurations(props) {
     );
 }
 ToolPathConfigurations.propTypes = {
-    headType: PropTypes.string
+    onClose: PropTypes.func,
+    headType: PropTypes.string,
+    toolpath: PropTypes.object.isRequired
+
 };
 export default ToolPathConfigurations;

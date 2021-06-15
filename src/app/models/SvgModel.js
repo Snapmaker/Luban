@@ -453,7 +453,7 @@ class SvgModel extends BaseModel {
                 elem.setAttribute('width', width);
                 elem.setAttribute('height', height);
                 if (!elem.getAttribute('href')) {
-                    elem.setAttribute('href', checkIsImageSuffix(href) ? href : './images/loading.gif');
+                    elem.setAttribute('href', checkIsImageSuffix(href) ? href : './resources/images/loading.gif');
                 }
                 break;
             }

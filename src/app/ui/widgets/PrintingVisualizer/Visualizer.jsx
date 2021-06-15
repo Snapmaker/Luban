@@ -13,11 +13,10 @@ import modal from '../../../lib/modal';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import VisualizerLeftBar from './VisualizerLeftBar';
-import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
+import VisualizerBottomLeft from './VisualizerBottomLeft';
 import VisualizerInfo from './VisualizerInfo';
 import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
@@ -36,6 +35,7 @@ class Visualizer extends PureComponent {
         progress: PropTypes.number.isRequired,
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
+        inProgress: PropTypes.bool.isRequired,
 
         offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
@@ -227,12 +227,36 @@ class Visualizer extends PureComponent {
         shortcuts: {
             [shortcutActions.SELECTALL]: this.props.selectAllModels,
             [shortcutActions.UNSELECT]: this.props.unselectAllModels,
-            [shortcutActions.DELETE]: this.props.removeSelectedModel,
-            [shortcutActions.COPY]: this.props.copy,
-            [shortcutActions.PASTE]: this.props.paste,
-            [shortcutActions.DUPLICATE]: this.props.duplicateSelectedModel,
-            [shortcutActions.UNDO]: this.props.undo,
-            [shortcutActions.REDO]: this.props.redo,
+            [shortcutActions.DELETE]: () => {
+                if (!this.props.inProgress) {
+                    this.props.removeSelectedModel();
+                }
+            },
+            [shortcutActions.COPY]: () => {
+                if (!this.props.inProgress) {
+                    this.props.copy();
+                }
+            },
+            [shortcutActions.PASTE]: () => {
+                if (!this.props.inProgress) {
+                    this.props.paste();
+                }
+            },
+            [shortcutActions.DUPLICATE]: () => {
+                if (!this.props.inProgress) {
+                    this.props.duplicateSelectedModel();
+                }
+            },
+            [shortcutActions.UNDO]: () => {
+                if (!this.props.inProgress) {
+                    this.props.undo();
+                }
+            },
+            [shortcutActions.REDO]: () => {
+                if (!this.props.inProgress) {
+                    this.props.redo();
+                }
+            },
             // optimize: accelerate when continuous click
             'SHOWGCODELAYERS_ADD': {
                 keys: ['alt+up'],
@@ -387,7 +411,7 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+        const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType, inProgress } = this.props;
 
         // const actions = this.actions;
 
@@ -407,6 +431,7 @@ class Visualizer extends PureComponent {
             >
                 <div className={styles['visualizer-left-bar']}>
                     <VisualizerLeftBar
+                        inProgress={inProgress}
                         updateBoundingBox={this.actions.updateBoundingBox}
                         setTransformMode={this.actions.setTransformMode}
                         supportActions={this.supportActions}
@@ -418,8 +443,8 @@ class Visualizer extends PureComponent {
                     />
                 </div>
 
-                <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations actions={this.actions} />
+                <div className={styles['visualizer-bottom-left']}>
+                    <VisualizerBottomLeft actions={this.actions} />
                 </div>
 
                 <div className={styles['visualizer-preview-control']}>
@@ -437,6 +462,7 @@ class Visualizer extends PureComponent {
                 <div className={styles['canvas-wrapper']}>
                     <Canvas
                         ref={this.canvas}
+                        inProgress={inProgress}
                         size={size}
                         modelGroup={modelGroup}
                         printableArea={this.printableArea}
@@ -451,13 +477,6 @@ class Visualizer extends PureComponent {
                         showContextMenu={this.showContextMenu}
                     />
                 </div>
-                <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar
-                        zoomIn={this.actions.zoomIn}
-                        zoomOut={this.actions.zoomOut}
-                        toFront={this.actions.toFront}
-                    />
-                </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="3dp"
@@ -466,49 +485,49 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Center Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.deleteSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Reset Selected Model Transformation'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Lay Flat Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.layFlatSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Auto Rotate Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.autoRotateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Scale To Fit Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 onClick: this.actions.scaleToFitSelectedModel
                             },
                             {
                                 type: 'subMenu',
                                 label: i18n._('Mirror Selected Model'),
-                                disabled: !isModelSelected || isSupportSelected,
+                                disabled: inProgress || !isModelSelected || isSupportSelected,
                                 items: [
                                     {
                                         type: 'item',
@@ -534,13 +553,13 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Add Manual Support'),
-                                disabled: !isSingleSelected || isSupportSelected,
+                                disabled: inProgress || !isSingleSelected || isSupportSelected,
                                 onClick: this.supportActions.startSupportMode
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Support'),
-                                disabled: !isSupportSelected,
+                                disabled: inProgress || !isSupportSelected,
                                 onClick: this.supportActions.clearSelectedSupport
                             },
                             {
@@ -555,13 +574,13 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Clear Heated Bed'),
-                                disabled: !hasModel || !isModelDisplayed,
+                                disabled: inProgress || !hasModel || !isModelDisplayed,
                                 onClick: this.actions.clearBuildPlate
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Arrange All Models'),
-                                disabled: !hasModel || !isModelDisplayed,
+                                disabled: inProgress || !hasModel || !isModelDisplayed,
                                 onClick: this.actions.arrangeAllModels
                             }
                         ]
@@ -577,7 +596,7 @@ const mapStateToProps = (state, ownProps) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
     return {
         isActive: ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
@@ -591,7 +610,8 @@ const mapStateToProps = (state, ownProps) => {
         transformMode,
         progress,
         displayedType,
-        renderingTimestamp
+        renderingTimestamp,
+        inProgress
     };
 };
 

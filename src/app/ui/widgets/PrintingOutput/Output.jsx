@@ -15,11 +15,14 @@ import { actions as projectActions } from '../../../flux/project';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
+import { renderPopup } from '../../utils';
+
+import Workspace from '../../Pages/Workspace';
 
 class Output extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         minimized: PropTypes.bool.isRequired,
 
         modelGroup: PropTypes.object.isRequired,
@@ -31,6 +34,7 @@ class Output extends PureComponent {
         hasAnyModelVisible: PropTypes.bool.isRequired,
         stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
+        inProgress: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
         renderGcodeFile: PropTypes.func.isRequired
@@ -60,8 +64,8 @@ class Output extends PureComponent {
             gcodeFile.thumbnail = this.thumbnail.current.getDataURL();
 
             this.props.renderGcodeFile(gcodeFile);
+            this.setState({ showWorkspace: true });
 
-            this.props.history.push('/workspace');
             window.scrollTo(0, 0);
         },
         changeFilenameExt: (filename) => {
@@ -115,13 +119,21 @@ class Output extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Actions'));
+        this.props.widgetActions.setTitle(i18n._('Actions'));
+    }
+
+    renderWorkspace() {
+        const onClose = () => this.setState({ showWorkspace: false });
+        return this.state.showWorkspace && renderPopup({
+            onClose,
+            component: Workspace
+        });
     }
 
     render() {
         const state = this.state;
         const actions = this.actions;
-        const { workflowState, stage, gcodeLine, hasModel, hasAnyModelVisible } = this.props;
+        const { workflowState, stage, gcodeLine, hasModel, hasAnyModelVisible, inProgress } = this.props;
 
         const isSlicing = stage === PRINTING_STAGE.SLICING;
         const { isAnyModelOverstepped } = this.props;
@@ -133,7 +145,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickGenerateGcode}
-                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped}
+                        disabled={!hasModel || !hasAnyModelVisible || isSlicing || isAnyModelOverstepped || inProgress}
                         style={{ display: 'block', width: '100%' }}
                     >
                         {i18n._('Generate G-code')}
@@ -164,7 +176,7 @@ class Output extends PureComponent {
                                         type="button"
                                         className="sm-btn-large sm-btn-default"
                                         style={{ width: '100%', lineHeight: '95%' }}
-                                        disabled={!hasModel}
+                                        disabled={!hasModel || inProgress}
                                         onClick={actions.onClickExportModel}
                                     >
                                         {i18n._('Export Models')}
@@ -177,7 +189,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickLoadGcode}
-                        disabled={workflowState === 'running' || !gcodeLine}
+                        disabled={workflowState === 'running' || !gcodeLine || inProgress}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Load G-code to Workspace')}
@@ -186,7 +198,7 @@ class Output extends PureComponent {
                         type="button"
                         className="sm-btn-large sm-btn-default"
                         onClick={actions.onClickExportGcode}
-                        disabled={!gcodeLine}
+                        disabled={!gcodeLine || inProgress}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Export G-code to File')}
@@ -197,6 +209,7 @@ class Output extends PureComponent {
                     modelGroup={this.props.modelGroup}
                     minimized={this.props.minimized}
                 />
+                {this.renderWorkspace()}
             </div>
         );
     }
@@ -208,7 +221,7 @@ const mapStateToProps = (state) => {
     const {
         stage,
         modelGroup, hasModel, isAnyModelOverstepped,
-        isGcodeOverstepped, gcodeLine, gcodeFile
+        isGcodeOverstepped, gcodeLine, gcodeFile, inProgress
     } = printing;
 
     return {
@@ -220,7 +233,8 @@ const mapStateToProps = (state) => {
         isAnyModelOverstepped,
         isGcodeOverstepped,
         gcodeLine,
-        gcodeFile
+        gcodeFile,
+        inProgress
     };
 };
 

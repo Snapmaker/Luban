@@ -28,9 +28,10 @@ const OFFICIAL_CONFIG_KEYS = [
 
 class Configurations extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
+        inProgress: PropTypes.bool.isRequired,
 
         updateManagerDisplayType: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
@@ -79,7 +80,7 @@ class Configurations extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Printing Settings'));
+        this.props.widgetActions.setTitle(i18n._('Printing Settings'));
     }
 
     componentDidMount() {
@@ -123,7 +124,7 @@ class Configurations extends PureComponent {
     }
 
     render() {
-        const { qualityDefinitions } = this.props;
+        const { qualityDefinitions, inProgress } = this.props;
         const state = this.state;
         // const actions = this.actions;
         const qualityDefinition = this.state.selectedDefinition;
@@ -151,10 +152,12 @@ class Configurations extends PureComponent {
                         onChange={(option) => {
                             this.actions.onSelectCustomDefinitionById(option.value);
                         }}
+                        disabled={inProgress}
                     />
                 </div>
                 <Anchor
                     onClick={this.actions.onShowMaterialManager}
+                    disabled={inProgress}
                 >
                     <span
                         className={classNames(
@@ -229,12 +232,13 @@ class Configurations extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { qualityDefinitions, defaultQualityId, isRecommended, activeDefinition } = state.printing;
+    const { qualityDefinitions, defaultQualityId, isRecommended, activeDefinition, inProgress } = state.printing;
     return {
         qualityDefinitions,
         defaultQualityId,
         isRecommended,
-        activeDefinition
+        activeDefinition,
+        inProgress
     };
 };
 

@@ -24,9 +24,10 @@ const MATERIAL_CONFIG_KEYS = [
     'material_bed_temperature',
     'material_bed_temperature_layer_0'
 ];
-function Material({ setTitle }) {
+function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
     const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
     const [currentDefinition, setCurrentDefinition] = useState(null);
@@ -84,8 +85,8 @@ function Material({ setTitle }) {
     }, [defaultMaterialId, onChangeMaterial]);
 
     useEffect(() => {
-        setTitle(i18n._('Material'));
-    }, [setTitle]);
+        widgetActions.setTitle(i18n._('Material'));
+    }, [widgetActions]);
 
     if (!currentDefinition) {
         return null;
@@ -103,10 +104,12 @@ function Material({ setTitle }) {
                     options={materialDefinitionOptions}
                     value={currentDefinition.definitionId}
                     onChange={onChangeMaterialValue}
+                    disabled={inProgress}
                 />
             </div>
             <Anchor
                 onClick={onShowPrintingManager}
+                disabled={inProgress}
             >
                 <span
                     className={classNames(
@@ -180,7 +183,7 @@ function Material({ setTitle }) {
 }
 
 Material.propTypes = {
-    setTitle: PropTypes.func
+    widgetActions: PropTypes.object
 };
 
 export default Material;

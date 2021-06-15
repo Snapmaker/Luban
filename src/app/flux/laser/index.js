@@ -32,6 +32,7 @@ const INITIAL_STATE = {
 
     stage: CNC_LASER_STAGE.EMPTY,
     progress: 0,
+    inProgress: false,
     scale: 1,
     target: null,
 

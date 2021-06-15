@@ -9,6 +9,7 @@ import ModelItem from '../../views/model-item';
 function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray, shallowEqual);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
     const actions = {
         selectTargetModel(targetModel, shiftKey) {
@@ -25,8 +26,8 @@ function PrintingObjectListBox(props) {
         }
     };
     useEffect(() => {
-        props.setTitle(i18n._('Object List'));
-    }, [props.setTitle]);
+        props.widgetActions.setTitle(i18n._('Object List'));
+    }, [props.widgetActions.setTitle]);
     return (
         <div className={styles['object-list-box']}>
             {(models) && models.filter(model => !model.supportTag).map((model) => {
@@ -38,6 +39,7 @@ function PrintingObjectListBox(props) {
                         isSelected={selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0}
                         onSelect={actions.selectTargetModel}
                         onToggleVisible={actions.onClickHideShowSelectedModel}
+                        inProgress={inProgress}
                     />
                 );
             })}
@@ -45,7 +47,7 @@ function PrintingObjectListBox(props) {
     );
 }
 PrintingObjectListBox.propTypes = {
-    setTitle: PropTypes.func
+    widgetActions: PropTypes.object
 };
 
 export default PrintingObjectListBox;

@@ -55,38 +55,40 @@ class SvgIcon extends PureComponent {
         const Component = Icons[name];
         if (!Component) {
             console.error(`Can't find the icon named '${name}', please check your icon name`);
-            return null;
-        } else {
-            return (
-                <Anchor
-                    className={className}
-                    title={title}
-                    disabled={disabled}
-                    onClick={onClick}
-                    onFocus={() => 0}
-                    onBlur={() => 0}
-                    onMouseEnter={this.actions.handleMouseOver}
-                    onMouseLeave={this.actions.handleMouseOut}
-                >
+        }
+
+        return (
+            <Anchor
+                className={className}
+                title={title}
+                disabled={disabled}
+                onClick={onClick}
+                onFocus={() => 0}
+                onBlur={() => 0}
+                onMouseEnter={this.actions.handleMouseOver}
+                onMouseLeave={this.actions.handleMouseOut}
+            >
+                {Component && (
                     <Component
                         {...props}
                         disabled={disabled}
                         color={isHovered ? '#272829' : color}
                     />
-                    { spanText && isHorizontal && (
-                        <span className={spanClassName}>
-                            {spanText}
-                        </span>
-                    )}
-                    { spanText && !isHorizontal && (
-                        <div className={spanClassName}>
-                            {spanText}
-                        </div>
-                    )}
-                </Anchor>
-            );
-        }
+                )}
+                { spanText && isHorizontal && (
+                    <span className={spanClassName}>
+                        {spanText}
+                    </span>
+                )}
+                { spanText && !isHorizontal && (
+                    <div className={spanClassName}>
+                        {spanText}
+                    </div>
+                )}
+            </Anchor>
+        );
     }
 }
+
 
 export default SvgIcon;

@@ -6,7 +6,6 @@ import i18n from '../../../lib/i18n';
 import Macro from './Macro';
 import AddMacro from './AddMacro';
 import EditMacro from './EditMacro';
-import { createDefaultWidget } from '../../components/SMWidget';
 import {
     MODAL_NONE,
     MODAL_ADD_MACRO,
@@ -17,8 +16,7 @@ import {
 class MacroWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        setTitle: PropTypes.func.isRequired,
-        setControlButtons: PropTypes.func.isRequired
+        widgetActions: PropTypes.object.isRequired
     };
 
     state = {
@@ -86,8 +84,8 @@ class MacroWidget extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Macro'));
-        this.props.setControlButtons(
+        this.props.widgetActions.setTitle(i18n._('Macro'));
+        this.props.widgetActions.setControlButtons(
             [
                 {
                     title: 'New Macro',
@@ -147,4 +145,4 @@ class MacroWidget extends PureComponent {
     }
 }
 
-export default createDefaultWidget(MacroWidget);
+export default (MacroWidget);

@@ -72,7 +72,7 @@ const normalizeToRange = (n, min, max) => {
 class Control extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        setTitle: PropTypes.func.isRequired,
+        widgetActions: PropTypes.object.isRequired,
 
         headType: PropTypes.string,
         dataSource: PropTypes.string.isRequired,
@@ -302,7 +302,7 @@ class Control extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.props.setTitle(i18n._('Control'));
+        this.props.widgetActions.setTitle(i18n._('Control'));
     }
 
     getInitialState() {

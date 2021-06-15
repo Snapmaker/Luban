@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 
 import PropTypes from 'prop-types';
@@ -8,23 +8,27 @@ import SvgIcon from '../../components/SvgIcon';
 
 import i18n from '../../../lib/i18n';
 import styles from './styles.styl';
+import ToolPathConfigurations from '../../views/ToolPathConfigurations/ToolPathConfigurations';
 
-const CreateToolPath = ({ headType, setTitle, setDisplay }) => {
+const CreateToolPath = ({ headType, widgetActions }) => {
     const page = useSelector(state => state[headType]?.page, shallowEqual);
     const toolPathTypes = useSelector(state => state[headType]?.toolPathGroup?.getToolPathTypes(), shallowEqual);
+    const inProgress = useSelector(state => state[headType]?.inProgress);
     const dispatch = useDispatch();
+    const [currentToolpath, setCurrentToolpath] = useState(null);
     const actions = {
         createToolPath() {
-            dispatch(editorActions.createToolPath(headType));
+            const toolpath = dispatch(editorActions.createToolPath(headType));
+            setCurrentToolpath(toolpath);
         }
     };
     // const fastCreateToolPath = () => dispatch(editorActions.fastCreateToolPath(headType));
     useEffect(() => {
-        setTitle(i18n._('Create Toolpath'));
-        setDisplay(page === PAGE_PROCESS);
+        widgetActions.setTitle(i18n._('Create Toolpath'));
+        widgetActions.setDisplay(page === PAGE_PROCESS);
     }, []); // << super important array
     useEffect(() => {
-        setDisplay(page === PAGE_PROCESS);
+        widgetActions.setDisplay(page === PAGE_PROCESS);
     }, [page]);
     return (
         <div>
@@ -34,7 +38,7 @@ const CreateToolPath = ({ headType, setTitle, setDisplay }) => {
                     className="sm-btn-large sm-btn-default"
                     onClick={actions.createToolPath}
                     style={{ display: 'block', width: '100%' }}
-                    disabled={toolPathTypes.length === 0}
+                    disabled={inProgress || toolPathTypes.length === 0}
                 >
                     {i18n._('Create Toolpath')}
                 </button>
@@ -60,12 +64,19 @@ const CreateToolPath = ({ headType, setTitle, setDisplay }) => {
                     </div>
                 </div>
             </div>
+            {currentToolpath && (
+                <ToolPathConfigurations
+                    toolpath={currentToolpath}
+                    headType={headType}
+                    onClose={() => setCurrentToolpath(null)}
+                />
+            )}
+
         </div>
     );
 };
 CreateToolPath.propTypes = {
-    setTitle: PropTypes.func,
-    headType: PropTypes.string,
-    setDisplay: PropTypes.func
+    widgetActions: PropTypes.object.isRequired,
+    headType: PropTypes.string
 };
 export default CreateToolPath;

@@ -4,24 +4,22 @@ import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
 import styles from './styles/maintoolbar.styl';
 import SvgIcon from '../components/SvgIcon';
-import { timestamp } from '../../../shared/lib/random-utils';
 
 function MenuItem({ menuItem, actions }) {
     if (!menuItem) {
         return null;
     }
-    const { type = 'button', title } = menuItem;
+    const { type = 'button', name = 'Copy', title } = menuItem;
     switch (type) {
         case 'separator':
             return (
-                <div key={title + timestamp()} className={styles.separator} />
+                <div className={styles.separator} />
             );
         case 'button':
             return (
                 <SvgIcon
-                    key={title + timestamp()}
                     size={18}
-                    name={title}
+                    name={name}
                     isHorizontal={false}
                     className={classNames(styles['bar-icon'])}
                     onClick={() => { actions.handleClick(menuItem.action); }}
@@ -34,7 +32,7 @@ function MenuItem({ menuItem, actions }) {
     }
 }
 MenuItem.propTypes = {
-    menuItem: PropTypes.array.isRequired,
+    menuItem: PropTypes.object.isRequired,
     actions: PropTypes.object.isRequired
 };
 
