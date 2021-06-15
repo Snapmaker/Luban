@@ -91,7 +91,6 @@ const SettingGuideModal = (props) => {
     ];
     // change language method
     const handleLanguageChange = (e) => {
-        console.log({ e });
         const nextLang = e.value;
         i18next.changeLanguage(nextLang, () => {
             setLang(nextLang);
