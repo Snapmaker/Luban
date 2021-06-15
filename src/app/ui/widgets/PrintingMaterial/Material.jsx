@@ -27,6 +27,7 @@ const MATERIAL_CONFIG_KEYS = [
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
+    const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
     const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
     const [currentDefinition, setCurrentDefinition] = useState(null);
@@ -103,10 +104,12 @@ function Material({ widgetActions }) {
                     options={materialDefinitionOptions}
                     value={currentDefinition.definitionId}
                     onChange={onChangeMaterialValue}
+                    disabled={inProgress}
                 />
             </div>
             <Anchor
                 onClick={onShowPrintingManager}
+                disabled={inProgress}
             >
                 <span
                     className={classNames(

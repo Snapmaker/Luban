@@ -9,6 +9,7 @@ import ModelItem from '../../views/model-item';
 function PrintingObjectListBox(props) {
     const selectedModelIDArray = useSelector(state => state?.printing?.modelGroup?.selectedModelIDArray, shallowEqual);
     const models = useSelector(state => state?.printing?.modelGroup?.models);
+    const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
     const actions = {
         selectTargetModel(targetModel, shiftKey) {
@@ -38,6 +39,7 @@ function PrintingObjectListBox(props) {
                         isSelected={selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0}
                         onSelect={actions.selectTargetModel}
                         onToggleVisible={actions.onClickHideShowSelectedModel}
+                        inProgress={inProgress}
                     />
                 );
             })}

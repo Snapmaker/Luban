@@ -4,8 +4,7 @@ import PropTypes from 'prop-types';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
-
-class VisualizerCameraOperations extends PureComponent {
+class VisualizerBottomLeft extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
             toLeft: PropTypes.func.isRequired,
@@ -20,27 +19,24 @@ class VisualizerCameraOperations extends PureComponent {
         const actions = this.props.actions;
         return (
             <React.Fragment>
-                <div style={{ display: 'inline-block', float: 'left' }}>
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
-                        onClick={actions.toLeft}
-                    />
-                </div>
-                <div style={{ display: 'inline-block', float: 'left' }}>
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-up', styles['turn-up'])}
-                        onClick={actions.toTop}
-                    />
+                <div className={classNames(styles['camera-operation'])}>
                     <Anchor
                         className={classNames(styles['camera-reset'])}
                         onClick={actions.toFront}
                     />
                     <Anchor
+                        className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
+                        onClick={actions.toLeft}
+                    />
+                    <Anchor
+                        className={classNames('fa', 'fa-chevron-up', styles['turn-up'])}
+                        onClick={actions.toTop}
+                    />
+                    <Anchor
                         className={classNames('fa', 'fa-chevron-down', styles['turn-down'])}
                         onClick={actions.toBottom}
                     />
-                </div>
-                <div style={{ display: 'inline-block', float: 'left' }}>
+
                     <Anchor
                         className={classNames('fa', 'fa-chevron-right', styles['turn-right'])}
                         onClick={actions.toRight}
@@ -51,4 +47,4 @@ class VisualizerCameraOperations extends PureComponent {
     }
 }
 
-export default VisualizerCameraOperations;
+export default VisualizerBottomLeft;

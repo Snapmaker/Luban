@@ -32,6 +32,7 @@ class VisualizerLeftBar extends PureComponent {
             x: PropTypes.number,
             y: PropTypes.number
         }).isRequired,
+        inProgress: PropTypes.bool.isRequired,
         isSupporting: PropTypes.bool.isRequired,
         isSupportSelected: PropTypes.bool.isRequired,
         modelSize: PropTypes.object.isRequired,
@@ -179,7 +180,7 @@ class VisualizerLeftBar extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, isSupportSelected, modelSize, supportActions } = this.props;
+        const { size, selectedModelArray, transformMode, transformation, defaultSupportSize, isSupporting, isSupportSelected, modelSize, supportActions, inProgress } = this.props;
         let moveX = 0;
         let moveY = 0;
         let scaleXPercent = 100;
@@ -190,13 +191,13 @@ class VisualizerLeftBar extends PureComponent {
         let rotateZ = 0;
         let uniformScalingState = true;
         // TODO: refactor these flags
-        const transformDisabled = !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
+        const transformDisabled = inProgress || !(selectedModelArray.length > 0 && selectedModelArray.every((model) => {
             return model.visible === true;
         }));
-        const supportDisabled = !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
+        const supportDisabled = inProgress || !(selectedModelArray.length === 1 && selectedModelArray.every((model) => {
             return model.visible === true && !model.supportTag;
         }));
-        const rotateDisabled = (selectedModelArray.length > 0 && selectedModelArray.some((model) => {
+        const rotateDisabled = inProgress || (selectedModelArray.length > 0 && selectedModelArray.some((model) => {
             return model.supportTag;
         }));
 
@@ -233,15 +234,13 @@ class VisualizerLeftBar extends PureComponent {
                                 <Anchor
                                     componentClass="button"
                                     className={classNames(
-                                        styles['operation-add']
-                                    //     { [styles.disabled]: transformDisabled },
-                                    //     {
-                                    //         [styles.selected]: !transformDisabled && transformMode === 'add'
-                                    //     }
+                                        styles['operation-add'],
+                                        { [styles.disabled]: inProgress }
                                     )}
                                     onClick={() => {
                                         actions.onClickToUpload();
                                     }}
+                                    disabled={inProgress}
                                 />
                             </li>
                         </ul>
@@ -255,7 +254,7 @@ class VisualizerLeftBar extends PureComponent {
                                     componentClass="button"
                                     className={classNames(
                                         styles['operation-move'],
-                                        { [styles.disabled]: transformDisabled },
+                                        { [styles.disabled]: (transformDisabled) },
                                         {
                                             [styles.selected]: !transformDisabled && transformMode === 'translate'
                                         }
@@ -340,6 +339,7 @@ class VisualizerLeftBar extends PureComponent {
                                     componentClass="button"
                                     className={classNames(
                                         styles['operation-arrange'],
+                                        { [styles.disabled]: inProgress },
                                         {
                                             [styles.selected]: !transformDisabled && transformMode === 'arrange'
                                         }
@@ -347,6 +347,7 @@ class VisualizerLeftBar extends PureComponent {
                                     onClick={() => {
                                         actions.arrangeAllModels();
                                     }}
+                                    disabled={inProgress}
                                 />
                             </li>
                         </ul>

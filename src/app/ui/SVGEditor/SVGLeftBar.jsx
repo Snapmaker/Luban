@@ -14,7 +14,8 @@ class SVGLeftBar extends PureComponent {
         onChangeFile: PropTypes.func.isRequired,
         onClickToUpload: PropTypes.func.isRequired,
         fileInput: PropTypes.object.isRequired,
-        allowedFiles: PropTypes.string.isRequired
+        allowedFiles: PropTypes.string.isRequired,
+        editable: PropTypes.bool.isRequired
     };
 
     state = {
@@ -43,7 +44,7 @@ class SVGLeftBar extends PureComponent {
     };
 
     render() {
-        const { mode } = this.props;
+        const { mode, editable } = this.props;
         const { showExtShape, extShape } = this.state;
 
         return (
@@ -57,12 +58,14 @@ class SVGLeftBar extends PureComponent {
                             style={{ display: 'none' }}
                             multiple={false}
                             onChange={this.props.onChangeFile}
+                            disabled={!editable}
                         />
                         <Anchor
                             componentClass="button"
                             className={classNames(styles['btn-center'],
                                 { [styles.selected]: (mode === 'add') })}
                             onClick={() => this.props.onClickToUpload()}
+                            disabled={!editable}
                         >
                             <i className={styles['btn-add']} />
                         </Anchor>
@@ -71,6 +74,7 @@ class SVGLeftBar extends PureComponent {
                             className={classNames(styles['btn-center'],
                                 { [styles.selected]: (mode === 'select') })}
                             onClick={() => this.actions.setMode('select')}
+                            disabled={!editable}
                         >
                             <i className={styles['btn-select']} />
                         </Anchor>
@@ -79,6 +83,7 @@ class SVGLeftBar extends PureComponent {
                             className={classNames(styles['btn-center'],
                                 { [styles.selected]: mode === 'rect' })}
                             onClick={() => this.actions.setMode('rect')}
+                            disabled={!editable}
                         >
                             <i className={styles['btn-rectangle']} />
                         </Anchor>
@@ -87,6 +92,7 @@ class SVGLeftBar extends PureComponent {
                             className={classNames(styles['btn-center'],
                                 { [styles.selected]: mode === 'ellipse' })}
                             onClick={() => this.actions.setMode('ellipse')}
+                            disabled={!editable}
                         >
                             <i className={classNames(styles['btn-round'])} />
                         </Anchor>
@@ -94,6 +100,7 @@ class SVGLeftBar extends PureComponent {
                             componentClass="button"
                             className={styles['btn-center']}
                             onClick={this.actions.onClickInsertText}
+                            disabled={!editable}
                         >
                             <i className={styles['btn-text']} />
                         </Anchor>
@@ -102,6 +109,7 @@ class SVGLeftBar extends PureComponent {
                             className={classNames(styles['btn-center'],
                                 { [styles.selected]: mode === 'ext' })}
                             onClick={() => this.actions.showExt()}
+                            disabled={!editable}
                         >
                             <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
                         </Anchor>
@@ -115,6 +123,7 @@ class SVGLeftBar extends PureComponent {
                                         componentClass="button"
                                         className={styles['btn-center-ext']}
                                         onClick={() => this.actions.setMode('ext', key)}
+                                        disabled={!editable}
                                     >
                                         <i className={styles[`btn-ext-${key}`]} />
                                     </Anchor>

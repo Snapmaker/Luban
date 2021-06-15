@@ -9,23 +9,31 @@ const MoreInfo = () => {
                 {i18n._('More Resource')}
             </div>
             <div className={styles['resource-list']}>
-                <a href="javascript;">
+                {/* <a href="javascript;">
                     {i18n._('Software Manual')}
-                </a>
+                </a> */}
                 <a href="https://support.snapmaker.com/hc/en-us" target="_blank" rel="noopener noreferrer">
-                    {i18n._('Support Center')}
+                    <img src={require('./images/question.png')} alt="" />
+                    <div>{i18n._('Support Center')}</div>
                 </a>
-                <a href="javascript;" target="_blank" rel="noopener noreferrer">
-                    {i18n._('Video Tutorial')}
+                <a href="https://www.youtube.com/c/Snapmaker/playlists" target="_blank" rel="noopener noreferrer">
+                    <img src={require('./images/question.png')} alt="" />
+                    <div>{i18n._('Video Tutorial')}</div>
                 </a>
                 <a href="https://forum.snapmaker.com/c/snapmaker-luban" target="_blank" rel="noopener noreferrer">
-                    {i18n._('Forum')}
+                    <img src={require('./images/question.png')} alt="" />
+                    <div>{i18n._('Forum')}</div>
                 </a>
                 <a href="https://store.snapmakce.com" target="_blank" rel="noopener noreferrer">
-                    {i18n._('Store')}
+                    <img src={require('./images/question.png')} alt="" />
+                    <div>{i18n._('Store')}</div>
                 </a>
                 <a href="https://www.myminifactory.com/" target="_blank" rel="noopener noreferrer">
-                    {i18n._('Myminifactory')}
+                    <img src={require('./images/question.png')} alt="" />
+                    <div>{i18n._('Myminifactory')}</div>
+                </a>
+                <a href="javascript;">
+                    {/* {i18n._('Software Manual')} */}
                 </a>
             </div>
         </div>
