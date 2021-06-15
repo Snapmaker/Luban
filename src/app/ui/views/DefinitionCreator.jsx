@@ -11,7 +11,8 @@ class DefinitionCreator extends PureComponent {
         isCreate: PropTypes.bool,
         disableCategory: PropTypes.bool,
         copyType: PropTypes.string,
-        copyTargetName: PropTypes.string,
+        copyCategoryName: PropTypes.string,
+        copyToolName: PropTypes.string,
         materialOptions: PropTypes.array
     };
 
@@ -22,15 +23,18 @@ class DefinitionCreator extends PureComponent {
     state = {
         createType: 'Material',
         materialName: 'Default Material',
-        toolName: 'Default Tool',
-        materialDefinitionId: 'Default'
+        toolName: 'Default Tool'
     }
 
     componentDidMount() {
-        if (this.props.copyTargetName) {
+        if (this.props.copyCategoryName) {
             this.setState({
-                materialName: this.props.copyTargetName,
-                toolName: this.props.copyTargetName
+                materialName: this.props.copyCategoryName
+            });
+        }
+        if (this.props.copyToolName) {
+            this.setState({
+                toolName: this.props.copyToolName
             });
         }
     }
@@ -120,10 +124,10 @@ class DefinitionCreator extends PureComponent {
                             clearable={false}
                             options={this.props.materialOptions}
                             placeholder={i18n._('Choose font')}
-                            value={this.state.materialDefinitionId}
+                            value={this.state.materialName}
                             onChange={(option) => {
-                                const materialDefinitionId = option.value;
-                                this.setState({ materialDefinitionId });
+                                const materialName = option.label;
+                                this.setState({ materialName });
                             }}
                         />
                     </div>

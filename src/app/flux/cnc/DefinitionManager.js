@@ -23,23 +23,13 @@ class DefinitionManager {
         this.toolDefinitions = toolDefinitions.body.definitions;
     }
 
-    async createToolCategoryDefinition(activeToolCategory) {
-        const res = await api.cncConfigs.createToolCategoryDefinition(activeToolCategory);
+    async createToolListDefinition(activeToolListDefinition) {
+        const res = await api.cncConfigs.createToolListDefinition(activeToolListDefinition);
         return res.body.definition;
     }
 
-    async createToolListDefinition(activeToolCategoryDefinition, activeToolListDefinition) {
-        const res = await api.cncConfigs.createToolListDefinition(activeToolCategoryDefinition, activeToolListDefinition);
-        return res.body.definition;
-    }
-
-    async removeToolCategoryDefinition(definitionId) {
-        await api.cncConfigs.removeToolCategoryDefinition(definitionId);
-        return null;
-    }
-
-    async removeToolListDefinition(activeToolCategory, activeToolList) {
-        const res = await api.cncConfigs.removeToolListDefinition(activeToolCategory, activeToolList);
+    async removeToolListDefinition(activeToolList) {
+        const res = await api.cncConfigs.removeToolListDefinition(activeToolList);
         return res.body.definition;
     }
 
@@ -54,17 +44,14 @@ class DefinitionManager {
         }
     }
 
-    async updateToolDefinition(activeToolCategory) {
-        await api.cncConfigs.updateToolDefinition(activeToolCategory);
+    async updateToolDefinition(activeToolList) {
+        await api.cncConfigs.updateToolDefinition(activeToolList);
     }
 
     async changeActiveToolListDefinition(definitionId, name) {
         const res = await api.cncConfigs.changeActiveToolListDefinition(definitionId, name);
         return res.body.definition;
     }
-    // TODO:
-    // Update active definition
-    // Only definitionId & name are configurable
 }
 
 const definitionManager = new DefinitionManager();

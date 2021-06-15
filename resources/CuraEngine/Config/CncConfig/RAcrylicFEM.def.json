@@ -1,11 +1,11 @@
 {
-    "category": "Default Material",
-    "definitionId": "DefaultCVbit",
+    "category": "Acrylic",
+    "definitionId": "RAcrylicFEM",
     "version": "1.0.0",
-    "name": "Carving V-bit",
+    "name": "Flat End Mill",
     "settings": {
         "diameter": {
-            "default_value": 0.2,
+            "default_value": 1.5,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -13,7 +13,7 @@
             "label": "Cutting Diameter"
         },
         "angle": {
-            "default_value": 30,
+            "default_value": 180,
             "type": "float",
             "min": 1,
             "max": 180,
@@ -21,7 +21,7 @@
             "label": "Point Angle"
         },
         "shaft_diameter": {
-            "default_value": 3.175,
+            "default_value": 1.5,
             "type": "float",
             "min": 0.1,
             "max": 10,
@@ -56,7 +56,7 @@
             "description": "Determines how fast the tool feeds into the material."
         },
         "step_down": {
-            "default_value": 0.5,
+            "default_value": 0.4,
             "type": "float",
             "min": 0.01,
             "unit": "mm",
