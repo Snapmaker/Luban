@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import { useDispatch } from 'react-redux';
@@ -11,6 +11,7 @@ import { actions as cncActions } from '../../../../flux/cnc';
 import TipTrigger from '../../../components/TipTrigger';
 import { NumberInput as Input } from '../../../components/Input';
 import { TOOLPATH_TYPE_VECTOR } from '../../../../constants';
+import CncToolManager from '../../CncToolManager';
 
 function SettingItem(props) {
     const { setting, isSVG, settingName, updateToolConfig } = props;
@@ -64,6 +65,7 @@ SettingItem.propTypes = {
 
 
 function ToolParameters(props) {
+    const [showManager, setShowManager] = useState(false);
     const dispatch = useDispatch();
     const { toolDefinitions, activeToolDefinition, toolPath, isModifiedDefinition, updateToolConfig } = props;
     const type = toolPath?.type;
@@ -73,8 +75,18 @@ function ToolParameters(props) {
     const toolDefinitionOptionsObj = {};
 
     function onShowCncToolManager() {
-        dispatch(cncActions.updateShowCncToolManager(true));
+        setShowManager(true);
     }
+
+    function renderModalView() {
+        function onclose() {
+            setShowManager(false);
+        }
+        return (
+            showManager && (<CncToolManager closeToolManager={onclose} />)
+        );
+    }
+
     async function onChangeActiveToolListValue(option) {
         if (option.definitionId === 'new') {
             await onShowCncToolManager();
@@ -204,6 +216,7 @@ function ToolParameters(props) {
                     }))}
 
                 </div>
+                {renderModalView()}
             </React.Fragment>
         </div>
     );

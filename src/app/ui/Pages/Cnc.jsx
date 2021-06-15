@@ -20,7 +20,6 @@ import MainToolBar from '../Layouts/MainToolBar';
 
 import { actions as editorActions } from '../../flux/editor';
 import { actions as machineActions } from '../../flux/machine';
-import CncToolManager from '../views/CncToolManager/CncToolManager';
 
 
 import ControlWidget from '../widgets/Control';
@@ -130,11 +129,10 @@ function useRenderWarning() {
 function Cnc({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
-    const [showManager, setShowManager] = useState(false);
     const dispatch = useDispatch();
 
-    const renderRecovery = useRenderRecoveryModal(pageHeadType);
-    const renderWarningModal = useRenderWarning();
+    const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const warningModal = useRenderWarning();
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -194,15 +192,6 @@ function Cnc({ history }) {
             />
         );
     }
-    function renderModalView() {
-        function onclose() {
-            setShowManager(false);
-        }
-        return (
-            showManager && (<CncToolManager closeToolManager={onclose} />)
-        );
-    }
-
     function renderRightView() {
         const widgetProps = { headType: 'cnc' };
         return (
@@ -237,9 +226,8 @@ function Cnc({ history }) {
                     <CNCVisualizer />
                 </Dropzone>
             </ProjectLayout>
-            {renderRecovery}
-            {renderModalView()}
-            {renderWarningModal}
+            {recoveryModal}
+            {warningModal}
         </div>
     );
 }

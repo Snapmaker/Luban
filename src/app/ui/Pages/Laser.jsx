@@ -85,7 +85,7 @@ function Laser({ history }) {
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
 
-    const renderRecovery = useRenderRecoveryModal(pageHeadType);
+    const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -173,7 +173,7 @@ function Laser({ history }) {
                     />
                 </Dropzone>
             </ProjectLayout>
-            {renderRecovery}
+            {recoveryModal}
         </div>
     );
 }
