@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Widget from '../widgets/Widget';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+// import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -59,7 +60,7 @@ const allWidgets = {
     '3dp-object-list': PrintingObjectList,
     '3dp-material': PrintingMaterialWidget,
     '3dp-configurations': PrintingConfigurationsWidget,
-    '3dp-output': PrintingOutputWidget,
+    // '3dp-output': PrintingOutputWidget,
     'laser-params': LaserParamsWidget,
     // 'laser-output': CncLaserOutputWidget,
     'laser-set-background': LaserSetBackground,
@@ -113,6 +114,30 @@ function Printing({ history, location }) {
             },
             {
                 type: 'separator'
+            },
+            {
+                title: 'Save',
+                name: 'Copy',
+                type: 'button',
+                action: () => {
+                    const headType = pageHeadType;
+                    if (!headType) {
+                        return;
+                    }
+                    dispatch(projectActions.save(headType));
+                }
+            },
+            {
+                title: 'Undo',
+                name: 'Copy',
+                type: 'button',
+                action: () => dispatch(printingActions.undo())
+            },
+            {
+                title: 'Redo',
+                name: 'Copy',
+                type: 'button',
+                action: () => dispatch(printingActions.redo())
             }
         ];
         const centerItems = [
@@ -148,6 +173,7 @@ function Printing({ history, location }) {
         return (
             <div>
                 {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
+                <PrintingOutputWidget />
             </div>
 
         );

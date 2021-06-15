@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { includes } from 'lodash';
 import i18n from '../../../lib/i18n';
 import SettingItem from './SettingItem';
 import CheckboxItem from './CheckboxItem';
@@ -8,7 +9,7 @@ import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
 
-function ConfigValueBox({ optionConfigGroup, type = 'input', isDefinitionEditable = () => true, onChangeDefinition, definitionState }) {
+function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelected, type = 'input', isDefinitionEditable = () => true, onChangeDefinition, definitionForManager, customConfigs }) {
     const [activeCateId, setActiveCateId] = useState(2);
     const scrollDom = useRef(null);
     function setActiveCate(cateId) {
@@ -25,6 +26,11 @@ function ConfigValueBox({ optionConfigGroup, type = 'input', isDefinitionEditabl
         }
         return true;
     }
+    // Make as a demo
+    const isEditable = useCallback(() => {
+        // console.log('isEditable');
+        return isDefinitionEditable(definitionForManager);
+    }, [isDefinitionEditable, definitionForManager]);
 
     return (
         <div style={{ display: 'flex' }}>
@@ -59,7 +65,7 @@ function ConfigValueBox({ optionConfigGroup, type = 'input', isDefinitionEditabl
                 onWheel={() => { setActiveCate(); }}
             >
                 <div className="sm-parameter-container" ref={scrollDom}>
-                    {!definitionState?.isCategorySelected && optionConfigGroup.map((group) => {
+                    {!isCategorySelected && optionConfigGroup.map((group) => {
                         return (
                             <div key={group.name || group.fields[0]}>
                                 { group.name && (
@@ -74,21 +80,23 @@ function ConfigValueBox({ optionConfigGroup, type = 'input', isDefinitionEditabl
                                     if (type === 'input') {
                                         return (
                                             <SettingItem
-                                                settings={definitionState?.definitionForManager?.settings}
+                                                settings={definitionForManager?.settings}
                                                 definitionKey={key}
                                                 width="160px"
                                                 key={key}
-                                                isDefinitionEditable={() => isDefinitionEditable(definitionState?.definitionForManager)}
+                                                isDefinitionEditable={isEditable}
                                                 onChangeDefinition={onChangeDefinition}
                                             />
                                         );
                                     } else if (type === 'checkbox') {
                                         return (
                                             <CheckboxItem
-                                                settings={definitionState?.settings}
+                                                calculateTextIndex={calculateTextIndex}
+                                                settings={definitionForManager?.settings}
+                                                defaultValue={includes(customConfigs, key)}
                                                 definitionKey={key}
                                                 key={key}
-                                                isDefinitionEditable={() => isDefinitionEditable(definitionState)}
+                                                isDefinitionEditable={isDefinitionEditable}
                                                 onChangeDefinition={onChangeDefinition}
                                             />
                                         );
@@ -105,11 +113,14 @@ function ConfigValueBox({ optionConfigGroup, type = 'input', isDefinitionEditabl
     );
 }
 ConfigValueBox.propTypes = {
-    definitionState: PropTypes.object.isRequired,
+    definitionForManager: PropTypes.object.isRequired,
     optionConfigGroup: PropTypes.array.isRequired,
+    isCategorySelected: PropTypes.bool,
+    customConfigs: PropTypes.array,
     type: PropTypes.string,
+    calculateTextIndex: PropTypes.func,
     isDefinitionEditable: PropTypes.func,
     onChangeDefinition: PropTypes.func.isRequired
 };
 
-export default ConfigValueBox;
+export default React.memo(ConfigValueBox);

@@ -175,7 +175,6 @@ export const actions = {
 
         return null;
     },
-    // // TODO:
     duplicateToolCategoryDefinition: (activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
         const state = getState().cnc;
         const toolDefinitions = cloneDeep(state.toolDefinitions);

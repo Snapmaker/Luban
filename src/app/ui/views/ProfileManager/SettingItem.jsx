@@ -8,6 +8,7 @@ import TipTrigger from '../../components/TipTrigger';
 
 function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
     const setting = settings[definitionKey];
+
     const { label, description, type, unit = '', enabled, options } = setting;
     const defaultValue = setting.default_value;
     if (typeof enabled === 'string') {

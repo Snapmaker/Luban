@@ -10,7 +10,7 @@ import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import Notifications from '../../components/Notifications';
 import Modal from '../../components/Modal';
-import ConfigItem from './ConfigItem';
+import ConfigValueBox from './ConfigValueBox';
 import useSetState from '../../../lib/hooks/set-state';
 import { limitStringLength } from '../../../lib/normalize-range';
 import styles from './styles.styl';
@@ -100,19 +100,10 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
     });
     const [configExpanded, setConfigExpanded] = useState({});
     const [notificationMessage, setNotificationMessage] = useState('');
-    const [activeCateId, setActiveCateId] = useState(2);
-    // const [qualityConfigExpanded, setQualityConfigExpanded] = useState((() => {
-    //     const obj = {};
-    //     PRINTING_QUALITY_CONFIG_GROUP.forEach((config) => {
-    //         obj[config.name] = false;
-    //     });
-    //     return obj;
-    // }));
     const refs = {
         fileInput: useRef(null),
         renameInput: useRef(null),
-        refCreateModal: useRef(null),
-        scrollDom: useRef(null)
+        refCreateModal: useRef(null)
     };
     const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId);
     const actions = {
@@ -143,12 +134,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             }
         },
         onSelectDefinitionById: (definitionId, name) => {
-            const definitionForManager = definitionState?.definitionForManager;
+            const { definitionForManager, isCategorySelected } = definitionState;
+            if (!isCategorySelected && definitionId === definitionForManager.definitionId) {
+                return;
+            }
             let selected;
             if (!name) {
-                if (definitionId === definitionForManager?.definitionId) {
-                    return;
-                }
                 selected = currentDefinitions.current.find(d => d.definitionId === definitionId);
             } else {
                 selected = currentDefinitions.current.find(d => d.definitionId === definitionId && d.name === name);
@@ -384,47 +375,33 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         clearNotification: () => {
             setNotificationMessage('');
         },
-        setActiveCate: (cateId) => {
-            if (refs.scrollDom.current) {
-                const container = refs.scrollDom.current.parentElement;
-                const offsetTops = [...refs.scrollDom.current.children].map(i => i.offsetTop);
-                if (cateId !== undefined) {
-                    container.scrollTop = offsetTops[cateId] - 80;
-                } else {
-                    cateId = offsetTops.findIndex((item, idx) => item < container.scrollTop && offsetTops[idx + 1] > container.scrollTop);
-                    cateId = Math.max(cateId, 0);
-                }
-                setActiveCateId(cateId);
-            }
-            return true;
-        },
         importFile: (ref) => {
             ref.current.value = null;
             ref.current.click();
         },
-        onChangeDefinition: (key, value, checkboxKeyArray) => {
+        onChangeDefinition: (key, value) => {
             // now setDefinitionState is synchronize, so remove setTimeout
-            const { definitionOptions, definitionForManager } = definitionState;
+            const { definitionForManager } = definitionState;
             const newDefinitionForManager = cloneDeep(definitionForManager);
             newDefinitionForManager.settings[key].default_value = value;
             setDefinitionState({
                 definitionForManager: newDefinitionForManager
             });
 
-            if (checkboxKeyArray) {
-                let newDefinitionOptions;
-                checkboxKeyArray.forEach((checkboxKey) => {
-                    newDefinitionOptions = definitionOptions.map((item) => {
-                        if (item.label === definitionForManager.name && key === checkboxKey) {
-                            item[checkboxKey] = value;
-                        }
-                        return item;
-                    });
-                });
-                setDefinitionState({
-                    definitionOptions: newDefinitionOptions
-                });
-            }
+            // if (checkboxKeyArray) {
+            //     let newDefinitionOptions;
+            //     checkboxKeyArray.forEach((checkboxKey) => {
+            //         newDefinitionOptions = definitionOptions.map((item) => {
+            //             if (item.label === definitionForManager.name && key === checkboxKey) {
+            //                 item[checkboxKey] = value;
+            //             }
+            //             return item;
+            //         });
+            //     });
+            //     setDefinitionState({
+            //         definitionOptions: newDefinitionOptions
+            //     });
+            // }
             outsideActions.onSaveDefinitionForManager(newDefinitionForManager);
         }
     };
@@ -442,17 +419,22 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                         style={{ margin: '0', padding: '20px 0 0', height: '100%', minHeight: '525px', textAlign: 'center' }}
                     >
                         <div className={classNames(styles['manager-type-wrapper'])}>
-                            <Anchor
+                            <div
                                 className={classNames(styles['manager-type'])}
                             >
                                 {i18n._(managerTitle)}
-                            </Anchor>
+                            </div>
                         </div>
 
                         <div
                             className={classNames(styles['manager-content'])}
                         >
                             <div className={classNames(styles['manager-name'])}>
+                                {notificationMessage && (
+                                    <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
+                                        {notificationMessage}
+                                    </Notifications>
+                                )}
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category, 28);
@@ -607,62 +589,13 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     />
                                 </div>
                             </div>
-
-                            {(optionConfigGroup.length > 2) && (
-                                <div className={classNames(styles['manager-grouplist'])}>
-                                    <div className="sm-parameter-container">
-                                        {optionConfigGroup.map((group, idx) => {
-                                            return (
-                                                <div
-                                                    key={i18n._(idx)}
-
-                                                >
-                                                    {group.name && (
-                                                        <Anchor
-                                                            className={classNames(styles.item, { [styles.selected]: idx === activeCateId })}
-
-                                                            onClick={() => {
-                                                                actions.setActiveCate(idx);
-                                                            }}
-                                                        >
-                                                            <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
-
-                                                        </Anchor>
-                                                    )}
-
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-
-                            <div
-                                className={classNames(styles['manager-details'])}
-                                onWheel={() => { actions.setActiveCate(); }}
-                            >
-                                {notificationMessage && (
-                                    <Notifications bsStyle="danger" onDismiss={actions.clearNotification} className="Notifications">
-                                        {notificationMessage}
-                                    </Notifications>
-                                )}
-
-                                <div className="sm-parameter-container" ref={refs.scrollDom}>
-                                    {!definitionState?.isCategorySelected && optionConfigGroup.map((group) => {
-                                        return (
-                                            <ConfigItem
-                                                definitionForManager={definitionState?.definitionForManager}
-                                                group={group}
-                                                defaultKeysAndId={defaultKeysAndId}
-                                                key={group.name || group.fields[0]}
-                                                isDefinitionEditable={isDefinitionEditable}
-                                                onChangeDefinition={actions.onChangeDefinition}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <ConfigValueBox
+                                definitionForManager={definitionState.definitionForManager}
+                                isCategorySelected={definitionState.isCategorySelected}
+                                optionConfigGroup={optionConfigGroup}
+                                isDefinitionEditable={isDefinitionEditable}
+                                onChangeDefinition={actions.onChangeDefinition}
+                            />
 
                         </div>
 

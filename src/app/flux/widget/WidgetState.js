@@ -25,7 +25,7 @@ const DEFAULT_STATE = {
     },
     '3dp': {
         default: {
-            widgets: ['3dp-object-list', '3dp-material', '3dp-configurations', '3dp-output']
+            widgets: ['3dp-object-list', '3dp-material', '3dp-configurations']
         }
     },
     laser: {
