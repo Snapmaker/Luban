@@ -29,7 +29,7 @@ const QUALITY_CHECKBOX_AND_SELECT_KEY_ARRAY = [
 ];
 // Only custom material is editable, changes on diameter is not allowed as well
 function isDefinitionEditable(definition, key) {
-    return !definition.metadata.readonly
+    return !definition?.metadata?.readonly
         && key !== 'material_diameter';
 }
 

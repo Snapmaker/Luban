@@ -224,6 +224,24 @@ export const CNC_TOOL_CONFIG_GROUP = [
         ]
     }
 ];
+
+export const PRINTING_QUALITY_CUSTOMIZE_FIELDS = [
+    'layer_height',
+    'infill_pattern',
+    'wall_thickness',
+    'adhesion_type',
+    'support_enable'
+];
+export const PRINTING_QUALITY_CONFIG_INDEX = {
+    'retraction_amount': 1,
+    'retraction_speed': 1,
+    'retraction_hop_enabled': 1,
+    'retraction_hop': 2,
+    'support_type': 1,
+    'skirt_line_count': 1,
+    'brim_line_count': 1,
+    'raft_margin': 1
+};
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 

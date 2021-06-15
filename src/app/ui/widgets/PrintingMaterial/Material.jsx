@@ -77,6 +77,7 @@ function Material({ widgetActions }) {
             label: d.name,
             value: d.definitionId
         }));
+
         setMaterialDefinitionOptions(newMaterialDefinitionOptions);
     }, [materialDefinitions, updateActiveDefinition, currentDefinition?.definitionId]);
 

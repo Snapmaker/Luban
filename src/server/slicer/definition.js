@@ -32,7 +32,6 @@ export class DefinitionLoader {
 
         const filePath = configPath ? path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`)
             : path.join(DataStorage.configDir, `${definitionId}.def.json`);
-
         const data = fs.readFileSync(filePath, 'utf8');
         // in case of JSON parse error, set default json inherits from snapmaker2.def.json
         let json = {

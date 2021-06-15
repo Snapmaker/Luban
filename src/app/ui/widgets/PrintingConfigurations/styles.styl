@@ -1,4 +1,29 @@
 @import "../../../styles/variables.styl"
+.manager-body {
+    text-align: left;
+    .manager-type-wrapper {
+        padding: 0 20px
+        border-bottom: 1px #c8c8c8 solid
+        text-align: left
+        .manager-type {
+            display: inline-block
+            line-height: 25px
+            padding-bottom: 9px
+            height: 36px;
+            font-size: 18px;
+            font-weight: 500;
+            &.selected {
+                color: #28A7E1;
+                border-bottom: 2px #28A7E1 solid;
+            }
+        }
+    }
+    .manager-content {
+        height: 530px
+        padding: 20px;
+        display: flex;
+    }
+}
 
 .manager-icon {
     width: 32px;
