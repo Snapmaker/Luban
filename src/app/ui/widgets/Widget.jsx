@@ -24,6 +24,7 @@ import PrintingObjectList from './PrintingObjectList';
 import JobType from './JobType';
 import CreateToolPath from './CncLaserToolPath';
 import PrintingVisualizer from './PrintingVisualizer';
+import MachineSettingWidget from './MachineSetting';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -36,6 +37,7 @@ const getWidgetByName = (name) => {
         'macroPanel': MacroWidget,
         'purifier': PurifierWidget,
         'marlin': MarlinWidget,
+        'machine-setting': MachineSettingWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
         'printing-visualizer': PrintingVisualizer,

@@ -13,7 +13,7 @@ const DEFAULT_STATE = {
         left: {
             show: true,
             widgets: [
-                'connection', 'console', 'marlin', 'laser-test-focus'
+                'connection', 'console', 'marlin', 'laser-test-focus', 'machine-setting'
             ]
         },
         right: {
