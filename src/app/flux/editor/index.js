@@ -88,6 +88,7 @@ export const actions = {
 
     _init: (headType) => (dispatch, getState) => {
         const { modelGroup, toolPathGroup } = getState()[headType];
+        modelGroup.removeAllModels();
         modelGroup.setDataChangedCallback(() => {
             dispatch(baseActions.render(headType));
         });

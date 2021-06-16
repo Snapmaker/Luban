@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
 import PropTypes from 'prop-types';
@@ -12,8 +12,8 @@ import LaserVisualizer from '../widgets/LaserVisualizer';
 import { renderWidgetList, useRenderRecoveryModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
-// import { actions as widgetActions } from '../../flux/widget';
-// import styles from './styles.styl';
+import { actions as laserActions } from '../../flux/laser';
+
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
@@ -84,6 +84,10 @@ function Laser({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(laserActions.init());
+    }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const listActions = {

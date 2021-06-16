@@ -97,6 +97,7 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
+    // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_CNC));
 

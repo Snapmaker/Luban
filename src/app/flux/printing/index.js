@@ -260,11 +260,14 @@ export const actions = {
         gcodeLineGroup.position.set(-size.x / 2, -size.y / 2, 0);
     },
 
+    // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
         await dispatch(actions.initSize());
 
         const printingState = getState().printing;
         const { modelGroup, gcodeLineGroup } = printingState;
+
+        modelGroup.removeAllModels();
 
         // TODO: not yet to clear old events before regist
         // generate gcode event

@@ -93,6 +93,7 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
+    // TODO: init should be  re-called
     init: () => (dispatch, getState) => {
         dispatch(editorActions._init(HEAD_LASER));
 
