@@ -15,7 +15,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -41,6 +41,7 @@ import CncLaserObjectList from '../widgets/CncLaserList';
 import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
+import HomePage from './HomePage';
 
 
 const allWidgets = {
@@ -73,14 +74,23 @@ const allWidgets = {
     'create-toolpath': CreateToolPath
 };
 
+
 const pageHeadType = HEAD_3DP;
 
 function Printing({ history, location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
 
-    const renderRecovery = useRenderRecoveryModal(pageHeadType);
+    const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
 
     useEffect(() => {
         dispatch(printingActions.init());
@@ -116,14 +126,16 @@ function Printing({ history, location }) {
             {
                 title: i18n._('Home'),
                 type: 'button',
-                action: () => history.push('/')
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
             },
             {
 
-                title: i18n._('Add'),
+                title: i18n._('Open'),
                 type: 'button',
                 name: 'Copy',
                 inputInfo: {
@@ -234,7 +246,8 @@ function Printing({ history, location }) {
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
             </Dropzone>
-            {renderRecovery}
+            {recoveryModal}
+            {renderHomepage()}
         </ProjectLayout>
     );
 }

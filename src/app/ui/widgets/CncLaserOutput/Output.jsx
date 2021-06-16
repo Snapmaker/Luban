@@ -223,7 +223,8 @@ class Output extends PureComponent {
                     ref={this.thumbnail}
                     modelGroup={this.props.modelGroup}
                     toolPathGroup={this.props.toolPathGroup}
-                />{this.renderWorkspace()}
+                />
+                {this.renderWorkspace()}
             </div>
         );
     }

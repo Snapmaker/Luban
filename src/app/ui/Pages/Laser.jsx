@@ -12,7 +12,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 // import Widget from '../widgets/Widget';
 
-import { renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
@@ -48,6 +48,7 @@ import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import HomePage from './HomePage';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -85,6 +86,7 @@ const pageHeadType = HEAD_LASER;
 function Laser({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
 
@@ -93,6 +95,13 @@ function Laser({ history }) {
     }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -129,13 +138,15 @@ function Laser({ history }) {
                 title: i18n._('Home'),
                 type: 'button',
                 name: 'Copy',
-                action: () => history.push('/')
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
             },
             {
-                title: i18n._('Add'),
+                title: i18n._('Open'),
                 type: 'button',
                 name: 'Copy',
                 inputInfo: {
@@ -263,6 +274,7 @@ function Laser({ history }) {
                 </Dropzone>
             </ProjectLayout>
             {recoveryModal}
+            {renderHomepage()}
         </div>
     );
 }

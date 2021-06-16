@@ -13,7 +13,7 @@ import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import Space from '../components/Space';
-import { renderModal, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../Layouts/ProjectLayout';
@@ -58,6 +58,7 @@ import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import HomePage from './HomePage';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -96,6 +97,7 @@ function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
     const dispatch = useDispatch();
     const onClose = () => setShowWarning(false);
+
     function onChangeShouldShowWarning(value) {
         dispatch(machineActions.setShouldShowCncWarning(value));
     }
@@ -140,6 +142,7 @@ function useRenderWarning() {
 function Cnc({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.cnc.page);
 
@@ -148,6 +151,13 @@ function Cnc({ history }) {
     }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
     const warningModal = useRenderWarning();
     const listActions = {
         onDragStart: () => {
@@ -192,13 +202,15 @@ function Cnc({ history }) {
                 title: i18n._('Home'),
                 type: 'button',
                 name: 'Copy',
-                action: () => history.push('/')
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
             },
             {
-                title: i18n._('Add'),
+                title: i18n._('Open'),
                 type: 'button',
                 name: 'Copy',
                 inputInfo: {
@@ -321,6 +333,7 @@ function Cnc({ history }) {
             </ProjectLayout>
             {recoveryModal}
             {warningModal}
+            {renderHomepage()}
         </div>
     );
 }
