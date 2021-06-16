@@ -3,15 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
+import classNames from 'classnames';
 
 import path from 'path';
 import { Trans } from 'react-i18next';
-import { HEAD_CNC, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 import i18n from '../../lib/i18n';
+import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import Space from '../components/Space';
-import { renderModal, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 
 import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../Layouts/ProjectLayout';
@@ -21,7 +22,15 @@ import MainToolBar from '../Layouts/MainToolBar';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as cncActions } from '../../flux/cnc';
 import { actions as machineActions } from '../../flux/machine';
-
+import { actions as projectActions } from '../../flux/project';
+import {
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_MESH,
+    PROCESS_MODE_VECTOR,
+    PAGE_EDITOR,
+    PAGE_PROCESS,
+    HEAD_CNC
+} from '../../constants';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -48,6 +57,7 @@ import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import HomePage from './HomePage';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -86,6 +96,7 @@ function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
     const dispatch = useDispatch();
     const onClose = () => setShowWarning(false);
+
     function onChangeShouldShowWarning(value) {
         dispatch(machineActions.setShouldShowCncWarning(value));
     }
@@ -130,13 +141,42 @@ function useRenderWarning() {
 function Cnc({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
+    const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
+    const page = useSelector(state => state?.cnc.page);
 
     useEffect(() => {
         dispatch(cncActions.init());
     }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
+    const jobTypeModal = showJobType && renderModal({
+        title: i18n._('Job Type'),
+        renderBody() {
+            return (
+                <JobType
+                    isWidget={false}
+                    headType={HEAD_CNC}
+                />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Cancel'),
+
+                onClick: () => { setSHowJobType(false); }
+            }
+        ],
+        onClose: () => { setSHowJobType(false); }
+    });
     const warningModal = useRenderWarning();
     const listActions = {
         onDragStart: () => {
@@ -173,14 +213,78 @@ function Cnc({ history }) {
             });
         }
     };
+
     function renderMainToolBar() {
+        const fileInput = React.createRef();
         const leftItems = [
             {
-                title: 'Home',
-                action: () => history.push('/')
+                title: i18n._('Home'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
+            },
+            {
+                title: i18n._('Open'),
+                type: 'button',
+                name: 'Copy',
+                inputInfo: {
+                    accept: '.snapcnc',
+                    fileInput: fileInput,
+                    onChange: async (e) => {
+                        const file = e.target.files[0];
+                        const recentFile = {
+                            name: file.name,
+                            path: file.path || ''
+                        };
+                        try {
+                            await dispatch(projectActions.open(file, history));
+                            // Todo: Add to recent file, but not use isElectron()
+                            // if (isElectron()) {
+                            //     const ipc = window.require('electron').ipcRenderer;
+                            //     ipc.send('add-recent-file', recentFile);
+                            // }
+                            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
+                        } catch (error) {
+                            modal({
+                                title: i18n._('Failed to upload model'),
+                                body: error.message
+                            });
+                        }
+                    }
+                },
+                action: () => {
+                    fileInput.current.value = null;
+                    fileInput.current.click();
+                }
+            },
+            {
+                title: 'Save',
+                type: 'button',
+                action: () => {
+                    dispatch(projectActions.save(HEAD_CNC));
+                }
+            },
+            // Todo: add after completed
+            // {
+            //     title: 'Undo',
+            //     type: 'button'
+            // },
+            // {
+            //     title: 'Redo',
+            //     type: 'button'
+            // }
+            {
+                title: i18n._('Job'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    setSHowJobType(true);
+                }
             }
         ];
         const centerItems = [
@@ -201,17 +305,41 @@ function Cnc({ history }) {
         const widgetProps = { headType: 'cnc' };
         return (
             <div>
-                <div>
-                    <button type="button" onClick={() => dispatch(editorActions.switchToPage('cnc', PAGE_EDITOR))}>
-                        Editor
-                    </button>
-                    <button type="button" onClick={() => dispatch(editorActions.switchToPage('cnc', PAGE_PROCESS))}>
-                        Process
-                    </button>
+                <div
+                    style={{
+                        display: 'inline-block',
+                        width: '50%',
+                        border: '1px solid #fafafa',
+                        backgroundColor: page === PAGE_EDITOR ? '#b3d4fc' : '#fafafa'
+                    }}
+                    className={classNames({ 'selected': page === PAGE_EDITOR })}
+                >
+                    <Anchor
+                        style={{
+
+                        }}
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_EDITOR))}
+                    >
+                        {i18n._('Edit')}
+                    </Anchor>
+                </div>
+                <div
+                    style={{
+                        display: 'inline-block',
+                        width: '50%',
+                        border: '1px solid #fafafa',
+                        backgroundColor: page === PAGE_PROCESS ? '#b3d4fc' : '#fafafa'
+                    }}
+                    className={classNames({ 'selected': page === PAGE_PROCESS })}
+                >
+                    <Anchor
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_PROCESS))}
+                    >
+                        {i18n._('Process')}
+                    </Anchor>
                 </div>
                 {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
             </div>
-
         );
     }
 
@@ -233,6 +361,8 @@ function Cnc({ history }) {
             </ProjectLayout>
             {recoveryModal}
             {warningModal}
+            {jobTypeModal}
+            {renderHomepage()}
         </div>
     );
 }

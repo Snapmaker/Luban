@@ -9,7 +9,7 @@ function MenuItem({ menuItem, actions }) {
     if (!menuItem) {
         return null;
     }
-    const { type = 'button', name = 'Copy', title } = menuItem;
+    const { type = 'button', name = 'Copy', title, inputInfo } = menuItem;
     switch (type) {
         case 'separator':
             return (
@@ -25,6 +25,7 @@ function MenuItem({ menuItem, actions }) {
                     onClick={() => { actions.handleClick(menuItem.action); }}
                     spanText={i18n._(title)}
                     spanClassName={classNames(styles['action-title'])}
+                    inputInfo={inputInfo}
                 />
             );
         default:

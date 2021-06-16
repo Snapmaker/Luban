@@ -6,6 +6,7 @@ import styles from './styles/homepage.styl';
 
 class HomeLayout extends PureComponent {
     static propTypes = {
+        renderMainToolBar: PropTypes.func,
         renderTopView: PropTypes.func,
         renderMiddleView: PropTypes.func,
         renderModalView: PropTypes.func,
@@ -14,11 +15,20 @@ class HomeLayout extends PureComponent {
 
 
     render() {
-        const { renderTopView, renderMiddleView, renderBottomBar, renderModalView } = this.props;
+        const { renderMainToolBar, renderTopView, renderMiddleView, renderBottomBar, renderModalView } = this.props;
         return (
             <div>
                 <div className={styles['content-table']}>
                     <div className={styles['content-row']}>
+                        <div
+                            className={classNames(
+                                styles.topBar
+                            )}
+                        >
+                            {renderMainToolBar && (
+                                renderMainToolBar()
+                            )}
+                        </div>
                         <div
                             className={classNames(
                                 styles.controls,

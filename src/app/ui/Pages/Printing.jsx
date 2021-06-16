@@ -3,6 +3,7 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Widget from '../widgets/Widget';
+import isElectron from 'is-electron';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
@@ -14,7 +15,7 @@ import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
-import { renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -40,6 +41,7 @@ import CncLaserObjectList from '../widgets/CncLaserList';
 import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
+import HomePage from './HomePage';
 
 
 const allWidgets = {
@@ -72,14 +74,23 @@ const allWidgets = {
     'create-toolpath': CreateToolPath
 };
 
+
 const pageHeadType = HEAD_3DP;
 
 function Printing({ history, location }) {
     const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
 
-    const renderRecovery = useRenderRecoveryModal(pageHeadType);
+    const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
 
     useEffect(() => {
         dispatch(printingActions.init());
@@ -110,45 +121,82 @@ function Printing({ history, location }) {
     }
 
     function renderMainToolBar() {
+        const fileInput = React.createRef();
         const leftItems = [
             {
-                title: 'Home',
+                title: i18n._('Home'),
                 type: 'button',
-                action: () => history.push('/')
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
             },
             {
-                title: 'Save',
-                name: 'Copy',
+
+                title: i18n._('Open'),
                 type: 'button',
-                action: () => {
-                    const headType = pageHeadType;
-                    if (!headType) {
-                        return;
+                name: 'Copy',
+                inputInfo: {
+                    accept: '.snap3dp',
+                    fileInput: fileInput,
+                    onChange: async (e) => {
+                        const file = e.target.files[0];
+                        const recentFile = {
+                            name: file.name,
+                            path: file.path || ''
+                        };
+                        try {
+                            await dispatch(projectActions.open(file, history));
+                            if (isElectron()) {
+                                const ipc = window.require('electron').ipcRenderer;
+                                ipc.send('add-recent-file', recentFile);
+                            }
+                            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
+                        } catch (error) {
+                            modal({
+                                title: i18n._('Failed to upload model'),
+                                body: error.message
+                            });
+                        }
                     }
-                    dispatch(projectActions.save(headType));
+                },
+                action: () => {
+                    fileInput.current.value = null;
+                    fileInput.current.click();
                 }
             },
             {
-                title: 'Undo',
-                name: 'Copy',
+                title: i18n._('Save'),
                 type: 'button',
-                action: () => dispatch(printingActions.undo())
+                name: 'Copy',
+                action: () => {
+                    dispatch(projectActions.save(HEAD_3DP));
+                }
             },
             {
-                title: 'Redo',
-                name: 'Copy',
+                title: i18n._('Undo'),
                 type: 'button',
-                action: () => dispatch(printingActions.redo())
+                name: 'Copy',
+                action: () => {
+                    dispatch(printingActions.undo());
+                }
+            },
+            {
+                title: i18n._('Redo'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    dispatch(printingActions.redo());
+                }
             }
         ];
         const centerItems = [
             {
                 type: 'button',
                 name: 'Edit',
-                title: 'Edit',
+                title: i18n._('Edit'),
                 action: () => history.push('cnc')
             }
         ];
@@ -198,7 +246,8 @@ function Printing({ history, location }) {
             >
                 <PrintingVisualizer widgetId="printingVisualizer" />
             </Dropzone>
-            {renderRecovery}
+            {recoveryModal}
+            {renderHomepage()}
         </ProjectLayout>
     );
 }

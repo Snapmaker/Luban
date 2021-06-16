@@ -11,7 +11,7 @@ import QuickStart from './QuickStart';
 import MoreInfo from './MoreInfo';
 import SettingGuideModal from './SettingGuideModal';
 
-const HomePage = (props) => {
+const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
     useEffect(() => {
         const settingStore = machineStore.get('settings');

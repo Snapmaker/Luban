@@ -4,18 +4,21 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Sortable from 'react-sortablejs';
+import classNames from 'classnames';
 import i18n from '../../lib/i18n';
+import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 // import Widget from '../widgets/Widget';
 
-import { renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
-
+import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
+// import WidgetContainer from '../Layouts/Widget';
 
 import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
@@ -45,6 +48,7 @@ import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
 import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
+import HomePage from './HomePage';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -79,17 +83,45 @@ const allWidgets = {
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-
 function Laser({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const [showHomePage, setShowHomePage] = useState(false);
+    const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
+    const page = useSelector(state => state?.laser?.page);
 
     useEffect(() => {
         dispatch(laserActions.init());
     }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const renderHomepage = () => {
+        const onClose = () => setShowHomePage(false);
+        return showHomePage && renderPopup({
+            onClose,
+            component: HomePage
+        });
+    };
+    const jobTypeModal = showJobType && renderModal({
+        title: i18n._('Job Type'),
+        renderBody() {
+            return (
+                <JobType
+                    isWidget={false}
+                    headType={HEAD_LASER}
+                />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Cancel'),
+
+                onClick: () => { setSHowJobType(false); }
+            }
+        ],
+        onClose: () => { setSHowJobType(false); }
+    });
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -118,21 +150,86 @@ function Laser({ history }) {
             });
         }
     };
+
     function renderMainToolBar() {
+        const fileInput = React.createRef();
         const leftItems = [
             {
-                title: 'Home',
-                action: () => history.push('/')
+                title: i18n._('Home'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    setShowHomePage(true);
+                }
             },
             {
                 type: 'separator'
+            },
+            {
+                title: i18n._('Open'),
+                type: 'button',
+                name: 'Copy',
+                inputInfo: {
+                    accept: '.snaplzr',
+                    fileInput: fileInput,
+                    onChange: async (e) => {
+                        const file = e.target.files[0];
+                        const recentFile = {
+                            name: file.name,
+                            path: file.path || ''
+                        };
+                        try {
+                            await dispatch(projectActions.open(file, history));
+                            // Todo: Add to recent file, but not use isElectron()
+                            // if (isElectron()) {
+                            //     const ipc = window.require('electron').ipcRenderer;
+                            //     ipc.send('add-recent-file', recentFile);
+                            // }
+                            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
+                        } catch (error) {
+                            modal({
+                                title: i18n._('Failed to upload model'),
+                                body: error.message
+                            });
+                        }
+                    }
+                },
+                action: () => {
+                    fileInput.current.value = null;
+                    fileInput.current.click();
+                }
+            },
+            {
+                title: i18n._('Save'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    dispatch(projectActions.save(HEAD_LASER));
+                }
+            },
+            // Todo, add after completed
+            // {
+            //     title: 'Undo',
+            //     type: 'button'
+            // },
+            // {
+            //     title: 'Redo',
+            //     type: 'button'
+            // }
+            {
+                title: i18n._('Job'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    setSHowJobType(true);
+                }
             }
         ];
         const centerItems = [
             {
-                title: 'Edit',
                 name: 'Edit',
-                action: () => history.push('laser')
+                action: () => history.push('laser'),
+                title: i18n._('Edit')
             }
         ];
         return (
@@ -146,13 +243,35 @@ function Laser({ history }) {
         const widgetProps = { headType: 'laser' };
         return (
             <div>
-                <div>
-                    <button type="button" onClick={() => dispatch(editorActions.switchToPage('laser', PAGE_EDITOR))}>
-                        Editor
-                    </button>
-                    <button type="button" onClick={() => dispatch(editorActions.switchToPage('laser', PAGE_PROCESS))}>
-                        Process
-                    </button>
+                <div
+                    style={{
+                        display: 'inline-block',
+                        width: '50%',
+                        border: '1px solid #fafafa',
+                        backgroundColor: page === PAGE_EDITOR ? '#b3d4fc' : '#fafafa'
+                    }}
+                    className={classNames({ 'selected': page === PAGE_EDITOR })}
+                >
+                    <Anchor
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_EDITOR))}
+                    >
+                        {i18n._('Edit')}
+                    </Anchor>
+                </div>
+                <div
+                    style={{
+                        display: 'inline-block',
+                        width: '50%',
+                        border: '1px solid #fafafa',
+                        backgroundColor: page === PAGE_PROCESS ? '#b3d4fc' : '#fafafa'
+                    }}
+                    className={classNames({ 'selected': page === PAGE_PROCESS })}
+                >
+                    <Anchor
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS))}
+                    >
+                        {i18n._('Process')}
+                    </Anchor>
                 </div>
                 {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
             </div>
@@ -178,6 +297,8 @@ function Laser({ history }) {
                 </Dropzone>
             </ProjectLayout>
             {recoveryModal}
+            {jobTypeModal}
+            {renderHomepage()}
         </div>
     );
 }

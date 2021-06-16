@@ -14,7 +14,8 @@ class SvgIcon extends PureComponent {
         color: PropTypes.string,
         spanText: PropTypes.string,
         spanClassName: PropTypes.string,
-        size: PropTypes.number
+        size: PropTypes.number,
+        inputInfo: PropTypes.object
     };
 
     static defaultProps = {
@@ -50,6 +51,7 @@ class SvgIcon extends PureComponent {
             spanClassName,
             color,
             isHorizontal,
+            inputInfo,
             ...props
         } = this.props;
         const Component = Icons[name];
@@ -58,34 +60,46 @@ class SvgIcon extends PureComponent {
         }
 
         return (
-            <Anchor
-                className={className}
-                title={title}
-                disabled={disabled}
-                onClick={onClick}
-                onFocus={() => 0}
-                onBlur={() => 0}
-                onMouseEnter={this.actions.handleMouseOver}
-                onMouseLeave={this.actions.handleMouseOut}
-            >
-                {Component && (
-                    <Component
-                        {...props}
-                        disabled={disabled}
-                        color={isHovered ? '#272829' : color}
+            <span>
+                { inputInfo !== undefined && (
+                    <input
+                        ref={inputInfo.fileInput}
+                        type="file"
+                        accept={inputInfo.accept}
+                        style={{ display: 'none' }}
+                        multiple={false}
+                        onChange={inputInfo.onChange}
                     />
                 )}
-                { spanText && isHorizontal && (
-                    <span className={spanClassName}>
-                        {spanText}
-                    </span>
-                )}
-                { spanText && !isHorizontal && (
-                    <div className={spanClassName}>
-                        {spanText}
-                    </div>
-                )}
-            </Anchor>
+                <Anchor
+                    className={className}
+                    title={title}
+                    disabled={disabled}
+                    onClick={onClick}
+                    onFocus={() => 0}
+                    onBlur={() => 0}
+                    onMouseEnter={this.actions.handleMouseOver}
+                    onMouseLeave={this.actions.handleMouseOut}
+                >
+                    {Component && (
+                        <Component
+                            {...props}
+                            disabled={disabled}
+                            color={isHovered ? '#272829' : color}
+                        />
+                    )}
+                    { spanText && isHorizontal && (
+                        <span className={spanClassName}>
+                            {spanText}
+                        </span>
+                    )}
+                    { spanText && !isHorizontal && (
+                        <div className={spanClassName}>
+                            {spanText}
+                        </div>
+                    )}
+                </Anchor>
+            </span>
         );
     }
 }
