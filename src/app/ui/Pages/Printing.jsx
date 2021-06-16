@@ -82,6 +82,10 @@ function Printing({ history, location }) {
     const renderRecovery = useRenderRecoveryModal(pageHeadType);
 
     useEffect(() => {
+        dispatch(printingActions.init());
+    }, []);
+
+    useEffect(() => {
         return async () => {
             dispatch(projectActions.save(pageHeadType));
         };

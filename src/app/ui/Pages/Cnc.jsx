@@ -1,5 +1,5 @@
 // import React, { useState, useEffect } from 'react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
@@ -19,6 +19,7 @@ import MainToolBar from '../Layouts/MainToolBar';
 
 
 import { actions as editorActions } from '../../flux/editor';
+import { actions as cncActions } from '../../flux/cnc';
 import { actions as machineActions } from '../../flux/machine';
 
 
@@ -130,6 +131,10 @@ function Cnc({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(cncActions.init());
+    }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const warningModal = useRenderWarning();

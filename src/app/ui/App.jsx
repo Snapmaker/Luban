@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 // import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
-import { HashRouter, Route, withRouter } from 'react-router-dom';
+import { HashRouter, Route, withRouter, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 // import { Trans } from 'react-i18next';
@@ -58,9 +58,9 @@ class App extends PureComponent {
         developToolsInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
         workspaceInit: PropTypes.func.isRequired,
-        laserInit: PropTypes.func.isRequired,
-        cncInit: PropTypes.func.isRequired,
-        printingInit: PropTypes.func.isRequired,
+        // laserInit: PropTypes.func.isRequired,
+        // cncInit: PropTypes.func.isRequired,
+        // printingInit: PropTypes.func.isRequired,
         textInit: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         // projectState: PropTypes.object.isRequired,
@@ -109,14 +109,14 @@ class App extends PureComponent {
             // this.setState({ shouldShowCncWarning: !event.target.checked });
         },
         saveAsFile: () => {
-            const headType = getCurrentHeadType(this.props.location.pathname);
+            const headType = getCurrentHeadType(this.router.current.history.location.pathname);
             if (!headType) {
                 return;
             }
             this.props.saveAsFile(headType);
         },
         save: async () => {
-            const headType = getCurrentHeadType(this.props.location.pathname);
+            const headType = getCurrentHeadType(this.router.current.history.location.pathname);
             if (!headType) {
                 return;
             }
@@ -124,7 +124,7 @@ class App extends PureComponent {
         },
         saveAll: async () => {
             // TODO: dont need to save all!
-            // const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            // const currentHeadType = getCurrentHeadType(this.router.current.history.location.pathname);
             // let message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
             // if (currentHeadType) {
             //     await this.props.save(currentHeadType, { message });
@@ -137,7 +137,7 @@ class App extends PureComponent {
             // for (const headType of AllType) {
             //     if (!this.props.projectState[headType].unSaved) continue;
             //     message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] });
-            //     this.props.history.push(`/${headType}`);
+            //     this.router.current.history.push(`/${headType}`);
             //     await new Promise((resolve) => {
             //         setTimeout(() => {
             //             resolve(this.props.save(headType, { message }));
@@ -146,7 +146,7 @@ class App extends PureComponent {
             // }
         },
         closeFile: async () => {
-            const currentHeadType = getCurrentHeadType(this.props.location.pathname);
+            const currentHeadType = getCurrentHeadType(this.router.current.history.location.pathname);
             const message = i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[currentHeadType] });
             if (currentHeadType) {
                 await this.props.saveAndClose(currentHeadType, { message });
@@ -158,7 +158,7 @@ class App extends PureComponent {
                 this.fileInput.current.click();
             } else {
                 try {
-                    await this.props.openProject(file, this.props.history);
+                    await this.props.openProject(file, this.router.current.history);
                 } catch (e) {
                     console.log(e.message);
                 }
@@ -224,6 +224,7 @@ class App extends PureComponent {
             return false;
         };
 
+        // TODO: check these fix code
         // Make fit-addon loading when loading from the workspace for the first time (console widget)
         // if (history.location && history.location.pathname === '/workspace') {
         //     history.push('/workspace');
@@ -236,14 +237,15 @@ class App extends PureComponent {
         // });
 
         // init machine module
+        // TODO: move init to proper page
         this.props.machineInit();
         this.props.developToolsInit();
 
         this.props.functionsInit();
         this.props.workspaceInit();
-        this.props.laserInit();
-        this.props.cncInit();
-        this.props.printingInit();
+        // this.props.laserInit();
+        // this.props.cncInit();
+        // this.props.printingInit();
         this.props.textInit();
 
         UniApi.Window.initWindow();
@@ -262,7 +264,7 @@ class App extends PureComponent {
     // componentWillReceiveProps(nextProps) {
     // const headType = getCurrentHeadType(nextProps.location.pathname);
 
-    // if (nextProps.location.pathname !== this.props.location.pathname) {
+    // if (nextProps.location.pathname !== this.router.current.history.location.pathname) {
     //     UniApi.Menu.setItemEnabled('save-as', !!headType);
     //     UniApi.Menu.setItemEnabled('save', !!headType);
     // }
@@ -352,13 +354,15 @@ class App extends PureComponent {
         return (
             <HashRouter ref={this.router}>
                 <AppLayout>
-                    <Route path="/" exact component={HomePage} />
-                    <Route path="/workspace" component={Workspace} />
-                    <Route path="/3dp" component={Printing} />
-                    <Route path="/laser" component={Laser} />
-                    <Route path="/cnc" component={Cnc} />
-                    <Route path="/settings" component={Settings} />
-                    <Route component={HomePage} />
+                    <Switch>
+                        <Route path="/" exact component={HomePage} />
+                        <Route path="/workspace" component={Workspace} />
+                        <Route path="/3dp" component={Printing} />
+                        <Route path="/laser" component={Laser} />
+                        <Route path="/cnc" component={Cnc} />
+                        <Route path="/settings" component={Settings} />
+                        <Route component={HomePage} />
+                    </Switch>
                     <ToastContainer
                         position="top-center"
                         autoClose={5000}
@@ -370,6 +374,7 @@ class App extends PureComponent {
                         draggable
                         pauseOnHover
                     />
+
                 </AppLayout>
             </HashRouter>
         );
