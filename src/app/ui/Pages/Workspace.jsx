@@ -26,6 +26,7 @@ import {
     PRINTING_GCODE_SUFFIX
 } from '../../constants';
 import modal from '../../lib/modal';
+import { actions as projectActions } from '../../flux/project';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { actions as widgetActions } from '../../flux/widget';
 
@@ -100,6 +101,7 @@ class Workspace extends PureComponent {
         primaryWidgets: PropTypes.array.isRequired,
         secondaryWidgets: PropTypes.array.isRequired,
         updateTabContainer: PropTypes.func.isRequired,
+        save: PropTypes.func.isRequired,
 
         uploadGcodeFile: PropTypes.func.isRequired
     };
@@ -208,6 +210,8 @@ class Workspace extends PureComponent {
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeResizeEventListener();
+        console.log('componentWillUnmount');
+        this.props.save('3dp');
     }
 
     resizeDefaultContainer = () => {
@@ -387,6 +391,7 @@ const mapStateToProps = (state) => {
 };
 const mapDispatchToProps = (dispatch) => ({
     uploadGcodeFile: (file) => dispatch(workspaceActions.uploadGcodeFile(file)),
+    save: (pageHeadType) => dispatch(projectActions.save(pageHeadType)),
     updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
 });
 

@@ -1,5 +1,6 @@
-// import React, { useState, useEffect } from 'react';
 import React, { useState, useEffect } from 'react';
+
+// import React, { useState } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
@@ -18,11 +19,12 @@ import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
-
+import { actions as projectActions, actions as projectActions } from '../../flux/project';
+import { actions as cncActions, actions as cncActions } from '../../flux/cnc';
 import { actions as editorActions } from '../../flux/editor';
-import { actions as cncActions } from '../../flux/cnc';
+
 import { actions as machineActions } from '../../flux/machine';
-import { actions as projectActions } from '../../flux/project';
+
 import {
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_MESH,
@@ -95,11 +97,13 @@ const pageHeadType = HEAD_CNC;
 function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
     const dispatch = useDispatch();
+
     const onClose = () => setShowWarning(false);
 
     function onChangeShouldShowWarning(value) {
         dispatch(machineActions.setShouldShowCncWarning(value));
     }
+
     return showWarning && renderModal({
         onClose,
         renderBody: () => (
@@ -186,6 +190,18 @@ function Cnc({ history }) {
             setIsDraggingWidget(false);
         }
     };
+    useEffect(() => {
+        const listener = async (ev) => {
+            await dispatch(projectActions.save(pageHeadType));
+            ev.preventDefault();
+            ev.returnValue = 'ccc';
+        };
+        window.addEventListener('beforeunload', listener);
+        return () => {
+            window.removeEventListener('beforeunload', listener);
+        };
+    }, []);
+
     const actions = {
         onDropAccepted: (file) => {
             const extname = path.extname(file.name).toLowerCase();
@@ -223,6 +239,7 @@ function Cnc({ history }) {
                 name: 'Copy',
                 action: () => {
                     setShowHomePage(true);
+                    window.scrollTo(0, 0);
                 }
             },
             {
@@ -342,6 +359,7 @@ function Cnc({ history }) {
             </div>
         );
     }
+
 
     return (
         <div>

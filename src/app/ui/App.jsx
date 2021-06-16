@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 // import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
-import { HashRouter, Route, withRouter, Switch } from 'react-router-dom';
+import { HashRouter, Route, withRouter, Switch, Prompt } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 // import { Trans } from 'react-i18next';
@@ -104,6 +104,14 @@ class App extends PureComponent {
 
 
     actions = {
+        handleBlockedNavigation: async (nextLocation) => {
+            console.log('location', nextLocation, window.location);
+            // if (!confirmedNavigation && shouldBlockNavigation(nextLocation)) {
+            await this.actions.saveNew();
+            console.log('after location');
+            return false;
+            // }
+        },
         onChangeShouldShowWarning: (event) => {
             this.props.setShouldShowCncWarning(!event.target.checked);
             // this.setState({ shouldShowCncWarning: !event.target.checked });
@@ -114,6 +122,14 @@ class App extends PureComponent {
                 return;
             }
             this.props.saveAsFile(headType);
+        },
+        saveNew: async () => {
+            const headType = getCurrentHeadType(window.location.hash);
+            console.log('save', headType, window.location,);
+            if (!headType) {
+                return;
+            }
+            await this.props.save(headType);
         },
         save: async () => {
             const headType = getCurrentHeadType(this.router.current.history.location.pathname);
@@ -375,11 +391,14 @@ class App extends PureComponent {
                         pauseOnHover
                     />
 
+                    <Prompt when message={() => 'dddd'} />
+                    {/* Your own alert/dialog/modal component */}
                 </AppLayout>
             </HashRouter>
         );
     }
 }
+
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
