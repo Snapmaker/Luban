@@ -3,7 +3,6 @@ import isElectron from 'is-electron';
 import i18next from 'i18next';
 import { gte } from 'lodash';
 import styles from './styles.styl';
-import HomeLayout from '../../Layouts/HomeLayout';
 import { machineStore } from '../../../store/local-storage';
 
 // component
@@ -28,38 +27,20 @@ const HomePage = (props) => {
             ipc.send('get-recent-file');
         }
     }, []);
-    // view method
-    const renderMiddleView = () => {
-        return (
-            <div>
-                <Begin {...props} />
-                <QuickStart {...props} />
-            </div>
-        );
-    };
-
-    const renderBottomBar = () => {
-        return (
-            <div>
-                <MoreInfo />
-            </div>
-        );
-    };
-    const renderModalView = () => {
-        return (
-            <SettingGuideModal
-                handleModalShow={setModalShow}
-                initLanguage={i18next.language}
-            />
-        );
-    };
     return (
-        <HomeLayout
-            className={styles.homepageContainer}
-            renderMiddleView={renderMiddleView}
-            renderBottomBar={renderBottomBar}
-            renderModalView={modalShow ? renderModalView : null}
-        />
+        <div className={styles.homepageContainer}>
+            <Begin {...props} />
+            <QuickStart {...props} />
+            <MoreInfo />
+            {modalShow
+                && (
+                    <SettingGuideModal
+                        handleModalShow={setModalShow}
+                        initLanguage={i18next.language}
+                    />
+                )
+            }
+        </div>
     );
 };
 
