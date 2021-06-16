@@ -5,20 +5,20 @@ import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
-import isElectron from 'is-electron';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 // import Widget from '../widgets/Widget';
 
-import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
+import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as laserActions } from '../../flux/laser';
 import { actions as projectActions } from '../../flux/project';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
+// import WidgetContainer from '../Layouts/Widget';
 
 import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
@@ -87,6 +87,7 @@ function Laser({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
+    const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
 
@@ -102,6 +103,25 @@ function Laser({ history }) {
             component: HomePage
         });
     };
+    const jobTypeModal = showJobType && renderModal({
+        title: i18n._('Job Type'),
+        renderBody() {
+            return (
+                <JobType
+                    isWidget={false}
+                    headType={HEAD_LASER}
+                />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Cancel'),
+
+                onClick: () => { setSHowJobType(false); }
+            }
+        ],
+        onClose: () => { setSHowJobType(false); }
+    });
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -160,10 +180,11 @@ function Laser({ history }) {
                         };
                         try {
                             await dispatch(projectActions.open(file, history));
-                            if (isElectron()) {
-                                const ipc = window.require('electron').ipcRenderer;
-                                ipc.send('add-recent-file', recentFile);
-                            }
+                            // Todo: Add to recent file, but not use isElectron()
+                            // if (isElectron()) {
+                            //     const ipc = window.require('electron').ipcRenderer;
+                            //     ipc.send('add-recent-file', recentFile);
+                            // }
                             await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
                         } catch (error) {
                             modal({
@@ -199,7 +220,9 @@ function Laser({ history }) {
                 title: i18n._('Job'),
                 type: 'button',
                 name: 'Copy',
-                action: () => {}
+                action: () => {
+                    setSHowJobType(true);
+                }
             }
         ];
         const centerItems = [
@@ -274,6 +297,7 @@ function Laser({ history }) {
                 </Dropzone>
             </ProjectLayout>
             {recoveryModal}
+            {jobTypeModal}
             {renderHomepage()}
         </div>
     );

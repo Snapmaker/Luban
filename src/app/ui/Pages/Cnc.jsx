@@ -7,7 +7,6 @@ import classNames from 'classnames';
 
 import path from 'path';
 import { Trans } from 'react-i18next';
-import isElectron from 'is-electron';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
@@ -143,6 +142,7 @@ function Cnc({ history }) {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
+    const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.cnc.page);
 
@@ -158,6 +158,25 @@ function Cnc({ history }) {
             component: HomePage
         });
     };
+    const jobTypeModal = showJobType && renderModal({
+        title: i18n._('Job Type'),
+        renderBody() {
+            return (
+                <JobType
+                    isWidget={false}
+                    headType={HEAD_CNC}
+                />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Cancel'),
+
+                onClick: () => { setSHowJobType(false); }
+            }
+        ],
+        onClose: () => { setSHowJobType(false); }
+    });
     const warningModal = useRenderWarning();
     const listActions = {
         onDragStart: () => {
@@ -224,10 +243,11 @@ function Cnc({ history }) {
                         };
                         try {
                             await dispatch(projectActions.open(file, history));
-                            if (isElectron()) {
-                                const ipc = window.require('electron').ipcRenderer;
-                                ipc.send('add-recent-file', recentFile);
-                            }
+                            // Todo: Add to recent file, but not use isElectron()
+                            // if (isElectron()) {
+                            //     const ipc = window.require('electron').ipcRenderer;
+                            //     ipc.send('add-recent-file', recentFile);
+                            // }
                             await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
                         } catch (error) {
                             modal({
@@ -248,8 +268,8 @@ function Cnc({ history }) {
                 action: () => {
                     dispatch(projectActions.save(HEAD_CNC));
                 }
-            }
-            // Todo, add after completed
+            },
+            // Todo: add after completed
             // {
             //     title: 'Undo',
             //     type: 'button'
@@ -258,6 +278,14 @@ function Cnc({ history }) {
             //     title: 'Redo',
             //     type: 'button'
             // }
+            {
+                title: i18n._('Job'),
+                type: 'button',
+                name: 'Copy',
+                action: () => {
+                    setSHowJobType(true);
+                }
+            }
         ];
         const centerItems = [
             {
@@ -333,6 +361,7 @@ function Cnc({ history }) {
             </ProjectLayout>
             {recoveryModal}
             {warningModal}
+            {jobTypeModal}
             {renderHomepage()}
         </div>
     );
