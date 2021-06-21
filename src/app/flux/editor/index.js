@@ -16,7 +16,7 @@ import {
     PAGE_PROCESS,
     SOURCE_TYPE_IMAGE3D,
     DATA_PREFIX,
-    COORDINATE_MODE_BOTTOM_CENTER
+    COORDINATE_MODE_BOTTOM_CENTER, DISPLAYED_TYPE_MODEL
 } from '../../constants';
 import { baseActions } from './actions-base';
 import { processActions } from './actions-process';
@@ -564,6 +564,8 @@ export const actions = {
             progress: 0
         }));
 
+        dispatch(actions.resetProcessState(headType));
+
         controller.commitProcessImage({
             taskId: uuid.v4(),
             headType: headType,
@@ -655,11 +657,47 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
+    checkToRemoveSelectedModels: (headType) => (dispatch, getState) => {
+        const { modelGroup, toolPathGroup } = getState()[headType];
+        const { selectedModelIDArray, allModelIDs } = modelGroup.getState();
+        const toolPaths = toolPathGroup.getToolPaths();
+        const emptyToolPaths = [];
+        toolPaths.forEach((item) => {
+            for (const id of item.modelIDs) {
+                if (!selectedModelIDArray.includes(id) && allModelIDs.includes(id)) {
+                    return;
+                }
+            }
+            emptyToolPaths.push(item);
+        });
+        if (emptyToolPaths.length === 0) {
+            dispatch(actions.removeSelectedModel(headType));
+            return;
+        }
+
+        dispatch(actions.updateState(headType, {
+            removingModelsWarning: true,
+            emptyToolPaths: emptyToolPaths
+        }));
+    },
+
     removeSelectedModel: (headType) => (dispatch, getState) => {
-        const { modelGroup, SVGActions } = getState()[headType];
+        const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
+
+        const { selectedModelIDArray } = modelGroup.getState();
+        const toolPaths = toolPathGroup.getToolPaths();
+        toolPaths.forEach((item) => {
+            for (const id of selectedModelIDArray) {
+                if (item.modelIDs.includes(id)) {
+                    const index = item.modelIDs.indexOf(id);
+                    if (index > -1) {
+                        item.modelIDs.splice(index, 1);
+                    }
+                }
+            }
+        });
 
         SVGActions.deleteSelectedElements();
-
         const modelState = modelGroup.removeSelectedModel();
 
         dispatch(baseActions.updateState(headType, {
@@ -667,12 +705,25 @@ export const actions = {
         }));
         if (!modelState.hasModel) {
             dispatch(baseActions.updateState(headType, {
+                displayedType: DISPLAYED_TYPE_MODEL,
                 stage: CNC_LASER_STAGE.EMPTY,
                 inProgress: false,
                 progress: 0
             }));
         }
+        dispatch(actions.resetProcessState(headType));
         // dispatch(actions.recordSnapshot(headType));
+        dispatch(baseActions.render(headType));
+    },
+
+    removeEmptyToolPaths: (headType) => (dispatch, getState) => {
+        const { emptyToolPaths, toolPathGroup } = getState()[headType];
+        emptyToolPaths.forEach((item) => {
+            toolPathGroup.deleteToolPath(item.id);
+        });
+        dispatch(baseActions.updateState(headType, {
+            emptyToolPaths: []
+        }));
         dispatch(baseActions.render(headType));
     },
 
@@ -924,6 +975,7 @@ export const actions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(actions.resetProcessState(headType));
         dispatch(baseActions.render(headType));
     },
 
@@ -935,14 +987,17 @@ export const actions = {
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: true
         }));
+        dispatch(actions.resetProcessState(headType));
         dispatch(baseActions.render(headType));
     },
 
     /**
      * Reset process state after model changes
      */
-    // eslint-disable-next-line no-unused-vars
-    resetProcessState: (headType) => (dispatch, getState) => {
+    resetProcessState: (headType) => (dispatch) => {
+        dispatch(baseActions.updateState(headType, {
+            displayedType: DISPLAYED_TYPE_MODEL
+        }));
         // const { isAllModelsPreviewed } = getState()[headType];
         // if (isAllModelsPreviewed) {
         //     dispatch(baseActions.updateState(headType, {
@@ -1027,6 +1082,8 @@ export const actions = {
 
         SVGActions.moveElementsImmediately(elements, options);
 
+        dispatch(actions.resetProcessState(headType));
+
         dispatch(baseActions.render(headType));
     },
 
@@ -1097,6 +1154,8 @@ export const actions = {
 
         SVGActions.resizeElementsImmediately(elements, options);
 
+        dispatch(actions.resetProcessState(headType));
+
         dispatch(baseActions.render(headType));
     },
 
@@ -1109,6 +1168,8 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.flipElementsHorizontally(elements);
+
+        dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
     },
@@ -1183,6 +1244,8 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.rotateElementsImmediately(elements, options);
+
+        dispatch(actions.resetProcessState(headType));
 
         dispatch(baseActions.render(headType));
     },

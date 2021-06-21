@@ -52,7 +52,6 @@ import EnclosureWidget from '../widgets/Enclosure';
 import CncLaserObjectList from '../widgets/CncLaserList';
 // import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
-import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import MachineSettingWidget from '../widgets/MachineSetting';
 
@@ -79,7 +78,6 @@ const allWidgets = {
     // 'cnc-output': CncLaserOutputWidget,
     'cnc-laser-object-list': CncLaserObjectList,
     'job-type': JobType,
-    'create-toolpath': CreateToolPath,
     'machine-setting': MachineSettingWidget
 };
 
@@ -106,7 +104,13 @@ class Workspace extends PureComponent {
     };
 
     state = {
-        leftItems: [],
+        leftItems: [
+            {
+                name: 'Edit',
+                action: () => this.props.history.push('/'),
+                title: i18n._('Home')
+            }
+        ],
         connected: controller.connected,
         isDraggingWidget: false
     };
@@ -145,15 +149,11 @@ class Workspace extends PureComponent {
             if (!this.props.onClose) {
                 return;
             }
-            const leftItems = this.state.leftItems;
             const returnButton = {
                 title: 'Return',
                 action: this.props.onClose
             };
-            if (leftItems.length && leftItems[0].title === returnButton.title) {
-                return;
-            }
-            this.setState({ leftItems: [returnButton, ...leftItems] });
+            this.setState({ leftItems: [returnButton] });
         },
         onDropAccepted: (file) => {
             this.props.uploadGcodeFile(file);

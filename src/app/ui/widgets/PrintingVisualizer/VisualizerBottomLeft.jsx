@@ -3,6 +3,8 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
+import { HEAD_3DP } from '../../../constants';
+import PrintingObjectListBox from '../PrintingObjectList';
 
 class VisualizerBottomLeft extends PureComponent {
     static propTypes = {
@@ -19,6 +21,12 @@ class VisualizerBottomLeft extends PureComponent {
         const actions = this.props.actions;
         return (
             <React.Fragment>
+                <div className={classNames(styles['object-list'])}>
+                    <PrintingObjectListBox
+
+                        headType={HEAD_3DP}
+                    />
+                </div>
                 <div className={classNames(styles['camera-operation'])}>
                     <Anchor
                         className={classNames(styles['camera-reset'])}

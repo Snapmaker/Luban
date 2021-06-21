@@ -93,7 +93,11 @@ const INITIAL_STATE = {
 
     // coordinateMode
     coordinateMode: COORDINATE_MODE_CENTER,
-    coordinateSize: { x: 0, y: 0 }
+    coordinateSize: { x: 0, y: 0 },
+
+    // check to remove models
+    removingModelsWarning: false,
+    emptyToolPaths: []
 };
 
 export const actions = {
@@ -115,7 +119,8 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        if (size) {
+        const { coordinateSize } = getState().cnc;
+        if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
             dispatch(editorActions.updateState('cnc', {
                 coordinateSize: size
             }));

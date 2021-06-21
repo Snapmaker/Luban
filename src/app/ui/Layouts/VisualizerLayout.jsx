@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import styles from './styles/visualizer.styl';
-/* eslint-disable */
+
 class VisualizerLayout extends PureComponent {
     static propTypes = {
         renderTopLeft: PropTypes.func,
@@ -21,7 +21,9 @@ class VisualizerLayout extends PureComponent {
         hideBottomLeft: PropTypes.bool,
         hideBottom: PropTypes.bool,
         hideBottomRight: PropTypes.bool,
+        children: PropTypes.object
     }
+
     render() {
         const {
             renderTopLeft, renderTop, renderTopRight,
@@ -33,106 +35,117 @@ class VisualizerLayout extends PureComponent {
         } = this.props;
         return (
             <div className={styles.visualizer}>
-                {renderTopLeft && <div
-                    className={
-                        classNames(
-                            styles['top-left-container'],
-                            {[styles.hidden]: hideTopLeft}
-                        )
-                    }
-                >
+                { renderTopLeft && (
+                    <div
+                        className={
+                            classNames(
+                                styles['top-left-container'],
+                                { [styles.hidden]: hideTopLeft }
+                            )
+                        }
+                    >
                         {renderTopLeft()}
                     </div>
-                }
-                {renderTop && <div
-                    className={
-                        classNames(
-                            styles['top-container'],
-                            {[styles.hidden]: hideTop}
-                        )
-                    }
-                >
+                )}
+                { renderTop && (
+                    <div
+                        className={
+                            classNames(
+                                styles['top-container'],
+                                { [styles.hidden]: hideTop }
+                            )
+                        }
+                    >
                         {renderTop()}
                     </div>
-                }
-                {renderTopRight && <div
-                    className={
-                        classNames(
-                            styles['top-right-container'],
-                            {[styles.hidden]: hideTopRight}
-                        )
-                    }
-                >
+                )}
+                { renderTopRight && (
+                    <div
+                        className={
+                            classNames(
+                                styles['top-right-container'],
+                                { [styles.hidden]: hideTopRight }
+                            )
+                        }
+                    >
                         {renderTopRight()}
                     </div>
-                }
-                {renderCenterLeft && <div
-                    className={
-                        classNames(
-                            styles['center-left-container'],
-                            {[styles.hidden]: hideCenterLeft}
-                        )
-                    }
-                >
+                )}
+                { renderCenterLeft && (
+                    <div
+                        className={
+                            classNames(
+                                styles['center-left-container'],
+                                { [styles.hidden]: hideCenterLeft }
+                            )
+                        }
+                    >
                         {renderCenterLeft()}
                     </div>
-                }
-                {!!this.props.children && <div
-                    className={
-                        classNames(
-                            styles['center-container'],
-                            {[styles.hidden]: !!this.props.children}
-                        )
-                    }
-                >
-                    {this.props.children}
-                </div>}
-                {renderCenterRight && <div
-                    className={
-                        classNames(
-                            styles['center-right-container'],
-                            {[styles.hidden]: hideCenterRight}
-                        )
-                    }
-                >
+                )}
+                { !!this.props.children && (
+                    <div
+                        className={
+                            classNames(
+                                styles['center-container'],
+                                { [styles.hidden]: !!this.props.children }
+                            )
+                        }
+                    >
+                        {this.props.children}
+                    </div>
+                )}
+                { renderCenterRight && (
+                    <div
+                        className={
+                            classNames(
+                                styles['center-right-container'],
+                                { [styles.hidden]: hideCenterRight }
+                            )
+                        }
+                    >
                         {renderCenterRight()}
                     </div>
-                }
-                {renderBottomLeft && <div
-                    className={
-                        classNames(
-                            styles['bottom-left-container'],
-                            {[styles.hidden]: hideBottomLeft}
-                        )
-                    }
-                >
+                )}
+                { renderBottomLeft && (
+                    <div
+                        className={
+                            classNames(
+                                styles['bottom-left-container'],
+                                { [styles.hidden]: hideBottomLeft }
+                            )
+                        }
+                    >
                         {renderBottomLeft()}
                     </div>
-                }
-                {renderBottom && <div
-                    className={
-                        classNames(
-                            styles['bottom-container'],
-                            {[styles.hidden]: hideBottom}
-                        )
-                    }
-                >
+                )}
+                { renderBottom && (
+                    <div
+                        className={
+                            classNames(
+                                styles['bottom-container'],
+                                { [styles.hidden]: hideBottom }
+                            )
+                        }
+                    >
                         {renderBottom()}
                     </div>
-                }
-                {renderBottomRight && <div
-                    className={
-                        classNames(
-                            styles['bottom-right-container'],
-                            {[styles.hidden]: hideBottomRight}
-                        )
-                    }
-                >
-                    {renderBottomRight && renderBottomRight()}
-                </div>}
+                )}
+                { renderBottomRight && (
+                    <div
+                        className={
+                            classNames(
+                                styles['bottom-right-container'],
+                                { [styles.hidden]: hideBottomRight }
+                            )
+                        }
+                    >
+                        {renderBottomRight && renderBottomRight()}
+                    </div>
+                )}
             </div>
-        )
+        );
     }
 }
 
-export default VisualizerLayout
+export default VisualizerLayout;

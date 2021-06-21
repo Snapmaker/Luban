@@ -1,39 +1,27 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import styles from './styles.styl';
-import { actions as editorActions } from '../../../flux/editor';
 import {
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_CNC, HEAD_LASER, PAGE_EDITOR
+    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_CNC, HEAD_LASER
 } from '../../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
 
 class JobType extends PureComponent {
     static propTypes = {
-        isWidget: PropTypes.bool,
-        widgetActions: PropTypes.object.isRequired,
         headType: PropTypes.string.isRequired,
 
-        page: PropTypes.string.isRequired,
-
         size: PropTypes.object.isRequired,
-        coordinateMode: PropTypes.object.isRequired,
-        coordinateSize: PropTypes.object.isRequired,
-
-        materials: PropTypes.object.isRequired,
-
-        updateMaterials: PropTypes.func.isRequired,
-
-        use4Axis: PropTypes.bool.isRequired,
 
         inProgress: PropTypes.bool.isRequired,
 
-        changeCoordinateMode: PropTypes.func.isRequired
+        jobTypeState: PropTypes.object.isRequired, // { materials, coordinateMode, coordinateSize }
+        setJobTypeState: PropTypes.func.isRequired
     };
 
     coordinateModeList = [
@@ -70,22 +58,65 @@ class JobType extends PureComponent {
     actions = {
         changeCoordinateMode: (option) => {
             const newCoordinateMode = this.coordinateModeList.find(d => d.value === option.value);
-            this.props.changeCoordinateMode(newCoordinateMode.mode);
+            const coordinateSize = {
+                x: this.props.size.x,
+                y: this.props.size.y
+            };
+            this.actions.setCoordinateModeAndCoordinateSize(newCoordinateMode.mode, coordinateSize);
+        },
+        setMaterials: (materials) => {
+            materials = {
+                ...this.props.jobTypeState.materials,
+                ...materials
+            };
+            this.props.setJobTypeState({
+                ...this.props.jobTypeState,
+                materials
+            });
+        },
+        setCoordinateMode: (coordinateMode) => {
+            this.props.setJobTypeState({
+                ...this.props.jobTypeState,
+                coordinateMode
+            });
+        },
+        setCoordinateSize: (coordinateSize) => {
+            this.props.setJobTypeState({
+                ...this.props.jobTypeState,
+                coordinateSize
+            });
+        },
+        setCoordinateModeAndCoordinateSize: (coordinateMode, coordinateSize) => {
+            this.props.setJobTypeState({
+                ...this.props.jobTypeState,
+                coordinateMode,
+                coordinateSize
+            });
+        },
+        setJobTypeState: (coordinateMode, coordinateSize, materials) => {
+            materials = {
+                ...this.props.jobTypeState.materials,
+                ...materials
+            };
+            this.props.setJobTypeState({
+                ...this.props.jobTypeState,
+                coordinateMode,
+                coordinateSize,
+                materials
+            });
         }
     };
 
-    constructor(props) {
-        super(props);
-        this.props.isWidget === true && this.props.widgetActions.setTitle(i18n._('Job Type'));
-        this.props.isWidget === true && this.props.widgetActions.setDisplay(this.props.use4Axis && this.props.page === PAGE_EDITOR);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        this.props.isWidget === true && this.props.widgetActions.setDisplay(nextProps.use4Axis && nextProps.page === PAGE_EDITOR);
-    }
+    // constructor(props) {
+    //     super(props);
+    // }
+    //
+    // componentWillReceiveProps(nextProps) {
+    // }
 
     render() {
-        const { size, materials, headType, coordinateMode, coordinateSize, inProgress } = this.props;
+        const { size, headType, inProgress, jobTypeState } = this.props;
+        const { materials, coordinateMode, coordinateSize } = jobTypeState;
         const { isRotate, diameter, length } = materials;
 
         return (
@@ -106,41 +137,41 @@ class JobType extends PureComponent {
                         />
                     </div>
                 )}
-                <div className="">
-                    <div className="sm-tabs" style={{ marginBottom: '1rem' }}>
-                        <button
-                            type="button"
-                            style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': !isRotate })}
-                            onClick={() => {
-                                this.props.changeCoordinateMode(
-                                    COORDINATE_MODE_CENTER
-                                );
-                                this.props.updateMaterials({ isRotate: false });
-                            }}
-                            disabled={inProgress}
-                        >
-                            {i18n._('3-axis')}
-                        </button>
-                        <button
-                            type="button"
-                            style={{ width: '50%' }}
-                            className={classNames('sm-tab', { 'sm-selected': isRotate })}
-                            onClick={() => {
-                                this.props.changeCoordinateMode(
-                                    COORDINATE_MODE_BOTTOM_CENTER, {
-                                        x: diameter * Math.PI,
-                                        y: length
-                                    }
-                                );
-                                this.props.updateMaterials({ isRotate: true });
-                            }}
-                            disabled={inProgress}
-                        >
-                            {i18n._('4-axis')}
-                        </button>
-                    </div>
-                </div>
+                {/*<div className="">*/}
+                {/*    <div className="sm-tabs" style={{ marginBottom: '1rem' }}>*/}
+                {/*        <button*/}
+                {/*            type="button"*/}
+                {/*            style={{ width: '50%' }}*/}
+                {/*            className={classNames('sm-tab', { 'sm-selected': !isRotate })}*/}
+                {/*            onClick={() => {*/}
+                {/*                this.actions.changeCoordinateMode(*/}
+                {/*                    COORDINATE_MODE_CENTER*/}
+                {/*                );*/}
+                {/*                this.actions.setMaterials({ isRotate: false });*/}
+                {/*            }}*/}
+                {/*            disabled={inProgress}*/}
+                {/*        >*/}
+                {/*            {i18n._('3-axis')}*/}
+                {/*        </button>*/}
+                {/*        <button*/}
+                {/*            type="button"*/}
+                {/*            style={{ width: '50%' }}*/}
+                {/*            className={classNames('sm-tab', { 'sm-selected': isRotate })}*/}
+                {/*            onClick={() => {*/}
+                {/*                this.actions.setCoordinateModeAndCoordinateSize(*/}
+                {/*                    COORDINATE_MODE_BOTTOM_CENTER, {*/}
+                {/*                        x: diameter * Math.PI,*/}
+                {/*                        y: length*/}
+                {/*                    }*/}
+                {/*                );*/}
+                {/*                this.actions.setMaterials({ isRotate: true });*/}
+                {/*            }}*/}
+                {/*            disabled={inProgress}*/}
+                {/*        >*/}
+                {/*            {i18n._('4-axis')}*/}
+                {/*        </button>*/}
+                {/*    </div>*/}
+                {/*</div>*/}
                 {!isRotate && (
                     <div>
                         <img
@@ -166,7 +197,7 @@ class JobType extends PureComponent {
                                     max={size.y}
                                     min={10}
                                     onChange={(value) => {
-                                        this.props.changeCoordinateMode(
+                                        this.actions.setCoordinateModeAndCoordinateSize(
                                             coordinateMode, {
                                                 x: coordinateSize.x,
                                                 y: value
@@ -189,7 +220,7 @@ class JobType extends PureComponent {
                                     max={size.x}
                                     min={2}
                                     onChange={(value) => {
-                                        this.props.changeCoordinateMode(
+                                        this.actions.setCoordinateModeAndCoordinateSize(
                                             coordinateMode, {
                                                 x: value,
                                                 y: coordinateSize.y
@@ -245,13 +276,13 @@ class JobType extends PureComponent {
                                     max={size.y}
                                     min={10}
                                     onChange={(value) => {
-                                        this.props.changeCoordinateMode(
+                                        this.actions.setJobTypeState(
                                             COORDINATE_MODE_BOTTOM_CENTER, {
                                                 x: diameter * Math.PI,
                                                 y: value
-                                            }
+                                            },
+                                            { length: value }
                                         );
-                                        this.props.updateMaterials({ length: value });
                                     }}
                                 />
                                 <span
@@ -269,13 +300,13 @@ class JobType extends PureComponent {
                                     max={size.x}
                                     min={2}
                                     onChange={(value) => {
-                                        this.props.changeCoordinateMode(
+                                        this.actions.setJobTypeState(
                                             COORDINATE_MODE_BOTTOM_CENTER, {
                                                 x: value * Math.PI,
                                                 y: length
-                                            }
+                                            },
+                                            { diameter: value }
                                         );
-                                        this.props.updateMaterials({ diameter: value });
                                     }}
                                 />
                                 <span
@@ -294,27 +325,22 @@ class JobType extends PureComponent {
 
 const mapStateToProps = (state, ownProps) => {
     const { headType } = ownProps;
-    const { size, use4Axis } = state.machine;
-    const { page, materials, coordinateMode, coordinateSize, inProgress } = state[headType];
+    const { size } = state.machine;
+    const { inProgress } = state[headType];
 
     return {
         size,
-        coordinateMode,
-        coordinateSize,
-        page,
-        materials,
-        use4Axis,
         inProgress
     };
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-    const { headType } = ownProps;
+// const mapDispatchToProps = (dispatch, ownProps) => {
+//     const { headType } = ownProps;
+//
+//     return {
+//         updateMaterials: (materials) => dispatch(editorActions.updateMaterials(headType, materials)),
+//         changeCoordinateMode: (coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize))
+//     };
+// };
 
-    return {
-        updateMaterials: (materials) => dispatch(editorActions.updateMaterials(headType, materials)),
-        changeCoordinateMode: (coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(JobType);
+export default connect(mapStateToProps)(JobType);

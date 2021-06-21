@@ -8,7 +8,7 @@ import {
     SOURCE_TYPE_IMAGE3D,
     PROCESS_MODE_MESH,
     getCurrentHeadType,
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
@@ -124,8 +124,13 @@ export const actions = {
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
-    clearSavedEnvironment: (headType) => async (dispatch) => {
+    clearSavedEnvironment: (headType) => async (dispatch, getState) => {
         try {
+            // Todo: toolPaths state add into env
+            const { toolPathGroup } = getState()[headType];
+            if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
+                toolPathGroup.deleteAllToolPaths();
+            }
             await api.removeEnv({ headType });
         } catch (e) {
             console.log(e);
@@ -159,7 +164,6 @@ export const actions = {
         await modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
         let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
-
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
@@ -198,6 +202,7 @@ export const actions = {
             for (let k = 0; k < toolpaths.length; k++) {
                 toolPathGroup.saveToolPath(toolpaths[k], { materials }, false);
             }
+            dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
         dispatch(modActions.updateState(envHeadType, restState));
 
@@ -206,8 +211,8 @@ export const actions = {
         } else {
             dispatch(modActions.updateState(envHeadType, restState));
         }
-        // TODO: set current content to avoid <unSaved> flag mis-set
-        await dispatch(actions.clearSavedEnvironment(envHeadType));
+        // // TODO: set current content to avoid <unSaved> flag mis-set
+        // await dispatch(actions.clearSavedEnvironment(envHeadType));
     },
 
     quitRecovery: (headType) => async (dispatch) => {
@@ -355,12 +360,21 @@ export const actions = {
     startProject: (from, to, history) => async (dispatch) => {
         const newHeadType = getCurrentHeadType(to);
         const oldHeadType = getCurrentHeadType(from) || newHeadType;
+        if (oldHeadType === null) {
+            history.push(to);
+            return;
+        }
         await dispatch(actions.save(oldHeadType, {
             message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+        }));
+        dispatch(editorActions.updateState(newHeadType, {
+            page: PAGE_EDITOR,
+            displayedType: DISPLAYED_TYPE_MODEL
         }));
         if (from === to) {
             history.push('/');
         }
+
         history.push(to);
 
         dispatch(actions.updateState(newHeadType, { unSaved: false }));

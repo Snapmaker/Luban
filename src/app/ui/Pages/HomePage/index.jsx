@@ -11,6 +11,7 @@ import Begin from './Begin';
 import QuickStart from './QuickStart';
 import MoreInfo from './MoreInfo';
 import SettingGuideModal from './SettingGuideModal';
+import MainToolBar from '../../Layouts/MainToolBar';
 
 const HomePage = (props) => { // Todo, what's the props ?
     const [modalShow, setModalShow] = useState(false);
@@ -30,6 +31,16 @@ const HomePage = (props) => { // Todo, what's the props ?
     }, []);
     return (
         <div className={styles.homepageContainer}>
+            {props?.isPopup && (
+                <MainToolBar
+                    leftItems={[
+                        {
+                            title: 'Back',
+                            action: () => props?.onClose()
+                        }
+                    ]}
+                />
+            )}
             <Begin {...props} />
             <QuickStart {...props} />
             <MoreInfo />

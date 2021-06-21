@@ -25,7 +25,7 @@ import {
     PAGE_EDITOR,
     SELECTEVENT,
     MAX_LASER_CNC_CANVAS_SCALE,
-    MIN_LASER_CNC_CANVAS_SCALE
+    MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
@@ -223,15 +223,15 @@ class Visualizer extends Component {
         this.canvas.current.resizeWindow();
         // this.canvas.current.disable3D();
 
-        window.addEventListener(
-            'hashchange',
-            (event) => {
-                if (event.newURL.endsWith('laser')) {
-                    this.canvas.current.resizeWindow();
-                }
-            },
-            false
-        );
+        // window.addEventListener(
+        //     'hashchange',
+        //     (event) => {
+        //         if (event.newURL.endsWith('laser')) {
+        //             this.canvas.current.resizeWindow();
+        //         }
+        //     },
+        //     false
+        // );
     }
 
     componentWillReceiveProps(nextProps) {
@@ -347,7 +347,6 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
-        const isEditor = this.props.page === PAGE_EDITOR;
         const contextMenuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const displayedType = this.props.displayedType;
 
@@ -355,7 +354,7 @@ class Visualizer extends Component {
             <div
                 ref={this.visualizerRef}
             >
-                {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
+                {(displayedType === DISPLAYED_TYPE_TOOLPATH) && (
                     <div>
                         <VisualizerTopRight
                             headType="laser"
@@ -366,7 +365,7 @@ class Visualizer extends Component {
                     <LaserCameraAidBackground />
                 </div>
                 <div style={{
-                    visibility: (isEditor || displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
+                    visibility: (displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}
                 >
                     <SVGEditor
@@ -405,7 +404,7 @@ class Visualizer extends Component {
                 <div
                     className={styles['canvas-content']}
                     style={{
-                        visibility: (!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
+                        visibility: (displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
                 >
                     <Canvas
@@ -435,6 +434,7 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['bottom-left']}>
                     <VisualizerBottomLeft
+                        headType={HEAD_LASER}
                         scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}
                         maxScale={MAX_LASER_CNC_CANVAS_SCALE}
@@ -629,7 +629,7 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
-        removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('laser')),
+        removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('laser')),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('laser', element)),

@@ -3,7 +3,6 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Widget from '../widgets/Widget';
-import isElectron from 'is-electron';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 // import PrintingOutput from '../widgets/PrintingOutput';
 import PrintingManager from '../views/PrintingManager';
@@ -38,9 +37,7 @@ import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
 import CncLaserObjectList from '../widgets/CncLaserList';
-import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
-import CreateToolPath from '../widgets/CncLaserToolPath';
 import HomePage from './HomePage';
 
 
@@ -59,7 +56,6 @@ const allWidgets = {
     'printing-visualizer': PrintingVisualizer,
     'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
-    '3dp-object-list': PrintingObjectList,
     '3dp-material': PrintingMaterialWidget,
     '3dp-configurations': PrintingConfigurationsWidget,
     // '3dp-output': PrintingOutputWidget,
@@ -70,13 +66,12 @@ const allWidgets = {
     'cnc-path': CNCPathWidget,
     'cnc-output': CncLaserOutputWidget,
     'cnc-laser-object-list': CncLaserObjectList,
-    'job-type': JobType,
-    'create-toolpath': CreateToolPath
+    'job-type': JobType
 };
 
 
 const pageHeadType = HEAD_3DP;
-function useRenderMainToolBar(history) {
+function useRenderMainToolBar() {
     const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
     const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
     const canRedo = useSelector(state => state?.printing?.canRedo, shallowEqual);
@@ -91,7 +86,7 @@ function useRenderMainToolBar(history) {
         });
     }
     function renderMainToolBar() {
-        const fileInput = React.createRef();
+        // const fileInput = React.createRef();
         const leftItems = [
             {
                 title: i18n._('Home'),
@@ -103,40 +98,40 @@ function useRenderMainToolBar(history) {
             {
                 type: 'separator'
             },
-            {
-
-                title: i18n._('Open'),
-                type: 'button',
-                name: 'Copy',
-                inputInfo: {
-                    accept: '.snap3dp',
-                    fileInput: fileInput,
-                    onChange: async (e) => {
-                        const file = e.target.files[0];
-                        const recentFile = {
-                            name: file.name,
-                            path: file.path || ''
-                        };
-                        try {
-                            await dispatch(projectActions.openProject(file, history));
-                            if (isElectron()) {
-                                const ipc = window.require('electron').ipcRenderer;
-                                ipc.send('add-recent-file', recentFile);
-                            }
-                            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-                        } catch (error) {
-                            modal({
-                                title: i18n._('Failed to upload model'),
-                                body: error.message
-                            });
-                        }
-                    }
-                },
-                action: () => {
-                    fileInput.current.value = null;
-                    fileInput.current.click();
-                }
-            },
+            // {
+            //
+            //     title: i18n._('Open'),
+            //     type: 'button',
+            //     name: 'Copy',
+            //     inputInfo: {
+            //         accept: '.snap3dp',
+            //         fileInput: fileInput,
+            //         onChange: async (e) => {
+            //             const file = e.target.files[0];
+            //             const recentFile = {
+            //                 name: file.name,
+            //                 path: file.path || ''
+            //             };
+            //             try {
+            //                 await dispatch(projectActions.openProject(file, history));
+            //                 // if (isElectron()) {
+            //                 //     const ipc = window.require('electron').ipcRenderer;
+            //                 //     ipc.send('add-recent-file', recentFile);
+            //                 // }
+            //                 await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
+            //             } catch (error) {
+            //                 modal({
+            //                     title: i18n._('Failed to upload model'),
+            //                     body: error.message
+            //                 });
+            //             }
+            //         }
+            //     },
+            //     action: () => {
+            //         fileInput.current.value = null;
+            //         fileInput.current.click();
+            //     }
+            // },
             {
                 title: i18n._('Save'),
                 disabled: !unSaved || !hasModel,
