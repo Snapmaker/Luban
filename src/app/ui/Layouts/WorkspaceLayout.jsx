@@ -1,7 +1,9 @@
 import React, { PureComponent } from 'react';
 // import Sortable from 'react-sortablejs';
+import { throttle } from 'lodash';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import pubsub from 'pubsub-js';
 import styles from './styles/workspace.styl';
 
 class WorkspaceLayout extends PureComponent {
@@ -18,45 +20,77 @@ class WorkspaceLayout extends PureComponent {
 
     };
 
-    state = {
-    };
+    primaryContainer = React.createRef();
 
-    actions = {
-    };
+    visualizerContainer = React.createRef();
+
+    secondaryContainer = React.createRef();
+
+    componentDidMount() {
+        pubsub.publish('resize'); // Also see "widgets/Visualizer"
+        this.addResizeEventListener();
+    }
+
+    componentWillUnmount() {
+        this.removeResizeEventListener();
+    }
+
+
+    resizeWindow = () => {
+        const primaryContainer = this.primaryContainer.current;
+        const visualizerContainer = this.visualizerContainer.current;
+        const secondaryContainer = this.secondaryContainer.current;
+        if (visualizerContainer) {
+            visualizerContainer.style.width = `calc(100vw - ${primaryContainer.clientWidth}px - ${secondaryContainer.clientWidth}px)`;
+        }
+    }
 
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.props;
         this.props.updateTabContainer('left', { show: !showPrimaryContainer });
 
         // Publish a 'resize' event
-        // pubsub.publish('resize'); // Also see "widgets/Visualizer"
+        pubsub.publish('resize'); // Also see "widgets/Visualizer"
+
+        setTimeout(() => {
+            this.resizeWindow();
+        }, 100);
     };
 
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.props;
         this.props.updateTabContainer('right', { show: !showSecondaryContainer });
 
-
         // Publish a 'resize' event
-        // pubsub.publish('resize'); // Also see "widgets/Visualizer"
+        pubsub.publish('resize'); // Also see "widgets/Visualizer"
+        // TODO
+        setTimeout(() => {
+            this.resizeWindow();
+        }, 100);
     };
 
+    addResizeEventListener() {
+        this.onResizeThrottled = throttle(this.resizeWindow, 50);
+        window.addEventListener('resize', this.onResizeThrottled);
+    }
+
+    removeResizeEventListener() {
+        window.removeEventListener('resize', this.onResizeThrottled);
+        this.onResizeThrottled = null;
+    }
 
     renderLeftTogglerView(showPrimaryContainer) {
-        const hidePrimaryContainer = !showPrimaryContainer;
         return (
-            <div
-                ref={this.primaryToggler}
-            >
+            <div>
                 <button
                     type="button"
                     className="btn btn-outline-secondary"
                     onClick={this.togglePrimaryContainer}
                 >
-                    {!hidePrimaryContainer && (
+                    {showPrimaryContainer && (
                         <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
                     )}
-                    {hidePrimaryContainer && (
+                    {!showPrimaryContainer && (
                         <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
                     )}
                 </button>
@@ -65,20 +99,17 @@ class WorkspaceLayout extends PureComponent {
     }
 
     renderRightTogglerView(showSecondaryContainer) {
-        const hideSecondaryContainer = !showSecondaryContainer;
         return (
-            <div
-                ref={this.secondaryToggler}
-            >
+            <div>
                 <button
                     type="button"
                     className="btn btn-outline-secondary"
                     onClick={this.toggleSecondaryContainer}
                 >
-                    {!hideSecondaryContainer && (
+                    {showSecondaryContainer && (
                         <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
                     )}
-                    {hideSecondaryContainer && (
+                    {!showSecondaryContainer && (
                         <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
                     )}
                 </button>
@@ -94,6 +125,7 @@ class WorkspaceLayout extends PureComponent {
                 <div
                     className={classNames(
                         styles['main-bar'],
+                        'clearfix'
                     )}
                 >
                     {renderMainToolBar && (
@@ -101,13 +133,15 @@ class WorkspaceLayout extends PureComponent {
                     )}
                 </div>
                 <div className={styles.workspaceTable}>
-                    <div className={styles.workspaceTableRow}>
-                        <div
-
-                            className={classNames(
-                                styles.primaryContainer,
-                                { [styles.hidden]: !showPrimaryContainer }
-                            )}
+                    <div
+                        ref={this.primaryContainer}
+                        className={classNames(
+                            styles.primaryContainer,
+                        )}
+                    >
+                        <div className={classNames(
+                            styles.primaryWrapper
+                        )}
                         >
                             {renderLeftView && showPrimaryContainer && (
                                 renderLeftView()
@@ -115,29 +149,37 @@ class WorkspaceLayout extends PureComponent {
                             <div
                                 className={classNames(styles.primaryToggler)}
                             >
-                                {this.renderLeftTogglerView()}
+                                {this.renderLeftTogglerView(showPrimaryContainer)}
                             </div>
                         </div>
-
+                    </div>
+                    <div
+                        ref={this.visualizerContainer}
+                        className={classNames(
+                            styles.visualizer,
+                        )}
+                    >
                         {this.props.children}
+                    </div>
 
-
-                        <div
-                            className={
-                                classNames(
-                                    styles.secondaryContainer,
-                                    { [styles.hidden]: !showSecondaryContainer }
-                                )}
+                    <div
+                        ref={this.secondaryContainer}
+                        className={
+                            classNames(
+                                styles.secondaryContainer,
+                            )}
+                    >
+                        <div className={classNames(
+                            styles.secondaryWrapper
+                        )}
                         >
                             {renderRightView && showSecondaryContainer && (
                                 renderRightView()
                             )}
                             <div
-                                className={classNames(
-                                    styles.secondaryToggler
-                                )}
+                                className={classNames(styles.secondaryToggler)}
                             >
-                                { this.renderRightTogglerView()}
+                                { this.renderRightTogglerView(showSecondaryContainer)}
                             </div>
                         </div>
 

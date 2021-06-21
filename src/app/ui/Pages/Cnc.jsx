@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-// import React, { useState } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
@@ -19,8 +18,8 @@ import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
-import { actions as projectActions, actions as projectActions } from '../../flux/project';
-import { actions as cncActions, actions as cncActions } from '../../flux/cnc';
+import { actions as projectActions } from '../../flux/project';
+import { actions as cncActions } from '../../flux/cnc';
 import { actions as editorActions } from '../../flux/editor';
 
 import { actions as machineActions } from '../../flux/machine';

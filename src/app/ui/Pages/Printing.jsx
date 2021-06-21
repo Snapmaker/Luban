@@ -192,18 +192,9 @@ function Printing({ history, location }) {
                 }
             }
         ];
-        const centerItems = [
-            {
-                type: 'button',
-                name: 'Edit',
-                title: i18n._('Edit'),
-                action: () => history.push('cnc')
-            }
-        ];
         return (
             <MainToolBar
                 leftItems={leftItems}
-                centerItems={centerItems}
             />
         );
     }

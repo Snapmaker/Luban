@@ -1229,7 +1229,6 @@ class SVGCanvas extends PureComponent {
     };
 
     updateCanvas = (size, materials) => {
-        // TODO
         size = size || this.props.size;
         materials = materials || this.props.materials;
 

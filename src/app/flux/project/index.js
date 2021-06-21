@@ -248,7 +248,6 @@ export const actions = {
         } else {
             modelGroup = getState()[headType].modelGroup;
         }
-        console.log('modelGroup.hasModel()', modelGroup.hasModel());
         if (!modelGroup.hasModel()) {
             return;
         }

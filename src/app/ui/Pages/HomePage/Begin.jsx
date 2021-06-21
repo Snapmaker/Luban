@@ -1,18 +1,30 @@
 import React from 'react';
 import isElectron from 'is-electron';
 import classNames from 'classnames';
-import { Link, withRouter } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
+// import { Link, withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
-import slice from 'lodash/slice';
-import cloneDeep from 'lodash/cloneDeep';
-import reverse from 'lodash/reverse';
+import { slice, cloneDeep, reverse } from 'lodash';
+import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
-import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
+import { HEAD_3DP, HEAD_CNC, HEAD_LASER, COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
+
+function getCurrentHeadType(pathname) {
+    if (!pathname) {
+        return null;
+    }
+    let headType = null;
+    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
+    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
+    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
+    if (pathname.indexOf('workspace') >= 0) headType = 'workspace';
+    return headType;
+}
 
 
 const Begin = (props) => {
@@ -45,14 +57,28 @@ const Begin = (props) => {
         }
     };
 
+    const onChangeRoute = async (pathname) => {
+        const oldPathname = props.location.pathname;
+        // console.log('changed pathname', pathname, props.location);
+        if (pathname === '/workspace' || oldPathname === '/') {
+            props.history.push(pathname);
+        } else if (oldPathname !== pathname) {
+            const headType = getCurrentHeadType(oldPathname);
+            await dispatch(projectActions.save(headType));
+            props.history.push(pathname);
+        } else if (pathname) {
+            props.history.push(pathname);
+        }
+        return null;
+    };
+
     const changeAxis = async (e, isRotate, type) => {
         e.preventDefault();
         if (!isRotate) {
             await dispatch(editorActions.changeCoordinateMode(type, COORDINATE_MODE_CENTER));
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         } else {
-            const materials = store?.[type]?.materials;
-            const { SVGActions } = store?.[type];
+            const { SVGActions, materials } = store?.[type];
             await dispatch(editorActions.changeCoordinateMode(
                 type,
                 COORDINATE_MODE_BOTTOM_CENTER, {
@@ -63,14 +89,13 @@ const Begin = (props) => {
             ));
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         }
-        props.history.push(`/${type}`);
+        // await onChangeRoute(`/${type}`);
     };
 
     const onClickToUpload = () => {
         fileInput.current.value = null;
         fileInput.current.click();
     };
-
     return (
         <div className={styles['create-new-project']}>
             <div className={styles.beginPart}>
@@ -78,7 +103,7 @@ const Begin = (props) => {
                     <div className={styles['title-label']}>{i18n._('Begin')}</div>
                     <div className={styles['link-bar']}>
                         <div className={styles['3dp']}>
-                            <Link to="/3dp" title={i18n._('3D Printing G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onChangeRoute('/3dp')} title={i18n._('3D Printing G-code Generator')} draggable="false">
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -86,10 +111,10 @@ const Begin = (props) => {
                                     )}
                                 />
                                 <span className={styles['common-label']}>{i18n._('3DP')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.laser}>
-                            <Link to="/laser" title={i18n._('Laser G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onChangeRoute('/laser')} title={i18n._('Laser G-code Generator')} draggable="false">
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -123,10 +148,10 @@ const Begin = (props) => {
                                     </div>
                                 </div>
                                 <span className={styles['common-label']}>{i18n._('Laser')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.cnc}>
-                            <Link to="/cnc" title={i18n._('CNC G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onChangeRoute('/cnc')} title={i18n._('CNC G-code Generator')} draggable="false">
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -160,10 +185,10 @@ const Begin = (props) => {
                                     </div>
                                 </div>
                                 <span className={styles['common-label']}>{i18n._('CNC')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.workspace}>
-                            <Link to="/workspace" title={i18n._('Workspace')} draggable="false">
+                            <Anchor onClick={() => onChangeRoute('/workspace')} title={i18n._('Workspace')} draggable="false">
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -171,7 +196,7 @@ const Begin = (props) => {
                                     )}
                                 />
                                 <span className={styles['common-label']}>{i18n._('Workspace')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                     </div>
                 </div>
@@ -224,7 +249,8 @@ const Begin = (props) => {
 };
 
 Begin.propTypes = {
-    history: PropTypes.object
+    history: PropTypes.object,
+    location: PropTypes.object
 };
 
 export default withRouter(Begin);

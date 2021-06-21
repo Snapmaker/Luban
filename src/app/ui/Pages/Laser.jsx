@@ -225,17 +225,9 @@ function Laser({ history }) {
                 }
             }
         ];
-        const centerItems = [
-            {
-                name: 'Edit',
-                action: () => history.push('laser'),
-                title: i18n._('Edit')
-            }
-        ];
         return (
             <MainToolBar
                 leftItems={leftItems}
-                centerItems={centerItems}
             />
         );
     }

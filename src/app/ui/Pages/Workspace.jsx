@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import includes from 'lodash/includes';
 import { withRouter } from 'react-router-dom';
@@ -101,18 +100,13 @@ class Workspace extends PureComponent {
         primaryWidgets: PropTypes.array.isRequired,
         secondaryWidgets: PropTypes.array.isRequired,
         updateTabContainer: PropTypes.func.isRequired,
-        save: PropTypes.func.isRequired,
+        // save: PropTypes.func.isRequired,
 
         uploadGcodeFile: PropTypes.func.isRequired
     };
 
     state = {
-        leftItems: [
-            {
-                title: 'Home',
-                action: () => this.props.history.push('/')
-            }
-        ],
+        leftItems: [],
         connected: controller.connected,
         isDraggingWidget: false
     };
@@ -192,7 +186,6 @@ class Workspace extends PureComponent {
 
     componentDidMount() {
         this.addControllerEvents();
-        this.addResizeEventListener();
 
         if (this.props.isPopup && this.props.onClose) {
             this.actions.addReturnButton();
@@ -203,71 +196,11 @@ class Workspace extends PureComponent {
         // }, 0);
     }
 
-    componentDidUpdate() {
-        // this.resizeDefaultContainer();
-    }
-
     componentWillUnmount() {
         this.removeControllerEvents();
-        this.removeResizeEventListener();
-        console.log('componentWillUnmount');
-        this.props.save('3dp');
+        // this.props.save('3dp');
     }
 
-    resizeDefaultContainer = () => {
-        // console.log('resizing');
-        // const sidebar = document.querySelector('#sidebar');
-        // const sidebar = {
-        //     offsetWidth: 0
-        // };
-        // const primaryContainer = this.primaryContainer.current?.parentElement;
-        // const primaryToggler = this.primaryToggler.current?.parentElement;
-        // const secondaryContainer = this.secondaryContainer.current?.parentElement;
-        // const secondaryToggler = this.secondaryToggler.current?.parentElement;
-        // const defaultContainer = this.defaultContainer.current?.parentElement;
-        // const { showPrimaryContainer, showSecondaryContainer } = this.props;
-
-        // { // Mobile-Friendly View
-        //     const disableHorizontalScroll = !(showPrimaryContainer && showSecondaryContainer);
-
-        //     if (disableHorizontalScroll) {
-        //         // Disable horizontal scroll
-        //         document.body.scrollLeft = 0;
-        //         document.body.style.overflowX = 'hidden';
-        //     } else {
-        //         // Enable horizontal scroll
-        //         document.body.style.overflowX = '';
-        //     }
-        // }
-        // if (showPrimaryContainer) {
-        //     defaultContainer.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
-        //     primaryToggler.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
-        // } else {
-        //     defaultContainer.style.left = `${sidebar.offsetWidth}px`;
-        //     primaryToggler.style.left = `${sidebar.offsetWidth}px`;
-        // }
-
-        // if (showSecondaryContainer) {
-        //     defaultContainer.style.right = `${secondaryContainer.offsetWidth}px`;
-        //     secondaryToggler.style.right = `${secondaryContainer.offsetWidth}px`;
-        // } else {
-        //     defaultContainer.style.right = '0px';
-        //     secondaryToggler.style.right = '0px';
-        // }
-
-        // Publish a 'resize' event
-        pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    };
-
-    addResizeEventListener() {
-        this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
-        window.addEventListener('resize', this.onResizeThrottled);
-    }
-
-    removeResizeEventListener() {
-        window.removeEventListener('resize', this.onResizeThrottled);
-        this.onResizeThrottled = null;
-    }
 
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
@@ -316,16 +249,9 @@ class Workspace extends PureComponent {
 
 
     renderMainToolBar = () => {
-        const centerItems = [
-            {
-                title: 'Edit',
-                action: () => this.props.history.push('cnc')
-            }
-        ];
         return (
             <MainToolBar
                 leftItems={this.state.leftItems}
-                centerItems={centerItems}
             />
         );
     }
@@ -361,7 +287,6 @@ class Workspace extends PureComponent {
                             ref={this.defaultContainer}
                             className={classNames(
                                 styles.defaultContainer,
-                                styles.fixed
                             )}
                         >
                             <VisualizerWidget />
