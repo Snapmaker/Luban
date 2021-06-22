@@ -23,7 +23,7 @@ import reducer from './flux';
 import App from './ui/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
-
+import 'antd/dist/antd.css';
 
 series([
     (next) => {

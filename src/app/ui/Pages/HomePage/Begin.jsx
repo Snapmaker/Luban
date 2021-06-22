@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { Link, withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
+import { Button } from 'antd';
 import slice from 'lodash/slice';
 import cloneDeep from 'lodash/cloneDeep';
 import reverse from 'lodash/reverse';
@@ -206,7 +207,7 @@ const Begin = (props) => {
                                 onChange={(e) => onChangeFile(e)}
                                 id="file-input"
                             />
-                            <button
+                            {/* <button
                                 type="button"
                                 className="sm-btn-small"
                                 style={{ float: 'left' }}
@@ -214,7 +215,15 @@ const Begin = (props) => {
                                 onClick={onClickToUpload}
                             >
                                 {i18n._('Open File')}
-                            </button>
+                            </button> */}
+                            <Button
+                                block
+                                shape="round"
+                                type="primary"
+                                onClick={onClickToUpload}
+                            >
+                                {i18n._('Open File')}
+                            </Button>
                         </div>
                     </div>
                 </div>
