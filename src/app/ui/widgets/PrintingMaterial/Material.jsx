@@ -9,27 +9,27 @@ import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
 import styles from './styles.styl';
 import { HEAD_3DP, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
-import OptionalDropdown from '../../components/OptionalDropdown';
-import Space from '../../components/Space';
+// import OptionalDropdown from '../../components/OptionalDropdown';
+// import Space from '../../components/Space';
 
 
-const MATERIAL_CONFIG_KEYS = [
-    'material_diameter',
-    'material_flow',
-    'material_print_temperature',
-    'material_print_temperature_layer_0',
-    'material_final_print_temperature',
-    'cool_fan_speed',
-    'machine_heated_bed',
-    'material_bed_temperature',
-    'material_bed_temperature_layer_0'
-];
+// const MATERIAL_CONFIG_KEYS = [
+//     'material_diameter',
+//     'material_flow',
+//     'material_print_temperature',
+//     'material_print_temperature_layer_0',
+//     'material_final_print_temperature',
+//     'cool_fan_speed',
+//     'machine_heated_bed',
+//     'material_bed_temperature',
+//     'material_bed_temperature_layer_0'
+// ];
 function Material({ widgetActions }) {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const inProgress = useSelector(state => state?.printing?.inProgress);
     const dispatch = useDispatch();
-    const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
+    // const [showOfficialMaterialDetails, setShowOfficialMaterialDetails] = useState(true);
     const [currentDefinition, setCurrentDefinition] = useState(null);
     const [materialDefinitionOptions, setMaterialDefinitionOptions] = useState([]);
 
@@ -118,7 +118,7 @@ function Material({ widgetActions }) {
                     )}
                 />
             </Anchor>
-            <div>
+            {/* <div>
                 <OptionalDropdown
                     draggable="false"
                     title={i18n._('Show Details')}
@@ -178,7 +178,7 @@ function Material({ widgetActions }) {
                         </table>
                     )}
                 </OptionalDropdown>
-            </div>
+            </div>*/}
         </React.Fragment>
     );
 }

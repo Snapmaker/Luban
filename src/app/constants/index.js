@@ -227,7 +227,7 @@ export const CNC_TOOL_CONFIG_GROUP = [
 
 export const PRINTING_QUALITY_CUSTOMIZE_FIELDS = [
     'layer_height',
-    'infill_pattern',
+    'infill_sparse_density',
     'wall_thickness',
     'adhesion_type',
     'support_enable'
