@@ -179,7 +179,7 @@ function Laser({ history }) {
                             path: file.path || ''
                         };
                         try {
-                            await dispatch(projectActions.open(file, history));
+                            await dispatch(projectActions.openProject(file, history));
                             // Todo: Add to recent file, but not use isElectron()
                             // if (isElectron()) {
                             //     const ipc = window.require('electron').ipcRenderer;

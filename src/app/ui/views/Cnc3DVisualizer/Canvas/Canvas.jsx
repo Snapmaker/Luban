@@ -108,7 +108,7 @@ class Canvas extends Component {
         const width = 400;
         const height = 260;
 
-        this.setCamera(this.props.cameraInitialPosition, this.initialTarget);
+        this.setCamera(this.props.cameraInitialPosition || new Vector3(0, 0, 0), this.initialTarget);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
 

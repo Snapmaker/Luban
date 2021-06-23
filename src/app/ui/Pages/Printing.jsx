@@ -118,7 +118,7 @@ function useRenderMainToolBar(history) {
                             path: file.path || ''
                         };
                         try {
-                            await dispatch(projectActions.open(file, history));
+                            await dispatch(projectActions.openProject(file, history));
                             if (isElectron()) {
                                 const ipc = window.require('electron').ipcRenderer;
                                 ipc.send('add-recent-file', recentFile);

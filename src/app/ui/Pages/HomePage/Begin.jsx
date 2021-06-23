@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import isElectron from 'is-electron';
 import classNames from 'classnames';
 import { withRouter } from 'react-router-dom';
@@ -16,7 +16,7 @@ import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../
 
 
 const Begin = (props) => {
-    const fileInput = React.createRef();
+    const fileInput = useRef(null);
 
     // redux correlation
     const dispatch = useDispatch();
@@ -31,7 +31,7 @@ const Begin = (props) => {
             path: file.path || ''
         };
         try {
-            await dispatch(projectActions.open(file, props.history));
+            await dispatch(projectActions.openProject(file, props.history));
             if (isElectron()) {
                 const ipc = window.require('electron').ipcRenderer;
                 ipc.send('add-recent-file', recentFile);
@@ -191,7 +191,7 @@ const Begin = (props) => {
                                 return (
                                     <div
                                         className={styles['file-item']}
-                                        onClick={() => dispatch(projectActions.open(item, props.history))}
+                                        onClick={() => dispatch(projectActions.openProject(item, props.history))}
                                         aria-hidden="true"
                                     >
                                         {item.name}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -147,6 +147,7 @@ function Cnc({ history }) {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
+    const fileInput = useRef(null);
     const page = useSelector(state => state?.cnc.page);
 
     useEffect(() => {
@@ -219,7 +220,6 @@ function Cnc({ history }) {
     };
 
     function renderMainToolBar() {
-        const fileInput = React.createRef();
         const leftItems = [
             {
                 title: i18n._('Home'),
@@ -247,7 +247,7 @@ function Cnc({ history }) {
                             path: file.path || ''
                         };
                         try {
-                            await dispatch(projectActions.open(file, history));
+                            await dispatch(projectActions.openProject(file, history));
                             // Todo: Add to recent file, but not use isElectron()
                             // if (isElectron()) {
                             //     const ipc = window.require('electron').ipcRenderer;

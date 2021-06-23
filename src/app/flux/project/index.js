@@ -299,7 +299,7 @@ export const actions = {
         await dispatch(actions.clearSavedEnvironment(headType));
     },
 
-    open: (file, history) => async (dispatch) => {
+    openProject: (file, history) => async (dispatch) => {
         // file: { path, name }
         const [, tail] = file.name.split('.');
         if (!tail) return;
