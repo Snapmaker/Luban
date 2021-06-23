@@ -65,7 +65,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         const { config, transformation, gcodeConfig, materials, toolParams } = modelInfo;
         const { targetDepth, allowance, stepDown, density, isModel = false } = gcodeConfig;
         const { isRotate, diameter } = materials;
-        const { toolDiameter, toolAngle } = toolParams;
+        const { toolAngle } = toolParams;
 
         const { invert } = config;
 
@@ -99,7 +99,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         this.stepDown = stepDown;
 
-        this.density = Math.min(density, this.calMaxDensity(toolDiameter, transformation));
+        this.density = density;
 
         this.toolAngle = toolAngle;
         this.toolParams = toolParams;
