@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import isElectron from 'is-electron';
 import i18next from 'i18next';
 import { gte } from 'lodash';
+import { withRouter } from 'react-router-dom';
 import styles from './styles.styl';
 import { machineStore } from '../../../store/local-storage';
 
@@ -44,4 +45,4 @@ const HomePage = (props) => { // Todo, what's the props ?
     );
 };
 
-export default HomePage;
+export default withRouter(HomePage);

@@ -33,19 +33,11 @@ import Settings from './Pages/Settings';
 // import styles from './App.styl';
 // import Space from '../components/Space';
 
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
+import { getCurrentHeadType, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
 import AppLayout from './Layouts/AppLayout';
 
-
-function getCurrentHeadType(pathname) {
-    let headType = null;
-    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
-    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
-    return headType;
-}
 
 class App extends PureComponent {
     static propTypes = {

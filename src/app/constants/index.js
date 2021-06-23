@@ -525,6 +525,17 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
         }
     }
 };
+export function getCurrentHeadType(pathname) {
+    if (!pathname) {
+        return null;
+    }
+    let headType = null;
+    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
+    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
+    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
+    return headType;
+}
+
 
 // Laser | CNC canvas min | max scale rate
 export const MAX_LASER_CNC_CANVAS_SCALE = 4;

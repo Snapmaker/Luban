@@ -11,7 +11,6 @@ class DefinitionManager {
         // active definition
         const res = await api.cncConfigs.getToolListDefinition('active');
         this.activeToolListDefinition = res.body.definition;
-        console.log('this.activeToolListDefinition', res, res.body.definition);
     }
 
     async getToolListDefinition(definitionId) {

@@ -7,6 +7,7 @@ import {
     HEAD_TYPE_ENV_NAME,
     SOURCE_TYPE_IMAGE3D,
     PROCESS_MODE_MESH,
+    getCurrentHeadType,
     COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER
 } from '../../constants';
 import api from '../../api';
@@ -135,7 +136,6 @@ export const actions = {
 
     onRecovery: (envHeadType, backendRecover = true) => async (dispatch, getState) => {
         const { content } = getState().project[envHeadType];
-
         // backup project if needed
         if (backendRecover) {
             await api.recoverEnv({ content });
@@ -248,7 +248,7 @@ export const actions = {
         } else {
             modelGroup = getState()[headType].modelGroup;
         }
-        if (!modelGroup.hasModel()) {
+        if (!modelGroup || !modelGroup.hasModel()) {
             return;
         }
 
@@ -257,6 +257,7 @@ export const actions = {
         if (!unSaved) {
             return;
         }
+
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
         if (dialogOptions) {
             const result = await UniApi.Dialog.showMessageBox({
@@ -269,11 +270,22 @@ export const actions = {
                     i18n._('Don\'t Save')
                 ]
             });
-            const idxClicked = result && result.response;
-            if (idxClicked === 1) throw new Error('Cancel');
-            if (idxClicked === 2) {
-                await dispatch(actions.clearSavedEnvironment(headType));
-                return;
+            if (typeof result === 'boolean') {
+                if (!result) {
+                    await dispatch(actions.clearSavedEnvironment(headType));
+                    return;
+                } else {
+                    await dispatch(actions.saveAsFile(headType));
+                    return;
+                }
+            } else {
+                const idxClicked = result && result.response;
+                if (idxClicked === 1) {
+                    throw new Error('Cancel');
+                } else if (idxClicked === 2) {
+                    await dispatch(actions.clearSavedEnvironment(headType));
+                    return;
+                }
             }
         }
         if (!openedFile) {
@@ -296,8 +308,10 @@ export const actions = {
             const formData = new FormData();
             let openedFile = null;
             if (!(file instanceof File)) {
-                openedFile = file;
-                UniApi.Window.setOpenedFile(file.name);
+                if (!new RegExp(/^\.\//).test(file?.path)) {
+                    openedFile = file;
+                    UniApi.Window.setOpenedFile(file.name);
+                }
                 file = JSON.stringify(file);
             }
             formData.append('file', file);
@@ -319,12 +333,15 @@ export const actions = {
                 // old verison of project file
                 headType = envObj.headType;
             }
-
-            await dispatch(actions.save(headType, {
-                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[headType] })
+            const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
+            await dispatch(actions.save(oldHeadType, {
+                message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
             }));
 
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));
+            if (oldHeadType === headType) {
+                history.push('/');
+            }
             history.push(`/${headType}`);
             await dispatch(actions.onRecovery(headType, false));
 
@@ -333,6 +350,20 @@ export const actions = {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
         }
+    },
+
+    startProject: (from, to, history) => async (dispatch) => {
+        const newHeadType = getCurrentHeadType(to);
+        const oldHeadType = getCurrentHeadType(from) || newHeadType;
+        await dispatch(actions.save(oldHeadType, {
+            message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
+        }));
+        if (from === to) {
+            history.push('/');
+        }
+        history.push(to);
+
+        dispatch(actions.updateState(newHeadType, { unSaved: false }));
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {

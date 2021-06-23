@@ -12,19 +12,7 @@ import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER, COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
-
-function getCurrentHeadType(pathname) {
-    if (!pathname) {
-        return null;
-    }
-    let headType = null;
-    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
-    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
-    if (pathname.indexOf('workspace') >= 0) headType = 'workspace';
-    return headType;
-}
+import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
 
 
 const Begin = (props) => {
@@ -57,18 +45,9 @@ const Begin = (props) => {
         }
     };
 
-    const onChangeRoute = async (pathname) => {
-        const oldPathname = props.location.pathname;
-        // console.log('changed pathname', pathname, props.location);
-        if (pathname === '/workspace' || oldPathname === '/') {
-            props.history.push(pathname);
-        } else if (oldPathname !== pathname) {
-            const headType = getCurrentHeadType(oldPathname);
-            await dispatch(projectActions.save(headType));
-            props.history.push(pathname);
-        } else if (pathname) {
-            props.history.push(pathname);
-        }
+    const onStartProject = async (pathname) => {
+        const oldPathname = props.location?.pathname;
+        await dispatch(projectActions.startProject(oldPathname, pathname, props.history));
         return null;
     };
 
@@ -89,7 +68,6 @@ const Begin = (props) => {
             ));
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         }
-        // await onChangeRoute(`/${type}`);
     };
 
     const onClickToUpload = () => {
@@ -103,7 +81,7 @@ const Begin = (props) => {
                     <div className={styles['title-label']}>{i18n._('Begin')}</div>
                     <div className={styles['link-bar']}>
                         <div className={styles['3dp']}>
-                            <Anchor onClick={() => onChangeRoute('/3dp')} title={i18n._('3D Printing G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/3dp')} title={i18n._('3D Printing G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -114,7 +92,7 @@ const Begin = (props) => {
                             </Anchor>
                         </div>
                         <div className={styles.laser}>
-                            <Anchor onClick={() => onChangeRoute('/laser')} title={i18n._('Laser G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/laser')} title={i18n._('Laser G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -151,7 +129,7 @@ const Begin = (props) => {
                             </Anchor>
                         </div>
                         <div className={styles.cnc}>
-                            <Anchor onClick={() => onChangeRoute('/cnc')} title={i18n._('CNC G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/cnc')} title={i18n._('CNC G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -188,7 +166,7 @@ const Begin = (props) => {
                             </Anchor>
                         </div>
                         <div className={styles.workspace}>
-                            <Anchor onClick={() => onChangeRoute('/workspace')} title={i18n._('Workspace')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/workspace')} title={i18n._('Workspace')}>
                                 <i className={
                                     classNames(
                                         styles.icon,

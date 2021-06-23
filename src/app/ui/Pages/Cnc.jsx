@@ -189,17 +189,6 @@ function Cnc({ history }) {
             setIsDraggingWidget(false);
         }
     };
-    useEffect(() => {
-        const listener = async (ev) => {
-            await dispatch(projectActions.save(pageHeadType));
-            ev.preventDefault();
-            ev.returnValue = 'ccc';
-        };
-        window.addEventListener('beforeunload', listener);
-        return () => {
-            window.removeEventListener('beforeunload', listener);
-        };
-    }, []);
 
     const actions = {
         onDropAccepted: (file) => {
