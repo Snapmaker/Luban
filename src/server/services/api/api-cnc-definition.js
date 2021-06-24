@@ -10,7 +10,7 @@ const defaultToolListNames = [
     'Ball End Mill',
     'Straight Groove V-bit'
 ];
-
+const Suffix = '.defv2.json';
 /**
  * Get definition
  */
@@ -23,7 +23,7 @@ export const getToolListDefinition = (req, res) => {
         return;
     }
 
-    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${Suffix}`);
 
     const data = fs.readFileSync(filePath, 'utf8');
     const json = JSON.parse(data);
@@ -39,8 +39,8 @@ export const changeActiveToolListDefinition = (req, res) => {
         return;
     }
 
-    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}.def.json`);
-    const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, 'active.def.json');
+    const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${definitionId}${Suffix}`);
+    const activeFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `active${Suffix}`);
     const data = fs.readFileSync(filePath, 'utf8');
     const json = JSON.parse(data);
     fs.writeFile(activeFilePath, data, 'utf8', (err) => {
@@ -53,7 +53,8 @@ export const changeActiveToolListDefinition = (req, res) => {
 };
 
 export const getToolDefinitions = (req, res) => {
-    const regex = /([A-Za-z0-9_]+).def.json$/;
+    const regexV1 = /([A-Za-z0-9_]+).def.json$/;
+    const regexV2 = /([A-Za-z0-9_]+).defv2.json$/;
 
     const configDir = `${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`;
     const filenames = fs.readdirSync(configDir);
@@ -62,7 +63,7 @@ export const getToolDefinitions = (req, res) => {
     const definitions = [];
 
     for (const filename of filenames) {
-        if (regex.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
+        if (regexV1.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
             const filePath = path.join(configDir, filename);
             const data = fs.readFileSync(filePath, 'utf8');
             const json = JSON.parse(data);
@@ -84,15 +85,20 @@ export const getToolDefinitions = (req, res) => {
                         newDefinition.settings = item.config;
                         const newName = `Old${json.definitionId}${item.name}`;
                         newDefinition.definitionId = newName;
-                        fs.writeFileSync(path.join(configDir, `${newName}.def.json`), JSON.stringify(newDefinition));
+                        fs.writeFileSync(path.join(configDir, `${newName}${Suffix}`), JSON.stringify(newDefinition));
                         // JSON.stringify
                         definitions.push(newDefinition);
                     }
                 });
                 fs.unlinkSync(filePath);
-            } else {
-                definitions.push(json);
             }
+        }
+
+        if (regexV2.test(filename) && filename.substr(0, filename.length - Suffix.length) !== 'active') {
+            const filePath = path.join(configDir, filename);
+            const data = fs.readFileSync(filePath, 'utf8');
+            const json = JSON.parse(data);
+            definitions.push(json);
         }
     }
     res.send({ definitions });
@@ -101,7 +107,7 @@ export const createToolListDefinition = (req, res) => {
     const { activeToolList } = req.body;
     const newActiveToolDefinition = JSON.parse(JSON.stringify(activeToolList));
     const definitionId = activeToolList.definitionId;
-    const filename = `${definitionId}.def.json`;
+    const filename = `${definitionId}${Suffix}`;
 
     const destPath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
 
@@ -117,7 +123,7 @@ export const createToolListDefinition = (req, res) => {
 export const removeToolListDefinition = (req, res) => {
     const { activeToolList } = req.body;
     const definitionId = activeToolList.definitionId;
-    const filename = `${definitionId}.def.json`;
+    const filename = `${definitionId}${Suffix}`;
     const filePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, filename);
 
     fs.unlink(filePath, (err) => {
@@ -131,7 +137,7 @@ export const removeToolListDefinition = (req, res) => {
 
 export const updateToolDefinition = (req, res) => {
     const { activeToolList } = req.body;
-    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${activeToolList.definitionId}.def.json`);
+    const filePath = path.join(`${DataStorage.configDir}/${CNC_CONFIG_SUBCATEGORY}`, `${activeToolList.definitionId}${Suffix}`);
     fs.writeFile(filePath, JSON.stringify(activeToolList, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -163,7 +169,7 @@ export const uploadToolDefinition = (req, res) => {
         obj.category = `#${obj.category}`;
     }
     // try {
-    const newFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${obj.definitionId}.def.json`);
+    const newFilePath = path.join(`${DataStorage.configDir}`, CNC_CONFIG_SUBCATEGORY, `${obj.definitionId}${Suffix}`);
     fs.writeFile(newFilePath, JSON.stringify(obj, null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

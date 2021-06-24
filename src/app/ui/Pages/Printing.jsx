@@ -76,50 +76,20 @@ const allWidgets = {
 
 
 const pageHeadType = HEAD_3DP;
-
-function Printing({ history, location }) {
-    const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
-    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+function useRenderMainToolBar(history) {
+    const unSaved = useSelector(state => state?.project[pageHeadType]?.unSaved, shallowEqual);
+    const hasModel = useSelector(state => state?.printing?.hasModel, shallowEqual);
+    const canRedo = useSelector(state => state?.printing?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state?.printing?.canUndo, shallowEqual);
     const [showHomePage, setShowHomePage] = useState(false);
     const dispatch = useDispatch();
-
-    const recoveryModal = useRenderRecoveryModal(pageHeadType);
-    const renderHomepage = () => {
+    function renderHomepage() {
         const onClose = () => setShowHomePage(false);
         return showHomePage && renderPopup({
             onClose,
             component: HomePage
         });
-    };
-
-    useEffect(() => {
-        dispatch(printingActions.init());
-    }, []);
-
-    useEffect(() => {
-        return async () => {
-            dispatch(projectActions.save(pageHeadType));
-        };
-    }, [location.pathname]);
-    async function onDropAccepted(file) {
-        try {
-            await dispatch(printingActions.uploadModel(file));
-        } catch (e) {
-            modal({
-                title: i18n._('Failed to open model.'),
-                body: e.message
-            });
-        }
     }
-    function onDropRejected() {
-        const title = i18n._('Warning');
-        const body = i18n._('Only STL/OBJ files are supported.');
-        modal({
-            title: title,
-            body: body
-        });
-    }
-
     function renderMainToolBar() {
         const fileInput = React.createRef();
         const leftItems = [
@@ -148,7 +118,7 @@ function Printing({ history, location }) {
                             path: file.path || ''
                         };
                         try {
-                            await dispatch(projectActions.open(file, history));
+                            await dispatch(projectActions.openProject(file, history));
                             if (isElectron()) {
                                 const ipc = window.require('electron').ipcRenderer;
                                 ipc.send('add-recent-file', recentFile);
@@ -169,6 +139,7 @@ function Printing({ history, location }) {
             },
             {
                 title: i18n._('Save'),
+                disabled: !unSaved || !hasModel,
                 type: 'button',
                 name: 'Copy',
                 action: () => {
@@ -177,6 +148,7 @@ function Printing({ history, location }) {
             },
             {
                 title: i18n._('Undo'),
+                disabled: !canUndo,
                 type: 'button',
                 name: 'Copy',
                 action: () => {
@@ -185,6 +157,7 @@ function Printing({ history, location }) {
             },
             {
                 title: i18n._('Redo'),
+                disabled: !canRedo,
                 type: 'button',
                 name: 'Copy',
                 action: () => {
@@ -192,20 +165,44 @@ function Printing({ history, location }) {
                 }
             }
         ];
-        const centerItems = [
-            {
-                type: 'button',
-                name: 'Edit',
-                title: i18n._('Edit'),
-                action: () => history.push('cnc')
-            }
-        ];
         return (
             <MainToolBar
                 leftItems={leftItems}
-                centerItems={centerItems}
             />
         );
+    }
+    return [renderHomepage, renderMainToolBar];
+}
+
+function Printing({ history }) {
+    const widgets = useSelector(state => state?.widget[pageHeadType].default.widgets, shallowEqual);
+    const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+    const dispatch = useDispatch();
+
+    const recoveryModal = useRenderRecoveryModal(pageHeadType);
+    const [renderHomepage, renderMainToolBar] = useRenderMainToolBar(history);
+
+    useEffect(() => {
+        dispatch(printingActions.init());
+    }, []);
+
+    async function onDropAccepted(file) {
+        try {
+            await dispatch(printingActions.uploadModel(file));
+        } catch (e) {
+            modal({
+                title: i18n._('Failed to open model.'),
+                body: e.message
+            });
+        }
+    }
+    function onDropRejected() {
+        const title = i18n._('Warning');
+        const body = i18n._('Only STL/OBJ files are supported.');
+        modal({
+            title: title,
+            body: body
+        });
     }
 
     function renderModalView() {
@@ -252,7 +249,6 @@ function Printing({ history, location }) {
     );
 }
 Printing.propTypes = {
-    history: PropTypes.object,
-    location: PropTypes.object
+    history: PropTypes.object
 };
 export default (withRouter(Printing));

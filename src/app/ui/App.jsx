@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 // import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
-import { HashRouter, Route, withRouter, Switch } from 'react-router-dom';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 // import { Trans } from 'react-i18next';
@@ -33,23 +33,14 @@ import Settings from './Pages/Settings';
 // import styles from './App.styl';
 // import Space from '../components/Space';
 
-import { HEAD_3DP, HEAD_CNC, HEAD_LASER, HEAD_TYPE_ENV_NAME } from '../constants';
+import { getCurrentHeadType, HEAD_TYPE_ENV_NAME } from '../constants';
 
 import UniApi from '../lib/uni-api';
 import AppLayout from './Layouts/AppLayout';
 
 
-function getCurrentHeadType(pathname) {
-    let headType = null;
-    if (pathname.indexOf(HEAD_CNC) >= 0) headType = HEAD_CNC;
-    if (pathname.indexOf(HEAD_LASER) >= 0) headType = HEAD_LASER;
-    if (pathname.indexOf(HEAD_3DP) >= 0) headType = HEAD_3DP;
-    return headType;
-}
-
 class App extends PureComponent {
     static propTypes = {
-        ...withRouter.propTypes,
 
         // machineInfo: PropTypes.object.isRequired,
 
@@ -66,6 +57,8 @@ class App extends PureComponent {
         // projectState: PropTypes.object.isRequired,
         // onRecovery: PropTypes.func.isRequired,
         // quitRecovery: PropTypes.func.isRequired,
+        save: PropTypes.func.isRequired,
+        updateRecentProject: PropTypes.func.isRequired,
         saveAsFile: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
         openProject: PropTypes.func.isRequired,
@@ -81,8 +74,6 @@ class App extends PureComponent {
     router = React.createRef();
 
     // state = {
-    //     platform: 'unknown',
-    //     recoveringProject: false
     // };
 
     shortcutHandler = {
@@ -106,7 +97,6 @@ class App extends PureComponent {
     actions = {
         onChangeShouldShowWarning: (event) => {
             this.props.setShouldShowCncWarning(!event.target.checked);
-            // this.setState({ shouldShowCncWarning: !event.target.checked });
         },
         saveAsFile: () => {
             const headType = getCurrentHeadType(this.router.current.history.location.pathname);
@@ -114,6 +104,13 @@ class App extends PureComponent {
                 return;
             }
             this.props.saveAsFile(headType);
+        },
+        saveNew: async () => {
+            const headType = getCurrentHeadType(window.location.hash);
+            if (!headType) {
+                return;
+            }
+            await this.props.save(headType);
         },
         save: async () => {
             const headType = getCurrentHeadType(this.router.current.history.location.pathname);
@@ -417,7 +414,7 @@ const mapDispatchToProps = (dispatch) => {
         saveAsFile: (headType) => dispatch(projectActions.saveAsFile(headType)),
         save: (headType, dialogOptions) => dispatch(projectActions.save(headType, dialogOptions)),
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
-        openProject: (file, history) => dispatch(projectActions.open(file, history)),
+        openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         clearSavedEnvironment: (headType) => dispatch(projectActions.clearSavedEnvironment(headType)),
         resetAllUserSettings: () => dispatch(settingActions.resetAllUserSettings())

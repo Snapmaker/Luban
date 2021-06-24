@@ -675,7 +675,7 @@ class Visualizer extends Component {
         const { gcodeFile } = this.props;
 
         return (
-            <div className="position-absolute" style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
+            <div style={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['visualizer-progress']}>
                     <ProgressBar tips={notice} progress={this.props.progress * 100} />
                 </div>
@@ -684,10 +684,10 @@ class Visualizer extends Component {
                         <p>{i18n._(gcodeFile.name)}</p>
                     </div>
                 )}
-                <div className={styles['canvas-content']}>
+                <div className={styles['canvas-wrapper']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {this.props.renderState === 'rendering' && <Rendering />}
-                    <div className="position-absolute m-3">
+                    <div className="m-3">
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}

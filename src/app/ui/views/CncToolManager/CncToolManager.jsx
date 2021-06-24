@@ -44,7 +44,7 @@ function CncToolManager({ closeToolManager }) {
         },
         exportConfigFile: (definitionForManager) => {
             const definitionId = definitionForManager.definitionId;
-            const targetFile = `${definitionId}.def.json`;
+            const targetFile = `${definitionId}.defv2.json`;
             dispatch(projectActions.exportConfigFile(targetFile, SUBCATEGORY));
         },
         onUpdateDefaultDefinition: (definitionForManager) => {

@@ -1,5 +1,5 @@
-// import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
@@ -18,11 +18,12 @@ import CNCVisualizer from '../widgets/CNCVisualizer';
 import ProjectLayout from '../Layouts/ProjectLayout';
 import MainToolBar from '../Layouts/MainToolBar';
 
-
-import { actions as editorActions } from '../../flux/editor';
-import { actions as cncActions } from '../../flux/cnc';
-import { actions as machineActions } from '../../flux/machine';
 import { actions as projectActions } from '../../flux/project';
+import { actions as cncActions } from '../../flux/cnc';
+import { actions as editorActions } from '../../flux/editor';
+
+import { actions as machineActions } from '../../flux/machine';
+
 import {
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_MESH,
@@ -95,11 +96,13 @@ const pageHeadType = HEAD_CNC;
 function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
     const dispatch = useDispatch();
+
     const onClose = () => setShowWarning(false);
 
     function onChangeShouldShowWarning(value) {
         dispatch(machineActions.setShouldShowCncWarning(value));
     }
+
     return showWarning && renderModal({
         onClose,
         renderBody: () => (
@@ -144,6 +147,7 @@ function Cnc({ history }) {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showJobType, setSHowJobType] = useState(false);
     const dispatch = useDispatch();
+    const fileInput = useRef(null);
     const page = useSelector(state => state?.cnc.page);
 
     useEffect(() => {
@@ -186,6 +190,7 @@ function Cnc({ history }) {
             setIsDraggingWidget(false);
         }
     };
+
     const actions = {
         onDropAccepted: (file) => {
             const extname = path.extname(file.name).toLowerCase();
@@ -215,7 +220,6 @@ function Cnc({ history }) {
     };
 
     function renderMainToolBar() {
-        const fileInput = React.createRef();
         const leftItems = [
             {
                 title: i18n._('Home'),
@@ -223,6 +227,7 @@ function Cnc({ history }) {
                 name: 'Copy',
                 action: () => {
                     setShowHomePage(true);
+                    window.scrollTo(0, 0);
                 }
             },
             {
@@ -242,7 +247,7 @@ function Cnc({ history }) {
                             path: file.path || ''
                         };
                         try {
-                            await dispatch(projectActions.open(file, history));
+                            await dispatch(projectActions.openProject(file, history));
                             // Todo: Add to recent file, but not use isElectron()
                             // if (isElectron()) {
                             //     const ipc = window.require('electron').ipcRenderer;
@@ -342,6 +347,7 @@ function Cnc({ history }) {
             </div>
         );
     }
+
 
     return (
         <div>

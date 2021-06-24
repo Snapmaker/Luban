@@ -50,7 +50,7 @@ const QuickStart = (props) => {
     };
 
     const loadCase = (caseItem) => {
-        dispatch(projectActions.open(caseItem.pathConfig, history));
+        dispatch(projectActions.openProject(caseItem.pathConfig, history));
     };
 
     //  useEffect

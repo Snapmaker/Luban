@@ -47,6 +47,7 @@ class ProjectLayout extends PureComponent {
                 <div
                     className={classNames(
                         styles['main-bar'],
+                        'clearfix'
                     )}
                 >
                     {renderMainToolBar && (

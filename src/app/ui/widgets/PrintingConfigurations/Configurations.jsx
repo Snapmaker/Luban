@@ -29,6 +29,8 @@ class Configurations extends PureComponent {
         defaultQualityId: PropTypes.string.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
         inProgress: PropTypes.bool.isRequired,
+        destroyGcodeLine: PropTypes.func.isRequired,
+        displayModel: PropTypes.func.isRequired,
 
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateDefinitionsForManager: PropTypes.func.isRequired,
@@ -68,6 +70,10 @@ class Configurations extends PureComponent {
                 customConfigs
             });
         },
+        displayModel: () => {
+            this.props.destroyGcodeLine();
+            this.props.displayModel();
+        },
         onChangeDefinition: async (key, value) => {
             // const {} = this.state;
             const { selectedDefinition } = this.state;
@@ -82,6 +88,7 @@ class Configurations extends PureComponent {
             this.setState({
                 selectedDefinition: newDefinitionForManager
             });
+            this.actions.displayModel();
         },
         onShowMaterialManager: () => {
             this.props.updateManagerDisplayType(PRINTING_MANAGER_TYPE_QUALITY);
@@ -104,6 +111,7 @@ class Configurations extends PureComponent {
             // has to update defaultQualityId
             this.props.updateDefaultQualityId(definitionId);
             this.actions.onSelectCustomDefinition(definition);
+            this.actions.displayModel();
         },
         onSelectCustomDefinition: (definition) => {
             this.setState({
@@ -285,6 +293,8 @@ const mapDispatchToProps = (dispatch) => {
         updateDefinitionsForManager: (definition, type) => dispatch(printingActions.updateDefinitionsForManager(definition, type)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
+        destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
+        displayModel: () => dispatch(printingActions.displayModel()),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager))
     };
 };

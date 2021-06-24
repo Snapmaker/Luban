@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import isElectron from 'is-electron';
 import classNames from 'classnames';
-import { Link, withRouter } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
+// import { Link, withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
-import slice from 'lodash/slice';
-import cloneDeep from 'lodash/cloneDeep';
-import reverse from 'lodash/reverse';
+import { slice, cloneDeep, reverse } from 'lodash';
+import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -16,7 +16,7 @@ import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../
 
 
 const Begin = (props) => {
-    const fileInput = React.createRef();
+    const fileInput = useRef(null);
 
     // redux correlation
     const dispatch = useDispatch();
@@ -31,7 +31,7 @@ const Begin = (props) => {
             path: file.path || ''
         };
         try {
-            await dispatch(projectActions.open(file, props.history));
+            await dispatch(projectActions.openProject(file, props.history));
             if (isElectron()) {
                 const ipc = window.require('electron').ipcRenderer;
                 ipc.send('add-recent-file', recentFile);
@@ -45,14 +45,19 @@ const Begin = (props) => {
         }
     };
 
+    const onStartProject = async (pathname) => {
+        const oldPathname = props.location?.pathname;
+        await dispatch(projectActions.startProject(oldPathname, pathname, props.history));
+        return null;
+    };
+
     const changeAxis = async (e, isRotate, type) => {
         e.preventDefault();
         if (!isRotate) {
             await dispatch(editorActions.changeCoordinateMode(type, COORDINATE_MODE_CENTER));
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         } else {
-            const materials = store?.[type]?.materials;
-            const { SVGActions } = store?.[type];
+            const { SVGActions, materials } = store?.[type];
             await dispatch(editorActions.changeCoordinateMode(
                 type,
                 COORDINATE_MODE_BOTTOM_CENTER, {
@@ -63,14 +68,12 @@ const Begin = (props) => {
             ));
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         }
-        props.history.push(`/${type}`);
     };
 
     const onClickToUpload = () => {
         fileInput.current.value = null;
         fileInput.current.click();
     };
-
     return (
         <div className={styles['create-new-project']}>
             <div className={styles.beginPart}>
@@ -78,7 +81,7 @@ const Begin = (props) => {
                     <div className={styles['title-label']}>{i18n._('Begin')}</div>
                     <div className={styles['link-bar']}>
                         <div className={styles['3dp']}>
-                            <Link to="/3dp" title={i18n._('3D Printing G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/3dp')} title={i18n._('3D Printing G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -86,10 +89,10 @@ const Begin = (props) => {
                                     )}
                                 />
                                 <span className={styles['common-label']}>{i18n._('3DP')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.laser}>
-                            <Link to="/laser" title={i18n._('Laser G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/laser')} title={i18n._('Laser G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -123,10 +126,10 @@ const Begin = (props) => {
                                     </div>
                                 </div>
                                 <span className={styles['common-label']}>{i18n._('Laser')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.cnc}>
-                            <Link to="/cnc" title={i18n._('CNC G-code Generator')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/cnc')} title={i18n._('CNC G-code Generator')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -160,10 +163,10 @@ const Begin = (props) => {
                                     </div>
                                 </div>
                                 <span className={styles['common-label']}>{i18n._('CNC')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                         <div className={styles.workspace}>
-                            <Link to="/workspace" title={i18n._('Workspace')} draggable="false">
+                            <Anchor onClick={() => onStartProject('/workspace')} title={i18n._('Workspace')}>
                                 <i className={
                                     classNames(
                                         styles.icon,
@@ -171,7 +174,7 @@ const Begin = (props) => {
                                     )}
                                 />
                                 <span className={styles['common-label']}>{i18n._('Workspace')}</span>
-                            </Link>
+                            </Anchor>
                         </div>
                     </div>
                 </div>
@@ -188,7 +191,7 @@ const Begin = (props) => {
                                 return (
                                     <div
                                         className={styles['file-item']}
-                                        onClick={() => dispatch(projectActions.open(item, props.history))}
+                                        onClick={() => dispatch(projectActions.openProject(item, props.history))}
                                         aria-hidden="true"
                                     >
                                         {item.name}
@@ -224,7 +227,8 @@ const Begin = (props) => {
 };
 
 Begin.propTypes = {
-    history: PropTypes.object
+    history: PropTypes.object,
+    location: PropTypes.object
 };
 
 export default withRouter(Begin);
