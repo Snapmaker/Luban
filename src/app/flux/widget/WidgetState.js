@@ -25,17 +25,17 @@ const DEFAULT_STATE = {
     },
     '3dp': {
         default: {
-            widgets: ['3dp-object-list', '3dp-material', '3dp-configurations']
+            widgets: ['3dp-material', '3dp-configurations']
         }
     },
     laser: {
         default: {
-            widgets: ['job-type', 'laser-set-background', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+            widgets: ['laser-set-background', 'toolpath-list', 'laser-params']
         }
     },
     cnc: {
         default: {
-            widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'cnc-path', 'cnc-output']
+            widgets: ['toolpath-list', 'cnc-path']
         }
     },
     developerPanel: {
@@ -187,21 +187,21 @@ const SERIES_STATES = {
     A150: {
         laser: {
             default: {
-                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['toolpath-list', 'laser-params']
             }
         }
     },
     A250: {
         laser: {
             default: {
-                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['toolpath-list', 'laser-params']
             }
         }
     },
     A350: {
         laser: {
             default: {
-                widgets: ['job-type', 'create-toolpath', 'cnc-laser-object-list', 'laser-params', 'laser-output']
+                widgets: ['toolpath-list', 'laser-params']
             }
         }
     }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 // import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
@@ -44,11 +44,10 @@ import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
 import CncLaserObjectList from '../widgets/CncLaserList';
-import PrintingObjectList from '../widgets/PrintingObjectList';
 import JobType from '../widgets/JobType';
-import CreateToolPath from '../widgets/CncLaserToolPath';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
+import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -65,29 +64,70 @@ const allWidgets = {
     'printing-visualizer': PrintingVisualizer,
     'wifi-transport': WifiTransport,
     'enclosure': EnclosureWidget,
-    '3dp-object-list': PrintingObjectList,
     '3dp-material': PrintingMaterialWidget,
     '3dp-configurations': PrintingConfigurationsWidget,
     '3dp-output': PrintingOutputWidget,
     'laser-params': LaserParamsWidget,
-    'laser-output': CncLaserOutputWidget,
+    // 'laser-output': CncLaserOutputWidget,
     'laser-set-background': LaserSetBackground,
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'cnc-output': CncLaserOutputWidget,
     'cnc-laser-object-list': CncLaserObjectList,
-    'job-type': JobType,
-    'create-toolpath': CreateToolPath
+    'toolpath-list': ToolPathListBox
 };
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
-function Laser({ history }) {
+function useRenderRemoveModelsWarning() {
+    const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
+    const emptyToolPaths = useSelector(state => state?.laser?.emptyToolPaths);
+    const dispatch = useDispatch();
+    const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
+        removingModelsWarning: false
+    }));
+    return removingModelsWarning && renderModal({
+        onClose,
+        renderBody: () => (
+            <div>
+                <div>{i18n._('Remove all empty toolPath(s)?')}</div>
+                {emptyToolPaths.map((item) => {
+                    return (<div key={item.name}>{item.name}</div>);
+                })}
+            </div>
+        ),
+        actions: [
+            {
+                name: i18n._('Yes'),
+                isPrimary: true,
+                onClick: () => {
+                    dispatch(editorActions.removeSelectedModel(HEAD_LASER));
+                    dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
+                    onClose();
+                }
+            },
+            {
+                name: i18n._('Cancel'),
+                onClick: () => { onClose(); }
+            }
+        ]
+    });
+}
+function Laser() {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
-    const [showJobType, setSHowJobType] = useState(false);
+    const [showJobType, setShowJobType] = useState(true);
+    const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
+    const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
+    const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+    const [jobTypeState, setJobTypeState] = useState({
+        coordinateMode,
+        coordinateSize,
+        materials
+    });
+    const [showCameraCapture, setShowCameraCapture] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
 
@@ -110,18 +150,60 @@ function Laser({ history }) {
                 <JobType
                     isWidget={false}
                     headType={HEAD_LASER}
+                    jobTypeState={jobTypeState}
+                    setJobTypeState={setJobTypeState}
                 />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Save'),
+                isPrimary: true,
+                onClick: () => {
+                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
+                        jobTypeState.coordinateMode, jobTypeState.coordinateSize));
+                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
+                    setShowJobType(false);
+                }
+            },
+            {
+                name: i18n._('Cancel'),
+                onClick: () => {
+                    setJobTypeState({
+                        coordinateMode,
+                        coordinateSize,
+                        materials
+                    });
+                    setShowJobType(false);
+                }
+            }
+        ],
+        onClose: () => {
+            setJobTypeState({
+                coordinateMode,
+                coordinateSize,
+                materials
+            });
+            setShowJobType(false);
+        }
+    });
+    const setBackgroundModal = showCameraCapture && renderModal({
+        title: i18n._('Set Background'),
+        renderBody() {
+            return (
+                <LaserSetBackground />
             );
         },
         actions: [
             {
                 name: i18n._('Cancel'),
 
-                onClick: () => { setSHowJobType(false); }
+                onclick: () => { setShowCameraCapture(false); }
             }
         ],
-        onClose: () => { setSHowJobType(false); }
+        onClose: () => { setShowCameraCapture(false); }
     });
+    const warningRemovingModels = useRenderRemoveModelsWarning();
     const listActions = {
         onDragStart: () => {
             setIsDraggingWidget(true);
@@ -152,7 +234,7 @@ function Laser({ history }) {
     };
 
     function renderMainToolBar() {
-        const fileInput = React.createRef();
+        // const fileInput = React.createRef();
         const leftItems = [
             {
                 title: i18n._('Home'),
@@ -165,40 +247,40 @@ function Laser({ history }) {
             {
                 type: 'separator'
             },
-            {
-                title: i18n._('Open'),
-                type: 'button',
-                name: 'Copy',
-                inputInfo: {
-                    accept: '.snaplzr',
-                    fileInput: fileInput,
-                    onChange: async (e) => {
-                        const file = e.target.files[0];
-                        const recentFile = {
-                            name: file.name,
-                            path: file.path || ''
-                        };
-                        try {
-                            await dispatch(projectActions.openProject(file, history));
-                            // Todo: Add to recent file, but not use isElectron()
-                            // if (isElectron()) {
-                            //     const ipc = window.require('electron').ipcRenderer;
-                            //     ipc.send('add-recent-file', recentFile);
-                            // }
-                            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-                        } catch (error) {
-                            modal({
-                                title: i18n._('Failed to upload model'),
-                                body: error.message
-                            });
-                        }
-                    }
-                },
-                action: () => {
-                    fileInput.current.value = null;
-                    fileInput.current.click();
-                }
-            },
+            // {
+            //     title: i18n._('Open'),
+            //     type: 'button',
+            //     name: 'Copy',
+            //     inputInfo: {
+            //         accept: '.snaplzr',
+            //         fileInput: fileInput,
+            //         onChange: async (e) => {
+            //             const file = e.target.files[0];
+            //             const recentFile = {
+            //                 name: file.name,
+            //                 path: file.path || ''
+            //             };
+            //             try {
+            //                 await dispatch(projectActions.openProject(file, history));
+            //                 // Todo: Add to recent file, but not use isElectron()
+            //                 // if (isElectron()) {
+            //                 //     const ipc = window.require('electron').ipcRenderer;
+            //                 //     ipc.send('add-recent-file', recentFile);
+            //                 // }
+            //                 await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
+            //             } catch (error) {
+            //                 modal({
+            //                     title: i18n._('Failed to upload model'),
+            //                     body: error.message
+            //                 });
+            //             }
+            //         }
+            //     },
+            //     action: () => {
+            //         fileInput.current.value = null;
+            //         fileInput.current.click();
+            //     }
+            // },
             {
                 title: i18n._('Save'),
                 type: 'button',
@@ -221,13 +303,37 @@ function Laser({ history }) {
                 type: 'button',
                 name: 'Copy',
                 action: () => {
-                    setSHowJobType(true);
+                    setShowJobType(true);
                 }
+            }
+        ];
+
+        const centerItems = [
+            {
+                name: 'Edit',
+                action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER)),
+                title: i18n._('Front')
+            },
+            {
+                name: 'Edit',
+                action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER)),
+                title: i18n._('Bottom')
+            }
+        ];
+        const rightItems = [
+            {
+                name: 'Edit',
+                action: () => {
+                    setShowCameraCapture(true);
+                },
+                title: i18n._('Camera')
             }
         ];
         return (
             <MainToolBar
                 leftItems={leftItems}
+                centerItems={centerItems}
+                rightItems={rightItems}
             />
         );
     }
@@ -266,6 +372,9 @@ function Laser({ history }) {
                     </Anchor>
                 </div>
                 {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
+                <CncLaserOutputWidget
+                    headType={HEAD_LASER}
+                />
             </div>
 
         );
@@ -289,13 +398,15 @@ function Laser({ history }) {
                 </Dropzone>
             </ProjectLayout>
             {recoveryModal}
+            {warningRemovingModels}
             {jobTypeModal}
+            {setBackgroundModal}
             {renderHomepage()}
         </div>
     );
 }
 Laser.propTypes = {
-    history: PropTypes.object
+    // history: PropTypes.object
     // location: PropTypes.object
 };
 export default withRouter(Laser);

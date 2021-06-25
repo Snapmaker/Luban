@@ -137,7 +137,7 @@ class ToolPathGroup {
 
         this._updated();
         const toolPathInfo = new ToolPath({
-            name: createToolPathNameByType(this.count, type),
+            name: createToolPathNameByType(this.count, type, this.headType),
             baseName: models[0].uploadName,
             headType: this.headType,
             type,
@@ -161,7 +161,7 @@ class ToolPathGroup {
             const { gcodeConfig } = generateModelDefaultConfigs(this.headType, modelsWithSameType[0].sourceType, modelsWithSameType[0].mode, materials.isRotate);
             this._updated();
             const toolPathInfo = new ToolPath({
-                name: createToolPathNameByType(this.count, type),
+                name: createToolPathNameByType(this.count, type, this.headType),
                 baseName: modelsWithSameType[0].uploadName,
                 headType: this.headType,
                 type,

@@ -104,15 +104,17 @@ class SVGLeftBar extends PureComponent {
                         >
                             <i className={styles['btn-text']} />
                         </Anchor>
-                        <Anchor
-                            componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: mode === 'ext' })}
-                            onClick={() => this.actions.showExt()}
-                            disabled={!editable}
-                        >
-                            <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
-                        </Anchor>
+                        { showExtShape && (
+                            <Anchor
+                                componentClass="button"
+                                className={classNames(styles['btn-center'],
+                                    { [styles.selected]: mode === 'ext' })}
+                                onClick={() => this.actions.showExt()}
+                                disabled={!editable}
+                            >
+                                <i className={styles[mode === 'ext' && extShape ? `btn-${extShape}` : 'btn-ext']} />
+                            </Anchor>
+                        )}
                     </div>
                     {showExtShape && (
                         <div className={classNames(styles['center-ext'])}>

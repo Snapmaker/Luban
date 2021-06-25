@@ -183,7 +183,8 @@ class SVGCanvas extends PureComponent {
             this.updateCanvas(null, nextProps.materials);
         }
         if (nextProps.coordinateMode !== this.props.coordinateMode
-            || nextProps.coordinateSize !== this.props.coordinateSize) {
+            || nextProps.coordinateSize.x !== this.props.coordinateSize.x
+            || nextProps.coordinateSize.y !== this.props.coordinateSize.y) {
             this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
 
             const { coordinateSize, coordinateMode } = this.props;

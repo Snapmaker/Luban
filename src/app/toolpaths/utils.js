@@ -1,4 +1,5 @@
 import {
+    HEAD_CNC, HEAD_LASER,
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
@@ -77,12 +78,22 @@ export const getModelsByToolPathType = (models) => {
     return modelObj;
 };
 
-export const createToolPathNameByType = (count, type) => {
-    if (type === 'Vector') {
-        return `Toolpath - ${type}${count++}`;
-    } else {
-        return `Toolpath - Picture ${type}${count++}`;
+export const createToolPathNameByType = (count, type, headType) => {
+    if (headType === HEAD_CNC) {
+        if (type === 'vector') {
+            return `Vector Toolpath - ${count++}`;
+        } else {
+            return `Carve Toolpath - ${count++}`;
+        }
     }
+    if (headType === HEAD_LASER) {
+        if (type === 'vector') {
+            return `Vector Toolpath - ${count++}`;
+        } else {
+            return `Image Toolpath - ${count++}`;
+        }
+    }
+    return 'unknown';
 };
 
 export const IDLE = 'idle';

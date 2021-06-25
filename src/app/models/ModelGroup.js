@@ -84,6 +84,7 @@ class ModelGroup extends EventEmitter {
 
     getState(shouldCheckOverStep = true) {
         const baseState = {
+            allModelIDs: this.models.map(m => m.modelID),
             selectedModelArray: this.selectedModelArray,
             selectedModelIDArray: this.selectedModelIDArray,
             estimatedTime: this.estimatedTime,

@@ -54,18 +54,23 @@ const Begin = (props) => {
     const changeAxis = async (e, isRotate, type) => {
         e.preventDefault();
         if (!isRotate) {
-            await dispatch(editorActions.changeCoordinateMode(type, COORDINATE_MODE_CENTER));
+            const { materials } = store?.[type];
+            if (materials.isRotate !== isRotate) {
+                await dispatch(editorActions.changeCoordinateMode(type, COORDINATE_MODE_CENTER));
+            }
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         } else {
             const { SVGActions, materials } = store?.[type];
-            await dispatch(editorActions.changeCoordinateMode(
-                type,
-                COORDINATE_MODE_BOTTOM_CENTER, {
-                    x: materials.diameter * Math.PI,
-                    y: materials.length
-                },
-                !SVGActions.svgContentGroup
-            ));
+            if (materials.isRotate !== isRotate) {
+                await dispatch(editorActions.changeCoordinateMode(
+                    type,
+                    COORDINATE_MODE_BOTTOM_CENTER, {
+                        x: materials.diameter * Math.PI,
+                        y: materials.length
+                    },
+                    !SVGActions.svgContentGroup
+                ));
+            }
             await dispatch(editorActions.updateMaterials(type, { isRotate }));
         }
     };

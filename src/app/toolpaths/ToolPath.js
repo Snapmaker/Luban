@@ -95,13 +95,15 @@ class ToolPath {
     }
 
     updateState(toolPath) {
-        const { name = this.name, check = this.check, visible = this.visible, gcodeConfig = this.gcodeConfig, toolParams = this.toolParams, materials = this.materials } = toolPath;
+        const { name = this.name, check = this.check, visible = this.visible, gcodeConfig = this.gcodeConfig,
+            toolParams = this.toolParams, materials = this.materials, modelIDs = this.modelIDs } = toolPath;
 
         this.name = name;
         this.check = check;
         this.visible = visible;
         this.object.visible = visible;
 
+        this.modelIDs = modelIDs;
         this.gcodeConfig = {
             ...gcodeConfig
         };

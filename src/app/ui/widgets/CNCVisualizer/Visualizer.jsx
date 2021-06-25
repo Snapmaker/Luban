@@ -22,7 +22,7 @@ import styles from './styles.styl';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 // eslint-disable-next-line no-unused-vars
 import {
-    DISPLAYED_TYPE_TOOLPATH, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
+    DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR, PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH, PROCESS_MODE_VECTOR,
     SELECTEVENT
 } from '../../../constants';
@@ -262,28 +262,11 @@ class Visualizer extends Component {
 
         this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
-        const { selectedModelArray } = nextProps;
+        const { selectedToolPathModelArray } = nextProps;
         // todo, selectedModelId nof found
-        if (selectedModelArray !== this.props.selectedModelArray) {
-            const selectedModel = selectedModelArray[0];
-            if (!selectedModel) {
-                this.canvas.current.controls.detach();
-            } else {
-                const sourceType = selectedModel.sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-                // this.canvas.current.controls.attach(model);
-                // const meshObject = nextProps.getSelectedModel().meshObject;
-                const meshObject = selectedModel.meshObject;
-                if (meshObject && selectedModel.visible) {
-                    this.canvas.current.controls.attach(meshObject);
-                } else {
-                    this.canvas.current.controls.detach();
-                }
-            }
+        if (selectedToolPathModelArray !== this.props.selectedToolPathModelArray) {
+            this.canvas.current.controls.detach();
+            selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
@@ -411,7 +394,6 @@ class Visualizer extends Component {
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
         const notice = this.getNotice();
-        const isEditor = this.props.page === PAGE_EDITOR;
         const contextMednuDisabled = !isOnlySelectedOneModel || !this.props.selectedModelArray[0].visible;
         const { displayedType } = this.props;
 
@@ -419,7 +401,7 @@ class Visualizer extends Component {
             <div
                 ref={this.visualizerRef}
             >
-                {(!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) && (
+                {(displayedType === DISPLAYED_TYPE_TOOLPATH) && (
                     <div>
                         <VisualizerTopRight
                             headType="cnc"
@@ -427,7 +409,7 @@ class Visualizer extends Component {
                     </div>
                 )}
                 <div style={{
-                    visibility: (isEditor || displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
+                    visibility: (displayedType !== DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                 }}
                 >
                     <SVGEditor
@@ -467,7 +449,7 @@ class Visualizer extends Component {
                 <div
                     className={styles['canvas-content']}
                     style={{
-                        visibility: (!isEditor && displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
+                        visibility: (displayedType === DISPLAYED_TYPE_TOOLPATH) ? 'visible' : 'hidden'
                     }}
                 >
                     <Canvas
@@ -496,6 +478,7 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['bottom-left']}>
                     <VisualizerBottomLeft
+                        headType={HEAD_CNC}
                         scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}
                         maxScale={MAX_LASER_CNC_CANVAS_SCALE}
@@ -686,7 +669,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
-        removeSelectedModel: () => dispatch(editorActions.removeSelectedModel('cnc')),
+        removeSelectedModel: () => dispatch(editorActions.checkToRemoveSelectedModels('cnc')),
 
         onCreateElement: (element) => dispatch(editorActions.createModelFromElement('cnc', element)),
         onSelectElements: (elements) => dispatch(editorActions.selectElements('cnc', elements)),

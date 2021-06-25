@@ -87,7 +87,11 @@ const INITIAL_STATE = {
 
     // coordinateMode
     coordinateMode: COORDINATE_MODE_CENTER,
-    coordinateSize: { x: 0, y: 0 }
+    coordinateSize: { x: 0, y: 0 },
+
+    // check to remove models
+    removingModelsWarning: false,
+    emptyToolPaths: []
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
@@ -102,9 +106,10 @@ export const actions = {
             dispatch(editorActions.updateMaterials('laser', materials));
         }
 
-        // // Set machine size into coordinate default size
+        // Set machine size into coordinate default size
         const { size } = getState().machine;
-        if (size) {
+        const { coordinateSize } = getState().laser;
+        if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
             dispatch(editorActions.updateState('laser', {
                 coordinateSize: size
             }));

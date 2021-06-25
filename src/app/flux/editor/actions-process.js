@@ -172,12 +172,13 @@ export const processActions = {
         if (toolPathGroup.getToolPath(toolPath.id)) {
             toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
         } else {
-            toolPathGroup.saveToolPath(toolPath, { materials });
+            toolPathGroup.saveToolPath(toolPath, { materials }, false);
         }
         if (autoPreviewEnabled) {
             dispatch(processActions.preview(headType));
         }
         dispatch(baseActions.updateState(headType, {
+            displayedType: DISPLAYED_TYPE_MODEL,
             updatingToolPath: null,
             isChangedAfterGcodeGenerating: true
         }));
@@ -214,6 +215,7 @@ export const processActions = {
         toolPathGroup.deleteToolPath(toolPathId);
         dispatch(processActions.showSimulationInPreview(headType, false));
         dispatch(baseActions.updateState(headType, {
+            displayedType: DISPLAYED_TYPE_MODEL,
             isChangedAfterGcodeGenerating: true
         }));
     },
@@ -229,9 +231,9 @@ export const processActions = {
         }
     },
 
-    onGenerateToolPath: (headType, taskResult) => (dispatch, getState) => {
+    onGenerateToolPath: (headType, taskResult) => async (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
-        toolPathGroup.onGenerateToolPath(taskResult);
+        await toolPathGroup.onGenerateToolPath(taskResult);
         if (taskResult.taskStatus === 'failed') {
             dispatch(baseActions.updateState(headType, {
                 stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_FAILED,
@@ -242,6 +244,9 @@ export const processActions = {
                 stage: CNC_LASER_STAGE.GENERATE_TOOLPATH_SUCCESS,
                 progress: 1
             }));
+            if (toolPathGroup.canGenerateGcode()) {
+                dispatch(processActions.commitGenerateGcode(headType));
+            }
         }
     },
 
