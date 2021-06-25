@@ -108,20 +108,21 @@ class JobType extends PureComponent {
         },
         handleNewFile: (is4Axis) => {
             if (is4Axis) {
-                const { materials: { diameter, length } } = this.props;
+                const { jobTypeState } = this.props;
+                const { materials: { diameter, length } } = jobTypeState;
 
-                this.props.changeCoordinateMode(
+                this.actions.changeCoordinateMode(
                     COORDINATE_MODE_BOTTOM_CENTER, {
                         x: diameter * Math.PI,
                         y: length
                     }
                 );
-                this.props.updateMaterials({ isRotate: true });
+                this.actions.updateMaterials({ isRotate: true });
             } else {
-                this.props.changeCoordinateMode(
+                this.actions.changeCoordinateMode(
                     COORDINATE_MODE_CENTER
                 );
-                this.props.updateMaterials({ isRotate: false });
+                this.actions.updateMaterials({ isRotate: false });
             }
         }
     };

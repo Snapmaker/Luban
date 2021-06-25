@@ -53,7 +53,7 @@ class Canvas extends Component {
         showContextMenu: PropTypes.func,
 
         // inProgress
-        inProgress: PropTypes.func
+        inProgress: PropTypes.bool
     };
 
     static defaultProps = {
