@@ -1,5 +1,4 @@
-import React, { useRef } from 'react';
-import isElectron from 'is-electron';
+import React from 'react';
 import classNames from 'classnames';
 import { withRouter } from 'react-router-dom';
 // import { Link, withRouter } from 'react-router-dom';
@@ -9,42 +8,19 @@ import { slice, cloneDeep, reverse } from 'lodash';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
-import modal from '../../../lib/modal';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
 import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
+import UniApi from '../../../lib/uni-api';
 
 
 const Begin = (props) => {
-    const fileInput = useRef(null);
-
     // redux correlation
     const dispatch = useDispatch();
     const project = useSelector(state => state?.project);
     const store = useSelector(state => state);
     const newRecentFile = reverse(cloneDeep(project.general.recentFiles));
     // method
-    const onChangeFile = async (e) => {
-        const file = e.target.files[0];
-        const recentFile = {
-            name: file.name,
-            path: file.path || ''
-        };
-        try {
-            await dispatch(projectActions.openProject(file, props.history));
-            if (isElectron()) {
-                const ipc = window.require('electron').ipcRenderer;
-                ipc.send('add-recent-file', recentFile);
-            }
-            await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-        } catch (error) {
-            modal({
-                title: i18n._('Failed to upload model'),
-                body: error.message
-            });
-        }
-    };
-
     const onStartProject = async (pathname) => {
         const oldPathname = props.location?.pathname;
         await dispatch(projectActions.startProject(oldPathname, pathname, props.history));
@@ -76,8 +52,7 @@ const Begin = (props) => {
     };
 
     const onClickToUpload = () => {
-        fileInput.current.value = null;
-        fileInput.current.click();
+        UniApi.Event.emit('appbar-menu:open-file-in-browser');
     };
     return (
         <div className={styles['create-new-project']}>
@@ -205,15 +180,6 @@ const Begin = (props) => {
                             })}
                         </div>
                         <div className={styles['open-file-btn']}>
-                            <input
-                                ref={fileInput}
-                                type="file"
-                                accept=".snap3dp, .snaplzr, .snapcnc, .gcode, .cnc, .nc"
-                                style={{ display: 'none' }}
-                                multiple={false}
-                                onChange={(e) => onChangeFile(e)}
-                                id="file-input"
-                            />
                             <button
                                 type="button"
                                 className="sm-btn-small"

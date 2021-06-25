@@ -5,6 +5,7 @@ import FileSaver from 'file-saver';
 import api from '../../../../api';
 import i18n from '../../../../lib/i18n';
 import styles from './index.styl';
+import UniApi from '../../../../lib/uni-api';
 
 class FirmwareTool extends PureComponent {
     mainInput = React.createRef();
@@ -63,6 +64,11 @@ class FirmwareTool extends PureComponent {
     };
 
     componentDidMount() {
+        UniApi.Event.on('appbar-menu:firmware-tools.export', this.actions.onClickToBuildAndExport);
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.off('appbar-menu:firmware-tools.export', this.actions.onClickToBuildAndExport);
     }
 
     render() {
@@ -96,7 +102,7 @@ class FirmwareTool extends PureComponent {
                         />
                     </li>
                 </ul>
-                <div className={styles.buildButton}>
+                {/* <div className={styles.buildButton}>
                     <button
                         type="button"
                         disabled={shouldShowWarning}
@@ -105,7 +111,7 @@ class FirmwareTool extends PureComponent {
                     >
                         {i18n._('Compile and Export')}
                     </button>
-                </div>
+                </div> */}
                 {shouldShowWarning && (
                     <p className={styles.warningNotes}>
                         {i18n._('Please select one or more firmware binaries')}

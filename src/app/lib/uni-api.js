@@ -2,16 +2,54 @@ import isElectron from 'is-electron';
 import request from 'superagent';
 import FileSaver from 'file-saver';
 import path from 'path';
+import events from 'events';
 import i18n from './i18n';
+
+class AppbarMenuEvent extends events.EventEmitter {}
+
+const menuEvent = new AppbarMenuEvent();
 /**
  * Event Listener in electron
  */
 const Event = {
     on: (eventName, callback) => {
         if (isElectron()) {
-            const { ipcRenderer } = window.require('electron');
-            ipcRenderer.on(eventName, callback);
+            if (eventName.startsWith('appbar-menu:')) {
+                menuEvent.on(eventName, callback);
+            } else {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.on(eventName, callback);
+            }
+        } else {
+            menuEvent.on(eventName, callback);
         }
+    },
+    emit: (eventName, ...args) => {
+        if (isElectron()) {
+            if (eventName.startsWith('appbar-menu:')) {
+                menuEvent.emit(eventName, ...args);
+            } else {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send(eventName, ...args);
+            }
+        } else {
+            menuEvent.emit(eventName, ...args);
+        }
+    },
+    off: (eventName, callback) => {
+        if (isElectron()) {
+            if (eventName.startsWith('appbar-menu:')) {
+                menuEvent.off(eventName, callback);
+            } else {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.off(eventName, callback);
+            }
+        } else {
+            menuEvent.off(eventName, callback);
+        }
+    },
+    once: (eventName, callback) => {
+        menuEvent.once(eventName, callback);
     }
 };
 
@@ -42,7 +80,7 @@ const Update = {
                 detail: i18n._(`Current version : ${oldVersion}`)
                 // detail: 'A new version has been detected. Should i download it now?'
             };
-            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+            dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
                     ipcRenderer.send('startingDownloadUpdate');
                 }
@@ -61,7 +99,7 @@ const Update = {
                 buttons: [i18n._('OK')],
                 detail: i18n._('The latest version is currently being downloaded.')
             };
-            dialog.showMessageBox(dialogOpts);
+            dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts);
         }
     },
     isReplacingAppNow(downloadInfo) {
@@ -78,7 +116,7 @@ const Update = {
                 detail: i18n._('Do you want to exit the program to install now?')
             };
 
-            dialog.showMessageBox(dialogOpts).then((returnValue) => {
+            dialog.showMessageBox(remote.getCurrentWindow(), dialogOpts).then((returnValue) => {
                 if (returnValue.response === 1) {
                     ipcRenderer.send('replaceAppNow');
                 }
@@ -103,6 +141,13 @@ const Menu = {
         if (isElectron()) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.send('clean-all-recent-files');
+        }
+    },
+    replaceMenu(newMenuTemplate) {
+        if (isElectron()) {
+            const appMenu = window.require('electron').remote.Menu;
+            const menu = appMenu.buildFromTemplate(newMenuTemplate);
+            appMenu.setApplicationMenu(menu);
         }
     }
 };
@@ -197,14 +242,63 @@ const File = {
                 });
             return null;
         }
+    },
+    constructFileObj(absolutePath, name) {
+        if (isElectron()) {
+            const fs = window.require('fs');
+            const buffer = fs.readFileSync(absolutePath);
+            const file = new window.File([new Uint8Array(buffer).buffer], name);
+            return file;
+        }
+        return null;
+    },
+    addRecentFiles(recentFile) {
+        if (isElectron()) {
+            const ipc = window.require('electron').ipcRenderer;
+            ipc.send('add-recent-file', recentFile);
+        }
     }
-
 };
 
 /**
  * Dialogs control in electron
  */
 const Dialog = {
+    async showOpenFileDialog(type) {
+        let extensions = ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'];
+        switch (type) {
+            case '3dp':
+                extensions = ['stl', 'obj'];
+                break;
+            case 'laser':
+                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf'];
+                break;
+            case 'cnc':
+                extensions = ['svg', 'png', 'jpg', 'jpeg', 'bmp', 'dxf', 'stl'];
+                break;
+            case 'workspace':
+                extensions = ['gcode', 'nc', 'cnc'];
+                break;
+            default: break;
+        }
+
+        if (isElectron()) {
+            const { remote } = window.require('electron');
+            const currentWindow = remote.getCurrentWindow();
+            const openDialogReturnValue = await remote.dialog.showOpenDialog(
+                currentWindow,
+                {
+                    title: 'Snapmaker Luban',
+                    filters: [{ name: 'files', extensions }]
+                }
+            );
+            const filePaths = openDialogReturnValue.filePaths;
+            if (!filePaths || !filePaths[0]) return null;
+            const file = { path: filePaths[0], name: window.require('path').basename(filePaths[0]) };
+            return file;
+        }
+        return null;
+    },
     showMessageBox(options, modal = true) {
         if (isElectron()) {
             const remote = window.require('electron').remote;
@@ -283,6 +377,74 @@ const Window = {
             // execCommand is unstable
             // document.execCommand('copy', true, text);
         }
+    },
+    reload() {
+        if (isElectron()) {
+            window.require('electron').remote.BrowserWindow.getFocusedWindow().webContents.reload();
+        } else {
+            window.location.reload(false);
+        }
+    },
+    forceReload() {
+        if (isElectron()) {
+            window.require('electron').remote.BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache();
+        } else {
+            window.location.reload(true);
+        }
+    },
+    viewInBrowser() {
+        if (isElectron()) {
+            const electron = window.require('electron');
+            electron.shell.openExternal(window.location.origin);
+        } else {
+            window.open(window.location.origin);
+        }
+    },
+    toggleFullscreen() {
+        if (isElectron()) {
+            const browserWindow = window.require('electron').remote.BrowserWindow.getFocusedWindow();
+            if (browserWindow.isFullScreen()) {
+                browserWindow.setFullScreen(false);
+            } else {
+                browserWindow.setFullScreen(true);
+            }
+        } else {
+            if (!window.document.fullscreenElement) {
+                window.document.documentElement.requestFullscreen();
+            } else {
+                if (window.document.exitFullscreen) {
+                    window.document.exitFullscreen();
+                }
+            }
+        }
+    },
+    toggleDeveloperTools() {
+        if (isElectron()) {
+            window.require('electron').remote.getCurrentWebContents().toggleDevTools();
+        }
+    },
+    openLink(url) {
+        if (isElectron()) {
+            window.require('electron').remote.shell.openExternal(url);
+        } else {
+            window.open(url);
+        }
+    }
+};
+
+const Connection = {
+    navigateToWorkspace() {
+        window.location.href = `${window.location.origin}/#/workspace`;
+    }
+};
+
+const APP = {
+    quit() {
+        if (isElectron()) {
+            window.require('electron').remote.app.quit();
+        } else {
+            window.top.close();
+        }
     }
 };
 
@@ -292,5 +454,7 @@ export default {
     Menu,
     File,
     Dialog,
-    Window
+    Window,
+    Connection,
+    APP
 };

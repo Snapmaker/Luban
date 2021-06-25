@@ -15,6 +15,7 @@ import { renderPopup } from '../../utils';
 
 import Workspace from '../../Pages/Workspace';
 import i18n from '../../../lib/i18n';
+import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import TipTrigger from '../../components/TipTrigger';
 
@@ -119,6 +120,10 @@ class Output extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        UniApi.Event.on('appbar-menu:cnc-laser.export-gcode', this.actions.onExport);
+    }
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.previewFailed && !this.props.previewFailed) {
             modal({
@@ -126,6 +131,10 @@ class Output extends PureComponent {
                 body: i18n._('Failed to preview, please modify parameters and try again.')
             });
         }
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', this.actions.onExport);
     }
 
     renderWorkspace() {

@@ -1,0 +1,83 @@
+.lu-appbar-menu {
+    z-index: 1111;
+    background-color: #fff;
+    margin: 0;
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    position: relative;
+
+    &.menu-submenu  {
+        position: absolute;
+        width: 200px;
+        box-shadow: 2px 2px 4px 1px #bbb;
+    }
+    &::after {
+        content: '';
+        display: block;
+        clear: both;
+    }
+    .menu-item {
+        float: left;
+        list-style: none;
+        margin: 0;
+        .enabled {
+            color: #aaa;
+        }
+        .label {
+            float: left;
+        }
+        .accelerator {
+            float: right;
+        }
+        .right-arrow {
+            float: right;
+        }
+        &>div {
+            float: left;
+            width: 100%;
+            padding: 0 15px;
+            cursor: default;
+        }
+        &.selected {
+            & span {
+                background-color: #EBEBEB;
+            }
+        }
+        & span {
+            cursor: default;
+            display: inline-block;
+            padding: 2px 5px;
+            word-break: break-word;
+        }
+        &:hover>div>.menu-submenu {
+            display: block;
+        }
+    }
+    .sub-2 {
+        top: 24px;
+        left: auto;
+    }
+    .sub-3 {
+        top: auto;
+        left: 195px;
+    }
+    .hide {
+        display: none;
+    }
+    .menu-submenu {
+        padding: 4px 0;
+        .separator {
+            margin: 5px 0;
+            width: 100%;
+            float: left;
+            border-top: 1px solid #eee;
+        }
+        .menu-item {
+            width: 100%;
+            &:hover {
+                background-color: #C8C8C9;
+            }
+        }
+    }
+}

@@ -29,6 +29,7 @@ import {
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
 import modal from '../../../lib/modal';
+import UniApi from '../../../lib/uni-api';
 
 class Visualizer extends Component {
     static propTypes = {
@@ -206,6 +207,17 @@ class Visualizer extends Component {
         },
         duplicateSelectedModel: () => {
             this.props.duplicateSelectedModel();
+        },
+        importFile: (fileObj) => {
+            if (fileObj) {
+                this.actions.onChangeFile({
+                    target: {
+                        files: [fileObj]
+                    }
+                });
+            } else {
+                this.actions.onClickToUpload();
+            }
         }
     };
 
@@ -224,11 +236,13 @@ class Visualizer extends Component {
         //     'hashchange',
         //     (event) => {
         //         if (event.newURL.endsWith('cnc')) {
-        //             this.canvas.current && this.canvas.current.resizeWindow();
+        //             this.canvas.current.resizeWindow();
         //         }
         //     },
         //     false
         // );
+
+        UniApi.Event.on('appbar-menu:cnc.import', this.actions.importFile);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -295,6 +309,10 @@ class Visualizer extends Component {
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
         }
+    }
+
+    componentWillUnmount() {
+        UniApi.Event.off('appbar-menu:cnc.import', this.actions.importFile);
     }
 
     getNotice() {
