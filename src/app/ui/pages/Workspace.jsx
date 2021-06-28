@@ -14,9 +14,9 @@ import i18n from '../../lib/i18n';
 // import SecondaryWidgets from './WorkspaceWidgets/SecondaryWidgets';
 
 import Dropzone from '../components/Dropzone';
-import styles from '../Layouts/styles/workspace.styl';
-import WorkspaceLayout from '../Layouts/WorkspaceLayout';
-import MainToolBar from '../Layouts/MainToolBar';
+import styles from '../layouts/styles/workspace.styl';
+import WorkspaceLayout from '../layouts/WorkspaceLayout';
+import MainToolBar from '../layouts/MainToolBar';
 
 import {
     WORKFLOW_STATE_IDLE,

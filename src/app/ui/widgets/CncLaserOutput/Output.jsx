@@ -13,7 +13,7 @@ import modal from '../../../lib/modal';
 
 import { renderPopup } from '../../utils';
 
-import Workspace from '../../Pages/Workspace';
+import Workspace from '../../pages/Workspace';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
 import Thumbnail from '../CncLaserShared/Thumbnail';

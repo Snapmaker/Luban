@@ -6,7 +6,7 @@ import {
     CaseConfigOriginal, CaseConfig150,
     CaseConfig250, CaseConfig350,
     CaseConfigA350FourAxis, CaseConfigA250FourAxis
-} from '../../ui/Pages/HomePage/CaseConfig';
+} from '../../ui/pages/HomePage/CaseConfig';
 import UniApi from '../../lib/uni-api';
 import i18n from '../../lib/i18n';
 

@@ -11,8 +11,8 @@ import modal from '../../lib/modal';
 import Dropzone from '../components/Dropzone';
 import { actions as printingActions } from '../../flux/printing';
 import { actions as projectActions } from '../../flux/project';
-import ProjectLayout from '../Layouts/ProjectLayout';
-import MainToolBar from '../Layouts/MainToolBar';
+import ProjectLayout from '../layouts/ProjectLayout';
+import MainToolBar from '../layouts/MainToolBar';
 import { HEAD_3DP } from '../../constants';
 import { renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
 

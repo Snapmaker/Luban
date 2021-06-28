@@ -9,9 +9,9 @@ import { renderModal } from '../utils';
 import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
-import Settings from '../Pages/Settings/Settings';
-import FirmwareTool from '../Pages/Settings/FirmwareTool';
-import SoftwareUpdate from '../Pages/Settings/SoftwareUpdate';
+import Settings from '../pages/Settings/Settings';
+import FirmwareTool from '../pages/Settings/FirmwareTool';
+import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
 import {
     PAGE_EDITOR,
     getCurrentHeadType,

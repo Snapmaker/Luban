@@ -18,7 +18,7 @@ import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 import { renderPopup } from '../../utils';
 
-import Workspace from '../../Pages/Workspace';
+import Workspace from '../../pages/Workspace';
 
 class Output extends PureComponent {
     static propTypes = {
