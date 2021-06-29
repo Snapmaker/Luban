@@ -1,0 +1,26 @@
+//@import "../../../styles/variables.styl"
+
+.tabs {
+    :global(.ant-tabs-nav-list){
+        width: 100%;
+        justify-content: space-around;
+        :global(.ant-tabs-tab) {
+            color: #85888C;
+            //minw-idth: 52px;
+            margin-left: 0!important;
+            :global(.ant-tabs-tab-btn) {
+                margin: 0 auto;
+            }
+        }
+        :global(.ant-tabs-tab):hover{
+            color: #2A2C2E
+        }
+        :global(.ant-tabs-tab.ant-tabs-tab-active) :global(.ant-tabs-tab-btn){
+            color: #2A2C2E;
+            font-weight: bold;
+        }
+        :global(.ant-tabs-ink-bar){
+            background: #545659;
+        }
+    }
+}

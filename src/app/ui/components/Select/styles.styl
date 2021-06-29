@@ -1,0 +1,29 @@
+//@import "../../../styles/variables.styl"
+.override-select {
+    display: inline-block;
+    .super-large{
+        width: 288px;
+    }
+    .large{
+        width: 200px;
+    }
+    .middle{
+        width: 160px;
+    }
+    .small{
+        width: 120px;
+    }
+    .super-small{
+        width: 64px;
+    }
+    :global(.ant-select){
+        //width: 100px;
+        border: none!important;
+        border-radius: 8px!important;
+        :global(.ant-select-selector) {
+            padding: 0 8px;
+            border: 1px solid #B9BCBF;
+            border-radius: 8px!important;
+        }
+    }
+}
