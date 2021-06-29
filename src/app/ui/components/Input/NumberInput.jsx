@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-
+import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
 class NumberInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
+        size: PropTypes.string,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.number,
         min: PropTypes.number,
@@ -52,9 +53,11 @@ class NumberInput extends PureComponent {
     }
 
     onChange = (event) => {
-        this.setState({
-            displayValue: event.target.value
-        });
+        if (this.state.displayValue !== event.target.value) {
+            this.setState({
+                displayValue: event.target.value
+            });
+        }
     };
 
     onBlur = (event) => {
@@ -115,15 +118,16 @@ class NumberInput extends PureComponent {
     }
 
     render() {
-        const { className = '', ...rest } = this.props;
-
+        const { className = '',
+            size = 'super-small', ...rest } = this.props;
         return (
-            <input
+            <Input
                 ref={this.ref}
                 {...rest}
                 type="number"
+                placeholder="Input a number"
                 value={this.state.displayValue}
-                className={classNames(styles.input, className)}
+                className={classNames(styles.input, className, styles[size])}
                 onChange={this.onChange}
                 onBlur={this.onBlur}
                 onKeyUp={this.onKeyUp}

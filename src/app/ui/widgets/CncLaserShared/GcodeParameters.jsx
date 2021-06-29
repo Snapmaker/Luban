@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Slider from 'rc-slider';
+import Slider from '../../components/Slider';
 
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';

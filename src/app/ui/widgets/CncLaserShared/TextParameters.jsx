@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { NumberInput as Input } from '../../components/Input';
+import { NumberInput as Input, TextAreaInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 
 
@@ -92,7 +92,7 @@ Start a new line manually according to your needs.')}
                         >
                             <div className="sm-parameter-row" style={{ height: '68px' }}>
                                 <span className="sm-parameter-row__label">{i18n._('Text')}</span>
-                                <textarea
+                                <TextAreaInput
                                     ref={this.textArea}
                                     disabled={disabled}
                                     onFocus={actions.onSelectAllText}

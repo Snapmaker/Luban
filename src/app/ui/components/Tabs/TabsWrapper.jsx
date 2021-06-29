@@ -12,7 +12,7 @@ class TabsWrapper extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         activeKey: PropTypes.string.isRequired,
-        options: PropTypes.object.isRequired
+        options: PropTypes.array.isRequired
     };
 
     render() {

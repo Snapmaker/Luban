@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-
+import { Input } from 'antd';
 import styles from './styles.styl';
 
 
 class DegreeInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
+        size: PropTypes.string,
         disabled: PropTypes.bool.isRequired,
         value: PropTypes.number.isRequired,
         onChange: PropTypes.func.isRequired,
@@ -105,16 +106,16 @@ class DegreeInput extends PureComponent {
     }
 
     render() {
-        const { className = '', ...rest } = this.props;
+        const { className = '', size = 'small', ...rest } = this.props;
         const { value } = this.state;
 
         return (
-            <input
+            <Input
                 {...rest}
                 ref={this.ref}
                 type="text"
                 value={value}
-                className={classNames(styles.input, className)}
+                className={classNames(styles.input, styles[size], className)}
                 onChange={this.onChangeInputValue}
                 onBlur={this.onBlur}
                 onKeyUp={this.onKeyUp}

@@ -2,8 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import Select from '../../components/Select';
-// import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
+import Checkbox from '../../components/Checkbox';
+
 import TipTrigger from '../../components/TipTrigger';
 
 function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
@@ -129,10 +130,9 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                     <span className="sm-parameter-row__input-unit">{unit}</span>
                 )}
                 {type === 'bool' && (
-                    <input
+                    <Checkbox
                         className="sm-parameter-row__checkbox"
                         style={{ cursor: !isDefinitionEditable() ? 'not-allowed' : 'default' }}
-                        type="checkbox"
                         checked={defaultValue}
                         disabled={!isDefinitionEditable()}
                         onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}

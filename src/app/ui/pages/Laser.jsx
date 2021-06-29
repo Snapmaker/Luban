@@ -3,13 +3,12 @@ import { shallowEqual, useSelector, useDispatch } from 'react-redux';
 import path from 'path';
 // import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
-// import Sortable from 'react-sortablejs';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 import i18n from '../../lib/i18n';
-import Anchor from '../components/Anchor';
+// import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
-// import Widget from '../widgets/Widget';
+import Tabs from '../components/Tabs';
 
 import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
@@ -337,40 +336,27 @@ function Laser() {
             />
         );
     }
+
     function renderRightView() {
         const widgetProps = { headType: 'laser' };
         return (
             <div>
-                <div
-                    style={{
-                        display: 'inline-block',
-                        width: '50%',
-                        border: '1px solid #fafafa',
-                        backgroundColor: page === PAGE_EDITOR ? '#b3d4fc' : '#fafafa'
+                <Tabs
+                    options={[
+                        {
+                            tab: i18n._('Edit'),
+                            key: PAGE_EDITOR
+                        },
+                        {
+                            tab: i18n._('Process'),
+                            key: PAGE_PROCESS
+                        }
+                    ]}
+                    activeKey={page}
+                    onChange={(key) => {
+                        dispatch(editorActions.switchToPage(HEAD_LASER, key));
                     }}
-                    className={classNames({ 'selected': page === PAGE_EDITOR })}
-                >
-                    <Anchor
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_EDITOR))}
-                    >
-                        {i18n._('Edit')}
-                    </Anchor>
-                </div>
-                <div
-                    style={{
-                        display: 'inline-block',
-                        width: '50%',
-                        border: '1px solid #fafafa',
-                        backgroundColor: page === PAGE_PROCESS ? '#b3d4fc' : '#fafafa'
-                    }}
-                    className={classNames({ 'selected': page === PAGE_PROCESS })}
-                >
-                    <Anchor
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS))}
-                    >
-                        {i18n._('Process')}
-                    </Anchor>
-                </div>
+                />
                 {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
                 <CncLaserOutputWidget
                     headType={HEAD_LASER}

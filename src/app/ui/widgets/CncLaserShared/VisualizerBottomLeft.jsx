@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
+import Slider from '../../components/Slider';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE } from '../../../constants';

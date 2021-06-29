@@ -88,6 +88,7 @@ function ToolParameters(props) {
     }
 
     async function onChangeActiveToolListValue(option) {
+        console.log('option', option);
         if (option.definitionId === 'new') {
             await onShowCncToolManager();
             props.setCurrentValueAsProfile();
@@ -140,7 +141,7 @@ function ToolParameters(props) {
 
     if (isModifiedDefinition) {
         toolDefinitionOptions.push({
-            name: 'modified',
+            name: 'Create profile with current parameters',
             definitionId: 'new',
             label: 'Create profile with current parameters',
             value: 'new-modified'

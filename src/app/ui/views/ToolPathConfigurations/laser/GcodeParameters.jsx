@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
+import Slider from '../../../components/Slider';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';

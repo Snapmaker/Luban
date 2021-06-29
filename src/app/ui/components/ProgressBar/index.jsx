@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Progress } from 'antd';
 import styles from './styles.styl';
 import { EPSILON } from '../../../constants';
 
@@ -33,19 +34,16 @@ class ProgressBar extends React.PureComponent {
         const { progress, tips } = this.props;
         const { display } = this.state;
         return (
-            <div style={{ display }}>
+            <div
+                style={{ display }}
+                className={styles.progressbar}
+            >
                 <div className={styles['progress-notice']}>
                     <p>{tips}</p>
                 </div>
-                <div className={styles.progressbar}>
-                    <div
-                        className={styles.progress}
-                        aria-valuenow={progress}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
+                <Progress
+                    percent={progress}
+                />
             </div>
 
         );

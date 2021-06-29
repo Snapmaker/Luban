@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Slider from 'rc-slider';
+import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 
 import i18n from '../../../../lib/i18n';

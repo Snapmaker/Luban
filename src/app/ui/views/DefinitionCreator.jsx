@@ -1,10 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { RadioButton, RadioGroup } from '../components/Radio';
+import { Radio } from '../components/Radio';
 import Select from '../components/Select';
 
 import i18n from '../../lib/i18n';
-
 
 class DefinitionCreator extends PureComponent {
     static propTypes = {
@@ -141,7 +140,7 @@ class DefinitionCreator extends PureComponent {
         const { isCreate } = this.props;
         if (isCreate) {
             return (
-                <RadioGroup
+                <Radio.Group
                     name="comic"
                     value={this.state.createType}
                     onChange={(event) => {
@@ -150,16 +149,16 @@ class DefinitionCreator extends PureComponent {
                     }}
                 >
                     <div>
-                        <RadioButton value="Material">{i18n._('Create Material')}</RadioButton>
+                        <Radio value="Material">{i18n._('Create Material')}</Radio>
                         {this.state.createType === 'Material' && this.renderMaterialCreate()}
                     </div>
 
                     <div style={{ marginTop: '20px' }}>
-                        <RadioButton value="Tool">{i18n._('Create Carving Tool')}</RadioButton>
+                        <Radio value="Tool">{i18n._('Create Carving Tool')}</Radio>
                         {this.state.createType === 'Tool' && this.renderToolCreate()}
                     </div>
 
-                </RadioGroup>
+                </Radio.Group>
             );
         } else {
             if (this.props.copyType === 'Material') {
