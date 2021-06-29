@@ -19,9 +19,9 @@ class LaserParameters extends PureComponent {
         page: PropTypes.string.isRequired,
 
         // model: PropTypes.object,
+        hasSelectedModels: PropTypes.bool,
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
-        modelGroup: PropTypes.object,
         sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         showOrigin: PropTypes.bool,
@@ -90,8 +90,7 @@ class LaserParameters extends PureComponent {
     }
 
     componentDidMount() {
-        const { modelGroup } = this.props;
-        if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
+        if (this.props.page === PAGE_EDITOR) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -99,8 +98,7 @@ class LaserParameters extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { modelGroup } = nextProps;
-        if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
+        if (nextProps.page === PAGE_EDITOR) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -114,7 +112,7 @@ class LaserParameters extends PureComponent {
             config,
             changeSelectedModelMode, showOrigin, changeSelectedModelShowOrigin,
             headType, updateSelectedModelUniformScalingState,
-            modifyText, inProgress
+            modifyText, inProgress, hasSelectedModels
         } = this.props;
 
         const actions = this.actions;
@@ -138,7 +136,7 @@ class LaserParameters extends PureComponent {
                     <TransformationSection
                         headType={headType}
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
-                        disabled={inProgress}
+                        disabled={inProgress && !hasSelectedModels}
                     />
                 )}
                 {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
@@ -183,14 +181,15 @@ const mapStateToProps = (state) => {
         config,
         visible
     } = selectedModel;
+    const hasSelectedModels = modelGroup.getSelectedModelArray().length > 0;
     return {
         page,
         printOrder,
         selectedModelArray,
         selectedModel,
+        hasSelectedModels,
         // todo, next version fix like selectedModelID
         selectedModelVisible: visible,
-        modelGroup,
         sourceType,
         mode,
         showOrigin,

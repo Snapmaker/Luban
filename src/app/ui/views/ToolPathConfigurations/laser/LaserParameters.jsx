@@ -1,11 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import Select from '../../../components/Select';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { TextInput } from '../../../components/Input';
-import widgetStyles from '../../../widgets/styles.styl';
 import TipTrigger from '../../../components/TipTrigger';
 import GcodeParameters from './GcodeParameters';
 
@@ -71,7 +69,7 @@ class LaserParameters extends PureComponent {
                                 content={i18n._('Select the direction of the engraving path.')}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Line Direction')}</span>
+                                    <span className="sm-parameter-row__label">{i18n._('Method')}</span>
                                     <Select
                                         backspaceRemoves={false}
                                         className="sm-parameter-row__select-md"
@@ -122,7 +120,6 @@ class LaserParameters extends PureComponent {
                         </div>
                     )}
                 </div>
-                <div className={classNames(widgetStyles.separator)} />
                 <GcodeParameters
                     toolPath={this.props.toolPath}
                     updateGcodeConfig={this.props.updateGcodeConfig}

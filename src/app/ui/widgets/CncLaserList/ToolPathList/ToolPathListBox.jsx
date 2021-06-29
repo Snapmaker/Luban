@@ -8,10 +8,21 @@ import styles from '../styles.styl';
 import { actions as editorActions } from '../../../../flux/editor';
 // import modal from '../../../lib/modal';
 import i18n from '../../../../lib/i18n';
+import { toHump } from '../../../../../shared/lib/utils';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolPathConfigurations from '../../../views/ToolPathConfigurations/ToolPathConfigurations';
-import { PAGE_EDITOR, PAGE_PROCESS } from '../../../../constants';
-
+import {
+    CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION,
+    LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION,
+    HEAD_CNC,
+    HEAD_LASER,
+    PAGE_EDITOR,
+    PAGE_PROCESS
+} from '../../../../constants';
+import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParameters';
+import widgetStyles from '../../styles.styl';
+import { actions as cncActions } from '../../../../flux/cnc';
+import ToolSelection from '../../../views/ToolPathConfigurations/cnc/ToolSelection';
 
 const getIconStatus = (status) => {
     if (status === 'running') {
@@ -54,10 +65,7 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                             {toolPath.name}
                         </span>
                     </Anchor>
-                    <div className={classNames(
-                        styles.iconWrapper
-                    )}
-                    >
+                    <div className={classNames(styles.iconWrapper)}>
                         <i
                             className={classNames(
                                 styles.icon,
@@ -105,6 +113,62 @@ ToolpathItem.propTypes = {
     disabled: PropTypes.bool.isRequired
 };
 
+function getFastEditedSettingsKeys(toolPath) {
+    const { headType, type: toolPathType, gcodeConfig } = toolPath;
+
+    if (headType === HEAD_CNC) {
+        if (toolPathType === 'vector') {
+            return [
+                'pathType', 'targetDepth', 'work_speed', 'plunge_speed', 'step_down', 'step_over'
+            ];
+        }
+        if (toolPathType === 'image') {
+            return [
+                'targetDepth', 'work_speed', 'plunge_speed', 'step_down', 'step_over'
+            ];
+        }
+        if (toolPathType === 'sculpt') {
+            if (toolPath.materials.isRotate) {
+                return [
+                    'sliceMode', 'work_speed', 'plunge_speed', 'step_down', 'step_over'
+                ];
+            } else {
+                return [
+                    'targetDepth', 'work_speed', 'plunge_speed', 'step_down', 'step_over'
+                ];
+            }
+        }
+    }
+    if (headType === HEAD_LASER) {
+        if (toolPathType === 'vector') {
+            const multiPasses = gcodeConfig?.multiPasses;
+            if (multiPasses === 1) {
+                return [
+                    'fill_enabled', 'work_speed', 'multi_passes', 'fixed_power'
+                ];
+            } else {
+                return [
+                    'fill_enabled', 'work_speed', 'multi_passes', 'multi_pass_depth', 'fixed_power'
+                ];
+            }
+        }
+        if (toolPathType === 'image') {
+            const movementMode = gcodeConfig?.movementMode;
+            if (movementMode === 'greyscale-line') {
+                return [
+                    'movement_mode', 'density', 'work_speed', 'fixed_power'
+                ];
+            }
+            if (movementMode === 'greyscale-dot') {
+                return [
+                    'movement_mode', 'density', 'dwell_time', 'fixed_power'
+                ];
+            }
+        }
+    }
+    return [];
+}
+
 const ToolPathListBox = (props) => {
     const page = useSelector(state => state[props.headType]?.page);
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
@@ -112,6 +176,49 @@ const ToolPathListBox = (props) => {
     const selectedToolPathId = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathId, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const dispatch = useDispatch();
+    const selectedToolPath = toolPaths && toolPaths.find(v => v.id === selectedToolPathId);
+    const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
+    const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
+
+    // ToolPath fast edit init
+    const fastEditedSettings = {};
+    if (selectedToolPath) {
+        const cncGcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+        const { gcodeConfig } = selectedToolPath;
+        let allDefinition = {};
+        if (props.headType === HEAD_CNC) {
+            Object.keys(cncGcodeDefinition).forEach((key) => {
+                cncGcodeDefinition[key].default_value = gcodeConfig[key];
+                // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+                cncGcodeDefinition[key].isGcodeConfig = true;
+            });
+            allDefinition = {
+                ...cncGcodeDefinition,
+                ...activeToolListDefinition?.settings
+            };
+            if (activeToolListDefinition) {
+                allDefinition.jog_speed.default_value = gcodeConfig?.jogSpeed;
+                allDefinition.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                allDefinition.work_speed.default_value = gcodeConfig?.workSpeed;
+                allDefinition.step_down.default_value = gcodeConfig?.stepDown;
+                allDefinition.density.default_value = gcodeConfig?.density;
+            }
+        }
+        if (props.headType === HEAD_LASER) {
+            allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+            Object.keys(allDefinition).forEach((key) => {
+                allDefinition[key].default_value = gcodeConfig[toHump(key)];
+                allDefinition[key].isGcodeConfig = true;
+            });
+        }
+        const fastEditedSettingsKeys = getFastEditedSettingsKeys(selectedToolPath);
+        fastEditedSettingsKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                fastEditedSettings[key] = allDefinition[key];
+            }
+        });
+    }
+
     const [editingToolpath, setEditingToolpath] = useState(null);
     const [currentToolpath, setCurrentToolpath] = useState(null);
     const actions = {
@@ -139,6 +246,33 @@ const ToolPathListBox = (props) => {
                     actions.commitGenerateToolPath(toolPath.id);
                 }
             });
+        },
+        updateToolConfig: async (settingName, value) => {
+            if (props.headType === HEAD_CNC) {
+                await dispatch(cncActions.changeActiveToolListDefinition(activeToolListDefinition.definitionId, activeToolListDefinition.name));
+            }
+            const toolPath = selectedToolPath;
+            const option = {};
+            option[toHump(settingName)] = value;
+            const newToolPath = {
+                ...toolPath,
+                gcodeConfig: {
+                    ...toolPath.gcodeConfig,
+                    ...option
+                }
+            };
+            dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+        },
+        updateGcodeConfig: (option) => {
+            const toolPath = selectedToolPath;
+            const newToolPath = {
+                ...toolPath,
+                gcodeConfig: {
+                    ...toolPath.gcodeConfig,
+                    ...option
+                }
+            };
+            dispatch(editorActions.saveToolPath(props.headType, newToolPath));
         }
     };
     useEffect(() => {
@@ -262,6 +396,40 @@ const ToolPathListBox = (props) => {
                     toolpath={editingToolpath}
                     onClose={() => setEditingToolpath(null)}
                 />
+            )}
+
+            {selectedToolPathId && (
+                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+            )}
+            {selectedToolPath && selectedToolPath.headType === HEAD_CNC && (
+                <ToolSelection
+                    toolDefinition={activeToolListDefinition}
+                    toolDefinitions={toolDefinitions}
+                    isModifiedDefinition={() => {
+                        console.log('----1----', fastEditedSettings, activeToolListDefinition.settings);
+                        return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+                            console.log('--', key, setting);
+                            return fastEditedSettings && fastEditedSettings[key].default_value === setting.default_value;
+                        });
+                    }}
+                    setCurrentValueAsProfile={() => {}}
+                />
+            )}
+            {selectedToolPath && (
+                <ToolParameters
+                    settings={fastEditedSettings}
+                    updateToolConfig={actions.updateToolConfig}
+                    updateGcodeConfig={actions.updateGcodeConfig}
+                    toolPath={selectedToolPath}
+                />
+            )}
+            {selectedToolPath && (
+                <button
+                    type="button"
+                    onClick={() => setEditingToolpath(selectedToolPath)}
+                >
+                    {i18n._('More Configurations')}
+                </button>
             )}
         </div>
     );
