@@ -27,10 +27,18 @@ import styles from './styles.styl';
 
 const texture = new TextureLoader().load('../resources/images/wood.png');
 
-const getModelTransformation = (t, size) => {
+const getModelTransformation = (t, size, coordinateMode, coordinateSize) => {
+    const posDiff = {
+        x: 0,
+        y: 0
+    };
+    if (coordinateMode) {
+        posDiff.x = coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2;
+        posDiff.y = coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2;
+    }
     return {
-        positionX: t.x - size.x,
-        positionY: -t.y + size.y,
+        positionX: t.x - size.x - posDiff.x,
+        positionY: -t.y + size.y - posDiff.y,
         positionZ: 0,
         scaleX: t.scaleX ?? 1,
         scaleY: t.scaleY ?? 1,
@@ -145,7 +153,9 @@ class Cnc3DVisualizer extends PureComponent {
         machineSize: PropTypes.object,
         direction: PropTypes.string,
         placement: PropTypes.string,
-        updateStlVisualizer: PropTypes.func
+        updateStlVisualizer: PropTypes.func,
+        coordinateMode: PropTypes.object,
+        coordinateSize: PropTypes.object
     };
 
     environment = null;
@@ -164,13 +174,15 @@ class Cnc3DVisualizer extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.hasModel) {
-            const { mesh, materials, sourceScale, transformation, direction, placement, machineSize } = nextProps;
+            const { mesh, materials, sourceScale, transformation, direction, placement, machineSize, coordinateSize, coordinateMode } = nextProps;
             if (mesh !== this.props.mesh || materials.isRotate !== this.props.materials.isRotate
                 || materials.diameter !== this.props.materials.diameter
                 || materials.length !== this.props.materials.length
                 || transformation !== this.props.transformation || direction !== this.props.direction
+                || this.props.coordinateSize !== coordinateSize
+                || this.props.coordinateMode !== coordinateMode
             ) {
-                const t = getModelTransformation(transformation, machineSize);
+                const t = getModelTransformation(transformation, machineSize, coordinateMode, coordinateSize);
                 mesh.remove(...mesh.children);
                 mesh.material = new MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 0 });
 
@@ -186,7 +198,7 @@ class Cnc3DVisualizer extends PureComponent {
                     this.worldTransform = new Matrix4().makeRotationY(Math.PI);
                 } else {
                     const meshSize = getMeshSize(mesh);
-                    const platSize = { x: machineSize.x, y: meshSize.y, z: machineSize.z };
+                    const platSize = { x: coordinateSize?.x ?? machineSize.x, y: meshSize.y, z: coordinateSize?.y ?? machineSize.z };
 
                     set3AxisMeshState(mesh, t, platSize);
 
@@ -266,7 +278,7 @@ class Cnc3DVisualizer extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { modelGroup, materials, SVGActions } = state.cnc;
+    const { modelGroup, materials, SVGActions, coordinateMode, coordinateSize } = state.cnc;
     const { size } = state.machine;
     let hasModel = false, mesh = null, transformation = null, direction = null, placement = null, sourceScale = null;
     if (modelGroup.selectedModelArray.length === 1 && modelGroup.selectedModelArray[0].image3dObj) {
@@ -280,7 +292,16 @@ const mapStateToProps = (state) => {
     }
 
     return {
-        hasModel, mesh, materials, sourceScale, transformation, direction, placement, machineSize: size
+        hasModel,
+        mesh,
+        materials,
+        sourceScale,
+        transformation,
+        direction,
+        placement,
+        machineSize: size,
+        coordinateMode,
+        coordinateSize
     };
 };
 

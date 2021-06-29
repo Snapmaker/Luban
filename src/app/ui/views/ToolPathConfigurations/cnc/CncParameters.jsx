@@ -13,7 +13,7 @@ import { NumberInput as Input, TextInput } from '../../../components/Input';
 import widgetStyles from '../../../widgets/styles.styl';
 import ToolParameters from './ToolParameters';
 import TipTrigger from '../../../components/TipTrigger';
-import ToolSelection from './ToolSelection';
+import ToolSelector from './ToolSelector';
 
 class CncParameters extends PureComponent {
     static propTypes = {
@@ -308,7 +308,7 @@ class CncParameters extends PureComponent {
                 </div>
                 <span>{i18n._('Tool')}</span>
                 <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
-                <ToolSelection
+                <ToolSelector
                     toolDefinition={this.props.activeToolDefinition}
                     toolDefinitions={this.props.toolDefinitions}
                     isModifiedDefinition={this.props.isModifiedDefinition}

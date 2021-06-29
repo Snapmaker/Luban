@@ -22,7 +22,7 @@ import {
 import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParameters';
 import widgetStyles from '../../styles.styl';
 import { actions as cncActions } from '../../../../flux/cnc';
-import ToolSelection from '../../../views/ToolPathConfigurations/cnc/ToolSelection';
+import ToolSelector from '../../../views/ToolPathConfigurations/cnc/ToolSelector';
 
 const getIconStatus = (status) => {
     if (status === 'running') {
@@ -125,7 +125,7 @@ ToolpathItem.propTypes = {
     disabled: PropTypes.bool.isRequired
 };
 
-function getFastEditedSettingsKeys(toolPath) {
+function getFastEditSettingsKeys(toolPath) {
     const { headType, type: toolPathType, gcodeConfig } = toolPath;
 
     if (headType === HEAD_CNC) {
@@ -193,7 +193,7 @@ const ToolPathListBox = (props) => {
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
 
     // ToolPath fast edit init
-    const fastEditedSettings = {};
+    const fastEditSettings = {};
     if (selectedToolPath) {
         const cncGcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         const { gcodeConfig } = selectedToolPath;
@@ -223,10 +223,10 @@ const ToolPathListBox = (props) => {
                 allDefinition[key].isGcodeConfig = true;
             });
         }
-        const fastEditedSettingsKeys = getFastEditedSettingsKeys(selectedToolPath);
-        fastEditedSettingsKeys.forEach((key) => {
+        const fastEditSettingsKeys = getFastEditSettingsKeys(selectedToolPath);
+        fastEditSettingsKeys.forEach((key) => {
             if (allDefinition[key]) {
-                fastEditedSettings[key] = allDefinition[key];
+                fastEditSettings[key] = allDefinition[key];
             }
         });
     }
@@ -236,6 +236,9 @@ const ToolPathListBox = (props) => {
     const actions = {
         selectToolPathId: (id) => {
             dispatch(editorActions.selectToolPathId(props.headType, id));
+        },
+        selectToolPathById: (id) => {
+            dispatch(editorActions.selectToolPathById(props.headType, id));
         },
         onClickVisible: (id, visible, check) => {
             dispatch(editorActions.updateToolPath(props.headType, id, {
@@ -277,6 +280,16 @@ const ToolPathListBox = (props) => {
         },
         updateGcodeConfig: (option) => {
             const toolPath = selectedToolPath;
+            if (props.headType === HEAD_LASER) {
+                if (!option.fixedPower) {
+                    if (option.movementMode === 'greyscale-line') {
+                        option.fixedPower = 50;
+                    }
+                    if (option.movementMode === 'greyscale-dot') {
+                        option.fixedPower = 30;
+                    }
+                }
+            }
             const newToolPath = {
                 ...toolPath,
                 gcodeConfig: {
@@ -413,15 +426,13 @@ const ToolPathListBox = (props) => {
             {selectedToolPathId && (
                 <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
             )}
-            {selectedToolPath && selectedToolPath.headType === HEAD_CNC && (
-                <ToolSelection
+            {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
+                <ToolSelector
                     toolDefinition={activeToolListDefinition}
                     toolDefinitions={toolDefinitions}
                     isModifiedDefinition={() => {
-                        console.log('----1----', fastEditedSettings, activeToolListDefinition.settings);
                         return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
-                            console.log('--', key, setting);
-                            return fastEditedSettings && fastEditedSettings[key].default_value === setting.default_value;
+                            return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;
                         });
                     }}
                     setCurrentValueAsProfile={() => {}}
@@ -429,7 +440,7 @@ const ToolPathListBox = (props) => {
             )}
             {selectedToolPath && (
                 <ToolParameters
-                    settings={fastEditedSettings}
+                    settings={fastEditSettings}
                     updateToolConfig={actions.updateToolConfig}
                     updateGcodeConfig={actions.updateGcodeConfig}
                     toolPath={selectedToolPath}

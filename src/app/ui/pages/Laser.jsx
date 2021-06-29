@@ -135,6 +135,15 @@ function Laser() {
         dispatch(laserActions.init());
     }, []);
 
+    useEffect(() => {
+        setJobTypeState({
+            coordinateMode,
+            coordinateSize,
+            materials
+        });
+    }, [coordinateMode, coordinateSize, materials]);
+
+
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);

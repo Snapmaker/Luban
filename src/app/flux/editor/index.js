@@ -615,8 +615,7 @@ export const actions = {
 
 
     duplicateSelectedModel: (headType) => (dispatch, getState) => {
-        const { page, modelGroup } = getState()[headType];
-        if (page === PAGE_PROCESS) return;
+        const { modelGroup } = getState()[headType];
 
         const { originalName, uploadName, config, sourceType, sourceWidth, sourceHeight, mode } = modelGroup.getSelectedModel();
         const transformation = { ...modelGroup.getSelectedModel().transformation };
@@ -1091,10 +1090,7 @@ export const actions = {
      * Move elements on key down (⬇).
      */
     moveElementsOnKeyDown: (headType, elements, { dx, dy }) => (dispatch, getState) => {
-        const { page, SVGActions } = getState()[headType];
-        if (page === PAGE_PROCESS) {
-            return;
-        }
+        const { SVGActions } = getState()[headType];
         SVGActions.moveElementsOnArrowKeyDown(elements, { dx, dy });
     },
 
