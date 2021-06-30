@@ -11,6 +11,7 @@ class NumberInput extends PureComponent {
         size: PropTypes.string,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.number,
+        disabled: PropTypes.bool,
         min: PropTypes.number,
         max: PropTypes.number,
         onChange: PropTypes.func
@@ -119,12 +120,13 @@ class NumberInput extends PureComponent {
 
     render() {
         const { className = '',
-            size = 'middle', ...rest } = this.props;
+            size = 'middle', disabled = false, ...rest } = this.props;
         return (
             <Input
                 ref={this.ref}
                 {...rest}
                 type="number"
+                disabled={disabled}
                 placeholder="Input a number"
                 value={this.state.displayValue}
                 className={classNames(styles.input, className, styles[size])}

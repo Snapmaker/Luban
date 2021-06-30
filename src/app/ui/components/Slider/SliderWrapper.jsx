@@ -14,14 +14,18 @@ class SliderWrapper extends PureComponent {
         vertical: PropTypes.bool,
         handleStyle: PropTypes.string,
         size: PropTypes.string,
+        marks: PropTypes.object,
+        disabled: PropTypes.bool,
         value: PropTypes.number.isRequired
     };
 
     render() {
-        const { className = '', vertical = false, size = 'small', value, ...rest } = this.props;
+        const { className = '', disabled = false, vertical = false, marks, size = 'small', value, ...rest } = this.props;
         return (
             <Slider
                 {...rest}
+                disabled={disabled}
+                marks={marks}
                 vertical={vertical}
                 className={classNames(styles.slider, className, styles[size])}
                 value={value}

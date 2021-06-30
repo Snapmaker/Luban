@@ -142,7 +142,7 @@ class VisualizerPreviewControl extends PureComponent {
                         min={0}
                         max={layerCount}
                         step={1}
-                        value={layerCountDisplayed === layerCount ? layerCountDisplayed * 1.14 : layerCountDisplayed}
+                        value={layerCountDisplayed}
                         onChange={(value) => {
                             actions.onChangeShowLayer(value);
                         }}

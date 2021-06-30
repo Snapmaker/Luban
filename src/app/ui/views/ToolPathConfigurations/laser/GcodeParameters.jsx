@@ -95,6 +95,11 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                         className="sm-parameter-row__slider"
                                         value={fillDensity}
                                         min={0}
+                                        marks={
+                                            {
+                                                10: ''
+                                            }
+                                        }
                                         max={20}
                                         onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                     />

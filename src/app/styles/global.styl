@@ -12,5 +12,305 @@
 // display & position & width & height
 @import "global-layout";
 
+<<<<<<< HEAD
 // border & shadow
 @import "global-border";
+=======
+// todo: refactor position
+.display-none {
+    display: none;
+}
+.display-block {
+    display: block;
+}
+.position-re {
+    position: relative;
+}
+.position-ab {
+    position: absolute;
+}
+
+.radius-8 {
+    border-radius: $px-grade-three;
+}
+.box-shadow-default {
+    box-shadow: 0px 2px 40px -16px rgba(134, 134, 139, 0.15), 0px 0px 8px -3px rgba(165, 165, 165, 0.9);
+}
+.width-56 {
+    width: $px-grade-night;
+}
+.height-56 {
+    height: $px-grade-night;
+}
+.width-100 {
+    width: 100%;
+}
+.height-100 {
+    height: 100%;
+}
+
+/* setting guide style*/
+.heading-1 {
+  font-size: $font-size-large;
+  font-weight: $font-weight-middle;
+  color: $black-2;
+}
+
+.heading-2 {
+  font-size: $font-size-big;
+  font-weight: $font-weight-blod;
+  color: $black-2;
+  &:hover {
+    font-weight: $font-weight-normal;
+  }
+}
+
+.heading-2-unselect {
+  font-size: $font-size-big;
+  font-weight $font-weight-normal;
+  color: $black-4;
+}
+
+.heading-3-bold {
+  font-size: $font-size-middle;
+  font-weight: $font-weight-bold;
+  color: $black-3;
+}
+
+.heading-3 {
+  font-size: $font-size-middle;
+  font-weight: $font-weight-normal;
+  color: $black-3;
+  &:hover {
+    color: $blue-2;
+  }
+}
+
+button.btn-first-second {
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  color: $black-2;
+  &:hover {
+    color: $black-3;
+  }
+  &:active {
+    color: $black-1;
+  }
+  &:[disabled] {
+    color: $black-5;
+  }
+}
+
+button.btn-third {
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  color: $black-3;
+  &:hover {
+    color: $black-4;
+  }
+  &:active {
+    color: $black-2;
+  }
+  &:[disabled] {
+    color: $black-5;
+  }
+}
+
+.white-font {
+  color: $white;
+}
+
+a.link {
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  color: $blue-2;
+  &:hover {
+    color: $blue-3;
+  }
+  &:active {
+    color: $blue-1;
+  }
+}
+
+// margin
+.margin-horizontal-2 {
+  margin-left: $px-grade-one;
+  margin-right: $px-grade-one;
+}
+
+.margin-vertical-2 {
+  margin-top: $px-grade-one;
+  margin-bottom: $px-grade-one;
+}
+
+.margin-horizontal-4 {
+  margin-left: $px-grade-two;
+  margin-right: $px-grade-two;
+}
+
+.margin-vertical-4 {
+  margin-bottom: $px-grade-two;
+  margin-top: $px-grade-two;
+}
+
+.margin-horizontal-8 {
+  margin-left: $px-grade-three;
+  margin-right: $px-grade-three;
+}
+
+.margin-vertical-8 {
+  margin-top: $px-grade-three;
+  margin-bottom: $px-grade-three;
+}
+
+.margin-horizontal-16 {
+  margin-left: $px-grade-four;
+  margin-right: $px-grade-four;
+}
+
+.margin-vertical-16 {
+  margin-top: $px-grade-four;
+  margin-bottom: $px-grade-four;
+}
+
+.margin-horizontal-24 {
+  margin-right: $px-grade-five;
+  margin-left: $px-grade-five;
+}
+
+.margin-vertical-24 {
+  margin-top: $px-grade-five;
+  margin-bottom: $px-grade-five;
+}
+
+.margin-horizontal-32 {
+  margin-right: $px-grade-six;
+  margin-left: $px-grade-six;
+}
+
+.margin-vertical-32 {
+  margin-top: $px-grade-six;
+  margin-bottom: $px-grade-six;
+}
+
+.margin-horizontal-40 {
+  margin-right: $px-grade-seven;
+  margin-left: $px-grade-seven;
+}
+
+.margin-vertical-40 {
+  margin-top: $px-grade-seven;
+  margin-bottom: $px-grade-seven;
+}
+
+.margin-horizontal-48 {
+  margin-right: $px-grade-eight;
+  margin-left: $px-grade-eight;
+}
+
+.margin-vertical-48 {
+  margin-top: $px-grade-eight;
+  margin-bottom: $px-grade-eight;
+}
+
+.margin-horizontal-56 {
+  margin-right: $px-grade-night;
+  margin-left: $px-grade-night;
+}
+
+.margin-vertical-56 {
+  margin-top: $px-grade-night;
+  margin-bottom: $px-grade-night;
+}
+
+// padding
+.padding-horizontal-2 {
+  padding-left: $px-grade-one;
+  padding-right: $px-grade-one;
+}
+
+.padding-vertical-2 {
+  padding-top: $px-grade-one;
+  padding-bottom: $px-grade-one;
+}
+
+.padding-horizontal-4 {
+  padding-left: $px-grade-two;
+  padding-right: $px-grade-two;
+}
+
+.padding-vertical-4 {
+  padding-bottom: $px-grade-two;
+  padding-top: $px-grade-two;
+}
+
+.padding-horizontal-8 {
+  padding-left: $px-grade-three;
+  padding-right: $px-grade-three;
+}
+
+.padding-vertical-8 {
+  padding-top: $px-grade-three;
+  padding-bottom: $px-grade-three;
+}
+
+.padding-horizontal-16 {
+  padding-left: $px-grade-four;
+  padding-right: $px-grade-four;
+}
+
+.padding-vertical-16 {
+  padding-top: $px-grade-four;
+  padding-bottom: $px-grade-four;
+}
+
+.padding-horizontal-24 {
+  padding-right: $px-grade-five;
+  padding-left: $px-grade-five;
+}
+
+.padding-vertical-24 {
+  padding-top: $px-grade-five;
+  padding-bottom: $px-grade-five;
+}
+
+.padding-horizontal-32 {
+  padding-right: $px-grade-six;
+  padding-left: $px-grade-six;
+}
+
+.padding-vertical-32 {
+  padding-top: $px-grade-six;
+  padding-bottom: $px-grade-six;
+}
+
+.padding-horizontal-40 {
+  padding-right: $px-grade-seven;
+  padding-left: $px-grade-seven;
+}
+
+.padding-vertical-40 {
+  padding-top: $px-grade-seven;
+  padding-bottom: $px-grade-seven;
+}
+
+.padding-horizontal-48 {
+  padding-right: $px-grade-eight;
+  padding-left: $px-grade-eight;
+}
+
+.padding-vertical-48 {
+  padding-top: $px-grade-eight;
+  padding-bottom: $px-grade-eight;
+}
+
+.padding-horizontal-56 {
+  padding-right: $px-grade-night;
+  padding-left: $px-grade-night;
+}
+
+.padding-vertical-56 {
+  padding-top: $px-grade-night;
+  padding-bottom: $px-grade-night;
+}
+>>>>>>> Fix: Change style for component
