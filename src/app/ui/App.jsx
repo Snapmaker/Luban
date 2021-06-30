@@ -13,14 +13,14 @@ import { actions as cncActions } from '../flux/cnc';
 import { actions as printingActions } from '../flux/printing';
 import { actions as workspaceActions } from '../flux/workspace';
 import { actions as textActions } from '../flux/text';
-import HomePage from './Pages/HomePage';
-import Workspace from './Pages/Workspace';
-import Printing from './Pages/Printing';
-import Cnc from './Pages/Cnc';
-import Laser from './Pages/Laser';
-import Settings from './Pages/Settings';
+import HomePage from './pages/HomePage';
+import Workspace from './pages/Workspace';
+import Printing from './pages/Printing';
+import Cnc from './pages/Cnc';
+import Laser from './pages/Laser';
+import Settings from './pages/Settings';
 import UniApi from '../lib/uni-api';
-import AppLayout from './Layouts/AppLayout';
+import AppLayout from './layouts/AppLayout';
 
 class App extends PureComponent {
     static propTypes = {

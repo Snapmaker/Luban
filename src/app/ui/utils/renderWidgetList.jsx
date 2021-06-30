@@ -1,6 +1,6 @@
 import React from 'react';
 import WidgetList from '../views/widget-list';
-import Widget from '../Layouts/Widget';
+import Widget from '../layouts/Widget';
 
 const getWidgetByName = (name, allWidgets) => {
     const foundWidget = allWidgets[name];

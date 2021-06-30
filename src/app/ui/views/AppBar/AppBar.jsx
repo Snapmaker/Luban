@@ -6,9 +6,9 @@ import styles from './appbar.styl';
 import UniApi from '../../../lib/uni-api';
 import i18n from '../../../lib/i18n';
 import { renderModal } from '../../utils';
-import FirmwareTool from '../../Pages/Settings/FirmwareTool';
-import General from '../../Pages/Settings/General';
-import SettingsMenu from '../../Pages/Settings';
+import FirmwareTool from '../../pages/Settings/FirmwareTool';
+import General from '../../pages/Settings/General';
+import SettingsMenu from '../../pages/Settings';
 
 class AppBar extends PureComponent {
     fileInputRef = React.createRef();

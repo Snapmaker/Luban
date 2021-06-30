@@ -1,37 +1,27 @@
 import React, { useState, useEffect } from 'react';
-
 import { shallowEqual, useSelector, useDispatch } from 'react-redux';
+import path from 'path';
 // import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
+// import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
-
-import path from 'path';
-import { Trans } from 'react-i18next';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
+import LaserVisualizer from '../widgets/LaserVisualizer';
+// import Widget from '../widgets/Widget';
+
+import { renderPopup, renderWidgetList, useRenderRecoveryModal, renderModal } from '../utils';
 import Dropzone from '../components/Dropzone';
-import Space from '../components/Space';
-import { renderModal, renderPopup, renderWidgetList, useRenderRecoveryModal } from '../utils';
-
-import CNCVisualizer from '../widgets/CNCVisualizer';
-import ProjectLayout from '../Layouts/ProjectLayout';
-import MainToolBar from '../Layouts/MainToolBar';
-
-import { actions as projectActions } from '../../flux/project';
-import { actions as cncActions } from '../../flux/cnc';
 import { actions as editorActions } from '../../flux/editor';
+import { actions as laserActions } from '../../flux/laser';
+import { actions as projectActions } from '../../flux/project';
+import ProjectLayout from '../layouts/ProjectLayout';
+import MainToolBar from '../layouts/MainToolBar';
+// import WidgetContainer from '../Layouts/Widget';
 
-import { actions as machineActions } from '../../flux/machine';
+import { HEAD_LASER, PAGE_EDITOR, PAGE_PROCESS } from '../../constants';
 
-import {
-    PROCESS_MODE_GREYSCALE,
-    PROCESS_MODE_MESH,
-    PROCESS_MODE_VECTOR,
-    PAGE_EDITOR,
-    PAGE_PROCESS,
-    HEAD_CNC
-} from '../../constants';
 
 import ControlWidget from '../widgets/Control';
 import ConnectionWidget from '../widgets/Connection';
@@ -53,10 +43,11 @@ import PrintingConfigurationsWidget from '../widgets/PrintingConfigurations';
 import PrintingOutputWidget from '../widgets/PrintingOutput';
 import WifiTransport from '../widgets/WifiTransport';
 import EnclosureWidget from '../widgets/Enclosure';
+import CncLaserObjectList from '../widgets/CncLaserList';
 import JobType from '../widgets/JobType';
-import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import HomePage from './HomePage';
+import ToolPathListBox from '../widgets/CncLaserList/ToolPathList';
 
 const allWidgets = {
     'control': ControlWidget,
@@ -81,66 +72,19 @@ const allWidgets = {
     'laser-set-background': LaserSetBackground,
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
-    // 'cnc-output': CncLaserOutputWidget,
+    'cnc-output': CncLaserOutputWidget,
+    'cnc-laser-object-list': CncLaserObjectList,
     'toolpath-list': ToolPathListBox
 };
 
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
+const pageHeadType = HEAD_LASER;
 
-const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl';
-const pageHeadType = HEAD_CNC;
-function useRenderWarning() {
-    const [showWarning, setShowWarning] = useState(false);
-    const dispatch = useDispatch();
-
-    const onClose = () => setShowWarning(false);
-
-    function onChangeShouldShowWarning(value) {
-        dispatch(machineActions.setShouldShowCncWarning(value));
-    }
-
-    return showWarning && renderModal({
-        onClose,
-        renderBody: () => (
-            <div>
-                <Trans i18nKey="key_CNC_loading_warning">
-                            This is an alpha feature that helps you get started with CNC Carving. Make sure you
-                    <Space width={4} />
-                    <a
-                        style={{ color: '#28a7e1' }}
-                        href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                                Read This First - Safety Information
-                    </a>
-                    <Space width={4} />
-                            before proceeding.
-                </Trans>
-            </div>
-        ),
-        renderFooter: () => (
-            <div style={{ display: 'inline-block', marginRight: '8px' }}>
-                <button type="button" className="sm-btn-large sm-btn-default" onClick={onClose}>
-                    {i18n._('Cancel')}
-                </button>
-                <input
-                    id="footer-input"
-                    type="checkbox"
-                    defaultChecked={false}
-                    onChange={onChangeShouldShowWarning}
-                />
-                {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                <label id="footer-input-label" htmlFor="footer-input" style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again')}</label>
-
-            </div>
-        )
-    });
-}
 function useRenderRemoveModelsWarning() {
-    const removingModelsWarning = useSelector(state => state?.cnc?.removingModelsWarning);
-    const emptyToolPaths = useSelector(state => state?.cnc?.emptyToolPaths);
+    const removingModelsWarning = useSelector(state => state?.laser?.removingModelsWarning);
+    const emptyToolPaths = useSelector(state => state?.laser?.emptyToolPaths);
     const dispatch = useDispatch();
-    const onClose = () => dispatch(editorActions.updateState(HEAD_CNC, {
+    const onClose = () => dispatch(editorActions.updateState(HEAD_LASER, {
         removingModelsWarning: false
     }));
     return removingModelsWarning && renderModal({
@@ -158,8 +102,8 @@ function useRenderRemoveModelsWarning() {
                 name: i18n._('Yes'),
                 isPrimary: true,
                 onClick: () => {
-                    dispatch(editorActions.removeSelectedModel(HEAD_CNC));
-                    dispatch(editorActions.removeEmptyToolPaths(HEAD_CNC));
+                    dispatch(editorActions.removeSelectedModel(HEAD_LASER));
+                    dispatch(editorActions.removeEmptyToolPaths(HEAD_LASER));
                     onClose();
                 }
             },
@@ -170,24 +114,25 @@ function useRenderRemoveModelsWarning() {
         ]
     });
 }
-function Cnc() {
+function Laser() {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
-    const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
-    const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
+    const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
+    const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
+    const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const [jobTypeState, setJobTypeState] = useState({
         coordinateMode,
         coordinateSize,
         materials
     });
+    const [showCameraCapture, setShowCameraCapture] = useState(false);
     const dispatch = useDispatch();
-    const page = useSelector(state => state?.cnc.page);
+    const page = useSelector(state => state?.laser?.page);
 
     useEffect(() => {
-        dispatch(cncActions.init());
+        dispatch(laserActions.init());
     }, []);
 
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
@@ -204,7 +149,7 @@ function Cnc() {
             return (
                 <JobType
                     isWidget={false}
-                    headType={HEAD_CNC}
+                    headType={HEAD_LASER}
                     jobTypeState={jobTypeState}
                     setJobTypeState={setJobTypeState}
                 />
@@ -215,9 +160,9 @@ function Cnc() {
                 name: i18n._('Save'),
                 isPrimary: true,
                 onClick: () => {
-                    dispatch(editorActions.changeCoordinateMode(HEAD_CNC,
+                    dispatch(editorActions.changeCoordinateMode(HEAD_LASER,
                         jobTypeState.coordinateMode, jobTypeState.coordinateSize));
-                    dispatch(editorActions.updateMaterials(HEAD_CNC, jobTypeState.materials));
+                    dispatch(editorActions.updateMaterials(HEAD_LASER, jobTypeState.materials));
                     setShowJobType(false);
                 }
             },
@@ -242,7 +187,22 @@ function Cnc() {
             setShowJobType(false);
         }
     });
-    const warningModal = useRenderWarning();
+    const setBackgroundModal = showCameraCapture && renderModal({
+        title: i18n._('Set Background'),
+        renderBody() {
+            return (
+                <LaserSetBackground />
+            );
+        },
+        actions: [
+            {
+                name: i18n._('Cancel'),
+
+                onclick: () => { setShowCameraCapture(false); }
+            }
+        ],
+        onClose: () => { setShowCameraCapture(false); }
+    });
     const warningRemovingModels = useRenderRemoveModelsWarning();
     const listActions = {
         onDragStart: () => {
@@ -252,21 +212,13 @@ function Cnc() {
             setIsDraggingWidget(false);
         }
     };
-
     const actions = {
         onDropAccepted: (file) => {
-            const extname = path.extname(file.name).toLowerCase();
-            let uploadMode;
-            if (extname.toLowerCase() === '.svg') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.dxf') {
-                uploadMode = PROCESS_MODE_VECTOR;
-            } else if (extname.toLowerCase() === '.stl') {
-                uploadMode = PROCESS_MODE_MESH;
-            } else {
-                uploadMode = PROCESS_MODE_GREYSCALE;
+            let mode = 'bw';
+            if (path.extname(file.name).toLowerCase() === '.svg' || path.extname(file.name).toLowerCase() === '.dxf') {
+                mode = 'vector';
             }
-            dispatch(editorActions.uploadImage('cnc', file, uploadMode, () => {
+            dispatch(editorActions.uploadImage('laser', file, mode, () => {
                 modal({
                     title: i18n._('Parse Error'),
                     body: i18n._('Failed to parse image file {{filename}}.', { filename: file.name })
@@ -290,7 +242,6 @@ function Cnc() {
                 name: 'Copy',
                 action: () => {
                     setShowHomePage(true);
-                    window.scrollTo(0, 0);
                 }
             },
             {
@@ -301,7 +252,7 @@ function Cnc() {
             //     type: 'button',
             //     name: 'Copy',
             //     inputInfo: {
-            //         accept: '.snapcnc',
+            //         accept: '.snaplzr',
             //         fileInput: fileInput,
             //         onChange: async (e) => {
             //             const file = e.target.files[0];
@@ -331,13 +282,14 @@ function Cnc() {
             //     }
             // },
             {
-                title: 'Save',
+                title: i18n._('Save'),
                 type: 'button',
+                name: 'Copy',
                 action: () => {
-                    dispatch(projectActions.save(HEAD_CNC));
+                    dispatch(projectActions.save(HEAD_LASER));
                 }
             },
-            // Todo: add after completed
+            // Todo, add after completed
             // {
             //     title: 'Undo',
             //     type: 'button'
@@ -355,27 +307,38 @@ function Cnc() {
                 }
             }
         ];
+
         const centerItems = [
             {
                 name: 'Edit',
-                action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_CNC)),
+                action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER)),
                 title: i18n._('Front')
             },
             {
                 name: 'Edit',
-                action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_CNC)),
+                action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER)),
                 title: i18n._('Bottom')
+            }
+        ];
+        const rightItems = [
+            {
+                name: 'Edit',
+                action: () => {
+                    setShowCameraCapture(true);
+                },
+                title: i18n._('Camera')
             }
         ];
         return (
             <MainToolBar
                 leftItems={leftItems}
                 centerItems={centerItems}
+                rightItems={rightItems}
             />
         );
     }
     function renderRightView() {
-        const widgetProps = { headType: 'cnc' };
+        const widgetProps = { headType: 'laser' };
         return (
             <div>
                 <div
@@ -388,10 +351,7 @@ function Cnc() {
                     className={classNames({ 'selected': page === PAGE_EDITOR })}
                 >
                     <Anchor
-                        style={{
-
-                        }}
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_EDITOR))}
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_EDITOR))}
                     >
                         {i18n._('Edit')}
                     </Anchor>
@@ -406,20 +366,19 @@ function Cnc() {
                     className={classNames({ 'selected': page === PAGE_PROCESS })}
                 >
                     <Anchor
-                        onClick={() => dispatch(editorActions.switchToPage(HEAD_CNC, PAGE_PROCESS))}
+                        onClick={() => dispatch(editorActions.switchToPage(HEAD_LASER, PAGE_PROCESS))}
                     >
                         {i18n._('Process')}
                     </Anchor>
                 </div>
-                {renderWidgetList('cnc', 'default', widgets, allWidgets, listActions, widgetProps)}
+                {renderWidgetList('laser', 'default', widgets, allWidgets, listActions, widgetProps)}
                 <CncLaserOutputWidget
-                    headType={HEAD_CNC}
+                    headType={HEAD_LASER}
                 />
             </div>
+
         );
     }
-
-
     return (
         <div>
             <ProjectLayout
@@ -433,19 +392,21 @@ function Cnc() {
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >
-                    <CNCVisualizer />
+                    <LaserVisualizer
+                        widgetId="laserVisualizer"
+                    />
                 </Dropzone>
             </ProjectLayout>
             {recoveryModal}
-            {warningModal}
             {warningRemovingModels}
             {jobTypeModal}
+            {setBackgroundModal}
             {renderHomepage()}
         </div>
     );
 }
-Cnc.propTypes = {
+Laser.propTypes = {
     // history: PropTypes.object
     // location: PropTypes.object
 };
-export default withRouter(Cnc);
+export default withRouter(Laser);
