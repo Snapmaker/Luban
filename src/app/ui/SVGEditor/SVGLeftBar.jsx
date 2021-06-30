@@ -46,24 +46,25 @@ class SVGLeftBar extends PureComponent {
     render() {
         const { mode, editable } = this.props;
         const { showExtShape, extShape } = this.state;
-
+        // classNames('position-ab', 'height-100')
         return (
             <React.Fragment>
                 <div className={classNames(styles['svg-left-bar'])}>
-                    <div className={styles['center-tool']}>
+                    <div className={classNames('position-ab', 'height-100', styles['center-tool'])}>
                         <input
                             ref={this.props.fileInput}
                             type="file"
                             accept={this.props.allowedFiles}
-                            style={{ display: 'none' }}
+                            className="display-none"
                             multiple={false}
                             onChange={this.props.onChangeFile}
                             disabled={!editable}
                         />
                         <Anchor
                             componentClass="button"
-                            className={classNames(styles['btn-center'],
-                                { [styles.selected]: (mode === 'add') })}
+                            className={
+                                classNames('width-56', 'height-56',
+                                    { [styles.selected]: (mode === 'add') })}
                             onClick={() => this.props.onClickToUpload()}
                             disabled={!editable}
                         >

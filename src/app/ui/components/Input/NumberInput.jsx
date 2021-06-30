@@ -119,7 +119,7 @@ class NumberInput extends PureComponent {
 
     render() {
         const { className = '',
-            size = 'super-small', ...rest } = this.props;
+            size = 'middle', ...rest } = this.props;
         return (
             <Input
                 ref={this.ref}

@@ -151,7 +151,7 @@ class ChangedReactSelect extends PureComponent {
             options,
             size = 'middle',
             isGroup,
-            disabled
+            disabled = true
         } = this.props;
         let defaultValue = {};
         if (isGroup) {
@@ -183,7 +183,6 @@ class ChangedReactSelect extends PureComponent {
                     <TreeSelect
                         className={styles[size]}
                         value={defaultValue}
-                        showSearch
                         onChange={this.actions.handleTreeChange}
                         disabled={disabled}
                     >
@@ -216,7 +215,6 @@ class ChangedReactSelect extends PureComponent {
                     <Select
                         className={styles[size]}
                         value={defaultValue?.value}
-                        showSearch
                         disabled={disabled}
                         onChange={this.actions.handleChange}
                     >

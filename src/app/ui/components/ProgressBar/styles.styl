@@ -12,11 +12,17 @@
         left: 8px;
         bottom: 0;
     }
-    :global(.ant-progress-inner) {
-        top: -8px;
-    }
-    :global(.ant-progress-outer) {
-        margin-right: 0!important;
-        padding-right: 0!important;
+    :global(.ant-progress) {
+        color: #D5D6D9;
+        :global(.ant-progress-inner) {
+            top: -8px;
+        }
+        :global(.ant-progress-outer) {
+            margin-right: 0!important;
+            padding-right: 0!important;
+        }
+        :global(.ant-progress-status-success) :global(.ant-progress-bg){
+            background-color: #52c41a;
+        }
     }
 }

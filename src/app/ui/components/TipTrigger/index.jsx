@@ -17,10 +17,15 @@ const TipTrigger = (props) => {
                         backgroundColor: '#FFFFCD',
                         padding: '2px 10px',
                         color: '#272829',
+                        border: '1px solid #D5D6D9',
                         borderRadius: 3
                     }}
                 >
-                    <Popover.Title style={{ backgroundColor: '#FFFFCD' }}>
+                    <Popover.Title style={{
+                        backgroundColor: '#F5F5F7',
+                        borderRadius: '7px 7px 0px 0px'
+                    }}
+                    >
                         {title}
                     </Popover.Title>
                     <Popover.Content style={{ backgroundColor: '#FFFFCD' }}>{content}</Popover.Content>

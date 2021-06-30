@@ -12,7 +12,7 @@ class TextInput extends PureComponent {
     };
 
     render() {
-        const { className = '', size = 'small', ...rest } = this.props;
+        const { className = '', size = 'middle', ...rest } = this.props;
 
         return (
             <Input

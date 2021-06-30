@@ -479,7 +479,6 @@ const mapDispatchToProps = (dispatch) => {
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
-        // openProject: (file, history) => dispatch(projectActions.open(file, history)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
         initMenuLanguage: () => dispatch(menuActions.initMenuLanguage()),
