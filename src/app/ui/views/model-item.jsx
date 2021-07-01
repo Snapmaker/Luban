@@ -5,7 +5,7 @@ import path from 'path';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
-import { limitStringLength } from '../../lib/normalize-range';
+// import { limitStringLength } from '../../lib/normalize-range';
 
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
     if (!model) {
@@ -29,7 +29,9 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
             return styles.iconShape;
         })();
     }
-    const displayModelName = limitStringLength(modelName, 36);
+    const prefixName = modelName.slice(0, modelName.length - 7);
+    const suffixName = modelName.slice(-7);
+    // const displayModelName = limitStringLength(modelName, 36);
 
     return (
         <TipTrigger
@@ -49,6 +51,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                             styles.name,
                             styles.bt
                         )}
+                        style={{ width: '270px' }}
                         onClick={(event) => onSelect(model, event.shiftKey)}
                     >
                         <span
@@ -57,7 +60,13 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                                 modelIcon
                             )}
                         />
-                        {displayModelName}
+                        {/* {displayModelName} */}
+                        <span className={classNames(styles.prefixName)}>
+                            {prefixName}
+                        </span>
+                        <span className={classNames(styles.suffixName)}>
+                            {suffixName}
+                        </span>
                     </Anchor>
                     <button
                         type="button"
