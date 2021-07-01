@@ -35,6 +35,7 @@ function saveRecentFile(file) {
     if (arr.length > 10) {
         arr.splice(0, arr.length - 10);
     }
+    console.log('saveRecentFile arr', index, file, arr);
     fs.writeFileSync(recentFileName, JSON.stringify(arr), 'utf-8');
 }
 
@@ -71,47 +72,6 @@ export function cleanAllRecentFiles() {
     const recentFileName = `${DataStorage.userDataDir}/recent-opened-files.json`;
     fs.writeFileSync(recentFileName, JSON.stringify([]), 'utf-8');
 }
-
-// function onClickPreferences(browserWindow) {
-//     const window = browserWindow;
-
-//     const url = window.webContents.getURL();
-//     const urlInstance = new URL(url);
-
-//     window.webContents.loadURL(`${urlInstance.origin}/#/settings`);
-// }
-
-// async function openFile(browserWindow, file) {
-//     if (!file) {
-//         const openDialogReturnValue = await dialog.showOpenDialog(
-//             browserWindow,
-//             {
-//                 title: 'Snapmaker Luban',
-//                 filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
-//             }
-//         );
-//         const filePaths = openDialogReturnValue.filePaths;
-//         if (!filePaths) return;
-//
-//         browserWindow.webContents.focus();
-//         file = { path: filePaths[0], name: path.basename(filePaths[0]) };
-//         addRecentFile(file);
-//     }
-//     const arr = getSavedRecentFile();
-//     browserWindow.webContents.send('open-file', file, arr);
-// }
-
-// function saveAsFile(browserWindow) {
-//     browserWindow.webContents.send('save-as-file');
-// }
-
-// function closeFile(browserWindow) {
-//     browserWindow.webContents.send('close-file');
-// }
-
-// function save(browserWindow) {
-//     browserWindow.webContents.send('save');
-// }
 
 function getMenuTemplate(options) {
     console.log('options', options);

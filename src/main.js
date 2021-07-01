@@ -230,6 +230,7 @@ const createWindow = async () => {
     });
 
     ipcMain.on('add-recent-file', (event, file) => {
+        console.log('main add-recent-file', event, file);
         addRecentFile(file);
     });
 
