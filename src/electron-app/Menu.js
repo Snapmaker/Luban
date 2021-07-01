@@ -1,6 +1,6 @@
-import path from 'path';
 import fs from 'fs';
-import { Menu, dialog, MenuItem } from 'electron';
+import { Menu } from 'electron';
+// import { Menu, dialog, MenuItem } from 'electron';
 // import { URL } from 'url';
 import DataStorage from '../DataStorage';
 
@@ -81,25 +81,25 @@ export function cleanAllRecentFiles() {
 //     window.webContents.loadURL(`${urlInstance.origin}/#/settings`);
 // }
 
-async function openFile(browserWindow, file) {
-    if (!file) {
-        const openDialogReturnValue = await dialog.showOpenDialog(
-            browserWindow,
-            {
-                title: 'Snapmaker Luban',
-                filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
-            }
-        );
-        const filePaths = openDialogReturnValue.filePaths;
-        if (!filePaths) return;
-
-        browserWindow.webContents.focus();
-        file = { path: filePaths[0], name: path.basename(filePaths[0]) };
-        addRecentFile(file);
-    }
-    const arr = getSavedRecentFile();
-    browserWindow.webContents.send('open-file', file, arr);
-}
+// async function openFile(browserWindow, file) {
+//     if (!file) {
+//         const openDialogReturnValue = await dialog.showOpenDialog(
+//             browserWindow,
+//             {
+//                 title: 'Snapmaker Luban',
+//                 filters: [{ name: 'files', extensions: ['snap3dp', 'snaplzr', 'snapcnc', 'gcode', 'cnc', 'nc'] }]
+//             }
+//         );
+//         const filePaths = openDialogReturnValue.filePaths;
+//         if (!filePaths) return;
+//
+//         browserWindow.webContents.focus();
+//         file = { path: filePaths[0], name: path.basename(filePaths[0]) };
+//         addRecentFile(file);
+//     }
+//     const arr = getSavedRecentFile();
+//     browserWindow.webContents.send('open-file', file, arr);
+// }
 
 // function saveAsFile(browserWindow) {
 //     browserWindow.webContents.send('save-as-file');
@@ -114,6 +114,7 @@ async function openFile(browserWindow, file) {
 // }
 
 function getMenuTemplate(options) {
+    console.log('options', options);
     // const { url } = options;
 
     // const template = [
