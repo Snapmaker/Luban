@@ -1,5 +1,5 @@
 import {
-    ABSENT_VALUE, CNC_MESH_SLICE_MODE_ROTATION, BOTTOM, FRONT, HEAD_CNC, HEAD_LASER,
+    CNC_MESH_SLICE_MODE_ROTATION, BOTTOM, FRONT, HEAD_CNC, HEAD_LASER,
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE,
@@ -147,9 +147,9 @@ const defaultGcodeConfigs = {
         direction: 'Horizontal',
         movementMode: 'greyscale-dot', // greyscale-line, greyscale-dot
         density: 7,
-        jogSpeed: ABSENT_VALUE,
+        jogSpeed: 2500,
         workSpeed: 2500,
-        plungeSpeed: ABSENT_VALUE,
+        plungeSpeed: 800,
         dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 35,
@@ -163,8 +163,8 @@ const defaultGcodeConfigs = {
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 800,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 50,
         multiPassEnabled: false,
@@ -177,8 +177,8 @@ const defaultGcodeConfigs = {
         density: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 800,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 50,
         multiPassEnabled: false,
@@ -191,8 +191,8 @@ const defaultGcodeConfigs = {
         fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 140,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 100,
         multiPassEnabled: true,
@@ -205,8 +205,8 @@ const defaultGcodeConfigs = {
         fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 800,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 100,
         multiPassEnabled: false,
@@ -219,8 +219,8 @@ const defaultGcodeConfigs = {
         fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 140,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 100,
         multiPassEnabled: true,
@@ -233,8 +233,8 @@ const defaultGcodeConfigs = {
         fillDensity: DEFAULT_FILL_DENSITY,
         jogSpeed: 1500,
         workSpeed: 800,
-        plungeSpeed: ABSENT_VALUE,
-        dwellTime: ABSENT_VALUE,
+        plungeSpeed: 800,
+        dwellTime: 5,
         fixedPowerEnabled: false,
         fixedPower: 100,
         multiPassEnabled: false,
@@ -253,7 +253,7 @@ const defaultGcodeConfigs = {
         jogSpeed: 1500,
         workSpeed: 600,
         plungeSpeed: 600,
-        dwellTime: ABSENT_VALUE
+        dwellTime: 5
     },
     [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
         sliceMode: CNC_MESH_SLICE_MODE_ROTATION,
@@ -267,7 +267,7 @@ const defaultGcodeConfigs = {
         jogSpeed: 1500,
         workSpeed: 300,
         plungeSpeed: 300,
-        dwellTime: ABSENT_VALUE,
+        dwellTime: 5,
         isModel: true
     },
     [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D, true)]: {
@@ -282,7 +282,7 @@ const defaultGcodeConfigs = {
         jogSpeed: 1500,
         workSpeed: 300,
         plungeSpeed: 300,
-        dwellTime: ABSENT_VALUE,
+        dwellTime: 5,
         isModel: true
     },
     [toKey(HEAD_CNC)]: {
@@ -302,7 +302,7 @@ const defaultGcodeConfigs = {
         jogSpeed: 1500,
         workSpeed: 300,
         plungeSpeed: 300,
-        dwellTime: ABSENT_VALUE
+        dwellTime: 5
     }
 };
 

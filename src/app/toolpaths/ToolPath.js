@@ -15,6 +15,8 @@ class ToolPath {
 
     type; // image, vector, image3d
 
+    useEngine = true;
+
     status = IDLE; // idle, running, success, warning, failed
 
     check = true;
@@ -40,7 +42,7 @@ class ToolPath {
     modelGroup;
 
     constructor(options) {
-        const { id, name, baseName, headType, type, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
+        const { id, name, baseName, headType, type, useEngine = true, modelIDs, gcodeConfig, toolParams = {}, materials = {}, modelGroup } = options;
 
         this.id = id || uuid.v4();
         this.name = name;
@@ -48,6 +50,7 @@ class ToolPath {
         this.headType = headType;
         this.type = type;
         this.status = IDLE;
+        this.useEngine = useEngine;
         this.modelIDs = modelIDs.map(v => v);
 
         for (const modelID of this.modelIDs) {
@@ -73,6 +76,7 @@ class ToolPath {
             name: this.name,
             baseName: this.baseName,
             type: this.type,
+            useEngine: this.useEngine,
             status: this.status,
             check: this.check,
             visible: this.visible,
@@ -95,12 +99,15 @@ class ToolPath {
     }
 
     updateState(toolPath) {
-        const { name = this.name, check = this.check, visible = this.visible, gcodeConfig = this.gcodeConfig,
-            toolParams = this.toolParams, materials = this.materials, modelIDs = this.modelIDs } = toolPath;
+        const {
+            name = this.name, check = this.check, visible = this.visible, useEngine = this.useEngine, gcodeConfig = this.gcodeConfig,
+            toolParams = this.toolParams, materials = this.materials, modelIDs = this.modelIDs
+        } = toolPath;
 
         this.name = name;
         this.check = check;
         this.visible = visible;
+        this.useEngine = useEngine;
         this.object.visible = visible;
 
         this.modelIDs = modelIDs;
@@ -203,6 +210,8 @@ class ToolPath {
         for (let i = 0; i < modelInfos.length; i++) {
             modelInfos[i] = {
                 ...modelInfos[i],
+                type: this.type,
+                useEngine: this.useEngine,
                 gcodeConfig: this.gcodeConfig,
                 toolParams: this.toolParams,
                 materials: this.materials

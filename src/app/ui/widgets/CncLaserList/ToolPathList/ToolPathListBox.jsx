@@ -123,7 +123,7 @@ const ToolPathListBox = (props) => {
                 visible: !visible,
                 check: !check
             }));
-            dispatch(editorActions.resetProcessState(props.headType));
+            // dispatch(editorActions.resetProcessState(props.headType));
         },
         deleteToolPath: (toolPathId) => dispatch(editorActions.deleteToolPath(props.headType, toolPathId)),
         commitGenerateToolPath: (toolPathId) => dispatch(editorActions.commitGenerateToolPath(props.headType, toolPathId)),

@@ -42,7 +42,7 @@ class CncParameters extends PureComponent {
     render() {
         const { toolPath, materials } = this.props;
 
-        const { name, type, gcodeConfig } = toolPath;
+        const { name, type, gcodeConfig, useEngine } = toolPath;
 
         const { pathType, sliceMode, smoothY, fillDensity, allowance } = gcodeConfig;
 
@@ -72,6 +72,15 @@ class CncParameters extends PureComponent {
                             style={{ display: 'inline-block', width: '160px', lineHeight: '15px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
+                        />
+                    </div>
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Use Engine')}</span>
+                        <input
+                            type="checkbox"
+                            className="sm-parameter-row__checkbox"
+                            checked={useEngine}
+                            onChange={() => { this.props.updateToolPath({ useEngine: !useEngine }); }}
                         />
                     </div>
                     {isSVG && (

@@ -10,10 +10,11 @@ import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToo
 import logger from '../../lib/logger';
 import {
     PROCESS_MODE_GREYSCALE, PROCESS_MODE_MESH,
-    PROCESS_MODE_VECTOR,
-    SOURCE_TYPE_SVG
+    PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER,
+    SOURCE_TYPE_SVG, TOOLPATH_TYPE_VECTOR
 } from '../../constants';
 import CncMeshToolPathGenerator from '../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
+import slice from '../../slicer/call-engine';
 
 const log = logger('service:TaskManager');
 
@@ -41,8 +42,6 @@ const generateLaserToolPath = async (modelInfo, onProgress) => {
         } catch (e) {
             return Promise.reject(new Error(`process Image Error ${e.message}`));
         }
-        const result = await editorProcess(modelInfo);
-        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
 
     if (modelPath) {
@@ -148,17 +147,51 @@ const generateCncToolPath = async (modelInfo, onProgress) => {
     }
 };
 
+const generateLaserToolPathFromEngine = async (modelInfo, onProgress) => {
+    const { type, sourceType } = modelInfo;
+    if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
+        const result = await editorProcess(modelInfo);
+        modelInfo.uploadName = result.filename;
+    }
+
+    modelInfo.gcodeConfig.stepOver = 1 / modelInfo.gcodeConfig.density;
+
+    modelInfo.toolpathFileName = pathWithRandomSuffix(`${path.parse(modelInfo.uploadName).name}.json`);
+
+    const sliceParams = {
+        headType: modelInfo.headType,
+        type: modelInfo.type,
+        data: [modelInfo]
+    };
+
+    return new Promise((resolve, reject) => {
+        slice(sliceParams, onProgress, (res) => {
+            resolve({
+                filename: res.filename
+            });
+        }, () => {
+            reject(new Error('Slice Error'));
+        });
+    });
+};
+
 export const generateToolPath = (modelInfo, onProgress) => {
     if (!modelInfo) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
-    const { headType } = modelInfo;
-    if (headType === 'laser') {
-        return generateLaserToolPath(modelInfo, onProgress);
-    } else if (headType === 'cnc') {
-        return generateCncToolPath(modelInfo, onProgress);
+    console.log('modelInfo', JSON.stringify(modelInfo));
+
+    const { headType, useEngine } = modelInfo;
+    if (useEngine) {
+        return generateLaserToolPathFromEngine(modelInfo, onProgress);
     } else {
-        return Promise.reject(new Error(`Unsupported type: ${headType}`));
+        if (headType === 'laser') {
+            return generateLaserToolPath(modelInfo, onProgress);
+        } else if (headType === 'cnc') {
+            return generateCncToolPath(modelInfo, onProgress);
+        } else {
+            return Promise.reject(new Error(`Unsupported type: ${headType}`));
+        }
     }
 };

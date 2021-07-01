@@ -24,7 +24,7 @@ class LaserParameters extends PureComponent {
         onChangeMovementMode: (options) => {
             if (options.value === 'greyscale-line') {
                 this.props.updateGcodeConfig({
-                    dwellTime: ABSENT_VALUE,
+                    dwellTime: 42,
                     jogSpeed: 1500,
                     workSpeed: 500,
                     movementMode: options.value
@@ -32,7 +32,7 @@ class LaserParameters extends PureComponent {
             } else if (options.value === 'greyscale-dot') {
                 this.props.updateGcodeConfig({
                     dwellTime: 42,
-                    jogSpeed: ABSENT_VALUE,
+                    jogSpeed: 1500,
                     workSpeed: 1500,
                     movementMode: options.value
                 });
@@ -43,7 +43,9 @@ class LaserParameters extends PureComponent {
     render() {
         const { toolPath } = this.props;
 
-        const { name, type, gcodeConfig } = toolPath;
+        const { name, type, gcodeConfig, useEngine } = toolPath;
+
+        console.log('useEngine', useEngine, ABSENT_VALUE);
 
         const { direction, movementMode } = gcodeConfig;
 
@@ -62,6 +64,15 @@ class LaserParameters extends PureComponent {
                             style={{ width: '160px' }}
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
+                        />
+                    </div>
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Use Engine')}</span>
+                        <input
+                            type="checkbox"
+                            className="sm-parameter-row__checkbox"
+                            checked={useEngine}
+                            onChange={() => { this.props.updateToolPath({ useEngine: !useEngine }); }}
                         />
                     </div>
                     {isImage && (
