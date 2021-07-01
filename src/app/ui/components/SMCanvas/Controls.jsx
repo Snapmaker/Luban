@@ -226,7 +226,7 @@ class Controls extends EventEmitter {
 
     onMouseDown = (event) => {
         // Prevent the browser from scrolling.
-        event.preventDefault();
+        // event.preventDefault();
         this.mouseDownPosition = this.getMouseCoord(event);
         // mousedown on support mode
         this.prevState = null;
