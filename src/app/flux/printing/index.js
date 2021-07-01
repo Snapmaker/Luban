@@ -213,6 +213,9 @@ export const actions = {
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition
         }));
+        dispatch(actions.updateState({
+            qualityDefinitions: definitionManager.qualityDefinitions
+        }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
