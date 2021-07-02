@@ -38,6 +38,18 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
     if (!toolPath) {
         return null;
     }
+    function handleOnDoubleClick() {
+        setEditingToolpath(toolPath);
+        selectToolPathId(toolPath.id);
+    }
+    function handleOnClick(e) {
+        if (e.detail > 1) { // Check difference to double click
+            return;
+        }
+        selectToolPathId(toolPath.id);
+    }
+
+
     return (
         <TipTrigger
             key={toolPath.id}
@@ -58,8 +70,8 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                             styles.process,
                             styles.bt
                         )}
-                        onDoubleClick={() => setEditingToolpath(toolPath)}
-                        onClick={() => selectToolPathId(toolPath.id)}
+                        onDoubleClick={handleOnDoubleClick}
+                        onClick={handleOnClick}
                     >
                         <span>
                             {toolPath.name}
