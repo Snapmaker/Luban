@@ -7,8 +7,7 @@ import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
 import { limitStringLength } from '../../lib/normalize-range';
 
-function ModelItem(props) {
-    const { model, isSelected, styles, onSelect, onToggleVisible, inProgress } = props;
+function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
     if (!model) {
         return null;
     }
@@ -64,7 +63,7 @@ function ModelItem(props) {
                         type="button"
                         className={classNames(
                             styles.icon,
-                            model.visible ? styles.iconHideOpen : styles.iconHideClose,
+                            visible ? styles.iconHideOpen : styles.iconHideClose,
                             styles.bt
                         )}
                         onClick={() => onToggleVisible(model)}
@@ -78,10 +77,11 @@ function ModelItem(props) {
 ModelItem.propTypes = {
     model: PropTypes.object.isRequired,
     styles: PropTypes.object.isRequired,
+    visible: PropTypes.bool.isRequired,
     isSelected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
     onToggleVisible: PropTypes.func.isRequired,
     inProgress: PropTypes.bool.isRequired
 };
 
-export default ModelItem;
+export default React.memo(ModelItem);
