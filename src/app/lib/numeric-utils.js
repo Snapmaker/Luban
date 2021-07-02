@@ -50,13 +50,18 @@ function bubbleSortByAttribute(arr, attribute = []) {
  * @return {*|string}
  */
 const toFixed = (value, fractionDigits) => {
+    console.log(value, fractionDigits);
     const stringValue = String(value);
     const pos = stringValue.indexOf('.');
     if (pos !== -1) {
         const d = stringValue.length - pos - 1;
         if (d > fractionDigits) {
             // actual fraction digits > maximum fraction digits
-            return Number(value.toFixed(fractionDigits));
+            let num = Number(value.toFixed(fractionDigits));
+            if (num < -180) {
+                num = (num + 360) % 360;
+            }
+            return num;
         }
     }
     return value; // no fix needed
