@@ -27,7 +27,7 @@ function saveRecentFile(file) {
     const arr = getSavedRecentFile();
 
     const index = arr.find(f => f.name === file.name);
-    if (index !== -1) {
+    if (index && index !== -1) {
         arr.splice(index, 1);
     }
     arr.push(file);
@@ -35,7 +35,6 @@ function saveRecentFile(file) {
     if (arr.length > 10) {
         arr.splice(0, arr.length - 10);
     }
-    console.log('saveRecentFile arr', index, file, arr);
     fs.writeFileSync(recentFileName, JSON.stringify(arr), 'utf-8');
 }
 

@@ -83,6 +83,7 @@ class NumberInput extends PureComponent {
             const absentValue = this.getAbsentValue();
             onChange(absentValue);
             this.onChange({ target: { value: absentValue } });
+            this.ref.current.blur();
             return;
         }
 
@@ -102,6 +103,7 @@ class NumberInput extends PureComponent {
 
         // call onAfterChange to change value
         onChange && onChange(numericValue);
+        this.ref.current.blur();
     }
 
     getAbsentValue() {

@@ -13,8 +13,8 @@ import Anchor from '../../../components/Anchor';
 function ObjectListBox(props) {
     // https://github.com/tc39/proposal-optional-chaining
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray, shallowEqual);
-    const models = useSelector(state => state[props.headType]?.modelGroup?.models, shallowEqual);
-    const inProgress = useSelector(state => state[props.headType]?.inProgress);
+    const models = useSelector(state => state[props.headType]?.modelGroup?.models);
+    const inProgress = useSelector(state => state[props.headType]?.inProgress, shallowEqual);
     const previewFailed = useSelector(state => state[props.headType]?.previewFailed, shallowEqual);
     const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
@@ -65,6 +65,7 @@ function ObjectListBox(props) {
                         return (
                             <ModelItem
                                 model={model}
+                                visible={model.visible}
                                 key={model.modelID}
                                 styles={styles}
                                 isSelected={selectedModelArray && selectedModelArray.includes(model)}

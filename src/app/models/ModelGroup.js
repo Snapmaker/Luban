@@ -187,6 +187,8 @@ class ModelGroup extends EventEmitter {
             model.visible = false;
             model.meshObject.visible = false;
         });
+        // Make the reference of 'models' change to re-render
+        this.models = [...this.models];
         return this.getState();
     }
 
@@ -196,6 +198,7 @@ class ModelGroup extends EventEmitter {
             model.visible = true;
             model.meshObject.visible = true;
         });
+        this.models = [...this.models];
         return this.getState();
     }
 

@@ -237,7 +237,6 @@ export const actions = {
         await UniApi.File.exportAs(targetFile, configFile);
     },
     setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
-        console.log('setOpenedFileWithType', headType, openedFile);
         openedFile && UniApi.Window.setOpenedFile(openedFile?.name);
         await dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile, unSaved: false }));
         UniApi.Menu.setItemEnabled('save', !!openedFile);
@@ -266,7 +265,6 @@ export const actions = {
 
         const state = getState().project[headType];
         const { openedFile, unSaved } = state;
-        console.log('openedFile, unSaved', openedFile, unSaved);
         if (!unSaved) {
             return;
         }
@@ -320,7 +318,6 @@ export const actions = {
         if (tail.substring(0, 4) === 'snap') {
             const formData = new FormData();
             let shouldSetFileName = true;
-            console.log('test', file, file instanceof File);
             if (!(file instanceof File)) {
                 if (new RegExp(/^\.\//).test(file?.path)) {
                     shouldSetFileName = false;
@@ -358,16 +355,16 @@ export const actions = {
             history.push(`/${headType}`);
 
             await dispatch(actions.onRecovery(headType, envObj, false));
-            console.log('shouldSetFileName', shouldSetFileName);
             if (shouldSetFileName) {
                 if (file instanceof File) {
                     await dispatch(actions.setOpenedFileWithType(headType, file));
                 } else {
                     await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
                 }
+                dispatch(actions.updateState(headType, { unSaved: false }));
+            } else {
+                dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
             }
-
-            dispatch(actions.updateState(headType, { unSaved: false }));
         } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
@@ -431,10 +428,9 @@ export const actions = {
             dispatch(printingActions.destroyGcodeLine());
             await dispatch(printingActions.initSize());
         }
-
         modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
         modState.modelGroup.removeAllModels();
-        modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
+        modState.SVGActions && modState.SVGActions.svgContentGroup && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
     },
 
