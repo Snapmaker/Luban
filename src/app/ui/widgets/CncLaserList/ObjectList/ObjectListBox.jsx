@@ -1,5 +1,5 @@
 // import React, { PureComponent } from 'react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import styles from '../styles.styl';
@@ -7,7 +7,6 @@ import { actions as editorActions } from '../../../../flux/editor';
 import modal from '../../../../lib/modal';
 import i18n from '../../../../lib/i18n';
 import ModelItem from '../../../views/model-item';
-import Anchor from '../../../components/Anchor';
 
 
 function ObjectListBox(props) {
@@ -16,7 +15,7 @@ function ObjectListBox(props) {
     const models = useSelector(state => state[props.headType]?.modelGroup?.models, shallowEqual);
     const inProgress = useSelector(state => state[props.headType]?.inProgress);
     const previewFailed = useSelector(state => state[props.headType]?.previewFailed, shallowEqual);
-    const [showList, setShowList] = useState(true);
+    // const [showList, setShowList] = useState(true);
     const dispatch = useDispatch();
     const actions = {
         onClickModelNameBox(model, event) {
@@ -50,32 +49,20 @@ function ObjectListBox(props) {
     }, [previewFailed]);
 
     return (
-        <div>
-            <div>
-                <Anchor
-                    onClick={() => setShowList(!showList)}
-                    title={i18n._('hide')}
-                >
-                    X
-                </Anchor>
-            </div>
-            {showList && (
-                <div className={styles['object-list-box']}>
-                    {models && models.map((model) => {
-                        return (
-                            <ModelItem
-                                model={model}
-                                key={model.modelID}
-                                styles={styles}
-                                isSelected={selectedModelArray && selectedModelArray.includes(model)}
-                                onSelect={actions.onClickModelNameBox}
-                                onToggleVisible={actions.onClickModelHideBox}
-                                inProgress={inProgress}
-                            />
-                        );
-                    })}
-                </div>
-            )}
+        <div className={styles['object-list-box']}>
+            {models && models.map((model) => {
+                return (
+                    <ModelItem
+                        model={model}
+                        key={model.modelID}
+                        styles={styles}
+                        isSelected={selectedModelArray && selectedModelArray.includes(model)}
+                        onSelect={actions.onClickModelNameBox}
+                        onToggleVisible={actions.onClickModelHideBox}
+                        inProgress={inProgress}
+                    />
+                );
+            })}
         </div>
     );
 }

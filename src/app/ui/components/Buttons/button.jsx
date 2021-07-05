@@ -6,11 +6,16 @@ import styles from './styles.styl';
 import '../../../styles/global.styl';
 
 const Button = (props) => {
-    const { priority, suffixIcon, width, ...rest } = props;
+    const { priority = 'level-three', className, suffixIcon, width = '100%', ...rest } = props;
     const ref = useRef();
     const type = priority === 'level-three' ? 'default' : props.type;
     return (
-        <div style={{ width: width }}>
+        <div
+            style={{ width: width }}
+            className={classNames(
+                className
+            )}
+        >
             <AntdButton
                 {...rest}
                 block
@@ -37,10 +42,11 @@ const Button = (props) => {
 };
 
 Button.propTypes = {
-    width: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-    priority: PropTypes.string.isRequired,
+    width: PropTypes.string,
+    type: PropTypes.string,
+    priority: PropTypes.string,
+    className: PropTypes.string,
     suffixIcon: PropTypes.element,
-    children: PropTypes.string | PropTypes.element
+    children: PropTypes.string | PropTypes.number | PropTypes.element
 };
 export default Button;

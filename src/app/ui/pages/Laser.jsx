@@ -304,10 +304,10 @@ function Laser() {
                 action: () => {
                     setShowJobType(true);
                 }
-            }
-        ];
-
-        const centerItems = [
+            },
+            {
+                type: 'separator'
+            },
             {
                 name: 'Edit',
                 action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER)),
@@ -317,22 +317,23 @@ function Laser() {
                 name: 'Edit',
                 action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER)),
                 title: i18n._('Bottom')
-            }
-        ];
-        const rightItems = [
+            },
+            {
+                type: 'separator'
+            },
             {
                 name: 'Edit',
                 action: () => {
                     setShowCameraCapture(true);
                 },
-                title: i18n._('Camera')
+                iconClassName: 'width-auto',
+                title: i18n._('Camera Capture')
             }
         ];
+
         return (
             <MainToolBar
                 leftItems={leftItems}
-                centerItems={centerItems}
-                rightItems={rightItems}
             />
         );
     }

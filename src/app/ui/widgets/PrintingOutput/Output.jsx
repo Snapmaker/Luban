@@ -15,7 +15,6 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as projectActions } from '../../../flux/project';
 import Thumbnail from './Thumbnail';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
-
 import { renderPopup } from '../../utils';
 
 import Workspace from '../../pages/Workspace';

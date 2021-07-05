@@ -46,11 +46,10 @@ class SVGLeftBar extends PureComponent {
     render() {
         const { mode, editable } = this.props;
         const { showExtShape, extShape } = this.state;
-        // classNames('position-ab', 'height-100')
         return (
             <React.Fragment>
                 <div className={classNames(styles['svg-left-bar'])}>
-                    <div className={classNames('position-ab', 'height-100', styles['center-tool'])}>
+                    <div className={classNames('position-ab', 'height-100', 'border-radius-8', styles['center-tool'])}>
                         <input
                             ref={this.props.fileInput}
                             type="file"
@@ -63,48 +62,51 @@ class SVGLeftBar extends PureComponent {
                         <Anchor
                             componentClass="button"
                             className={
-                                classNames('width-56', 'height-56',
+                                classNames('width-56', 'height-56', 'border-radius-top-8', 'background-transparent', 'border-0', 'padding-0', 'position-re',
                                     { [styles.selected]: (mode === 'add') })}
                             onClick={() => this.props.onClickToUpload()}
                             disabled={!editable}
                         >
-                            <i className={styles['btn-add']} />
+                            <div className={classNames('height-56', styles['btn-add'],)} />
                         </Anchor>
                         <Anchor
                             componentClass="button"
-                            className={classNames(styles['btn-center'],
+                            className={classNames('width-56', 'height-56', 'background-transparent', 'border-0', 'padding-0', 'position-re',
                                 { [styles.selected]: (mode === 'select') })}
                             onClick={() => this.actions.setMode('select')}
                             disabled={!editable}
                         >
-                            <i className={styles['btn-select']} />
+                            <div className={classNames('height-56', styles['btn-select'])} />
                         </Anchor>
+
                         <Anchor
                             componentClass="button"
-                            className={classNames(styles['btn-center'],
+                            className={classNames('width-56', 'height-56', 'background-transparent', 'border-0', 'padding-0', 'position-re',
                                 { [styles.selected]: mode === 'rect' })}
                             onClick={() => this.actions.setMode('rect')}
                             disabled={!editable}
                         >
-                            <i className={styles['btn-rectangle']} />
+                            <div className={classNames('height-56', styles['btn-rectangle'])} />
                         </Anchor>
+
                         <Anchor
                             componentClass="button"
-                            className={classNames(styles['btn-center'],
+                            className={classNames('width-56', 'height-56', 'background-transparent', 'border-0', 'padding-0', 'position-re',
                                 { [styles.selected]: mode === 'ellipse' })}
                             onClick={() => this.actions.setMode('ellipse')}
                             disabled={!editable}
                         >
-                            <i className={classNames(styles['btn-round'])} />
+                            <div className={classNames('height-56', styles['btn-round'])} />
                         </Anchor>
                         <Anchor
                             componentClass="button"
-                            className={styles['btn-center']}
+                            className={classNames('width-56', 'height-56', 'background-transparent', 'border-0', 'padding-0', 'position-re')}
                             onClick={this.actions.onClickInsertText}
                             disabled={!editable}
                         >
-                            <i className={styles['btn-text']} />
+                            <div className={classNames('height-56', styles['btn-text'])} />
                         </Anchor>
+                        {/* todo: refactor style*/}
                         { showExtShape && (
                             <Anchor
                                 componentClass="button"

@@ -2,6 +2,7 @@
 
 .object-list-box
     max-height: 100%
+    margin: 4px 0;
     //overflow: auto
 
 .left {
@@ -20,12 +21,14 @@
     background-color: unset
     background-size: 36px
     display: flex
-
     &.selected {
         background-color: #E7F2FD
     }
-
+    &:not(.selected):hover {
+        background-color: #EEEFF0;
+    }
     .bt {
+        margin-left: 8px
         &:hover {
             opacity(1)
         }
@@ -40,8 +43,8 @@
 
     .name {
         vertical-align: middle
-        line-height: 36px
-        height: 36px
+        line-height: 32px
+        height: 32px
         display: inline-block
         width: 100%
     }
@@ -50,7 +53,7 @@
         margin-right: 5px;
     }
     .icon {
-        padding: 6px 2px;
+        padding: 4px 0;
         box-sizing: content-box;
         display: inline-block;
         width: 24px;

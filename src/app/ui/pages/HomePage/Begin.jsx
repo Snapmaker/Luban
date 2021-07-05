@@ -5,7 +5,7 @@ import { withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { slice, cloneDeep, reverse } from 'lodash';
-import { Button } from '../../components/Buttons/index.jsx';
+import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';

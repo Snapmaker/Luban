@@ -7,7 +7,7 @@ import _ from 'lodash';
 import { connect } from 'react-redux';
 import Widget from '../../components/Widget';
 
-import SMSortableHandle from './SMSortableHandle';
+// import SMSortableHandle from './SMSortableHandle';
 import SMDropdownButton from './SMDropdownButton';
 import SMMinimizeButton from './SMMinimizeButton';
 import { actions as widgetActions } from '../../../flux/widget';
@@ -33,7 +33,7 @@ class WidgetContainer extends PureComponent {
     state = {
         title: '',
         display: true,
-        buttons: ['SMMinimize', 'SMDropdown']
+        buttons: ['SMMinimize']
     };
 
     actions = {
@@ -79,9 +79,8 @@ class WidgetContainer extends PureComponent {
         const actions = this.actions;
         return (
             <Widget style={{ display: this.state.display ? '' : 'none' }} fullscreen={state.fullscreen}>
-                <Widget.Header>
+                <Widget.Header style={{ border: 0 }}>
                     <Widget.Title>
-                        <SMSortableHandle />
                         {this.state.title}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
@@ -121,7 +120,7 @@ class WidgetContainer extends PureComponent {
                         })}
                     </Widget.Controls>
                 </Widget.Header>
-                <Widget.Content style={{ display: state.minimized ? 'none' : 'block' }}>
+                <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: 0, borderRadius: '8px' }}>
 
                     <Component
                         isWidget

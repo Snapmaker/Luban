@@ -216,6 +216,9 @@ class ChangedReactSelect extends PureComponent {
                         className={styles[size]}
                         value={defaultValue?.value}
                         disabled={disabled}
+                        dropdownStyle={{
+                            width: '120%'
+                        }}
                         onChange={this.actions.handleChange}
                     >
                         {(options.map((option) => {
