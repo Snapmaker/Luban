@@ -1,0 +1,140 @@
+@import "../../../styles/global-var";
+
+button.button-lb {
+    font-family: 'Roboto Regular';
+    font-weight: normal;
+    border-radius: $px-grade-three;
+    padding-left: $px-grade-three;
+    padding-right: $px-grade-three;
+    .suffix-container {
+        top: $px-grade-zero;
+        right: $px-grade-zero;
+        border-left: $border-width-one solid $grey-2;
+        height: $px-grade-five;
+        .content {
+            width: $px-grade-five;
+            height: $px-grade-five;
+            margin-left: $px-grade-two;
+        }
+    }
+    &[ant-click-animating-without-extra-node]:after {
+        border: 0 none;
+        opacity: 0;
+        animation:none 0 ease 0 1 normal;
+    }
+    &[disabled] {
+        border-color: $grey-1 !important;
+        color: $black-5 !important;
+        .suffix-container {
+            border-color: $grey-1;
+            color: $grey-1;
+        }
+        // &:hover {
+        //     background: auto;
+        // }
+    }
+}
+
+.button-lb:global(.ant-btn-primary) {
+    border-color: $black-2;
+    background: $black-2;
+    color: $white;
+    &:hover {
+        background: $black-3;
+        border-color: $black-2;
+    }
+    &:focus {
+        border-color: $black-2;
+        background: $black-2;
+    }
+    &:active {
+        background: $black-1;
+        border-color: $black-1;
+    }
+    &[disabled] {
+        background: #F5F5F7;
+    }
+}
+
+.button-lb:global(.ant-btn-default) {
+    border-color: $black-2;
+    color: $black-2;
+    &:hover {
+        border-color: $black-4;
+        color: $black-4;
+    }
+    &:focus {
+        border-color: $black-2;
+        color: $black-2;
+    }
+    &:active {
+        border-color: $black-1;
+        color: $black-1;
+    }
+    &[disabled] {
+        background: $white !important;
+    }
+}
+
+.button-lb:global(.ant-btn-link) {
+    &:hover {
+        color: $blue-3;
+    }
+    &:focus {
+        color: $blue-2;
+    }
+    &:active {
+        color: $blue-1;
+    }
+    &[disabled] {
+        color: $black-5;
+        border-color: transparent !important;
+    }
+}
+
+.button-lb:global(.ant-btn-text) {
+    color: $black-3;
+     &:hover {
+        color: $black-4;
+        background: transparent !important;
+    }
+    &:focus {
+        color: $black-3;
+        background: transparent !important;
+    }
+    &:active {
+        color: $black-2;
+        background: transparent !important;
+    }
+    &[disabled] {
+        color: $black-5;
+        border-color: transparent !important;
+    }
+}
+.button-lb:global(.ant-btn-default).level-three {
+    border-color: $black-5;
+    color: $black-3;
+    &:hover {
+        border-color: $grey-1;
+        color: $black-4;
+    }
+    &:focus {
+        border-color: $black-5;
+        color: $black-3;
+    }
+    &:active {
+        border-color: $black-4;
+        color: $black-2;
+    }
+    &[disabled] {
+        background: transparent;
+    }
+}
+
+.button-lb.level-one {
+    height: $px-grade-seven;
+}
+
+.button-lb.level-two, .button-lb.level-three {
+    height: $px-grade-six;
+}
