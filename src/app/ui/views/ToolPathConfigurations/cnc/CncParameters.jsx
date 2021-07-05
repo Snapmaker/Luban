@@ -4,13 +4,16 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 // import Slider from 'rc-slider';
 import Select from '../../../components/Select';
-import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
+import { CNC_MESH_SLICE_MODE_LINKAGE, CNC_MESH_SLICE_MODE_ROTATION,
+    TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_SCULPT, TOOLPATH_TYPE_VECTOR,
+    CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION
+} from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input, TextInput } from '../../../components/Input';
 import widgetStyles from '../../../widgets/styles.styl';
 import ToolParameters from './ToolParameters';
 import TipTrigger from '../../../components/TipTrigger';
-import GcodeParameters from './GcodeParameters';
+import ToolSelection from './ToolSelection';
 
 class CncParameters extends PureComponent {
     static propTypes = {
@@ -24,27 +27,23 @@ class CncParameters extends PureComponent {
         updateToolConfig: PropTypes.func.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
 
+        size: PropTypes.object.isRequired,
         materials: PropTypes.object.isRequired
     };
 
     state = {
-        showToolFeed: true
-    }
-
-    actions = {
-        onChangeShowToolFeed: (value) => {
-            this.setState({
-                showToolFeed: value
-            });
-        }
     };
 
+    actions = {
+    };
+
+
     render() {
-        const { toolPath, materials } = this.props;
+        const { toolPath, materials, size } = this.props;
 
         const { name, type, gcodeConfig } = toolPath;
 
-        const { pathType, sliceMode, smoothY, fillDensity, allowance } = gcodeConfig;
+        const { pathType, sliceMode, smoothY, allowance, targetDepth } = gcodeConfig;
 
         const { isRotate } = materials;
 
@@ -62,6 +61,53 @@ class CncParameters extends PureComponent {
         const isImage = type === TOOLPATH_TYPE_IMAGE;
         const isSculpt = type === TOOLPATH_TYPE_SCULPT;
 
+        const gcodeDefinition = CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION;
+        Object.keys(gcodeDefinition).forEach((key) => {
+            gcodeDefinition[key].default_value = gcodeConfig[key];
+            // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
+            gcodeDefinition[key].isGcodeConfig = true;
+        });
+        const allDefinition = {
+            ...gcodeDefinition,
+            ...this.props.activeToolDefinition.settings
+        };
+
+        const toolDefinitionToolKeys = [
+            'work_speed', 'plunge_speed', 'step_down', 'step_over'
+        ];
+        const toolDefinitionJogKeys = [
+            'jog_speed', 'safetyHeight', 'stopHeight'
+        ];
+        let toolDefinitionTabKeys = [];
+        const useCncTabConfig = toolPath.type === 'vector';
+        if (!allDefinition.enableTab.default_value) {
+            toolDefinitionTabKeys = [
+                'enableTab'
+            ];
+        } else {
+            toolDefinitionTabKeys = [
+                'enableTab', 'tabHeight', 'tabSpace', 'tabWidth'
+            ];
+        }
+        const toolDefinitionTool = {};
+        toolDefinitionToolKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                toolDefinitionTool[key] = allDefinition[key];
+            }
+        });
+        const toolDefinitionJog = {};
+        toolDefinitionJogKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                toolDefinitionJog[key] = allDefinition[key];
+            }
+        });
+        const toolDefinitionTab = {};
+        toolDefinitionTabKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                toolDefinitionTab[key] = allDefinition[key];
+            }
+        });
+
         return (
             <React.Fragment>
                 <div className="sm-parameter-container">
@@ -76,20 +122,6 @@ class CncParameters extends PureComponent {
                     </div>
                     {isSVG && (
                         <div>
-                            <TipTrigger
-                                title={i18n._('Method')}
-                                content={i18n._('Method')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Method')}</span>
-                                    <TextInput
-                                        disabled
-                                        className="sm-parameter-row__input"
-                                        value={methodType}
-                                        style={{ width: '160px' }}
-                                    />
-                                </div>
-                            </TipTrigger>
                             <TipTrigger
                                 title={i18n._('method')}
                                 content={(
@@ -107,7 +139,7 @@ class CncParameters extends PureComponent {
                                     <span
                                         style={{ height: '30px', lineHeight: '30px' }}
                                     >
-                                        {i18n._('Path')}
+                                        {i18n._('Method')}
                                     </span>
                                     <Select
                                         disabled={false}
@@ -138,21 +170,25 @@ class CncParameters extends PureComponent {
                                     />
                                 </div>
                             </TipTrigger>
-                            {pathType === 'pocket' && (
+
+                            {(methodType === 'Carve' || pathType === 'pocket' || pathType === 'path') && (
                                 <TipTrigger
-                                    title={i18n._('Fill Density')}
-                                    content={i18n._('Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.')}
+                                    title={i18n._('Target Depth')}
+                                    content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
                                 >
                                     <div className="sm-parameter-row">
-                                        <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
+                                        <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
                                         <Input
-                                            className="sm-parameter-row__slider-input"
-                                            value={fillDensity}
-                                            min={1}
-                                            max={20}
+                                            disabled={false}
+                                            className="sm-parameter-row__input"
                                             style={{ width: '160px' }}
-                                            onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
+                                            value={targetDepth}
+                                            min={0.01}
+                                            max={size.z}
+                                            step={0.1}
+                                            onChange={(value) => { this.props.updateGcodeConfig({ targetDepth: value }); }}
                                         />
+                                        <span className="sm-parameter-row__input-unit">mm</span>
                                     </div>
                                 </TipTrigger>
                             )}
@@ -176,20 +212,22 @@ class CncParameters extends PureComponent {
                     )}
                     {isSculpt && (
                         <div>
-                            <TipTrigger
-                                title={i18n._('Method')}
-                                content={i18n._('Method')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Method')}</span>
-                                    <TextInput
-                                        disabled
-                                        className="sm-parameter-row__input"
-                                        value={methodType}
-                                        style={{ width: '160px' }}
-                                    />
-                                </div>
-                            </TipTrigger>
+                            {!isRotate && (
+                                <TipTrigger
+                                    title={i18n._('Method')}
+                                    content={i18n._('Method')}
+                                >
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Method')}</span>
+                                        <TextInput
+                                            disabled
+                                            className="sm-parameter-row__input"
+                                            value={methodType}
+                                            style={{ width: '160px' }}
+                                        />
+                                    </div>
+                                </TipTrigger>
+                            )}
 
                             {isRotate && (
                                 <React.Fragment>
@@ -198,7 +236,7 @@ class CncParameters extends PureComponent {
                                         content={i18n._('Select the slicing mode of the mesh toolpath')}
                                     >
                                         <div className="sm-parameter-row">
-                                            <span className="sm-parameter-row__label">{i18n._('Slicing Mode')}</span>
+                                            <span className="sm-parameter-row__label">{i18n._('Method')}</span>
                                             <Select
                                                 disabled={false}
                                                 className="sm-parameter-row__select-md"
@@ -230,6 +268,26 @@ class CncParameters extends PureComponent {
                     )}
                     {!isSVG && (
                         <TipTrigger
+                            title={i18n._('Target Depth')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                                <Input
+                                    disabled={false}
+                                    className="sm-parameter-row__input"
+                                    value={targetDepth}
+                                    min={0.01}
+                                    style={{ width: '160px' }}
+                                    step={0.1}
+                                    max={100}
+                                    onChange={(value) => { this.props.updateGcodeConfig({ targetDepth: value }); }}
+                                />
+                                <span className="sm-parameter-row__input-unit">mm</span>
+                            </div>
+                        </TipTrigger>
+                    )}
+                    {!isSVG && (
+                        <TipTrigger
                             title={i18n._('Allowance')}
                         >
                             <div className="sm-parameter-row">
@@ -248,44 +306,39 @@ class CncParameters extends PureComponent {
                         </TipTrigger>
                     )}
                 </div>
+                <span>{i18n._('Tool')}</span>
                 <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
-                <div className="sm-tabs" style={{ marginTop: '6px', marginBottom: '12px' }}>
-                    <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': this.state.showToolFeed })}
-                        onClick={() => {
-                            this.actions.onChangeShowToolFeed(true);
-                        }}
-                    >
-                        {i18n._('Tool & Feed')}
-                    </button>
-                    <button
-                        type="button"
-                        style={{ width: '50%', borderRight: '1px solid #c8c8c8' }}
-                        className={classNames('sm-tab', { 'sm-selected': !this.state.showToolFeed })}
-                        onClick={() => {
-                            this.actions.onChangeShowToolFeed(false);
-                        }}
-                    >
-                        {i18n._('Height & Tabs')}
-                    </button>
-                </div>
-                {this.state.showToolFeed && (
-                    <ToolParameters
-                        activeToolDefinition={this.props.activeToolDefinition}
-                        toolDefinitions={this.props.toolDefinitions}
-                        isModifiedDefinition={this.props.isModifiedDefinition}
-                        updateToolConfig={this.props.updateToolConfig}
-                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-                        toolPath={this.props.toolPath}
-                    />
-                )}
-                {!this.state.showToolFeed && (
-                    <GcodeParameters
-                        toolPath={this.props.toolPath}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
-                    />
+                <ToolSelection
+                    toolDefinition={this.props.activeToolDefinition}
+                    toolDefinitions={this.props.toolDefinitions}
+                    isModifiedDefinition={this.props.isModifiedDefinition}
+                    setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                />
+                <ToolParameters
+                    settings={toolDefinitionTool}
+                    updateToolConfig={this.props.updateToolConfig}
+                    updateGcodeConfig={this.props.updateGcodeConfig}
+                    toolPath={this.props.toolPath}
+                />
+                <span>{i18n._('Jog')}</span>
+                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                <ToolParameters
+                    settings={toolDefinitionJog}
+                    updateToolConfig={this.props.updateToolConfig}
+                    updateGcodeConfig={this.props.updateGcodeConfig}
+                    toolPath={this.props.toolPath}
+                />
+                {useCncTabConfig && (
+                    <div>
+                        <span>{i18n._('Tab')}</span>
+                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                        <ToolParameters
+                            settings={toolDefinitionTab}
+                            updateToolConfig={this.props.updateToolConfig}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                        />
+                    </div>
                 )}
             </React.Fragment>
         );
@@ -293,8 +346,10 @@ class CncParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const { size } = state.machine;
     const { materials } = state.cnc;
     return {
+        size,
         materials
     };
 };

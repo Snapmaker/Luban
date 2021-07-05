@@ -27,7 +27,7 @@ class TransformationSection extends PureComponent {
             y: PropTypes.number,
             z: PropTypes.number
         }).isRequired,
-        selectedElements: PropTypes.array.isRequired,
+        selectedElements: PropTypes.array,
         // element transformation
         selectedElementsTransformation: PropTypes.shape({
             x: PropTypes.number.isRequired,
@@ -37,7 +37,7 @@ class TransformationSection extends PureComponent {
             scaleX: PropTypes.number.isRequired,
             scaleY: PropTypes.number.isRequired,
             angle: PropTypes.number.isRequired
-        }).isRequired,
+        }),
         // element actions
         elementActions: PropTypes.shape({
             moveElementsImmediately: PropTypes.func.isRequired,
@@ -344,7 +344,15 @@ const mapStateToProps = (state, ownProps) => {
     const { modelGroup, SVGActions } = state[headType];
 
     const selectedElements = SVGActions.getSelectedElements();
-    const selectedElementsTransformation = SVGActions.getSelectedElementsTransformation();
+    const selectedElementsTransformation = selectedElements.length === 0 ? {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        scaleX: 1,
+        scaleY: 1,
+        angle: 0
+    } : SVGActions.getSelectedElementsTransformation();
 
     const transformation = modelGroup.getSelectedModelTransformation();
     const selectedModelArray = modelGroup.getSelectedModelArray();

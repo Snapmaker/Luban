@@ -151,10 +151,10 @@ const defaultGcodeConfigs = {
         workSpeed: 2500,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: 5,
-        fixedPowerEnabled: false,
-        fixedPower: 35,
-        multiPassEnabled: false,
-        multiPasses: 2,
+        fixedPowerEnabled: true,
+        fixedPower: 30,
+        multiPassEnabled: true,
+        multiPasses: 1,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
@@ -165,10 +165,10 @@ const defaultGcodeConfigs = {
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 50,
-        multiPassEnabled: false,
-        multiPasses: 2,
+        multiPassEnabled: true,
+        multiPasses: 1,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
@@ -179,10 +179,10 @@ const defaultGcodeConfigs = {
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 50,
-        multiPassEnabled: false,
-        multiPasses: 2,
+        multiPassEnabled: true,
+        multiPasses: 1,
         multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR)]: {
@@ -193,7 +193,7 @@ const defaultGcodeConfigs = {
         workSpeed: 140,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 2,
@@ -207,11 +207,11 @@ const defaultGcodeConfigs = {
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 100,
-        multiPassEnabled: false,
-        multiPasses: 2,
-        multiPassDepth: 0.6
+        multiPassEnabled: true,
+        multiPasses: 1,
+        multiPassDepth: 1
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE_RASTER)]: {
         optimizePath: true,
@@ -221,7 +221,7 @@ const defaultGcodeConfigs = {
         workSpeed: 140,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 100,
         multiPassEnabled: true,
         multiPasses: 2,
@@ -235,11 +235,11 @@ const defaultGcodeConfigs = {
         workSpeed: 800,
         plungeSpeed: ABSENT_VALUE,
         dwellTime: ABSENT_VALUE,
-        fixedPowerEnabled: false,
+        fixedPowerEnabled: true,
         fixedPower: 100,
-        multiPassEnabled: false,
-        multiPasses: 2,
-        multiPassDepth: 0.6
+        multiPassEnabled: true,
+        multiPasses: 1,
+        multiPassDepth: 1
     },
 
     // Cnc
@@ -253,6 +253,7 @@ const defaultGcodeConfigs = {
         jogSpeed: 1500,
         workSpeed: 600,
         plungeSpeed: 600,
+        enableTab: false,
         dwellTime: ABSENT_VALUE
     },
     [toKey(HEAD_CNC, PROCESS_MODE_MESH, SOURCE_TYPE_IMAGE3D)]: {
@@ -264,6 +265,7 @@ const defaultGcodeConfigs = {
         safetyHeight: 1.0,
         stopHeight: 10,
         density: 5,
+        enableTab: false,
         jogSpeed: 1500,
         workSpeed: 300,
         plungeSpeed: 300,
@@ -279,6 +281,7 @@ const defaultGcodeConfigs = {
         safetyHeight: 1.0,
         stopHeight: 10,
         density: 5,
+        enableTab: false,
         jogSpeed: 1500,
         workSpeed: 300,
         plungeSpeed: 300,
