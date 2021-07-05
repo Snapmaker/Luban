@@ -5,6 +5,7 @@ import path from 'path';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
+import { normalizeNameDisplay } from '../../lib/normalize-range';
 
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
     if (!model) {
@@ -29,8 +30,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
         })();
     }
     const suffixLength = 7;
-    const prefixName = modelName.slice(0, modelName.length - suffixLength);
-    const suffixName = modelName.slice(-suffixLength);
+    const { prefixName, suffixName } = normalizeNameDisplay(modelName, suffixLength);
 
     return (
         <TipTrigger
