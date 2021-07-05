@@ -28,8 +28,9 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
             return styles.iconShape;
         })();
     }
-    const prefixName = modelName.slice(0, modelName.length - 7);
-    const suffixName = modelName.slice(-7);
+    const suffixLength = 7;
+    const prefixName = modelName.slice(0, modelName.length - suffixLength);
+    const suffixName = modelName.slice(-suffixLength);
 
     return (
         <TipTrigger

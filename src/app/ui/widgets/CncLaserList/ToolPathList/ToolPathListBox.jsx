@@ -48,8 +48,9 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
         }
         selectToolPathId(toolPath.id);
     }
-
-
+    const suffixLength = 6;
+    const prefixName = toolPath.name.slice(0, toolPath.name.length - suffixLength);
+    const suffixName = toolPath.name.slice(-suffixLength);
     return (
         <TipTrigger
             key={toolPath.id}
@@ -73,8 +74,14 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                         onDoubleClick={handleOnDoubleClick}
                         onClick={handleOnClick}
                     >
-                        <span>
+                        {/* <span>
                             {toolPath.name}
+                        </span> */}
+                        <span className={classNames(styles.prefixName)}>
+                            {prefixName}
+                        </span>
+                        <span className={classNames(styles.suffixName)}>
+                            {suffixName}
                         </span>
                     </Anchor>
                     <div className={classNames(styles.iconWrapper)}>
