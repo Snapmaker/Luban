@@ -449,6 +449,9 @@ export const actions = {
         }
         if (definition !== state.activeDefinition) {
             for (const key of definition.ownKeys) {
+                if (typeof activeDefinition.settings === 'undefined') {
+                    return;
+                }
                 if (activeDefinition.settings[key] === undefined) {
                     continue;
                 }
