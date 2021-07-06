@@ -26,6 +26,8 @@ class SVGContentGroup {
 
         this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
+
+        this.initFilter();
         // this.selectorManager = new SelectorManager({
         //     getRoot: () => this.svgContent,
         //     scale: this.scale
@@ -35,6 +37,34 @@ class SVGContentGroup {
             scale: this.scale
         });
         this.operatorPoints.showOperator(true);
+    }
+
+    // construct filter used in toolPath
+    initFilter() {
+        const filterText = document.createElementNS(NS.SVG, 'filter');
+        filterText.setAttribute('id', 'inSelectedToolPathText');
+        const filterElementText = document.createElementNS(NS.SVG, 'feColorMatrix');
+        filterElementText.setAttribute('type', 'matrix');
+        filterElementText.setAttribute('values', '0.125 0 0 0 0.125 0 0.25 0 0 0.25 0 0 0.375 0 0.375 0 0 0 1 0');
+        filterText.append(filterElementText);
+
+        const filterSVG = document.createElementNS(NS.SVG, 'filter');
+        filterSVG.setAttribute('id', 'inSelectedToolPathSVG');
+        const filterElementSVG = document.createElementNS(NS.SVG, 'feColorMatrix');
+        filterElementSVG.setAttribute('type', 'matrix');
+        filterElementSVG.setAttribute('values', '0.125 0 0 0 0.125 0 0.25 0 0 0.25 0 0 0.375 0 0.375 0 0 0 1 0');
+        filterSVG.append(filterElementSVG);
+
+        const filterImage = document.createElementNS(NS.SVG, 'filter');
+        filterImage.setAttribute('id', 'inSelectedToolPathImage');
+        const filterElementImage = document.createElementNS(NS.SVG, 'feColorMatrix');
+        filterElementImage.setAttribute('type', 'matrix');
+        filterElementImage.setAttribute('values', '0.125 0 0 0 0.125 0 0.25 0 0 0.25 0 0 0.375 0 0.375 0 0 0 0.8 0');
+        filterImage.append(filterElementImage);
+
+        this.svgContent.append(filterText);
+        this.svgContent.append(filterSVG);
+        this.svgContent.append(filterImage);
     }
 
     // for create new elem

@@ -609,6 +609,7 @@ export const actions = {
     },
 
     // removes all non-predefined definitions
+    // now only used in reset settings
     removeAllMaterialDefinitions: () => async (dispatch, getState) => {
         const state = getState().printing;
 

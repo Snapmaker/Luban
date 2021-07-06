@@ -1382,6 +1382,7 @@ class SVGActionsFactory {
                 x: this.size.x - 30,
                 y: this.size.y,
                 fill: '#000000',
+                'fill-opacity': 1,
                 'font-size': 12,
                 'font-family': 'Arial',
                 'stroke-width': 0.25,
