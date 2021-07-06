@@ -381,7 +381,7 @@ export const actions = {
         }));
         await dispatch(actions.closeProject(oldHeadType));
 
-        if (newHeadType === HEAD_CNC || newHeadType === HEAD_CNC) {
+        if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
             dispatch(editorActions.updateState(newHeadType, {
                 page: PAGE_EDITOR,
                 displayedType: DISPLAYED_TYPE_MODEL
