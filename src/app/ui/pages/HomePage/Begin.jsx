@@ -10,7 +10,7 @@ import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import { actions as projectActions } from '../../../flux/project';
 import { actions as editorActions } from '../../../flux/editor';
-import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER } from '../../../constants';
+import { COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER, HEAD_CNC } from '../../../constants';
 import UniApi from '../../../lib/uni-api';
 
 
@@ -27,27 +27,27 @@ const Begin = (props) => {
         return null;
     };
 
-    const changeAxis = async (e, isRotate, type) => {
+    const changeAxis = async (e, isRotate, headType) => {
         e.preventDefault();
         if (!isRotate) {
-            const { materials } = store?.[type];
+            const { materials } = store?.[headType];
             if (materials.isRotate !== isRotate) {
-                await dispatch(editorActions.changeCoordinateMode(type, COORDINATE_MODE_CENTER));
+                await dispatch(editorActions.changeCoordinateMode(headType, COORDINATE_MODE_CENTER));
+                await dispatch(editorActions.updateMaterials(headType, { isRotate }));
             }
-            await dispatch(editorActions.updateMaterials(type, { isRotate }));
         } else {
-            const { SVGActions, materials } = store?.[type];
+            const { SVGActions, materials } = store?.[headType];
             if (materials.isRotate !== isRotate) {
                 await dispatch(editorActions.changeCoordinateMode(
-                    type,
+                    headType,
                     COORDINATE_MODE_BOTTOM_CENTER, {
                         x: materials.diameter * Math.PI,
                         y: materials.length
                     },
                     !SVGActions.svgContentGroup
                 ));
+                await dispatch(editorActions.updateMaterials(headType, { isRotate }));
             }
-            await dispatch(editorActions.updateMaterials(type, { isRotate }));
         }
     };
 
@@ -87,7 +87,7 @@ const Begin = (props) => {
                                                 styles['3-axis-select']
                                             )
                                         }
-                                        onClick={(e) => changeAxis(e, false, 'laser')}
+                                        onClick={(e) => changeAxis(e, false, HEAD_LASER)}
                                         aria-hidden="true"
                                     >
                                         {i18n._('3-axis')}
@@ -99,7 +99,7 @@ const Begin = (props) => {
                                                 styles['4-axis-select']
                                             )
                                         }
-                                        onClick={(e) => changeAxis(e, true, 'laser')}
+                                        onClick={(e) => changeAxis(e, true, HEAD_LASER)}
                                         aria-hidden="true"
                                     >
                                         {i18n._('4-axis')}
@@ -124,7 +124,7 @@ const Begin = (props) => {
                                                 styles['3-axis-select']
                                             )
                                         }
-                                        onClick={(e) => changeAxis(e, false, 'cnc')}
+                                        onClick={(e) => changeAxis(e, false, HEAD_CNC)}
                                         aria-hidden="true"
                                     >
                                         {i18n._('3-axis')}
@@ -136,7 +136,7 @@ const Begin = (props) => {
                                                 styles['4-axis-select']
                                             )
                                         }
-                                        onClick={(e) => changeAxis(e, true, 'cnc')}
+                                        onClick={(e) => changeAxis(e, true, HEAD_CNC)}
                                         aria-hidden="true"
                                     >
                                         {i18n._('4-axis')}

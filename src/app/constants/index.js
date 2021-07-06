@@ -732,3 +732,6 @@ export const OFFICIAL_SITE_EN_URL = 'https://snapmaker.com/';
 export const MARKET_ZH_URL = 'https://snapmaker.world.tmall.com/?spm=a1z10.3-b.w5001-21696184167.3.40be7f386PAuCQ&scene=taobao_shop';
 export const MARKET_EN_URL = 'https://shop.snapmaker.com/';
 export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
+
+// Project and Menu
+export const MAX_RECENT_FILES_LENGTH = 15;

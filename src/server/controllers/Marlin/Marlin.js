@@ -290,11 +290,11 @@ class MarlinReplyParserEnclosureFanPower {
 class MarlinReplyParserPurifierNotEnabled {
     static parse(line) {
         const r0 = line.match(/^echo:Unknown command: "M1011"$/);
-        // const r1 = line.match(/^Purifier is not exist\.$/);
-        // const r2 = line.match(/^Purifier err code:0X2$/);
-        // const r3 = line.match(/^Purifier extand power err$/);
-        // if (!r0 && !r1 && !r2 && !r3) {
-        if (!r0) {
+        const r1 = line.match(/^Purifier is not exist\.$/);
+        const r2 = line.match(/^Purifier err code:0X2$/);
+        const r3 = line.match(/^Purifier extand power err$/);
+        // if (!r0) {
+        if (!r0 && !r1 && !r2 && !r3) {
             return null;
         }
         return {

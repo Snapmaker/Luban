@@ -124,7 +124,7 @@ export const actions = {
         if (recentFilesSubmenu) {
             recentFilesSubmenu.submenu = [
                 ...(reverse(cloneDeep(recentFiles)).map(item => {
-                    item.label = item.name;
+                    item.label = item.path || item.name; // item.name;
                     item.enabled = true;
                     item.click = function () {
                         UniApi.Event.emit('appbar-menu:open-file', { path: item.path, name: item.name }, []);

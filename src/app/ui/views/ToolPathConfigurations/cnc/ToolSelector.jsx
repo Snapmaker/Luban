@@ -9,7 +9,7 @@ import styles from '../styles.styl';
 import { actions as cncActions } from '../../../../flux/cnc';
 import CncToolManager from '../../CncToolManager';
 
-function ToolSelection(props) {
+function ToolSelector(props) {
     const [showManager, setShowManager] = useState(false);
     const dispatch = useDispatch();
     const { toolDefinitions, toolDefinition, isModifiedDefinition } = props;
@@ -150,11 +150,11 @@ function ToolSelection(props) {
         </div>
     );
 }
-ToolSelection.propTypes = {
+ToolSelector.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     toolDefinition: PropTypes.object.isRequired,
     isModifiedDefinition: PropTypes.bool.isRequired,
     setCurrentValueAsProfile: PropTypes.func.isRequired
 };
 
-export default ToolSelection;
+export default ToolSelector;

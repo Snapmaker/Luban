@@ -83,6 +83,14 @@ class ToolPathGroup {
         this.updatedCallback = updatedCallback;
     }
 
+    // Select
+    selectToolPathById(toolPathId) {
+        this.selectedToolPathId = toolPathId;
+        this.addSelectedToolpathColor();
+        this._updated();
+    }
+
+    // Unselect when selected id === toolPathId
     selectToolPathId(toolPathId) {
         if (this.selectedToolPathId === toolPathId) {
             this.selectedToolPathId = '';

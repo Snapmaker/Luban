@@ -190,6 +190,14 @@ function Cnc() {
         dispatch(cncActions.init());
     }, []);
 
+    useEffect(() => {
+        setJobTypeState({
+            coordinateMode,
+            coordinateSize,
+            materials
+        });
+    }, [coordinateMode, coordinateSize, materials]);
+
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);

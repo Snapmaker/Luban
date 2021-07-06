@@ -8,7 +8,8 @@ import {
     SOURCE_TYPE_IMAGE3D,
     PROCESS_MODE_MESH,
     getCurrentHeadType,
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
+    MAX_RECENT_FILES_LENGTH
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
@@ -124,13 +125,8 @@ export const actions = {
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
-    clearSavedEnvironment: (headType) => async (dispatch, getState) => {
+    clearSavedEnvironment: (headType) => async (dispatch) => {
         try {
-            // Todo: toolPaths state add into env
-            const toolPathGroup = getState()[headType]?.toolPathGroup;
-            if (toolPathGroup?.toolPaths?.length) {
-                toolPathGroup.deleteAllToolPaths();
-            }
             await api.removeEnv({ headType });
         } catch (e) {
             console.log(e);
@@ -140,6 +136,7 @@ export const actions = {
     },
 
     onRecovery: (envHeadType, envObj, backendRecover = true) => async (dispatch, getState) => {
+        UniApi.Window.setOpenedFile();
         const { content } = getState().project[envHeadType];
         // backup project if needed
         if (backendRecover) {
@@ -174,11 +171,12 @@ export const actions = {
             const isRotate = materials ? materials.isRotate : false;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
-                    coordinateMode: coordinateMode ?? (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER)
+                    coordinateMode: coordinateMode,
+                    coordinateSize: coordinateSize ?? machineInfo.size
                 }));
-            }
-            if (coordinateSize) {
+            } else {
                 dispatch(editorActions.updateState(envHeadType, {
+                    coordinateMode: (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER),
                     coordinateSize: coordinateSize ?? machineInfo.size
                 }));
             }
@@ -383,6 +381,12 @@ export const actions = {
         }));
         await dispatch(actions.closeProject(oldHeadType));
 
+        if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
+            dispatch(editorActions.updateState(newHeadType, {
+                page: PAGE_EDITOR,
+                displayedType: DISPLAYED_TYPE_MODEL
+            }));
+        }
         if (from === to) {
             history.push('/');
         }
@@ -445,6 +449,9 @@ export const actions = {
             newRecentFiles = [];
         } else {
             arr.forEach(fileItem => {
+                if (newRecentFiles.length >= MAX_RECENT_FILES_LENGTH) {
+                    return;
+                }
                 if (!find(newRecentFiles, { 'name': fileItem.name })) {
                     newRecentFiles.push(fileItem);
                 }
