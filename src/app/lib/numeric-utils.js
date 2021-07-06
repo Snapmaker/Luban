@@ -50,7 +50,6 @@ function bubbleSortByAttribute(arr, attribute = []) {
  * @return {*|string}
  */
 const toFixed = (value, fractionDigits) => {
-    console.log(value, fractionDigits);
     const stringValue = String(value);
     const pos = stringValue.indexOf('.');
     if (pos !== -1) {

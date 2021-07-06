@@ -1231,7 +1231,7 @@ export const actions = {
         modelGroup.defaultSupportSize = size;
     },
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight,
-        mode, sourceType, config, gcodeConfig, transformation) => async (dispatch, getState) => {
+        mode, sourceType, config, gcodeConfig, transformation, modelID) => async (dispatch, getState) => {
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         const { modelGroup } = getState().printing;
@@ -1269,7 +1269,8 @@ export const actions = {
                         height: sourceHeight,
                         geometry: bufferGeometry,
                         material: material,
-                        transformation
+                        transformation,
+                        modelID
                     });
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
