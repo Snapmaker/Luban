@@ -31,6 +31,7 @@ export default function (headType, onClose) {
 
                 onClick: () => { onClose(); }
             }
-        ]
+        ],
+        onClose
     });
 }

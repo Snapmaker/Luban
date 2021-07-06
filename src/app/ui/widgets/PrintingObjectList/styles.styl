@@ -35,13 +35,33 @@
         line-height: 38px
         height: 36px
         display: inline-block
-        width: 200px
+        width: calc(100% - 36px)
+        max-width: 270px
+    }
+
+    .prefix-name {
+        display: inline-block
+        vertical-align: middle
+        max-width: 65%
+        overflow: hidden
+        white-space: nowrap
+        text-overflow: ellipsis
+    }
+
+    .suffix-name {
+        display: inline-block
+        vertical-align: middle
     }
 
     .icon {
         vertical-align: middle
-        width: 36px
-        height: 36px
+        box-sizing: content-box;
+        display: inline-block;
+        // width: 36px
+        padding: 6px 2px;
+        width: 24px;
+        height: 24px;
+        // height: 36px
         &.icon-shape{
             background: url("images/list_ic_3d_18x18.png") no-repeat center center
             display: inline-block
@@ -50,8 +70,8 @@
         &.icon-hide-open, &.icon-hide-close {
             margin-right: 8px
             border: 0
-            position: absolute
-            right: 0
+            // position: absolute
+            // right: 0
         }
 
         &.icon-hide-open {

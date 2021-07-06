@@ -11,7 +11,6 @@ import {
 } from '../../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
-import UniApi from '../../../lib/uni-api';
 
 class JobType extends PureComponent {
     static propTypes = {
@@ -105,35 +104,8 @@ class JobType extends PureComponent {
                 coordinateSize,
                 materials
             });
-        },
-        handleNewFile: (is4Axis) => {
-            if (is4Axis) {
-                const { jobTypeState } = this.props;
-                const { materials: { diameter, length } } = jobTypeState;
-
-                this.actions.changeCoordinateMode(
-                    COORDINATE_MODE_BOTTOM_CENTER, {
-                        x: diameter * Math.PI,
-                        y: length
-                    }
-                );
-                this.actions.updateMaterials({ isRotate: true });
-            } else {
-                this.actions.changeCoordinateMode(
-                    COORDINATE_MODE_CENTER
-                );
-                this.actions.updateMaterials({ isRotate: false });
-            }
         }
     };
-
-    componentDidMount() {
-        UniApi.Event.on('appbar-menu:cnc-laser.new-file', this.actions.handleNewFile);
-    }
-
-    componentWillUnmount() {
-        UniApi.Event.off('appbar-menu:cnc-laser.new-file', this.actions.handleNewFile);
-    }
 
     render() {
         const { size, headType, inProgress, jobTypeState } = this.props;

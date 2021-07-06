@@ -9,6 +9,7 @@ import { actions as editorActions } from '../../../../flux/editor';
 // import modal from '../../../lib/modal';
 import i18n from '../../../../lib/i18n';
 import { toHump } from '../../../../../shared/lib/utils';
+import { normalizeNameDisplay } from '../../../../lib/normalize-range';
 import TipTrigger from '../../../components/TipTrigger';
 import ToolPathConfigurations from '../../../views/ToolPathConfigurations/ToolPathConfigurations';
 import {
@@ -48,7 +49,8 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
         }
         selectToolPathId(toolPath.id);
     }
-
+    const suffixLength = 6;
+    const { prefixName, suffixName } = normalizeNameDisplay(toolPath.name, suffixLength);
 
     return (
         <TipTrigger
@@ -73,8 +75,14 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                         onDoubleClick={handleOnDoubleClick}
                         onClick={handleOnClick}
                     >
-                        <span>
+                        {/* <span>
                             {toolPath.name}
+                        </span> */}
+                        <span className={classNames(styles.prefixName)}>
+                            {prefixName}
+                        </span>
+                        <span className={classNames(styles.suffixName)}>
+                            {suffixName}
                         </span>
                     </Anchor>
                     <div className={classNames(styles.iconWrapper)}>

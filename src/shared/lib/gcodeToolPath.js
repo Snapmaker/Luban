@@ -9,7 +9,7 @@ const TYPE_CODES = {
     'WALL-INNER': 1,
     'WALL-OUTER': 2,
     SKIN: 3,
-    SKIRT: 4,
+    SKIRT: 5,
     SUPPORT: 5,
     'SUPPORT-INTERFACE': 5,
     FILL: 6,

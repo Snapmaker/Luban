@@ -27,8 +27,17 @@ export const limitStringLength = (string, maxLength) => {
     return string;
 };
 
+export const normalizeNameDisplay = (name, suffixLength = 7) => {
+    const prefixName = name.slice(0, name.length - suffixLength);
+    const suffixName = name.slice(-suffixLength);
+    return {
+        prefixName, suffixName
+    };
+};
+
 export default {
     limit,
     test,
-    limitStringLength
+    limitStringLength,
+    normalizeNameDisplay
 };

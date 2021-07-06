@@ -5,7 +5,7 @@ import path from 'path';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
-import { limitStringLength } from '../../lib/normalize-range';
+import { normalizeNameDisplay } from '../../lib/normalize-range';
 
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
     if (!model) {
@@ -29,7 +29,8 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
             return styles.iconShape;
         })();
     }
-    const displayModelName = limitStringLength(modelName, 36);
+    const suffixLength = 7;
+    const { prefixName, suffixName } = normalizeNameDisplay(modelName, suffixLength);
 
     return (
         <TipTrigger
@@ -57,7 +58,12 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
                                 modelIcon
                             )}
                         />
-                        {displayModelName}
+                        <span className={classNames(styles.prefixName)}>
+                            {prefixName}
+                        </span>
+                        <span className={classNames(styles.suffixName)}>
+                            {suffixName}
+                        </span>
                     </Anchor>
                     <button
                         type="button"

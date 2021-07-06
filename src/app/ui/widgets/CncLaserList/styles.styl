@@ -43,8 +43,24 @@
         line-height: 36px
         height: 36px
         display: inline-block
-        width: 200px
+        width: calc(100% - 36px)
+        max-width: 270px
     }
+
+    .prefix-name {
+        display: inline-block
+        vertical-align: middle
+        max-width: 65%
+        overflow: hidden
+        white-space: nowrap
+        text-overflow: ellipsis
+    }
+
+    .suffix-name {
+        display: inline-block
+        vertical-align: middle
+    }
+
     .icon-wrapper{
         display: flex;
         margin-right: 5px;

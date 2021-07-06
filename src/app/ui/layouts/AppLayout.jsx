@@ -33,6 +33,7 @@ import { actions as projectActions } from '../../flux/project';
 
 class AppLayout extends PureComponent {
     static propTypes = {
+        updateMaterials: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
@@ -372,7 +373,8 @@ class AppLayout extends PureComponent {
                 await this.actions.closeFile();
                 this.props.history.push(`/${headType}`);
                 if (headType === 'cnc' || headType === 'laser') {
-                    UniApi.Event.emit('appbar-menu:cnc-laser.new-file', isRotate);
+                    // UniApi.Event.emit('appbar-menu:cnc-laser.new-file', isRotate);
+                    this.props.updateMaterials(headType, { isRotate });
                     this.props.switchToPage(headType, PAGE_EDITOR);
                 }
             });
@@ -430,11 +432,13 @@ class AppLayout extends PureComponent {
         }
     }
 
-    componentDidMount() {
+    componentWillMount() {
         this.props.initMenuLanguage();
         this.actions.initUniEvent();
         this.actions.initFileOpen();
+    }
 
+    componentDidMount() {
         UniApi.Event.on('appbar-menu:preferences.show', this.actions.showPreferences);
         UniApi.Event.on('appbar-menu:developer-tools.show', this.actions.showDevelopTools);
         UniApi.Event.on('appbar-menu:check-for-updates.show', this.actions.showCheckForUpdates);
@@ -479,6 +483,7 @@ const mapDispatchToProps = (dispatch) => {
         saveAndClose: (headType, opts) => dispatch(projectActions.saveAndClose(headType, opts)),
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
+        updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
         // openProject: (file, history) => dispatch(projectActions.open(file, history)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateMenu: () => dispatch(menuActions.updateMenu()),
