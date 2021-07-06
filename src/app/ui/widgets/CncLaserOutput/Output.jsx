@@ -150,7 +150,7 @@ class Output extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled, inProgress, displayedType, page } = this.props;
+        const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, autoPreviewEnabled, inProgress, displayedType, page, disablePreview } = this.props;
 
         return (
             <div style={{ position: 'fixed', bottom: '10px', backgroundColor: '#fff', width: '360px' }}>
@@ -161,7 +161,7 @@ class Output extends PureComponent {
                             className="sm-btn-large sm-btn-default"
                             onClick={this.actions.preview}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                            disabled={inProgress || (!hasToolPathModel ?? false)}
+                            disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
                         >
                             {i18n._('Preview')}
                         </button>
@@ -264,9 +264,11 @@ const mapStateToProps = (state, ownProps) => {
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
+    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false);
 
     return {
         page,
+        disablePreview,
         headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),

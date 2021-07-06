@@ -273,6 +273,7 @@ export const actions = {
                 ...dialogOptions,
                 type: 'warning',
                 defaultId: 2,
+                cancelId: 1,
                 buttons: [
                     i18n._('Save'),
                     i18n._('Cancel'),
