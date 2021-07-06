@@ -12,7 +12,7 @@ import { DISPLAYED_TYPE_TOOLPATH
 } from '../../../constants';
 
 import modal from '../../../lib/modal';
-import { Button } from '../../components/Buttons/index.jsx';
+import { Button } from '../../components/Buttons';
 import { renderPopup } from '../../utils';
 import styles from './styles.styl';
 import Workspace from '../../pages/Workspace';

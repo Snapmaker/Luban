@@ -1,4 +1,6 @@
 //@import "../../../styles/variables.styl"
+@import "../../../styles/global-var.styl";
+
 .override-select {
     display: inline-block;
     .super-large{
@@ -20,14 +22,38 @@
         //width: 100px;
         border: none!important;
         border-radius: 8px!important;
-        :global(.ant-select-selector) {
+        :global(div.ant-select-selector) {
             padding: 0 8px;
             border: 1px solid #B9BCBF;
             border-radius: 8px!important;
+        }
+    }
+    :global(div.ant-select-disabled) {
+        :global(div.ant-select-selector) {
+            background: $grey-3 !important;
+            color: $black-5 !important;
+            border: 1px solid $grey-1;
         }
     }
 }
 
 :global(.ant-select-dropdown){
     width: 120%
+}
+
+:global(div.ant-select-dropdown) {
+    width: auto !important;
+    max-width: 320px;
+    :global(.ant-select-item) {
+        padding: 5px 8px;
+        color: $black-3;
+    }
+    :global(.ant-select-item-option-active:not(.ant-select-item-option-disabled)) {
+        background: $grey-2;
+    }
+    :global(.ant-select-item-option-selected:not(.ant-select-item-option-disabled)) {
+        background: $blue-6;
+        color: $black-3;
+        font-weight: $font-weight-normal;
+    }
 }

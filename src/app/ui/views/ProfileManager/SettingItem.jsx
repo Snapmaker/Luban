@@ -133,7 +133,7 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
                     <Checkbox
                         className="sm-parameter-row__checkbox"
                         style={{ cursor: !isDefinitionEditable() ? 'not-allowed' : 'default' }}
-                        checked={defaultValue}
+                        defaultChecked={defaultValue}
                         disabled={!isDefinitionEditable()}
                         onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                     />

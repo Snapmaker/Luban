@@ -8,16 +8,17 @@ import styles from './styles.styl';
 
 class CheckboxWrapper extends PureComponent {
     static propTypes = {
-        className: PropTypes.string
+        className: PropTypes.string,
+        hollow: PropTypes.bool
     };
 
     render() {
-        const { className = '', ...rest } = this.props;
+        const { className = '', hollow = false, ...rest } = this.props;
 
         return (
             <Checkbox
                 {...rest}
-                className={classNames(styles.checkbox, className)}
+                className={classNames(styles.checkbox, className, hollow && styles.hollow)}
             />
         );
     }
