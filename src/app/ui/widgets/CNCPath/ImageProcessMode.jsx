@@ -53,7 +53,7 @@ class ImageProcessMode extends PureComponent {
                     </Anchor>
                     {this.state.expanded && (
                         <React.Fragment>
-                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-precent-50')}>
+                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between', 'width-percent-50')}>
                                 <div className={classNames(this.props.mode === 'greyscale' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}

@@ -244,13 +244,17 @@ $bottom-bar-height = 0px
         padding-left: 0
         margin-bottom: 0
         list-style: none
+        border-bottom: 1px solid $grey-1;
 
         > li
             display: block
             position: relative
-            border-bottom: 1px solid $border-color
+            text-align: center
             text-decoration: none
             white-space: nowrap
+
+            .selected
+                background-color: #E7F3FF!important;
 
         > li > button
             display: block
@@ -360,7 +364,7 @@ $bottom-bar-height = 0px
     > .panel
         background-color: $background-color
         display: block
-        //width: 235px
+        //width: 280px
         position: absolute
         left: (56px + $visualizer-padding)
         border: 1px solid $border-color
@@ -370,8 +374,7 @@ $bottom-bar-height = 0px
         .reset-button
             background-color: #FFFFFF
             margin-left: 8px;
-            //width: 114px;
-            width: 104px;
+            width: 248px;
             display: inline-block
             border: 1px solid $grey-color2
             border-radius: $border-radius
@@ -385,7 +388,7 @@ $bottom-bar-height = 0px
 
         &.move-panel
             top: 0
-            width: 130px
+            width: 280px
             transform: translate(0, 64px * 1.5 - 93px / 2)
 
         &.scale-panel, &.scale-panel-multi
@@ -489,7 +492,7 @@ $bottom-bar-height = 0px
         // mm
 
         .axis-unit-1
-            left: 75px
+            left: 117px
 
         // %
 

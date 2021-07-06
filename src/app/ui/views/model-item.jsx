@@ -41,7 +41,7 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
         >
             <div
                 className={classNames(
-                    styles['object-list-item'],
+                    'padding-vertical-4',
                     'padding-horizontal-8',
                     'sm-flex',
                     isSelected ? styles.selected : null,

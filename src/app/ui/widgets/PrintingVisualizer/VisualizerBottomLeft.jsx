@@ -1,10 +1,10 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
 import { HEAD_3DP } from '../../../constants';
 import PrintingObjectListBox from '../PrintingObjectList';
+import Card from '../../components/Card';
+import SvgIcon from '../../components/SvgIcon';
 
 class VisualizerBottomLeft extends PureComponent {
     static propTypes = {
@@ -21,32 +21,33 @@ class VisualizerBottomLeft extends PureComponent {
         const actions = this.props.actions;
         return (
             <React.Fragment>
-                <div className={classNames(styles['object-list'])}>
+                <Card
+                    className={classNames('margin-horizontal-8')}
+                    title="Object List"
+                >
                     <PrintingObjectListBox
-
                         headType={HEAD_3DP}
                     />
-                </div>
-                <div className={classNames(styles['camera-operation'])}>
-                    <Anchor
-                        className={classNames(styles['camera-reset'])}
+                </Card>
+                <div className={classNames('margin-horizontal-8', 'height-24')}>
+                    <SvgIcon
+                        name="ViewIsometric"
+                        onClick={actions.toBottom} // Todo: fix new function
+                    />
+                    <SvgIcon
+                        name="ViewFront"
                         onClick={actions.toFront}
                     />
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
-                        onClick={actions.toLeft}
-                    />
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-up', styles['turn-up'])}
+                    <SvgIcon
+                        name="ViewTop"
                         onClick={actions.toTop}
                     />
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-down', styles['turn-down'])}
-                        onClick={actions.toBottom}
+                    <SvgIcon
+                        name="ViewLeft"
+                        onClick={actions.toLeft}
                     />
-
-                    <Anchor
-                        className={classNames('fa', 'fa-chevron-right', styles['turn-right'])}
+                    <SvgIcon
+                        name="ViewRight"
                         onClick={actions.toRight}
                     />
                 </div>

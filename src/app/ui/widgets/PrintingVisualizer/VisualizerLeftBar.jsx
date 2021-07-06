@@ -6,11 +6,13 @@ import * as THREE from 'three';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import UniApi from '../../../lib/uni-api';
-import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { actions as printingActions } from '../../../flux/printing';
 import modal from '../../../lib/modal';
+import SvgIcon from '../../components/SvgIcon';
+import { Button } from '../../components/Buttons';
+import Checkbox from '../../components/Checkbox';
 
 class VisualizerLeftBar extends PureComponent {
     static propTypes = {
@@ -243,42 +245,33 @@ class VisualizerLeftBar extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
-                <div className={styles.leftbar} id="sidebar">
+                <div className="position-ab height-100 border-radius-8 background-color-white width-56 margin-horizontal-8 margin-vertical-8">
                     <nav className={styles.navbar}>
                         <ul className={styles.nav}>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['operation-add'],
-                                        { [styles.disabled]: inProgress }
-                                    )}
+                                <SvgIcon
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarOpen"
                                     onClick={() => {
                                         actions.onClickToUpload();
                                     }}
+                                    size={48}
                                     disabled={inProgress}
                                 />
                             </li>
                         </ul>
                         <ul className={styles.nav}>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['operation-move'],
-                                        { [styles.disabled]: (transformDisabled) },
-                                        {
-                                            [styles.selected]: !transformDisabled && transformMode === 'translate'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'translate') })}
+                                    // Todo: Add selected props
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarMove"
+                                    size={48}
                                     onClick={() => {
                                         actions.setTransformMode('translate');
                                     }}
@@ -286,19 +279,13 @@ class VisualizerLeftBar extends PureComponent {
                                 />
                             </li>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['operation-scale'],
-                                        { [styles.disabled]: (transformDisabled) },
-                                        {
-                                            [styles.selected]: !transformDisabled && transformMode === 'scale'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'scale') })}
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarScale"
+                                    size={48}
                                     onClick={() => {
                                         actions.setTransformMode('scale');
                                     }}
@@ -306,42 +293,27 @@ class VisualizerLeftBar extends PureComponent {
                                 />
                             </li>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['operation-rotate'],
-                                        { [styles.disabled]: transformDisabled || rotateDisabled },
-                                        {
-                                            [styles.selected]: !(transformDisabled || rotateDisabled) && transformMode === 'rotate'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'rotate') })}
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarRotate"
+                                    size={48}
                                     onClick={() => {
                                         actions.setTransformMode('rotate');
                                     }}
                                     disabled={transformDisabled || rotateDisabled}
                                 />
                             </li>
-                        </ul>
-                        <ul className={styles.nav}>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['model-operation'],
-                                        styles['operation-mirror'],
-                                        { [styles.disabled]: transformDisabled },
-                                        {
-                                            [styles.selected]: !transformDisabled && transformMode === 'mirror'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'mirror') })}
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarMirror"
+                                    size={48}
                                     onClick={() => {
                                         actions.setTransformMode('mirror');
                                     }}
@@ -351,19 +323,12 @@ class VisualizerLeftBar extends PureComponent {
                         </ul>
                         <ul className={styles.nav}>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['operation-arrange'],
-                                        { [styles.disabled]: inProgress },
-                                        {
-                                            [styles.selected]: !transformDisabled && transformMode === 'arrange'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarAutoLayout"
+                                    size={48}
                                     onClick={() => {
                                         actions.arrangeAllModels();
                                     }}
@@ -373,20 +338,13 @@ class VisualizerLeftBar extends PureComponent {
                         </ul>
                         <ul className={styles.nav}>
                             <li
-                                className={classNames(
-                                    'text-center'
-                                )}
+                                className="padding-vertical-4"
                             >
-                                <Anchor
-                                    componentClass="button"
-                                    className={classNames(
-                                        styles['model-operation'],
-                                        styles['operation-support'],
-                                        { [styles.disabled]: supportDisabled },
-                                        {
-                                            [styles.selected]: !supportDisabled && transformMode === 'support'
-                                        }
-                                    )}
+                                <SvgIcon
+                                    className={classNames({ [styles.selected]: (!transformDisabled && transformMode === 'support') })}
+                                    type={['hoverSpecial', 'pressSpecial']}
+                                    name="ToolbarSupport"
+                                    size={48}
                                     onClick={() => {
                                         actions.setTransformMode('support');
                                     }}
@@ -397,361 +355,410 @@ class VisualizerLeftBar extends PureComponent {
                     </nav>
                 </div>
                 {!transformDisabled && transformMode === 'translate' && (
-                    <div className={classNames(styles.panel, styles['move-panel'])}>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
-                                    value={moveX}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'moveX': value });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-1']}>mm</span>
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '72px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Move')}
                         </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
-                                    value={moveY}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'moveY': value });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-1']}>mm</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-red-1">X</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-size.x / 2}
+                                        max={size.x / 2}
+                                        value={moveX}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'moveX': value });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-size.y / 2}
+                                        max={size.y / 2}
+                                        value={moveY}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'moveY': value });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <Button
+                                className="margin-top-32"
+                                type="primary"
+                                priority="level-three"
+                                width="100%"
                                 onClick={actions.resetPosition}
                             >
                                 <span>{i18n._('Reset')}</span>
-                            </Anchor>
+                            </Button>
                         </div>
                     </div>
                 )}
                 {!transformDisabled && !isSupportSelected && transformMode === 'scale' && (
-                    <div className={classNames(styles.panel, styles['scale-panel'])}>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={scaleXPercent}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleX': value / 100 });
-                                        actions.onModelAfterTransform();
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '124px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Scale')}
+                        </div>
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-red-1">X</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={scaleXPercent}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleX': value / 100 });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">%</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={scaleYPercent}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleY': value / 100 });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">%</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-blue-2">Z</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={scaleZPercent}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleZ': value / 100 });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">%</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <Checkbox
+                                    defaultChecked={uniformScalingState}
+                                    onClick={() => {
+                                        actions.changeUniformScalingState(uniformScalingState); // Todo: bug, state error
                                     }}
                                 />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={scaleYPercent}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleY': value / 100 });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={scaleZPercent}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleZ': value / 100 });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>%</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                onClick={() => {
-                                    actions.changeUniformScalingState(uniformScalingState);
-                                }}
-                            >
-                                <i className={classNames(styles.icon, uniformScalingState ? styles['icon-checked'] : styles['icon-unchecked'])} />
-                                <span>{i18n._('Uniform Scaling')}</span>
-                            </Anchor>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                onClick={this.props.scaleToFitSelectedModel}
-                            >
-                                <span>{i18n._('Scale to Fit')}</span>
-                            </Anchor>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                onClick={actions.resetScale}
-                            >
-                                <span>{i18n._('Reset')}</span>
-                            </Anchor>
+                                <span
+                                    className="height-20 margin-horizontal-8"
+                                >
+                                    {i18n._('Uniform Scaling')}
+                                </span>
+                            </div>
+                            <div className="sm-flex">
+                                <Button
+                                    className="margin-top-32 margin-right-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={this.props.scaleToFitSelectedModel}
+                                >
+                                    <span>{i18n._('Scale to Fit')}</span>
+                                </Button>
+                                <Button
+                                    className="margin-top-32 margin-left-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={actions.resetScale}
+                                >
+                                    <span>{i18n._('Reset')}</span>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {!transformDisabled && isSupportSelected && transformMode === 'scale' && (
-                    <div className={classNames(styles.panel, styles['scale-panel'])}>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={modelSize.x}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleX': value / modelSize.x });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>mm</span>
+                    <div className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Scale')}
                         </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={modelSize.y}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleY': value / modelSize.y });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>mm</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={1}
-                                    value={modelSize.z}
-                                    onChange={(value) => {
-                                        actions.onModelTransform({ 'scaleZ': value / modelSize.z });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-2']}>mm</span>
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-red-1">X</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={modelSize.x}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleX': value / modelSize.x });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={modelSize.y}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleY': value / modelSize.y });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-blue-2">Z</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={1}
+                                        value={modelSize.z}
+                                        onChange={(value) => {
+                                            actions.onModelTransform({ 'scaleZ': value / modelSize.z });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {!transformDisabled && transformMode === 'rotate' && (
-                    <div className={classNames(styles.panel, styles['rotate-panel'])}>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={-180}
-                                    max={180}
-                                    value={rotateX}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateX': THREE.Math.degToRad(degree) });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-3']}>°</span>
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '176px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Rotate')}
                         </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={-180}
-                                    max={180}
-                                    value={rotateY}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateY': THREE.Math.degToRad(degree) });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-3']}>°</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                            <span className={styles['axis-input-1']}>
-                                <Input
-                                    min={-180}
-                                    max={180}
-                                    value={rotateZ}
-                                    onChange={(degree) => {
-                                        actions.onModelTransform({ 'rotateZ': THREE.Math.degToRad(degree) });
-                                        actions.onModelAfterTransform();
-                                    }}
-                                />
-                            </span>
-                            <span className={styles['axis-unit-3']}>°</span>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                onClick={this.props.autoRotateSelectedModel}
-                            >
-                                <span>{i18n._('Auto Rotate')}</span>
-                            </Anchor>
-                        </div>
-                        <div className={styles.axis}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                onClick={actions.resetRotation}
-                            >
-                                <span>{i18n._('Reset')}</span>
-                            </Anchor>
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-red-1">X</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-180}
+                                        max={180}
+                                        value={rotateX}
+                                        onChange={(degree) => {
+                                            actions.onModelTransform({ 'rotateX': THREE.Math.degToRad(degree) });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">°</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-180}
+                                        max={180}
+                                        value={rotateY}
+                                        onChange={(degree) => {
+                                            actions.onModelTransform({ 'rotateY': THREE.Math.degToRad(degree) });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">°</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-blue-2">Z</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-180}
+                                        max={180}
+                                        value={rotateZ}
+                                        onChange={(degree) => {
+                                            actions.onModelTransform({ 'rotateZ': THREE.Math.degToRad(degree) });
+                                            actions.onModelAfterTransform();
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">°</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex">
+                                <Button
+                                    className="margin-top-32 margin-right-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={this.props.autoRotateSelectedModel}
+                                >
+                                    <span>{i18n._('Auto Rotate')}</span>
+                                </Button>
+                                <Button
+                                    className="margin-top-32 margin-left-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={actions.resetRotation}
+                                >
+                                    <span>{i18n._('Reset')}</span>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {!transformDisabled && transformMode === 'mirror' && (
-                    <div className={classNames(styles.panel, styles['mirror-panel'])}>
-                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
-                            <span className={classNames(styles['title-mode'])}>{i18n._('Mirror')}</span>
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '228px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Mirror')}
                         </div>
-                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
-                            <Anchor
-                                componentClass="button"
-                                style={{ width: '60px' }}
-                                className={styles['reset-button']}
-                                onClick={() => actions.mirrorSelectedModel('X')}
-                            >
-                                <span>{i18n._('X-axis')}</span>
-                            </Anchor>
-                            <Anchor
-                                componentClass="button"
-                                style={{ width: '60px' }}
-                                className={styles['reset-button']}
-                                onClick={() => actions.mirrorSelectedModel('Y')}
-                            >
-                                <span>{i18n._('Y-axis')}</span>
-                            </Anchor>
-                            <Anchor
-                                componentClass="button"
-                                style={{ width: '60px' }}
-                                className={styles['reset-button']}
-                                onClick={() => actions.mirrorSelectedModel('Z')}
-                            >
-                                <span>{i18n._('Z-axis')}</span>
-                            </Anchor>
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex">
+                                <Button
+                                    className="margin-right-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={() => actions.mirrorSelectedModel('X')}
+                                >
+                                    <span>{i18n._('X axis')}</span>
+                                </Button>
+                                <Button
+                                    className="margin-horizontal-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={() => actions.mirrorSelectedModel('Y')}
+                                >
+                                    <span>{i18n._('Y axis')}</span>
+                                </Button>
+                                <Button
+                                    className="margin-left-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={() => actions.mirrorSelectedModel('Z')}
+                                >
+                                    <span>{i18n._('Z axis')}</span>
+                                </Button>
+                            </div>
                         </div>
-                        {/*TODO: Cannot easily reset because different method to calculate scales*/}
-                        {/*<div className={classNames(styles.axis, styles['axis-padding-left'])}>*/}
-                        {/*    <Anchor*/}
-                        {/*        componentClass="button"*/}
-                        {/*        style={{ width: '198px' }}*/}
-                        {/*        className={styles['reset-button']}*/}
-                        {/*        onClick={() => actions.mirrorSelectedModel('Reset')}*/}
-                        {/*    >*/}
-                        {/*        <span>{i18n._('Reset')}</span>*/}
-                        {/*    </Anchor>*/}
-                        {/*</div>*/}
                     </div>
                 )}
 
                 {!supportDisabled && transformMode === 'support' && (
-                    <div className={classNames(styles.panel, styles['support-panel'])}>
-                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
-                            <span className={classNames(styles['title-mode'])}>{i18n._('Manual Support')}</span>
+                    <div
+                        className="position-ab width-280 margin-left-72 border-default-grey-1 border-radius-8 background-color-white"
+                        style={{
+                            marginTop: '332px'
+                        }}
+                    >
+                        <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            {i18n._('Manual Support')}
                         </div>
-                        <div className={classNames(styles.axis, styles['axis-padding-left'])}>
-
-                            <span style={{ fontSize: '14px', width: '125px', display: 'inline-block' }}>
-                                {i18n._('Support Size(mm)')}
-                            </span>
-
-                            <span
-                                className={classNames(styles['input-container'])}
-
-                            >
-                                <Input
-                                    min={1}
-                                    max={size.y / 2}
-                                    value={defaultSupportSize.x}
-                                    onChange={(value) => {
-                                        supportActions.setDefaultSupportSize({ x: value });
-                                    }}
-                                />
-                                <span className={classNames(styles.suffix)}>X</span>
-                            </span>
-                            <span
-                                className={classNames(styles['input-container'])}
-
-                            >
-                                <Input
-                                    min={1}
-                                    max={size.y / 2}
-                                    value={defaultSupportSize.y}
-                                    onChange={(value) => {
-                                        supportActions.setDefaultSupportSize({ y: value });
-                                    }}
-                                />
-                                <span className={classNames(styles.suffix)}>Y</span>
-                            </span>
-
-                        </div>
-                        <div className={classNames(styles.axis)}>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                style={{ width: '125px' }}
-                                disabled={isSupporting}
-                                onClick={supportActions.startSupportMode}
-                            >
-                                <span>{i18n._('Add Support')}</span>
-                            </Anchor>
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                style={{ width: '128px' }}
-                                onClick={supportActions.stopSupportMode}
-                            >
-                                <span>{i18n._('Done')}</span>
-                            </Anchor>
-
-                        </div>
-                        <div
-                            className={classNames(styles.axis)}
-                            style={{ borderTop: '1px solid #E7E8E9', paddingTop: '10px' }}
-                        >
-                            <Anchor
-                                componentClass="button"
-                                className={styles['reset-button']}
-                                style={{ width: '125px' }}
+                        <div className="padding-vertical-16 padding-horizontal-16">
+                            <div className="sm-flex">{i18n._('Support Size')}</div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-red-1">X</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-size.x / 2}
+                                        max={size.x / 2}
+                                        value={defaultSupportSize.x}
+                                        onChange={(value) => {
+                                            supportActions.setDefaultSupportSize({ x: value });
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex height-32 margin-bottom-8">
+                                <span className="sm-flex-auto width-16 color-green-1">Y</span>
+                                <div className="position-ab sm-flex-auto margin-horizontal-24">
+                                    <Input
+                                        size="small"
+                                        min={-size.y / 2}
+                                        max={size.y / 2}
+                                        value={defaultSupportSize.y}
+                                        onChange={(value) => {
+                                            supportActions.setDefaultSupportSize({ y: value });
+                                        }}
+                                    />
+                                    <span className="sm-flex__input-unit-8 color-black-5">mm</span>
+                                </div>
+                            </div>
+                            <div className="sm-flex">
+                                <Button
+                                    className="margin-top-32 margin-right-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    disabled={isSupporting}
+                                    onClick={supportActions.startSupportMode}
+                                >
+                                    <span>{i18n._('Add Support')}</span>
+                                </Button>
+                                <Button
+                                    className="margin-top-32 margin-left-8"
+                                    type="primary"
+                                    priority="level-three"
+                                    width="100%"
+                                    onClick={supportActions.stopSupportMode}
+                                >
+                                    <span>{i18n._('Done')}</span>
+                                </Button>
+                            </div>
+                            <Button
+                                className="margin-top-32"
+                                type="primary"
+                                priority="level-three"
+                                width="100%"
                                 onClick={supportActions.clearAllManualSupport}
                             >
                                 <span>{i18n._('Clear All Support')}</span>
-                            </Anchor>
+                            </Button>
                         </div>
-
                     </div>
                 )}
-
             </React.Fragment>
         );
     }
