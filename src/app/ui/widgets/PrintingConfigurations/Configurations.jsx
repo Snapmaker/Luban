@@ -37,16 +37,24 @@ class Configurations extends PureComponent {
         updateManagerDisplayType: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
         updateShowPrintingManager: PropTypes.func.isRequired,
-        updateDefaultQualityId: PropTypes.func.isRequired
+        updateDefaultQualityId: PropTypes.func.isRequired,
+        getDefaultDefinition: PropTypes.func.isRequired
     };
 
     state = {
+        selectedSettingDefaultValue: null,
         customConfigs: cloneDeep(PRINTING_QUALITY_CUSTOMIZE_FIELDS),
         showCustomConfigPannel: false,
         selectedDefinition: null
     };
 
     actions = {
+        onChangeSelectedDefinition: (selectedDefinition) => {
+            selectedDefinition && this.setState({
+                selectedSettingDefaultValue: this.props.getDefaultDefinition(selectedDefinition.definitionId),
+                selectedDefinition: selectedDefinition
+            });
+        },
         toggleShowCustomConfigPannel: () => {
             const { showCustomConfigPannel } = this.state;
             this.setState({
@@ -85,9 +93,22 @@ class Configurations extends PureComponent {
 
             await this.props.updateDefinitionSettings(selectedDefinition, newDefinitionSettings);
             await this.props.updateDefinitionsForManager(selectedDefinition.definitionId, 'quality');
-            this.setState({
-                selectedDefinition: newDefinitionForManager
-            });
+
+            this.actions.onChangeSelectedDefinition(newDefinitionForManager);
+            this.actions.displayModel();
+        },
+        onResetDefinition: async (definitionKey) => {
+            const { selectedDefinition } = this.state;
+            const value = this.props.getDefaultDefinition(selectedDefinition.definitionId)[definitionKey].default_value;
+            const newDefinitionForManager = cloneDeep(selectedDefinition);
+            newDefinitionForManager.settings[definitionKey].default_value = value;
+
+            const newDefinitionSettings = {};
+            newDefinitionSettings[definitionKey] = { 'default_value': value };
+
+            await this.props.updateDefinitionSettings(selectedDefinition, newDefinitionSettings);
+            await this.props.updateDefinitionsForManager(selectedDefinition.definitionId, 'quality');
+            this.actions.onChangeSelectedDefinition(newDefinitionForManager);
             this.actions.displayModel();
         },
         onShowMaterialManager: () => {
@@ -100,9 +121,7 @@ class Configurations extends PureComponent {
          * @param definition
          */
         onSelectOfficialDefinition: (definition) => {
-            this.setState({
-                selectedDefinition: definition
-            });
+            this.actions.onChangeSelectedDefinition(definition);
             this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         },
@@ -114,9 +133,7 @@ class Configurations extends PureComponent {
             this.actions.displayModel();
         },
         onSelectCustomDefinition: (definition) => {
-            this.setState({
-                selectedDefinition: definition
-            });
+            this.actions.onChangeSelectedDefinition(definition);
             // this.props.updateDefaultQualityId(definition.definitionId);
             this.props.updateActiveDefinition(definition);
         }
@@ -129,6 +146,7 @@ class Configurations extends PureComponent {
 
     componentDidMount() {
         const { defaultQualityId, qualityDefinitions } = this.props;
+
         if (qualityDefinitions.length) {
             // re-select definition based on new properties
             let definition = null;
@@ -167,10 +185,13 @@ class Configurations extends PureComponent {
     }
 
     render() {
-        const { qualityDefinitions, inProgress } = this.props;
+        const { qualityDefinitions, inProgress, defaultQualityId } = this.props;
         const state = this.state;
         const actions = this.actions;
         const qualityDefinition = this.state.selectedDefinition;
+        const selectedSettingDefaultValue = this.state.selectedSettingDefaultValue;
+        const isProfile = defaultQualityId
+            && includes(['material.pla', 'material.abs', 'quality.fast_print', 'quality.normal_quality', 'quality.high_quality'], defaultQualityId);
 
         const customDefinitionOptions = qualityDefinitions.map(d => ({
             label: d.name,
@@ -216,6 +237,12 @@ class Configurations extends PureComponent {
                                 definitionKey={key}
                                 key={key}
                                 onChangeDefinition={actions.onChangeDefinition}
+                                isDefinitionEditable={() => {
+                                    return !isProfile;
+                                }}
+                                defaultValue={{
+                                    value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
+                                }}
                             />
                         );
                     })}
@@ -253,6 +280,7 @@ class Configurations extends PureComponent {
                                     isDefinitionEditable={isDefinitionEditable}
                                     type="checkbox"
                                     onChangeDefinition={actions.onChangeCustomConfig}
+                                    onResetDefinition={actions.onResetDefinition}
                                 />
                             </div>
                             <div style={{ float: 'right' }}>
@@ -293,6 +321,8 @@ const mapDispatchToProps = (dispatch) => {
         updateDefinitionsForManager: (definition, type) => dispatch(printingActions.updateDefinitionsForManager(definition, type)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
         updateManagerDisplayType: (managerDisplayType) => dispatch(printingActions.updateManagerDisplayType(managerDisplayType)),
+        getDefaultDefinition: (id) => dispatch(printingActions.getDefaultDefinition(id)),
+
         destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
         displayModel: () => dispatch(printingActions.displayModel()),
         updateShowPrintingManager: (showPrintingManager) => dispatch(printingActions.updateShowPrintingManager(showPrintingManager))

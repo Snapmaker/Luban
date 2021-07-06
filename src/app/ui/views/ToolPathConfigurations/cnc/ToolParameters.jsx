@@ -46,7 +46,7 @@ function SettingItem(props) {
             title={i18n._(label)}
             content={i18n._(content)}
         >
-            <div key={settingName} className="sm-flex height-32 margin-vertical-8 justify-space-between">
+            <div key={settingName} className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
                 <span className="sm-flex-auto sm-flex-order-negative">{i18n._(label)}</span>
                 {type === 'bool' && (
                     <Checkbox
@@ -68,7 +68,8 @@ function SettingItem(props) {
                         value={defaultValue}
                         min={min}
                         max={max}
-                        className="sm-flex-width align-r"
+                        size="large"
+                        className="sm-flex-auto"
                         onChange={value => {
                             if (setting.isGcodeConfig) {
                                 const gcodeOptions = {};

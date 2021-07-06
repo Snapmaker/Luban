@@ -103,6 +103,57 @@ export const getToolDefinitions = (req, res) => {
     }
     res.send({ definitions });
 };
+export const getDefaultDefinitions = (req, res) => {
+    const regexV1 = /([A-Za-z0-9_]+).def.json$/;
+    const regexV2 = /([A-Za-z0-9_]+).defv2.json$/;
+
+    const configDir = `${DataStorage.configDir}/default/${CNC_CONFIG_SUBCATEGORY}`;
+    const filenames = fs.readdirSync(configDir);
+
+    // // Load pre-defined definitions first
+    const definitions = [];
+
+    for (const filename of filenames) {
+        if (regexV1.test(filename) && filename.substr(0, filename.length - 9) !== 'active') {
+            const filePath = path.join(configDir, filename);
+            const data = fs.readFileSync(filePath, 'utf8');
+            const json = JSON.parse(data);
+            if (json.toolList && isNil(json.settings)) {
+                const toolLists = json.toolList;
+                const shouldCheckName = json?.definitionId === 'Default';
+                toolLists.forEach((item) => {
+                    let shouldCoverDefinition = false;
+                    if (shouldCheckName && item.name && !includes(defaultToolListNames, item.name)) {
+                        shouldCoverDefinition = true;
+                    } else if (!shouldCheckName && item.name) {
+                        shouldCoverDefinition = true;
+                    }
+                    if (shouldCoverDefinition) {
+                        const newDefinition = {};
+                        newDefinition.category = json.category;
+                        newDefinition.version = json.version;
+                        newDefinition.name = item.name;
+                        newDefinition.settings = item.config;
+                        const newName = `Old${json.definitionId}${item.name}`;
+                        newDefinition.definitionId = newName;
+                        fs.writeFileSync(path.join(configDir, `${newName}${Suffix}`), JSON.stringify(newDefinition));
+                        // JSON.stringify
+                        definitions.push(newDefinition);
+                    }
+                });
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        if (regexV2.test(filename) && filename.substr(0, filename.length - Suffix.length) !== 'active') {
+            const filePath = path.join(configDir, filename);
+            const data = fs.readFileSync(filePath, 'utf8');
+            const json = JSON.parse(data);
+            definitions.push(json);
+        }
+    }
+    res.send({ definitions });
+};
 export const createToolListDefinition = (req, res) => {
     const { activeToolList } = req.body;
     const newActiveToolDefinition = JSON.parse(JSON.stringify(activeToolList));

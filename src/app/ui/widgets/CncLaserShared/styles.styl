@@ -106,7 +106,6 @@
         > span
             color: #1890FF;
 
-
     &__icon-bw
         background: url("../../../resources/images/cnc-laser/laser-mode-bw-88x88.png") no-repeat 0 0
         background-size: 100%
@@ -125,6 +124,44 @@
 
     &__icon-halftone
         background: url("../../../resources/images/cnc-laser/laser-mode-halftone-88x88.png") no-repeat 0 0
+        background-size: 100%
+
+    &__text
+        margin-top: 8px
+        float: left
+        width: 100%
+        text-align: center
+        vertical-align: top
+
+.cnc-mode
+    .unselected, .selected
+        > a
+            display: block
+            width: 76px
+            border-radius: $border-radius
+            border: 1px solid #B9BCBF;
+
+            > i
+                display: block
+                border-radius: $border-radius
+                width: 74px
+                height: 74px
+    .selected
+        > a
+            border: 1px solid #1890FF;
+        > span
+            color: #1890FF;
+
+    &__icon-greyscale
+        background: url("../../../resources/images/cnc-laser/laser-mode-greyscale-88x88.png") no-repeat 0 0
+        background-size: 100%
+
+    &__icon-vector
+        background: url("../../../resources/images/cnc-laser/laser-mode-vector-88x88.png") no-repeat 0 0
+        background-size: 100%
+
+    &__icon-text
+        background: url("../../../resources/images/cnc-laser/laser-mode-text-88x88.png") no-repeat 0 0
         background-size: 100%
 
     &__text

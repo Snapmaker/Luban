@@ -340,7 +340,6 @@ const ToolPathListBox = (props) => {
         }
     }, [page]);
 
-
     return (
         <div className="clearfix margin-bottom-16">
             <div className={classNames(

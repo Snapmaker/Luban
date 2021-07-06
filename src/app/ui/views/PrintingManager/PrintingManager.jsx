@@ -42,8 +42,8 @@ function PrintingManager() {
     const showPrintingManager = useSelector(state => state?.printing?.showPrintingManager, shallowEqual);
     // const series = useSelector(state => state?.machine?.series, shallowEqual);
     const managerDisplayType = useSelector(state => state?.printing?.managerDisplayType, shallowEqual);
-    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
-    const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions, shallowEqual);
+    const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions);
+    const qualityDefinitions = useSelector(state => state?.printing?.qualityDefinitions);
     const dispatch = useDispatch();
     if (!showPrintingManager) {
         return null;
@@ -117,6 +117,12 @@ function PrintingManager() {
         },
         removeManagerDefinition: async (definition) => {
             await dispatch(printingActions.removeDefinitionByType(managerDisplayType, definition));
+        },
+        getDefaultDefinition: (definitionId) => {
+            return dispatch(printingActions.getDefaultDefinition(definitionId));
+        },
+        resetDefinitionById: (id) => {
+            dispatch(printingActions.resetDefinitionById(id));
         }
     };
 

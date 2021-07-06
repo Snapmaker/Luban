@@ -45,7 +45,7 @@ function creatCateArray(optionList) {
     return cates;
 }
 
-function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId) {
+function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId, getDefaultDefinition) {
     const definitionsRef = useRef([]);
     useEffect(() => {
         const newState = {};
@@ -56,8 +56,11 @@ function useGetDefinitions(allDefinitions, definitionState, setDefinitionState, 
         } else if (!definitionForManager && !defaultKeysAndId?.name) {
             definitionForManager = allDefinitions.find(d => d.definitionId === defaultKeysAndId?.id);
         }
+        const selectedSettingDefaultValue = getDefaultDefinition && getDefaultDefinition(definitionForManager?.definitionId);
+
         Object.assign(newState, {
-            definitionForManager: definitionForManager
+            definitionForManager: definitionForManager,
+            selectedSettingDefaultValue: selectedSettingDefaultValue
         });
 
         const definitionOptions = allDefinitions.map(d => {
@@ -105,7 +108,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
         renameInput: useRef(null),
         refCreateModal: useRef(null)
     };
-    const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId);
+    const currentDefinitions = useGetDefinitions(allDefinitions, definitionState, setDefinitionState, defaultKeysAndId, outsideActions.getDefaultDefinition);
     const actions = {
         isCategorySelectedNow: (category) => {
             const { definitionForManager, isCategorySelected } = definitionState;
@@ -133,6 +136,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 }, 0);
             }
         },
+        // onSelectedQualityDefinition
         onSelectDefinitionById: (definitionId, name) => {
             const { definitionForManager, isCategorySelected } = definitionState;
             if (!isCategorySelected && definitionId === definitionForManager.definitionId) {
@@ -149,10 +153,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 actions.setRenamingStatus(false);
             }
             if (selected) {
+                const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(selected.definitionId);
                 setDefinitionState({
                     definitionForManager: selected,
                     isCategorySelected: false,
-                    selectedName: selected.name
+                    selectedName: selected.name,
+                    selectedSettingDefaultValue: selectedSettingDefaultValue
                 });
             }
         },
@@ -167,10 +173,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             }
             const activeToolCategory = currentDefinitions.current.find(d => d.category === category);
 
+            const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(activeToolCategory.definitionId);
             setDefinitionState({
                 definitionForManager: activeToolCategory,
                 selectedName: activeToolCategory.category,
-                isCategorySelected: true
+                isCategorySelected: true,
+                selectedSettingDefaultValue: selectedSettingDefaultValue
             });
         },
         foldCategory: (category) => {
@@ -178,10 +186,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
             setConfigExpanded(JSON.parse(JSON.stringify(configExpanded)));
         },
         onSelectDefinition: (definitionForManager) => {
+            const selectedSettingDefaultValue = outsideActions.getDefaultDefinition(definitionForManager.definitionId);
             setDefinitionState({
                 definitionForManager: definitionForManager,
                 isCategorySelected: false,
-                selectedName: definitionForManager.name
+                selectedName: definitionForManager.name,
+                selectedSettingDefaultValue: selectedSettingDefaultValue
             });
         },
         onRemoveManagerDefinition: async (definition, isCategorySelected) => {
@@ -388,20 +398,6 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                 definitionForManager: newDefinitionForManager
             });
 
-            // if (checkboxKeyArray) {
-            //     let newDefinitionOptions;
-            //     checkboxKeyArray.forEach((checkboxKey) => {
-            //         newDefinitionOptions = definitionOptions.map((item) => {
-            //             if (item.label === definitionForManager.name && key === checkboxKey) {
-            //                 item[checkboxKey] = value;
-            //             }
-            //             return item;
-            //         });
-            //     });
-            //     setDefinitionState({
-            //         definitionOptions: newDefinitionOptions
-            //     });
-            // }
             outsideActions.onSaveDefinitionForManager(newDefinitionForManager);
         }
     };
@@ -439,6 +435,8 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 <ul className={classNames(styles['manager-name-wrapper'])}>
                                     {(cates.map((cate) => {
                                         const displayCategory = limitStringLength(cate.category, 28);
+                                        const { category } = cate;
+                                        const isDefault = category.indexOf('Default') !== -1;
                                         const isCategorySelected = cate.category === definitionState?.definitionForManager.category;
                                         return !!cate.items.length && (
                                             <li key={`${cate.category}`}>
@@ -447,15 +445,12 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                     onClick={() => actions.onSelectToolCategory(cate.category)}
                                                     onDoubleClick={() => actions.setRenamingStatus(true)}
                                                 >
-                                                    <div className={classNames(styles['manager-btn-unfold'])}>
-                                                        <span
-                                                            className={classNames(styles['manager-btn-unfold-bg'], { [styles.unfold]: !configExpanded[cate.category] })}
-                                                            onKeyDown={() => {}}
-                                                            role="button"
-                                                            tabIndex={0}
-                                                            onClick={() => { actions.foldCategory(cate.category); }}
-                                                        />
-                                                    </div>
+                                                    <SvgIcon
+                                                        // type={['hoverNormal', 'pressSpecial']}
+                                                        size={24}
+                                                        name="DropdownOpen"
+                                                        onClick={() => { actions.foldCategory(cate.category); }}
+                                                    />
                                                     {(definitionState?.isCategorySelected && isCategorySelected && definitionState?.renamingStatus) ? (
                                                         <input
                                                             ref={refs.renameInput}
@@ -482,6 +477,20 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                             const displayName = limitStringLength(i18n._(currentOption.label), 24);
                                                             const definitionForManager = definitionState?.definitionForManager;
                                                             const isSelected = !definitionState.isCategorySelected && currentOption.value === definitionForManager.definitionId;
+                                                            let isAllValueDefault = isDefault && isSelected;
+                                                            if (isDefault && isSelected) {
+                                                                const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
+                                                                optionConfigGroup.map((item) => {
+                                                                    item.fields.map((key) => {
+                                                                        if (definitionForManager.settings[key].default_value !== selectedSettingDefaultValue[key].default_value) {
+                                                                            isAllValueDefault = false;
+                                                                        }
+                                                                        return null;
+                                                                    });
+                                                                    return null;
+                                                                });
+                                                            }
+
                                                             if (isUndefined(currentOption.label) || currentOption.isHidden) {
                                                                 return null;
                                                             } else {
@@ -494,6 +503,17 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                                                             onClick={() => actions.onSelectDefinitionById(currentOption.value, currentOption.label)}
                                                                             onDoubleClick={() => actions.setRenamingStatus(true)}
                                                                         >
+                                                                            {isDefault && isSelected && !isAllValueDefault && (
+                                                                                <span className="margin-left-8">
+                                                                                    <SvgIcon
+                                                                                        name="Reset"
+                                                                                        size={24}
+                                                                                        onClick={() => {
+                                                                                            outsideActions.resetDefinitionById(currentOption.value);
+                                                                                        }}
+                                                                                    />
+                                                                                </span>
+                                                                            )}
                                                                             {(isSelected && definitionState.renamingStatus) ? (
                                                                                 <input
                                                                                     ref={refs.renameInput}
@@ -536,7 +556,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     <SvgIcon
                                         name="Edit"
                                         disabled={isOfficialDefinition(definitionState.definitionForManager)}
-                                        size={18}
+                                        size={24}
                                         title={i18n._('Edit')}
                                         onClick={() => actions.setRenamingStatus(true)}
                                     />
@@ -550,20 +570,20 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                     />
                                     <SvgIcon
                                         name="Import"
-                                        size={18}
+                                        size={24}
                                         title={i18n._('Import')}
                                         onClick={() => actions.importFile(refs.fileInput)}
                                     />
                                     <SvgIcon
                                         name="Export"
-                                        size={18}
+                                        size={24}
                                         disabled={definitionState.isCategorySelected}
                                         title={i18n._('Export')}
                                         onClick={() => outsideActions.exportConfigFile(definitionState.definitionForManager)}
                                     />
                                     <SvgIcon
                                         name="Delete"
-                                        size={18}
+                                        size={24}
                                         title={i18n._('Delete')}
                                         onClick={() => actions.onRemoveManagerDefinition(definitionState.definitionForManager, definitionState.isCategorySelected)}
                                         disabled={isOfficialDefinition(definitionState.definitionForManager)}
@@ -573,16 +593,16 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
 
                                 <div className="sm-tabs" style={{ padding: '16px' }}>
                                     <SvgIcon
-                                        name="New"
-                                        size={18}
+                                        name="NewNomal" // TODO: "NewNormal"
+                                        size={24}
                                         className={classNames(styles['manager-file'], 'sm-tab')}
                                         onClick={() => { actions.showNewModal(); }}
                                         spanText={i18n._('New')}
                                         spanClassName={classNames(styles['action-title'])}
                                     />
                                     <SvgIcon
-                                        name="Copy"
-                                        size={18}
+                                        name="CopyNormal"
+                                        size={24}
                                         className={classNames(styles['manager-file'], 'sm-tab')}
                                         onClick={() => { actions.showDuplicateModal(); }}
                                         spanText={i18n._('Copy')}
@@ -596,6 +616,7 @@ function ProfileManager({ optionConfigGroup, disableCategory = true, managerTitl
                                 optionConfigGroup={optionConfigGroup}
                                 isDefinitionEditable={isDefinitionEditable}
                                 onChangeDefinition={actions.onChangeDefinition}
+                                selectedSettingDefaultValue={definitionState?.selectedSettingDefaultValue}
                             />
 
                         </div>

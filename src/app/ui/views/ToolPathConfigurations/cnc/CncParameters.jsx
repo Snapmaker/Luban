@@ -115,7 +115,7 @@ class CncParameters extends PureComponent {
                         <span className="sm-parameter-row__label">{i18n._('Name')}</span>
                         <TextInput
                             className="sm-parameter-row__input"
-                            style={{ display: 'inline-block', width: '160px', lineHeight: '15px' }}
+                            size="large"
                             value={name}
                             onChange={(event) => { this.props.updateToolPath({ name: event.target.value }); }}
                         />
@@ -187,12 +187,12 @@ class CncParameters extends PureComponent {
                                     title={i18n._('Target Depth')}
                                     content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
                                 >
-                                    <div className="sm-parameter-row">
-                                        <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                                    <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                        <span>{i18n._('Target Depth')}</span>
                                         <Input
                                             disabled={false}
-                                            className="sm-parameter-row__input"
-                                            style={{ width: '160px' }}
+                                            className="sm-flex-auto"
+                                            size="large"
                                             value={targetDepth}
                                             min={0.01}
                                             max={size.z}
@@ -214,9 +214,9 @@ class CncParameters extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Method')}</span>
                                 <TextInput
                                     disabled
+                                    size="large"
                                     className="sm-parameter-row__input"
                                     value={methodType}
-                                    style={{ width: '160px' }}
                                 />
                             </div>
                         </TipTrigger>
@@ -234,7 +234,7 @@ class CncParameters extends PureComponent {
                                             disabled
                                             className="sm-parameter-row__input"
                                             value={methodType}
-                                            style={{ width: '160px' }}
+                                            size="large"
                                         />
                                     </div>
                                 </TipTrigger>
@@ -264,12 +264,12 @@ class CncParameters extends PureComponent {
                             )}
 
                             {isRotate && sliceMode === CNC_MESH_SLICE_MODE_LINKAGE && (
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label-lg">{i18n._('Y Smoothing')}</span>
+                                <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                    <span>{i18n._('Y Smoothing')}</span>
                                     <input
                                         disabled={false}
                                         type="checkbox"
-                                        className="sm-parameter-row__checkbox"
+                                        className="sm-flex-auto"
                                         checked={smoothY}
                                         onChange={() => { this.props.updateGcodeConfig({ smoothY: !smoothY }); }}
                                     />
@@ -281,14 +281,14 @@ class CncParameters extends PureComponent {
                         <TipTrigger
                             title={i18n._('Target Depth')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                <span>{i18n._('Target Depth')}</span>
                                 <Input
                                     disabled={false}
-                                    className="sm-parameter-row__input"
+                                    className="sm-flex-auto"
                                     value={targetDepth}
+                                    size="large"
                                     min={0.01}
-                                    style={{ width: '160px' }}
                                     step={0.1}
                                     max={100}
                                     onChange={(value) => { this.props.updateGcodeConfig({ targetDepth: value }); }}
@@ -301,14 +301,14 @@ class CncParameters extends PureComponent {
                         <TipTrigger
                             title={i18n._('Allowance')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Allowance')}</span>
+                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                                <span>{i18n._('Allowance')}</span>
                                 <Input
                                     disabled={false}
-                                    className="sm-parameter-row__input"
+                                    className="sm-flex-auto"
+                                    size="large"
                                     value={allowance}
                                     min={0.00}
-                                    style={{ width: '160px' }}
                                     step={0.1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ allowance: value }); }}
                                 />

@@ -6,12 +6,15 @@ import { NumberInput as Input } from '../../components/Input';
 import Checkbox from '../../components/Checkbox';
 
 import TipTrigger from '../../components/TipTrigger';
+import SvgIcon from '../../components/SvgIcon';
 
-function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEditable = () => true, onChangeDefinition }) {
+function SettingItem({ definitionKey, settings, isDefinitionEditable = () => true, onChangeDefinition, defaultValue }) {
     const setting = settings[definitionKey];
 
+    const isProfile = !isDefinitionEditable();
     const { label, description, type, unit = '', enabled, options } = setting;
-    const defaultValue = setting.default_value;
+    const settingDefaultValue = setting.default_value;
+    const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
     if (typeof enabled === 'string') {
         if (enabled.indexOf(' and ') !== -1) {
             const andConditions = enabled.split(' and ').map(c => c.trim());
@@ -99,74 +102,88 @@ function SettingItem({ definitionKey, settings, width = 'auto', isDefinitionEdit
     }
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
-            <div className="sm-parameter-row">
-                <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
-                {type === 'float' && (
-                    <Input
-                        className="sm-parameter-row__input"
-                        style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
-                        onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
-                        }}
-                    />
-                )}
-                {type === 'float' && (
-                    <span className="sm-parameter-row__input-unit">{unit}</span>
-                )}
-                {type === 'int' && (
-                    <Input
-                        className="sm-parameter-row__input"
-                        style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
-                        onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
-                        }}
-                    />
-                )}
-                {type === 'int' && (
-                    <span className="sm-parameter-row__input-unit">{unit}</span>
-                )}
-                {type === 'bool' && (
-                    <Checkbox
-                        className="sm-parameter-row__checkbox"
-                        style={{ cursor: !isDefinitionEditable() ? 'not-allowed' : 'default' }}
-                        defaultChecked={defaultValue}
-                        disabled={!isDefinitionEditable()}
-                        onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
-                    />
-                )}
-                {type === 'enum' && (
-                    <Select
-                        className="sm-parameter-row__select-md"
-                        backspaceRemoves={false}
-                        clearable={false}
-                        menuContainerStyle={{ zIndex: 5 }}
-                        name={definitionKey}
-                        disabled={!isDefinitionEditable()}
-                        options={opts}
-                        value={defaultValue}
-                        onChange={(option) => {
-                            onChangeDefinition(definitionKey, option.value);
-                        }}
-                    />
-                )}
-                {type === undefined && (
-                    <Input
-                        className="sm-parameter-row__input"
-                        style={{ width: width }}
-                        value={defaultValue}
-                        disabled={!isDefinitionEditable()}
-                        onChange={(value) => {
-                            onChangeDefinition(definitionKey, value);
-                        }}
-                    />
-                )}
-                {type === undefined && (
-                    <span className="sm-parameter-row__input-unit">{unit}</span>
-                )}
+            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                <span>
+                    {i18n._(label)}
+                </span>
+                <div className="sm-flex-auto">
+                    {isProfile && !isDefault && (
+                        <SvgIcon
+                            className="margin-horizontal-4"
+                            name="Reset"
+                            size={24}
+                            // className={}
+                            onClick={() => {
+                                onChangeDefinition(definitionKey, (defaultValue && defaultValue.value) ?? settingDefaultValue);
+                            }}
+                        />
+                    )}
+                    {type === 'float' && (
+                        <Input
+                            className="sm-flex-width align-r"
+                            value={settingDefaultValue}
+                            // disabled={!isDefinitionEditable()}
+                            size="large"
+                            onChange={(value) => {
+                                onChangeDefinition(definitionKey, value);
+                            }}
+                        />
+                    )}
+                    {type === 'float' && (
+                        <span className="sm-flex__input-unit-8">{unit}</span>
+                    )}
+                    {type === 'int' && (
+                        <Input
+                            className="sm-flex-width align-r"
+                            value={settingDefaultValue}
+                            // disabled={!isDefinitionEditable()}
+                            onChange={(value) => {
+                                onChangeDefinition(definitionKey, value);
+                            }}
+                        />
+                    )}
+                    {type === 'int' && (
+                        <span className="sm-flex__input-unit-8">{unit}</span>
+                    )}
+                    {type === 'bool' && (
+                        <Checkbox
+                            className="sm-flex-width align-r"
+                            defaultChecked={settingDefaultValue}
+                            // disabled={!isDefinitionEditable()}
+                            type="checkbox"
+                            checked={settingDefaultValue}
+                            onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
+                        />
+                    )}
+                    {type === 'enum' && (
+                        <Select
+                            className="sm-flex-width align-r"
+                            backspaceRemoves={false}
+                            clearable={false}
+                            menuContainerStyle={{ zIndex: 5 }}
+                            name={definitionKey}
+                            // disabled={!isDefinitionEditable()}
+                            options={opts}
+                            value={settingDefaultValue}
+                            onChange={(option) => {
+                                onChangeDefinition(definitionKey, option.value);
+                            }}
+                        />
+                    )}
+                    {type === undefined && (
+                        <Input
+                            className="sm-flex-width align-r"
+                            value={settingDefaultValue}
+                            // disabled={!isDefinitionEditable()}
+                            onChange={(value) => {
+                                onChangeDefinition(definitionKey, value);
+                            }}
+                        />
+                    )}
+                    {type === undefined && (
+                        <span className="sm-parameter-row__input-unit">{unit}</span>
+                    )}
+                </div>
             </div>
         </TipTrigger>
     );
@@ -175,8 +192,8 @@ SettingItem.propTypes = {
     settings: PropTypes.object.isRequired,
     definitionKey: PropTypes.string.isRequired,
     isDefinitionEditable: PropTypes.func,
-    width: PropTypes.string,
-    onChangeDefinition: PropTypes.func.isRequired
+    onChangeDefinition: PropTypes.func.isRequired,
+    defaultValue: PropTypes.object
 };
 
 export default React.memo(SettingItem);

@@ -172,6 +172,9 @@ class DataStorage {
                  const dstPath = path.join(dst, file);
                  if (fs.statSync(srcPath).isFile()) {
                      fs.copyFileSync(srcPath, dstPath);
+                 } else {
+                     // Todo: cause dead cycle?
+                     await this.copyDir(srcPath, dstPath);
                  }
              }
          }
