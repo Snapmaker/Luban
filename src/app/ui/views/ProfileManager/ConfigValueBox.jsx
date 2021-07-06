@@ -90,6 +90,7 @@ function ConfigValueBox({ optionConfigGroup, calculateTextIndex, isCategorySelec
                                                 defaultValue={{
                                                     value: selectedSettingDefaultValue && selectedSettingDefaultValue[key].default_value
                                                 }}
+                                                styleSize="large"
                                             />
                                         );
                                     } else if (type === 'checkbox') {

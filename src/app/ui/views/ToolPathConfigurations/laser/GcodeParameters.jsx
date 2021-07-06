@@ -1,13 +1,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 // import Slider from '../../../components/Slider';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
-import NumberInput from '../../../components/Input/NumberInput';
-import widgetStyles from '../../../widgets/styles.styl';
+import SvgIcon from '../../../components/SvgIcon';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
@@ -36,17 +34,24 @@ class GcodeParameters extends PureComponent {
         return (
             <React.Fragment>
                 {isImage && (
-                    <div>
+                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <SvgIcon
+                            name="TitleSetting"
+                            size={24}
+                        />
                         <span>{i18n._('Fill')}</span>
-                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                    </div>
+                )}
+                {isImage && (
+                    <div>
                         <TipTrigger
                             title={i18n._('Density')}
                             content={i18n._('Determines how fine and smooth the engraved picture will be. \
     The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
                         >
-                            <div className="position-re sm-flex justify-space-between height-32 margin-vertical-8">
+                            <div className="sm-flex justify-space-between height-32 margin-vertical-8">
                                 <span>{i18n._('Density')}</span>
-                                <NumberInput
+                                <Input
                                     className="sm-flex-auto"
                                     size="large"
                                     value={density}
@@ -55,29 +60,22 @@ class GcodeParameters extends PureComponent {
                                     step={1}
                                     onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32">dot/mm</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">dot/mm</span>
                             </div>
                         </TipTrigger>
                     </div>
                 )}
                 {isSVG && (
-                    <div>
-                        {/* <TipTrigger*/}
-                        {/*    title={i18n._('Optimize Path')}*/}
-                        {/*    content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}*/}
-                        {/* >*/}
-                        {/*    <div className="sm-parameter-row">*/}
-                        {/*        <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>*/}
-                        {/*        <input*/}
-                        {/*            type="checkbox"*/}
-                        {/*            className="sm-parameter-row__checkbox"*/}
-                        {/*            checked={optimizePath}*/}
-                        {/*            onClick={() => { this.props.updateGcodeConfig({ optimizePath: !optimizePath }); }}*/}
-                        {/*        />*/}
-                        {/*    </div>*/}
-                        {/* </TipTrigger>*/}
+                    <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                        <SvgIcon
+                            name="TitleSetting"
+                            size={24}
+                        />
                         <span>{i18n._('Fill')}</span>
-                        <div className={classNames(widgetStyles.separator)} />
+                    </div>
+                )}
+                {isSVG && (
+                    <div>
                         <div
                             title={i18n._('Fill')}
                         >
@@ -105,8 +103,13 @@ class GcodeParameters extends PureComponent {
                         </div>
                     </div>
                 )}
-                <span>{i18n._('Speed')}</span>
-                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                    <SvgIcon
+                        name="TitleSetting"
+                        size={24}
+                    />
+                    <span>{i18n._('Speed')}</span>
+                </div>
                 {jogSpeed !== ABSENT_VALUE && (
                     <TipTrigger
                         title={i18n._('Jog Speed')}
@@ -123,7 +126,7 @@ class GcodeParameters extends PureComponent {
                                 step={1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ jogSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -143,7 +146,7 @@ class GcodeParameters extends PureComponent {
                                 max={6000}
                                 onChange={(value) => { this.props.updateGcodeConfig({ workSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -163,7 +166,7 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ dwellTime: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">ms/dot</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">ms/dot</span>
                         </div>
                     </TipTrigger>
                 )}
@@ -182,12 +185,17 @@ class GcodeParameters extends PureComponent {
                                 step={0.1}
                                 onChange={(value) => { this.props.updateGcodeConfig({ plungeSpeed: value }); }}
                             />
-                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm/min</span>
+                            <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm/min</span>
                         </div>
                     </TipTrigger>
                 )}
-                <span>{i18n._('Repetition')}</span>
-                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                    <SvgIcon
+                        name="TitleSetting"
+                        size={24}
+                    />
+                    <span>{i18n._('Repetition')}</span>
+                </div>
                 {multiPassEnabled !== undefined && (
                     <div
                         style={{ marginTop: '10px', marginBottom: '10px' }}
@@ -226,7 +234,7 @@ class GcodeParameters extends PureComponent {
                                         value={multiPassDepth}
                                         onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
                                     />
-                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32">mm</span>
+                                    <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">mm</span>
                                 </div>
                             </TipTrigger>
                         )}
@@ -238,8 +246,13 @@ class GcodeParameters extends PureComponent {
                         title={i18n._('Fixed Power')}
                         titletip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
                     >
-                        <span>{i18n._('Power')}</span>
-                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                        <div className="border-bottom-normal padding-bottom-4 margin-bottom-16">
+                            <SvgIcon
+                                name="TitleSetting"
+                                size={24}
+                            />
+                            <span>{i18n._('Power')}</span>
+                        </div>
                         <TipTrigger
                             title={i18n._('Power')}
                             content={i18n._('Power to use when laser is working.')}
@@ -254,7 +267,7 @@ class GcodeParameters extends PureComponent {
                                     value={fixedPower}
                                     onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
                                 />
-                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32">%</span>
+                                <span className="unit-text sm-flex__input-unit-in-modal line-height-32 margin-horizontal-16">%</span>
                             </div>
                         </TipTrigger>
                     </div>

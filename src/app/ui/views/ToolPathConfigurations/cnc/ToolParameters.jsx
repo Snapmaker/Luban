@@ -10,7 +10,7 @@ import Checkbox from '../../../components/Checkbox';
 import { toHump } from '../../../../../shared/lib/utils';
 
 function SettingItem(props) {
-    const { setting, isSVG, settingName, updateToolConfig, updateGcodeConfig } = props;
+    const { setting, isSVG, settingName, updateToolConfig, updateGcodeConfig, styleSize = 'large' } = props;
     if (!setting) {
         return null;
     }
@@ -68,7 +68,7 @@ function SettingItem(props) {
                         value={defaultValue}
                         min={min}
                         max={max}
-                        size="large"
+                        size={styleSize}
                         className="sm-flex-auto"
                         onChange={value => {
                             if (setting.isGcodeConfig) {
@@ -87,7 +87,7 @@ function SettingItem(props) {
                         clearable={false}
                         searchable={false}
                         name={i18n._(label)}
-                        size="small"
+                        size={styleSize === 'middle' ? 'small' : 'middle'} // Todo: change the size to the same value
                         className="sm-flex-width align-r"
                         options={optionsArray}
                         value={defaultValue}
@@ -103,7 +103,7 @@ function SettingItem(props) {
                         disabled={isToolParams(settingName)}
                     />
                 )}
-                <span className="sm-flex__input-unit-40">{unit}</span>
+                <span className="sm-flex__input-unit-8">{unit}</span>
             </div>
         </TipTrigger>
 
@@ -114,12 +114,13 @@ SettingItem.propTypes = {
     updateToolConfig: PropTypes.func.isRequired,
     updateGcodeConfig: PropTypes.func.isRequired,
     setting: PropTypes.object.isRequired,
-    isSVG: PropTypes.bool.isRequired
+    isSVG: PropTypes.bool.isRequired,
+    styleSize: PropTypes.bool.isRequired
 };
 
 
 function ToolParameters(props) {
-    const { settings, toolPath, updateToolConfig, updateGcodeConfig } = props;
+    const { settings, toolPath, updateToolConfig, updateGcodeConfig, styleSize = 'large' } = props;
     const type = toolPath?.type;
     const isSVG = type === TOOLPATH_TYPE_VECTOR;
 
@@ -132,6 +133,7 @@ function ToolParameters(props) {
                             const setting = settings[key];
                             return (
                                 <SettingItem
+                                    styleSize={styleSize}
                                     setting={setting}
                                     updateToolConfig={updateToolConfig}
                                     updateGcodeConfig={updateGcodeConfig}
@@ -151,7 +153,8 @@ ToolParameters.propTypes = {
     settings: PropTypes.object.isRequired,
     toolPath: PropTypes.object.isRequired,
     updateToolConfig: PropTypes.func.isRequired,
-    updateGcodeConfig: PropTypes.func.isRequired
+    updateGcodeConfig: PropTypes.func.isRequired,
+    styleSize: PropTypes.string
 };
 
 export default ToolParameters;

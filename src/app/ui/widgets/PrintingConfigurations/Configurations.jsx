@@ -233,6 +233,7 @@ class Configurations extends PureComponent {
                     { state.customConfigs.map((key) => {
                         return (
                             <SettingItem
+                                styleSize="small"
                                 settings={qualityDefinition?.settings}
                                 definitionKey={key}
                                 key={key}

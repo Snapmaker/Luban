@@ -10,6 +10,8 @@ import TipTrigger from '../../components/TipTrigger';
 import { actions as editorActions } from '../../../flux/editor';
 import { NumberInput as Input } from '../../components/Input';
 import { BACK, BOTTOM, FRONT, LEFT, RIGHT, TOP } from '../../../constants';
+import styles from '../CncLaserShared/styles.styl';
+import SvgIcon from '../../components/SvgIcon';
 
 class Image3dParameters extends PureComponent {
     static propTypes = {
@@ -76,85 +78,85 @@ class Image3dParameters extends PureComponent {
         const actions = this.actions;
 
         return (
-            <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
-                    <span className="fa fa-gears sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Model')}</span>
-                    <span className={classNames(
-                        'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                    )}
+            <div className={styles['cnc-mode']}>
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
+                    <span className="sm-flex-width">{i18n._('Model')}</span>
+                    <SvgIcon
+                        name="DropdownLine"
+                        className={classNames(
+                            this.state.expanded ? '' : 'rotate180'
+                        )}
                     />
                 </Anchor>
                 {this.state.expanded && (
-                    <React.Fragment>
-                        {!this.props.materials.isRotate && (
+                    <div className="margin-vertical-8">
+                        <React.Fragment>
+                            {!this.props.materials.isRotate && (
+                                <TipTrigger
+                                    title={i18n._('Projection Direction')}
+                                    content={i18n._('Select the model\'s projection orientation.')}
+                                >
+                                    <div className="sm-flex height-32 margin-vertical-8">
+                                        <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Projection Direction')}</span>
+                                        <Select
+                                            disabled={disabled}
+                                            className="sm-flex-width align-r"
+                                            size="120px"
+                                            backspaceRemoves={false}
+                                            clearable={false}
+                                            options={Options}
+                                            value={direction}
+                                            onChange={(option) => {
+                                                actions.onChangeDirectionFace(option);
+                                                this.props.processSelectedModel();
+                                            }}
+                                        />
+                                    </div>
+                                </TipTrigger>
+                            )}
+                            {this.props.materials.isRotate && (
+                                <TipTrigger
+                                    title={i18n._('Placement Face')}
+                                >
+                                    <div className="sm-flex height-32 margin-vertical-8">
+                                        <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Placement Face')}</span>
+                                        <Select
+                                            disabled={disabled}
+                                            className="sm-flex-width align-r"
+                                            size="120px"
+                                            clearable={false}
+                                            options={Options}
+                                            value={placement}
+                                            onChange={(option) => {
+                                                actions.onChangePlacementFace(option);
+                                                this.props.processSelectedModel();
+                                            }}
+                                        />
+                                    </div>
+                                </TipTrigger>
+                            )}
                             <TipTrigger
-                                title={i18n._('Projection Direction')}
-                                content={i18n._('Select the model\'s projection orientation.')}
+                                title={i18n._('Image Density')}
+                                content={i18n._('Set the density of the images generated by model')}
                             >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Projection Direction')}</span>
-                                    <Select
+                                <div className="sm-flex height-32 margin-vertical-8">
+                                    <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Image Density')}</span>
+                                    <Input
                                         disabled={disabled}
-                                        className="sm-parameter-row__select"
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        options={Options}
-                                        value={direction}
+                                        className="sm-flex-width align-r"
+                                        value={sliceDensity}
+                                        min={1}
+                                        max={20}
+                                        step={1}
                                         onChange={(option) => {
-                                            actions.onChangeDirectionFace(option);
+                                            actions.onChangeSliceDensityGray(option);
                                             this.props.processSelectedModel();
                                         }}
                                     />
                                 </div>
                             </TipTrigger>
-                        )}
-                        {this.props.materials.isRotate && (
-                            <TipTrigger
-                                title={i18n._('Placement Face')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Placement Face')}</span>
-                                    <Select
-                                        disabled={disabled}
-                                        className="sm-parameter-row__select"
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        searchable={false}
-                                        options={Options}
-                                        value={placement}
-                                        onChange={(option) => {
-                                            actions.onChangePlacementFace(option);
-                                            this.props.processSelectedModel();
-                                        }}
-                                    />
-                                </div>
-                            </TipTrigger>
-                        )}
-                        <TipTrigger
-                            title={i18n._('Image Density')}
-                            content={i18n._('Set the density of the images generated by model')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Image Density')}</span>
-                                <Input
-                                    disabled={disabled}
-                                    className="sm-parameter-row__input"
-                                    value={sliceDensity}
-                                    min={1}
-                                    max={20}
-                                    step={1}
-                                    onChange={(option) => {
-                                        actions.onChangeSliceDensityGray(option);
-                                        this.props.processSelectedModel();
-                                    }}
-                                />
-                            </div>
-                        </TipTrigger>
-                    </React.Fragment>
+                        </React.Fragment>
+                    </div>
                 )}
             </div>
         );
