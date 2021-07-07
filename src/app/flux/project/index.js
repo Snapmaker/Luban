@@ -8,7 +8,8 @@ import {
     SOURCE_TYPE_IMAGE3D,
     PROCESS_MODE_MESH,
     getCurrentHeadType,
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL
+    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_CENTER, PAGE_EDITOR, DISPLAYED_TYPE_MODEL,
+    MAX_RECENT_FILES_LENGTH
 } from '../../constants';
 import api from '../../api';
 import { actions as printingActions } from '../printing';
@@ -124,13 +125,8 @@ export const actions = {
         content && dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
     },
 
-    clearSavedEnvironment: (headType) => async (dispatch, getState) => {
+    clearSavedEnvironment: (headType) => async (dispatch) => {
         try {
-            // Todo: toolPaths state add into env
-            const { toolPathGroup } = getState()[headType];
-            if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
-                toolPathGroup.deleteAllToolPaths();
-            }
             await api.removeEnv({ headType });
         } catch (e) {
             console.log(e);
@@ -139,13 +135,17 @@ export const actions = {
         dispatch(actions.updateState(headType, { findLastEnvironment: false, unSaved: false }));
     },
 
-    onRecovery: (envHeadType, backendRecover = true) => async (dispatch, getState) => {
+    onRecovery: (envHeadType, envObj, backendRecover = true) => async (dispatch, getState) => {
+        UniApi.Window.setOpenedFile();
         const { content } = getState().project[envHeadType];
         // backup project if needed
         if (backendRecover) {
             await api.recoverEnv({ content });
         }
-        const envObj = JSON.parse(content);
+        if (!envObj) {
+            envObj = JSON.parse(content);
+        }
+        // const envObj = JSON.parse(content);
         let modActions = null;
         let modState = null;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
@@ -161,7 +161,7 @@ export const actions = {
         // await dispatch(modActions.init(envHeadType));
         modelGroup.removeAllModels();
 
-        await modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
+        await modState?.SVGActions?.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
         let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
@@ -171,11 +171,12 @@ export const actions = {
             const isRotate = materials ? materials.isRotate : false;
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
-                    coordinateMode: coordinateMode ?? (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER)
+                    coordinateMode: coordinateMode,
+                    coordinateSize: coordinateSize ?? machineInfo.size
                 }));
-            }
-            if (coordinateSize) {
+            } else {
                 dispatch(editorActions.updateState(envHeadType, {
+                    coordinateMode: (!isRotate ? COORDINATE_MODE_CENTER : COORDINATE_MODE_BOTTOM_CENTER),
                     coordinateSize: coordinateSize ?? machineInfo.size
                 }));
             }
@@ -233,15 +234,18 @@ export const actions = {
         }
         await UniApi.File.exportAs(targetFile, configFile);
     },
+    setOpenedFileWithType: (headType, openedFile) => async (dispatch) => {
+        openedFile && UniApi.Window.setOpenedFile(openedFile?.name);
+        await dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile, unSaved: false }));
+        UniApi.Menu.setItemEnabled('save', !!openedFile);
+    },
 
     saveAsFile: (headType) => async (dispatch) => {
         const { body: { targetFile } } = await api.packageEnv({ headType });
         const tmpFile = `/Tmp/${targetFile}`;
         const openedFile = await UniApi.File.saveAs(targetFile, tmpFile);
         if (openedFile) {
-            openedFile && UniApi.Window.setOpenedFile(openedFile.name);
-            dispatch(actions.updateState(headType, { findLastEnvironment: false, openedFile }));
-            UniApi.Menu.setItemEnabled('save', !!openedFile);
+            await dispatch(actions.setOpenedFileWithType(headType, openedFile));
         }
         await dispatch(actions.clearSavedEnvironment(headType));
     },
@@ -269,6 +273,7 @@ export const actions = {
                 ...dialogOptions,
                 type: 'warning',
                 defaultId: 2,
+                cancelId: 1,
                 buttons: [
                     i18n._('Save'),
                     i18n._('Cancel'),
@@ -311,11 +316,10 @@ export const actions = {
 
         if (tail.substring(0, 4) === 'snap') {
             const formData = new FormData();
-            let openedFile = null;
+            let shouldSetFileName = true;
             if (!(file instanceof File)) {
-                if (!new RegExp(/^\.\//).test(file?.path)) {
-                    openedFile = file;
-                    UniApi.Window.setOpenedFile(file.name);
+                if (new RegExp(/^\.\//).test(file?.path)) {
+                    shouldSetFileName = false;
                 }
                 file = JSON.stringify(file);
             }
@@ -342,15 +346,24 @@ export const actions = {
             await dispatch(actions.save(oldHeadType, {
                 message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
             }));
-
-            content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, openedFile, unSaved: false }));
+            await dispatch(actions.closeProject(oldHeadType));
+            content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
             if (oldHeadType === headType) {
                 history.push('/');
             }
             history.push(`/${headType}`);
-            await dispatch(actions.onRecovery(headType, false));
 
-            dispatch(actions.updateState(headType, { unSaved: false }));
+            await dispatch(actions.onRecovery(headType, envObj, false));
+            if (shouldSetFileName) {
+                if (file instanceof File) {
+                    await dispatch(actions.setOpenedFileWithType(headType, file));
+                } else {
+                    await dispatch(actions.setOpenedFileWithType(headType, JSON.parse(file)));
+                }
+                dispatch(actions.updateState(headType, { unSaved: false }));
+            } else {
+                dispatch(actions.updateState(headType, { unSaved: false, openedFile: null }));
+            }
         } else if (tail === 'gcode') {
             dispatch(workspaceActions.uploadGcodeFile(file));
             history.push('/workspace');
@@ -367,17 +380,20 @@ export const actions = {
         await dispatch(actions.save(oldHeadType, {
             message: i18n._('Do you want to save the changes in the {{headType}} editor?', { headType: HEAD_TYPE_ENV_NAME[oldHeadType] })
         }));
-        dispatch(editorActions.updateState(newHeadType, {
-            page: PAGE_EDITOR,
-            displayedType: DISPLAYED_TYPE_MODEL
-        }));
+        await dispatch(actions.closeProject(oldHeadType));
+
+        if (newHeadType === HEAD_CNC || newHeadType === HEAD_LASER) {
+            dispatch(editorActions.updateState(newHeadType, {
+                page: PAGE_EDITOR,
+                displayedType: DISPLAYED_TYPE_MODEL
+            }));
+        }
         if (from === to) {
             history.push('/');
         }
+        dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
 
         history.push(to);
-
-        dispatch(actions.updateState(newHeadType, { unSaved: false }));
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {
@@ -404,6 +420,24 @@ export const actions = {
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
     },
+    closeProject: (headType) => async (dispatch, getState) => {
+        let modState = null;
+        if (headType === HEAD_CNC || headType === HEAD_LASER) {
+            modState = getState()[headType];
+        }
+        if (headType === HEAD_3DP) {
+            modState = getState().printing;
+        }
+
+        if (headType === HEAD_3DP) {
+            dispatch(printingActions.destroyGcodeLine());
+            await dispatch(printingActions.initSize());
+        }
+        modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();
+        modState.modelGroup.removeAllModels();
+        modState.SVGActions && modState.SVGActions.svgContentGroup && modState.SVGActions.svgContentGroup.removeAllElements();
+        UniApi.Window.setOpenedFile();
+    },
 
     cleanAllRecentFiles: () => async () => {
         UniApi.Menu.cleanAllRecentFiles();
@@ -416,6 +450,9 @@ export const actions = {
             newRecentFiles = [];
         } else {
             arr.forEach(fileItem => {
+                if (newRecentFiles.length >= MAX_RECENT_FILES_LENGTH) {
+                    return;
+                }
                 if (!find(newRecentFiles, { 'name': fileItem.name })) {
                     newRecentFiles.push(fileItem);
                 }

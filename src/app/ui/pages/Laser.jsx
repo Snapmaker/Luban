@@ -134,6 +134,15 @@ function Laser() {
         dispatch(laserActions.init());
     }, []);
 
+    useEffect(() => {
+        setJobTypeState({
+            coordinateMode,
+            coordinateSize,
+            materials
+        });
+    }, [coordinateMode, coordinateSize, materials]);
+
+
     const recoveryModal = useRenderRecoveryModal(pageHeadType);
     const renderHomepage = () => {
         const onClose = () => setShowHomePage(false);
@@ -197,7 +206,7 @@ function Laser() {
             {
                 name: i18n._('Cancel'),
 
-                onclick: () => { setShowCameraCapture(false); }
+                onClick: () => { setShowCameraCapture(false); }
             }
         ],
         onClose: () => { setShowCameraCapture(false); }
@@ -238,7 +247,7 @@ function Laser() {
             {
                 title: i18n._('Home'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarHome',
                 action: () => {
                     setShowHomePage(true);
                 }
@@ -246,44 +255,10 @@ function Laser() {
             {
                 type: 'separator'
             },
-            // {
-            //     title: i18n._('Open'),
-            //     type: 'button',
-            //     name: 'Copy',
-            //     inputInfo: {
-            //         accept: '.snaplzr',
-            //         fileInput: fileInput,
-            //         onChange: async (e) => {
-            //             const file = e.target.files[0];
-            //             const recentFile = {
-            //                 name: file.name,
-            //                 path: file.path || ''
-            //             };
-            //             try {
-            //                 await dispatch(projectActions.openProject(file, history));
-            //                 // Todo: Add to recent file, but not use isElectron()
-            //                 // if (isElectron()) {
-            //                 //     const ipc = window.require('electron').ipcRenderer;
-            //                 //     ipc.send('add-recent-file', recentFile);
-            //                 // }
-            //                 await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-            //             } catch (error) {
-            //                 modal({
-            //                     title: i18n._('Failed to upload model'),
-            //                     body: error.message
-            //                 });
-            //             }
-            //         }
-            //     },
-            //     action: () => {
-            //         fileInput.current.value = null;
-            //         fileInput.current.click();
-            //     }
-            // },
             {
                 title: i18n._('Save'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_LASER));
                 }
@@ -300,7 +275,7 @@ function Laser() {
             {
                 title: i18n._('Job'),
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarJobSetup',
                 action: () => {
                     setShowJobType(true);
                 }
@@ -309,12 +284,12 @@ function Laser() {
                 type: 'separator'
             },
             {
-                name: 'Edit',
+                name: 'MainToolbarTop',
                 action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER)),
                 title: i18n._('Front')
             },
             {
-                name: 'Edit',
+                name: 'MainToolbarBottom',
                 action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER)),
                 title: i18n._('Bottom')
             },

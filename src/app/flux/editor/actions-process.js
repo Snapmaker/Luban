@@ -154,6 +154,11 @@ export const processActions = {
         }));
     },
 
+    selectToolPathById: (headType, toolPathId) => (dispatch, getState) => {
+        const { toolPathGroup } = getState()[headType];
+        toolPathGroup.selectToolPathById(toolPathId);
+    },
+
     selectToolPathId: (headType, toolPathId) => (dispatch, getState) => {
         const { toolPathGroup } = getState()[headType];
         toolPathGroup.selectToolPathId(toolPathId);

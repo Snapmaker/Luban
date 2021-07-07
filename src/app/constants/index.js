@@ -204,6 +204,27 @@ export const PRINTING_QUALITY_CONFIG_GROUP = [
         ]
     }
 ];
+
+export const PRINTING_QUALITY_CUSTOMIZE_FIELDS = [
+    'layer_height',
+    'infill_sparse_density',
+    'wall_thickness',
+    'adhesion_type',
+    'support_enable'
+];
+export const PRINTING_QUALITY_CONFIG_INDEX = {
+    'retraction_amount': 1,
+    'retraction_speed': 1,
+    'retraction_hop_enabled': 1,
+    'retraction_hop': 2,
+    'support_type': 1,
+    'skirt_line_count': 1,
+    'brim_line_count': 1,
+    'raft_margin': 1
+};
+export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
+export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
+
 export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',
@@ -225,25 +246,187 @@ export const CNC_TOOL_CONFIG_GROUP = [
     }
 ];
 
-export const PRINTING_QUALITY_CUSTOMIZE_FIELDS = [
-    'layer_height',
-    'infill_sparse_density',
-    'wall_thickness',
-    'adhesion_type',
-    'support_enable'
-];
-export const PRINTING_QUALITY_CONFIG_INDEX = {
-    'retraction_amount': 1,
-    'retraction_speed': 1,
-    'retraction_hop_enabled': 1,
-    'retraction_hop': 2,
-    'support_type': 1,
-    'skirt_line_count': 1,
-    'brim_line_count': 1,
-    'raft_margin': 1
+export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
+    'sliceMode': {
+        label: 'Slicing Mode',
+        description: 'Select the slicing mode of the mesh toolpath',
+        type: 'enum',
+        options: {
+            'rotation': 'Rotation',
+            'linkage': 'Linkage'
+        },
+        default_value: 'rotation'
+    },
+    'pathType': {
+        label: 'Path',
+        description: 'Choose carving path',
+        type: 'enum',
+        options: {
+            'path': 'On the Path',
+            'outline': 'Outline',
+            'pocket': 'Fill'
+        },
+        default_value: 'path'
+    },
+    'targetDepth': {
+        label: 'Target Depth',
+        description: 'Enter the depth of the carved image. The depth cannot be deeper than the flute length.',
+        min: 0.01,
+        step: 0.1,
+        max: 100,
+        value: 'targetDepth',
+        default_value: 'targetDepth',
+        type: 'float',
+        unit: 'mm'
+    },
+    'safetyHeight': {
+        label: 'Jog Height',
+        description: 'The distance between the tool and the material when it’s not carving.',
+        min: 0.1,
+        step: 1,
+        max: 100,
+        value: 'safetyHeight',
+        default_value: 'safetyHeight',
+        type: 'float',
+        unit: 'mm'
+    },
+    'stopHeight': {
+        label: 'Stop Height',
+        description: 'The distance between the tool and the material when the machine stops.',
+        min: 0.1,
+        step: 0.1,
+        max: 100,
+        value: 'stopHeight',
+        default_value: 'stopHeight',
+        type: 'float'
+    },
+    'enableTab': {
+        label: 'Use Tab',
+        description: 'Switch to use tab',
+        type: 'bool',
+        default_value: false,
+        value: 'enableTab'
+    },
+    'tabHeight': {
+        label: 'Tab Height',
+        description: 'Enter the height of the tabs.',
+        // min: '-targetDepth',
+        max: 0,
+        step: 0.5,
+        value: 'tabHeight',
+        default_value: 'tabHeight',
+        type: 'float',
+        unit: 'mm'
+    },
+    'tabSpace': {
+        label: 'Tab Space',
+        description: 'Enter the space between any two tabs.',
+        min: 1,
+        step: 1,
+        value: 'tabSpace',
+        default_value: 'tabSpace',
+        type: 'float',
+        unit: 'mm'
+    },
+    'tabWidth': {
+        label: 'Tab Width',
+        description: 'Enter the width of the tabs.',
+        min: 1,
+        step: 1,
+        value: 'tabWidth',
+        default_value: 'tabWidth',
+        type: 'float',
+        unit: 'mm'
+    }
 };
-export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
-export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
+
+export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
+    'fill_enabled': {
+        label: 'Fill',
+        type: 'bool',
+        default_value: false
+    },
+    'work_speed': {
+        label: 'Work Speed',
+        description: 'Determines how fast the machine moves when it’s engraving.',
+        type: 'float',
+        min: 1,
+        max: 6000,
+        step: 1,
+        default_value: 'workSpeed',
+        unit: 'mm/min'
+    },
+    'multi_passes': {
+        label: 'Number of Passes',
+        description: 'Determines how many times the printer will run the G-code automatically.',
+        type: 'float',
+        min: 1,
+        max: 50,
+        default_value: 'passes'
+    },
+    'multi_pass_depth': {
+        label: 'Z Step Per Pass',
+        description: 'Determines how much the laser module will be lowered after each pass.',
+        type: 'float',
+        min: 0.01,
+        max: 10,
+        default_value: 'passDepth',
+        unit: 'mm'
+    },
+    'fixed_power': {
+        label: 'Power',
+        description: 'Power to use when laser is working.',
+        type: 'float',
+        min: 0,
+        max: 100,
+        default_value: 'fixedPower',
+        unit: '%'
+    },
+    'movement_mode': {
+        label: 'Movement Mode',
+        description: 'Choose Movement Mode',
+        type: 'enum',
+        options: {
+            'greyscale-line': 'Line', //'Line (Normal Quality)',
+            'greyscale-dot': 'Dot' // 'Dot (High Quality)'
+        },
+        default_value: 'movementMode'
+    },
+    'density': {
+        label: 'Density',
+        description: 'Determines how fine and smooth the engraved picture will be. \
+The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.',
+        type: 'float',
+        min: 1,
+        max: 10,
+        step: 1,
+        default_value: 'density',
+        unit: 'dot/mm'
+    },
+    'dwell_time': {
+        label: 'Dwell Time',
+        description: 'Determines how long the laser keeps on when it’s engraving a dot.',
+        type: 'float',
+        min: 0.1,
+        max: 1000,
+        step: 0.1,
+        default_value: 'dwellTime',
+        value: 'dwellTime',
+        unit: 'ms/dot'
+    },
+    'direction': {
+        label: 'Line Direction',
+        description: 'Select the direction of the engraving path.',
+        options: {
+            Horizontal: 'Horizontal',
+            Vertical: 'Vertical',
+            Diagonal: 'Diagonal',
+            Diagonal2: 'Diagonal2'
+        },
+        default_value: 'direction',
+        value: 'direction'
+    }
+};
 
 const publicPath = global.PUBLIC_PATH || '';
 export const DATA_PATH = `${publicPath}/data`;
@@ -549,3 +732,6 @@ export const OFFICIAL_SITE_EN_URL = 'https://snapmaker.com/';
 export const MARKET_ZH_URL = 'https://snapmaker.world.tmall.com/?spm=a1z10.3-b.w5001-21696184167.3.40be7f386PAuCQ&scene=taobao_shop';
 export const MARKET_EN_URL = 'https://shop.snapmaker.com/';
 export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
+
+// Project and Menu
+export const MAX_RECENT_FILES_LENGTH = 15;

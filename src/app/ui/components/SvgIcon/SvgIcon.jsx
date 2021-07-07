@@ -56,11 +56,12 @@ class SvgIcon extends PureComponent {
         } = this.props;
         const Component = Icons[name];
         if (!Component) {
-            console.error(`Can't find the icon named '${name}', please check your icon name`);
+            console.log(`Can't find the icon named '${name}', please check your icon name`);
+            return null;
         }
 
         return (
-            <span>
+            <span style={{ verticalAlign: 'top' }}>
                 { inputInfo !== undefined && (
                     <input
                         ref={inputInfo.fileInput}

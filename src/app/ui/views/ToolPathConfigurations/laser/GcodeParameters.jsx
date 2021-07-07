@@ -1,12 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Slider from '../../../components/Slider';
+import classNames from 'classnames';
+// import Slider from '../../../components/Slider';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import TipTrigger from '../../../components/TipTrigger';
-import OptionalDropdown from '../../../components/OptionalDropdown';
 import NumberInput from '../../../components/Input/NumberInput';
+import widgetStyles from '../../../widgets/styles.styl';
 
 class GcodeParameters extends PureComponent {
     static propTypes = {
@@ -29,54 +30,57 @@ class GcodeParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
 
-        const { density, optimizePath, fillEnabled, fillDensity, jogSpeed, workSpeed, dwellTime, plungeSpeed, multiPassEnabled,
+        const { density, fillDensity, jogSpeed, workSpeed, dwellTime, plungeSpeed, multiPassEnabled,
             multiPasses, multiPassDepth, fixedPowerEnabled, fixedPower } = gcodeConfig;
 
         return (
             <React.Fragment>
-
                 {isImage && (
-                    <TipTrigger
-                        title={i18n._('Density')}
-                        content={i18n._('Determines how fine and smooth the engraved picture will be. \
-The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
-                    >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Density')}</span>
-                            <NumberInput
-                                className="sm-parameter-row__input"
-                                style={{ width: '160px' }}
-                                value={density}
-                                min={1}
-                                max={10}
-                                step={1}
-                                onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
-                            />
-                            <span className="sm-parameter-row__input-unit">dot/mm</span>
-                        </div>
-                    </TipTrigger>
+                    <div>
+                        <span>{i18n._('Fill')}</span>
+                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                        <TipTrigger
+                            title={i18n._('Density')}
+                            content={i18n._('Determines how fine and smooth the engraved picture will be. \
+    The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Density')}</span>
+                                <NumberInput
+                                    className="sm-parameter-row__input"
+                                    style={{ width: '160px' }}
+                                    value={density}
+                                    min={1}
+                                    max={10}
+                                    step={1}
+                                    onChange={(value) => { this.props.updateGcodeConfig({ density: value }); }}
+                                />
+                                <span className="sm-parameter-row__input-unit">dot/mm</span>
+                            </div>
+                        </TipTrigger>
+                    </div>
                 )}
                 {isSVG && (
                     <div>
-                        <TipTrigger
-                            title={i18n._('Optimize Path')}
-                            content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>
-                                <input
-                                    type="checkbox"
-                                    className="sm-parameter-row__checkbox"
-                                    checked={optimizePath}
-                                    onChange={() => { this.props.updateGcodeConfig({ optimizePath: !optimizePath }); }}
-                                />
-                            </div>
-                        </TipTrigger>
-                        <OptionalDropdown
+                        {/* <TipTrigger*/}
+                        {/*    title={i18n._('Optimize Path')}*/}
+                        {/*    content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}*/}
+                        {/* >*/}
+                        {/*    <div className="sm-parameter-row">*/}
+                        {/*        <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>*/}
+                        {/*        <input*/}
+                        {/*            type="checkbox"*/}
+                        {/*            className="sm-parameter-row__checkbox"*/}
+                        {/*            checked={optimizePath}*/}
+                        {/*            onClick={() => { this.props.updateGcodeConfig({ optimizePath: !optimizePath }); }}*/}
+                        {/*        />*/}
+                        {/*    </div>*/}
+                        {/* </TipTrigger>*/}
+                        <span>{i18n._('Fill')}</span>
+                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
+                        <div
                             style={{ marginBottom: '10px' }}
                             title={i18n._('Fill')}
-                            onClick={() => { this.props.updateGcodeConfig({ fillEnabled: !fillEnabled }); }}
-                            hidden={!fillEnabled}
                         >
                             <TipTrigger
                                 title={i18n._('Fill Density')}
@@ -85,14 +89,8 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
                                     <Input
-                                        className="sm-parameter-row__slider-input"
-                                        value={fillDensity}
-                                        min={0}
-                                        max={20}
-                                        onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
-                                    />
-                                    <Slider
-                                        className="sm-parameter-row__slider"
+                                        className="sm-parameter-row__input"
+                                        style={{ width: '160px' }}
                                         value={fillDensity}
                                         min={0}
                                         marks={
@@ -105,10 +103,11 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                     />
                                 </div>
                             </TipTrigger>
-                        </OptionalDropdown>
+                        </div>
                     </div>
                 )}
-
+                <span>{i18n._('Speed')}</span>
+                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                 {jogSpeed !== ABSENT_VALUE && (
                     <TipTrigger
                         title={i18n._('Jog Speed')}
@@ -188,25 +187,24 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                         </div>
                     </TipTrigger>
                 )}
+                <span>{i18n._('Repetition')}</span>
+                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                 {multiPassEnabled !== undefined && (
-                    <OptionalDropdown
+                    <div
                         style={{ marginTop: '10px', marginBottom: '10px' }}
                         title={i18n._('Multi-pass')}
                         titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
-                        onClick={() => { this.props.updateGcodeConfig({ multiPassEnabled: !multiPassEnabled }); }}
-                        hidden={!multiPassEnabled}
                     >
-
                         <TipTrigger
-                            title={i18n._('Passes')}
+                            title={i18n._('Number of Passes')}
                             content={i18n._('Determines how many times the printer will run the G-code automatically.')}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Passes')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Number of Passes')}</span>
                                 <Input
                                     className="sm-parameter-row__input"
                                     style={{ width: '160px' }}
-                                    min={2}
+                                    min={1}
                                     max={50}
                                     value={multiPasses}
                                     onChange={(value) => { this.props.updateGcodeConfig({ multiPasses: value }); }}
@@ -214,33 +212,35 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             </div>
                         </TipTrigger>
 
-                        <TipTrigger
-                            title={i18n._('Pass Depth')}
-                            content={i18n._('Determines how much the laser module will be lowered after each pass.')}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Pass Depth')}</span>
-                                <Input
-                                    className="sm-parameter-row__input"
-                                    style={{ width: '160px' }}
-                                    min={0}
-                                    max={10}
-                                    value={multiPassDepth}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm</span>
-                            </div>
-                        </TipTrigger>
-                    </OptionalDropdown>
+                        {multiPasses > 1 && (
+                            <TipTrigger
+                                title={i18n._('Z step per pass')}
+                                content={i18n._('Determines how much the laser module will be lowered after each pass.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Z step per pass')}</span>
+                                    <Input
+                                        className="sm-parameter-row__input"
+                                        style={{ width: '160px' }}
+                                        min={0}
+                                        max={10}
+                                        value={multiPassDepth}
+                                        onChange={(value) => { this.props.updateGcodeConfig({ multiPassDepth: value }); }}
+                                    />
+                                    <span className="sm-parameter-row__input-unit">mm</span>
+                                </div>
+                            </TipTrigger>
+                        )}
+                    </div>
                 )}
                 {fixedPowerEnabled !== undefined && (
-                    <OptionalDropdown
+                    <div
                         style={{ marginTop: '10px' }}
                         title={i18n._('Fixed Power')}
                         titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
-                        onClick={() => { this.props.updateGcodeConfig({ fixedPowerEnabled: !fixedPowerEnabled }); }}
-                        hidden={!fixedPowerEnabled}
                     >
+                        <span>{i18n._('Power')}</span>
+                        <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                         <TipTrigger
                             title={i18n._('Power')}
                             content={i18n._('Power to use when laser is working.')}
@@ -248,24 +248,17 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Power (%)')}</span>
                                 <Input
-                                    className="sm-parameter-row__slider-input"
+                                    className="sm-parameter-row__input"
+                                    style={{ width: '160px' }}
                                     min={1}
                                     max={100}
                                     value={fixedPower}
                                     onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
                                 />
-                                <Slider
-                                    className="sm-parameter-row__slider"
-                                    value={fixedPower}
-                                    min={0}
-                                    max={100}
-                                    step={0.5}
-                                    onChange={(value) => { this.props.updateGcodeConfig({ fixedPower: value }); }}
-                                />
+                                <span className="sm-parameter-row__input-unit">%</span>
                             </div>
                         </TipTrigger>
-
-                    </OptionalDropdown>
+                    </div>
                 )}
             </React.Fragment>
         );

@@ -380,7 +380,7 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseDown = (event) => {
-        event.preventDefault();
+        // event.preventDefault();
 
         const rightClick = event.button === 2;
 

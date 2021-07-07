@@ -56,7 +56,11 @@ const toFixed = (value, fractionDigits) => {
         const d = stringValue.length - pos - 1;
         if (d > fractionDigits) {
             // actual fraction digits > maximum fraction digits
-            return Number(value.toFixed(fractionDigits));
+            let num = Number(value.toFixed(fractionDigits));
+            if (num < -180) {
+                num = (num + 360) % 360;
+            }
+            return num;
         }
     }
     return value; // no fix needed

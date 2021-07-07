@@ -213,6 +213,9 @@ export const actions = {
         dispatch(actions.updateState({
             activeDefinition: definitionManager.activeDefinition
         }));
+        dispatch(actions.updateState({
+            qualityDefinitions: definitionManager.qualityDefinitions
+        }));
         // model group
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -size.y / 2 - EPSILON, -EPSILON),
@@ -446,6 +449,9 @@ export const actions = {
         }
         if (definition !== state.activeDefinition) {
             for (const key of definition.ownKeys) {
+                if (typeof activeDefinition.settings === 'undefined') {
+                    return;
+                }
                 if (activeDefinition.settings[key] === undefined) {
                     continue;
                 }
@@ -1225,7 +1231,7 @@ export const actions = {
         modelGroup.defaultSupportSize = size;
     },
     generateModel: (headType, originalName, uploadName, sourceWidth, sourceHeight,
-        mode, sourceType, config, gcodeConfig, transformation) => async (dispatch, getState) => {
+        mode, sourceType, config, gcodeConfig, transformation, modelID) => async (dispatch, getState) => {
         const { size } = getState().machine;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         const { modelGroup } = getState().printing;
@@ -1263,7 +1269,8 @@ export const actions = {
                         height: sourceHeight,
                         geometry: bufferGeometry,
                         material: material,
-                        transformation
+                        transformation,
+                        modelID
                     });
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());

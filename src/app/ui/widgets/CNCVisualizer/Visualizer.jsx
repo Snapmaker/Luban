@@ -224,8 +224,8 @@ class Visualizer extends Component {
     constructor(props) {
         super(props);
 
-        const { size, materials } = props;
-        this.printableArea = new PrintablePlate(size, materials);
+        const { size, materials, coordinateMode } = props;
+        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
     }
 
     componentDidMount() {

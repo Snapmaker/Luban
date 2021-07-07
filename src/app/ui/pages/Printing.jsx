@@ -98,40 +98,6 @@ function useRenderMainToolBar() {
             {
                 type: 'separator'
             },
-            // {
-            //
-            //     title: i18n._('Open'),
-            //     type: 'button',
-            //     name: 'Copy',
-            //     inputInfo: {
-            //         accept: '.snap3dp',
-            //         fileInput: fileInput,
-            //         onChange: async (e) => {
-            //             const file = e.target.files[0];
-            //             const recentFile = {
-            //                 name: file.name,
-            //                 path: file.path || ''
-            //             };
-            //             try {
-            //                 await dispatch(projectActions.openProject(file, history));
-            //                 // if (isElectron()) {
-            //                 //     const ipc = window.require('electron').ipcRenderer;
-            //                 //     ipc.send('add-recent-file', recentFile);
-            //                 // }
-            //                 await dispatch(projectActions.updateRecentFile([recentFile], 'update'));
-            //             } catch (error) {
-            //                 modal({
-            //                     title: i18n._('Failed to upload model'),
-            //                     body: error.message
-            //                 });
-            //             }
-            //         }
-            //     },
-            //     action: () => {
-            //         fileInput.current.value = null;
-            //         fileInput.current.click();
-            //     }
-            // },
             {
                 title: i18n._('Save'),
                 disabled: !unSaved || !hasModel,

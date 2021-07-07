@@ -45,6 +45,7 @@ function PrintingObjectListBox() {
                             <ModelItem
                                 key={model.modelID}
                                 model={model}
+                                visible={model.visible}
                                 styles={styles}
                                 isSelected={selectedModelIDArray.length > 0 && selectedModelIDArray.indexOf(model.modelID) >= 0}
                                 onSelect={actions.selectTargetModel}

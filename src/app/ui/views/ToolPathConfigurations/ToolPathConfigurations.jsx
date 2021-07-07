@@ -76,7 +76,7 @@ function ToolPathConfigurations(props) {
         cancelUpdateToolPath() {
             props.onClose && props.onClose();
         },
-        saveToolPath() {
+        async saveToolPath() {
             const toolParams = {};
             const gcodeConfig = {
                 ...toolPath.gcodeConfig
@@ -102,7 +102,7 @@ function ToolPathConfigurations(props) {
                 gcodeConfig,
                 toolParams
             };
-            dispatch(editorActions.saveToolPath(props.headType, newToolPath));
+            await dispatch(editorActions.saveToolPath(props.headType, newToolPath));
             props.onClose && props.onClose();
         },
         updateToolPath(option) {

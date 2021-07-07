@@ -4,11 +4,6 @@ import isElectron from 'is-electron';
 import Menu from './Menu';
 import styles from './appbar.styl';
 import UniApi from '../../../lib/uni-api';
-import i18n from '../../../lib/i18n';
-import { renderModal } from '../../utils';
-import FirmwareTool from '../../pages/Settings/FirmwareTool';
-import General from '../../pages/Settings/General';
-import SettingsMenu from '../../pages/Settings';
 
 class AppBar extends PureComponent {
     fileInputRef = React.createRef();
@@ -27,83 +22,6 @@ class AppBar extends PureComponent {
                 path: file.path || ''
             };
             UniApi.Event.emit('appbar-menu:open-file', file, [recentFile]);
-        },
-        showSettings() {
-            const location = {
-                pathname: '/settings/general'
-            };
-            function onClose() {}
-            return renderModal({
-                title: i18n._('Preferences'),
-                renderBody() {
-                    return <SettingsMenu location={location} />;
-                },
-                size: 'large',
-                actions: [
-                    {
-                        name: i18n._('Yes'),
-                        isPrimary: true,
-                        onClick: () => {
-                            // actions.onRecovery();
-                            onClose();
-                        }
-                    },
-                    {
-                        name: i18n._('Cancel'),
-                        onClick: () => { onClose(); }
-                    }
-                ],
-                onClose
-            });
-        },
-        showFirmwareTool() {
-            function onClose() {}
-            return renderModal({
-                title: i18n._('Firmware Tool'),
-                renderBody() {
-                    return <FirmwareTool />;
-                },
-                actions: [
-                    {
-                        name: i18n._('Yes'),
-                        isPrimary: true,
-                        onClick: () => {
-                            // actions.onRecovery();
-                            onClose();
-                        }
-                    },
-                    {
-                        name: i18n._('Cancel'),
-                        onClick: () => { onClose(); }
-                    }
-                ],
-                onClose
-            });
-        },
-        showSoftwareUpdate() {
-            function onClose() {}
-            return renderModal({
-                title: i18n._('Preferences'),
-                renderBody() {
-                    return <General updateShouldCheckForUpdate={() => {}} actions={{ load: () => {} }} state={{ api: { loading: false } }} />;
-                },
-                size: 'large',
-                actions: [
-                    {
-                        name: i18n._('Yes'),
-                        isPrimary: true,
-                        onClick: () => {
-                            // actions.onRecovery();
-                            onClose();
-                        }
-                    },
-                    {
-                        name: i18n._('Cancel'),
-                        onClick: () => { onClose(); }
-                    }
-                ],
-                onClose
-            });
         }
     }
 

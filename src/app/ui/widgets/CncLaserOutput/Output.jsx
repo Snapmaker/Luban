@@ -7,8 +7,8 @@ import { connect } from 'react-redux';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
-import { DISPLAYED_TYPE_TOOLPATH
-    // PAGE_EDITOR, PAGE_PROCESS
+import {
+    DISPLAYED_TYPE_TOOLPATH, PAGE_PROCESS
 } from '../../../constants';
 
 import modal from '../../../lib/modal';
@@ -44,7 +44,7 @@ class Output extends PureComponent {
         renderGcodeFile: PropTypes.func.isRequired,
         createToolPath: PropTypes.func.isRequired,
         exportFile: PropTypes.func.isRequired,
-        // switchToPage: PropTypes.func.isRequired,
+        switchToPage: PropTypes.func.isRequired,
         showToolPathGroupObject: PropTypes.func.isRequired,
         showModelGroupObject: PropTypes.func.isRequired,
         setAutoPreview: PropTypes.func.isRequired,
@@ -62,6 +62,9 @@ class Output extends PureComponent {
             } else {
                 this.props.showToolPathGroupObject();
             }
+        },
+        switchToProcess: () => {
+            this.props.switchToPage(PAGE_PROCESS);
         },
         onGenerateGcode: () => {
             const thumbnail = this.thumbnail.current.getThumbnail();
@@ -235,13 +238,15 @@ const mapStateToProps = (state, ownProps) => {
     const { widgets } = state.widget;
     const { headType } = ownProps;
     const { isGcodeGenerating, autoPreviewEnabled,
-        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile, inProgress } = state[headType];
+        previewFailed, modelGroup, toolPathGroup, displayedType, gcodeFile, inProgress, page } = state[headType];
 
     const canGenerateGcode = toolPathGroup.canGenerateGcode();
     const hasToolPathModel = (toolPathGroup.toolPaths.length > 0);
+    const disablePreview = toolPathGroup.toolPaths.every(item => item.visible === false);
 
     return {
-        // page,
+        page,
+        disablePreview,
         headType,
         modelGroup,
         hasModel: modelGroup.hasModel(),
@@ -262,7 +267,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch, ownProps) => {
     const { headType } = ownProps;
     return {
-        // switchToPage: (page) => dispatch(editorActions.switchToPage(headType, page)),
+        switchToPage: (page) => dispatch(editorActions.switchToPage(headType, page)),
         showToolPathGroupObject: () => dispatch(editorActions.showToolPathGroupObject(headType)),
         showModelGroupObject: () => dispatch(editorActions.showModelGroupObject(headType)),
         // togglePage: (page) => dispatch(editorActions.togglePage(headType, page)),

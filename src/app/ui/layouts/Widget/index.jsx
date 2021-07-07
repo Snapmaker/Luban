@@ -8,10 +8,10 @@ import { connect } from 'react-redux';
 import Widget from '../../components/Widget';
 
 // import SMSortableHandle from './SMSortableHandle';
-import SMDropdownButton from './SMDropdownButton';
-import SMMinimizeButton from './SMMinimizeButton';
+// import SMDropdownButton from './SMDropdownButton';
+// import SMMinimizeButton from './SMMinimizeButton';
 import { actions as widgetActions } from '../../../flux/widget';
-import i18n from '../../../lib/i18n';
+// import i18n from '../../../lib/i18n';
 
 
 class WidgetContainer extends PureComponent {
@@ -76,51 +76,10 @@ class WidgetContainer extends PureComponent {
             fullscreen: fullscreen,
             buttons: this.state.buttons
         };
-        const actions = this.actions;
+        // const actions = this.actions;
         return (
             <Widget style={{ display: this.state.display ? '' : 'none' }} fullscreen={state.fullscreen}>
-                <Widget.Header style={{ border: 0 }}>
-                    <Widget.Title>
-                        {this.state.title}
-                    </Widget.Title>
-                    <Widget.Controls className="sortable-filter">
-                        {state.buttons && _.isArray(state.buttons) && state.buttons.map(v => {
-                            if (typeof v === 'object') {
-                                const { disabled = false, title = '', onClick, className = 'fa' } = v;
-                                return (
-                                    <Widget.Button
-                                        key={title}
-                                        disabled={disabled}
-                                        title={i18n._(title)}
-                                        onClick={onClick}
-                                    >
-                                        <i
-                                            className={className}
-                                        />
-                                    </Widget.Button>
-                                );
-                            } else if (v === 'SMMinimize') {
-                                return (
-                                    <SMMinimizeButton
-                                        key="SMMinimize"
-                                        state={state}
-                                        actions={actions}
-                                    />
-                                );
-                            } else if (v === 'SMDropdown') {
-                                return (
-                                    <SMDropdownButton
-                                        key="SMDropdown"
-                                        state={state}
-                                        actions={actions}
-                                    />
-                                );
-                            }
-                            return null;
-                        })}
-                    </Widget.Controls>
-                </Widget.Header>
-                <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: 0, borderRadius: '8px' }}>
+                <Widget.Content style={{ display: state.minimized ? 'none' : 'block', padding: '8px 16px', border: 'none' }}>
 
                     <Component
                         isWidget

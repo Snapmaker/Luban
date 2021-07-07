@@ -15,10 +15,12 @@ class TextAreaInput extends PureComponent {
         const { className = '', ...rest } = this.props;
 
         return (
-            <div className={styles['override-textArea']}>
+            <div
+                className={classNames(styles['override-textArea'], className)}
+            >
                 <TextArea
                     {...rest}
-                    className={classNames(styles.textarea, className)}
+                    className={classNames(styles.textarea)}
                 />
             </div>
         );

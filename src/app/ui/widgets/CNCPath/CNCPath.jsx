@@ -16,7 +16,7 @@ class CNCPath extends PureComponent {
 
         page: PropTypes.string.isRequired,
 
-        modelGroup: PropTypes.object,
+        hasSelectedModels: PropTypes.bool,
         selectedModelArray: PropTypes.array,
         selectedModelVisible: PropTypes.bool,
         sourceType: PropTypes.string,
@@ -49,8 +49,7 @@ class CNCPath extends PureComponent {
     }
 
     componentDidMount() {
-        const { modelGroup } = this.props;
-        if (modelGroup.getSelectedModelArray().length > 0 && this.props.page === PAGE_EDITOR) {
+        if (this.props.page === PAGE_EDITOR) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -58,8 +57,7 @@ class CNCPath extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { modelGroup } = nextProps;
-        if (modelGroup.getSelectedModelArray().length > 0 && nextProps.page === PAGE_EDITOR) {
+        if (nextProps.page === PAGE_EDITOR) {
             this.props.widgetActions.setDisplay(true);
         } else {
             this.props.widgetActions.setDisplay(false);
@@ -77,6 +75,7 @@ class CNCPath extends PureComponent {
             selectedModel,
             modifyText,
             updateSelectedModelConfig,
+            hasSelectedModels,
             inProgress
         } = this.props;
         const selectedNotHide = selectedModelArray && selectedModelArray.length === 1 && selectedModelVisible;
@@ -85,11 +84,12 @@ class CNCPath extends PureComponent {
         const isImage3d = (sourceType === SOURCE_TYPE_IMAGE3D);
         const isEditor = page === PAGE_EDITOR;
         const showImageProcessMode = (sourceType === 'raster' || sourceType === 'svg') && config.svgNodeName === 'image';
+
         return (
             <React.Fragment>
                 {isEditor && (
                     <TransformationSection
-                        disabled={inProgress}
+                        disabled={inProgress || !hasSelectedModels}
                         headType="cnc"
                         updateSelectedModelUniformScalingState={updateSelectedModelUniformScalingState}
                     />
@@ -141,12 +141,14 @@ const mapStateToProps = (state) => {
         config
     } = selectedModel;
     const selectedModelArray = modelGroup.getSelectedModelArray();
+    const hasSelectedModels = modelGroup.getSelectedModelArray().length > 0;
     return {
         selectedModelArray,
         page,
         transformation,
         selectedModelID,
         selectedModel,
+        hasSelectedModels,
         // todo, next version fix like selectedModelID
         selectedModelVisible: modelGroup.getSelectedModel() && modelGroup.getSelectedModel().visible,
         modelGroup,

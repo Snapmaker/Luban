@@ -30,7 +30,7 @@ const DEFAULT_STATE = {
     },
     laser: {
         default: {
-            widgets: ['laser-set-background', 'toolpath-list', 'laser-params']
+            widgets: ['toolpath-list', 'laser-params']
         }
     },
     cnc: {

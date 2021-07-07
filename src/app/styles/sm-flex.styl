@@ -2,10 +2,30 @@
 .sm-flex {
     display: flex;
     overflow: hidden;
-    .sm-flex-auto
+    .sm-flex-auto{
         flex: 0 0 auto;
         order: 1;
-    .sm-flex-width
+    }
+    .sm-flex-width{
         flex: 1;
-        order: 0;
+    }
+    .sm-flex-order-positive{
+        order: 1;
+    }
+    .sm-flex-order-negative{
+        order: -1;
+    }
+    .justify-space-around{
+        justify-content: space-around;
+    }
+    .justify-space-between{
+        justify-content: space-between;;
+    }
+    .justify-start{
+        justify-content: start;
+    }
+    &__input-unit {
+        position: absolute;
+        right: 24px;
+    }
 }

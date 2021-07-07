@@ -188,7 +188,7 @@ class VisualizerPreviewControl extends PureComponent {
                             Skin
                             <span className={styles['preview-brick']} style={{ backgroundColor: '#ffff00' }} />
                         </div>
-                        <div className={styles['preview-type']}>
+                        {/* <div className={styles['preview-type']}>
                             <input
                                 type="checkbox"
                                 checked={state.showSkirt}
@@ -204,6 +204,15 @@ class VisualizerPreviewControl extends PureComponent {
                                 onChange={actions.onTogglePreviewSupport}
                             />
                             Support
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                        </div> */}
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showSupport}
+                                onChange={actions.onTogglePreviewSupport}
+                            />
+                            Helper
                             <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
                         </div>
                         <div className={styles['preview-type']}>

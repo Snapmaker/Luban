@@ -87,6 +87,7 @@ class NumberInput extends PureComponent {
             const absentValue = this.getAbsentValue();
             onChange(absentValue);
             this.onChange({ target: { value: absentValue } });
+            this.ref.current.blur();
             return;
         }
 
@@ -106,6 +107,7 @@ class NumberInput extends PureComponent {
 
         // call onAfterChange to change value
         onChange && onChange(numericValue);
+        this.ref.current.blur();
     }
 
     getAbsentValue() {
@@ -122,19 +124,23 @@ class NumberInput extends PureComponent {
         const { className = '',
             size = 'middle', disabled = false, ...rest } = this.props;
         return (
-            <Input
-                ref={this.ref}
-                {...rest}
-                type="number"
-                disabled={disabled}
-                placeholder="Input a number"
-                value={this.state.displayValue}
-                className={classNames(styles.input, className, styles[size])}
-                onChange={this.onChange}
-                onBlur={this.onBlur}
-                onKeyUp={this.onKeyUp}
-                onFocus={this.onFocus}
-            />
+            <span
+                className={className}
+            >
+                <Input
+                    ref={this.ref}
+                    {...rest}
+                    type="number"
+                    disabled={disabled}
+                    placeholder="Input a number"
+                    className={classNames(styles.input, styles[size])}
+                    value={this.state.displayValue}
+                    onChange={this.onChange}
+                    onBlur={this.onBlur}
+                    onKeyUp={this.onKeyUp}
+                    onFocus={this.onFocus}
+                />
+            </span>
         );
     }
 }
