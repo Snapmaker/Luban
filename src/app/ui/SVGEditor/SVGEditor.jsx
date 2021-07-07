@@ -78,6 +78,8 @@ class SVGEditor extends PureComponent {
         isActive: () => this.props.isActive,
         priority: priorities.VIEW,
         shortcuts: {
+            [shortcutActions.UNDO]: () => { this.props.editorActions.undo(); },
+            [shortcutActions.REDO]: () => { this.props.editorActions.redo(); },
             // [shortcutActions.SELECTALL]: this.props.editorActions.selectAll,
             [shortcutActions.UNSELECT]: () => { this.props.onClearSelection(); },
             [shortcutActions.DELETE]: this.props.editorActions.deleteSelectedModel,

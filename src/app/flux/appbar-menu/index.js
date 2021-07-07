@@ -168,8 +168,6 @@ export const actions = {
         const stateName = hashStateMap[window.location.hash]; // acquire corresponding state according to location hash
         if (stateName) {
             const {
-                canUndo,
-                canRedo,
                 gcodeFile,
                 hasModel,
                 modelGroup: {
@@ -177,6 +175,10 @@ export const actions = {
                     clipboard
                 }
             } = getState()[stateName];
+            const {
+                canUndo,
+                canRedo
+            } = getState()[stateName].history;
 
             fileMenu.submenu.forEach(item => {
                 switch (item.id) {

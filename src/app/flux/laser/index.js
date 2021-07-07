@@ -2,6 +2,7 @@ import * as THREE from 'three';
 // import { DATA_PREFIX, EPSILON } from '../../constants';
 import { COORDINATE_MODE_CENTER, DATA_PREFIX, DISPLAYED_TYPE_MODEL, HEAD_LASER, PAGE_EDITOR } from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
+import OperationHistory from '../operation-history/OperationHistory';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 
 import {
@@ -16,6 +17,7 @@ import { CNC_LASER_STAGE } from '../editor/utils';
 
 
 const initModelGroup = new ModelGroup('laser');
+const operationHistory = new OperationHistory();
 const INITIAL_STATE = {
 
     page: PAGE_EDITOR,
@@ -68,6 +70,12 @@ const INITIAL_STATE = {
     redoSnapshots: [], // snapshot { models, toolPathModels }
     canUndo: false,
     canRedo: false,
+    history: operationHistory,
+    targetTmpState: {},
+    // When project recovered, the operation history should be cleared,
+    // however we can not identify while the recovery is done, just exclude
+    // them when the models loaded at the first time.
+    excludeModelIDs: {},
 
     // modelGroup state
     hasModel: false,

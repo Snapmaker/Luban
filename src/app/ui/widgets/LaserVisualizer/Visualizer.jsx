@@ -29,6 +29,7 @@ import {
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
+import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 
@@ -61,6 +62,9 @@ class Visualizer extends Component {
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
 
         // func
+        clearOperationHistory: PropTypes.func.isRequired,
+        undo: PropTypes.func.isRequired,
+        redo: PropTypes.func.isRequired,
         initContentGroup: PropTypes.func.isRequired,
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
@@ -117,6 +121,12 @@ class Visualizer extends Component {
     fileInput = React.createRef();
 
     actions = {
+        undo: () => {
+            this.props.undo();
+        },
+        redo: () => {
+            this.props.redo();
+        },
         onChangeFile: (event) => {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
@@ -233,17 +243,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
-        // this.canvas.current.disable3D();
-
-        // window.addEventListener(
-        //     'hashchange',
-        //     (event) => {
-        //         if (event.newURL.endsWith('laser')) {
-        //             this.canvas.current.resizeWindow();
-        //         }
-        //     },
-        //     false
-        // );
+        this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
     }
 
@@ -287,6 +287,7 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
+        this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
@@ -613,6 +614,9 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        clearOperationHistory: () => dispatch(operationHistoryActions.clear('laser')),
+        undo: () => dispatch(editorActions.undo('laser')),
+        redo: () => dispatch(editorActions.redo('laser')),
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('laser', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('laser', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('laser', { scale })),

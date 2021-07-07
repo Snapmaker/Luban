@@ -652,8 +652,10 @@ class SVGActionsFactory {
 
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
+            return svgModel;
         } catch (e) {
             console.error(e);
+            return null;
         }
     }
 
@@ -1205,6 +1207,35 @@ class SVGActionsFactory {
             const scaleY = scaleTransform.matrix.d;
 
             scaleTransform.setScale(scaleX, -scaleY);
+            this.getSVGModelByElement(element).onTransform();
+        }
+
+        // update selector
+        this._resetSelector(elements);
+
+        // update t
+        const t = SVGActionsFactory.calculateElementsTransformation(elements);
+        this._setSelectedElementsTransformation(t);
+    }
+
+    /**
+     * Reset Flip elements.
+     *
+     * @param elements
+     */
+    resetFlipElements(elements, newScale = {}) {
+        if (elements.length !== 1) {
+            return;
+        }
+
+        for (const element of elements) {
+            const transformList = SvgModel.getTransformList(element);
+
+            const scaleTransform = transformList.getItem(2);
+            const scaleX = newScale.x === undefined ? Math.abs(scaleTransform.matrix.a) : newScale.x;
+            const scaleY = newScale.y === undefined ? Math.abs(scaleTransform.matrix.d) : newScale.y;
+
+            scaleTransform.setScale(scaleX, scaleY);
             this.getSVGModelByElement(element).onTransform();
         }
 

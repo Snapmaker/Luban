@@ -28,6 +28,7 @@ import {
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { CNC_LASER_STAGE } from '../../../flux/editor/utils';
+import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 
@@ -60,6 +61,9 @@ class Visualizer extends Component {
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        clearOperationHistory: PropTypes.func.isRequired,
+        undo: PropTypes.func.isRequired,
+        redo: PropTypes.func.isRequired,
         initContentGroup: PropTypes.func.isRequired,
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
@@ -118,6 +122,12 @@ class Visualizer extends Component {
     fileInput = React.createRef();
 
     actions = {
+        undo: () => {
+            this.props.undo();
+        },
+        redo: () => {
+            this.props.redo();
+        },
         onChangeFile: (event) => {
             const file = event.target.files[0];
             const extname = path.extname(file.name).toLowerCase();
@@ -230,18 +240,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.current.resizeWindow();
-        // this.canvas.current.disable3D();
-
-        // window.addEventListener(
-        //     'hashchange',
-        //     (event) => {
-        //         if (event.newURL.endsWith('cnc')) {
-        //             this.canvas.current.resizeWindow();
-        //         }
-        //     },
-        //     false
-        // );
-
+        this.props.clearOperationHistory();
         UniApi.Event.on('appbar-menu:cnc.import', this.actions.importFile);
     }
 
@@ -291,6 +290,7 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
+        this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:cnc.import', this.actions.importFile);
     }
 
@@ -653,6 +653,9 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        clearOperationHistory: () => dispatch(operationHistoryActions.clear('cnc')),
+        undo: () => dispatch(editorActions.undo('cnc')),
+        redo: () => dispatch(editorActions.redo('cnc')),
         initContentGroup: (svgContentGroup) => dispatch(editorActions.initContentGroup('cnc', svgContentGroup)),
         updateTarget: (target) => dispatch(editorActions.updateState('cnc', { target })),
         updateScale: (scale) => dispatch(editorActions.updateState('cnc', { scale })),

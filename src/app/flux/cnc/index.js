@@ -15,10 +15,12 @@ import definitionManager from './DefinitionManager';
 import { machineStore } from '../../store/local-storage';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { CNC_LASER_STAGE } from '../editor/utils';
+import OperationHistory from '../operation-history/OperationHistory';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const initModelGroup = new ModelGroup('cnc');
+const operationHistory = new OperationHistory();
 const INITIAL_STATE = {
 
     materials: {
@@ -75,6 +77,12 @@ const INITIAL_STATE = {
     redoSnapshots: [], // snapshot { models, toolPathModels }
     canUndo: false,
     canRedo: false,
+    history: operationHistory,
+    targetTmpState: {},
+    // When project recovered, the operation history should be cleared,
+    // however we can not identify while the recovery is done, just exclude
+    // them when the models loaded at the first time.
+    excludeModelIDs: {},
 
     // modelGroup state
     hasModel: false,

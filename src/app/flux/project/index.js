@@ -17,6 +17,7 @@ import { actions as editorActions } from '../editor';
 // import machineAction from '../machine/action-base';
 import { actions as workspaceActions } from '../workspace';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
+import { actions as operationHistoryActions } from '../operation-history';
 
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
@@ -149,10 +150,14 @@ export const actions = {
         let modActions = null;
         let modState = null;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
+            // clear operation history
+            dispatch(operationHistoryActions.clear(envHeadType));
             modActions = editorActions;
             modState = getState()[envHeadType];
         }
         if (envHeadType === HEAD_3DP) {
+            // clear operation history
+            dispatch(operationHistoryActions.clear('printing'));
             modActions = printingActions;
             modState = getState().printing;
             await dispatch(printingActions.initSize());
@@ -192,6 +197,12 @@ export const actions = {
 
         for (let k = 0; k < models.length; k++) {
             const { headType, originalName, uploadName, config, sourceType, gcodeConfig, sourceWidth, sourceHeight, mode, transformation, modelID } = models[k];
+            // prevent project recovery recorded into operation history
+            if (envHeadType === '3dp') {
+                dispatch(operationHistoryActions.excludeModelById('printing', modelID));
+            } else {
+                dispatch(operationHistoryActions.excludeModelById(envHeadType, modelID));
+            }
             await dispatch(modActions.generateModel(headType, originalName, uploadName, sourceWidth, sourceHeight, mode,
                 sourceType, config, gcodeConfig, transformation, modelID));
         }
@@ -395,6 +406,9 @@ export const actions = {
         dispatch(actions.updateState(newHeadType, { unSaved: false, openedFile: null }));
 
         history.push(to);
+
+        // clear operation history
+        dispatch(operationHistoryActions.clear(newHeadType));
     },
 
     saveAndClose: (headType, opts) => async (dispatch, getState) => {

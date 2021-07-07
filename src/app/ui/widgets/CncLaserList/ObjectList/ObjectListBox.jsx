@@ -32,9 +32,9 @@ function ObjectListBox(props) {
             const visible = model.visible;
             dispatch(editorActions.selectTargetModel(model, props.headType));
             if (visible) {
-                dispatch(editorActions.hideSelectedModel(props.headType));
+                dispatch(editorActions.hideSelectedModel(props.headType, model));
             } else {
-                dispatch(editorActions.showSelectedModel(props.headType));
+                dispatch(editorActions.showSelectedModel(props.headType, model));
             }
         }
     };
