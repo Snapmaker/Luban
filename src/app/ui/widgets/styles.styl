@@ -9,6 +9,7 @@ $bottom-bar-height = 0px
 // separator without margin on top and bottom
 .visualizer
     position: relative;
+    margin-bottom: 0;
 .visualizer-content-wrapper
     position: relative!important;
     padding: 0!important;
@@ -106,8 +107,15 @@ $bottom-bar-height = 0px
 }
 .canvas-wrapper {
     height: calc(100vh - 61px);
+    .m-3 {
+        padding: 1rem;
+    }
 }
-
+[class="appbar"] {
+    .canvas-wrapper {
+        height: calc(100vh - 85px);
+    }
+}
 
 .canvas-footer {
     border-top: 1px solid #ccc;

@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
+import classNames from 'classnames';
 import { renderModal } from '../utils';
 // import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
@@ -30,6 +31,7 @@ import { actions as menuActions } from '../../flux/appbar-menu';
 import { actions as machineActions } from '../../flux/machine';
 import { actions as editorActions } from '../../flux/editor';
 import { actions as projectActions } from '../../flux/project';
+import styles from './styles/appbar.styl';
 
 class AppLayout extends PureComponent {
     static propTypes = {
@@ -457,7 +459,9 @@ class AppLayout extends PureComponent {
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }
-                {this.props.children}
+                <div className={isElectron() ? null : classNames(styles['app-content'])}>
+                    {this.props.children}
+                </div>
             </div>
         );
     }

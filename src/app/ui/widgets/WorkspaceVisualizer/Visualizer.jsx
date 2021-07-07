@@ -687,7 +687,7 @@ class Visualizer extends Component {
                 <div className={styles['canvas-wrapper']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {this.props.renderState === 'rendering' && <Rendering />}
-                    <div className="m-3">
+                    <div className={styles['m-3']}>
                         <WorkflowControl
                             workflowStatus={this.props.workflowStatus}
                             isConnected={this.props.isConnected}
