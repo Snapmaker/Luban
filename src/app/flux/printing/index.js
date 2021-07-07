@@ -15,6 +15,7 @@ import ModelGroup from '../../models/ModelGroup';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../ui/widgets/PrintingVisualizer/ModelExporter';
 import { controller } from '../../lib/controller';
+import { actions as operationHistoryActions } from '../operation-history';
 
 const isDefaultQualityDefinition = (definitionId) => {
     return definitionId.indexOf('quality') !== -1
@@ -1136,46 +1137,50 @@ export const actions = {
     },
 
     // uploadModel
-    undo: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        if (undoSnapshots.length <= 1) {
-            return;
-        }
-        redoSnapshots.push(undoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+    undo: () => (dispatch) => {
+    // undo: () => (dispatch, getState) => {
+        // const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
+        // if (undoSnapshots.length <= 1) {
+        //     return;
+        // }
+        // redoSnapshots.push(undoSnapshots.pop());
+        // const snapshots = undoSnapshots[undoSnapshots.length - 1];
 
-        const modelState = modelGroup.undoRedo(snapshots.models);
+        // const modelState = modelGroup.undoRedo(snapshots.models);
 
-        dispatch(actions.updateState({
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+        // dispatch(actions.updateState({
+        //     ...modelState,
+        //     undoSnapshots: undoSnapshots,
+        //     redoSnapshots: redoSnapshots,
+        //     canUndo: undoSnapshots.length > 1,
+        //     canRedo: redoSnapshots.length > 0
+        // }));
+        dispatch(operationHistoryActions.undo());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.render());
     },
 
-    redo: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
-        if (redoSnapshots.length === 0) {
-            return;
-        }
+    redo: () => (dispatch) => {
+    // redo: () => (dispatch, getState) => {
+        // const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
+        // if (redoSnapshots.length === 0) {
+        //     return;
+        // }
 
-        undoSnapshots.push(redoSnapshots.pop());
-        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+        // undoSnapshots.push(redoSnapshots.pop());
+        // const snapshots = undoSnapshots[undoSnapshots.length - 1];
 
-        const modelState = modelGroup.undoRedo(snapshots.models);
+        // const modelState = modelGroup.undoRedo(snapshots.models);
 
-        dispatch(actions.updateState({
-            ...modelState,
-            undoSnapshots: undoSnapshots,
-            redoSnapshots: redoSnapshots,
-            canUndo: undoSnapshots.length > 1,
-            canRedo: redoSnapshots.length > 0
-        }));
+        // dispatch(actions.updateState({
+        //     ...modelState,
+        //     undoSnapshots: undoSnapshots,
+        //     redoSnapshots: redoSnapshots,
+        //     canUndo: undoSnapshots.length > 1,
+        //     canRedo: redoSnapshots.length > 0
+        // }));
+        dispatch(operationHistoryActions.redo());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
         dispatch(actions.render());

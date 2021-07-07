@@ -11,6 +11,7 @@ import developTools from './develop-tools';
 import text from './text';
 import project from './project';
 import appbarMenu from './appbar-menu';
+import operationHistory from './operation-history';
 
 export default combineReducers({
     workspace,
@@ -24,5 +25,6 @@ export default combineReducers({
     developTools,
     editor,
     project,
-    appbarMenu
+    appbarMenu,
+    operationHistory
 });

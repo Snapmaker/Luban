@@ -14,6 +14,9 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
+import { actions as operationHistoryActions } from '../../../flux/operation-history';
+import AddOperation from '../../../flux/operation-history/AddOperation';
+import Operations from '../../../flux/operation-history/Operations';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerBottomLeft from './VisualizerBottomLeft';
@@ -37,6 +40,7 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
+        setOperations: PropTypes.func.isRequired,
         offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
         selectMultiModel: PropTypes.func.isRequired,
@@ -165,6 +169,16 @@ class Visualizer extends PureComponent {
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
+        },
+        recordAddOperation: (modelInfo) => {
+            const operation = new AddOperation({
+                target: modelInfo,
+                parent: null,
+                modelGroup: this.props.modelGroup
+            });
+            const operations = new Operations();
+            operations.push(operation);
+            this.props.setOperations(operations);
         }
     };
 
@@ -293,6 +307,7 @@ class Visualizer extends PureComponent {
             },
             false
         );
+        this.props.modelGroup.on('add', this.actions.recordAddOperation);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -374,6 +389,10 @@ class Visualizer extends PureComponent {
                 });
             }
         }
+    }
+
+    componentWillUnmount() {
+        this.props.modelGroup.on('add', this.actions.recordAddOperation);
     }
 
     getNotice() {
@@ -616,6 +635,8 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    setOperations: (operation) => dispatch(operationHistoryActions.setOperations(operation)),
+
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),
     selectMultiModel: (intersect, selectEvent) => dispatch(printingActions.selectMultiModel(intersect, selectEvent)),

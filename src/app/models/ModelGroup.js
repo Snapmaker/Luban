@@ -1282,16 +1282,17 @@ class ModelGroup extends EventEmitter {
             });
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
-        if (modelInfo.sourceType !== '3d') {
-            if (!(modelInfo?.transformation?.positionZ > 0)) {
-                this.resetModelsPositionZByOrder();
-                const modelLength = this.models.length;
-                modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
-            }
-        }
+        // if (modelInfo.sourceType !== '3d') {
+        //     if (!(modelInfo?.transformation?.positionZ > 0)) {
+        //         this.resetModelsPositionZByOrder();
+        //         const modelLength = this.models.length;
+        //         modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
+        //     }
+        // }
         const model = this.newModel(modelInfo);
+        console.log(model);
 
-        model.computeBoundingBox();
+        // model.computeBoundingBox();
 
         // add to group and select
         this.models.push(model);
