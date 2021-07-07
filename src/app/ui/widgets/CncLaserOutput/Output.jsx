@@ -13,6 +13,8 @@ import {
 
 import modal from '../../../lib/modal';
 import { Button } from '../../components/Buttons';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
 import { renderPopup } from '../../utils';
 import styles from './styles.styl';
 import Workspace from '../../pages/Workspace';
@@ -154,7 +156,26 @@ class Output extends PureComponent {
     render() {
         const actions = this.actions;
         const { workflowState, isGcodeGenerating, gcodeFile, hasModel, hasToolPathModel, inProgress, displayedType } = this.props;
-
+        const menu = (
+            <Menu>
+                <Menu.Item
+                    onClick={actions.onLoadGcode}
+                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Load G-code to Workspace')}
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                    onClick={actions.onExport}
+                >
+                    <div className={classNames('align-c')}>
+                        {i18n._('Export G-code to file')}
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
         return (
             <div className={classNames('position-fixed', 'margin-horizontal-16', 'margin-vertical-16', 'bottom-8', 'border-radius-bottom-8', styles['output-wrapper'])}>
                 <div>
@@ -187,16 +208,21 @@ class Output extends PureComponent {
                         onMouseEnter={actions.handleMouseOver}
                         onMouseLeave={actions.handleMouseOut}
                     >
-                        <Button
-                            type="primary"
-                            priority="level-one"
-                            style={{ display: displayedType === DISPLAYED_TYPE_TOOLPATH ? 'block' : 'none' }}
-                            disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                            className={classNames('position-ab', 'bottom-0', 'margin-top-10')}
+                        <Dropdown
+                            className="export-dropdown"
+                            overlay={menu}
                         >
-                            {i18n._('Export')}
-                        </Button>
-                        {this.state.showExportOptions && (
+                            <Button
+                                type="primary"
+                                priority="level-one"
+                                style={{ display: displayedType === DISPLAYED_TYPE_TOOLPATH ? 'block' : 'none' }}
+                                disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                className={classNames('position-ab', 'bottom-0', 'margin-top-10')}
+                            >
+                                {i18n._('Export')}
+                            </Button>
+                        </Dropdown>
+                        {/* {this.state.showExportOptions && (
                             <div className={classNames('position-re', 'bottom-56')}>
                                 <Button
                                     type="primary"
@@ -217,8 +243,14 @@ class Output extends PureComponent {
                                 >
                                     {i18n._('Export G-code to file')}
                                 </Button>
+                                <div>
+                                    {i18n._('Load G-code to Workspace')}
+                                </div>
+                                <div>
+                                    {i18n._('Export G-code to file')}
+                                </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
 
                 </div>

@@ -7,7 +7,8 @@ import { EPSILON } from '../../../constants';
 class ProgressBar extends React.PureComponent {
     static propTypes = {
         progress: PropTypes.number,
-        tips: PropTypes.string
+        tips: PropTypes.string,
+        strokeColor: PropTypes.string
     };
 
     timeout = null;
@@ -31,7 +32,7 @@ class ProgressBar extends React.PureComponent {
     }
 
     render() {
-        const { progress, tips } = this.props;
+        const { progress, tips, strokeColor = '#1890ff' } = this.props;
         const { display } = this.state;
         return (
             <div
@@ -43,6 +44,7 @@ class ProgressBar extends React.PureComponent {
                 </div>
                 <Progress
                     percent={progress}
+                    strokeColor={strokeColor}
                 />
             </div>
 

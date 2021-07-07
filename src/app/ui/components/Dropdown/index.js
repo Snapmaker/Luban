@@ -1,6 +1,10 @@
-import '@trendmicro/react-dropdown/dist/react-dropdown.css';
-import Dropdown from '@trendmicro/react-dropdown';
-import '../Buttons'; // CSS dependency
+// import '@trendmicro/react-dropdown/dist/react-dropdown.css';
+// import Dropdown from '@trendmicro/react-dropdown';
+// import '../Buttons'; // CSS dependency
+
+// export default Dropdown;
+
+import Dropdown from './dropdown';
 
 export default Dropdown;
 export {
