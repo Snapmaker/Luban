@@ -1,3 +1,5 @@
-import '@trendmicro/react-buttons/dist/react-buttons.css';
+import Button from './button';
 
-export { Button, ButtonGroup, ButtonToolbar } from '@trendmicro/react-buttons';
+export {
+    Button
+};

@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
+import Slider from '../../components/Slider';
 import Anchor from '../../components/Anchor';
+import Card from '../../components/Card';
 import styles from './styles.styl';
 import { MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE } from '../../../constants';
 import CncLaserObjectList from '../CncLaserList/ObjectList';
@@ -23,12 +24,15 @@ class VisualizerBottomLeft extends PureComponent {
     render() {
         return (
             <React.Fragment>
-                <div className={classNames(styles['object-list'])}>
+                <Card
+                    className={classNames(styles['object-list'], 'margin-horizontal-8')}
+                    title="Object List"
+                >
                     <CncLaserObjectList
                         headType={this.props.headType}
                     />
-                </div>
-                <div className={classNames(styles['camera-operation'])}>
+                </Card>
+                <div className={classNames(styles['camera-operation'], 'margin-horizontal-8')}>
                     <Anchor
                         className={classNames(styles['zoom-button'], styles['to-front'])}
                         onClick={this.props.toFront}
@@ -43,6 +47,7 @@ class VisualizerBottomLeft extends PureComponent {
                             min={this.props.minScale ?? MIN_LASER_CNC_CANVAS_SCALE}
                             max={this.props.maxScale ?? MAX_LASER_CNC_CANVAS_SCALE}
                             step={0.1}
+                            className="margin-0"
                             onChange={(value) => {
                                 this.props.updateScale(value);
                             }}

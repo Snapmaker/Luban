@@ -1,15 +1,17 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-
+import { Input } from 'antd';
 import log from '../../../lib/log';
 import styles from './styles.styl';
 
 class NumberInput extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
+        size: PropTypes.string,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.number,
+        disabled: PropTypes.bool,
         min: PropTypes.number,
         max: PropTypes.number,
         onChange: PropTypes.func
@@ -52,9 +54,11 @@ class NumberInput extends PureComponent {
     }
 
     onChange = (event) => {
-        this.setState({
-            displayValue: event.target.value
-        });
+        if (this.state.displayValue !== event.target.value) {
+            this.setState({
+                displayValue: event.target.value
+            });
+        }
     };
 
     onBlur = (event) => {
@@ -117,20 +121,26 @@ class NumberInput extends PureComponent {
     }
 
     render() {
-        const { className = '', ...rest } = this.props;
-
+        const { className = '',
+            size = 'middle', disabled = false, ...rest } = this.props;
         return (
-            <input
-                ref={this.ref}
-                {...rest}
-                type="number"
-                value={this.state.displayValue}
-                className={classNames(styles.input, className)}
-                onChange={this.onChange}
-                onBlur={this.onBlur}
-                onKeyUp={this.onKeyUp}
-                onFocus={this.onFocus}
-            />
+            <span
+                className={className}
+            >
+                <Input
+                    ref={this.ref}
+                    {...rest}
+                    type="number"
+                    disabled={disabled}
+                    placeholder="Input a number"
+                    className={classNames(styles.input, styles[size])}
+                    value={this.state.displayValue}
+                    onChange={this.onChange}
+                    onBlur={this.onBlur}
+                    onKeyUp={this.onKeyUp}
+                    onFocus={this.onFocus}
+                />
+            </span>
         );
     }
 }

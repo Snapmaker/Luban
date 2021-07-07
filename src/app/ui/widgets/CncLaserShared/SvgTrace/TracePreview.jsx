@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
 import Detector from 'three/examples/js/Detector';
+import Slider from '../../../components/Slider';
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';

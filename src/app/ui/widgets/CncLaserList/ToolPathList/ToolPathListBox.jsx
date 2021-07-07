@@ -372,7 +372,7 @@ const ToolPathListBox = (props) => {
                         className={classNames(
                             styles.icon,
                         )}
-                        name="Copy"
+                        name="CopyNorma"
                         disabled={inProgress || toolPathTypes.length === 0}
                         size={24}
                         title={i18n._('Create')}
@@ -400,7 +400,7 @@ const ToolPathListBox = (props) => {
                         disabled={disabled}
                         title={i18n._('Prioritize')}
                         onClick={() => actions.toolPathToUp(selectedToolPathId)}
-                        name="Up"
+                        name="CopyNorma"
                         size={24}
                     />
                     <SvgIcon
@@ -411,7 +411,7 @@ const ToolPathListBox = (props) => {
                         disabled={disabled}
                         title={i18n._('Deprioritize')}
                         onClick={() => actions.toolPathToDown(selectedToolPathId)}
-                        name="Up"
+                        name="CopyNorma"
                         size={24}
                     />
                 </div>

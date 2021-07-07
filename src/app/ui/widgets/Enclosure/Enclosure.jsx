@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import TipTrigger from '../../components/TipTrigger';
+import Switch from '../../components/Switch';
 import { actions as machineActions } from '../../../flux/machine';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -174,20 +175,17 @@ class Enclosure extends PureComponent {
                     </div>
                     <div className="sm-parameter-row">
                         <span className="sm-parameter-row__label-lg">{i18n._('Cooling Fan')}</span>
-                        <button
-                            type="button"
+                        <Switch
                             className={fan ? 'sm-btn-small sm-btn-primary' : 'sm-btn-small sm-btn-danger'}
                             style={{
                                 float: 'right'
                             }}
                             onClick={this.actions.onHandleCoolingFans}
+                            checkedChildren={i18n._('On')}
+                            unCheckedChildren={i18n._('Off')}
+                            checked={fan}
                             disabled={(connectionType === 'serial' && !isFanReady) || !isConnected}
-                        >
-                            {!fan && <i className="fa fa-toggle-off" />}
-                            {!!fan && <i className="fa fa-toggle-on" />}
-                            <span className="space" />
-                            {fan ? i18n._('On') : i18n._('Off')}
-                        </button>
+                        />
                     </div>
                     { (isConnected && connectionType === 'wifi' && headType !== '3dp') && (
                         <TipTrigger

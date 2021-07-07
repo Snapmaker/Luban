@@ -5,6 +5,7 @@ import { withRouter } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { slice, cloneDeep, reverse } from 'lodash';
+import { Button } from '../../components/Buttons';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
@@ -180,7 +181,7 @@ const Begin = (props) => {
                             })}
                         </div>
                         <div className={styles['open-file-btn']}>
-                            <button
+                            {/* <button
                                 type="button"
                                 className="sm-btn-small"
                                 style={{ float: 'left' }}
@@ -188,7 +189,16 @@ const Begin = (props) => {
                                 onClick={onClickToUpload}
                             >
                                 {i18n._('Open File')}
-                            </button>
+                            </button> */}
+                            <Button
+                                type="primary"
+                                priority="level-one"
+                                width="100%"
+                                disabled
+                                onClick={onClickToUpload}
+                            >
+                                {i18n._('Open File')}
+                            </Button>
                         </div>
                     </div>
                 </div>

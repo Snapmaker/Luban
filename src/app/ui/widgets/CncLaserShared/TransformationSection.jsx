@@ -165,14 +165,14 @@ class TransformationSection extends PureComponent {
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
-                    <span className="fa fa-arrows-alt sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Transformation')}</span>
+                <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
+                    <span className="sm-flex-width">{i18n._('Transformation')}</span>
                     <span className={classNames(
                         'fa',
                         this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
+                        'sm-flex-auto'
                     )}
                     />
                 </Anchor>
@@ -180,102 +180,98 @@ class TransformationSection extends PureComponent {
                     <React.Fragment>
                         {/* X */}
                         <TipTrigger
-                            title={i18n._('Move (mm)')}
+                            title={i18n._('Move')}
                             content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Move (mm)')}</span>
-                                <div className="sm-parameter-row__label-r">
-                                    <div className={styles['input-box-left']}>
+                            <div className="sm-flex height-32 margin-vertical-8 ">
+                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Move (mm)')}</span>
+                                <span className="sm-flex-width sm-flex justify-space-between">
+                                    <div className="display-inline ">
+                                        <span>
+                                            X
+                                        </span>
                                         <Input
+                                            className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide}
                                             value={toFixed(logicalX, 1)}
+                                            size="small"
                                             min={-size.x}
                                             max={size.x}
                                             onChange={(value) => {
                                                 actions.onChangeLogicalX(value);
                                             }}
                                         />
-                                        <span
-                                            className={styles['input-box-inner-text']}
-                                            style={{ marginLeft: '-15px' }}
-                                        >
-                                            X
-                                        </span>
                                     </div>
-                                    <span
-                                        className={styles['description-text']}
-                                        style={{ marginLeft: '6px', width: '20px', textAlign: 'center', display: 'inline-block' }}
-                                    />
-                                    <div className={styles['input-box-left']}>
+                                    <div className="display-inline">
+                                        <span>
+                                            Y
+                                        </span>
                                         <Input
                                             disabled={disabled || !selectedNotHide}
+                                            className="margin-horizontal-2"
                                             value={toFixed(logicalY, 1)}
+                                            size="small"
                                             min={-size.y}
                                             max={size.y}
                                             onChange={(value) => {
                                                 actions.onChangeLogicalY(value);
                                             }}
                                         />
-                                        <span
-                                            className={styles['input-box-inner-text']}
-                                            style={{ marginLeft: '-15px' }}
-                                        >
-                                            Y
-                                        </span>
                                     </div>
-                                </div>
+                                </span>
                             </div>
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Size')}
                             content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Size (mm)')}</span>
-                                <div className="sm-parameter-row__label-r">
-                                    <div className={styles['input-box-left']}>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Size (mm)')}</span>
+                                <div className="sm-flex-width sm-flex justify-space-between">
+                                    <div className="display-inline">
+                                        <span>
+                                           W
+                                        </span>
                                         <Input
+                                            className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide || canResize === false}
                                             value={toFixed(logicalWidth, 1)}
                                             min={1}
+                                            size="small"
                                             max={size.x}
                                             onChange={(value) => {
                                                 actions.onChangeWidth(value);
                                             }}
                                         />
-                                        <span
-                                            className={styles['input-box-inner-text']}
-                                            style={{ marginLeft: '-17px' }}
-                                        >
-                                           W
-                                        </span>
                                     </div>
                                     <button
                                         type="button"
                                         disabled={disabled || !selectedNotHide || sourceType === 'raster'}
-                                        className={uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock}
-                                        style={{ height: '22px', width: '20px', display: 'inline-block', 'verticalAlign': 'middle', marginLeft: '4px', marginRight: '2px' }}
+                                        className={classNames(
+                                            uniformScalingState ? styles.icon_size_lock : styles.icon_size_unlock,
+                                            'display-inline',
+                                            'width-24',
+                                            'height-32'
+                                        )}
                                         onClick={() => {
                                             actions.onChangeUniformScalingState(!uniformScalingState);
                                         }}
                                     />
-                                    <div className={styles['input-box-left']}>
+                                    <div className="display-inline">
+                                        <span>
+                                           H
+                                        </span>
                                         <Input
+                                            className="margin-horizontal-2"
                                             disabled={disabled || !selectedNotHide || canResize === false}
                                             value={toFixed(logicalHeight, 1)}
                                             min={1}
                                             max={size.y}
+                                            size="small"
                                             onChange={(value) => {
                                                 actions.onChangeHeight(value);
                                             }}
                                         />
-                                        <span
-                                            className={styles['input-box-inner-text']}
-                                            style={{ marginLeft: '-16px' }}
-                                        >
-                                           H
-                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -284,49 +280,44 @@ class TransformationSection extends PureComponent {
                             title={i18n._('Rotate')}
                             content={i18n._('Rotate the image to the angle you need.')}
                         >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
-                                <div className="sm-parameter-row__label-r">
-                                    <div className={styles['input-box-left']}>
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Rotate')}</span>
+                                <div className="sm-flex-width sm-flex justify-space-between">
+                                    <div className="display-inline">
                                         <DegreeInput
                                             disabled={disabled || !selectedNotHide || !canRotate}
                                             value={toFixed(logicalAngle, 1)}
+                                            size="small"
                                             suffix="°"
                                             onChange={actions.onChangeLogicalAngle}
                                         />
                                     </div>
-                                    <span
-                                        className={styles['description-text']}
-                                        style={{ width: '28px', textAlign: 'center', display: 'inline-block' }}
-                                    />
-                                    {selectedModelArray.length !== 1 && (
-                                        <span
-                                            className={styles['description-text']}
-                                            style={{ width: '80px', textAlign: 'center', display: 'inline-block' }}
-                                        />
-                                    )}
-                                    {selectedModelArray.length === 1 && (
-                                        <button
-                                            type="button"
-                                            disabled={disabled || !selectedNotHide}
-                                            className={styles.icon_flip_vertically}
-                                            onClick={actions.onFlipHorizontally}
-                                        />
-                                    )}
-                                    {selectedModelArray.length === 1 && (
-                                        <span
-                                            className={styles['description-text']}
-                                            style={{ width: '20px', textAlign: 'center', display: 'inline-block' }}
-                                        />
-                                    )}
-                                    {selectedModelArray.length === 1 && (
-                                        <button
-                                            type="button"
-                                            disabled={disabled || !selectedNotHide}
-                                            className={styles.icon_flip_horizontal}
-                                            onClick={actions.onFlipVertically}
-                                        />
-                                    )}
+                                    <div className="sm-flex width-96 justify-space-between">
+                                        {selectedModelArray.length === 1 && (
+                                            <button
+                                                type="button"
+                                                className={classNames(
+                                                    styles.icon_flip_vertically,
+                                                    'width-44',
+                                                    'padding-horizontal-10'
+                                                )}
+                                                disabled={disabled || !selectedNotHide}
+                                                onClick={actions.onFlipHorizontally}
+                                            />
+                                        )}
+                                        {selectedModelArray.length === 1 && (
+                                            <button
+                                                type="button"
+                                                className={classNames(
+                                                    styles.icon_flip_horizontal,
+                                                    'width-44',
+                                                    'padding-horizontal-10'
+                                                )}
+                                                disabled={disabled || !selectedNotHide}
+                                                onClick={actions.onFlipVertically}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </TipTrigger>

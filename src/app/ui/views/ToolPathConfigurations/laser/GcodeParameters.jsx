@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+// import Slider from '../../../components/Slider';
 import { ABSENT_VALUE, TOOLPATH_TYPE_IMAGE, TOOLPATH_TYPE_VECTOR } from '../../../../constants';
 import i18n from '../../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
@@ -61,10 +62,10 @@ class GcodeParameters extends PureComponent {
                 )}
                 {isSVG && (
                     <div>
-                        {/*<TipTrigger*/}
+                        {/* <TipTrigger*/}
                         {/*    title={i18n._('Optimize Path')}*/}
                         {/*    content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}*/}
-                        {/*>*/}
+                        {/* >*/}
                         {/*    <div className="sm-parameter-row">*/}
                         {/*        <span className="sm-parameter-row__label">{i18n._('Optimize Path')}</span>*/}
                         {/*        <input*/}
@@ -74,7 +75,7 @@ class GcodeParameters extends PureComponent {
                         {/*            onClick={() => { this.props.updateGcodeConfig({ optimizePath: !optimizePath }); }}*/}
                         {/*        />*/}
                         {/*    </div>*/}
-                        {/*</TipTrigger>*/}
+                        {/* </TipTrigger>*/}
                         <span>{i18n._('Fill')}</span>
                         <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
                         <div
@@ -92,6 +93,11 @@ class GcodeParameters extends PureComponent {
                                         style={{ width: '160px' }}
                                         value={fillDensity}
                                         min={0}
+                                        marks={
+                                            {
+                                                10: ''
+                                            }
+                                        }
                                         max={20}
                                         onChange={(value) => { this.props.updateGcodeConfig({ fillDensity: value }); }}
                                     />

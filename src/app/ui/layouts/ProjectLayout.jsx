@@ -43,7 +43,6 @@ class ProjectLayout extends PureComponent {
         const { renderRightView, children, renderMainToolBar, renderSubToolBar, renderModalView } = this.props;
         return (
             <div>
-
                 <div
                     className={classNames(
                         styles['main-bar'],
@@ -59,6 +58,7 @@ class ProjectLayout extends PureComponent {
                         ref={this.rightView}
                         className={classNames(
                             styles.controls,
+                            'border-radius-8',
                             styles['controls-right'],
                         )}
                     >
