@@ -1,4 +1,4 @@
-// import ThreeUtils from '../../three-extensions/ThreeUtils';
+import ThreeUtils from '../../three-extensions/ThreeUtils';
 
 export default class AddOperation {
     state = [];
@@ -52,8 +52,11 @@ export default class AddOperation {
             const model = state.target;
             const modelGroup = model.modelGroup;
 
-            if (!state.parent) {
-                state.parent = model.meshObject.parent.clone();
+            if (!model.supportTag) {
+                if (model.isSelected) {
+                    ThreeUtils.removeObjectParent(model.meshObject, model.meshObject.parent);
+                    ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
+                }
             }
             modelGroup.removeModel(model);
             if (model.isSelected) {

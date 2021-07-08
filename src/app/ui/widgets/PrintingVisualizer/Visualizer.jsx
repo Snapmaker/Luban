@@ -126,9 +126,6 @@ class Visualizer extends PureComponent {
             // newly added model will be selected, record them to operation history
             const operations = new Operations();
             for (const model of this.props.modelGroup.selectedModelArray) {
-                if (model.isSelected) {
-                    this.props.modelGroup.unwrapSelectedModel(model);
-                }
                 const operation = new AddOperation({
                     target: model,
                     parent: null
@@ -186,9 +183,7 @@ class Visualizer extends PureComponent {
         recordAddOperation: (model) => {
             if (!model.supportTag) {
                 // support should be recorded when mouse clicked
-                if (model.isSelected) {
-                    this.props.modelGroup.unwrapSelectedModel(model);
-                }
+                console.log(model);
                 const operation = new AddOperation({
                     target: model,
                     parent: null
@@ -283,6 +278,15 @@ class Visualizer extends PureComponent {
             [shortcutActions.PASTE]: () => {
                 if (!this.props.inProgress) {
                     this.props.paste();
+                    const operations = new Operations();
+                    for (const model of this.props.modelGroup.selectedModelArray) {
+                        const operation = new AddOperation({
+                            target: model,
+                            parent: null
+                        });
+                        operations.push(operation);
+                    }
+                    this.props.setOperations(operations);
                 }
             },
             [shortcutActions.DUPLICATE]: () => {

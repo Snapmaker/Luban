@@ -637,19 +637,6 @@ class ModelGroup extends EventEmitter {
         this.prepareSelectedGroup();
     }
 
-    unwrapSelectedModel(model) {
-        if (!(model instanceof Model)) return;
-        if (!this.selectedGroup.children.find(obj => obj === model.meshObject)) return;
-
-        model.setSelected(false);
-        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
-        let parent = this.object;
-        if (model.supportTag) { // support parent should be the target model
-            parent = model.target.meshObject;
-        }
-        ThreeUtils.setObjectParent(model.meshObject, parent);
-    }
-
     // refresh selected group matrix
     prepareSelectedGroup() {
         if (this.selectedModelArray.length === 1) {
