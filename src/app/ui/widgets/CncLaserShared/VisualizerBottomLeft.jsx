@@ -2,8 +2,8 @@ import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import Slider from '../../components/Slider';
-import Anchor from '../../components/Anchor';
 import Card from '../../components/Card';
+import SvgIcon from '../../components/SvgIcon';
 import styles from './styles.styl';
 import { MIN_LASER_CNC_CANVAS_SCALE, MAX_LASER_CNC_CANVAS_SCALE } from '../../../constants';
 import CncLaserObjectList from '../CncLaserList/ObjectList';
@@ -21,6 +21,7 @@ class VisualizerBottomLeft extends PureComponent {
         headType: PropTypes.string.isRequired
     };
 
+    // ViewEnlarge
     render() {
         return (
             <React.Fragment>
@@ -33,12 +34,12 @@ class VisualizerBottomLeft extends PureComponent {
                     />
                 </Card>
                 <div className={classNames(styles['camera-operation'], 'margin-horizontal-8')}>
-                    <Anchor
-                        className={classNames(styles['zoom-button'], styles['to-front'])}
+                    <SvgIcon
+                        name="ViewFix"
                         onClick={this.props.toFront}
                     />
-                    <Anchor
-                        className={classNames(styles['zoom-button'], styles['zoom-out'])}
+                    <SvgIcon
+                        name="ViewReduce"
                         onClick={this.props.zoomOut}
                     />
                     <span className={styles['scale-slider']}>
@@ -55,8 +56,8 @@ class VisualizerBottomLeft extends PureComponent {
                             }}
                         />
                     </span>
-                    <Anchor
-                        className={classNames(styles['zoom-button'], styles['zoom-in'])}
+                    <SvgIcon
+                        name="ViewEnlarge"
                         onClick={this.props.zoomIn}
                     />
                 </div>

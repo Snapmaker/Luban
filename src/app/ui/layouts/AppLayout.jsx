@@ -6,7 +6,7 @@ import isElectron from 'is-electron';
 import Mousetrap from 'mousetrap';
 import i18next from 'i18next';
 import { renderModal } from '../utils';
-import AppBar from '../views/AppBar';
+// import AppBar from '../views/AppBar';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import Settings from '../pages/Settings/Settings';
@@ -454,7 +454,6 @@ class AppLayout extends PureComponent {
         const { showSettingsModal, showDevelopToolsModal, showCheckForUpdatesModal } = this.state;
         return (
             <div className={isElectron() ? null : 'appbar'}>
-                <AppBar />
                 { showSettingsModal ? this.actions.renderSettingModal() : null }
                 { showDevelopToolsModal ? this.actions.renderDevelopToolsModal() : null }
                 { showCheckForUpdatesModal ? this.actions.renderCheckForUpdatesModal() : null }

@@ -184,7 +184,7 @@ class TransformationSection extends PureComponent {
                             content={i18n._('Set the coordinate of the selected image or text. You can also drag the image directly.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8 ">
-                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Move (mm)')}</span>
+                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
                                 <span className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline ">
                                         <span>
@@ -226,7 +226,7 @@ class TransformationSection extends PureComponent {
                             content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Size (mm)')}</span>
+                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size (mm)')}</span>
                                 <div className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline">
                                         <span>
@@ -281,14 +281,13 @@ class TransformationSection extends PureComponent {
                             content={i18n._('Rotate the image to the angle you need.')}
                         >
                             <div className="sm-flex height-32 margin-vertical-8">
-                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Rotate')}</span>
+                                <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Rotate')}</span>
                                 <div className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline">
                                         <DegreeInput
                                             disabled={disabled || !selectedNotHide || !canRotate}
                                             value={toFixed(logicalAngle, 1)}
                                             size="small"
-                                            suffix="°"
                                             onChange={actions.onChangeLogicalAngle}
                                         />
                                     </div>

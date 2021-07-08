@@ -59,7 +59,7 @@ class ImageProcessMode extends PureComponent {
                     </Anchor>
                     {this.state.expanded && (
                         <React.Fragment>
-                            <div className={classNames('sm-flex', 'margin-vertical-16', 'align-c', 'justify-space-between')}>
+                            <div className={classNames('sm-flex', 'margin-vertical-8', 'align-c', 'justify-space-between')}>
                                 <div className={classNames(this.props.mode === 'bw' ? styles.selected : styles.unselected)}>
                                     <Anchor
                                         disabled={disabled}
