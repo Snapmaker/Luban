@@ -183,10 +183,19 @@ class Output extends PureComponent {
                         type="primary"
                         priority="level-one"
                         onClick={this.actions.preview}
-                        style={{ display: displayedType !== DISPLAYED_TYPE_TOOLPATH ? 'block' : 'none' }}
-                        disabled={inProgress || (!hasToolPathModel ?? false)}
+                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page !== PAGE_EDITOR ? 'block' : 'none' }}
+                        disabled={inProgress || (!hasToolPathModel ?? false) || disablePreview}
                     >
                         {i18n._('Preview')}
+                    </Button>
+                    <Button
+                        type="primary"
+                        priority="level-one"
+                        onClick={this.actions.switchToProcess}
+                        style={{ displayedType !== DISPLAYED_TYPE_TOOLPATH && page === PAGE_EDITOR ? 'block' : 'none' }}
+                        disabled={!hasModel ?? false}
+                    >
+                        {i18n._('Next')}
                     </Button>
                     {displayedType === DISPLAYED_TYPE_TOOLPATH && !this.state.showExportOptions && (
                         <Button
