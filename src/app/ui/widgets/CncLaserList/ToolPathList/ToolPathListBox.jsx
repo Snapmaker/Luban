@@ -4,6 +4,7 @@ import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import SvgIcon from '../../../components/SvgIcon';
 import Anchor from '../../../components/Anchor';
+import { Button } from '../../../components/Buttons';
 import styles from '../styles.styl';
 import { actions as editorActions } from '../../../../flux/editor';
 // import modal from '../../../lib/modal';
@@ -21,19 +22,18 @@ import {
     PAGE_PROCESS
 } from '../../../../constants';
 import ToolParameters from '../../../views/ToolPathConfigurations/cnc/ToolParameters';
-import widgetStyles from '../../styles.styl';
 import { actions as cncActions } from '../../../../flux/cnc';
 import ToolSelector from '../../../views/ToolPathConfigurations/cnc/ToolSelector';
 
 const getIconStatus = (status) => {
     if (status === 'running') {
-        return styles.iconRunning;
+        return [styles.icon, styles.iconRunning];
     } else if (status === 'warning') {
-        return styles.iconWarning;
+        return [styles.icon, styles.iconWarning];
     } else if (status === 'failed') {
-        return styles.iconError;
+        return [styles.icon, styles.iconError];
     }
-    return '';
+    return [];
 };
 const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
@@ -58,66 +58,58 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
             title={i18n._('Object')}
             content={toolPath.name}
         >
-            <div>
-                <div
+            <div
+                className={classNames(
+                    styles['object-list-item'],
+                    'padding-horizontal-16',
+                    'sm-flex',
+                    'justify-space-between',
+                    toolPath.id === selectedToolPathId ? styles.selected : null,
+                )}
+            >
+                <Anchor
                     className={classNames(
-                        styles['object-list-item'],
-                        'clearfix',
-                        toolPath.id === selectedToolPathId ? styles.selected : null,
+                        'height-24',
+                        'sm-flex',
+                        'sm-flex-width',
+                        // 'width-all-minus-24',
+                        // 'sm-flex-order-negative',
                     )}
+                    onDoubleClick={handleOnDoubleClick}
+                    onClick={handleOnClick}
                 >
-                    <Anchor
+                    <span>
+                        {prefixName}
+                    </span>
+                    <span>
+                        {suffixName}
+                    </span>
+                </Anchor>
+                <div className={classNames('sm-flex', 'height-24')}>
+                    <i
                         className={classNames(
-                            styles.name,
-                            styles.process,
-                            styles.bt
+                            ...getIconStatus(toolPath.status)
                         )}
-                        onDoubleClick={handleOnDoubleClick}
-                        onClick={handleOnClick}
-                    >
-                        {/* <span>
-                            {toolPath.name}
-                        </span> */}
-                        <span className={classNames(styles.prefixName)}>
-                            {prefixName}
-                        </span>
-                        <span className={classNames(styles.suffixName)}>
-                            {suffixName}
-                        </span>
-                    </Anchor>
-                    <div className={classNames(styles.iconWrapper)}>
-                        <i
-                            className={classNames(
-                                styles.icon,
-                                getIconStatus(toolPath.status)
-                            )}
+                    />
+                    {!toolPath.visible && (
+                        <SvgIcon
+                            size={24}
+                            color="#BFBFBF"
+                            name="HideNormal"
+                            title={i18n._('Hide')}
+                            onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                            disabled={disabled}
                         />
-                        {!toolPath.visible && (
-                            <SvgIcon
-                                size={22}
-                                color="#BFBFBF"
-                                name="Hide"
-                                className={classNames(
-                                    styles.icon,
-                                )}
-                                title={i18n._('Hide')}
-                                onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
-                                disabled={disabled}
-                            />
-                        )}
-                        {toolPath.visible && (
-                            <SvgIcon
-                                size={22}
-                                name="Show"
-                                className={classNames(
-                                    styles.icon,
-                                )}
-                                title={i18n._('Show')}
-                                onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
-                                disabled={disabled}
-                            />
-                        )}
-                    </div>
+                    )}
+                    {toolPath.visible && (
+                        <SvgIcon
+                            size={24}
+                            name="ShowNormal"
+                            title={i18n._('Show')}
+                            onClick={() => onClickVisible(toolPath.id, toolPath.visible, toolPath.check)}
+                            disabled={disabled}
+                        />
+                    )}
                 </div>
             </div>
         </TipTrigger>
@@ -319,101 +311,107 @@ const ToolPathListBox = (props) => {
         props.widgetActions.setDisplay(true);
     }
     return (
-        <div>
-            {toolPaths.length === 0 && (
-                <div style={{ marginTop: '10px', height: '20px', textAlign: 'center' }}>
-                    <SvgIcon
-                        name="Information"
-                        size={18}
-                        color="#979899"
-                        className={styles['focus-icon']}
-                    />
-
-                    <div style={{
-                        display: 'inline-block',
-                        color: '#979899',
-                        fontSize: '14px',
-                        fontFamily: 'Roboto-Regular, Roboto',
-                        height: '19px',
-                        lineHeight: '19px',
-                        marginLeft: '9px'
-                    }}
-                    >
-                        {i18n._('Select Object to Create Toolpath')}
-                    </div>
-                </div>
-            )}
-
-            <div className={styles['object-list-box']}>
-                {toolPaths && toolPaths.map((toolPath) => {
-                    return (
-                        <ToolpathItem
-                            toolPath={toolPath}
-                            key={toolPath.id}
-                            selectedToolPathId={selectedToolPathId}
-                            selectToolPathId={actions.selectToolPathId}
-                            onClickVisible={actions.onClickVisible}
-                            setEditingToolpath={setEditingToolpath}
-                            disabled={inProgress}
-                        />
-                    );
-                })}
-            </div>
+        <div className={classNames(
+            styles.toolPathWrapper,
+            'clearfix'
+        )}
+        >
             <div className={classNames(
-                styles.toolPathFooter,
-                'clearfix'
+                'border-default-grey-1',
+                'border-radius-8',
+                'padding-bottom-16'
             )}
             >
                 <div className={classNames(
-                    styles.left
+                    'height-176',
+                    'align-c'
                 )}
                 >
-                    <SvgIcon
-                        className={classNames(
-                            styles.icon,
+                    {toolPaths.length === 0 && (
+                        <div className={classNames(
+                            'font-roboto',
+                            'border-radius-8',
+                            'display-inline',
+                            'height-40',
+                            'padding-horizontal-16',
+                            'border-default-blue',
+                            'background-color-blue'
                         )}
-                        name="CopyNorma"
-                        disabled={inProgress || toolPathTypes.length === 0}
-                        size={24}
-                        title={i18n._('Create')}
-                        onClick={() => actions.createToolPath()}
-                    />
-                    <SvgIcon
-                        className={classNames(
-                            styles.icon,
-                        )}
-                        name="Delete"
-                        disabled={disabled}
-                        size={24}
-                        title={i18n._('Delete')}
-                        onClick={() => actions.deleteToolPath(selectedToolPathId)}
-                    />
+                        >
+                            {i18n._('Select Object to Create Toolpath')}
+                        </div>
+                    )}
+
+                    <div className={styles['object-list-box']}>
+                        {toolPaths && toolPaths.map((toolPath) => {
+                            return (
+                                <ToolpathItem
+                                    toolPath={toolPath}
+                                    key={toolPath.id}
+                                    selectedToolPathId={selectedToolPathId}
+                                    selectToolPathId={actions.selectToolPathId}
+                                    onClickVisible={actions.onClickVisible}
+                                    setEditingToolpath={setEditingToolpath}
+                                    disabled={inProgress}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
                 <div className={classNames(
-                    styles.right,
+                    'border-radius-bottom-8',
+                    'margin-horizontal-16',
+                    'clearfix'
                 )}
                 >
-                    <SvgIcon
-                        className={classNames(
-                            styles.icon,
-                        )}
-                        disabled={disabled}
-                        title={i18n._('Prioritize')}
-                        onClick={() => actions.toolPathToUp(selectedToolPathId)}
-                        name="CopyNorma"
-                        size={24}
-                    />
-                    <SvgIcon
-                        className={classNames(
-                            styles.icon,
-                            styles.rotate180
-                        )}
-                        disabled={disabled}
-                        title={i18n._('Deprioritize')}
-                        onClick={() => actions.toolPathToDown(selectedToolPathId)}
-                        name="CopyNorma"
-                        size={24}
-                    />
+                    <div className={classNames(
+                        'float-l',
+                        'margin-vertical-8',
+                    )}
+                    >
+                        <SvgIcon
+                            name="Delete"
+                            disabled={disabled}
+                            size={24}
+                            title={i18n._('Delete')}
+                            onClick={() => actions.deleteToolPath(selectedToolPathId)}
+                        />
+                    </div>
+                    <div className={classNames(
+                        'float-r',
+                        'margin-vertical-8',
+                    )}
+                    >
+                        <SvgIcon
+                            className={classNames(
+                                'margin-horizontal-8',
+                            )}
+                            disabled={disabled}
+                            title={i18n._('Prioritize')}
+                            onClick={() => actions.toolPathToUp(selectedToolPathId)}
+                            name="CopyNorma"
+                            size={24}
+                        />
+                        <SvgIcon
+                            className={classNames(
+                                'rotate180'
+                            )}
+                            disabled={disabled}
+                            title={i18n._('Deprioritize')}
+                            onClick={() => actions.toolPathToDown(selectedToolPathId)}
+                            name="CopyNorma"
+                            size={24}
+                        />
+                    </div>
+                    <Button
+                        type="primary"
+                        priority="level-three"
+                        width="100%"
+                        onClick={actions.createToolPath}
+                        disabled={inProgress || toolPathTypes.length === 0}
+                    >
+                        {i18n._('Create Toolpath')}
+                    </Button>
                 </div>
             </div>
             {currentToolpath && (
@@ -431,9 +429,6 @@ const ToolPathListBox = (props) => {
                 />
             )}
 
-            {selectedToolPathId && (
-                <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />
-            )}
             {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
                 <ToolSelector
                     toolDefinition={activeToolListDefinition}
@@ -455,12 +450,15 @@ const ToolPathListBox = (props) => {
                 />
             )}
             {selectedToolPath && (
-                <button
-                    type="button"
+                <Anchor
+                    className={classNames(
+                        'float-r',
+                        'link-text'
+                    )}
                     onClick={() => setEditingToolpath(selectedToolPath)}
                 >
-                    {i18n._('More Configurations')}
-                </button>
+                    {i18n._('More')}
+                </Anchor>
             )}
         </div>
     );

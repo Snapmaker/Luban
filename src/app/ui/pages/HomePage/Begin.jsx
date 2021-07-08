@@ -194,7 +194,6 @@ const Begin = (props) => {
                                 type="primary"
                                 priority="level-one"
                                 width="100%"
-                                disabled
                                 onClick={onClickToUpload}
                             >
                                 {i18n._('Open File')}

@@ -110,17 +110,19 @@ class DegreeInput extends PureComponent {
         const { value } = this.state;
 
         return (
-            <Input
-                {...rest}
-                ref={this.ref}
-                type="text"
-                value={value}
-                className={classNames(styles.input, styles[size], className)}
-                onChange={this.onChangeInputValue}
-                onBlur={this.onBlur}
-                onKeyUp={this.onKeyUp}
-                onFocus={this.onFocus}
-            />
+            <span className={classNames('display-inline', styles[size], className)}>
+                <Input
+                    {...rest}
+                    ref={this.ref}
+                    type="text"
+                    value={value}
+                    className={classNames(styles.input)}
+                    onChange={this.onChangeInputValue}
+                    onBlur={this.onBlur}
+                    onKeyUp={this.onKeyUp}
+                    onFocus={this.onFocus}
+                />
+            </span>
         );
     }
 }

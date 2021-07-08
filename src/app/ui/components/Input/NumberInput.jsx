@@ -125,7 +125,7 @@ class NumberInput extends PureComponent {
             size = 'middle', disabled = false, ...rest } = this.props;
         return (
             <span
-                className={className}
+                className={classNames('display-inline', className, styles[size])}
             >
                 <Input
                     ref={this.ref}
@@ -133,7 +133,7 @@ class NumberInput extends PureComponent {
                     type="number"
                     disabled={disabled}
                     placeholder="Input a number"
-                    className={classNames(styles.input, styles[size])}
+                    className={classNames(styles.input)}
                     value={this.state.displayValue}
                     onChange={this.onChange}
                     onBlur={this.onBlur}

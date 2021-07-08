@@ -18,15 +18,17 @@ class TabsWrapper extends PureComponent {
     render() {
         const { className = '', options, activeKey, ...rest } = this.props;
         return (
-            <Tabs
-                {...rest}
-                activeKey={activeKey}
-                className={classNames(styles.tabs, className)}
-            >
-                {(options.map((option) => {
-                    return (<TabPane key={option.key} tab={option.tab} />);
-                }))}
-            </Tabs>
+            <div className={classNames(className)}>
+                <Tabs
+                    {...rest}
+                    activeKey={activeKey}
+                    className={classNames(styles.tabs)}
+                >
+                    {(options.map((option) => {
+                        return (<TabPane key={option.key} tab={option.tab} />);
+                    }))}
+                </Tabs>
+            </div>
         );
     }
 }

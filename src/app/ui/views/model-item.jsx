@@ -5,6 +5,7 @@ import path from 'path';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../components/TipTrigger';
 import Anchor from '../components/Anchor';
+import SvgIcon from '../components/SvgIcon';
 import { normalizeNameDisplay } from '../../lib/normalize-range';
 
 function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisible, inProgress }) {
@@ -38,44 +39,43 @@ function ModelItem({ model, visible, isSelected, styles, onSelect, onToggleVisib
             title={i18n._('Object')}
             content={model.modelName}
         >
-            <div>
-                <div
+            <div
+                className={classNames(
+                    styles['object-list-item'],
+                    'padding-horizontal-16',
+                    'sm-flex',
+                    isSelected ? styles.selected : null,
+                )}
+            >
+                <Anchor
                     className={classNames(
-                        styles['object-list-item'],
-                        isSelected ? styles.selected : null,
+                        'height-24',
+                        'sm-flex-width',
+                        'sm-flex'
                     )}
+                    onClick={(event) => onSelect(model, event.shiftKey)}
                 >
-                    <Anchor
+                    <span
                         className={classNames(
-                            styles.name,
-                            styles.bt
+                            'height-24',
+                            'width-24',
+                            modelIcon
                         )}
-                        onClick={(event) => onSelect(model, event.shiftKey)}
-                    >
-                        <span
-                            className={classNames(
-                                styles.icon,
-                                modelIcon
-                            )}
-                        />
-                        <span className={classNames(styles.prefixName)}>
-                            {prefixName}
-                        </span>
-                        <span className={classNames(styles.suffixName)}>
-                            {suffixName}
-                        </span>
-                    </Anchor>
-                    <button
-                        type="button"
-                        className={classNames(
-                            styles.icon,
-                            visible ? styles.iconHideOpen : styles.iconHideClose,
-                            styles.bt
-                        )}
-                        onClick={() => onToggleVisible(model)}
-                        disabled={inProgress}
                     />
-                </div>
+                    <span>
+                        {prefixName}
+                    </span>
+                    <span>
+                        {suffixName}
+                    </span>
+                </Anchor>
+                <SvgIcon
+                    name={visible ? 'ShowNormal' : 'HideNormal'}
+                    title={visible ? i18n._('Hide') : i18n._('Show')}
+                    color={visible ? '#545659' : '#B9BCBF'}
+                    onClick={() => onToggleVisible(model)}
+                    disabled={inProgress}
+                />
             </div>
         </TipTrigger>
     );

@@ -1,168 +1,12 @@
-@import "../styles.styl"
 
-.object-list-box
-    max-height: 100%
-    margin: 4px 0;
-    //overflow: auto
-
-.left {
-    float: left;
-    padding-left: 5px
-    height: 100%
-}
-
-.right  {
-    float: right;
-    padding-right: 5px
-    height: 100%
-}
-
-.object-list-item {
-    background-color: unset
-    background-size: 36px
-    display: flex
-    &.selected {
-        background-color: #E7F2FD
-    }
-    &:not(.selected):hover {
-        background-color: #EEEFF0;
-    }
-    .bt {
-        margin-left: 8px
-        &:hover {
-            opacity(1)
-        }
-
-        &:active {
-            opacity(.3)
-        }
-    }
-    .process{
-        padding: 0 12px;
-    }
-
-    .name {
-        vertical-align: middle
-        line-height: 32px
-        height: 32px
-        display: inline-block
-        width: calc(100% - 36px)
-        max-width: 270px
-    }
-
-    .prefix-name {
-        display: inline-block
-        vertical-align: middle
-        max-width: 65%
-        overflow: hidden
-        white-space: nowrap
-        text-overflow: ellipsis
-    }
-
-    .suffix-name {
-        display: inline-block
-        vertical-align: middle
-    }
-
-    .icon-wrapper{
-        display: flex;
-        margin-right: 5px;
-    }
+.tool-path-wrapper {
     .icon {
-        padding: 4px 0;
-        box-sizing: content-box;
-        display: inline-block;
-        width: 24px;
-        height: 24px;
-        vertical-align: middle;
-        //margin: 0 4px;
-
-        &.icon-hide-open, &.icon-hide-close {
-            margin-right: 8px
-            border: 0
-        }
-
-        &.icon-hide-open {
-            background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
-        }
-
-        &.icon-hide-close {
-            background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
-        }
-
-        &.icon-shape {
-            background: url("images/list_ic_shape_18x18@2x.png") no-repeat center center
-            display: inline-block
-        }
-
-        &.icon-pic {
-            background: url("images/list_ic_pic_18x18@2x.png") no-repeat center center
-            display: inline-block
-        }
-
-        &.icon-text {
-            background: url("images/list_ic_text_18x18@2x.png") no-repeat center center
-            display: inline-block
-        }
-
-        &.icon-hide-open {
-            background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
-            border: 0
-        }
-
-        &.icon-hide-close {
-            background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
-            border: 0
-        }
-
-        &.icon-check {
-            background: url("images/ic_box_check_14x14.png") no-repeat center center
-            background-size: 18px
-            display: inline-block
-        }
-
-        &.icon-uncheck {
-            background: url("images/ic_box_uncheck_14x14.png") no-repeat center center
-            background-size: 18px
-            display: inline-block
-        }
-
-        &.icon-running {
-            background: url("images/list_ic_running_18x18@2x.png") no-repeat center center
-            background-size: 18px
-            display: inline-block
-        }
-
-        &.icon-warning {
-            background: url("images/list_ic_warning_18x18@2x.png") no-repeat center center
-            background-size: 18px
-            display: inline-block
-        }
-
-        &.icon-error {
-            background: url("images/list_ic_error_18x18@2x.png") no-repeat center center
-            background-size: 18px
-            display: inline-block
-        }
-    }
-
-}
-
-.tool-path-footer {
-    .rotate180 {
-        transform: rotate(180deg);
-    }
-    .icon {
-        padding: 6px 2px;
         box-sizing: content-box;
         display: inline-block;
         width: 24px;
         height: 24px;
         vertical-align: middle;
         margin: 0 4px;
-        //&:active  {
-        //    background-color: #ccc
-        //}
         &.icon-refresh {
             background: url("images/list_ic_refresh_18x18@2x.png") no-repeat center center
             background-size: 18px
@@ -192,5 +36,80 @@
             background-size: 18px
             display: inline-block
         }
+    }
+}
+.object-list-box{
+    max-height: 100%
+    margin: 4px 0;
+}
+.object-list-item {
+    padding: 4px 0;
+    &.selected {
+        background-color: #F5F5F7;
+    }
+    &:not(.selected):hover {
+        background-color: #EEEFF0;
+    }
+    .process{
+        padding: 0 12px;
+    }
+
+    .prefix-name {
+        display: inline-block
+        vertical-align: middle
+        max-width: 65%
+        overflow: hidden
+        white-space: nowrap
+        text-overflow: ellipsis
+    }
+
+    .suffix-name {
+        display: inline-block
+        vertical-align: middle
+    }
+
+    .icon-shape {
+        background: url("images/list_ic_shape_18x18@2x.png") no-repeat center center
+        display: inline-block
+    }
+
+    .icon-pic {
+        background: url("images/list_ic_pic_18x18@2x.png") no-repeat center center
+        display: inline-block
+    }
+
+    .icon-text {
+        background: url("images/list_ic_text_18x18@2x.png") no-repeat center center
+        display: inline-block
+    }
+
+    .icon-check {
+        background: url("images/ic_box_check_14x14.png") no-repeat center center
+        background-size: 18px
+        display: inline-block
+    }
+
+    .icon-uncheck {
+        background: url("images/ic_box_uncheck_14x14.png") no-repeat center center
+        background-size: 18px
+        display: inline-block
+    }
+
+    .icon-running {
+        background: url("images/list_ic_running_18x18@2x.png") no-repeat center center
+        background-size: 18px
+        display: inline-block
+    }
+
+    .icon-warning {
+        background: url("images/list_ic_warning_18x18@2x.png") no-repeat center center
+        background-size: 18px
+        display: inline-block
+    }
+
+    .icon-error {
+        background: url("images/list_ic_error_18x18@2x.png") no-repeat center center
+        background-size: 18px
+        display: inline-block
     }
 }

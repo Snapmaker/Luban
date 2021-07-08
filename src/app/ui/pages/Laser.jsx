@@ -129,7 +129,6 @@ function Laser() {
     const [showCameraCapture, setShowCameraCapture] = useState(false);
     const dispatch = useDispatch();
     const page = useSelector(state => state?.laser?.page);
-
     useEffect(() => {
         dispatch(laserActions.init());
     }, []);
@@ -297,7 +296,7 @@ function Laser() {
                 type: 'separator'
             },
             {
-                name: 'Edit',
+                name: 'CameraCaptureExtract',
                 action: () => {
                     setShowCameraCapture(true);
                 },

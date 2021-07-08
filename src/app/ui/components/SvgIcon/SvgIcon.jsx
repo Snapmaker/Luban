@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import * as Icons from 'snapmaker-react-icon';
+import classNames from 'classnames';
 import Anchor from '../Anchor';
 
 class SvgIcon extends PureComponent {
@@ -73,7 +74,7 @@ class SvgIcon extends PureComponent {
                     />
                 )}
                 <Anchor
-                    className={className}
+                    className={classNames(className, 'display-inline')}
                     title={title}
                     disabled={disabled}
                     onClick={onClick}

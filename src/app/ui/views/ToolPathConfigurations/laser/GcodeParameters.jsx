@@ -193,7 +193,7 @@ class GcodeParameters extends PureComponent {
                     <div
                         style={{ marginTop: '10px', marginBottom: '10px' }}
                         title={i18n._('Multi-pass')}
-                        titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
+                        titletip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
                     >
                         <TipTrigger
                             title={i18n._('Number of Passes')}
@@ -237,7 +237,7 @@ class GcodeParameters extends PureComponent {
                     <div
                         style={{ marginTop: '10px' }}
                         title={i18n._('Fixed Power')}
-                        titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                        titletip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
                     >
                         <span>{i18n._('Power')}</span>
                         <div className={classNames(widgetStyles.separator)} style={{ margin: '16px 0' }} />

@@ -1,6 +1,9 @@
 //@import "../../../styles/variables.styl"
 
-.tabs {
+.tabs:global(.ant-tabs-top) {
+    :global(.ant-tabs-nav) {
+        margin: 0;
+    }
     :global(.ant-tabs-nav-list){
         width: 100%;
         justify-content: space-around;

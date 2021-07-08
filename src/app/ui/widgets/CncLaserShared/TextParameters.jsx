@@ -41,7 +41,7 @@ class TextParameters extends PureComponent {
             this.fileInput.current.click();
         },
         onSelectAllText: () => {
-            this.textArea.current.select();
+            // this.textArea.current.select();
         },
         onChangeText: (event) => {
             const text = event.target.value;
@@ -91,12 +91,11 @@ The maximum length of the text is 125 mm. When the text is too long, it will be 
 Start a new line manually according to your needs.')}
                         >
                             <div className="sm-flex height-80 margin-vertical-8">
-                                <span className="sm-flex-auto sm-flex-order-negative width-56">{i18n._('Text')}</span>
                                 <TextAreaInput
                                     ref={this.textArea}
                                     disabled={disabled}
                                     onFocus={actions.onSelectAllText}
-                                    style={{ width: '202px', float: 'right', resize: 'none' }}
+                                    style={{ resize: 'none' }}
                                     className="sm-flex-width"
                                     rows="3"
                                     value={text}
