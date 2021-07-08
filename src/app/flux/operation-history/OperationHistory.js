@@ -43,6 +43,7 @@ class OperationHistory {
     }
 
     push(operations) {
+        console.log(this.history);
         // don't use push, because the original history item can be override by different user opertation
         this.history[++this.index] = operations;
         this.history.length = this.index + 1;

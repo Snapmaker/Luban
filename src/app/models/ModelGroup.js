@@ -637,6 +637,19 @@ class ModelGroup extends EventEmitter {
         this.prepareSelectedGroup();
     }
 
+    unwrapSelectedModel(model) {
+        if (!(model instanceof Model)) return;
+        if (!this.selectedGroup.children.find(obj => obj === model.meshObject)) return;
+
+        model.setSelected(false);
+        ThreeUtils.applyObjectMatrix(this.selectedGroup, new Matrix4().getInverse(this.selectedGroup.matrix));
+        let parent = this.object;
+        if (model.supportTag) { // support parent should be the target model
+            parent = model.target.meshObject;
+        }
+        ThreeUtils.setObjectParent(model.meshObject, parent);
+    }
+
     // refresh selected group matrix
     prepareSelectedGroup() {
         if (this.selectedModelArray.length === 1) {
@@ -1282,17 +1295,17 @@ class ModelGroup extends EventEmitter {
             });
         }
         // Adding the z position for each meshObject when add a model(Corresponding to 'bringSelectedModelToFront' function)
-        // if (modelInfo.sourceType !== '3d') {
-        //     if (!(modelInfo?.transformation?.positionZ > 0)) {
-        //         this.resetModelsPositionZByOrder();
-        //         const modelLength = this.models.length;
-        //         modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
-        //     }
-        // }
+        if (modelInfo.sourceType !== '3d') {
+            if (!(modelInfo?.transformation?.positionZ > 0)) {
+                this.resetModelsPositionZByOrder();
+                const modelLength = this.models.length;
+                modelInfo.transformation.positionZ = (modelLength + 1) * INDEXMARGIN;
+            }
+        }
         const model = this.newModel(modelInfo);
         console.log(model);
 
-        // model.computeBoundingBox();
+        model.computeBoundingBox();
 
         // add to group and select
         this.models.push(model);
@@ -1314,6 +1327,7 @@ class ModelGroup extends EventEmitter {
     }
 
     addSupportOnSelectedModel(defaultSupportSize) {
+        console.log('addSupportOnSelectedModel');
         if (this.selectedModelArray.length !== 1) {
             return null;
         }

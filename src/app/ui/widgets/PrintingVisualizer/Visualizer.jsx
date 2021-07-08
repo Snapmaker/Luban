@@ -123,6 +123,19 @@ class Visualizer extends PureComponent {
         },
         duplicateSelectedModel: () => {
             this.props.duplicateSelectedModel();
+            // newly added model will be selected, record them to operation history
+            const operations = new Operations();
+            for (const model of this.props.modelGroup.selectedModelArray) {
+                if (model.isSelected) {
+                    this.props.modelGroup.unwrapSelectedModel(model);
+                }
+                const operation = new AddOperation({
+                    target: model,
+                    parent: null
+                });
+                operations.push(operation);
+            }
+            this.props.setOperations(operations);
         },
         resetSelectedModelTransformation: () => {
             this.props.resetSelectedModelTransformation();
@@ -170,15 +183,20 @@ class Visualizer extends PureComponent {
             this.props.setTransformMode(value);
             this.canvas.current.setTransformMode(value);
         },
-        recordAddOperation: (modelInfo) => {
-            const operation = new AddOperation({
-                target: modelInfo,
-                parent: null,
-                modelGroup: this.props.modelGroup
-            });
-            const operations = new Operations();
-            operations.push(operation);
-            this.props.setOperations(operations);
+        recordAddOperation: (model) => {
+            if (!model.supportTag) {
+                // support should be recorded when mouse clicked
+                if (model.isSelected) {
+                    this.props.modelGroup.unwrapSelectedModel(model);
+                }
+                const operation = new AddOperation({
+                    target: model,
+                    parent: null
+                });
+                const operations = new Operations();
+                operations.push(operation);
+                this.props.setOperations(operations);
+            }
         }
     };
 
@@ -212,6 +230,17 @@ class Visualizer extends PureComponent {
         saveSupport: () => {
             if (this._model) {
                 this.props.saveSupport(this._model);
+                if (!this._model.isInitSupport) {
+                    // save generated support into operation history
+                    const operation = new AddOperation({
+                        target: this._model,
+                        parent: this._model.target
+                    });
+                    operation.description = 'AddSupport';
+                    const operations = new Operations();
+                    operations.push(operation);
+                    this.props.setOperations(operations);
+                }
                 this._model = null;
             }
         },
@@ -258,7 +287,7 @@ class Visualizer extends PureComponent {
             },
             [shortcutActions.DUPLICATE]: () => {
                 if (!this.props.inProgress) {
-                    this.props.duplicateSelectedModel();
+                    this.actions.duplicateSelectedModel();
                 }
             },
             [shortcutActions.UNDO]: () => {
@@ -431,7 +460,6 @@ class Visualizer extends PureComponent {
 
     render() {
         const { size, hasModel, selectedModelArray, modelGroup, gcodeLineGroup, progress, displayedType, inProgress } = this.props;
-
         // const actions = this.actions;
 
         const isModelSelected = (selectedModelArray.length > 0);
