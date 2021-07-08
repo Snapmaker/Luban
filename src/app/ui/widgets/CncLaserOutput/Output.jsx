@@ -172,7 +172,7 @@ class Output extends PureComponent {
                             className="sm-btn-large sm-btn-default"
                             onClick={this.actions.switchToProcess}
                             style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                            disabled={!hasToolPathModel ?? false}
+                            disabled={!hasModel ?? false}
                         >
                             {i18n._('Next')}
                         </button>
