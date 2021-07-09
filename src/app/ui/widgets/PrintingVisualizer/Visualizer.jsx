@@ -16,6 +16,7 @@ import Canvas from '../../components/SMCanvas';
 import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printing';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import AddOperation from '../../../flux/operation-history/AddOperation';
+import DeleteOperation from '../../../flux/operation-history/DeleteOperation';
 import Operations from '../../../flux/operation-history/Operations';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -119,6 +120,15 @@ class Visualizer extends PureComponent {
         },
 
         deleteSelectedModel: () => {
+            const operations = new Operations();
+            for (const model of this.props.modelGroup.selectedModelArray) {
+                const operation = new DeleteOperation({
+                    target: model,
+                    parent: model.meshObject.parent.clone(false)
+                });
+                operations.push(operation);
+            }
+            this.props.setOperations(operations);
             this.props.removeSelectedModel();
         },
         duplicateSelectedModel: () => {
@@ -138,6 +148,15 @@ class Visualizer extends PureComponent {
             this.props.resetSelectedModelTransformation();
         },
         clearBuildPlate: () => {
+            const operations = new Operations();
+            for (const model of this.props.modelGroup.models) {
+                const operation = new DeleteOperation({
+                    target: model,
+                    parent: null
+                });
+                operations.push(operation);
+            }
+            this.props.setOperations(operations);
             this.props.removeAllModels();
         },
         arrangeAllModels: () => {
@@ -246,13 +265,37 @@ class Visualizer extends PureComponent {
         },
         clearSelectedSupport: () => {
             const { modelGroup } = this.props;
+            // support can only be selected with supports
             const isSupportSelected = modelGroup.selectedModelArray.length > 0 && modelGroup.selectedModelArray[0].supportTag === true;
             if (isSupportSelected) {
+                const operations = new Operations();
+                for (const model of this.props.modelGroup.selectedModelArray) {
+                    const operation = new DeleteOperation({
+                        target: model,
+                        parent: model.target
+                    });
+                    operation.description = 'DeleteSupport';
+                    operations.push(operation);
+                }
+                this.props.setOperations(operations);
                 modelGroup.removeSelectedModel();
             }
         },
         clearAllManualSupport: () => {
-            this.props.clearAllManualSupport();
+            const supports = this.props.modelGroup.models.filter(item => item.supportTag === true);
+            if (supports && supports.length > 0) {
+                const operations = new Operations();
+                for (const model of supports) {
+                    const operation = new DeleteOperation({
+                        target: model,
+                        parent: model.target
+                    });
+                    operation.description = 'DeleteSupport';
+                    operations.push(operation);
+                }
+                this.props.setOperations(operations);
+                this.props.clearAllManualSupport();
+            }
         }
     };
 
@@ -267,7 +310,7 @@ class Visualizer extends PureComponent {
             [shortcutActions.UNSELECT]: this.props.unselectAllModels,
             [shortcutActions.DELETE]: () => {
                 if (!this.props.inProgress) {
-                    this.props.removeSelectedModel();
+                    this.actions.deleteSelectedModel();
                 }
             },
             [shortcutActions.COPY]: () => {

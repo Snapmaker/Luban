@@ -1,5 +1,5 @@
 export default class VisibleOperation {
-    state = {}
+    state = {};
 
     description = 'Visible';
 
@@ -22,6 +22,7 @@ export default class VisibleOperation {
         model.visible = this.state.visible;
         model.meshObject.visible = this.state.visible;
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
+        modelGroup.modelChanged();
     }
 
     undo() {
@@ -31,5 +32,6 @@ export default class VisibleOperation {
         model.visible = !this.state.visible;
         model.meshObject.visible = !this.state.visible;
         modelGroup.models = [...modelGroup.models]; // trigger <ModelItem> component to show the unselected model
+        modelGroup.modelChanged();
     }
 }
