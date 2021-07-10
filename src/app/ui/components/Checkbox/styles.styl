@@ -11,8 +11,11 @@
     :global(.ant-checkbox-disabled) {
         :global(.ant-checkbox-inner) {
             background-color: $grey-3;
-            color: $black-5;
-            border-color: $black-5 !important;
+            color: $grey-1;
+            border-color: $grey-1 !important;
+            &::after {
+                border-color: $grey-1;
+            }
         }
     }
 }

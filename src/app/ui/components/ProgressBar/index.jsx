@@ -45,6 +45,7 @@ class ProgressBar extends React.PureComponent {
                 <Progress
                     percent={progress}
                     strokeColor={strokeColor}
+                    trailColor="#D5D6D9"
                 />
             </div>
 

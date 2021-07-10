@@ -1,4 +1,5 @@
 @import "../../../styles/variables.styl"
+@import "../../../styles/global-var.styl"
 
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -39,3 +40,7 @@ input[type=number]::-webkit-outer-spin-button {
         background-color: #F5F5F7!important;
         border: 1px solid #D5D6D9!important;
         color: #B9BCBF!important;
+
+:global(.ant-input-suffix) {
+    color: $black-5;
+}

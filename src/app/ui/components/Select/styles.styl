@@ -47,6 +47,8 @@
 :global(div.ant-select-dropdown) {
     width: auto !important;
     max-width: 320px;
+    border: 1px solid $black-5;
+    border-radius: $px-grade-4;
     :global(.ant-select-item) {
         padding: 5px 8px;
         color: $black-3;
@@ -58,5 +60,8 @@
         background: $blue-6;
         color: $black-3;
         font-weight: $font-weight-normal;
+    }
+    :global(.ant-select-item-option-disabled) {
+        color: $black-5;
     }
 }
