@@ -47,6 +47,7 @@ export default class AddOperation {
         }
         modelGroup.removeModel(model);
         if (model.isSelected) {
+            model.setSelected(false);
             // trigger <VisualizerLeftBar> component hidden
             modelGroup.unselectAllModels();
         }

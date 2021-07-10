@@ -42,6 +42,7 @@ export default class DeleteOperation {
         }
         modelGroup.removeModel(model);
         if (model.isSelected) {
+            model.setSelected(false);
             // trigger <VisualizerLeftBar> popup component hidden
             modelGroup.unselectAllModels();
         }
@@ -57,6 +58,9 @@ export default class DeleteOperation {
             model.target.meshObject.add(model.meshObject); // restore the parent-child relationship
         } else {
             modelGroup.object.add(model.meshObject);
+        }
+        if (model.isSelected) {
+            model.setSelected(false);
         }
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.models.push(model);
