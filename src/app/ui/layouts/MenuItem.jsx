@@ -27,6 +27,7 @@ function MenuItem({ menuItem, actions }) {
                     spanText={i18n._(title)}
                     spanClassName={classNames(styles['action-title'])}
                     inputInfo={inputInfo}
+                    type={['hoverNormal', 'pressNormal']}
                 />
             );
         default:
