@@ -3,6 +3,7 @@ import React, { PureComponent } from 'react';
 import * as Icons from 'snapmaker-react-icon';
 import classNames from 'classnames';
 import includes from 'lodash/includes';
+import { noop } from 'lodash';
 import Anchor from '../Anchor';
 
 class SvgIcon extends PureComponent {
@@ -80,6 +81,10 @@ class SvgIcon extends PureComponent {
         } = this.props;
         let iconBackground = 'transparent';
         const Component = Icons[name];
+        if (!Component) {
+            console.log(`Can't find the icon named '${name}', please check your icon name`);
+            return null;
+        }
         const hoverBackgroundColor = includes(type, 'hoverNoBackground') ? 'transparent' : '#EEEFF0';
         const hoverIconColor = includes(type, 'hoverNoBackground') ? '#2A2C2E' : color;
         const pressedBackground = includes(type, 'pressSpecial') ? '#E7F3FF' : '#D5D6D9';// '#D5D6D9'
@@ -95,10 +100,6 @@ class SvgIcon extends PureComponent {
             iconBackground = 'transparent';
             color = '#85888C';
         }
-        if (!Component) {
-            console.log(`Can't find the icon named '${name}', please check your icon name`);
-            return null;
-        }
 
         return (
             <span style={{ verticalAlign: 'top' }}>
@@ -112,10 +113,13 @@ class SvgIcon extends PureComponent {
                         onChange={inputInfo.onChange}
                     />
                 )}
-                <Anchor
+                <div
                     className={classNames(className, 'display-inline')}
                     title={title}
                     disabled={disabled}
+                    onKeyDown={noop}
+                    role="button"
+                    tabIndex={0}
                     onClick={onClick}
                     onFocus={() => 0}
                     onBlur={() => 0}
@@ -142,7 +146,7 @@ class SvgIcon extends PureComponent {
                             {spanText}
                         </div>
                     )}
-                </Anchor>
+                </div>
             </span>
         );
     }

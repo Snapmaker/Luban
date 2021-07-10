@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import Select from '../../components/Select';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
+import SvgIcon from '../../components/SvgIcon';
 import { NumberInput as Input, TextAreaInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 
@@ -73,13 +74,11 @@ class TextParameters extends PureComponent {
             <div>
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                     <span className="sm-flex-width">{i18n._('Text')}</span>
-                    <span className={classNames(
-                        'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                        'sm-flex-auto'
-                    )}
+                    <SvgIcon
+                        name="DropdownLine"
+                        className={classNames(
+                            this.state.expanded ? '' : 'rotate180'
+                        )}
                     />
                 </Anchor>
                 {this.state.expanded && (
@@ -138,7 +137,7 @@ Start a new line manually according to your needs.')}
                                     value={parseInt(fontSize, 10)}
                                     onChange={actions.onChangeSize}
                                 />
-                                <span className="sm-flex__input-unit">pt</span>
+                                <span className="sm-flex__input-unit-24">pt</span>
                             </div>
                         </TipTrigger>
                         {/* <TipTrigger

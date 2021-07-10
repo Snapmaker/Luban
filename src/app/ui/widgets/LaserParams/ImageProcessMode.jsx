@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import i18n from '../../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import Checkbox from '../../components/Checkbox';
+import SvgIcon from '../../components/SvgIcon';
 import styles from '../CncLaserShared/styles.styl';
 import ConfigRasterBW from './config/ConfigRasterBW';
 import ConfigGreyscale from './config/ConfigGreyscale';
@@ -48,13 +49,11 @@ class ImageProcessMode extends PureComponent {
                 <div className={styles['laser-mode']}>
                     <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                         <span className="sm-flex-width">{i18n._('Processing Mode')}</span>
-                        <span className={classNames(
-                            'fa',
-                            this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                            'sm-parameter-header__indicator',
-                            'pull-right',
-                            'sm-flex-auto'
-                        )}
+                        <SvgIcon
+                            name="DropdownLine"
+                            className={classNames(
+                                this.state.expanded ? '' : 'rotate180'
+                            )}
                         />
                     </Anchor>
                     {this.state.expanded && (

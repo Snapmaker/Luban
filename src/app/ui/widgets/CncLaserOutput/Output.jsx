@@ -177,8 +177,8 @@ class Output extends PureComponent {
             </Menu>
         );
         return (
-            <div className={classNames('position-fixed', 'margin-horizontal-16', 'margin-vertical-16', 'bottom-8', 'border-radius-bottom-8', styles['output-wrapper'])}>
-                <div>
+            <div className={classNames('position-fixed', 'border-radius-bottom-8', 'bottom-8', 'background-color-white', styles['output-wrapper'])}>
+                <div className={classNames('position-re', 'margin-horizontal-16', 'margin-vertical-16')}>
                     <Button
                         type="primary"
                         priority="level-one"
@@ -196,7 +196,7 @@ class Output extends PureComponent {
                                 this.actions.switchToEditPage();
                                 this.actions.handleMouseOut();
                             }}
-                            className={classNames('position-ab', 'bottom-56')}
+                            className={classNames('position-ab', 'bottom-64')}
                         >
                             {i18n._('Back to Object View')}
                         </Button>
@@ -205,52 +205,27 @@ class Output extends PureComponent {
                         onKeyDown={noop}
                         role="button"
                         tabIndex={0}
+                        className={classNames('position-re')}
                         onMouseEnter={actions.handleMouseOver}
                         onMouseLeave={actions.handleMouseOut}
                     >
                         <Dropdown
-                            className="export-dropdown"
                             overlay={menu}
                         >
                             <Button
                                 type="primary"
                                 priority="level-one"
-                                style={{ display: displayedType === DISPLAYED_TYPE_TOOLPATH ? 'block' : 'none' }}
                                 disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                className={classNames('position-ab', 'bottom-0', 'margin-top-10')}
+                                className={classNames(
+                                    'position-ab',
+                                    'bottom-16',
+                                    'margin-top-10',
+                                    displayedType === DISPLAYED_TYPE_TOOLPATH ? 'display-block' : 'display-none'
+                                )}
                             >
                                 {i18n._('Export')}
                             </Button>
                         </Dropdown>
-                        {/* {this.state.showExportOptions && (
-                            <div className={classNames('position-re', 'bottom-56')}>
-                                <Button
-                                    type="primary"
-                                    priority="level-one"
-                                    onClick={actions.onLoadGcode}
-                                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                    className={classNames('margin-top-10')}
-                                >
-                                    {i18n._('Load G-code to Workspace')}
-                                </Button>
-                                <Button
-                                    type="primary"
-                                    priority="level-one"
-                                    onClick={actions.onExport}
-                                    style={{ display: displayedType === DISPLAYED_TYPE_TOOLPATH ? 'block' : 'none' }}
-                                    disabled={inProgress || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
-                                    className={classNames('margin-top-10')}
-                                >
-                                    {i18n._('Export G-code to file')}
-                                </Button>
-                                <div>
-                                    {i18n._('Load G-code to Workspace')}
-                                </div>
-                                <div>
-                                    {i18n._('Export G-code to file')}
-                                </div>
-                            </div>
-                        )} */}
                     </div>
 
                 </div>

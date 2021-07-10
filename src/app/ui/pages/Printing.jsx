@@ -91,6 +91,7 @@ function useRenderMainToolBar() {
             {
                 title: i18n._('Home'),
                 type: 'button',
+                name: 'MainToolbarHome',
                 action: () => {
                     setShowHomePage(true);
                 }
@@ -102,7 +103,7 @@ function useRenderMainToolBar() {
                 title: i18n._('Save'),
                 disabled: !unSaved || !hasModel,
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarSave',
                 action: () => {
                     dispatch(projectActions.save(HEAD_3DP));
                 }
@@ -111,7 +112,7 @@ function useRenderMainToolBar() {
                 title: i18n._('Undo'),
                 disabled: !canUndo,
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarUndo',
                 action: () => {
                     dispatch(printingActions.undo());
                 }
@@ -120,7 +121,7 @@ function useRenderMainToolBar() {
                 title: i18n._('Redo'),
                 disabled: !canRedo,
                 type: 'button',
-                name: 'Copy',
+                name: 'MainToolbarRedo',
                 action: () => {
                     dispatch(printingActions.redo());
                 }

@@ -3,21 +3,22 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Card } from 'antd';
-import Anchor from '../Anchor';
+import SvgIcon from '../SvgIcon';
 import styles from './styles.styl';
-import i18n from '../../../lib/i18n';
+// import i18n from '../../../lib/i18n';
 
 function CardWrapper({ className = '', children, hasToggleBotton = true, ...rest }) {
     const [showList, setShowList] = useState(true);
     let extra;
     if (hasToggleBotton) {
         extra = (
-            <Anchor
+            <SvgIcon
+                name="DropdownLine"
                 onClick={() => setShowList(!showList)}
-                title={i18n._('hide')}
-            >
-            X
-            </Anchor>
+                className={classNames(
+                    showList ? '' : 'rotate180'
+                )}
+            />
         );
     }
     return (

@@ -10,16 +10,16 @@ function CheckboxItem({ definitionKey, settings, calculateTextIndex = () => 0, d
 
     return (
         <TipTrigger title={i18n._(label)} content={i18n._(description)} key={definitionKey}>
-            <div className="sm-parameter-row">
+            <div className="sm-flex height-32 margin-vertical-8 justify-space-between">
                 <Checkbox
-                    className="sm-parameter-row__checkbox"
+                    className="sm-flex-width"
                     style={{ width: width, cursor: !isDefinitionEditable(definitionKey) ? 'not-allowed' : 'default' }}
                     checked={defaultValue}
                     disabled={!isDefinitionEditable(definitionKey)}
                     onChange={(event) => onChangeDefinition(definitionKey, event.target.checked)}
                 />
                 <span
-                    className="sm-parameter-row__label-lg"
+                    className="sm-flex-auto"
                     style={{ textIndent: calculateTextIndex(definitionKey) }}
                 >
                     {i18n._(label)}

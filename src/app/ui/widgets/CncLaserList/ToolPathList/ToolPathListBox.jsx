@@ -35,6 +35,27 @@ const getIconStatus = (status) => {
     }
     return [];
 };
+// 'Toolpath List'
+const useExpandItem = (title) => {
+    const [expanded, setExpanded] = useState(true);
+    function handleClick() {
+        setExpanded(!expanded);
+    }
+    function renderExpandItem() {
+        return (
+            <Anchor className="sm-flex height-32 margin-vertical-8" onClick={handleClick}>
+                <span className="sm-flex-width">{i18n._(title)}</span>
+                <SvgIcon
+                    name="DropdownLine"
+                    className={classNames(
+                        expanded ? '' : 'rotate180'
+                    )}
+                />
+            </Anchor>
+        );
+    }
+    return [expanded, renderExpandItem];
+};
 const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickVisible, setEditingToolpath, disabled }) => {
     if (!toolPath) {
         return null;
@@ -72,8 +93,6 @@ const ToolpathItem = ({ toolPath, selectedToolPathId, selectToolPathId, onClickV
                         'height-24',
                         'sm-flex',
                         'sm-flex-width',
-                        // 'width-all-minus-24',
-                        // 'sm-flex-order-negative',
                     )}
                     onDoubleClick={handleOnDoubleClick}
                     onClick={handleOnClick}
@@ -191,7 +210,7 @@ const ToolPathListBox = (props) => {
     const selectedToolPath = toolPaths && toolPaths.find(v => v.id === selectedToolPathId);
     const activeToolListDefinition = useSelector(state => state[props.headType]?.activeToolListDefinition, shallowEqual);
     const toolDefinitions = useSelector(state => state[props.headType]?.toolDefinitions, shallowEqual);
-
+    const [expanded, renderExpandItem] = useExpandItem('Toolpath List');
     // ToolPath fast edit init
     const fastEditSettings = {};
     if (selectedToolPath) {
@@ -316,117 +335,178 @@ const ToolPathListBox = (props) => {
             'clearfix'
         )}
         >
-            <div className={classNames(
-                'border-default-grey-1',
-                'border-radius-8',
-                'padding-bottom-16'
-            )}
-            >
-                <div className={classNames(
-                    'height-176',
-                    'align-c'
-                )}
-                >
-                    {toolPaths.length === 0 && (
+            {renderExpandItem()}
+            {expanded && (
+                <div>
+                    <div className={classNames(
+                        'border-default-grey-1',
+                        'border-radius-8',
+                        'padding-bottom-16'
+                    )}
+                    >
                         <div className={classNames(
-                            'font-roboto',
-                            'border-radius-8',
-                            'display-inline',
-                            'height-40',
-                            'padding-horizontal-16',
-                            'border-default-blue',
-                            'background-color-blue'
+                            'height-176',
+                            'align-c'
                         )}
                         >
-                            {i18n._('Select Object to Create Toolpath')}
+                            {toolPaths.length === 0 && (
+                                <div className={classNames(
+                                    'font-roboto',
+                                    'border-radius-8',
+                                    'display-inline',
+                                    'height-40',
+                                    'padding-horizontal-16',
+                                    'border-default-blue',
+                                    'background-color-blue'
+                                )}
+                                >
+                                    {i18n._('Select Object to Create Toolpath')}
+                                </div>
+                            )}
+
+                            <div className={styles['object-list-box']}>
+                                {toolPaths && toolPaths.map((toolPath) => {
+                                    return (
+                                        <ToolpathItem
+                                            toolPath={toolPath}
+                                            key={toolPath.id}
+                                            selectedToolPathId={selectedToolPathId}
+                                            selectToolPathId={actions.selectToolPathId}
+                                            onClickVisible={actions.onClickVisible}
+                                            setEditingToolpath={setEditingToolpath}
+                                            disabled={inProgress}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
+                        <div className={classNames(
+                            'border-radius-bottom-8',
+                            'margin-horizontal-16',
+                            'clearfix'
+                        )}
+                        >
+                            <span className={classNames(
+                                'float-l',
+                                'margin-vertical-8',
+                            )}
+                            >
+                                <SvgIcon
+                                    name="Delete"
+                                    disabled={disabled}
+                                    size={24}
+                                    title={i18n._('Delete')}
+                                    onClick={() => actions.deleteToolPath(selectedToolPathId)}
+                                />
+                            </span>
+                            <div className={classNames(
+                                'float-r',
+                                'margin-vertical-8',
+                            )}
+                            >
+                                <SvgIcon
+                                    className={classNames(
+                                        'margin-horizontal-8',
+                                    )}
+                                    disabled={disabled}
+                                    title={i18n._('Prioritize')}
+                                    onClick={() => actions.toolPathToUp(selectedToolPathId)}
+                                    name="CopyNormal"
+                                    size={24}
+                                />
+                                <SvgIcon
+                                    className={classNames(
+                                        'rotate180'
+                                    )}
+                                    disabled={disabled}
+                                    title={i18n._('Deprioritize')}
+                                    onClick={() => actions.toolPathToDown(selectedToolPathId)}
+                                    name="CopyNormal"
+                                    size={24}
+                                />
+                            </div>
+                            <Button
+                                type="primary"
+                                priority="level-three"
+                                width="100%"
+                                onClick={actions.createToolPath}
+                                disabled={inProgress || toolPathTypes.length === 0}
+                            >
+                                {i18n._('Create Toolpath')}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {currentToolpath && (
+                        <ToolPathConfigurations
+                            toolpath={currentToolpath}
+                            headType={props.headType}
+                            onClose={() => setCurrentToolpath(null)}
+                        />
+                    )}
+                    {editingToolpath && (
+                        <ToolPathConfigurations
+                            headType={props.headType}
+                            toolpath={editingToolpath}
+                            onClose={() => setEditingToolpath(null)}
+                        />
                     )}
 
-                    <div className={styles['object-list-box']}>
-                        {toolPaths && toolPaths.map((toolPath) => {
-                            return (
-                                <ToolpathItem
-                                    toolPath={toolPath}
-                                    key={toolPath.id}
-                                    selectedToolPathId={selectedToolPathId}
-                                    selectToolPathId={actions.selectToolPathId}
-                                    onClickVisible={actions.onClickVisible}
-                                    setEditingToolpath={setEditingToolpath}
-                                    disabled={inProgress}
+                    {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (
+                        <ToolSelector
+                            toolDefinition={activeToolListDefinition}
+                            toolDefinitions={toolDefinitions}
+                            isModifiedDefinition={() => {
+                                return !Object.entries(activeToolListDefinition.settings).every(([key, setting]) => {
+                                    return fastEditSettings && fastEditSettings[key].default_value === setting.default_value;
+                                });
+                            }}
+                            setCurrentValueAsProfile={() => {}}
+                        />
+                    )}
+                    {selectedToolPath && (
+                        <div className={classNames(
+                            'border-default-grey-1',
+                            'border-radius-8',
+                            'margin-vertical-16',
+                            'clearfix',
+                            'padding-bottom-16'
+                        )}
+                        >
+                            <div className={classNames(
+                                'border-bottom-normal',
+                                'border-radius-top-8',
+                                'padding-horizontal-16',
+                                'height-40',
+                            )}
+                            >
+                                {i18n._('Common parameters')}
+                            </div>
+                            <div className="padding-horizontal-16">
+                                <ToolParameters
+                                    settings={fastEditSettings}
+                                    updateToolConfig={actions.updateToolConfig}
+                                    updateGcodeConfig={actions.updateGcodeConfig}
+                                    toolPath={selectedToolPath}
                                 />
-                            );
-                        })}
-                    </div>
-                </div>
-                <div className={classNames(
-                    'border-radius-bottom-8',
-                    'margin-horizontal-16',
-                    'clearfix'
-                )}
-                >
-                    <div className={classNames(
-                        'float-l',
-                        'margin-vertical-8',
+                                <Anchor
+                                    className={classNames(
+                                        'float-r',
+                                        'link-text',
+                                        'height-24'
+                                    )}
+                                    onClick={() => setEditingToolpath(selectedToolPath)}
+                                >
+                                    {i18n._('More')}
+                                    <SvgIcon
+                                        name="ArrowRightBlue24pxNormal"
+                                        size={24}
+                                    />
+                                </Anchor>
+                            </div>
+                        </div>
                     )}
-                    >
-                        <SvgIcon
-                            name="Delete"
-                            disabled={disabled}
-                            size={24}
-                            title={i18n._('Delete')}
-                            onClick={() => actions.deleteToolPath(selectedToolPathId)}
-                        />
-                    </div>
-                    <div className={classNames(
-                        'float-r',
-                        'margin-vertical-8',
-                    )}
-                    >
-                        <SvgIcon
-                            className={classNames(
-                                'margin-horizontal-8',
-                            )}
-                            disabled={disabled}
-                            title={i18n._('Prioritize')}
-                            onClick={() => actions.toolPathToUp(selectedToolPathId)}
-                            name="CopyNorma"
-                            size={24}
-                        />
-                        <SvgIcon
-                            className={classNames(
-                                'rotate180'
-                            )}
-                            disabled={disabled}
-                            title={i18n._('Deprioritize')}
-                            onClick={() => actions.toolPathToDown(selectedToolPathId)}
-                            name="CopyNorma"
-                            size={24}
-                        />
-                    </div>
-                    <Button
-                        type="primary"
-                        priority="level-three"
-                        width="100%"
-                        onClick={actions.createToolPath}
-                        disabled={inProgress || toolPathTypes.length === 0}
-                    >
-                        {i18n._('Create Toolpath')}
-                    </Button>
                 </div>
-            </div>
-            {currentToolpath && (
-                <ToolPathConfigurations
-                    toolpath={currentToolpath}
-                    headType={props.headType}
-                    onClose={() => setCurrentToolpath(null)}
-                />
-            )}
-            {editingToolpath && (
-                <ToolPathConfigurations
-                    headType={props.headType}
-                    toolpath={editingToolpath}
-                    onClose={() => setEditingToolpath(null)}
-                />
             )}
 
             {selectedToolPath && selectedToolPath.headType === HEAD_CNC && activeToolListDefinition && (

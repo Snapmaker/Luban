@@ -5,7 +5,7 @@ import path from 'path';
 import { withRouter } from 'react-router-dom';
 // import classNames from 'classnames';
 import i18n from '../../lib/i18n';
-// import Anchor from '../components/Anchor';
+import Anchor from '../components/Anchor';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../widgets/LaserVisualizer';
 import Tabs from '../components/Tabs';
@@ -283,25 +283,71 @@ function Laser() {
                 type: 'separator'
             },
             {
-                name: 'MainToolbarTop',
-                action: () => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER)),
-                title: i18n._('Front')
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Anchor
+                            onClick={() => dispatch(editorActions.bringSelectedModelToFront(HEAD_LASER))}
+                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-top-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Front')}
+                            </div>
+                        </Anchor>
+                    );
+                }
             },
             {
-                name: 'MainToolbarBottom',
-                action: () => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER)),
-                title: i18n._('Bottom')
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Anchor
+                            onClick={() => dispatch(editorActions.sendSelectedModelToBack(HEAD_LASER))}
+                            className="width-64 display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Set-bottom-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Bottom')}
+                            </div>
+                        </Anchor>
+                    );
+                }
             },
             {
                 type: 'separator'
             },
             {
-                name: 'CameraCaptureExtract',
-                action: () => {
-                    setShowCameraCapture(true);
-                },
-                iconClassName: 'width-auto',
-                title: i18n._('Camera Capture')
+                // Camera-capture-normal
+                type: 'render',
+                customRender: function () {
+                    return (
+                        <Anchor
+                            onClick={() => setShowCameraCapture(true)}
+                            className="display-inline align-c padding-vertical-2 padding-horizontal-2 font-size-0"
+                        >
+                            <i
+                                style={{
+                                    backgroundImage: `url(${require('../../resources/images/laser-image/Camera-capture-normal.svg')})`
+                                }}
+                                className="width-24 height-24 display-inline "
+                            />
+                            <div className="font-size-base">
+                                {i18n._('Camera Capture')}
+                            </div>
+                        </Anchor>
+                    );
+                }
             }
         ];
 

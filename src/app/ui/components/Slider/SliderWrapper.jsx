@@ -13,6 +13,7 @@ class SliderWrapper extends PureComponent {
         className: PropTypes.string,
         vertical: PropTypes.bool,
         handleStyle: PropTypes.string,
+        isBlack: PropTypes.bool,
         size: PropTypes.string,
         marks: PropTypes.object,
         disabled: PropTypes.bool,
@@ -20,17 +21,17 @@ class SliderWrapper extends PureComponent {
     };
 
     render() {
-        const { className = '', disabled = false, vertical = false, marks, size = 'small', value, ...rest } = this.props;
+        const { className = '', disabled = false, isBlack = false, vertical = false, marks, size = 'small', value, ...rest } = this.props;
         return (
             <div
-                className={classNames(className, styles[size])}
+                className={classNames(className, isBlack ? 'is-black' : '', 'display-inline', styles[size])}
             >
                 <Slider
                     {...rest}
                     disabled={disabled}
                     marks={marks}
                     vertical={vertical}
-                    className={classNames(styles.slider,)}
+                    className={classNames(styles.slider)}
                     value={value}
                 />
             </div>

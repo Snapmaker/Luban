@@ -87,7 +87,7 @@ class DegreeInput extends PureComponent {
      * @returns {string}
      */
     getNumberWithSuffix(num) {
-        return num.toString() + this.props.suffix;
+        return num.toString();
     }
 
     getStandardValue(value) {

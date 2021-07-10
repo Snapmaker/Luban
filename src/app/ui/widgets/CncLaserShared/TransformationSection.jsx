@@ -7,6 +7,7 @@ import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
+import SvgIcon from '../../components/SvgIcon';
 import { DegreeInput, NumberInput as Input } from '../../components/Input';
 
 import { actions as editorActions } from '../../../flux/editor';
@@ -167,13 +168,11 @@ class TransformationSection extends PureComponent {
             <div>
                 <Anchor className="sm-flex height-32 margin-vertical-8" onClick={this.actions.onToggleExpand}>
                     <span className="sm-flex-width">{i18n._('Transformation')}</span>
-                    <span className={classNames(
-                        'fa',
-                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                        'sm-parameter-header__indicator',
-                        'pull-right',
-                        'sm-flex-auto'
-                    )}
+                    <SvgIcon
+                        name="DropdownLine"
+                        className={classNames(
+                            this.state.expanded ? '' : 'rotate180'
+                        )}
                     />
                 </Anchor>
                 {this.state.expanded && (
@@ -187,7 +186,7 @@ class TransformationSection extends PureComponent {
                                 <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Move (mm)')}</span>
                                 <span className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline ">
-                                        <span>
+                                        <span className="width-16 display-inline">
                                             X
                                         </span>
                                         <Input
@@ -203,7 +202,7 @@ class TransformationSection extends PureComponent {
                                         />
                                     </div>
                                     <div className="display-inline">
-                                        <span>
+                                        <span className="width-16 display-inline">
                                             Y
                                         </span>
                                         <Input
@@ -229,7 +228,7 @@ class TransformationSection extends PureComponent {
                                 <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Size (mm)')}</span>
                                 <div className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline">
-                                        <span>
+                                        <span className="width-16 display-inline">
                                            W
                                         </span>
                                         <Input
@@ -258,7 +257,7 @@ class TransformationSection extends PureComponent {
                                         }}
                                     />
                                     <div className="display-inline">
-                                        <span>
+                                        <span className="width-16 display-inline">
                                            H
                                         </span>
                                         <Input
@@ -284,6 +283,10 @@ class TransformationSection extends PureComponent {
                                 <span className="sm-flex-auto sm-flex-order-negative width-64">{i18n._('Rotate')}</span>
                                 <div className="sm-flex-width sm-flex justify-space-between">
                                     <div className="display-inline">
+                                        {/* <SvgIcon
+                                            size={16}
+                                            name="RotationAngle"
+                                        />*/}
                                         <DegreeInput
                                             disabled={disabled || !selectedNotHide || !canRotate}
                                             value={toFixed(logicalAngle, 1)}
@@ -298,6 +301,7 @@ class TransformationSection extends PureComponent {
                                                 className={classNames(
                                                     styles.icon_flip_vertically,
                                                     'width-44',
+                                                    'border-radius-8',
                                                     'padding-horizontal-10'
                                                 )}
                                                 disabled={disabled || !selectedNotHide}
@@ -310,6 +314,7 @@ class TransformationSection extends PureComponent {
                                                 className={classNames(
                                                     styles.icon_flip_horizontal,
                                                     'width-44',
+                                                    'border-radius-8',
                                                     'padding-horizontal-10'
                                                 )}
                                                 disabled={disabled || !selectedNotHide}
