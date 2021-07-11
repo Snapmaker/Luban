@@ -1290,7 +1290,6 @@ class ModelGroup extends EventEmitter {
             }
         }
         const model = this.newModel(modelInfo);
-        console.log(model);
 
         model.computeBoundingBox();
 
@@ -1314,7 +1313,6 @@ class ModelGroup extends EventEmitter {
     }
 
     addSupportOnSelectedModel(defaultSupportSize) {
-        console.log('addSupportOnSelectedModel');
         if (this.selectedModelArray.length !== 1) {
             return null;
         }

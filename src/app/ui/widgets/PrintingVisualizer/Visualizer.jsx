@@ -17,6 +17,7 @@ import { actions as printingActions, PRINTING_STAGE } from '../../../flux/printi
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import AddOperation from '../../../flux/operation-history/AddOperation';
 import DeleteOperation from '../../../flux/operation-history/DeleteOperation';
+import MoveOperation3D from '../../../flux/operation-history/MoveOperation3D';
 import Operations from '../../../flux/operation-history/Operations';
 import VisualizerLeftBar from './VisualizerLeftBar';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
@@ -27,6 +28,7 @@ import styles from './styles.styl';
 
 class Visualizer extends PureComponent {
     static propTypes = {
+        targetTmpState: PropTypes.object.isRequired,
         isActive: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
@@ -41,6 +43,8 @@ class Visualizer extends PureComponent {
         renderingTimestamp: PropTypes.number.isRequired,
         inProgress: PropTypes.bool.isRequired,
 
+        updateTargetTmpState: PropTypes.func.isRequired,
+        clearTargetTmpState: PropTypes.func.isRequired,
         setOperations: PropTypes.func.isRequired,
         offsetGcodeLayers: PropTypes.func.isRequired,
         destroyGcodeLine: PropTypes.func.isRequired,
@@ -106,7 +110,86 @@ class Visualizer extends PureComponent {
         onSelectModels: (intersect, selectEvent) => {
             this.props.selectMultiModel(intersect, selectEvent);
         },
-        onModelAfterTransform: () => {
+        onModelBeforeTransform: (transformMode) => {
+            this.props.clearTargetTmpState();
+            for (const model of this.props.modelGroup.selectedModelArray) {
+                console.log(model.transformation);
+                switch (transformMode) {
+                    case 'translate':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            from: {
+                                positionX: model.transformation.positionX,
+                                positionY: model.transformation.positionY,
+                                positionZ: model.transformation.positionZ
+                            }
+                        });
+                        break;
+                    case 'rotate':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            from: {
+                                rotationX: model.transformation.rotationX,
+                                rotationY: model.transformation.rotationY,
+                                rotationZ: model.transformation.rotationZ
+                            }
+                        });
+                        break;
+                    case 'scale':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            from: {
+                                scaleX: model.transformation.scaleX,
+                                scaleY: model.transformation.scaleY,
+                                scaleZ: model.transformation.scaleZ
+                            }
+                        });
+                        break;
+                    default: break;
+                }
+            }
+        },
+        onModelAfterTransform: (transformMode) => {
+            for (const model of this.props.modelGroup.selectedModelArray) {
+                console.log(model.transformation);
+                switch (transformMode) {
+                    case 'translate':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            to: {
+                                positionX: model.transformation.positionX,
+                                positionY: model.transformation.positionY,
+                                positionZ: model.transformation.positionZ
+                            }
+                        });
+                        break;
+                    case 'rotate':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            to: {
+                                rotationX: model.transformation.rotationX,
+                                rotationY: model.transformation.rotationY,
+                                rotationZ: model.transformation.rotationZ
+                            }
+                        });
+                        break;
+                    case 'scale':
+                        this.props.updateTargetTmpState(model.modelID, {
+                            to: {
+                                scaleX: model.transformation.scaleX,
+                                scaleY: model.transformation.scaleY,
+                                scaleZ: model.transformation.scaleZ
+                            }
+                        });
+                        break;
+                    default: break;
+                }
+            }
+            const operations = new Operations();
+            for (const model of this.props.modelGroup.selectedModelArray) {
+                const operation = new MoveOperation3D({
+                    target: model,
+                    ...this.props.targetTmpState[model.modelID]
+                });
+                operations.push(operation);
+            }
+            this.props.setOperations(operations);
+            console.log(operations);
             this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
@@ -567,6 +650,7 @@ class Visualizer extends PureComponent {
                         supportActions={this.supportActions}
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={this.actions.onModelAfterTransform}
+                        onModelBeforeTransform={this.actions.onModelBeforeTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                     />
@@ -688,10 +772,12 @@ class Visualizer extends PureComponent {
 const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const printing = state.printing;
+    const { targetTmpState } = state.operationHistory;
     const { size } = machine;
     // TODO: be to organized
     const { stage, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp, inProgress } = printing;
     return {
+        targetTmpState,
         isActive: ownProps.location.pathname.indexOf('3dp') > 0,
         stage,
         size,
@@ -711,6 +797,8 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch) => ({
     setOperations: (operation) => dispatch(operationHistoryActions.setOperations(operation)),
+    clearTargetTmpState: () => dispatch(operationHistoryActions.clearTargetTmpState()),
+    updateTargetTmpState: (targetId, tmpState) => dispatch(operationHistoryActions.updateTargetTmpState(targetId, tmpState)),
 
     destroyGcodeLine: () => dispatch(printingActions.destroyGcodeLine()),
     offsetGcodeLayers: (offset) => dispatch(printingActions.offsetGcodeLayers(offset)),

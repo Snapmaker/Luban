@@ -45,6 +45,7 @@ class Canvas extends Component {
         updateTarget: PropTypes.func,
         updateScale: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
+        onModelBeforeTransform: PropTypes.func,
         onModelTransform: PropTypes.func,
 
         // tmp
@@ -83,6 +84,7 @@ class Canvas extends Component {
 
         // callback
         this.onSelectModels = this.props.onSelectModels || noop;
+        this.onModelBeforeTransform = this.props.onModelBeforeTransform || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
@@ -265,13 +267,18 @@ class Canvas extends Component {
                 this.props.showContextMenu(e);
             }
         });
+        this.controls.on(EVENTS.BEFORE_TRANSFORM_OBJECT, () => {
+            console.log(this.controls.transformControl);
+            this.onModelBeforeTransform(this.controls.transformControl.mode);
+        });
         this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
             if (this.props.canOperateModel) {
                 this.onModelTransform();
             }
         });
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
-            this.onModelAfterTransform();
+            console.log(this.controls.transformControl);
+            this.onModelAfterTransform(this.controls.transformControl.mode);
         });
     }
 

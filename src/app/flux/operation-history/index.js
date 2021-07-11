@@ -5,7 +5,7 @@ const ACTIONS_UPDATE_STATE = 'history/ACTION_UPDATE_STATE';
 
 const INITIAL_STATE = {
     history: getOperationHistoryInstance(),
-    operattingTargets: []
+    targetTmpState: {}
 };
 
 export const actions = {
@@ -37,6 +37,32 @@ export const actions = {
             type: ACTIONS_UPDATE_STATE,
             action: {
                 history
+            }
+        });
+    },
+    clearTargetTmpState: () => (dispatch, getState) => {
+        let { targetTmpState } = getState().operationHistory;
+        targetTmpState = {};
+        dispatch({
+            type: ACTIONS_UPDATE_STATE,
+            action: {
+                targetTmpState
+            }
+        });
+    },
+    updateTargetTmpState: (targetId, tmpState) => (dispatch, getState) => {
+        const { targetTmpState } = getState().operationHistory;
+        if (!targetTmpState[targetId]) {
+            targetTmpState[targetId] = {};
+        }
+        targetTmpState[targetId] = {
+            ...targetTmpState[targetId],
+            ...tmpState
+        };
+        dispatch({
+            type: ACTIONS_UPDATE_STATE,
+            action: {
+                targetTmpState
             }
         });
     }

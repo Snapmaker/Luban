@@ -22,6 +22,7 @@ class OperationHistory {
     }
 
     undo() {
+        console.log('undo', this.history);
         if (this.index >= 0) {
             const operations = this.history[this.index];
             this.index--;
@@ -33,6 +34,7 @@ class OperationHistory {
     }
 
     redo() {
+        console.log('redo', this.history);
         if (this.index < this.history.length - 1) {
             const operations = this.history[++this.index];
             for (const operation of operations.operations) {

@@ -14,10 +14,24 @@ export default class MoveOperation3D {
     }
 
     redo() {
+        const model = this.state.target;
+        const modelGroup = model.modelGroup;
 
+        // modelGroup.unselectAllModels();
+        modelGroup.updateSelectedGroupTransformation({
+            ...model.transformation,
+            ...this.state.to
+        }, false);
     }
 
     undo() {
-        
+        const model = this.state.target;
+        const modelGroup = model.modelGroup;
+
+        // modelGroup.unselectAllModels();
+        modelGroup.updateSelectedGroupTransformation({
+            ...model.transformation,
+            ...this.state.from
+        }, false);
     }
 }

@@ -29,6 +29,7 @@ export const EVENTS = {
     CONTEXT_MENU: 'contextmenu',
     SELECT_OBJECTS: 'object:select',
     // UNSELECT_OBJECT: 'object:unselect',
+    BEFORE_TRANSFORM_OBJECT: 'object:beforetransform',
     TRANSFORM_OBJECT: 'object:transform',
     AFTER_TRANSFORM_OBJECT: 'object:aftertransform'
 };
@@ -247,6 +248,7 @@ class Controls extends EventEmitter {
                     this.transformControl.onMouseHover(coord);
                     if (this.transformControl.onMouseDown(coord)) {
                         this.state = STATE.TRANSFORM;
+                        this.emit(EVENTS.BEFORE_TRANSFORM_OBJECT);
                         break;
                     }
                 }
