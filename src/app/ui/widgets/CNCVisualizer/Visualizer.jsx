@@ -254,33 +254,12 @@ class Visualizer extends Component {
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, 300)), new THREE.Vector3());
         }
 
-        // TODO: find better way
-        /*
-        this.canvas.current.updateTransformControl2D();
-        const { model } = nextProps;
-        if (model !== this.props.model) {
-            if (!model) {
-                this.canvas.current.controls.detach();
-            } else {
-                const sourceType = model.modelInfo.source.type;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-
-                this.canvas.current.controls.attach(model);
-            }
-        }
-        */
-
-        this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
         const { selectedToolPathModelArray } = nextProps;
         // todo, selectedModelId nof found
         if (selectedToolPathModelArray !== this.props.selectedToolPathModelArray) {
-            this.canvas.current.controls.detach();
-            selectedToolPathModelArray.map(model => this.canvas.current.controls.attach(model.meshObject, SELECTEVENT.ADDSELECT));
+            this.canvas.current.detach();
+            selectedToolPathModelArray.map(model => this.canvas.current.attach(model.meshObject, SELECTEVENT.ADDSELECT));
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {

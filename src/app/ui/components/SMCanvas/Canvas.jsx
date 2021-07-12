@@ -106,7 +106,7 @@ class Canvas extends Component {
         this.setupScene();
         this.setupControls();
 
-        this.group.add(this.printableArea);
+        this.group.add(this.props.printableArea);
         this.props.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
         this.group.add(this.modelGroup.object);
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
